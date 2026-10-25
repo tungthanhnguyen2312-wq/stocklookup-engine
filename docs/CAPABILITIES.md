@@ -227,7 +227,7 @@ immutable. [Share contract](hpg_common_share_evidence_contract.md).
 - Next trigger: Monday `thesis_*` acceptance rows
 
 ### 16. Outcomes / outcome feedback
-- Contract: [owner_daily_feedback_resource_containment_contract.md](owner_daily_feedback_resource_containment_contract.md); `prospective_decision_outcome_feedback.py`, `prospective_feedback_streaming.py`, `feedback_resource_guard.py`
+- Contract: [owner_daily_feedback_resource_containment_contract.md](owner_daily_feedback_resource_containment_contract.md); `prospective_decision_outcome_feedback.py`, `prospective_feedback_streaming.py`, `acquisition/feedback_resource_guard.py`
 - Runtime: `ACTIVE_FAILSOFT` (two child calls per Daily, `INCREMENTAL`, 1,200 s total deadline, Job-Object contained) · Authority: `NON_VOTING` (resource/defect status is never feedback evidence) · Production: `IN_DAILY_FAILSOFT`
 - Input: T0 snapshots, exact-session price snapshots, governed session chain · Predecessor: legacy whole-load builder (identity-equal; superseded)
 - Blocker: T20/T60 not yet mature; growth linear in sessions; reopen if cold run > half the deadline
@@ -268,7 +268,7 @@ periods, retained receipts, unknown publication and cutoff limits; no valuation/
 cold guard/plan/adapter offline. Authority NONE; no production activation or reclaim.
 
 ### 20. Dashboard / AI handoff publication
-- Contract: [dashboard_release_session_contract.md](dashboard_release_session_contract.md), [release_publication_contract.md](release_publication_contract.md); `release_orchestrator.py`, `ai_handoff_publication.py`
+- Contract: [dashboard_release_session_contract.md](dashboard_release_session_contract.md), [release_publication_contract.md](release_publication_contract.md); `release_orchestrator.py`, `research/ai_handoff_publication.py`
 - Runtime: `ACTIVE` · Authority: `SCOPED` (presentation of Producer verdicts; consumers may narrow, never widen) · Production: `OWNER_LAUNCHER` (phases 3–9)
 - Input: sealed Producer operation, retained Brief, Integrated Decision overlay · Predecessor: pre-M1 publication path
 - Blocker: none recorded · Next trigger: Monday `FINAL STATUS: PASS` = `READY_FOR_AI`
