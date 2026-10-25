@@ -1306,6 +1306,19 @@ def _ocr_match_key(text: str) -> str:
     return normalize_text(text).casefold()
 
 
+def _token_on_page(token: str, text: str) -> bool:
+    """`token` occurs in `text` as a whole printed value, not inside a longer number.
+
+    `10%` must not match inside `110%`, nor `1.000` inside `21.000` or `1.000.000`: a digit,
+    or a `.`/`,` digit group, adjoining the token on either side refuses the occurrence.
+    """
+    key, haystack = _ocr_match_key(token), _ocr_match_key(text)
+    if not key:
+        return False
+    boundary = r"(?<![0-9])(?<![0-9][.,])" + re.escape(key) + r"(?![0-9])(?![.,][0-9])"
+    return re.search(boundary, haystack) is not None
+
+
 def parse_entitlement_ratio(printed: str) -> float | None:
     """New shares per existing entitled share from one printed rate.
 
@@ -1364,10 +1377,9 @@ def reviewed_scan_observation(document: Mapping[str, Any], review: Mapping[str, 
             pages.setdefault(int(row["page"]), []).append(row)
 
     def located(printed: str, page: int | None) -> Mapping[str, Any] | None:
-        key = _ocr_match_key(printed)
         candidates = pages.get(page, []) if page is not None else [r for rows in pages.values() for r in rows]
         return next((row for row in sorted(candidates, key=lambda r: str(r.get("citation_id")))
-                     if key and key in _ocr_match_key(str(row.get("text") or ""))), None)
+                     if _token_on_page(printed, str(row.get("text") or ""))), None)
 
     event_type = review.get("event_type")
     type_phrase = str(review.get("event_type_printed") or "")

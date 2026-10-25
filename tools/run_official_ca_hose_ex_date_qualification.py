@@ -28,7 +28,8 @@ sys.path.insert(0, str(ROOT))
 
 from stocklookup_core.evidence.bitemporal_semantic_contract import (  # noqa: E402
     project_official_evidence_temporal_metadata, propagate_derived_knowledge)
-from stocklookup_core.evidence.corporate_action_events import reviewed_scan_observation  # noqa: E402
+from stocklookup_core.evidence.corporate_action_events import (  # noqa: E402
+    _token_on_page, reviewed_scan_observation)
 from stocklookup_core.evidence.official_corporate_action_ledger import build_ledger  # noqa: E402
 from stocklookup_core.evidence.official_document_acquisition import acquire  # noqa: E402
 from stocklookup_core.evidence.official_document_ocr_handoff import replay as replay_ocr  # noqa: E402
@@ -333,7 +334,7 @@ def build_artifact(sidecar: Mapping[str, Any] | None = None) -> dict[str, Any]:
         old_pages, new_pages = load_ocr_pages(sidecar, old), load_ocr_pages(sidecar, new)
         for token, pages in ((row["superseded_token"], old_pages), (row["unchanged_token"], old_pages),
                              (row["corrected_token"], new_pages)):
-            if not any(token["printed"] in r["text"] for r in pages if int(r["page"]) == token["page"]):
+            if not any(_token_on_page(token["printed"], r["text"]) for r in pages if int(r["page"]) == token["page"]):
                 raise ValueError("supersession_token_absent_from_governed_ocr")
         supersessions.append({"superseded_document_id": old["document_id"], "superseding_document_id": new["document_id"],
                               **{key: row[key] for key in ("superseded_token", "corrected_token", "unchanged_token")},

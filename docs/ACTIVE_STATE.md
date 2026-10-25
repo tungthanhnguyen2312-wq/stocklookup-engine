@@ -264,9 +264,9 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 5. BLOCKED (evidence-blocked; do not work around)
 
-- Corporate-action factor chain: 0 historically knowable events (HPG/PVD 2026 known only from receipt
-  2026-10-25, local) → PIT-adjusted history, PIT backtest and execution replay stay blocked. Prospective
-  raw-as-traded: only bars equal to official HOSE; historical raw PARTIAL (HOSE, research grade).
+- Corporate-action factor chain: 0 historically knowable events (HPG/PVD 2026 known only from
+  2026-10-25 receipt) → PIT-adjusted history, PIT backtest, execution replay blocked. Prospective
+  raw-as-traded: only bars equal to official HOSE; historical raw PARTIAL (research).
 - `ACTIVE_UNIVERSE` authority: `UNKNOWN` for all instruments (no official listing-status proof from DNSE).
 - Reverse / intrinsic valuation outputs: no governed intrinsic evaluator output or FCFF inputs.
 - Execution-grade liquidity, canonical participation/horizon policy, position sizing authority.

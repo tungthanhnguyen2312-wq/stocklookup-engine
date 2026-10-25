@@ -8,11 +8,16 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import datetime, timedelta
 
 import pytest
 
-import market_only_pit_eligibility as market_only
 import pit_price_reconstruction_contract as pit
+
+try:  # PR #191 relocates this root module; accept either side of that migration.
+    from stocklookup_core.evidence import market_only_pit_eligibility as market_only
+except ImportError:
+    import market_only_pit_eligibility as market_only
 import price_basis_feature_fitness as fitness
 from stocklookup_core.evidence import official_corporate_action_ledger as ledger
 from stocklookup_core.evidence import qualified_corporate_action_factor_chain as factor_chain
@@ -300,6 +305,34 @@ def test_legacy_observation_ledger_gains_no_new_fields():
     for field in ("shares_planned", "treasury_shares_before", "ratio_basis_corroboration",
                   "planned_count_bridge", "co_documented_legs", "ratio_source"):
         assert field not in entry
+
+
+@requires_evidence
+def test_no_governed_session_before_receipt_can_use_either_factor(cohort):
+    """The downstream PIT gate, swept over every governed session close before Producer's receipt."""
+    for ticker in ("HPG", "PVD"):
+        chain = _chain(cohort, ticker)
+        context = fitness.price_series_context(
+            ticker=ticker, provider="HOSE", source_identity="hose:tradingresult", session_start="2026-06-03",
+            session_end="2026-09-04", observed_basis=fitness.POINT_IN_TIME_ADJUSTED, basis_provenance=["test"],
+            factor_chain=chain)
+        decisions = [f"{session}T15:00:00+07:00" for session in runner.GOVERNED_SESSIONS]
+        cutoff = datetime.fromisoformat(chain["knowledge_cutoff"].replace("Z", "+00:00"))
+        decisions.append((cutoff - timedelta(seconds=1)).isoformat())
+        for decision in decisions:
+            verdict = fitness.evaluate_feature_fitness(feature=fitness.PIT_BACKTEST, current_context=context,
+                                                       decision_as_of=decision)
+            assert verdict["reason_codes"] == [fitness.REASON_PIT_FACTOR_AFTER_DECISION], (ticker, decision)
+
+
+def test_token_match_refuses_a_value_inside_a_longer_number():
+    from stocklookup_core.evidence.corporate_action_events import _token_on_page
+    assert _token_on_page("10%", "Tỷ lệ thực hiện: 10% (Người")
+    assert not _token_on_page("10%", "tỷ lệ 110%")
+    assert not _token_on_page("1.000", "Mệnh giá 21.000 đồng")
+    assert not _token_on_page("1.000", "1.000.000 đồng")
+    assert _token_on_page("1.000", "được nhận 1.000 đồng)")
+    assert not _token_on_page("767.546.585", "767.546.5850")
 
 
 @pytest.mark.parametrize("printed,expected", [("10%", 0.1), ("66,9%", 0.669), ("100:10", 0.1), ("5:1", 0.2),

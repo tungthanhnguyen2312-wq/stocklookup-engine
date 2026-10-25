@@ -82,11 +82,28 @@ representation contract to join any other scale. Observed price ratios are never
 
 ## 5. Tests and resources
 
-`tests/test_official_ca_hose_ex_date_qualification.py`: 26 pass (2 need the ignored PDF bytes and
+`tests/test_official_ca_hose_ex_date_qualification.py`: 28 pass (2 need the ignored PDF bytes and
 skip in CI). Targeted regression (20 modules, one process): 486 pass; 4 fail identically on clean
 `origin/main` 92fe7612 in the same location (missing `mva-daily` retained artifact; Consumer p1g
 runtime upstream files) — pre-existing, environmental. Free RAM 1.3–1.7 GB of 15.7 GB throughout;
 C: 49 GB free. Logs under the evidence `logs/` folder (ignored).
+
+## 5a. Review acceptance (second pass, same day)
+
+- Reproduction: with only the tracked manifest copied into an empty root, `acquire()` re-downloaded
+  all nine HOSE originals with identical bytes (`cached_valid`, `refreshed_same_bytes`) and left the
+  manifest byte-identical. A reviewer can therefore restore the ignored PDFs with
+  `--acquire` and un-skip the two byte-level tests.
+- Every cited page (HPG 1121 p1, 1475 p1, 03/BC p1–2; PVD 1421 p1, 1775 p1, revised report p6–7,
+  original p3/p8, correction p1; SSI 1634 p1; POW 72 p1) was compared against the rendered original.
+  Each cited token matches what is printed on its page.
+- Fix: token corroboration now refuses a value inside a longer number (`10%` in `110%`, `1.000` in
+  `21.000`). The artifact replayed byte-identically under the stricter rule.
+- Boundary: the PIT_BACKTEST gate refuses both factors for every governed session close
+  (2026-06-03..2026-09-04) and for one second before each receipt instant.
+- PR interaction: #191 moves `market_only_pit_eligibility.py` into `stocklookup_core/evidence/`. The
+  test imports it from either location. #189 and #191 edit other `ACTIVE_STATE.md` lines; with all
+  three merged, the active set is 102,391 of 102,400 bytes.
 
 ## 6. Handoff
 
