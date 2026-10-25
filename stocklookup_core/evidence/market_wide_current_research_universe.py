@@ -3,8 +3,8 @@ from __future__ import annotations
 import hashlib,json
 from collections import Counter
 from typing import Any,Mapping,Sequence
-from dnse_instrument_universe import normalize_instrument_record,EQUITY
-from dnse_security_group_semantics import refine_records
+from stocklookup_core.evidence.dnse_instrument_universe import normalize_instrument_record,EQUITY
+from stocklookup_core.evidence.dnse_security_group_semantics import refine_records
 
 CONTRACT_VERSION='market_wide_current_research_universe/v1'
 def _canon(x:Any)->str:return json.dumps(x,ensure_ascii=False,sort_keys=True,separators=(',',':'))

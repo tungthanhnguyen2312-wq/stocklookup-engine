@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 import stocklookup_core.evidence.vietnam_official_macro_evidence as nso
-from current_macro_regime import build as build_macro, session_context
+from stocklookup_core.evidence.current_macro_regime import build as build_macro, session_context
 from stocklookup_core.evidence.vietnam_official_macro_evidence import build, content_identity, current_macro_observations
 
 

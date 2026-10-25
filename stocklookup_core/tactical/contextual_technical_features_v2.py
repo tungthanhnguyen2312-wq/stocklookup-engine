@@ -3,7 +3,7 @@ from __future__ import annotations
 import statistics
 from collections import Counter
 import canonical_market_bars as bars
-import prospective_market_snapshot_contract as market
+import stocklookup_core.evidence.prospective_market_snapshot_contract as market
 import technical_structure_context as structure
 import technical_relationship_view as bridge
 from contextual_technical_primitives import (USABLE, morphology, finite_number as _number,

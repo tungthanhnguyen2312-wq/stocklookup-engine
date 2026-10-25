@@ -6,7 +6,7 @@ import pytest
 
 from official_acquisition_budget import AcquisitionBudget, AcquisitionLimits, AcquisitionBudgetExceeded
 import official_corporate_event_incremental_acquisition as incremental
-import hnx_enumerable_universe_kllh_event_disclosure_scaleout as hnx
+import stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout as hnx
 from test_official_corporate_event_incremental_acquisition import _stocklookup_universe, _make_hnx_fetch, _hose_response
 
 

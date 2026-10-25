@@ -13,7 +13,7 @@
       "archive": "tests/fixtures/evidence_valuation_v1_sources/canonical_daily_operation.py.txt",
       "base_commit": "de90c6b94c7bb2377bedd7e2a1c809498d22926a",
       "prior_sha256_lf": "a4151d55564105df60b29e49036e35ae98287366daba1dc5f96444da3b31b730",
-      "active_sha256_lf": "16c15f57daa645e0a2197215e1f2830585fde6d1207ec7e7e9022838ee50a48f"
+      "active_sha256_lf": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c"
     },
     "canonical_post_close_pipeline.py": {
       "archive": "tests/fixtures/evidence_valuation_v1_sources/canonical_post_close_pipeline.py.txt",

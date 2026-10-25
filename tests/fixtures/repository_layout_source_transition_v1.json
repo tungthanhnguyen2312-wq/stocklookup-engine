@@ -10,7 +10,7 @@
       "governing_manifest": "tests/fixtures/financial_research_source_transition_v1.json",
       "historical_pin_sha256_lf": "640a09ee27e87a2a2901a98f06e6d9a8ee33ab5882aeb6112077c52a63e1309c",
       "prior_sha256_lf": "6e3e63ae4379b39723a0c94c71a89d80af335c89310adeb305f02905f42d13d5",
-      "active_sha256_lf": "17b889fd1dce1b03f7ba4c47d85eb390cf98c3d7461b8fe19b6dd2b3bceeac5e"
+      "active_sha256_lf": "73e69872190eb13a019dffafc2b1c19ac2812f0858650d2edfbc7bcfe72f1938"
     },
     "tools/run_owner_daily.py": {
       "archive": "tests/fixtures/repository_layout_v1_sources/tools/run_owner_daily.py.txt",
@@ -24,7 +24,7 @@
       "governing_manifest": "tests/fixtures/evidence_valuation_orchestration_source_transition_v1.json",
       "historical_pin_sha256_lf": "a4151d55564105df60b29e49036e35ae98287366daba1dc5f96444da3b31b730",
       "prior_sha256_lf": "487a0b91b4ef8699bdacdd46111a12fb40b4731994acf8e83b80540631daf829",
-      "active_sha256_lf": "16c15f57daa645e0a2197215e1f2830585fde6d1207ec7e7e9022838ee50a48f"
+      "active_sha256_lf": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c"
     },
     "canonical_post_close_pipeline.py": {
       "archive": "tests/fixtures/repository_layout_v1_sources/canonical_post_close_pipeline.py.txt",

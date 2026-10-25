@@ -32,7 +32,7 @@ import hashlib
 import json
 from typing import Any, Mapping, Sequence
 
-import price_basis_feature_fitness as fitness
+import stocklookup_core.evidence.price_basis_feature_fitness as fitness
 from stocklookup_core.evidence import provider_price_basis_registry as basis_registry
 
 CONTRACT_VERSION = "pit_price_series_qualification/v1"

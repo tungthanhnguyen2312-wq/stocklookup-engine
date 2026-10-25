@@ -10,7 +10,7 @@
       ]
     },
     "canonical_daily_operation.py": {
-      "ast_sha256": "8b906fac78c7a6f884aa62a7bd20a140197356aa712bfbb369c8ca9653109cbe",
+      "ast_sha256": "f1acfe23cdb262aba8ddd90a41f21c4e921bfec27194a756ef4cd489d88517f5",
       "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
       "targets": [
         "macro_sync.py",
@@ -54,7 +54,7 @@
       ]
     },
     "stocklookup.py": {
-      "ast_sha256": "559aa3b091bc2a35a091a0aaaa1a14a51ab097af5bdafd4988c5a57b6aacc8c9",
+      "ast_sha256": "710823f42f50ea375120cbcdff7725d52b56a20ff9c4e2a8622d6a76f116c97c",
       "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
       "targets": [
         "daily_analysis_pipeline.py",

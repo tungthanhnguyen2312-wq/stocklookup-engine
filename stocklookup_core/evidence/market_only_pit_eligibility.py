@@ -10,7 +10,7 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from typing import Any, Mapping, Sequence
 
-import prospective_market_snapshot_contract as market
+import stocklookup_core.evidence.prospective_market_snapshot_contract as market
 
 CONTRACT_VERSION = "market_only_pit_eligibility/v1"
 RAW_AS_TRADED = "RAW_AS_TRADED"
@@ -187,7 +187,7 @@ def evaluate(*, requirements: SignalRequirements, ticker: str, session: str, kno
                 r.get("window_end", "") >= session]
     memberships = scoped(universe_versions)
     if requirements.membership_mode == "POSITIVE_PRESENCE_EVERY_SESSION":
-        from prospective_pit_capture import qualifying_presence
+        from stocklookup_core.evidence.prospective_pit_capture import qualifying_presence
         if requirements.membership_claim != "LISTED_PRESENT" or any(not any(
             qualifying_presence(r, ticker=ticker, session=day, cutoff=knowledge_cutoff) and r.get("exchange") == exchange
             for r in listing_presence) for day in window):
@@ -246,7 +246,7 @@ class CaptureEligibilityIndex:
 
 def _evaluate_capture(*, requirements, ticker, session, knowledge_cutoff, governed_chain, receipts,
                       companions, listing_presence, verifications, ca_versions):
-    import prospective_pit_capture as capture
+    import stocklookup_core.evidence.prospective_pit_capture as capture
     if (requirements.membership_claim != "LISTED_PRESENT" or requirements.membership_mode != "POSITIVE_PRESENCE_EVERY_SESSION" or
         requirements.scale_behavior != "INVARIANT" or requirements.volume_required or requirements.benchmark_required or
         requirements.timeframe != "D" or isinstance(requirements.lookback_sessions, bool) or

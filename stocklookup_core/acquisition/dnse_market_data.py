@@ -18,7 +18,7 @@ import time
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from dnse_access import BASE_URL, auth_headers, redact_value, safe_error_code
+from stocklookup_core.acquisition.dnse_access import BASE_URL, auth_headers, redact_value, safe_error_code
 
 PROVIDER = "DNSE"
 PROVIDER_INTERFACE_VERSION = "dnse_openapi_rest_unversioned_2026"

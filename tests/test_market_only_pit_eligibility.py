@@ -3,7 +3,7 @@ from dataclasses import replace
 
 import pytest
 
-import market_only_pit_eligibility as eligibility
+import stocklookup_core.evidence.market_only_pit_eligibility as eligibility
 import prospective_market_snapshot_contract as market
 
 DAYS = ["2026-10-01", "2026-10-02", "2026-10-05", "2026-10-06"]

@@ -48,7 +48,7 @@ if str(ROOT) not in sys.path:
 from stocklookup_core.acquisition.artifact_io import atomic_write_json  # noqa: E402
 import stocklookup_core.evidence.canonical_instrument_reconciliation as c1  # noqa: E402
 import stocklookup_core.evidence.canonical_universe_tiers as c2  # noqa: E402
-import dnse_security_group_semantics as security_group_semantics  # noqa: E402
+import stocklookup_core.evidence.dnse_security_group_semantics as security_group_semantics  # noqa: E402
 
 SCHEMA_VERSION = "1.0.0"
 STORE_RELATIVE = Path("data") / "canonical_universe_retained_snapshot_integration" / "runs"

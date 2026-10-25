@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
-from owner_research_focus import owner_focus_tickers
+from stocklookup_core.research.owner_research_focus import owner_focus_tickers
 
 PACKET_CONTRACT = "ai_ticker_research_packet/v1"
 RUNS_ROOT = Path("operations-review") / "daily-producer-runs-v1"

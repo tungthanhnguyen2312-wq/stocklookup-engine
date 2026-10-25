@@ -18,7 +18,7 @@ PINS = {
     "canonical_post_close_pipeline.py": "db6e78370b57739888211d3c4381206daed7a542ac7123416bb0870c2427236a",
 }
 ACTIVE = {
-    "canonical_daily_operation.py": "16c15f57daa645e0a2197215e1f2830585fde6d1207ec7e7e9022838ee50a48f",
+    "canonical_daily_operation.py": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
     "canonical_post_close_pipeline.py": "042bc0541e8d6802c5c54912406d4a70a6f367508299c521ebe8eea731f58d54",
 }
 V1_DIGEST = "fa79baadcca197493b9ca70067fbd153f5e8bb7f50dfb6dbc6da53f253483d46"

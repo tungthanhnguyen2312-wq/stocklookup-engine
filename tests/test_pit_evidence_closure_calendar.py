@@ -5,7 +5,7 @@ import pytest
 
 import completed_market_session_gate as gate
 import prospective_market_snapshot_contract as market
-import market_only_pit_eligibility as eligibility
+import stocklookup_core.evidence.market_only_pit_eligibility as eligibility
 from prospective_market_evidence_retention import retain_working_dates_calendar
 
 RAW = json.dumps({"workingDates":["2026-10-02","2026-10-05","2026-10-07"]}).encode()

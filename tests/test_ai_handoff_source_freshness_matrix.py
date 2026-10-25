@@ -4,7 +4,7 @@ never emit an investment conclusion and must never assert a domain is current wh
 underlying evidence says otherwise (stale market-flow/catalyst must not become current)."""
 from __future__ import annotations
 
-from ai_handoff_source_freshness_matrix import (
+from stocklookup_core.research.ai_handoff_source_freshness_matrix import (
     FITNESS_CURRENT, FITNESS_PARTIAL, FITNESS_STALE, FITNESS_UNAVAILABLE,
     ENRICHMENT_EXTERNAL_MAY_BE_REQUIRED, ENRICHMENT_SUFFICIENT,
     build_source_freshness_matrix,

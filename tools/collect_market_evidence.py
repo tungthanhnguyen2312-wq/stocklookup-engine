@@ -58,7 +58,7 @@ if str(ROOT) not in sys.path:
 
 import dnse_access as dnse_acc
 from dnse_access import BASE_URL as DNSE_BASE_URL, auth_headers, credential_status, credentials_for_request
-from dnse_market_data import resolve_endpoint
+from stocklookup_core.acquisition.dnse_market_data import resolve_endpoint
 from dnse_secrets_env import ensure_credentials_loaded
 from stocklookup_core.evidence.fhsc_retained_live_reconciliation import (
     FHSC_BASE_URL,

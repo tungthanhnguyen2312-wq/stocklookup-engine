@@ -18,7 +18,7 @@ from typing import Any, Mapping
 from urllib.parse import urlencode
 from urllib.request import Request
 
-from official_acquisition_budget import AcquisitionBudget, AcquisitionBudgetExceeded
+from stocklookup_core.acquisition.official_acquisition_budget import AcquisitionBudget, AcquisitionBudgetExceeded
 
 CONTRACT_VERSION = "hnx_enumerable_universe_kllh_event_and_disclosure_scaleout/v1"
 BASE = "https://hnx.vn"

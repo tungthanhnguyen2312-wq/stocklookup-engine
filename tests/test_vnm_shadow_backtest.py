@@ -1,5 +1,5 @@
 ﻿import unittest
-from vnm_shadow_backtest import run_shadow_backtest
+from stocklookup_core.portfolio.vnm_shadow_backtest import run_shadow_backtest
 
 def snap(**k):
  x={"ticker":"VNM","snapshot_id":"s","knowledge_cutoff":"2026-06-30T00:00:00Z","state":"partial","input_vintage":{"identity":"v"},"input_lineage":[{"lineage_id":"l"}],"ranking":{"dimensions":{"technical_current_market_readiness":{"state":"available"}}},"scenarios":{"records":{"bull":{"state":"available"}}}};x.update(k);return x

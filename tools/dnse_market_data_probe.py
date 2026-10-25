@@ -80,7 +80,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dnse_access import credential_status, credentials_for_request  # noqa: E402
-from dnse_market_data import request_capability, top_level_schema  # noqa: E402
+from stocklookup_core.acquisition.dnse_market_data import request_capability, top_level_schema  # noqa: E402
 import vn_time  # noqa: E402
 
 CREDENTIAL_INJECTION_REQUIRED = "DNSE_CREDENTIAL_INJECTION_REQUIRED"

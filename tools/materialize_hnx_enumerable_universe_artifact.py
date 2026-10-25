@@ -4,7 +4,7 @@ from collections import Counter
 from datetime import UTC,datetime
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
-from hnx_enumerable_universe_kllh_event_disclosure_scaleout import _content,parse_list,parse_events,parse_disclosures,_total
+from stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout import _content,parse_list,parse_events,parse_disclosures,_total
 OUT=ROOT/'operations-review'/'hnx-enumerable-universe-kllh-event-and-disclosure-scaleout-v1-20260824'/'hnx_enumerable_universe_artifact.json'
 RAW=OUT.parent/'raw'
 UNIVERSE=ROOT/'operations-review'/'current-market-universe-breadth-foundation-v1-20260823'/'current_market_universe_breadth_foundation_artifact.json'

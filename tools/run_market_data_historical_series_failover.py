@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from dnse_access import CREDENTIAL_ENV_PAIRS, credentials_for_request
-from dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 from dnse_secrets_env import ensure_credentials_loaded
 from historical_series_failover import (
     CONTRACT_VERSION, PROVIDER_ENDPOINT, PROVIDER_INTERFACE, build_provider_series,

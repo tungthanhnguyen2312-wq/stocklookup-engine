@@ -2,7 +2,7 @@
 from __future__ import annotations
 import subprocess
 from pathlib import Path
-from dnse_secrets_env import ensure_credentials_loaded
+from stocklookup_core.acquisition.dnse_secrets_env import ensure_credentials_loaded
 
 class PreflightError(ValueError): pass
 def _fail(code: str): raise PreflightError(code)

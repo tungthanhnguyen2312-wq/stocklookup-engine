@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from freshness_history import freshness_envelope
+from stocklookup_core.evidence.freshness_history import freshness_envelope
 
 CONTRACT_VERSION = "ai_handoff_source_freshness_matrix/v1"
 

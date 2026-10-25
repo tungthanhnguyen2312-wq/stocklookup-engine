@@ -3,8 +3,8 @@ from dataclasses import replace
 import pytest
 
 from test_market_only_pit_eligibility import DAYS, binding, observation
-from market_only_pit_eligibility import evaluate, existing_vnm_requirements
-from vnm_shadow_backtest import run_market_only_gross_replay
+from stocklookup_core.evidence.market_only_pit_eligibility import evaluate, existing_vnm_requirements
+from stocklookup_core.portfolio.vnm_shadow_backtest import run_market_only_gross_replay
 
 
 def replay_inputs():

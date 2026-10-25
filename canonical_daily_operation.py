@@ -104,7 +104,7 @@ from daily_research_session_operations import load_registry
 from governed_previous_operation import AVAILABLE as PREVIOUS_OPERATION_AVAILABLE
 from governed_previous_operation import resolve_governed_previous_operation
 from field_temporal_contract import stable_id
-import macro_presentation_context as macro_presentation_context_module
+import stocklookup_core.research.macro_presentation_context as macro_presentation_context_module
 from governed_publication_completion import PublicationCompletionError
 from vn_time import VN_TZ, vn_now
 
@@ -289,7 +289,7 @@ def prepare_macro_delivery(root: Path, session: str, *, artifact_root: Path, enr
         return {}
     if cutoff_fn is None and datetime.now(VN_TZ).date().isoformat() != session:
         return {}  # Retained historical replay performs no fresh macro I/O.
-    from current_macro_regime import acquire
+    from stocklookup_core.evidence.current_macro_regime import acquire
     import daily_session_level2_package as level2
     from canonical_post_close_pipeline import _load
     from prospective_pit_capture_retention import io_known_at
@@ -333,7 +333,7 @@ def build_macro_presentation_context(
 def _working_dates_probe() -> dict[str, Any]:
     """Exactly one DNSE working_dates GET. Not a market-wide acquisition."""
     from dnse_access import credential_status, credentials_for_request
-    from dnse_bulk_market_data import fetch_capability_raw
+    from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
     from dnse_secrets_env import ensure_credentials_loaded
 
     ensure_credentials_loaded()

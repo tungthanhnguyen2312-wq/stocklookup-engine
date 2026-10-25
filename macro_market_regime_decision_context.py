@@ -9,7 +9,7 @@ import copy
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Mapping
 
-from current_macro_regime import session_context
+from stocklookup_core.evidence.current_macro_regime import session_context
 from stocklookup_core.evidence.field_identity import stable_id
 
 CONTRACT_VERSION = "macro_market_regime_decision_context/v1"
@@ -528,7 +528,7 @@ def build_context(
 
 def validate_context(context: Mapping[str, Any], session: str | None) -> None:
     """Validate the receiving session and immutable content before delivery."""
-    from current_macro_regime import _knowledge_timestamp
+    from stocklookup_core.evidence.current_macro_regime import _knowledge_timestamp
     if context.get("contract_version") != CONTRACT_VERSION or context.get("session") != session:
         raise ValueError("REGIME_CONTEXT_SESSION_MISMATCH")
     payload = {k: v for k, v in context.items() if k not in {"artifact_sha256", "artifact_identity"}}
@@ -652,7 +652,7 @@ def decision_answers(context: Mapping[str, Any]) -> dict[str, Any]:
 
 def scratch_acceptance() -> dict[str, Any]:
     """One explicit scratch context. Not an October 8 session artifact."""
-    from current_macro_regime import build as build_macro
+    from stocklookup_core.evidence.current_macro_regime import build as build_macro
 
     def row(identifier: str, value: float | None, previous: float | None, **extra: Any) -> dict[str, Any]:
         base = {

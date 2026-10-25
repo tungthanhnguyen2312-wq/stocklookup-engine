@@ -46,8 +46,8 @@ def run_market_only_gross_replay(*, snapshot: Mapping[str, Any], entry_observati
  Eligible market data alone does not fabricate an emitted T0 feature or signal.
  Entry/exit are explicitly bound close-to-close research observations, never orders.
  """
- from market_only_pit_eligibility import CONTRACT_VERSION, EXISTING_VNM_SIGNAL, _price_ready, _volume_ready
- import prospective_market_snapshot_contract as market
+ from stocklookup_core.evidence.market_only_pit_eligibility import CONTRACT_VERSION, EXISTING_VNM_SIGNAL, _price_ready, _volume_ready
+ import stocklookup_core.evidence.prospective_market_snapshot_contract as market
  reasons = []
  signal = _signal(snapshot)
  if signal is None: reasons.append("EXISTING_SIGNAL_RULE_NOT_SATISFIED")
@@ -102,7 +102,7 @@ def run_authority_gated_replay(*, snapshot: Mapping[str, Any], raw_sessions: lis
  qualification context at its own session close; never copied backward into T0.
  The legacy fixed-holding exit remains explicit, with no inferred stop or policy.
  """
- from raw_pit_authority_matrix import use_case_readiness
+ from stocklookup_core.evidence.raw_pit_authority_matrix import use_case_readiness
  from stocklookup_core.portfolio.vnm_execution_contract import _row_reason, _costs
  from stocklookup_core.evidence.field_identity import stable_id
  ticker = snapshot.get("ticker")
@@ -141,7 +141,7 @@ def run_authority_gated_replay(*, snapshot: Mapping[str, Any], raw_sessions: lis
   if not reasons:
    # Cost model qualification is separate from otherwise valid gross replay.
    net_rows = [evidence.get(f) or {} for f in ("FEES_TAXES", "SLIPPAGE_IMPACT")]
-   from raw_pit_authority_matrix import authority_row
+   from stocklookup_core.evidence.raw_pit_authority_matrix import authority_row
    net_qualified = all(authority_row(feature=f, use_case="EXECUTION_REPLAY", ticker=ticker, session=session,
                         evidence=e, knowledge_cutoff=cutoff)["fitness"] == "EXECUTION_USABLE"
                        for f,e in zip(("FEES_TAXES", "SLIPPAGE_IMPACT"), net_rows))

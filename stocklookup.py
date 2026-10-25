@@ -466,7 +466,7 @@ def main(argv=None) -> int:
         daily_output_root = Path(environment["roots"]["output_root"])
 
     try:
-        from stocklookup_preflight import check
+        from stocklookup_core.acquisition.stocklookup_preflight import check
         check(
             producer_root=a.replay_root if a.replay_operation else ROOT,
             runtime_root=daily_runtime or _runtime(),

@@ -6,7 +6,7 @@ import json
 from typing import Any, Mapping
 
 from stocklookup_core.research.qualified_research_delta import compare
-from qualified_research_snapshot_v2 import COMPATIBLE_SCHEMA_VERSIONS
+from stocklookup_core.research.qualified_research_snapshot_v2 import COMPATIBLE_SCHEMA_VERSIONS
 
 SCHEMA_VERSION = "1.0.0"
 

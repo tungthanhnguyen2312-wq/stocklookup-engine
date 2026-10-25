@@ -126,7 +126,7 @@ def test_v4_consolidations_have_single_owners_and_no_root_aliases():
     assert reconstruction.RetentionError is snapshot.RetentionError
     assert snapshot.RANKING_VERSION is snapshot.RANKING_CONTRACT_VERSION
     execution = importlib.import_module("stocklookup_core.portfolio.vnm_execution_contract")
-    backtest = importlib.import_module("vnm_shadow_backtest")
+    backtest = importlib.import_module("stocklookup_core.portfolio.vnm_shadow_backtest")
     assert backtest.resolve_vnm_fill is execution.resolve_vnm_fill
     # Preserve the existing shadow's version separately from the SSI qualifier's version.
     assert shadow.VERSION == "1.0.0" and shadow.SSI_VERSION == "1.1.0"
@@ -494,7 +494,7 @@ def test_layout_migration_20261025_moves_leave_one_owner_and_no_root_dependency(
         assert old not in pinned and new not in pinned, old
         assert not (ROOT / old).exists() and importlib.util.find_spec(old[:-3]) is None, old
         assert Path(importlib.util.find_spec(new[:-3].replace("/", ".")).origin) == ROOT / new
-        for node in ast.walk(ast.parse((ROOT / new).read_text(encoding="utf-8"))):
+        for node in ast.walk(ast.parse((ROOT / new).read_text(encoding="utf-8-sig"))):
             names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
                 [node.module] if isinstance(node, ast.ImportFrom) and node.module and not node.level else []
             assert not root_names.intersection(n.split(".")[0] for n in names), (new, names)
@@ -513,3 +513,29 @@ def test_layout_source_transition_binding_runs_in_structural_ci():
     identity = layout_transition_identity(ROOT)
     assert identity["historical_receipt_adoption"] is False
     assert all(len(set(row.values())) == 3 for row in identity["sources"].values())
+
+
+def test_layout_migration_20261025_root_interfaces_reexport_one_owner():
+    """Root interfaces kept for frozen importers hold no implementation and export the owner's objects."""
+    import subprocess
+    import sys
+    for old, row in W4.get("root_interfaces", {}).items():
+        owner = row["owner"]
+        module = owner[:-3].replace("/", ".")
+        tree = ast.parse((ROOT / old).read_text(encoding="utf-8-sig"))
+        body = [n for n in tree.body if not (isinstance(n, ast.Expr) and isinstance(n.value, ast.Constant))]
+        assert len(body) == 1 and isinstance(body[0], ast.ImportFrom) and body[0].module == module, old
+        assert old in LAYOUT["grandfathered_root_python"] and old not in LAYOUT["relocations"], old
+        owner_tree = ast.parse((ROOT / owner).read_text(encoding="utf-8-sig"))
+        for node in ast.walk(owner_tree):
+            names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
+                [node.module] if isinstance(node, ast.ImportFrom) and node.module and not node.level else []
+            assert not {p.stem for p in ROOT.glob("*.py")}.intersection(n.split(".")[0] for n in names), (owner, names)
+        defined = sorted(n.name for n in owner_tree.body if isinstance(n, (ast.FunctionDef, ast.ClassDef)))
+        assert defined, owner
+        probe = (f"import {old[:-3]} as root, {module} as owner\n"
+                 "shared = [k for k in vars(owner) if not (k.startswith('__') and k.endswith('__')) and k != 'annotations']\n"
+                 "assert all(getattr(root, k) is getattr(owner, k) for k in shared), 'object identity'\n"
+                 "assert set(shared) <= set(vars(root)), 'missing export'\n"
+                 f"assert all(getattr(owner, k).__module__ == '{old[:-3]}' for k in {defined!r}), 'historical module name'\n")
+        subprocess.run([sys.executable, "-c", probe], cwd=ROOT, check=True, capture_output=True)

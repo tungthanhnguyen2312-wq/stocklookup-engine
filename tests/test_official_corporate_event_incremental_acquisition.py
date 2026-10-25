@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-import hnx_enumerable_universe_kllh_event_disclosure_scaleout as hnx_module
+import stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout as hnx_module
 import official_corporate_event_incremental_acquisition as incremental
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -46,7 +46,7 @@ from typing import Any
 
 import pandas as pd
 
-from dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 
 SCHEMA_VERSION = "1.0.0"
 PROVIDER = "DNSE"

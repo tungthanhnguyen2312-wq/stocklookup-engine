@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from dnse_instrument_universe import BOND, DERIVATIVE, ETF, UNKNOWN_SECURITY_GROUP, WARRANT
+from stocklookup_core.evidence.dnse_instrument_universe import BOND, DERIVATIVE, ETF, UNKNOWN_SECURITY_GROUP, WARRANT
 
 INDEX = "INDEX"
 

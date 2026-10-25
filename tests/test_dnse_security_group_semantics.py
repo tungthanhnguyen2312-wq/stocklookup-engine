@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-import dnse_security_group_semantics as semantics
+import stocklookup_core.evidence.dnse_security_group_semantics as semantics
 
 
 def record(*, raw_security_group_id, name, instrument_class="UNKNOWN_SECURITY_GROUP", **overrides):

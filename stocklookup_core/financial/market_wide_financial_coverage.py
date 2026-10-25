@@ -50,7 +50,7 @@ from stocklookup_core.financial.financial_entity_applicability import (
 )
 from stocklookup_core.financial.raw_financial_observations import STATEMENT_FAMILIES, sha256_file
 from stocklookup_core.financial.raw_financial_observations import load_state, read_shard, shard_path
-from statement_taxonomy_sidecar import load_sidecar, taxonomy_index
+from stocklookup_core.financial.statement_taxonomy_sidecar import load_sidecar, taxonomy_index
 
 COVERAGE_SCHEMA_VERSION = "1.0.0"
 COVERAGE_FILENAME = "coverage_report.json"

@@ -46,8 +46,8 @@ import math
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from dnse_access import BASE_URL, auth_headers, safe_error_code
-from dnse_market_data import MARKET_DATA_ENDPOINTS, DnseProbeError, resolve_endpoint
+from stocklookup_core.acquisition.dnse_access import BASE_URL, auth_headers, safe_error_code
+from stocklookup_core.acquisition.dnse_market_data import MARKET_DATA_ENDPOINTS, DnseProbeError, resolve_endpoint
 
 PROVIDER = "DNSE"
 PROVIDER_INTERFACE_VERSION = "dnse_openapi_rest_unversioned_2026"

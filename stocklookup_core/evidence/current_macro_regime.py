@@ -12,7 +12,7 @@ from typing import Any, Mapping
 from urllib.request import Request, urlopen
 
 from stocklookup_core.evidence.field_identity import stable_id
-from freshness_history import freshness_envelope, parse_timestamp
+from stocklookup_core.evidence.freshness_history import freshness_envelope, parse_timestamp
 
 CONTRACT_VERSION = "current_macro_regime/v1"
 RULE_VERSION = "macro_axes_rules/v1"

@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT))
 from dnse_access import BASE_URL, auth_headers, credentials_for_request
 from stocklookup_core.evidence.dnse_fhsc_market_composition_scaleout import DNSE_TRADED_VALUE_COMPARATOR_UNAVAILABLE, content_identity, reconcile_scaleout, value_matrix
 from stocklookup_core.evidence.dnse_fhsc_volume_basis import parse_dnse_ohlc_volume_history, parse_fhsc_trading_history
-from dnse_market_data import resolve_endpoint
+from stocklookup_core.acquisition.dnse_market_data import resolve_endpoint
 from dnse_secrets_env import ensure_credentials_loaded
 from stocklookup_core.evidence.fhsc_retained_live_reconciliation import TIER1_HEADER_NAME, load_finhay_api_key
 

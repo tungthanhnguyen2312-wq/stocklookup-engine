@@ -4,7 +4,7 @@ never be confused with current_macro_regime/v1 (no regime classification, no ret
 provider payload, distinct contract_version) and must never call a network."""
 from __future__ import annotations
 
-import macro_presentation_context as mpc
+import stocklookup_core.research.macro_presentation_context as mpc
 
 
 def _row(key, *, source="FRED", frequency="daily", period="2026-09-11", value=1.23):
