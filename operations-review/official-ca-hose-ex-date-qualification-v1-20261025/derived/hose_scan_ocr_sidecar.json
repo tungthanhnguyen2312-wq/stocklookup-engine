@@ -1,0 +1,1679 @@
+{
+ "documents": {
+  "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+    "document_sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "a4124d97720f32e50006261e8c839a773e8998396a80e19a97ba1e2b8b5c46ab",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+      "document_sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+      "materialization_id": "e9a25b8f7221e4b120fa615a467148e3f7e94d9ecfc7e00714f8692dcc2232be",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "2530d596a8979fa9c30f62f0e8284704726e9d476b720cbb2099029d2dbaafb9",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HỒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố:44²4/TB—SGDHCM Thành phố Hồ Chí Minh, ngày 14 tháng 05 năm ²0²6\r\nTHÔNG BÁO\r\nVề ngày đăng ký cuối cùng\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký cuối\r\n| cùng như sau:\r\n| — Tổ chức niêm yết : Công ty cổ phần Tập đºàn Hòa Phát\r\n— Mã chứng khºán : HPG\r\n— Lºại chứng khºán : Cổ phiếu phổ thông\r\n— Mệnh giá : 10.000 đồng (Mười nghìn đồng)\r\n— Ngày giaº dịch không hưởng quyền: ²5/05/²0²6\r\n— Ngày đăng ký cuối cùng :²6/05/²0²6\r\n— Lý dº và mục đích: Trả cổ tức năm ²0²5 bằng cổ phiếu\r\n— Tỷ lệ thực hiện: 10% (Người sở hữu 100 cổ phiếu được nhận 10 cổ phiếu mới)\r\n— Số lượng cổ phiếu dự kiến phát hành: 767.546.585 cổ phiếu\r\n— Phương án xử lý cổ phiếu lẻ (nếu có): Số lượng cổ phiếu phát hành trả cổ tức chº\r\nmỗi cổ đông sẽ được làm tròn đến hàng đơn vị theº nguyên tắc làm tròn xuống. Số cổ\r\nphiếu lẻ phần thập phân (nếu có) sẽ bị hủy bỏ.\r\nVí dụ: Cổ đông sở hữu 178 cổ Àpl1z\"e?'u, số cổ M1ỉếu trả cổ tức được nhận tạm tính là\r\n178 x 10% = 17,8 cổ phiếu. Số cổ phiếu cố đông sẽ thực nhận là 17 cổ phiếu; 0,8 cổ\r\nphiếu lẻ sẽ bị hủy bỏ.\r\n— Địa điểm thực hiện:\r\n— + Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng cổ\r\nphiếu tại các Thành viên lưu ký nơi mở tài khºản lưu ký.\r\n+ Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng\r\ncổ phiếu tại Văn phòng Công ty cổ phần Tập đºàn Hòa Phát, địa chỉ: 66 Nguyễn Du\r\nphường Cửa Nam, thành phố Hà Nội vàº các ngày làm việc trºng tuần. Khi đến nhận\r\n| cổ tức, cổ đông xuất trình căn cước công dân/căn cước và Giấy chứng nhận sở hữu cổ\r\nủ1euỀ/\r\nNơi nhận: R R _Àỉ`\\\\ M ựÓC R R\r\n— TCNo3(; GIAÁM ĐC ũfflUóĩc J ) LY NIEM YÉET\r\n— TGĐ (để b/c) â ỦỂỄHKỄHOễN `)\r\n— HTGD, GS, TTTT:; \\ Ổ cuíu '(J\r\n— Lưu: VT, NY (7) y / 8 |\r\náá 4— ?P. nộ C> `\r\nNguyễn Nam Anh\r\nHOSE_BM—7.33/1—BH0²—07/²0²²\r\n—\r\nEiiiiiiiiiiiiiiiiiiiiiiiiiiissssissssssccccccccccnnnnnnnnnnnnnºsnnnnnnnnnsnnsssssssssssssssssssssssssssssnsssnsssnssanuaaaaaaaauuaaauuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuumuammmmmaiis\r\n",
+      "text_sha256": "2530d596a8979fa9c30f62f0e8284704726e9d476b720cbb2099029d2dbaafb9"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "HPG"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+    "document_sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "f6ed74c76c513fdddc30c9a63ae51f2bcbdfffcb5cec475717b3eaf47959099e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "cbef139c70de06419fc8d45b80c5de02b36b574229d5ccbe6efc687db9209e58",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+      "document_sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+      "materialization_id": "fb59da3c0fa33ac95414a0bdbf1693b8902f23d4d28255aab6a15648cc389ec0",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8a018e63515eb82464540e368ab6634c441c814e80af181a5cdfab2c86a36c01",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CONG HOA XA HOI CHU NGHĨA VIET NAM\r\nTHANH PHO HO CHi MINH Doc lap — Tw do — Hanh phic\r\nS6:4424/TB-SGDHCM Thanh pho Hồ Chi Minh, ngay 14 thang 05 năm 2026\r\nTHONG BAO\r\nVề ngày đăng ký cuối cùng\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký cuối\r\n| cùng như sau:\r\n| — Tổ chức niêm yét : Cong ty cé phan Tap đºàn Hoa Phat\r\n— Ma ching khoan : HPG\r\n— Loai chứng khoan : Cổ phiéu phé thong\r\n- Ménh gia : 10.000 déng (Mudi nghin déng)\r\n— Ngay giao dich khéng huéng quyén: 25/05/2026\r\n— Ngay dang ky cudi cing : 26/05/2026\r\n— Ly do va muc dich: Tra c6 tire nim 2025 bang cé phiéu\r\n— Ty lệ thuc hién: 10% (Người sé hữu 100 cé phiéu được nhan 10 cổ phiéu mdi)\r\n— Số luong cổ phiéu dy kién phat hanh: 767.546.585 cổ phiéu\r\n— Phuong án xử ly cổ phiéu lẻ (néu cd): Số lượng cổ phiéu phat hanh tra cổ tire cho\r\nmoi cổ dong sé được lam tron dén hang don vi theo nguyén tac lam tron xudng. Số cổ\r\nphiéu lẻ phan thap phan (néu có) sé bi hiy bo.\r\nVi du: Cổ dong so hitu 178 cổ phiéu, số cổ phiéu tra cổ tức duoc nhận tam tinh la\r\n178 x 10% = 17,8 cổ phiéu. S6 cổ phiéu cé dong sé the nhận la 17 cổ phiéu; 0,8 cổ\r\nphiéu lé sé bi hủy bo.\r\n— Dia diém thực hién:\r\n— + Doi với chứng khoan lưu ky: Người sé hữu lam thi tục nhận cổ tire bang cổ\r\nphiếu tại các Thành viên lưu ký nơi mở tài khºản lưu ký.\r\n+ Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng\r\ncổ phiéu tai Van phòng Công ty cổ phan Tap doan Hoa Phat, dia chi: 66 Nguyễn Du\r\nphudng Cita Nam, thanh phé Ha Nội vao các ngay lam viéc trong tuan. Khi dén nhan\r\n| cổ tức, cổ đông xuất trình căn cước công dân/căn cước va Giấy chứng nhận sé hữu cổ\r\nủ1euỀ/\r\nNơi nhận: R R _Àỉ`\\\\ M BOC R R\r\n— TCNY: GIAM DOC PHONG ay. ) LY NIEM YET\r\n— TGĐ (dé b/c) â ỦfflỄHỆH°ầN\r\n— HTGD, GS, TTT; \\ ud cuíu '(J\r\n— Luu: VT, NY (7) % / 8 |\r\nae <2 TP HO C>\r\nNguyén Nam Anh\r\nHOSE_BM-7.33/1-BH02-07/2022\r\n—\r\nEiiiiiiiiiiiiiiiiiiiiiiiiiiissssissssssccccccccccnnnnnnnnnnnnnºsnnnnnnnnnsnnsssssssssssssssssssssssssssssnsssnsssnssanuaaaaaaaauuaaauuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuumuammmmmaiis\r\n",
+      "text_sha256": "8a018e63515eb82464540e368ab6634c441c814e80af181a5cdfab2c86a36c01"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "HPG"
+   }
+  },
+  "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+    "document_sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "3c7608eca9d2dcbbe43ecc6f883d8cda7dabbafe7e594f7bbcda664810aeb956",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+      "document_sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+      "materialization_id": "6d09cd4bd7bbe0b61aa76b4e7fa967615d338dbe195ea2b5c1f7dc08cbea5233",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "b04cad0b795185e6caf27d8e455084e4cc82d9fee1b786371507764dee8e059e",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHOÒ HỔ CHỈ MINH Độc lập — Tự dº — Hạnh phúc\r\nsố:14715/TB—SGDHCM Thành phố Hồ Chí Minh, ngày ²5 tháng 8 năm ²0²6\r\nTHÔNG BÁO\r\nVề việc giaº dịch chứng khºán thay đổi đăng ký niêm yết\r\n| Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về việc giaº dịch chứng\r\nkhºán thay đổi đăng ký niêm yết như sau:\r\n{ — Tổ chức niêm yết: Tổng CTCP Khºan và Dịch vụ Khºan Dầu khí |\r\n— Trụ sở chính: Lầu 4 Tòa nhà Sailing, 111A Pasteur, Phường Sài Gòn, TP. Hồ Chí Minh |\r\n— Điện thºại: 0²83 914²01² Fax: 0²83 914²0²1\r\nĐược thay đổi đăng ký niêm yết (theº Quyết định số 669/QĐ—SGDHCM ngày\r\n| ²0/8/²0²6) tại Sở Giaº dịch Chứng khºán TP. Hồ Chí Minh với nội dung như sau:\r\n— Lºại chứng khºán : Cổ phiếu phổ thông\r\n— Mã chứng khºán : PVD _\r\n— Mệnh giá : 10.000 đồng/cổ phiếu\r\n— Số lượng chứng khºán thay đổi niêm yết: 371.86².185 cổ phiếu\r\n— Lý dº thay đổi niêm yết: Phát hành cổ phiếu từ nguồn vốn chủ sở hữu\r\n— Số lượng chứng khºán niêm yết sau khi thay đổi niêm yết: 9²8.158.191 cố phiếu\r\n| — Giá trị chứng khºán niêm. yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n9,²81.581.910.000 đồng\r\n— Ngày thay đổi niêm yết có hiệu lực: ²4/8/²0²6\r\n— Ngày giaº dịch của chứng khºán thay đổi niêm yết: 07/9/²0²6 lướ\r\nNơi nhận: TUQ. TỔNG GIÁM ĐÓC ______\r\n— TCNY; PHÓ GIÁM ĐÓ€PHÒNG QUẢN LÝ NIỀM YÉT\r\nb ỀỄỄ GS, TTTT; 'l Ê›`\r\n| — Tưu: VT,N¥ mv).ịgg/ ẳằ'ậỉfiịỉ' ệẫ\\\r\n~>—/—\r\nT*Ngủyến Liên Sơn\r\nHOSE_BM.7.34/—BH03—07/²0²6 0000 /// ²²00000000000000000|\r\na |f?\r\n",
+      "text_sha256": "b04cad0b795185e6caf27d8e455084e4cc82d9fee1b786371507764dee8e059e"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "PVD"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+    "document_sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+      "document_sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+      "materialization_id": "2eadbecbba6f55632e6c02f16a7a42279d3e651376cda7e30da73670a960ff60",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "4a0872c2d9f2910bf0c5f5c19ca41295152e1d51476c653ef8fe85078b84ad04",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CONG HOA XA HOI CHU NGHĨA VIET NAM\r\nTHANH PHO HO CHI MINH Doc lap — Tw do — Hanh phic\r\nS6:4445/TB-SGDHCM Thanh phé H6 Chi Minh, ngay 25 tháng 8 năm 2026\r\nTHONG BAO\r\nVề viée giao dich ching khoan thay d6i dang ky niém yét\r\n| Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về việc giaº dịch chứng\r\nkhºán thay đổi dang ky niém yét nhu sau:\r\n{ — Tổ chức niém yét: Tong CTCP Khoan va Dich vu Khoan Dau khi |\r\n— Truso chinh: Lau 4 Toa nha Sailing, 111A Pasteur, Phuong Sai Gon, TP. H6 Chi Minh |\r\n— Dién thoai: 0283 9142012 Fax: 0283 9142021\r\nĐược thay déi dang ky niém yét (theo Quyét dinh số 669/QD-SGDHCM ngay\r\n| 20/8/2026) tai Sở Giao dich Chtmg khoan TP. Hồ Chi Minh voi nội dung nhu sau:\r\n— Loai chứng khoan : Cổ phiéu phé thong\r\n— Ma chimg khoan : PVD _\r\n— Mệnh giá : 10.000 đồng/cổ phiếu\r\n— Số lượng chứng khºán thay đổi niêm yét: 371.862.185 cổ phiéu\r\n— Ly do thay đổi niém yét: Phat hanh cổ phiếu tir ngu6n von chu sé hitu\r\n— $6 lượng ching khoan niém yét sau khi thay déi niém yét: 928.158.191 cé phiéu\r\n— Gid tri chứng khodn niém. yét sau khi thay déi niém yét (theo ménh gid):\r\n9,281.581.910.000 dong\r\n— Ngay thay déi niém yét có hiéu luc: 24/8/2026\r\n— Ngay giao dich của ching khoan thay déi niém yét: 07/9/2026 i-\r\nNoi nhận: TUQ.TONGGIAMBOC ______\r\n- TCNY; PHO GIAM ĐÓ€PHÒNG QUAN LY NIEM YET\r\n; en GS, TTTT; Sa Na\r\n| — Luu: VT, NY (07). Le 2)\r\nhy\r\n~TeNeuyén Lién Son\r\nHOSE_BM.7.34/—BH03—07/²0²6 0000 /// ²²00000000000000000|\r\nap Nl\r\n",
+      "text_sha256": "4a0872c2d9f2910bf0c5f5c19ca41295152e1d51476c653ef8fe85078b84ad04"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "PVD"
+   }
+  },
+  "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+    "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6,
+     "6": 6,
+     "7": 6,
+     "8": 6,
+     "9": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6d439aca13077fc5db1522a31c8429125a7b6ebdf1bc5f0c701878af03240faf",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "2e1a3196a5f2d43bbc3e9f53010029b1afb3575dfe8b94638a60b6563fa827fd",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "a07083874afe2e06a347b53f1385b978cd38e3d540c84eb5ac49275447344f19",
+      "text": "TẬP ĐOÀN CÔNG NGHIỆP — NĂNG LƯỢNG CỤNG fIc)15A` XA HỌI CHUNGJXHA ỦẸT NAM\r\n— QUỐC GIAVIỆT NAM Độc lập — Tự dº — Hạnh phúc\r\nPEIRVIETNg — TỔNG CÔNG TY CỎ PHẢN KHOAN ——————————————————===.===——=———\r\nPVBrilling ...VÀ DỊCH vỤKHOAN DẦU KHÍ\r\nTp. Hồ Chí Minh, ngày c $ tháng — năm ²0²6\r\nSố: . ;Ịrg6J / ặ WD ỈÌ`ỔẮể/T\r\n| CÔNG BÓ THÔNG TIN BÁT THƯỜNG\r\nEXTRAORDINARY INFORMATION ĐISCLOSURE\r\nKính gửi: Uy Ban Chứng khºán Nhà Nước / Sở Giaº dịch Chứng khºán\r\nThành phổ Hô Chí Minh\r\nTº: State Securities Cºmmissiºn ºf Vietnam/ Hºchiminh Stºck Exchange\r\n\r\n1. Tên tổ chức: Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu khí (PV Drilling).\r\nName ºf Organizatiºn: Petrºvietnam Drilling & Well Service Cºrpºratiºn (PV Drilling).\r\n\r\n— : Mã chứng khºán/7ïcker: PVD.\r\n\r\n— : Địa chỉ: Lầu 4, tòa nhà Sailīng, 111A Pasteur, Phường Sài Gòn, Tp. Hồ Chí Minh.\r\nAddress: 4 Flººr, Sailing Tºwer, 1114 Pasteur Street, Sai Gºn Ward, Hº Chi Minh City.\r\n\r\n— : Điện thºại liên hệ/7e/: (0²8) 3914 ²01² Fax: (0²8) 3914 ²0²1\r\n\r\n— E—mail: IR@pvdrilling.cºm.vn\r\n\r\n². Nội dung thông tin công bố/ Cºntents ºf disclºsure:\r\n\r\n— — Ngày ²7/7/²0²6 Hội đồng quản trị PV Drilling đã ban hành Quyết định số 05/07/²0²6/QĐ—\r\nHĐQT về việc Thông qua Báº cáº kết quả phát hành cổ phiếu để tăng vốn cổ phần từ\r\nnguồn vốn chủ sở hữu.\r\n\r\nOn ²7 July ²0²6, PV Drilling`s Bºard ºf Directºrs issued Decisiºn Nº. 05/07/²0²6/QD—\r\nIHLDỌT ºn apprºval ºf the Repºrt ºn the results ºf the share issuance tº increase share\r\ncapital frºm equity resºurces.\r\n\r\n3. Thông tin này đã đượ<I: công bố trên trang thông tin điện tử của công ty vàº ngày ²8/7/²0²6\r\ntại đường dẫn http://www.pvdrilling.cºm.vn/quan—he—cº—dºng/This infºrmatiºn was\r\npublished ºn the cºmpany`s website ºn ²8 July ²0²6, as in the  link\r\nhỏttps:/Zwww.pvdrilling.cºm.vn/en—US/investºr—relatiºns .\r\n\r\nChúng tôi xin cam kết các thông tin công bố trên đây là đúng sự thật và hºàn tºàn chịu trách\r\n\r\nnhiệm trước pháp luật về nội dung các thông tin đã công bố.\r\n\r\nWe hereby certify that the infºrmatiºn prºvided is true and cºrrect and we bear the full\r\n\r\nrespºnsibility tº the law.\r\n\r\nNơi nhận/Recipients: NGƯỜI ĐẠI ». G BÓ THÔNG TIN\r\n— Như trên/4s abºve oA»Ỉ PERSON AUTHORIZEUD FTOISCLOSE INFORMATION\r\n— Lưu/Save VT, B.TCKT VICE:PRÈSHD)EFNT\r\nsvICRR\r\nC « w† ww\r\ntở fflHGJY 00 PHAN\r\n[BỤM t 0I(W\\I ft '\r\n*\\ _ DẦu kửi ;\r\nẠ`/_; / xh\r\n#Ờ Cµt vV\r\nNH RANG\r\nJ/\r\n",
+      "text_sha256": "a07083874afe2e06a347b53f1385b978cd38e3d540c84eb5ac49275447344f19"
+     },
+     {
+      "citation_id": "0a3aee10263df6bce88019d4786e9b5339f097b20cf262bed13f68cd7b83fc63",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "c903fc66dc9e431e1b1a099ed52b256c04a4b843294e56c28e7ad1c2978c133a",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "0e56893a76400cde5f9b82991a46f7a82eba69dbd07164c05d1c88456145e728",
+      "text": "*__. TỔNG CÔNG TY CÔ PHẦN KHOAN — CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nVA DỊCH VỤ KHOAN DẦU KHÌ Độc lập — Tự dº — Hạnh phúc\r\nPETROVIETNAM DRITTING & WELL SOCTAILIST REPUBLIC OF VIETNAM\r\nSERVICE CORPORA TION Independence — Freedºm — Happiness\r\nduiaj:: ¥W€ Tp. Hồ Chí Minh, ngày 47 tháng 07 năm ²0²6\r\nSố/ Nº: 05 /07/²0²6/QĐ—HĐQT Hĩº Chủ Mình Cây, (4—†® July ²0²6\r\nQUYẾÉT ĐỊNH/ ĐDFECISION\r\nV/v: Thông qua Báº cáº kết quả phát hành cố phiếu để tăng vốn cố phần _\r\ntừ nguồn vốn chủ sở hữu\r\nRe: Apprºval ºf the Repºrt ºn the results ºf the share issuance tº increase\r\n...._._share capital frºm equify sºurces\r\n— c _ HỘI ĐỒNG QUẢN TRỊ Ng — ,\r\nTÓNG CÔNG TY CÔ PHÁẢN KHOAN VA DỊCH VỤ KHOAN DẦU KHÍ\r\nTHE BOARD OF DIRECTORS OF\r\nPETROVIETNAM DRILLING & WELL SERVICE CORPORATION †\r\n\r\nCăn cứ Luật Chứng khºán số 54/²019/QH14 ngày ²6/11/²019 và các văn bản sửa\r\nđổi, bổ sung, hướng dẫn thi hành;/ Pwrsuant tº the Law ºn Securities Nº.54/²01 9/QHF14\r\ndated ²6 Nºvember ²019, and ¡ts amendments, supplements, and implementatiºn\r\nguidelines; :\r\n\r\nCăn cứ Luật Dºanh nghiệp số 59/²0²0/QH14 ngày 17/6/²0²0 và các văn bản sửa đổi, Á G%›°\r\nbổ sung, hướng dẫn thi hành;/Pursuant tº the Law ºn Fnterprises Nº.59/²0²0/QHF14 dated (/...\r\n17 June ²0²0, and its amendments, supplements, and impilementatiºn guidelines; æ ffl]ĨNGV\r\n\r\n| Căn cứ Điều lệ Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu khí (PV Drilling) & \\ Di\r\nkị k bị Ì\r\nngày ²9/3/²008 được sửa đối, bổ sung lần thứ Hai Mươi Ba ngày ²1/4/²0²6/ Pursuant tº <¶è\r\nthe Charter ºf PetrºVietnam Drilling & Well Service Cºrpºratiºn (“PV Drilling“), dated\r\n²9 March ²008, as amended and supplemented fºr the Twenty—Third time ºn ²1 April\r\n²0²6; |\r\n\r\nCăn cứ Quy chế nội bộ về quản trị công ty ngày ²7/4/²018 của PV Drilling được sửa\r\n\r\nđổi, bổ sung lần thứ Sáu ngày ²1/4/²0²6;/ Pursuant tº the Internal Regulatiºns ºn\r\n. — Cºrpºrate Gºvernance ºf PV Drilling dated ²7 April ²018, as amended and supplemented\r\n— fºr the Sixth time ºn ²1 April ²0²6; Î `\r\n\r\nCăn cứ Quy chế hºạt động của Hội đồng quản trị PV Drilling ngày 04/8/²0²1 được\r\nsửa đổi, bổ sung lần thứ Ba ngày ²1/4/²0²6;/ Pursuant tº the Operatiºnal Regulatiºns ºf\r\nthe Bºard ºf Directºrs ºf PV Drilling, dated 04 August ²0²1, as amended and\r\n\r\nsupplemented fºr the Third time ºn ²1 April ²0²6;\r\nCăn cứ Nghị quyết số 07/²0²6/NQ—ĐHĐCĐ ngày ²1/4/²0²6 của Đại hội đồng cổ\r\nđông PV Drilling về Phương án phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ\r\n| sở hữu;/ Pursuant tº the Resºlutiºn Nº. 07/²0²6/NQ—ĐHĐCĐ dated ²1 April ²0²6 ºf the\r\n. 1\r\nNội đung tiếng Anh chỉ sử dụng chº mục đích thông tin. Trºng trường hợp có sự mâu thuẫn giữa nội dung tiếng Việt\r\nvà nội dung tiếng Anh, nội dung tiếng Việt sẽ được ưu tiên áp dụng/ The English versiºn is fºr infºrmatiºnal purpºses §\r\nºnly. In case ºf any discrepancies between the Vietnamese and English versiºn, the Vietnamese versiºn shall Drevail.\r\n",
+      "text_sha256": "0e56893a76400cde5f9b82991a46f7a82eba69dbd07164c05d1c88456145e728"
+     },
+     {
+      "citation_id": "546b0b7749225b640c4143a67f8e28e49916a4a06596e4829b87a4f8db219911",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "9128bbc8e7d2152dab9008fc67a91d892cbd121c73f65835d379efbae2f97a8b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8d01421bf304cd8ee54b81716037feda722541d34595f3d994e5dbce1cc07a08",
+      "text": "` General Meeting ºf Sharehºlders ºf PV Drilling regarding the share issuance plan tº\r\nincrease share capital frºm equitfy sºurees;\r\nCăn cứ Nghị quyết số 0²/06/²0²6/NQ—HĐQT ngày 0²/6/²0²6 của Hội đồng quản trị\r\nPV Drilling về việc Triển khai phương án phát hành cổ phiếu để tăng vốn cổ phần từ nguồn\r\nvốn chủ sở hữu;/ Pursuant tº the Resºlutiºn Nº. 0²/06/²0²6/NQ—HĐỌT dated 0² June\r\n²0²6 ºf the Bºard ºf Directºrs ºf PV Drilling regarding the implementatiºn ºf the share\r\nissuance plan tº increase share capital frºm equity sºurc@s;\r\nXét đề nghị của Tổng giám đốc PV Drilling tại Tờ trình số 776/PVD—TCKT ngày\r\n²7/07/²0²6 về việc Thông qua Báº cáº kết quả đợt phát hành cổ phiếu để tăng vốn cổ phần\r\ntừ nguồn vốn chủ sở hữu;/ Cºnsidering the prºpºsal ºf the President & Chief Executive\r\nOfficer ºf PV Drilling in the Prºpºsal Nº. 776/PVD—TCKT dated ²7 July ²0²6, regarding |\r\nthe apprºval ºf the Repºrt ºn the results ºf the share issuance plan tº increase share\r\ncapital frºm equity sºurces,\r\nQUYÉT ĐỊNH/ DFECIDES:\r\nĐiều 1. Thông qua Báº cáº kết quả đợt phát hành cổ phiếu để tăng vốn cổ phần từ\r\nnguồn vốn chủ sở hữu theº Tờ trình số 776/PVD—TCKT ngày ²7/07/²0²6 của Tổng giám\r\nđốc với những nội dung chính như saủ:/ Arficle 1. Apprºval ºf the Repºrt ºn the results\r\nºf the share issuancẻ tº increase share:capital frºm equity sºurces as set ºut in Prºpºsal\r\nNº. 776%/PVD—TCKT dated ²7 July ²0²6 submitted by the President & Chief Executive\r\nOfficer, with the prinçipal cºntents as fºllºws: _.\r\n1. Tổng số cổ phiếu trước thời điểm phát hành: 556.²96.006 cổ phiếu, trºng đó: /\r\nTºftal number ºf shares ºutstanding priºr tº the issuance: 556,²96,006 shares, ºf which: Ề\r\n— Sô lượng cố phiếu đang lưu hành: 555.880.006 cố phiếu./ Number ºf ºutstanding ÔNG\r\nshares:555,880,006 shares. ¥ ců PH\r\nR $ F : £ )(l t\\ Ý\r\n— Số lượng cô phiếu quỹ: 416.000 cố phiếu./ Number ºf treasury shares: 416,000 J KHÍ\r\nsares. —ỏ\r\n². Tỷ lệ thực hiện quyền: 66,9% (tương ứng tỷ lệ 100:66,9, nghĩa là cô đông đang sở\r\nhữu 100 cổ phiếu sẽ được nhận 66,9 cổ phiếu mới)./ Exercise ratiº: 66. 9% (equivalent tº\r\na ratiº ºf 100:66.9, meaning that a sharehºlder ºwning 100 shares will receive an\r\nadditiºnal 66. 9 shares). ¡\r\ně 3. Ngày kết thúc đợt phát hành: 15/7/²0²6./ Clºsing date ºf the share issuance: 15 ln\r\n| July ²0²6.\r\n4. Ngày dự kiến chuyển giaº cổ phiếu: tháng 8 — tháng 9/²0²6./ Expected share\r\ndelivery date:August — September ²0²6.\r\n| 5. Tổng số cổ phiếu đã phân phối: 371.883.63².03 cổ phiếu, trºng đó:/ Number ºf\r\ndistributed shares:371,883,63².03 shares, ºf which: | |\r\n` 3\r\nNội dung tiếng Anh chỉ sử dụng chº mục đích thông tin. Trºng trường hợp có sự mâu thuẫn giữa nội dung tiếng Việt\r\nvà nội dung tiếng Anh, nội dung tiếng Việt sẽ được ưu tiên áp dụng/ The English versiºn is fºr infºrmatiºnal purpºses\r\nºnly. In case f any discrepancies between the Vietnamese and English versiºn, the Vietnameseyersion shall prevail. `\r\n",
+      "text_sha256": "8d01421bf304cd8ee54b81716037feda722541d34595f3d994e5dbce1cc07a08"
+     },
+     {
+      "citation_id": "66ebddc717307783e5778f6e6a576520e864c590f6f32a3a79b9be0ccb9b5532",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "b24653d5d4339b8c5e0b86eac5c4b5f1b76071a8abc7fd8c4daf471ed9c3e723",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "3ff0a80fd6b67e4d224fb7c1470f7128d2b50c169bd3cf946ada8dd1a8f72e5b",
+      "text": "ln — Số cổ phiếu thực tế phân phối: 371.86².185 cổ phiếu chº 46.955 cổ đông;/ Acrual\r\nnumber ºf shares distributed: 371,86²,185 shares, allºcated tº 46,955\r\nsharehºlders.\r\n— : Số cổ phiếu xử lý phần lẻ cổ phần, cổ phiếu lẻ: ²1.447,03 cổ phiếu. Số cổ phiếu\r\nnày bị hủy bỏ theº phương án phát hành đã được Đại hội đồng cổ đông thông qua./\r\nNumber ºf shares resulting frºm the treatment ºf fractiºnal share entitlements:\r\n²1,447.03 shares. Al ºf these shares were cancelled in accºrdance with the\r\n† apprºved share issuance plan apprºved by the General Meeting ºf Sharehºlders.\r\n6. Tổng số cổ phiếu sau đợt phát hành (ngày 15/7/²0²6): 9²8.158.191 cổ phiếu, trºng\r\nđó:/ Tºtal ºf shares after the issuance (as ºf 15 July ²0²6): 9²8,158,191 shares, ºf which:\r\n— : Số lượng cổ phiếu đang lưu hành: 9²7.74².191 cổ phiếu./ Number ºf ºutstanding\r\nshares: 9²7,74², 191 shares.\r\n— : Số lượng cổ phiếu quỹ: 416.000 cổ phiếu./ Number ºf treasury shares: 416,000\r\nshares.\r\n7. Vốn điều lệ sau đợt phát hành (ngày 15/7/²0²6): 9.²81.581.910.000 đồng./ Charter\r\ncapital after the issuance (as ºf 15 July ²0²6): VND 9,²81,581,910,000. .\r\n— Điều ². Giaº Tổng giám đốc triển khai thực hiện các thủ tục và các công việc có liên\r\nquan đến đợt phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu, đảm bảº\r\ntuân thủ quy định của pháp luật và Điều lệ PV Drillīing./ Article ². Tº assign the President\r\n& Chief Executive Officer tº carry ºut all fºllºw—up prºcedures and ºther tasks relating tº the\r\nshare issuance tº increase share capital frºm equity sºurces, ensuring cºmpliance with the\r\napplicable laws and the Charter ºf PV Drilling. `\r\nĐiều 3. Quyết định này có hiệu lực kể từ ngày ký. Thành viên Hội đồng quản trị, Tổng\r\ngiám đốc và Trưởng các Ban/Văn phòng có liên quan của PV Drilling chịu trách nhiệm thi _.\r\nhành Quyết định này./ Article 3. This Decisiºn shall take effect frºm its signing date. The Ồ\\\r\nmembers ºf the Bºard ºf Directºrs, the President & Chief Executive Officer, the Heads ºf “¶ ;°\r\nrelevant Divisiºns/Offices ºf PV Driling shall take full respºnsibility fºr the Ä\r\nimplementatiºn ºf this Decisiºn./ 4\r\nNơi nhận/ Recipients: TM. HỘỌI ĐỒNG QUẢN TRỊ\r\n— ỊỀ3Ỉ1}jI'Ễ]Ễ)Cầ1——/ cĩlỂ²Ol)(jJc\"1C°²`Jfễ²ễf²(r 5 ®'c°ij’)ẽ ON BEHALF OF THE BOARD OF DIRECTORS Î\r\n= resident ²—CODW); @² c Ú—TỊC HAIRMA\r\n— PTGĐ/ Vice Presidents: Đ.D.Rạng (e— f> 9 ụC N h Î\r\nCODy); @ — & |\r\n— Ban kiểm sºát/ BOS (²—cºpy); ậCỎNG Ụ3 ỀZIỂP tà\r\n— Ban/Divisiºn: TCKT (đề CBTT); ® [HMA \\ 0IH \\\\ µ “|\r\nỳgỊ…/Archzve. VT, TH( 5). \\ _DẦU KHÍw &: | —\r\n»—____—<+/\r\n/ mễ Tºàn\r\n3\r\nNội dung tiếng Anh chỉ sử dụng chº mục đích thông tin. Trºng trường hợp có sự mâu thuẫn giữa nội dung tiếng Việt\r\nvà nội dung tiếng Anh, nội dung tiếng Việt sẽ được ưu tiên áp dụng/ The English versiºn is fºr infºrmatiºnal purpºses\r\nºnly. In case ºf any discrepancies between the Vietnamese and English versiºn, the Vietnamese versiºn shall prevail.\r\n",
+      "text_sha256": "3ff0a80fd6b67e4d224fb7c1470f7128d2b50c169bd3cf946ada8dd1a8f72e5b"
+     },
+     {
+      "citation_id": "0ee272738891e17cceeb83ba5ecc65ae6e9e7311c50e4428667616bbc06d04e2",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "877411557492194761ad850990f39a16d2fcfd2cbb721c88d0b8a1c20bfc9d22",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "2c67b31b19017d5b71f77067d8dba6e4de1ffd514313c6e18bd681ce078017fa",
+      "text": "` TẠP ĐOÀN CÔNG NGHIẸP — NĂNG LƯỢNG CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nQUỐC GIA VIỆT NAM Độc lập — Tự dº — Hạnh phúc\r\nPETRVIETNRIR _ TỎNG CÔNG TY CỎ PHẦN KHOAN\r\nPVßrikling VÀ DỊCH VỤ KHOAN DẦU KHÍ Tp. Hồ Chí Minh, ngày s¦¶. tháng ặ\" . năm ²0²² ß\r\nSố: . Ịf'Jf/g viºwiuessess: ffl/D…TÌKẢ\r\n. BÁO CÁO KÉT QUẢ ĐỢT PHÁT HÀNH CỎ PHIÉU\r\nĐẺ TANG VÒN CÓ PHẢN TỪ NGUỒN VÓN CHỦ SỞ HỮU\r\nREFPORT ON THE RESULTS OF SHARE ISSUANCE TO INCREFASE\r\nCHARTER CAPITAL FROM EQUITY SOURCES\r\nKính gửi/ Respecfully tº: C\r\n— Ủy Ban Chứng khºán Nhà Nước\r\nSfates Securities Cºmmissiºn ºf` Vietnam\r\n— Sở Giaº dịch Chứng khºán Tp. Hồ Chí Minh\r\nHº Chi Minh Stºck Exchange (HOSE)\r\nI. Giới thiệu về Tổ chức phát hành/ Intrºductiºn tº the Issuer\r\n1. Tên tổ chức phát hành: Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu khí\r\nName ºf the issuer: Petrºvietnam Drilling & Well Service Cºrpºratiºn «\r\n(@/\r\n². Tên viết tắt/4bbreviated name: PV Drilling (\r\n3. Địa chỉ trụ sở chính: Lầu 4, tòa nhà Sailing, 111A Pasteur, Phường Sài Gòn,\r\nThành phố Hồ Chí Minh\r\nIFead Office Address: 4² Flººr, Sailing Tºwer, 1114 Pasteur, Saigºn Ward,\r\nFHº Chi Minh City.\r\n4. Điện thºại/Phºne: (0²8) 3914 ²01²\r\nWebsite: www.pvdrilling.cºm.vn\r\n5. Vốn điều lệ: 5.56².960.060.000 đồng\r\nCharter capital: VND 5,56²,960,060,000\r\n6. Mã cổ phiếu/ Ticker symbºl: _ PVD\r\n7. Nơi mở tài khºản thanh tºán:  Công ty cổ phần Chứng khºán Thành phố Hồ Chí Minh\r\n(HSC) Số hiệu tài khºản: 011C368369\r\nSecurities accºunt: Flº Chi Minh City Securities Cºrpºratiºn (HSC)\r\nAccºunt Nº.: 011C368369\r\n8. Giấy chứng nhận đăng ký dºanh nghiệp mã số dºanh nghiệp 030²4951²6 dº Sở Kế\r\nhºạch và Đầu tư TP. HCM cấp lần đầu ngày 15 tháng 0² năm ²006, dº Sở Tài chính TP.\r\nHCM cấp thay đổi lần thứ 18 ngày 16 tháng 09 năm ²0²5.\r\nBusiness Registratiºn Certificate Nº. 030²4951²6 initially issued by the Hº Chi Minh\r\nCity Department ºf Planning and mvestment ºn February 15, ²006, and amended fºr the\r\n18 time by the Hº Chi Minh City Department ºf Finance ºn September 16, ²0²5.\r\nLầu 4, Sailing Tºwer, 111A Pasteur, Phường Sài Gòn, Thành phố Hồ Chí Minh, Việt Nam\r\nTel: +84 — ²8 — 39 14² 01² : : Fax: +84 — ²8 — 39 14² 0²1 / 39 14² 0²² : Web: www.pvdrilling.cºm.vn\r\n",
+      "text_sha256": "2c67b31b19017d5b71f77067d8dba6e4de1ffd514313c6e18bd681ce078017fa"
+     },
+     {
+      "citation_id": "9e1cf368be56a9c62d9959dfc19971c1d6d5832e2c11f050904e29c1c31a7d31",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "51cf28a0cacc50c0110f6f2cd67baed7a6de69f2bc36e88dfdf6de062d9fd89b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 6,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "dfd2964d7a09f1b373224cf355e5ccf441bec08fe383afff0f2c45299431942a",
+      "text": ", — Ngành nghề kinh dºanh chính, Mã ngành:\r\nMain business lines and business cºdes:\r\n+ : Hºạt động dịch vụ hỗ trợ khai thác dầu thô và khí tự nhiên (Mã ngành 0910);\r\nSuppºrt activities fºr petrºleum and natural gas extractiºn (Business Cºde: 0910);\r\n+ : Bán buôn máy móc, thiết bị và phụ tùng máy khác (Mã ngành 4659); —\r\nWhºlesale ºf machinery, equipment and ºther spare parts (Business Cºde: 46509);\r\n+ : Lắp đặt máy móc và thiết bị công nghiệp (Mã ngành 33²0);\r\nTnstallatiºn ºf industrial machinery and equipment (Business Cºde: 33²0); .\r\n+ — Xử lý ô nhiễm và hºạt động quản lý chất thải khác (Mã ngành 3900);\r\nÄRemediatiºn activities and ºther waste management services (Business Cºde:\r\n3900); |\r\n+ : Hºạt động hỗ trợ dịch vụ tài chính chưa được phân vàº đâu (Mã ngành 6619);\r\nOther activities auxiliary tº financial service activities (Business Cºde: 6619);\r\n+ : Hºạt động thiết kế chuyên dụng (Mã ngành 7410);\r\nSpecialized design activities (Business Cºde: 7410);\r\n+ — Cung ứng nguồn nhân lực khác (Mã ngành 78²²);\r\nOther manpºwer supply services (Business Cºde: 78²²);\r\n+ : Hºạt động tư vấn quản lý kinh dºanh và hºạt động tư vấn quản lý khác (Mã ngành\r\n70²0);\r\nManagement cºnsultancy activities(Business Cºde: 70²0);\r\n+ : Sửa chữa, bảº dưỡng máy móc thiết bị (Mã ngành 331²); - Á\r\nRepair ºf machinery (Business Cºde: 331²); /\r\n—++ : Đàº tạº trung cấp (Mã ngành 853²). | — tÂM\r\nJntermediate—level training and educatiºn (Business Cºde: 853²). Ệ\"ì\r\nl hĩ\r\n— : Sản phẩm/dịch vụ chính: ỵ\r\nKey prºducts/ services: | |\r\n+ : Khºan và sửa chữa các giếng khºan dầu khí;\r\nDrilling and wºrkºver services fºr ºil and gas wells;\r\n+ . Cung ứng giàn khºan và giàn khai thác dầu khí;\r\nPrºvisiºn ºf drilling rigs and ºil and gas prºductiºn platfºrms; ` . `\r\n+ — Thử vỉa, bơm trám xi măng, đº địa vật lý giếng khºan và các dịch vụ khác liên quan ,\r\n— đến công tác khºan và khai thác;\r\n` Well testing, cementing, well lºgging, and ºther services related tº drilling and .\r\nprºductiºn ºperatiºns;\r\n+ — Các dịch vụ liên quan đến công tác khºan dầu khí chº các dự án dầu khí ở nước ngºài;\r\nServices related tº ºil and gas drilling ºperatiºns fºr ºverseas prºjects;\r\n| — Dịch vụ chế tạº, lắp đặt, kiểm tra chất lượng, sửa chữa, bảº dưỡng, vận hành giàn\r\nkhºan và giàn khºan khai thác dầu khí; |\r\nFabricatiºn, installatiºn, inspectiºn, repair, maintenance, and ºperatiºn services\r\nJfºr drilling rigs and prºductiºn platfºrms;\r\n+ : Mua bán vật tư, thiết bị khºan và khai thác;\r\nTrading ºf drilling and prºductiºn materials and equipmen;\r\n",
+      "text_sha256": "dfd2964d7a09f1b373224cf355e5ccf441bec08fe383afff0f2c45299431942a"
+     },
+     {
+      "citation_id": "bdb75995ea9c85a87c3140a6aee6a9fdf0c6c9324144d0b44e917f6277f79600",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "923d0b6541f2910346a8e724c36bcc81c43b6fa1d320815321269c217ac9b16f",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 7,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "d5c2a4c2c65be4c4a1e0e1c5804166e4663ee8ae0aac39141d07f86af3afc9b0",
+      "text": ", + : Cung cấp vật tư, các thiết bị dây chuyền công nghiệp (Không thực hiện quyền xuất\r\nkhẩu, quyền nhập khẩu, quyền phân phối đối với các hàng hóa thuộc Danh mục\r\nhàng hóa mà nhà đầu tư nước ngºài, tổ chức kinh tế có vốn đầu tư nước ngºài không\r\nđược thực hiện quyền xuất khẩu, quyền nhập khẩu, quyền phân phối theº quy định của\r\npháp luật);\r\nSupply ºf materials and industrial prºductiºn line equipment (excluding the exercise\r\nºf expºrt rights, impºrt rights, and distributiºn rights with respect tº gººds ºn the Iist\r\nºf gººds fºr which fºreign investºrs and fºreign—invested ecºnºmic ºrganizatiºns are\r\nprºhibited frºm exercising expºrt rights, impºrt rights, and distributiºn rights in\r\naccºrdance with applicable laws);\r\n+ : Lắp đặt các thiết bị dây chuyền công nghiệp;\r\nInstallatiºn ºf industrial prºductiºn line equipmení;\r\n+._._Dịch vụ ứng cứu sự cố dầu tràn và bảº vệ môi trường;\r\nOil spill respºnse and envirºnmental prºtectiºn services;\r\n+ _ Tư vấn đầu tư — quản lý dự án (trừ tư vấn tài chính, kế tºán, pháp luật);\r\nInvestment cºnsultancy and prºject management services (excluding financial,\r\naccºunting, and legal cºnsultancy services);\r\n+ _ Dịch vụ thiết kế giàn khºan và giàn khai thác dầu khí;\r\nDesign services fºr ºil and gas drilling rigs and prºductiºn platfºrms;\r\n+ _ Cung cấp laº động chº các giàn khºan, giàn khai thác dầu khí của Tập đºàn Công\r\nnghiệp — Năng lượng Quốc gia Việt Nam;\r\nPrºvisiºn ºf manpºwer fºr ºil and gas drilling rigs and prºductiºn platfºrms ºf the I G×\r\nVietnam Natiºnal Industry — Energy Grºup; 335\r\n+ _ Cung cấp laº động có chuyên môn khºan dầu khí chº các nhà thầu trºng và ngºài ẵNẳ\r\nnước (Không baº gồm dịch vụ đưa người laº động đi làm việc ở nước ngºài theº Ð h\r\nhợp đồng.) fXLR)\r\nSupply ºf skilled ºil and gas drilling persºnnel tº dºmestic and fºreign cºntractºrs Pruret\r\n(excluding services fºr sending Vienamese wºrkers abrºad under cºntracts); m\r\n+ : Hºạt động tư vấn quản lý (trừ tư vấn tài chính, kế tºán, pháp luật); 3\r\nManagement cºnsultancy services (excluding financial, accºunting, and Iegal\r\ncºnsultancy services);\r\n+ ... Sửa chữa, bảº dưỡng các thiết bị dây chuyền công nghiệp;\r\nRepair and maintenance services fºr industrial prºductiºn line equipment;\r\n+ : Đàº tạº công nhân khºan dầu khí;\r\nTraining ºf ºil and gas drilling wºrkers;\r\n9. . Giấy phép thành lập và hºạt động (fheº quỵ định của pháp luật chuyên ngành): Không\r\nOperating License and Establishment License (under specialized laws): Nºne.\r\nII. Nội dung phương án phát hành/ Apprºved Share Issuance Plan\r\n1.  Tên cổ phiếu: Cổ phiếu Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu khí\r\nName ºf shares: Shares ºf Petrºvietnam Drilling and Well Service Cºrpºratiºn\r\n². Lºại cổ phiếu: cổ phiếu phổ thông\r\n",
+      "text_sha256": "d5c2a4c2c65be4c4a1e0e1c5804166e4663ee8ae0aac39141d07f86af3afc9b0"
+     },
+     {
+      "citation_id": "a7bf244f8d4fad842015c5cab9959d795b2f3504b45440215feb0d40542d9f3c",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "f1d8532666da94af0aac935156e062614539c7174cc2e57f95a0a3de63624e5f",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 8,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "79b923f56a75f709bcc08cfb60314ea3393f8971dc2734d33f9fd58a4792b18d",
+      "text": "¡ Type ºf shares: Ordinary shares\r\n3. Tổng số cổ phiếu trước thời điểm phát hành:\r\nTºtal number ºf shares ºutstanding priºr tº the issuance:\r\n— : Tổng số cổ phiếu đã phát hành: 556.²96.006 cổ phiếu.\r\nTºtal number ºf issued shares: 556,²96,006 shares.\r\n— : Số lượng cổ phiếu đang lưu hành: 555.880.006 cổ phiếu.\r\nNumber ºf ºutstanding shares: 555,880,006 shares.\r\n— : Số lượng cổ phiếu quỹ: 416.000 cổ phiếu.\r\nNumber ºf treasury shares: 416,000 shares.\r\n4.  Số lượng cổ phiếu dự kiến phát hành: 371.883.7²4 cổ phiếu.\r\nNumber ºf shares expected tº be issued: 371 Ẩ83, 7²4 shares.\r\n5. . Tỷ lệ thực hiện quyền: 66,9% (tương ứng tỷ lệ 100:66,9, nghĩa là cổ đông đang sở hữu\r\n100 cổ phiếu sẽ được nhận 66,9 cổ phiếu mới).\r\nFxercise ratiº: 66.9% (equivalent tº a ratiº ºf 100:66.9, meaning that a sharehºlder\r\nºwning 100 shares will receive an additiºnal 66. 9 shares).\r\n6. Nguồn vốn phát hành: từ Quỹ Đầu tư phát triển tại ngày 31/1²/²0²5, theº Báº cáº tài\r\nchính riêng được kiểm tºán năm ²0²5 của PV Drilling.\r\nSºurce ºf issuance capital: the Develºpment Investment Fund as ºf 31 December ²0²5,\r\nas reflected in PV Drilling`s audited separate financial statements fºr the year ended 31\r\nDecember ²0²3.\r\n7. . Phương án xử lý phần lẻ cổ phần, cổ phiếu lẻ: Số lượng cổ phần phát hành thêm phân\r\nphối chº cổ đông hiện hữu sẽ được làm tròn xuống đến hàng đơn vị. Phần lẻ cổ phần phát\r\nsinh (nếu có) sẽ bị hủy bỏ. Q\r\nTreatment ºf fractiºnal shares: The number ºf additiºnal shares allºcated tº existing \\C\r\nsharehºlders shall be rºunded dºwn tº the nearest whºle share. Any fractiºnal shares PHÃN\r\nresulting frºm such allºcatiºn (if any) shall be cancelled and shall nºt be issued. ỊẫHW\r\n$. . Ngày kết thúc đợt phát hành: 15/7/²0²6. ổ*\r\nClºsing date ºf the share issuance: — 15 July ²0²6. tá\r\n9. . Ngày dự kiến chuyển giaº cổ phiếu: tháng 8 — tháng 9/²0²6.\r\nxpected share delivery date: AÁugust — September ²0²6.\r\nIII. Kết quả phát hành cổ phiếu/ Results ºf the Share Issuance\r\n1.  Tổng số cổ phiếu đã phân phối: 371.883.63².03 cổ phiếu, trºng đó:\r\nNumber ºf distributed shares: 371,883,63².03 shares, including:\r\n— : Số cổ phiếu thực tế phân phối: 371.86².185 cổ phiếu chº 46.955 cổ đông;\r\nActual number ºf shares distributed: 371,86²,185 shares, allºcated tº 46,955\r\nsharehºlders.\r\n— : Số cổ phiếu xử lý phần lẻ cổ phần, cổ phiếu lẻ: ²1.447.03 cổ phiếu.\r\nNumber ºf shares resulting frºm the treatment ºf fractiºnal share entitlements:\r\n²1,447.03 shares.\r\n",
+      "text_sha256": "79b923f56a75f709bcc08cfb60314ea3393f8971dc2734d33f9fd58a4792b18d"
+     },
+     {
+      "citation_id": "380a5073c9340ded48e03cda43bff7c48dface804aa06663571bfe8853628ade",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "ff6f6bfeef28630484c89f63d9556ba8ecc69da0469cc32c70a0a1eb679bdede",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 9,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "1d93a84e29eafed4f88912e512e2b3f035bae9bdae8e302aaf78bb0df317c4b0",
+      "text": "c ² W (Theº phương án phát hành đã được Đại hội đồng cổ đông thông qua, tºàn bộ\r\n²1.447.03 cổ phiếu lẻ phát sinh đã được hủy bỏ và không được phát hành).\r\n(In accºrdanece with the apprºved share issuance plan, all ²1,447.03 fractiºnal shares\r\nresulting frºm the rºunding ºf share entitlements were cancelled )\r\n². Tổng số cổ phiếu sau đợt phát hành (ngày 15/7/²0²6): 9²8.158.191 cổ phiếu, trºng đó:\r\nTºtal ºf shares after the issuance (as ºf 15 July ²0²6): shares, including:\r\n— : Số lượng cổ phiếu đang lưu hành:  9²7.74².191 cổ phiếu.\r\nNumber ºf ºutstanding shares: 9²7,74²,191 shares.\r\n— : Số lượng cổ phiếu quỹ: 416.000 cổ phiếu.\r\nNumber ºf treasury shares: 416,000 shares.\r\nIV. Tài liệu gửi kèm: Không có\r\nEnclºsed dºcuments: Nºne\r\nNơi nhận/Recipients: NGƯỜI ĐẠI DIỆN THEO PHÁP LUẬT\r\n— Như trên/ As abºve; « LEGAL REPRESENTATIVE v\r\n— Lưu VT, Ban TCKT/ Cºrpºrate Office PRESIDENT & CEO\r\nand FA Divisiºn.\r\nQ»º²^²5/@@\r\n~ TỔNG —\r\nw [ßûNG TY CŨ PHÂN ấ\r\nM tÌ DỊữf t\\ IQJW/²)\r\n\\ _ DẦU K ÍÍ';l g\r\n›\r\nờ Cmí 6 I\r\nNGUYỄN XUÂN CƯỜNG\r\nl\r\nýe\r\n@ ^ Được ký bởi TÔNG\r\nFl1()Ỉ\\ĨCỂỊ CONG CÔNG TY CÔ PHẢN\r\nKHOAN VẠ DỊCH VỤ\r\n’Ĩ`Y ACj () KHOAN DẦU KHIÍ\r\nPHAN — Ềgẻỉỵắ ký: ²8.07.²0²6\r\nKHOAN VA `\r\nDỊCH VỤ\r\nKHOAN —\r\nDAU KHI\r\n",
+      "text_sha256": "1d93a84e29eafed4f88912e512e2b3f035bae9bdae8e302aaf78bb0df317c4b0"
+     }
+    ],
+    "pages_processed": 9,
+    "schema_version": "1.0.0",
+    "source_page_count": 9,
+    "ticker": "PVD"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+    "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6,
+     "6": 6,
+     "7": 6,
+     "8": 6,
+     "9": 6
+    },
+    "pages": [
+     {
+      "citation_id": "65ea8e88cfc176604429bc161c85c9a13105d24766fb5a00cb02502a334fe818",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "f66ed059522afe9504f3a89496b13e6b347facb535e39a28913a8d95791c5853",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "6b39f63629c33f1fddd3cf0f6845cc84becd43950d312fc18ed00c7ad5797db2",
+      "text": "TAP DOAN CONG NGHIEP — NANG LƯỢNG oe Hs a ES CEE Viet NAM\r\n_ QUỐC GIA VIET NAM Doc lap — Tw do — Hanh phuc\r\nPETROVIETNAM TONG CONG TY CO PHAN KHOAN wanna nnn nnn nnn nena nnn nnn n=\r\nPYDrilling © VA DICH VU KHOAN DAU KHÍ\r\nTp. Hé Chi Minh, ngay c $ thang F nam 2026\r\nSé: . 86, | : PVD -LUCT\r\n| CÔNG BÓ THÔNG TIN BÁT THƯỜNG\r\nEXTRAORDINARY INFORMATION DISCLOSURE\r\nKinh gti: Uy Ban Ching khoan Nha Nước / Sở Giao dich Ching khoan\r\nThanh pho Ho Chi Minh\r\nTo: State Securities Commission of Vietnam/ Hochiminh Stock Exchange\r\n\r\n1. Tén tổ chức: Téng céng ty cổ phần Khoan va Dich vu Khoan Dau khi (PV Drilling).\r\nName of Organization: Petrovietnam Drilling & Well Service Corporation (PV Drilling).\r\n\r\n- Mã ching khoan/Ticker: PVD.\r\n\r\n- Dia chi: Lau 4, toa nha Sailing, 111A Pasteur, Phuong Sai Gon, Tp. H6 Chi Minh.\r\nAddress: 4” Floor, Sailing Tower, 111A Pasteur Street, Sai Gon Ward, Ho Chi Minh City.\r\n\r\n- Dién thoai lién hé/Te/: (028) 3914 2012 Fax: (028) 3914 2021\r\n\r\n- E-mail: IR@pvdrilling.com.vn\r\n\r\n2. Nội dung thong tin cong bé/ Contents of disclosure:\r\n\r\n— Negay 27/7/2026 Hoi déng quan tri PV Drilling da ban hanh Quyét dinh số 05/07/2026/QD-\r\nHDQT về việc Théng qua Bao cáº két qua phat hanh cổ phiéu dé tang vén cé phan tir\r\nnguén von chu sé hitu.\r\n\r\nOn 27 July 2026, PV Drilling’s Board of Directors issued Decision No. 05/07/2026/OD-\r\nHDOQT on approval of the Report on the results of the share issuance to increase share\r\ncapital from equity resources.\r\n\r\n3. Thong tin nay da duoc cong bố trén trang thông tin dién tir của cong ty vao ngay 28/7/2026\r\ntai dudng dan _http:/Avww.pvdrilling.com.vn/quan-he-co-dong/This information was\r\npublished on the company’s website on 28 July 2026, as in the link\r\nhttps://www.pvdrilling.com.vn/en-US/investor-relations .\r\n\r\nChing ti xin cam két cdc théng tin cng bố trén day 1a dung su that va hoan toan chiu trach\r\n\r\nnhiém trước phap luat về noi dung cdc thong tin da céng bé.\r\n\r\nWe hereby certify that the information provided is true and correct and we bear the full\r\n\r\nresponsibility to the law.\r\n\r\nNoi nhén/Recipients: NGUOI DAI DJEN-CON G BO THONG TIN\r\n- Nhu trén/As above on PERSON AUTHOREIZED-“PO DISCLOSE INFORMATION\r\n— LuwSave VT, B.TCKT VICEPRESWENT\r\nWICKHR\r\nC « a? ww\r\ntở CONG TY CO PHAN\r\nKHOAK VA DICH XU KH ()\r\n*\\ pau Afi ;\r\noN / xh\r\n#Ờ CH WS\r\nNH RANG\r\nJ/\r\n",
+      "text_sha256": "6b39f63629c33f1fddd3cf0f6845cc84becd43950d312fc18ed00c7ad5797db2"
+     },
+     {
+      "citation_id": "8b74d1c14457617bae6b00285777e7fa5a9bfab250fe1fac9b200da45029ed0c",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "ee344ceaefc1b0a7542ca1ec99d254e05bba1f081723ac8392b29c47b9a272b7",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "0b0505fb6a033a7c9b1a6bad6eea1026ddc149a68c5681caa278f9e7a7c8dc3b",
+      "text": "\"TONG CONG TY CO PHAN KHOAN — CONG HOA XA HOI CHU NGHIA VIET NAM\r\nVA DICH VU KHOAN DAU KHI Doc lap — Tự dº — Hanh phic\r\nPETROVIETNAM DRILLING & WELL SOCIALIST REPUBLIC OF VIETNAM\r\nSERVICE CORPORATION Independence — Freedom - Happiness\r\nae Tp. Hé Chi Minh, ngay 274 thang 07 nam 2026\r\nS6/ No: 05 /07/2026/QD-HDQT Ho Chi Minh City, eh July 2026\r\nQUYET DINH/ DECISION\r\nViv: Théng qua Bao cáº kết qua phat hanh cb phiéu dé ting von cé phan _\r\ntir nguén von chi sé hữu\r\nRe: Approval of the Report on the results of the share issuance to increase\r\n_ Share capital from equity sources\r\n— c _ HỘI ĐỒNG QUAN TRI - ,\r\nTONG CONG TY CO PHAN KHOAN VA DICH VU KHOAN DAU KHÍ\r\nTHE BOARD OF DIRECTORS OF\r\nPETROVIETNAM DRILLING & WELL SERVICE CORPORATION\r\nCan cit Luật Chimg khoan số 54/2019/QH14 ngay 26/11/2019 va cac van ban stra\r\ndéi, bổ sung, hướng dan thi hanh;/ Pursuant to the Law on Securities No.54/201 9/OH14\r\ndated 26 November 2019, and its amendments, supplements, and implementation\r\nguidelines; :\r\nCan cit Luat Doanh nghiép số 59/2020/QH14 ngay 17/6/2020 va các van ban stra déi, Á o3f\r\nb6 sung, huéng dan thi hanh;/ Pursuant to the Law on Enterprises No.59/2020/QH14 dated ‘a\r\n17 June 2020, and its amendments, supplements, and implementation guidelines; = sd\r\n3 C&n ctr Diéu 1é Téng cong ty cổ phan Khoan va Dich vu Khoan Dau khi (PV Drilling) & \\ Di\r\n2 k bị >\r\nngay 29/3/2008 được stra doi, bd sung lan thir Hai Muoi Ba ngay 21/4/2026/ Pursuant to ed?)\r\nthe Charter of PetroVietnam Drilling & Well Service Corporation (“PV Drilling\"), dated\r\n29 March 2008, as amended and supplemented for the Twenty-Third time on 21 April\r\n2026; |\r\nCan cit Quy ché nội bộ về quan tri công ty ngày 27/4/2018 của PV Drilling được stra\r\nđổi, bổ sung Jan thir Sau ngay 21/4/2026;/ Pursuant to the Internal Regulations on\r\n. Corporate Governance of PV Drilling dated 27 April 2018, as amended and supplemented\r\n— for the Sixth time on 2] April 2026; `\r\nCăn cir Quy chế hoat động của Hội đồng quản trị PV Drilling ngay 04/8/2021 được\r\nsita déi, bé sung lần thir Ba ngay 21/4/2026:/ Pursuant to the Operational Regulations of\r\nthe Board of Directors of PV Drilling, dated 04 August 2021, as amended and\r\nsupplemented for the Third time on 21 April 2026;\r\nCan cứ Nghi quyét số 07/2026/NQ-DHDCD ngay 21/4/2026 của Dai hội déng cổ\r\ndong PV Drilling về Phuong án phat hanh cé phiéu dé tang vén cé phan tir nguén von chu\r\n| sở hữu;/ Pursuant to the Resolution No. 07/²0²6/NQ—ĐHĐCĐ dated 21 April 2026 of the\r\n. 1\r\nNội dung tiéng Anh chi sir dung cho muc dich théng tin. Trong trudng hop cé su mau thuan gitta nội dung tiéng Viét\r\nva nội dung tiéng Anh, nội dung tiéng Viét sé được wu tién ap dung/ The English version is for informational purposes §\r\nonly. In case of any discrepancies between the Vietnamese and English version, the Vietnamese version shall prevail.\r\n",
+      "text_sha256": "0b0505fb6a033a7c9b1a6bad6eea1026ddc149a68c5681caa278f9e7a7c8dc3b"
+     },
+     {
+      "citation_id": "5dc4c8f2951701f47f96a27f33f9e95c1ed44385104460b933a49ac4ebd25566",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "6a288221a0cbb49535b7521d5e728f88bae1b4341e207fadeccccdc390c2837d",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "3bf3b386b7ae4d3f24328a5b2063536aeb9318dd5535adda125d717106c7726e",
+      "text": "` General Meeting of Shareholders of PV Drilling regarding the share issuance plan to\r\nincrease share capital from equity sources;\r\nCin cit Nghi quyét số 02/06/2026/NQ-HDQT ngay 02/6/2026 cia Hội déng quan tri\r\nPV Drilling về viéc Trién khai phuong án phat hanh cé phiéu dé tang vốn cd phan tir nguén\r\nvon chi sé hitu;/ Pursuant to the Resolution No. 02/06/2026/NQ-HDOT dated 02 June\r\n2026 of the Board of Directors of PV Drilling regarding the implementation of the share\r\nissuance plan to increase share capital from equity sources;\r\nXét dé nghi của Téng giám déc PV Drilling tai To trinh số 776/PVD-TCKT ngay\r\n27/07/2026 về viéc Thong qua Bao cáº két qua dot phat hanh cé phiéu dé tang vén cổ phan\r\ntit nguồn vén chu sé hữu;/ Considering the proposal of the President & Chief Executive\r\nOfficer of PV Drilling inthe Proposal No. 776/PVD-TCKT dated 27 July 2026, regarding |\r\nthe approval of the Report on the results of the share issuance plan to increase share\r\ncapital from equity sources,\r\nQUYET DINH/ DECIDES:\r\nDieu 1. Thong qua Bao cáº két qua dot phat hanh cé phiéu dé tang vén cổ phan tir\r\nngudn von chu sé hữu theo Té trinh số 776/PVD-TCKT ngay 27/07/2026 cia Téng gidm\r\ndéc voi những nội dung chinh nhu sau:/ Article I. Approval of the Report on the results\r\nof the share issuance to increase share-capital from equity sources as set out in Proposal\r\nNo. 776/PVD-TCKT dated 27 July 2026 submitted by the President & Chief Executive\r\nOfficer, with the principal contents as follows: _.\r\n1. Téng số cổ phiéu trước thoi diém phat hanh: 556.296.006 cé phiéu, trong dé: /\r\nTotal number of shares outstanding prior to the issuance: 556,296,006 shares, of which: 4955\r\n- SO lugng co phiéu dang lưu hanh: 555.880.006 cé phiéu./ Number of outstanding ING\r\nshares:555,880,006 shares. ¥ CO PH\r\nR $ F : ; ‘GH VU KR\r\n- SO lugng co phiéu quỹ: 416.000 cd phiéu./ Number of treasury shares: 416,000 J KHI\r\nshares. Ke\r\n2. Ty lệ thực hién quyén: 66,9% (tuong img ty 1é 100:66,9, nghia la cd dong dang sé\r\nhữu 100 c6 phiéu sé duge nhan 66,9 cé phiéu méi)./ Exercise ratio: 66.9% (equivalent to\r\na ratio of 100:66.9, meaning that a shareholder owning 100 shares will receive an\r\nadditional 66.9 shares).\r\n3. Ngay két thúc dot phat hanh: 15/7/2026./ Closing date of the share issuance: 15\r\nJuly 2026.\r\n4. Ngay du kién chuyén giao cé phiéu: thang 8 - thang 9/2026./ Expected share\r\ndelivery date: August - September 2026.\r\n5. Téng số cé phiéu da phan phối: 371.883.632,03 cổ phiéu, trong đó:/ Number of\r\ndistributed shares: 37 1,883,632.03 shares, of which: | |\r\n` 3\r\nNội dung tiếng Anh chỉ sử dụng chº mục đích thông tin. Trºng trường hợp có sự mâu thuẫn giữa nội dung tiếng Việt\r\nva nội dung tiéng Anh, nội dung tiếng Việt sẽ duoc wu tiên ap dung/ The English version is for informational purposes\r\nonly. In case of any discrepancies between the Vietnamese and English version, the Vietnamese version shall prevail.\r\n",
+      "text_sha256": "3bf3b386b7ae4d3f24328a5b2063536aeb9318dd5535adda125d717106c7726e"
+     },
+     {
+      "citation_id": "c2148f77b6c1140a519d5f820fa16357e47bb18b73a503d7096fde645b214b72",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "9043360f175c989b34b6e1e061a6fb8d99c6d762c62e1f84d4fd97bdc6166f4e",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "bd084f533f1feb762bdcbb5517c78867ecc024170f632fc03ffc43d3d8f9554c",
+      "text": "ln - Số cổ phiéu thực tế phan phối: 371.86².185 cổ phiếu cho 46.955 cổ đông;/ Actual\r\nnumber of shares distributed: 371,862,185 shares, allocated to 46,955\r\nshareholders.\r\n- 86 cổ phiéu xử ly phan lẻ cé phan, cé phiéu 1é: 21.447,03 cổ phiéu. Số cé phiéu\r\nnay bi hủy bỏ theo phuong án phat hanh đã dugc Dai hdi déng cé dong théng qua./\r\nNumber of shares resulting from the treatment of fractional share entitlements:\r\n21,447.03 shares. All of these shares were cancelled in accordance with the\r\napproved share issuance plan approved by the General Meeting of Shareholders.\r\n6. Tong số cổ phiéu sau dot phat hanh (ngay 15/7/2026): 928.158.191 cổ phiéu, trong\r\nd6:/ Total of shares after the issuance (as of 15 July 2026): 928,158,191 shares, of which:\r\n— S6 lượng cé phiéu dang lưu hanh: 927.742.191 cd phiéu./ Number of outstanding\r\nshares: 927,742,191 shares.\r\n- Sé lượng cé phiéu quy: 416.000 cé phiéu./ Number of treasury shares: 416,000\r\nshares.\r\n7. Vốn diéu 1é sau dot phat hanh (ngay 15/7/2026): 9.281.581.910.000 déng./ Charter\r\ncapital after the issuance (as of 15 July 2026): VND 9,281,581,910,000. .\r\n— Điều 2. Giao Téng giam déc trién khai thuc hién cdc thủ tuc va cac céng viéc có lién\r\nquan dén dot phat hanh cé phiéu dé tang vén cé phan tir nguén vén chi sé hitu, dam bao\r\ntudn thi quy dinh cia phap luật va Diéu lệ PV Drilling./ Article 2. To assign the President\r\n& Chief Executive Officer to carry out all follow-up procedures and other tasks relating to the\r\nshare issuance to increase share capital from equity sources, ensuring compliance with the\r\napplicable laws and the Charter of PV Drilling. `\r\nĐiều 3. Quyết định này có hiệu lực kể từ ngày ký. Thành viên Hội đồng quản trị, Tổng\r\ngiám đốc và Trưởng các Ban/Văn phong có liên quan của PV Drilling chịu trách nhiệm thi.\r\nhanh Quyét định này./ Article 3. This Decision shall take effect from its signing date. The a\\\r\nmembers of the Board of Directors, the President & Chief Executive Officer, the Heads of “ :\r\nrelevant Divisions/Offices of PV Drilling shall take full responsibility for the Ä\r\nimplementation of this Decisiºn./ 4\r\nNơi nhận/ Recipients: TM. HOI DONG QUAN TRI/\r\n— ta a 5 ®'c°jW)ẽ ON BEHALF OF THE BOARD OF DIRECTORS\r\n- resident e-copy); @² c EEC HAIRMA\r\n- PTGD/ Vice Presidents: D.D.Rang (e- Visa A 9 A N\r\ncopy); of — & |\r\n— Ban kiểm sºát/ BOS (²—cºpy); ậCỎNG tip io\r\n- Ban/ Division: TCKT (dé CBTT); = [HMA Vi DICH YU µ “|\r\noo VT, TH( 3). a DAU KHNL | —\r\neee\r\nJie Nerang tnd Toan\r\n3\r\nNội dung tiéng Anh chi sir dung cho muc dich théng tin. Trong truéng hop cé su mau thuan gitta ndi dung tiéng Viét\r\nva ndi dung tiéng Anh, nội dung tiéng Viét sé duoc wu tién ap dung/ The English version is for informational purposes\r\nonly. In case of any discrepancies between the Vietnamese and English version, the Vietnamese version shall prevail.\r\n",
+      "text_sha256": "bd084f533f1feb762bdcbb5517c78867ecc024170f632fc03ffc43d3d8f9554c"
+     },
+     {
+      "citation_id": "20f79b72bd063c7c29801e9f375a0452aa13d31183565055030969b6ac13cdbd",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "4d30d43bdeb9702ccafec001565eaae3eb5c48a3f3a71d6ef884adba42ac7c1a",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "a5185b96a5eb715e537f4bbf755edac29c1b04c44331c27c3830c6b1b93fdd65",
+      "text": "` TAP DOAN CONG NGHIEP — NANG LƯỢNG CONG HOA XA HOI CHU NGHIA VIET NAM\r\nQUOC GIA VIET NAM Doc lap - Tw do - Hanh phic\r\nPETROVIETNAM =TONG CONG TY CO PHAN KHOAN\r\nPY Drilling VA DICH VU KHOAN DAU KHi Tp. Hé Chi Minh, ngay 2F. thang ra _ năm 20228,\r\nSé: . tt8 ee PVD Tee\r\n_ BAO CAO KET QUA DOT PHAT HANH CO PHIEU\r\nDE TANG VON CO PHAN TU NGUON VON CHU SO HUU\r\nREPORT ON THE RESULTS OF SHARE ISSUANCE TO INCREASE\r\nCHARTER CAPITAL FROM EQUITY SOURCES\r\nKinh gửi/ Respecfully to: C\r\n- Uy Ban Chứng khºán Nha Nước\r\nStates Securities Commission of Vietnam\r\n— Sở Giao dich Chirng khoan Tp. H6 Chi Minh\r\nHo Chi Minh Stock Exchange (HOSE)\r\nI. Giới thiéu về T6 chire phat hanh/ Introduction to the Issuer\r\n1. Tén tổ chire phat hanh: Téng céng ty cổ phan Khoan va Dich vu Khoan Dau khi\r\nName of the issuer: Petrovietnam Drilling & Well Service Corporation «\r\n(@/\r\n2. Tén viết tắt/4bbreviated name: PV Drilling (\r\n3. Địa chỉ trụ sở chính: Lầu 4, tòa nhà Sailing, 111A Pasteur, Phuong Sai Gon,\r\nThanh phé H6 Chi Minh\r\nHead Office Address: 4\" Floor, Sailing Tower, 111A Pasteur, Saigon Ward,\r\nHo Chi Minh City.\r\n4. Dién thoai/Phone: (028) 3914 2012\r\nWebsite: www.pvdrilling.com.vn\r\n5. Von diéu lệ: 5.562.960.060.000 déng\r\nCharter capital: VND 5,562,960,060,000\r\n6. Ma cé phiéu/ Ticker symbol: | PVD\r\n7. Noi mé tai khoan thanh toén: Céng ty cổ phan Ching khoan Thanh phé Hồ Chi Minh\r\n(HSC) Số hiéu tai khoan: 0110368369\r\nSecurities account: Ho Chi Minh City Securities Corporation (HSC)\r\nAccount No.: 011C368369\r\n8. Gidy chứng nhận dang ky doanh nghiép mã số doanh nghiép 0302495126 do So Ké\r\nhoach va Dau tu TP. HCM cấp lần dau ngay 15 thang 02 nam 2006, do Sé Tai chinh TP.\r\nHCM cấp thay đổi lan thir 18 ngay 16 thang 09 nam 2025.\r\nBusiness Registration Certificate No. 0302495126 initially issued by the Ho Chi Minh\r\nCity Department of Planning and Investment on February 15, 2006, and amended for the\r\n18\" time by the Ho Chi Minh City Department of Finance on September 16, 2025.\r\nLau 4, Sailing Tower, 111A Pasteur, Phuong Sai Gon, Thanh phé Hồ Chi Minh, Viet Nam\r\nTel: +84-28-39142012 Fax: +84 — 28-39 14² 0²1 / 39 14² 0²² Web: www.pvdrilling.com.vn\r\n",
+      "text_sha256": "a5185b96a5eb715e537f4bbf755edac29c1b04c44331c27c3830c6b1b93fdd65"
+     },
+     {
+      "citation_id": "0ccaf880c7ad5077dd08c64c01113861291419c81f5ff022435cbd9325e9f9c3",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "5806afe8d1927a04060ca7275f94af1b512846648123d20f8cb5b7eff234ca71",
+       "text": "no best words!!\r\n"
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "bd44ae9d1d928cc185a0e9e344a4a7f35ff225a40eae0b5307d66ab5b9618a98",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 6,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "427efe8d577cf9169b72c79eee78852f66b3d5f1522c5aefbe6205dcd38c2127",
+      "text": ", — Nganh nghề kinh doanh chinh, Mã nganh:\r\nMain business lines and business codes:\r\n+ Hoat động dich vy hé tro khai thac dau thé va khi tu nhién (Ma nganh 0910);\r\nSupport activities for petroleum and natural gas extraction (Business Code: 0910),\r\n+ Bén buén may moc, thiét bi va phu ting may khac (Ma nganh 4659); —\r\nWholesale of machinery, equipment and other spare parts (Business Code: 4659);\r\n+ Lap dat may méc va thiét bi céng nghiép (Ma nganh 3320);\r\nInstallation of industrial machinery and equipment (Business Code: 3320); .\r\n+ Xt ly ô nhiễm va hºạt động quan ly chat thai khác (Ma nganh 3900);\r\nRemediation activities and other waste management services (Business Code:\r\n3900); |\r\n+ : Hºạt động hé tro dich vu tai chinh chua duoc phan vao dau (Ma nganh 6619);\r\nOther activities auxiliary to financial service activities (Business Code: 6619);\r\n+ Hoat động thiét kế chuyén dung (Ma nganh 7410);\r\nSpecialized design activities (Business Code: 7410);\r\n+ Cung tmg nguén nhan luc khac (Ma nganh 7822);\r\nOther manpower supply services (Business Code: 7822);\r\n+ Hoat d6ng tr van quan ly kinh doanh va hoat động tu van quan ly khác (Ma nganh\r\n7020);\r\nManagement consultancy activities(Business Code: 7020);\r\n+ Stra chữa, bao duéng may méc thiét bi (Ma nganh 3312): - Á\r\nRepair of machinery (Business Code: 3312); Yo\r\n+ Dao tao trung cap (Ma nganh 8532). cont\r\nIntermediate-level training and education (Business Code: 8532). Ne\r\nl <\r\n- San pham/dich vu chinh: NE\r\nKey products/ services: | |\r\n+ : Khºan va sta chữa các giếng khoan dau khí;\r\nDrilling and workover services for oil and gas wells;\r\n+ Cung ứng gian khoan va gian khai thac dau khi;\r\nProvision of drilling rigs and oil and gas production platforms; . `\r\n+ Thi via, bom tram xi mang, do dia vat ly giếng khºan va các dich vu khác lién quan ,\r\ndén cong tac khoan va khai thac;\r\n` Well testing, cementing, well logging, and other services related to drilling and .\r\nproduction ºperatiºns;\r\n+ Cac dich vu liên quan đến công tac khoan dau khi cho cdc dy án dau khi 6 nước ngoai;\r\nServices related to oil and gas drilling operations for overseas projects;\r\n| + Dich vu ché tao, lap dat, kiém tra chat luong, stra chita, bao dưỡng, van hanh gian\r\nkhoan va gian khoan khai thac dau khi; |\r\nFabrication, installation, inspection, repair, maintenance, and operation services\r\nJor drilling rigs and production platforms;\r\n+ Mua ban vat tu, thiét bi khoan va khai thác;\r\nTrading of drilling and production materials and equipment;\r\n",
+      "text_sha256": "427efe8d577cf9169b72c79eee78852f66b3d5f1522c5aefbe6205dcd38c2127"
+     },
+     {
+      "citation_id": "6e79ddf5e98d6edea3abc77587e49a3f48f5832314dc496ff13e0a00442fec96",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "df36f652c67598733ec6eeb5424c4937e04ab307baf411cc5101a0a2a725db04",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 7,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "db1c8c05ac075290665b13a24fe7107ac1963b8454ef2b5644c842b82a227f2a",
+      "text": ", + : Cung cấp vat tu, cdc thiét bi day chuyén cong nghiép (Khéng thực hién quyén xuat\r\nkhau, quyén nhap khau, quyén phan phối đối với cdc hang hóa thuéc Danh muc\r\nhang héa ma nha dau tu nước ngoai, té chitc kinh té có von dau tu nước ngoai khong\r\ndugc thực hién quyén xuat khau, quyén nhap khau, quyén phan phối theo quy dinh cua\r\nphap luat);\r\nSupply of materials and industrial production line equipment (excluding the exercise\r\nof export rights, import rights, and distribution rights with respect to goods on the list\r\nof goods for which foreign investors and foreign-invested economic organizations are\r\nprohibited from exercising export rights, import rights, and distribution rights in\r\naccordance with applicable laws);\r\n+ Lap dat cdc thiét bi day chuyén cong nghiép;\r\nInstallation of industrial production line equipment;\r\n+ Dich vu tng ctu su cé dau tran va bao vé mdi trudng;\r\nOil spill response and environmental protection services;\r\n+ Tuvan dau tu — quan ly du an (trir tu van tai chinh, kế toan, phap luat);\r\nInvestment consultancy and project management services (excluding financial,\r\naccounting, and legal consultancy services);\r\n+ Dich vu thiét kế gian khoan va gian khai thac dau khi;\r\nDesign services for oil and gas drilling rigs and production platforms;\r\n+  Cung cap lao déng cho cdc gian khoan, gian khai thac dau khi cua Tap doan Céng\r\nnghiép — Nang luong Quéc gia Viét Nam;\r\nProvision of manpower for oil and gas drilling rigs and production platforms of the iia\r\nVietnam National Industry - Energy Group; =!\r\n+  Cung cấp lao động có chuyén mén khoan dau khi cho cdc nha thau trong va ngoai ir\r\nnước (Khéng bao gém dich vu dia ngudi lao dong di lam viéc 6 nước ngoai theo ADH\r\nhop dong.) :AU K\r\nSupply of skilled oil and gas drilling personnel to domestic and foreign contractors ora\r\n(excluding services for sending Vienamese workers abroad under contracts); m\r\n+  Hoat động tu van quan ly (trừ tu van tai chinh, kế tºán, phap luat); :\r\nManagement consultancy services (excluding financial, accounting, and legal\r\nconsultancy services);\r\n+ Stra chita, bao dudng cac thiét bi day chuyén cong nghiép;\r\nRepair and maintenance services for industrial production line equipment;\r\n+ Dao tao céng nhân khoan dau khí;\r\nTraining of oil and gas drilling workers;\r\n9.  Giay phép thanh lap va hoat d6ng (theo quy dinh cua pháp luật chuyén nganh): Khong\r\nOperating License and Establishment License (under specialized laws): None.\r\nII. Noi dung phuong an phat hanh/ Approved Share Issuance Plan\r\n1. Téncé phiéu: Cổ phiéu Téng céng ty cổ phan Khoan va Dich vu Khoan Dau khi\r\nName of shares: Shares of Petrovietnam Drilling and Well Service Corporation\r\n2. Loaicé phiéu: cổ phiéu phé thong\r\n",
+      "text_sha256": "db1c8c05ac075290665b13a24fe7107ac1963b8454ef2b5644c842b82a227f2a"
+     },
+     {
+      "citation_id": "f46242de0c16b7bee03f683ce823e94af1a666e75ce129474733569a0143bf14",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "246d7958682ad72d35e18275a2681c52bfb7714346b12ec8e531a320d1ca190d",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 8,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "9d3b96db925955becc3793928733021b41d63ac159ffe735094d8c4451fc8120",
+      "text": "¡ Type of shares: Ordinary shares\r\n3. Téng số cé phiéu trước thoi diém phat hanh:\r\nTotal number of shares outstanding prior to the issuance:\r\n- Téng sé cé phiéu da phat hanh: 556.296.006 cổ phiéu.\r\nTotal number of issued shares: 556,296,006 shares.\r\n- 86 luong cé phiéu dang lưu hanh: 555.880.006 cổ phiéu.\r\nNumber of outstanding shares: 555,880,006 shares.\r\n- 86 luong cổ phiéu quy: 416.000 cé phiéu.\r\nNumber of treasury shares: 416,000 shares.\r\n4. S6 luong cé phiéu dy kién phat hanh: 371.883.724 cé phiéu.\r\nNumber of shares expected to be issued: 371 883, 724 shares.\r\n5. Ty lệ thuc hién quyén: 66,9% (tong tng ty 1é 100:66,9, nghia 1a cổ dong dang sé hữu\r\n100 cổ phiéu sé duoc nhan 66,9 cổ phiéu mdi).\r\nExercise ratio: 66.9% (equivalent to a ratio of 100:66.9, meaning that a shareholder\r\nowning 100 shares will receive an additional 66.9 shares).\r\n6. Nguồn vén phat hanh: tir Quy Dau tu phat trién tai ngay 31/12/2025, theo Bao cáº tai\r\nchinh riéng được kiém tºán nim 2025 cia PV Drilling.\r\nSource of issuance capital: the Development Investment Fund as of 31 December 2025,\r\nas reflected in PV Drilling's audited separate financial statements for the year ended 31\r\nDecember 2025.\r\n7. Phuong án xt ly phan lẻ cé phan, cé phiéu lẻ: $6 luong cổ phan phat hanh thém phan\r\nphối cho cé đông hién hữu sé duoc lam tron xuống dén hang don vi. Phan lẻ cé phan phat\r\nsinh (néu cé) sé bi hủy bỏ. DN\r\nTreatment of fractional shares: The number of additional shares allocated to existing X\r\nshareholders shall be rounded down to the nearest whole share. Any fractional shares PHAN\r\nresulting from such allocation (if any) shall be cancelled and shall not be issued. i\r\n8. Ngay két thúc dot phat hanh: 15/7/2026. é\r\nClosing date of the share issuance: 15 July 2026. =\r\n9. Ngay du kién chuyén giao cổ phiéu: thang 8 - thang 9/2026.\r\nExpected share delivery date: August — September 2026.\r\nIII. Két qua phat hanh cé phiéu/ Results of the Share Issuance\r\n1. Téng số cổ phiéu da phan phối: 371.883.632,03 cổ phiéu, trong do:\r\nNumber of distributed shares: 371,883,632.03 shares, including:\r\n- $66 phiéu thu té phan phối: 371.862.185 cổ phiéu cho 46.955 cổ dong;\r\nActual number of shares distributed: 371,862,185 shares, allocated to 46,955\r\nshareholders.\r\n- $6 cổ phiéu xt ly phan lẻ cé phan, cé phiéu lẻ: 21.447,03 cổ phiéu.\r\nNumber of shares resulting from the treatment of fractional share entitlements:\r\n21,447.03 shares.\r\n",
+      "text_sha256": "9d3b96db925955becc3793928733021b41d63ac159ffe735094d8c4451fc8120"
+     },
+     {
+      "citation_id": "e5eef45129cd66367d7de6025eb0a595896b4b8431c8678689025d2063e978fd",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "document_sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "materialization_id": "da2c2315d87da942fafd4338f53554a3e010717149896e9910dfbe53cc326ce2",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 9,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "c818d9d23e8e76e5e5a4fd61b27bb1ba672f74013888d447137e8e116060bcaf",
+      "text": "c ² W (Theº phương án phát hành đã được Đại hội đồng cổ đông thông qua, tºàn bộ\r\n21.447,03 cổ phiéu lẻ phat sinh da duoc huy bỏ va khéng duge phat hanh).\r\n(In accordance with the approved share issuance plan, all 21,447.03 fractional shares\r\nresulting from the rounding of share entitlements were cancelled.)\r\n2. Téng số cé phiéu sau dot phat hanh (ngay 15/7/2026): 928.158.191 cổ phiéu, trong dé:\r\nTotal of shares after the issuance (as of 15 July 2026): shares, including:\r\n— $6 lwong cé phiéu dang lưu hanh: —927.742.191 cé phiéu.\r\nNumber of outstanding shares: 927,742,191 shares.\r\n- $6 long cé phiéu quy: 416.000 cé phiéu.\r\nNumber of treasury shares: 416,000 shares.\r\nIV. Tai liéu gửi kém: Khong cé\r\nEnclosed documents: None\r\nNoi nhGn/Recipients: NGUOI DAI DIEN THEO PHAP LUAT\r\n- Nhu trén/ As above; aoe LEGAL REPRESENTATIVE v\r\n- Luu VT, Ban TCKT/ Corporate Office PRESIDENT & CEO\r\nand FA Division.\r\nQ»º²^²5/@@\r\nof TONG —\r\nw (CONG TY cO PHAN 5\r\nKHON i, OICH VU IQJW/²)\r\n\\ DAU K HW, g\r\nPas\r\nOTT 6 Y\r\nNGUYEN XUAN CUONG\r\nl\r\nie\r\nA A Duoc ky boi TONG\r\nTONG CONG CONG TY CO PHAN\r\nKHOAN VA DICH VU\r\nTY C O KHOAN DAU KHI\r\nPHAN — ỀỄỄ ky: 28.07.2026\r\nKHOAN VA `\r\nDICH VU\r\nKHOAN |\r\nDAU KHI\r\n",
+      "text_sha256": "c818d9d23e8e76e5e5a4fd61b27bb1ba672f74013888d447137e8e116060bcaf"
+     }
+    ],
+    "pages_processed": 9,
+    "schema_version": "1.0.0",
+    "source_page_count": 9,
+    "ticker": "PVD"
+   }
+  },
+  "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+    "document_sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "b590036e0a941a8fe5b5fbbaad435b6fcf4af5de5a8568397b904c8aa6ac47dd",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+      "document_sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+      "materialization_id": "0fecd43017aec67ac505a306b559e8988494644443154a81d7b832c91a66b563",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "c6c46827fbea4a5aab344ffaca7c7ab12a7a97a8d377d1b199558f9ec97a401f",
+      "text": "SỞ GIAO DỊCH CHỨNG KHỌÁN : CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM __ |\r\nTHÀNH PHÓ HỎ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố:14 15 /TB—SGDHCM Thành phố Hồ Chí Minh, ngày 06 tháng 07 năm ²0²6\r\n— THÔNG BÁO _ —\r\nVề việc giaº dịch chứng khºán thay đối đăng ký niêm yết\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về việc giaº dịch\r\nchứng khºán thay đổi đăng ký niêm yết như sau:\r\n— : Tổ chức niêm yết: Công ty Cổ phần Tập đºàn Hòa Phát\r\nẢ — — Trụ sở chính: KCN Phố Nối A, xã Nguyễn Văn Linh, tỉnh Hưng Yên, Việt Nam\r\n| — Điện thºại: 0²43.9747751\r\nĐược thay đổi đăng ký niêm yết (theº Quyết định số 560/QĐ—SGDHCM ngày\r\n30/06/²0²6) tại Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh với nội dung như\r\nsaäu:\r\n— : Lºại chứng khºán : Cổ phiếu phổ thông\r\n| — Mã chứng khºán : : HPG\r\n— : Mệnh giá : 10.000 đồng\r\n— : Số lượng chứng khºán thay đổi niêm yết: 767.498.665 cổ phiếu\r\n— : Lý dº thay đổi niêm yết: Phát hành cổ phiếu để trả cổ tức\r\n— : Số lượng chứng khºán sau khi thay đổi niêm yết: 8.44².964.5²0 cổ phiếu\r\n— Giá trị chứng khºán niêm yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n84.4²9.645.²00.000 đồng\r\n— : Ngày thay đổi niêm yết có hiệu lực: 0²/07/²0²6\r\n— : Ngày giaº dịch bổ sung của chứng khºán thay đổi niêm yết: 15/07/²0²6 / _\r\n| ln ái GIÁM › á l’ẠfẨ1`41_1ẳ’fc)1\\(J'jI1^«:1x4/ YÉT\r\n| — HTGD, GS, TTTT; x | THÀNH PHỔ / |\r\n— Lưu: VT, NỸ ffl8)/,j.7/ °ềâ` HỒ CHÍ MIN\r\nC Ngũ ,' Nam Anh\r\n|\r\n|\r\nNÈA\r\n",
+      "text_sha256": "c6c46827fbea4a5aab344ffaca7c7ab12a7a97a8d377d1b199558f9ec97a401f"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "HPG"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+    "document_sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "cbef139c70de06419fc8d45b80c5de02b36b574229d5ccbe6efc687db9209e58",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+      "document_sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+      "materialization_id": "f579278af7a2a39fba5d6fb45965eff379cec60cd226e642de3138da0c2fbbd9",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8ea7b30e0cec6fc9065be0aeb90681a8aaad3d23c009b6da597ec652fa4d947d",
+      "text": "SO GIAO DICH CHUNG KHOAN CONG HOA XA HỘI CHỦ NGHĨA VIỆT NAM __ |\r\nTHANH PHO HO CHi MINH Doc lap — Tw do — Hanh phic\r\nSố:14 15 /TB-SGDHCM Thanh phố Hồ Chi Minh, ngay 06 thang 07 năm 2026\r\nTHONG BAO _\r\nVề việc giao dich ching khoan thay đối dang ky niém yét\r\nSở Giao dich Ching khºán Thanh phé Hồ Chi Minh théng bao về viéc giao dich\r\nching khodn thay d6i dang ky niém yét như sau:\r\n— T6 chức niém yét: Cong ty Cổ phan Tap doan Hoa Phat\r\n- Tru sé chinh: KCN Phé Néi A, xã Nguyén Van Linh, tinh Hung Yén, Viét Nam\r\n| - Dién thoai: 0²43.9747751\r\nDuoc thay déi ding ky niém yét (theo Quyét dinh số 560/QD-SGDHCM ngay\r\n30/06/2026) tai So Giao dich Ching khoén Thanh phé Hồ Chi Minh voi nội dung nhu\r\nSau:\r\n- Loaichitng khºán — : Cổ phiéu phé thong\r\n| - Mã chứng khºán :HPG\r\n— Ménh gid : 10.000 ding\r\n- 86 long ching khodn thay d6i niém yét: 767.498.665 cổ phiéu\r\n- Ly do thay déi niém yét: Phat hanh cé phiéu dé tra cổ tire\r\n- : Số lượng ching khoan sau khi thay déi niém yét: 8.442.964.520 c6 phiéu\r\n— Gia tri chimg khodn niém yét sau khi thay déi niém yét (theo ménh gia):\r\n84.429.645.200.000 dong\r\n- Ngay thay đổi niém yét có hiéu luc: 02/07/2026\r\n— Ngay giao dich bé sung của chứng khºán thay déi niém yét: 15/07/2026 / _\r\n| Ta, GIAM r6 PHOME.QUAN LY Ni YET\r\n| — HTGD, GS, TTTT; x | THÀNH PHO |\r\n- Luu: VT, NY (08)7~ q\\ HO CHI MIN\r\nRQ Nga vb Nam Anh\r\n|\r\n|\r\nxu:\r\n",
+      "text_sha256": "8ea7b30e0cec6fc9065be0aeb90681a8aaad3d23c009b6da597ec652fa4d947d"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "HPG"
+   }
+  },
+  "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+    "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "4f2a48d5f9eaf9f2ac8864337d70e4ae877671346b87e0fbb648c70a2b5cbbf2",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "80cbb47b9354fd0b134ba1dd7d4304eba570732440f5ae0bae4915f54e0bead7",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8fd58dbc57266cb2b9b1ff8e2cf10cead0e1fe0f34556bcb046c440fdaf4e302",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HỒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố: 4657 /TB—SGDHCM Thành phố Hồ Chí Minh, ngày 30 tháng 07 năm ²0²6\r\nTHÔNG BÁO\r\nVề ngày đăng ký cuối cùng\r\n| Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký\r\ncuối cùng như sau:\r\n— : Tổ chức niêm yết : Công ty Cổ phần Chứng khºán SSI\r\n— : Mã chứng khºán : SSI\r\n— Lºại chứng khºán : Cổ phiếu phổ thông\r\n— : Mệnh giá : 10.000 đồng (Mười nghìn đồng)\r\n— : Ngày giaº dịch không hưởng quyền : 17/08/²0²6\r\n— : Ngày đăng ký cuối cùng : 18/08/²0²6\r\n— : Lý dº và mục đích:\r\n— Chi trả cố tức năm ²0²5 bằng tiền;\r\n+ — Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\n— : Nội dung cụ thể:\r\n1) Chi trả cổ tức năm ²0²5 bằng tiền\r\n+ : Tỷ lệ thực hiện: 10%/mệnh giá (01 cổ phiếu được nhận 1.000 đồng)\r\n+ : Ngày thanh tºán: 14/09/²0²6\r\n+ : Địa điểm thực hiện:\r\n. : Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng tiền\r\ntại các Thành viên lưu ký nơi mở tài khºản lưu ký.\r\n+.:. Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ tức\r\nbằng tiền tại Trụ sở chính Công ty số 7² Nguyễn Huệ, phường Sài Gòn, TP.\r\nHồ Chí Minh hºặc Chi nhánh Hà Nội của Công ty số 1C Ngô Quyền, phường\r\nHºàn Kiếm, TP. Hà Nội (vàº các ngày làm việc trºng tuần) bắt đầu từ ngày\r\n14/09/²0²6 và xuất trình căn cước công dân/căn cước.\r\n| ²) Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\n| + — Tỷ lệ thực hiện: 5:1 (Người sở hữu 05 cổ phiếu sẽ được nhận thêm 01 cổ phiếu\r\nmới).\r\n+ : Số lượng cổ phiếu dự kiến phát hành: 500.²19.550 cổ phiếu\r\n+ : Phương án làm tròn và phương án xử lý _phzẦìn lẻ qổ ffl'{ần› cổ phiếu lẻ (nếu có):\r\nSau khi nhân với tỷ lệ thực hiện quyền, số lượng cố phần phát hành sẽ được làm\r\nHOSR_BM—7.33/1—BH3—06/²0²6 _ / /5 0000000000\r\n",
+      "text_sha256": "8fd58dbc57266cb2b9b1ff8e2cf10cead0e1fe0f34556bcb046c440fdaf4e302"
+     },
+     {
+      "citation_id": "db47a5475ad6fd9a25f5eb5ae62260c3e168e45991d835c817fc810ca4167b5f",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "1b470144e26d417fc12b07cd98e79c83022cdc7d16a1f1722d935a62b692cfc1",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "b24391ac0f52893e7ea6d61ef4a79217eb39b63d964a82a2b184fba1d85192a1",
+      "text": "²\r\ntròn xuống đến hàng đơn vị, phần lẻ thập phân (nếu có) sẽ được hủy bỏ.\r\nVí dụ: Cổ đông 4 sở hữu 506 cổ phần, với tỷ lệ thực hiện gJuye”`n 5:1 thì số Ổ\r\nphân mà cô đông A nhận được là: (506x1)/5 = 101,² cô phân. Theº nguyên tăc\r\nlàm tròn nêu trên, số cô phần mới mà cô đông A được nhận là 101 cô phân. Sô\r\n| cô phân lẻ (0,² cô phán) sẽ được hủy bỏ.\r\n| + : Tºàn bộ số cổ phiếu lẻ phát sinh khi phát hành cổ phiếu để tăng vốn cổ phần từ\r\nnguồn vôn chủ sở hữu sẽ bị hủy bỏ.\r\n+ . Địa điểm thực hiện:\r\n+.:. Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cố phiếu phát\r\nhành để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại các Thành viên lưu ký\r\nnơi mở tài khºản lưu ký.\r\n... Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ phiếu\r\nphát hành để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại Trụ sở chính\r\nCông ty số 7² Nguyễn Huệ, phường Sài Gòn, TP. Hồ Chí Minh hºặc Chi\r\nnhánh Hà Nội của Công ty số 1C Ngô Quyền, phường Hºàn Kiếm, TP. Hà\r\nNội (vàº các ngày làm việc trºng tuần) và xuất trình căn cước công dân/căn\r\ncướcøf_/` |\r\nNơi nhận: | TUỌ.TỎNG GIÁM ĐÓC_\r\n— TCNY;, GIÁM ĐÓ€PHÒNG QUÁẢN LÝ NIÊM YÉT\r\n— TGĐ (để b/c); aº t /\r\n1 — HTGD, GS, TTTT; 4 SỎ GIAO DỊCHN%ç\r\n— Lưu: VT,NY U)âa/ . x| CHỨNG KHOÁN } z}| số\r\n* | _ THÀNH PHÔ |Íl (\r\n` C  HÔ CHÍ MINH/>\r\nỔẸJ Vỳ\r\n~ J×p ` Q\r\nụg=-«’- Nam Anh\r\nHOSE_BM—7.33/1—BH3—06²0² _ — >»/\r\nF«.....\r\n",
+      "text_sha256": "b24391ac0f52893e7ea6d61ef4a79217eb39b63d964a82a2b184fba1d85192a1"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+    "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "9a930b1493040c7337198d2888ff64dd4cc6236fa8624027dbd8244287df2ecf",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "49dea8514afcd5ef6574e593d86f8f6d1d14a5f4fd0d6a5913ad3368e9a8928b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "76a7f1c2ad0c122c3de7dafa3974ca07b201de91e2ee8d443e6bac48fa06b606",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHO HO CHi MINH Độc lap — Tw do — Hanh phic\r\nSố: 1654/TB-SGDHCM Thanh phé Hé Chi Minh, ngay 30 thang 07 nam 2026\r\nTHONG BAO\r\nVé ngay dang ky cudi cing\r\n| Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký\r\ncudi cùng nhu sau:\r\n— Té chite niém yét : Cong ty Cổ phan Chirng khºán SSI\r\n- Ma ching khoan : SSI\r\n- Loai ching khoan 368 phiéu phé théng\r\n- Ménh gid : 10.000 déng (Mudi nghin dong)\r\n- Ngay giao dich khong huéng quyén: 17/08/2026\r\n- Ngay dang ky cudi cing : 18/08/2026\r\n- Ly do va muc dich:\r\n- Chitra cé tire nim 2025 bang tién;\r\n+ Phat hanh cổ phiéu dé tang von cé phan tir nguon von chi sở hitu\r\n- N6i dung cu thé:\r\n1) Chi tra cé tire nam 2025 bang tién\r\n+ Ty lệ thuc hién: 10%/ménh gia (01 cổ phiéu được nhan 1.000 déng)\r\n+ Ngay thanh toan: 14/09/2026\r\n+ Dia diém thuc hién:\r\n. Déivéi ching khodn luu ky: Nguoi sé hữu 1am thi tuc nhan cổ tire bang tién\r\ntai cac Thanh vién luu ky noi mé tai khoan luu ky.\r\n- Déi với chứng khodn chua luu ky: Ngudi sé hữu lam thu tue nhận cổ tire\r\nbang tién tai Tru so chinh Céng ty số 72 Nguyén Hué, phudng Sai Gon, TP.\r\nHé Chi Minh hºặc Chi nhanh Ha Noi cia Céng ty số 1C Ngô Quyén, phudng\r\nHoan Kiém, TP. Ha Ndi (vao cdc ngay lam viéc trong tuan) bat dau ti ngay\r\n14/09/2026 va xuat trinh cin cước cong dân/căn cước.\r\n| 2) Phat hanh cé phiéu dé ting von cé phan tir nguon von chi sé hữu\r\n| + Ty lệ thuc hién: 5:1 (Ngudi sé hitu 05 cổ phiéu sé được nhan thém 01 cé phiéu\r\nmới).\r\n+ Séluong cổ phiếu dy kién phat hành: 500.²19.550 c6 phiếu\r\n+ Phuong án lam tron va phuong án xu ly phan lẻ cé phan, cổ phiéu lẻ (néu có):\r\nSau khi nhân với ty lệ thực hién quyền, số lượng cé phan phat hanh sé được lam\r\nHOSE BM-733/1-BH30020282«2«*°@20202”,.”~—C~C”——————OO\r\n",
+      "text_sha256": "76a7f1c2ad0c122c3de7dafa3974ca07b201de91e2ee8d443e6bac48fa06b606"
+     },
+     {
+      "citation_id": "377ca5c3ea4103ccac1845f4521334cf8d7586864b1de5f5e431279c6a8b5be9",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "4544a559b1d507aaf0c197e74053a1e1b9a675dd8c7b0dc6cb1d579331429cfc",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "1376265ab80417067320f60f8a3da9fbee77f62e3dc90ba44393f1da7362f891",
+      "text": "2\r\ntron xuéng dén hang don vi, phan lẻ thap phan (néu c6) sé duge hủy bd.\r\nVi du: Cổ déng A sé hitu 506 cổ phan, voi ty lé thuc hién quyén 5:1 thi số cé\r\nphan ma cô đông A nhận được la: (506x1)/5 = 101,2 co phan. Theo nguyén tac\r\nlam tron néu trén, số c6 phan méi ma cé déng A dugc nhận la 101 cô phan. Sô\r\n| cô phan lẻ (0,2 cô phan) sé được hủy bo.\r\n| + Toan bộ số cổ phiéu lẻ phat sinh khi phat hanh cổ phiéu dé tang von cổ phan tir\r\nnguon von chu sé hữu sé bi huy bo.\r\n+ Dia diém thuc hién:\r\n\r\n- Đối voi ching khoan luu ky: Ngudi sé hữu lam thi tuc nhan c6 phiéu phat\r\nhanh dé tang von cé phan tir ngu6n von chu sở hữu tai cdc Thanh vién lưu ky\r\nnoi mở tai khoan luu ky.\r\n\r\n» Đối với chứng khodn chưa lưu ky: Ngudi sé hitu lam thi tuc nhan cé phiéu\r\nphat hanh dé tang vén cổ phan tir nguon vốn chi sé hữu tai Tru sé chinh\r\nCong ty số 72 Nguyén Hué, phudng Sai Gon, TP. Hé Chi Minh hºặc Chi\r\nnhanh Ha N6i của Cong ty số 1C Ngô Quyén, phudng Hoan Kiém, TP. Ha\r\nNội (vao cac ngay lam viéc trong tudn) va xuất trinh cin cước céng dân/căn\r\ncudegye |\r\n\r\nNơi nhận: | TUQ.TONG GIAM DOC.\r\n\r\n- TONY; | GIAM DOGRHONG. QUAN LY NIEM YET\r\n\r\n- TGD (dé b/c); Ze <a /\r\n: — HTGD, GS, TTTT; 4 SỎ GIAO DICH\\*,\r\n\r\n- Luu: VT, NY (7)-ge- . x| CHUNG KHOÁN } z}| số\r\n\r\n* | _ THÀNH PHO (A te\r\n%\\HO CHI MINH/ >\r\n> cy\r\n~ Tp Fay Ce\r\nNeRyen Nam Anh\r\nHOSE_BM-7.33/1-BH3-062026. 2 SCSCSCSCS<«;«7«;<S; 7S\r\n—_\r\n",
+      "text_sha256": "1376265ab80417067320f60f8a3da9fbee77f62e3dc90ba44393f1da7362f891"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   }
+  },
+  "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+    "document_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "70c5d664243e1f10db84e4f8f8126397e684bf2172471eccb3edc5816507b60e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+      "document_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+      "materialization_id": "c948a5627884c5e00834a7f3a532468326be88906dab841e8f494f953d228567",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "f3d3f7dbf1342ece611b662f9c89ab6bdaa560664940f93bb3df4cb25da8a52d",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HÒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc |\r\nSố: 4² /TB—SGDHCM Thành phố Hồ Chí Minh, ngày 14 tháng 01 năm ²0²6\r\n— THÔNG BÁO _ —\r\nVề việc giaº dịch chứng khºán thay đối đăng ký niêm yết\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về việc giaº dịch\r\nchứng khºán thay đổi đăng ký niêm yết như sau:\r\n— — Tổ chức niêm yết: Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\n— Trụ sở chính: Tòa nhà Viện Dầu khí Việt Nam, số 167 Phố Trung Kính,\r\nPhường Yên Hòa, Thành phố Hà Nội\r\n— Điện thºại: (84—²4) ²²²1 0²88 : : Fax: (84—²4) ²²²1 0388\r\n— Website: www.pvpºwer.vn\r\nĐược thay đổi đăng ký niêm yết (theº Quyết định số ²9/QĐ—SGDHCM ngày\r\n09/01/²0²6) tại Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh với nội dung như\r\nsau:\r\n— : Lºại chứng khºán : Cổ phiếu phổ thông\r\n— : Mã chứng khºán _ : POW\r\n— : Mệnh giá : 10.000 đồng\r\n— : Số lượng chứng khºán thay đổi niêm yết: 444.949.496 cổ phiếu\r\n— : Lý dº thay đổi niêm yết: Phát hành cổ phiếu để trả cổ tức và tăng vốn cổ phần\r\ntừ nguồn vốn chủ sở hữu\r\n— : Số lượng chứng khºán sau khi thay đổi niêm yết: ².786.8²1.096 cổ phiếu\r\n— Giá trị chứng khºán niêm yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n²7.868.²10.960.000 đồng\r\n— — Ngày thay đổi niêm yết có hiệu lực: 13/01/²0²6\r\n— — Ngày giaº dịch của chứng khºán thay đổi niêm yết: N/01/202615'ỉ\r\n| lọ²“ó\r\né — GIÁM bỐ@ bhẻ ~ ằolxẵỀM YÉT\r\n— Ễ~ỄCD'_.GS,TTTT; | ễ ẳẳ'ểỉẵâ\"* Fồ /\r\n— Lưu: VT., NY uva \\ x| THÀNH _|,i\r\n>º CHÍ MI\r\nTm—P›\r\nNøuũỹền Nam Anh\r\nTIOSE_BM—734/²—BH0²—07/²0²² ² ²² ²00000000000000000000\r\n",
+      "text_sha256": "f3d3f7dbf1342ece611b662f9c89ab6bdaa560664940f93bb3df4cb25da8a52d"
+     },
+     {
+      "citation_id": "2523b69dc1938e620fb49b64006693143c22c624f49bc5fb10952146f30e6a81",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+      "document_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+      "materialization_id": "e19c8ed6edb55f6b17e3b5d05bc702095816cefd89e9f0786acc429aef6d328f",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "1765cca405454ec799685118be0101652465bf5d6729a9c5e7a3749b5e6de711",
+      "text": "` +—* — v:nh _ |\r\n",
+      "text_sha256": "1765cca405454ec799685118be0101652465bf5d6729a9c5e7a3749b5e6de711"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "POW"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+    "document_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6fb8165fd6057527c09b8f395718f295da178397cfeb65ae13931d4a6ded7d7d",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "5806afe8d1927a04060ca7275f94af1b512846648123d20f8cb5b7eff234ca71",
+       "text": "no best words!!\r\n"
+      },
+      "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+      "document_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+      "materialization_id": "b3c61aca23d1a07292b25d7d806724203312ff11239c486e48b80fb2f1d70a15",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "2876befa13de9e57336df7dc0e5bb509b50d3a40808109c3695d6c98adabe579",
+      "text": "SO GIAO DICH CHUNG KHOAN CONG HOA XA HOI CHU NGHIA VIET NAM\r\nTHANH PHO HO CHi MINH Độc lap — Tw do — Hanh phic |\r\nSo: 4² /TB-SGDHCM Thanh phé Hồ Chi Minh, ngay 14 thang 01 năm 2026\r\n— THONG BAO _ —\r\nVề việc giao dich chứng khºán thay đối dang ky niém yét\r\nSở Giao dich Chứng khºán Thanh phé H6 Chi Minh thong bao về viée giao dich\r\nchimg khoan thay đổi dang ky niém yét nhu sau:\r\n— Téchite niém yét: Tong Cong ty Dién lực Dau khi Viét Nam — CTCP\r\n— Tru so chinh: Toa nha Vién Dau khi Viét Nam, số 167 Phố Trung Kinh,\r\nPhuong Yén Hoa, Thanh phé Ha Noi\r\n- Dién thoai: (84-24) 2221 0288 Fax: (84-24) 2221 0388\r\n- Website: www.pvpower.vn\r\nĐược thay đổi ding ky niém yét (theo Quyét dinh số 29/QD-SGDHCM ngay\r\n09/01/2026) tai Sở Giao dich Chitng khoan Thanh phé H6 Chi Minh voi nội dung nh\r\nsau:\r\n- Loaichtng khoan : Cổ phiéu phé thong\r\n- Mã chứng khºán :POW\r\n— Ménh gia : 10.000 dong\r\n- : Số luong chimg khoan thay déi niém yét: 444.949.496 cổ phiéu\r\n- Ly do thay déi niém yét: Phat hanh cổ phiéu dé tra cổ ttre va tang von cổ phan\r\ntừ nguén von chủ so hữu\r\n— §é6 luong ching khoan sau khi thay đổi niém yét: 2.786.821.096 cé phiéu\r\n— Gia tri chimg khodn niém yét sau khi thay đổi niém yét (theo ménh gia):\r\n27.868.210.960.000 dong\r\n- Neay thay đổi niém yét có hiéu hye: 13/01/2026\r\n- Neay giao dich của ching khoan thay déi niém yét: 27/01/2026 4\r\n| awe\r\né — GIÁM OCHO ~ LY NIEM YET\r\n— ẵ'Ệ`[ễClẩ`,GS,'l\"TTT; | ễ ẳẵểỉẵâH A /\r\n— Luu: VF, NY Oy | | THÀNH eHey JA\r\nleo CHI MI\r\nSr\r\nNouyen Nam Anh\r\nHOSE BM7a4n-BHo070022,—~S*~*=<“—s*“‘“‘*“‘“‘“S*‘<C 727}\r\n",
+      "text_sha256": "2876befa13de9e57336df7dc0e5bb509b50d3a40808109c3695d6c98adabe579"
+     },
+     {
+      "citation_id": "c98cebf1c68596e5ac28bab8d6422b024441d4381346d0a9784c43a2b893972e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+      "document_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+      "materialization_id": "52793719ff709b8e23476542a28b48b3aa024dca417776d0d48c2f5327afeb45",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "ea2c21bce302172b194099ea8f101e44147276293843eeec639c1b737d1a5527",
+      "text": "__ +—* — v:nh _ |\r\n",
+      "text_sha256": "ea2c21bce302172b194099ea8f101e44147276293843eeec639c1b737d1a5527"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "POW"
+   }
+  },
+  "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+    "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6
+    },
+    "pages": [
+     {
+      "citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "34a0264acb8a2ef373041c7e83bf2e9959e59bf5313e8793835012f870c97679",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "9fc7e57c520feac4242af80c9123c88aff1d6b22a85a8b78c9be51745ac11d65",
+      "text": "TẬP ĐOÀN:=“*“~..\r\nCÔNG TY CP TẬP ĐOÀN HÒA PHÁT CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nĐộc lập — Tự dº — Hạnh phúc\r\nSố:03/BC/²0²6—TDHP\r\nHà Nội, ngày 04 tháng 06 năm ²0²6\r\nBÁO CÁO KÉT QUẢ ĐỢT PHÁT HÀNH CỔ PHIẾU\r\nĐẺ TRẢ CỔ TỨC\r\nKính gửi: — Ủy ban Chứng khºán Nhà nước\r\n\r\nI. — Giới thiệu về Tổ chức phát hành\r\n1. Tên tổ chức phát hành: Công ty Cổ phần Tập đºàn Hòa Phát\r\n². Tên viết tắt: Hºaphat Grºup đạn\r\n3.. Địa chỉ trụ sở chính: Khu công nghiệp Phố nối A, xã Nguyễn Văn Linh, tỉnh Hưng Q'ệ\"<>ịÔỈ`l(3\r\n\r\nYên, Việt Nam. ể’Ổ\r\n4. Điện thºại: 0²4.3974 7751 ×\\ HÙA I\r\n5.. Vốn điều lệ: 76.754.658.550.000 đồng (Bảy mươi sáu nghìn bảy trăm năm mươi — y ỵỵ\r\n\r\ntư tỷ, sáu trăm năm mươi tám triệu năm trăm năm mươi nghìn đồng).\r\n6. Mã cổ phiếu: HPG\r\n7. Nơi mở tài khºản thanh tºán: Ngân hàng Vietcºmbank —CN Thành Công\r\n\r\nSố hiệu tài khºản: 0451 001 ²89 ²²6\r\n8. Giấy chứng nhận đăng ký dºanh nghiệp mã số dºanh nghiệp 0503000008 dº Sở\r\n\r\nKế hºạch và đầu tư tỉnh Hưng Yên cấp lần đầu ngày ²6 tháng 10 năm ²001, số\r\n\r\n0900189²84 dº Sở Tài chính tỉnh Hưng Yên cấp thay đổi lần thứ 38 ngày 1² tháng\r\n\r\n8 năm ²0²5. |\r\nII. Phương án phát hành cổ phiếu trả cốổ tức năm ²0²5\r\n1. Tên tổ cổ phiếu: Cổ phiếu Công ty Cổ phần Tập đºàn Hòa Phát\r\n². Lºại cổ phiếu: Cổ phiếu phổ thông\r\n3. Số lượng cổ phiếu trước thời điểm phát hành:\r\n\r\n— — Tổng số cổ phiếu đã phát hành:  7.675.465.855 cổ phiếu\r\n\r\n— — Số lượng cổ phiếu đang lưu hành: 7.675.465.855 cổ phiếu\r\n\r\n— : Số lượng cổ phiếu quỹ: 0 cổ phiếu\r\n4. Số lượng cổ phiếu dự kiến phát hành: 767.546.585 cổ phiếu\r\n\r\n1\r\n",
+      "text_sha256": "9fc7e57c520feac4242af80c9123c88aff1d6b22a85a8b78c9be51745ac11d65"
+     },
+     {
+      "citation_id": "c1a649bcac0fe686c9e0cb85077c9ad1cb6693efabe62a53429c057537ddd734",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "f8e97cd71c04582b454141961cf7c8c5110d4cceeb30afe2d06b7845e5cdf7f3",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "77b37d4b637cdbc470dc3ebcec9aabf06e7200a868b95702153556953eee92c1",
+      "text": "5. Tỷ lệ thực hiện quyền: 100:10 (Cổ đông sở hữu 100 cổ phiếu sẽ được nhận 10 cổ\r\nphiếu phát hành thêm để trả cổ tức)\r\n6. Nguồn vốn phát hành: Lợi nhuận sau thuế chưa phân phối trên báº cáº tài chính\r\nđược kiểm tºán năm ²0²5.\r\n7. Phương án xử lý cổ phiếu lẻ phát sinh: Số lượng cổ phiếu phát hành trả cổ tức chº\r\nmỗi cổ đông sẽ được làm tròn đến hàng đơn vị theº nguyên tắc làm tròn xuống. Số\r\ncổ phiếu lẻ phần thập phân (nếu có) sẽ bị hủy bỏ.\r\nJí dụ: Cổ đông sở hữu 1 78 Ổ phiếu, số cổ phiếu trả cổ tức được nhận tạm tính\r\nk`zj Ệ x / ,0% = 17,8 cô phiêu. R R\r\nSó cổ phiếu cô đông sẽ thực nhận là 17 cô phiêu; 0,8 cô phiêu lẻ sẽ bị hủy bỏ\r\n8. Ngày kết thúc đợt phát hành: ²6/5/²0²6\r\n9, Ngày dự kiến chuyển giaº cổ phiếu: 06/7/²0²6\r\nIII. Kết quả phát hành cổ phiếu\r\n1. Tổng số cổ phiếu đã phân phối: 767.498.665 cổ phiếu, trºng đó:\r\n— : Số cổ phiếu phân phối chº cổ đông theº tỷ lệ: 767.498.665 cổ phiếu chº cổ B\r\n²81.575 cổ đông; ry N\r\n— : Số cổ phiếu xử lý phần lẻ cổ phần, cổ phiếu lẻ: Có 47.9²0 cổ phiếu (đã ủỄ\r\nhủy bỏ). lẤT /«\r\n². Tổng số cổ phiếu sau đợt phát hành (ngày ²6/5/²0²6): 8.44².964.5²0 cổ phiế sờ\r\ntrºng đó:\r\n— : Số lượng cổ phiếu đang lưu hành: 8.44².964.5²0 cổ phiếu;\r\n— : Số lượng cổ phiếu quỹ: 0 cổ phiếu.\r\nIII. Tài liệu gửi kèm\r\nNghị quyết Hội đồng quản trị số 07/NQHP—²0²6 ngày ²8/4/²0²6 thông qua việc\r\ntriển khai phương án chi tiết chi trả cổ tức năm ²0²5 bằng cổ phiếu kèm theº\r\nphương án xử lý cổ phiếu lẻ phát sinh;\r\nNGƯỜI ĐALDĐIỆN THEO PHÁP LUẬT\r\n/4º0!8%²@y\r\nSở cÔNG LY\r\nV bựng — TNG GIÁM ĐỐC\r\n²\r\n",
+      "text_sha256": "77b37d4b637cdbc470dc3ebcec9aabf06e7200a868b95702153556953eee92c1"
+     },
+     {
+      "citation_id": "2a765a6b92990a2f71ee11426ae057d7f2e11c7704291b0c7187b5c72d5a8053",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "ef15d2aea33d57eeac79937f64c3b6598b6400857ba5d638d3b164ce5441fedf",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "75d75ab8db16e20cd0e721ec7a12487a0024908cbe4ebcc928e5aaa45b8ad1bf",
+      "text": "HOA PHAT GROUP THE SOCIALIST REPUBLIC OF VIETNAM\r\nJOINT STOCK COMPANY Independence — Freedºm — Happiness\r\nNº: 03 /²0²6/BC—TĐHP Hung Yen, June 04, ²0²6\r\nREPORT ON THE RESULTS OF THEẺE SHARE ISSUANCE\r\nTO PAY DIVIDENDS\r\nI. Intrºductiºn tº the Issuing Organizatiºn\r\n1. Name ºflIssuing Organizatiºn: Hºa Phat Grºup Jºint Stºck Cºmpany\r\n². Abbreviatiºn name: Hºa Phat Grºup ‹\r\n3. Headquarters: Phº Nºi A Industrial Park, Nguyen Van Linh Cºmmune, é.°qop\r\nHung Yen Prºvince, Vietnam s | Gc,cc\r\n4. Tel: 0²43.9747751 Website: www.hºaphat.cºm.vn Ĩ Ấ<\r\n5. Registered capital: 76.754.658.550.000 VND (Seventy six thºusand seven ²\r\nhundred fifty fºur billiºn, six hundred fifty eight milliºn and five hundred\r\nand fifty thºusands VND)\r\n6. Security cºde: HPG\r\n7. Accºunt infºrmatiºn: Vietcºmbank — Thanh Cºng\r\nAccºunt number: 0451 001 ²89 ²²6\r\n$8. Business registratiºn certificate number 0503000008 was first isused by\r\nHung Yen prºvince Finance Depatment ºn ²6 /10/²001, Nº 0900189²84\r\nwas isused by Hung Yen prºvince Finance Depatmernt fºr the 38 time ºn\r\n1²/08/²0²5.\r\n— The main busīness:\r\nII. Release plan Issuing shares tº pay dividends\r\n1. Stºck: Hºa Phat Grºup Jºint Stºck Cºmpany Stºck\r\n². Class ºf share: Ordinary share\r\n3. Number ºf shares befºre issuance:\r\nTºtal number ºf shares issued: 7.675.465.855 shares\r\n1\r\n",
+      "text_sha256": "75d75ab8db16e20cd0e721ec7a12487a0024908cbe4ebcc928e5aaa45b8ad1bf"
+     },
+     {
+      "citation_id": "1bf80b35e71584db4bdcfedc8029ec4aaf98ea575f03bd71c8824bd964aae2ff",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "f599fd696ff8d22fa26a1d3fdac2ee1e794632e50b987cfb769edf42b2f98326",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "266c47c43e22f8e2ea8caab3a9eabbcc9a210d8fe41c1d8b1c2375603c9d729c",
+      "text": "Tºtal number ºf ºutstanding shares: 7.675.465.855 shares\r\nNumber ºf treasury shares: 0 shares\r\n4. Number ºf stºcks expected tº be issued:  767.546.585 shares\r\n5. Stºck dividend payºut ratiº: 10%/ Registered capital, (Sharehºlders\r\nºwning 100 stºcks will receive 10 additiºnal stºcks issued tº pay dividends)\r\n6. Funds fºr issuance: Undistributed after—tax prºfit ºn the audited Financial\r\nStatements ²0²5\r\n7. Plan tº prºcess fractiºnal stºcks: Number ºf stºcks Issued tº pay dividend\r\nfºr each sharehºlder will be rºunded dºwn tº the nearest whºle number.\r\nAny fractiºnal stºcks will be canceled.\r\nExample: Estimated number ºf dīvidend stºcks a sharehºlder ºwning 178\r\nstºcks will receive is 178 x 10% = 17.8 stºcks\r\nNumber ºf stºcks the sharehºlder will actually receive is 17 stºcks; 0.8\r\nfractiºnal stºcks will be canceled. '3²²Ệ\r\nTY\r\n8. Issuance cºmpletiºn date: ²6/5/²0²6 PGH Âh\r\n9.  Expected share transfer date: 06/7/²0²6 \\’ ỀÌỀ\r\nIII. Results ºf the Share Issuance me(\r\nHƯNG&,\r\n1. Tºtal number ºf shares distributed: 767.498.665 shares, includiīng:\r\n— Number ºf shares distributed tº sharehºlders accºrding tº ratiº: 767.498.665\r\nshares fºr ²81,575 sharehºlders;\r\n— Number ºf shares prºcessed frºm fractiºnal shares: 47.9²0 shares (which\r\nhave been canceled).\r\n². Tºtal number ºf shares after the issuance (May ²6, ²0²6): 8.44².964.5²0\r\nshares, including:\r\n— Number ºf ºutstanding shares: 8.44².964.5²0 shares;\r\n— Number ºf treasury shares: 0 shares.\r\nIII. Attached Dºcuments\r\n²\r\n",
+      "text_sha256": "266c47c43e22f8e2ea8caab3a9eabbcc9a210d8fe41c1d8b1c2375603c9d729c"
+     },
+     {
+      "citation_id": "f0b0b16105d3bb2c0f2737fdea81772b9588af433ff12f5ba6a63d55d4b523a3",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "822dc9e68b549346f9cf7ccab1018da3a0ba7fc40860fcc1c4a6469a5ddd9f01",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "fd1178c92f6e5d6df63388a2d07e914b54e251ec1276b0cb1d883cc97285678c",
+      "text": "Bºard ºf Directºrs Resºlutiºn Nº. 07/NQHP—²0²6 dated April ²8, ²0²6,\r\napprºving the implementatiºn ºf the detailed plan fºr paying dividends fºr\r\n²0²5 in shares, alºng with the plan fºr handling fractiºnal shares arising;\r\nLEGAL REPRESENTATTIVE\r\n\r\nRecipients: /00189²ạ\r\n\r\nđ.) Cí\r\n— ._As abºve; ~ ọ\r\n\r\nFecºrd. x\r\n²\r\nỔNG eIÁM Độc\r\nX\r\n»\r\n3\r\n",
+      "text_sha256": "fd1178c92f6e5d6df63388a2d07e914b54e251ec1276b0cb1d883cc97285678c"
+     }
+    ],
+    "pages_processed": 5,
+    "schema_version": "1.0.0",
+    "source_page_count": 5,
+    "ticker": "HPG"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+    "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6
+    },
+    "pages": [
+     {
+      "citation_id": "a8709bef921f14205ae124c020283e363f091a6c60b7b286c4f11089eff1b080",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "b6e9ee2886bff7a834c13fca31870b3c37a7971460f3e9d70caaa74ea811b0c8",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "e3fdb9158a9bbfb18b5027dbbdacce8e01a9513d4e0c3d8418c1c8b88812ce08",
+      "text": "TAP ĐOÀN:=“*“~..\r\nCÔNG TY CP TẬP ĐOÀN HÒA PHÁT CONG HOA XA HOI CHU NGHĨA VIET NAM\r\nDoc lap — Tw do — Hanh phic\r\nS6:03 /BC/2026-TDHP\r\nHa Noi, ngay 04 thang 06 nam 2026\r\nBAO CAO KET QUA DOT PHAT HANH CO PHIEU\r\nDE TRA CO TUC\r\nKinh gửi: Uy ban Ching khodn Nha nước\r\n\r\n|. Giới thiéu về T6 chire phat hanh\r\n1. Tén t6 chức phat hanh: Céng ty Cổ phan Tap doan Hoa Phat\r\n2. Tén viét tat: Hoaphat Group me\r\n3. Dia chi tru sé chinh: Khu céng nghiép Phé nối A, xã Nguyén Van Linh, tinh Hung LZ ov\r\n\r\nYén, Viét Nam. iG\r\n4. Dién thoai: 024.3974 7751 «\\ HOA I\r\n5. Vén điều lệ: 76.754.658.550.000 déng (Bay muoi sáu nghin bay tram nim muoi Waa\r\n\r\ntu ty, sdu tram nim muoi tam trigu nam tram năm muoi nghin đồng).\r\n6. Mã cổ phiếu: HPG\r\n7. Noi mở tai khºản thanh tºán: Ngân hang Vietcombank — CN Thanh Cong\r\n\r\nSố hiéu tai khoan: 0451 001 289 226\r\n8. Gidy chimg nhan dang ky doanh nghiép mã số doanh nghiép 0503000008 do Sở\r\n\r\nKé hoach va dau tu tinh Hung Yén cap lan dau ngay 26 thang 10 nam 2001, số\r\n\r\n0900189²84 dº Sở Tài chính tỉnh Hưng Yên cấp thay đổi lần thứ 38 ngày 1² tháng\r\n\r\n8 năm ²0²5. |\r\nll. Phương án phat hành cổ phiếu tra cé tire nam 2025\r\n1. Tén t6 cổ phiéu: Cổ phiéu Céng ty Cé phan Tap doan Hoa Phat\r\n2. Loai cé phiéu: Cổ phiéu phé thong\r\n3. Sé lượng cé phiéu trudc thời diém phat hanh:\r\n\r\n— Téng số cé phiéu da phat hanh: —7.675.465.855 cổ phiéu\r\n\r\n— $6 lượng cé phiéu dang lưu hanh: 7.675.465.855 cổ phiéu\r\n\r\n— : Số lugng cổ phiếu quỹ: 0 cổ phiếu\r\n4. Số lượng cổ phiếu dự kiến phát hành: 767.546.585 cổ phiếu\r\n\r\n1\r\n",
+      "text_sha256": "e3fdb9158a9bbfb18b5027dbbdacce8e01a9513d4e0c3d8418c1c8b88812ce08"
+     },
+     {
+      "citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "3df1159725a95fae1ea43c53fe62c62d67b0f3728a59a49f91a5d3c3308f6c75",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "6a3a499f298878a06776c5e0448f959450b4209cdedccdcbee33fd9ed236c200",
+      "text": "5. Ty lệ thực hién quyền: 100:10 (Cổ đông sé hữu 100 cổ phiéu sé được nhận 10 cổ\r\nphiếu phát hành thêm để trả cổ tức)\r\n6. Nguồn vốn phát hành: Lợi nhuận sau thuế chưa phân phối trên báº cáº tài chính\r\nđược kiểm tºán năm ²0²5.\r\n7. Phuong án xt ly cổ phiếu lẻ phat sinh: Số lugng cé phiéu phat hanh tra cé tire cho\r\nmdi cổ déng sé duge 1am tron dén hang don vi theo nguyén tac lam tron xudng. S6\r\ncổ phiéu lẻ phan thap phan (néu có) sé bi hủy bo.\r\nVi du: Cổ déng so hitu 1 78 cé phiéu, số cổ phiéu tra co tite duoc nhận tam tinh\r\nla 1 78 x1 0% = 17,8 cô phiéu. R R\r\nS6 c6 phiéu cô đông sé thực nhận la 17 cô phiéu; 0,8 cô phiéu lẻ sé bi hủy bo\r\n8. Ngay két thúc dot phat hanh: 26/5/2026\r\n9. Ngay du kién chuyén giao cổ phiéu: 06/7/2026\r\nIIL. Két qua phat hanh cổ phiéu\r\n1. Téng số cé phiéu da phan phối: 767.498.665 cổ phiéu, trong do:\r\n— §6 cé phiéu phan phối cho cổ déng theo ty 16: 767.498.665 cé phiéu cho cổ >\r\n281.575 cổ déng; ry Nu\r\n— §6cé phiéu xt ly phan lẻ cé phan, cé phiéu lẻ: Co 47.920 cổ phiéu (da +)\r\nhủy bd). iAT /\r\n2. Téng số cé phiéu sau dot phat hanh (ngay 26/5/2026): 8.442.964.520 cổ phié sờ\r\ntrºng đó:\r\n— : Số lượng cổ phiéu dang lưu hanh: 8.442.964.520 cé phiếu;\r\n— : Số lượng cé phiéu quỹ: 0 cổ phiếu.\r\nlll. Tai liệu gửi kèm\r\nNghị quyét Hội déng quan tri số 07/NQHP-2026 ngay 28/4/2026 thông qua việc\r\ntrién khai phuong án chi tiét chi tra c6 tức nam 2025 bang cé phiéu kém theo\r\nphuong án xử ly cổ phiếu lẻ phát sinh;\r\nNGƯỜI DALDIEN THEO PHÁP LUẬT\r\n/4º0!8%²@y\r\n9/ CONG ON\r\nOTE, TNG GIÁM BOC\r\n2\r\n",
+      "text_sha256": "6a3a499f298878a06776c5e0448f959450b4209cdedccdcbee33fd9ed236c200"
+     },
+     {
+      "citation_id": "5a9c6cb4e3a171d0e0afc914319582b584e164c9af2b4fd68e7173ea6d0c83ed",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "54fb86ad40558d743555806155a4b1cb42f10f2fcdb8f69cde7c62ca9afe0380",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "3ebadddcde93e1b492ddea73cc5cbdbceb9fbd736bd9fe50efa02b53188f7e2b",
+      "text": "HOA PHAT GROUP THE SOCIALIST REPUBLIC OF VIETNAM\r\nJOINT STOCK COMPANY Independence - Freedom - Happiness\r\nNo: 03 /2026/BC-TDHP Hung Yen, June 04, 2026\r\nREPORT ON THE RESULTS OF THE SHARE ISSUANCE\r\nTO PAY DIVIDENDS\r\nI. Introduction to the Issuing Organization\r\n1. Name of Issuing Organization: Hoa Phat Group Joint Stock Company\r\n2. Abbreviation name: Hoa Phat Group ;\r\n3. Headquarters: Pho Noi A Industrial Park, Nguyen Van Linh Commune, kg\r\nHung Yen Province, Vietnam s | “i\r\n4. Tel: 0243.9747751 Website: www.hoaphat.com.vn “ P\r\n5. Registered capital: 76.754.658.550.000 VND (Seventy six thousand seven ²\r\nhundred fifty four billion, six hundred fifty eight million and five hundred\r\nand fifty thousands VND)\r\n6. Security code: HPG\r\n7. Account information: Vietcombank — Thanh Cong\r\nAccount number: 0451 001 289 226\r\n8. Business registration certificate number 0503000008 was first isused by\r\nHung Yen province Finance Depatment on 26 /10/2001, No 0900189284\r\nwas isused by Hung Yen province Finance Depatment for the 38\" time on\r\n12/08/2025.\r\n- The main business:\r\nII. Release plan Issuing shares to pay dividends\r\n1. Stock: Hoa Phat Group Joint Stock Company Stock\r\n2. Class of share: Ordinary share\r\n3. Number of shares before issuance:\r\nTotal number of shares issued: 7.675.465.855 shares\r\n1\r\n",
+      "text_sha256": "3ebadddcde93e1b492ddea73cc5cbdbceb9fbd736bd9fe50efa02b53188f7e2b"
+     },
+     {
+      "citation_id": "165b2ded792819bf0025094726d4b82c8207f6c94a1236194d8d92fbb35a034e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "0c3f276207799f17e542efcdc51bd909208578af877f99203cf3bf2d59214106",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "9cc7755ec683c0e128841b461e6e1e4c664c1656ee53ffba2cc5dacadbf82ee9",
+      "text": "Total number of outstanding shares: 7.675.465.855 shares\r\nNumber of treasury shares: 0 shares\r\n4. Number of stocks expected to be issued: 767.546.585 shares\r\n5. Stock dividend payout ratio: 10%/ Registered capital, (Shareholders\r\nowning 100 stocks will receive 10 additional stocks issued to pay dividends)\r\n6. Funds for issuance: Undistributed after-tax profit on the audited Financial\r\nStatements 2025\r\n7. Plan to process fractional stocks: Number of stocks issued to pay dividend\r\nfor each shareholder will be rounded down to the nearest whole number.\r\nAny fractional stocks will be canceled.\r\nExample: Estimated number of dividend stocks a shareholder owning 178\r\nstocks will receive is 178 x 10% = 17.8 stocks\r\nNumber of stocks the shareholder will actually receive is 17 stocks; 0.8\r\nfractional stocks will be canceled. 3928\r\nTY\r\n8. Issuance completion date: 26/5/2026 7 Ab\r\n9. Expected share transfer date: 06/7/2026 : oH)\r\nIII. Results of the Share Issuance me(\r\nHUNG,\r\n1. Total number of shares distributed: 767.498.665 shares, including:\r\n— Number of shares distributed to shareholders according to ratio: 767.498 .665\r\nshares for 281,575 shareholders;\r\n- Number of shares processed from fractional shares: 47.920 shares (which\r\nhave been canceled).\r\n2. Total number of shares after the issuance (May 26, 2026): 8.442.964.520\r\nshares, including:\r\n- Number of outstanding shares: 8.442.964.520 shares;\r\n- Number of treasury shares: 0 shares.\r\nIll. Attached Documents\r\n2\r\n",
+      "text_sha256": "9cc7755ec683c0e128841b461e6e1e4c664c1656ee53ffba2cc5dacadbf82ee9"
+     },
+     {
+      "citation_id": "399871186e254078907880deeb2f97414a1774fb8d136964dac76815ed7f5622",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "materialization_id": "e54da623661310de64d77e2ad7f5e69b856fdb7e636a82793538e8fc1336e61c",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "729e93a37b56c4538d391dc09454c6a733784b38c1d38090e7a13d67bb7761ed",
+      "text": "Board of Directors Resolution No. 07/NQHP-2026 dated April 28, 2026,\r\napproving the implementation of the detailed plan for paying dividends for\r\n2025 in shares, along with the plan for handling fractional shares arising;\r\nLEGAL REPRESENTATIVE\r\n\r\nRecipients: 29018929\r\n\r\nGe) g\r\n- As above; aor a)\r\n\r\nrecora. .\r\n²\r\nỔNG GIAM péc\r\n*\r\n»\r\n3\r\n",
+      "text_sha256": "729e93a37b56c4538d391dc09454c6a733784b38c1d38090e7a13d67bb7761ed"
+     }
+    ],
+    "pages_processed": 5,
+    "schema_version": "1.0.0",
+    "source_page_count": 5,
+    "ticker": "HPG"
+   }
+  },
+  "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+    "document_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "f94ebe5bda1321c17c7cedbb6e156d4542bbba3d28e4c37df70f46d1953d1754",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+      "document_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+      "materialization_id": "be2c34295bc4636519ad5eaf892f1c498f21e57a0a31e38eb6d6a63bedf15f9b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8bd181ce4d52b0a242a6de857998205530024cdaf486683bd3d62ccbfc78e13f",
+      "text": "| SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HÒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố:#4²4 /TB—SGDHCM Thành phố Hồ Chí Minh, ngày ²5 tháng 06 năm ²0²6\r\nTHÔNG BÁO\r\nVề ngày đăng ký cuối cùng\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký cuối\r\ncùng như sau:\r\n— : Tổ chức niêm yết : Tổng Công ty Cổ phần Khºan và Dịch vụ Khºan Dầu khí\r\n— : Mã chứng khºán : PVD\r\n— : Lºại chứng khºán : Cổ phiếu phổ thông\r\n— : Mệnh giá : 10.000 đồng (mười nghìn đồng)\r\n— : Ngày giaº dịch không hưởng quyền : 14/07/²0²6\r\n— : Ngày đăng ký cuối cùng : 15/07/²0²6\r\n—: Lý dº và mục đích : Phát hành cổ phiếu để tăng vốn cổ phần từ Ủ1ủ\r\nnguồn vốn chủ sở hữu Ệỉò @lå\r\n— : Tỷ lệ thực hiện: 66,9% (cổ đông đang sở hữu 100 cổ phiếu sẽ được nhận 66,9 cổ ffl\\°ẸẢ\r\nphiếu phá: hành thêm). ẦgHõ le)\r\n— : Số lượng cổ phiếu dự kiến phát hành: 371.883.7²4 cổ phiếu à ;\r\n— : Phương án xử lý phần lẻ cổ phần, cổ phiếu lẻ: Số lượng cổ phần phát hành thêm phân\r\nphối chº cổ đông hiện hữu sẽ được làm tròn xuống đến hàng đơn vị. Phần lẻ cổ phần\r\nphát sinh (nếu có) sẽ bị hủy bỏ.\r\nVí dụ: Cổ đông 4 sở hữu 150 cổ fflaz'ếu tại ngày chốt danh sách cổ đông để thực hiện\r\nquyền nhận cổ phiếu phát hành dº Công tyỵ tăng vốn cổ phần từ nguồn vốn chủ sở hữu.\r\nVới tỷ lệ thực hiện quyền 66,9%, cổ đông A được nhận: 150 × 66,9% = 100,35 cổ phiếu.\r\nTheº nguyên tắc làm tròn xuống, cổ đông A được nhận 100 cổ phiếu phát hành thêm;\r\nphần lẻ 0,35 cổ phiếu phát sinh sẽ không được phân phối.\r\n— Địa điểm thực hiện:\r\n+ Đối với chứng khºán đã lưu ký: Người sở hữu chứng khºán làm thủ tục nhận cổ\r\nphiếu phát hành thêm để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại các Thành viên\r\nlưu ký nơi mở tài khºản lưu ký.\r\n+ Đối với chứng khºán chưa lưu ký: Người sở hữu chứng khºán làm thủ tục nhận cổ\r\nphiếu phát hành thêm để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại Bộ phận Quan\r\nHOSE_BM—7.33/1—BH3—06/²0²6% 000000 /// ²² 0000000000\r\nJI EIEEIEEIEHEIIIEIHUIEIEHIIIIHIHIIHIIIIIIIIIIEIIHHEIEEIIIILIEIIUIEEEEIEIIEIIEIIIIIIIIIIIIIIIIIIIIIIIIIIHHIIHHEHIIHEHIEEIIIHIIAIIIIGILUILELULGYIGUAGGRAYEQGIELERIIREILIEIIIREERII\r\n",
+      "text_sha256": "8bd181ce4d52b0a242a6de857998205530024cdaf486683bd3d62ccbfc78e13f"
+     },
+     {
+      "citation_id": "6e86a2b5e0521a6dd0a61949dc2ffdd38c90913b801dd7e3788ef5e71368212e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+      "document_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+      "materialization_id": "bbaab839d9b5e5b7f978bff04f5b907d4628fce172da7bbfccdff63af70ae772",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "242f24667f7409220fe6950668237c46379b40b2d23988d0174977d71cf74473",
+      "text": "^ ²\r\nhệ cổ đông — Tổng công ty PV Drilling, (địa chỉ: Lầu 4, tòa nhà Sailing Tºwer, 111A\r\nPasteur, Phường Sài Gòn, TP. HCM) vàº các ngày trºng tuần và xuất trình căn cước ả\r\ncông dân/căn cước. b€\r\nNơi nhận: — £——--\\ GIÁM ĐÓC l\r\n— TCNY; — GIÁM Đ 6Ý HONMG— QUẢN LÝ NIÊM YÉT |\r\n« T,GĐ (đê b/c) ầ-? SỔ GIAO MCẸ \\ ,\r\n— HTGD, GS, TTTT; | CHỨNG KHOÁN 7 /\r\n— Lưu: VT, NY Ữ).ỵ/ n H'|\\ÀNH PHỔ /\r\nHỔ CHÍ MINH\r\nv cỡ\r\n² s, v5 $²\r\n. Nguyên Nam Anh\r\n> ồ\r\n^9|ÇhH\\«.\r\n<HOÁN }`x\r\nPHỔ /\r\ni| MINH\r\né7\r\nH\r\nHOSE_BM—7.33/1—BH3—06/²0²% 00000 /// 0000000000\r\nLái\r\n",
+      "text_sha256": "242f24667f7409220fe6950668237c46379b40b2d23988d0174977d71cf74473"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "PVD"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+    "document_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+      "document_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+      "materialization_id": "f4f5791245a54bbdf0b0739c13197cc0aed44a847ddb62c2f0aab264d5169195",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "3895f9274ade0de6a42d6be50888e1cef5b85535a84f3ec5ae47e32b726522b2",
+      "text": "| SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHO HO CHi MINH Doc lip — Tw do — Hanh phuc\r\nS6:/424 /TB-SGDHCM Thanh phố Hồ Chi Minh, ngdy 25 thang 06 năm 2026\r\nTHONG BAO\r\nVề ngày đăng ký cuối cùng\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký cuối\r\ncùng như sau:\r\n— : Tổ chức niém yét: Tổng Công ty Cổ phần Khºan và Dịch vụ Khºan Dầu khí\r\n- Mã chứng khºán : PVD\r\n— Loai chứng khºán : Cổ phiéu phé thông\r\n— Ménh gid : 10.000 déng (mudi nghin déng)\r\n- Ngay giao dich khéng huéng quyén : 14/07/2026\r\n— Neay dang ky cuối cing : 15/07/2026\r\n- Ly do va muc dich : Phat hanh c6 phiéu dé tang vn cé phan tir raise\r\nnguồn von chi sở hữu ỆỄò GIA\r\n— Ty lệ thuc hién: 66,9% (cd đông dang sở hữu 100 cé phiéu sé được nhan 66,9 cổ i\r\nphiéu phat hanh thém). anv? C\r\n- : Số lượng cé phiéu dy kién phat hanh: 371.883.724 c6 phiéu WF\r\n— Phuong án xử ly phan lẻ cé phan, cổ phiéu lẻ: Số lượng cé phan phat hanh thém phan\r\nphéi cho cé déng hién hitu sé duge lam tron xuéng dén hang don vi. Phan lẻ cổ phan\r\nphat sinh (néu cé) sé bi hủy bd.\r\nVi du: Cổ dong A so hữu 150 cổ phiéu tai ngay chét danh sách cổ dong dé thc hién\r\nquyền nhén cé phiéu phat hanh do Céng ty tang von cé phan tir nguon von chi so hữu.\r\nVoi ty lé thực hién quyén 66,9%, cổ dong A duoc nhan: 150 × 66,9% = 100,35 cổ phiéu.\r\nTheo nguyén tac lam tron xudng, cổ déng A được nhận 100 cổ phiéu phat hanh thém;\r\nphan lé 0,35 c6 phiéu phat sinh sé khong duoc phan phi.\r\n- Dia diém thuc hién:\r\n+ Déi voi chimg khoan da lưu ky: Người so hữu ching khoan 1am tha tue nhan cổ\r\nphiếu phát hành thêm để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại các Thành viên\r\nlưu ký nơi mở tài khºản lưu ký.\r\n+ Đối với chứng khºán chưa lưu ký: Người sở hữu chứng khºán làm thủ tục nhận cổ\r\nphiếu phát hành thêm để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại Bộ phận Quan\r\nHOSE_BM—7.33/1—BH3—06/²0²6% 000000 /// ²² 0000000000\r\nee\r\n",
+      "text_sha256": "3895f9274ade0de6a42d6be50888e1cef5b85535a84f3ec5ae47e32b726522b2"
+     },
+     {
+      "citation_id": "787926e6753d923b95fefeb98ddd84cb95f10648a9579846b3196867152e0de2",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+      "document_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+      "materialization_id": "7f45a7f9c90b7b3311697c097fc2b00b0b4907ed79da45aa795cce5839989b8f",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "ca25e2b09d6b04ef278c4ceef8f9f7c2ea1ac6d47eea7d0edb552724e5a6be99",
+      "text": "^ ²\r\nhé cd đông — Tổng công ty PV Drilling, (dia chi: Lau 4, toa nha Sailing Tower, 111A\r\nPasteur, Phuong Sai Gon, TP. HCM) vao cdc ngay trong tuan va xuất trinh cin cước |\r\ncong dan/can cước. hk\r\nNoi nhận: — TUQ-FONG GIAM DOC |\r\n— TCNY; — GIÁM Đ OCF HONG QUAN LY NIEM YET |\r\n« aii (dé b/c) by, $6 GIAO DICH 2\\\r\n— HTGD, GS, TTTT; | CHUNG KHOAN 7 /\r\n— Luu: VT, NY (7). 6 mt THANH PHO Wy\r\nHO CHi MINH\r\nv cỡ\r\ners»\r\n. Nguyen Nam Anh\r\n> >,\r\nY DICH \\'4,\r\n<HOAN }`x\r\nPHỔ /\r\nil MINH\r\nWe,\r\nH\r\nHOSE_BM—7.33/1—BH3—06/²0²% 00000 /// 0000000000\r\na\r\n",
+      "text_sha256": "ca25e2b09d6b04ef278c4ceef8f9f7c2ea1ac6d47eea7d0edb552724e5a6be99"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "PVD"
+   }
+  },
+  "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+    "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6,
+     "6": 6,
+     "7": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6efb576eda9b7b17fc1aff1f9ed03fffdd6d9f9b4e4b87e9300db1758cbf6dce",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "b86ed22377157c41435b4747ee1ab3cb522360aab0eb6f143aa33848f164c93e",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "80ebee001ade654a99d0abd9a91c43343ee10e57071eafc6527018e2b77a95cf",
+      "text": "* TẬP ĐOÀN CÔNG NGHIỆP—NĂNG LƯỢNG CỌNG fflJỊỄ XA HỌI CHỦNGHIA ỦẸT NAM\r\n— QUỐC GIAVIỆÊT NAM Độc lập — Tự dº — Hạnh phúc\r\nPtTNUVIETIRN — TỔNG CÔNG TY CỎ PHẢN KHOAN ~———————————.——..—...=—...—————\r\nPlDrilling ..VÀ ĐỊCH vỤ KHOAN DẦU KHÍ\r\nTp. Hồ Chí Minh, ngày 1Q tháng — năm ²0²6\r\nsó: .336 | ß[µp.—=¶cl(T\r\nCÔNG BÓ THÔNG TIN TRÊN CÓNG THÔNG TIN ĐIỆN TỬ CỦA ỦY BAN\r\nCHỨNG KHOAN NHA NƯỚC VA SƠ GSCK TP.HCM\r\nDISCLOSURE OF INFORMATION OF WEB PORTAILS OF THE STATE\r\nSFECURITIES COMMISSION AND HO CHỈ MINH STOCK EXCHANGEF\r\nKính gửi: Ủy Ban Chứng khºán Nhà Nước / Sở Giaº dịch Chứng khºán\r\nThành phổ Hồ Chí Minh\r\nTº: State Securities Cºmmissiºn ºf Vietnam/ Hºchiminh Stºck Exchange\r\n1. Tên tổ chức/Name ºf Organizatiºn: Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu\r\nkhí (PV Drilling)/ Petrºvietnam Drilling & Well Service Cºrpºratiºn (PV Drilling). Á Q30²3\r\n— Mã chứng khºán/Ticker: PVD. ẵcô f ỆYJỂ\r\n— Địa chỉ/4ddress: Lầu 4, tòa nhà Sailing, 111A Pasteur, P. Sài Gòn, Tp. Hồ Chí Mi í`l' M ì 0Itµ\r\nJlººr, Sailing Tºwer, 1114 Pasteur Street, Sai Gºn Ward, Hº Chi Minh City. 3 DẦU\r\n— Điện thºại liên hệ/7e/: (0²8) 3914 ²01² Fax: (0²8) 3914 ²0²1 €ề CHíỈ\r\n— E—mail: IR@pvdrilling.cºm.vn\r\n². Nội dung thông tin công bố:\r\n— Ngày ²8/7/²0²6 PV Drilling đã công bố thông tin Báº cáº kết quả phát hành cổ phiếu để\r\ntăng vốn cổ phần từ nguồn vốn chủ sở hữu. Để phù hợp với thực tế thủ tục tại cơ quan nhà\r\nnước, nay PV Drilling công bố đính chính nội dung Báº cáº kết quả phát hành cổ phiếu\r\nnhư sau:\r\nOn July ²8, ²0²6, PV Drilling disclºsed the Repºrt ºn the Results ºf the Share Issuance tº\r\nIncrease Share Capital frºm EFquity. Tº align with the actual prºcedures at State\r\nauthºrities, PV Drilling hereby issues a cºrrectiºn tº the cºntents ºf the Repºrt ºn the\r\nResults ºf the Share Issuance as fºllºws:\r\nThông tin đã công bố Thông tin đính chính\r\nDisclºsed infºrmatiºn Updated infºrmatiºn\r\nIII. Kết quả phát hành cố phiếu: III. Kết quả phát hành cố phiếu:\r\n1. Tổng số cổ phiếu đã phân phối:| 1. Tổng số cổ phiếu đã phân phối:\r\n371.883.63².03 cổ phiếu, trºng đó: 371.86².185 cổ phiếu, trºng đó:\r\nSố cổ phiếu thực tế phân phối: Số cổ phiếu thực tế phân phối:\r\n371.86².185 cổ phiếu chº 46.955 cổ| 371.86².185 cổ phiếu chº 46.955 cổ\r\nđông; đông;\r\n1/²\r\n",
+      "text_sha256": "80ebee001ade654a99d0abd9a91c43343ee10e57071eafc6527018e2b77a95cf"
+     },
+     {
+      "citation_id": "00e6c94023cc3e6d8148083ceb0ede8cc36f3c22aa915fa4fdec00ab25b85149",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "b02974a92ee2b4fd98a2b3866635306acbb634728f4b6f90c4f622fde80038bf",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "d1338105992df012f868f79c661b1e8d73e572231d93a58a0957c4cd67555d84",
+      "text": "| Số cổ phiếu xử lý phần lẻ cổ phần, cổ | Số cổ phiếu xử lý phần lẻ cổ phần, cổ\r\nphiếu lẻ: ²1.447,03 cổ phiếu. phiếu lẻ: ²1.447,03 cổ phiếu.\r\nIII. Results ºf the Share Issuance 1III. Results ºf the Share Issuance\r\nNumber — ºf — distributed _ shares: | Number ºf _ distributed Shares:\r\n371,883,63².03 shares, including: 371,86²,185 shares, including:\r\nActual number ºf shares distributed: | Actual number ºf shares distributed:\r\n371,86²,185 shares, allºcated tº 46955 | 371,86²,185 shares, allºcated tº 46,955\r\nsharehºlders. sharehºlders.\r\nNumber ºf shares resulting frºm the | Number ºf shares resulting frºm the\r\ntreatiment _ ºf _ fractiºnal — share | treatment ºf fractiºnal share\r\nentitlements: ²1,447.03 shares. entitlements: ²1,447.03 shares.\r\nCác thông tin còn lại của Báº cáº kết quả phát hành cổ phiếu không thay đổi, PV Drilling\r\nđính kèm Báº cáº kết quả phát hành cổ phiếu đã được hiệu đính, thay thế chº văn bản đã\r\nđược công bố ngày ²8/7/²0²6.\r\nAl ºther cºntents ºf the Repºrt ºn the Results ºf the Share Issuance remain unchanged.\r\nPV Drilling hereby enclºses the revised Repºrt ºn the Results ºf the Share Issuance, which\r\nshall replace the versiºn previºusly disclºsed ºn July ²8, ²0²6.\r\n3. Thông tin này đã được công bố trên trang thông tin điện tử của công ty vàº ngày ²9/7/²0²6\r\ntại đường dẫn http://www.pvdrilling.cºm.vn/quan—he—cº—dºng/.\r\nThis infºrmatiºn was published ºn the cºmpany`s website ºn ²9 July ²0²6, as in the li\r\nhttps:/www.pvdrilling.cºm.vn/en—US/investºr—relatiºns . 3 ớ*Ộ\r\nChúng tôi xin cam kết Ếác thông tin công bố trên đây là ffl’Ễng sự thật và hºàn tºàn chịu ẩểw ễỆ\r\nnhiệm trước pháp luật về nội dung các thông tin đã công bố. # /w\r\nWe hereby certify that the infºrmatiºn prºvided is true and cºrrect and we bear thỀ°#i!\r\nrespºnsibility tº the law.\r\nNơi nhận/Recipients: NGƯỜI ĐALĐIỆN CÔNG BÓ THÔNG TIN\r\n— Như trên/4sabºve _ — PERSON AUT aÓRA#¥ =`\\o DISCLOSE INFORMATION\r\n— Lưu/Save VT, B.TCKT ẹ TNSTERKXSIDENT\r\nw (LÔNG TY CŨ PHÂN,\r\nII0åi \\\\ DỊ(f \\ KOAN\r\n& \\ DẦU KHÍ '\r\n,\r\nDO DANH RANG\r\n²/²\r\n",
+      "text_sha256": "d1338105992df012f868f79c661b1e8d73e572231d93a58a0957c4cd67555d84"
+     },
+     {
+      "citation_id": "b9541a847e75917993fbf257af07ffe2e508f6b902fda88d025d9734eddbc17c",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "3d8f5c203a56217c20b79d0aac3ea5451c842ed30484bdb7d7529545a54ac7f4",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "90f9c78a3d1fbd887634c92c152c32377904bb7e284628a57ecc94eceee580cd",
+      "text": "| TẠP ĐOÀN CÔNG NGHIẸP — NĂNG LƯỢNG CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nQUỐC GIA VIỆT NAM Độc lập — Tự dº — Hạnh phúc\r\nPETRVIETNRINI TỔỎNG CÔNG TY CỎ PHẦN KHOAN —\r\nPWiritüng VÀ DỊCH VỤ KHOAN DẦU KHÍ Tp. Hồ Chí Minh, ngày : tháng #†—. . năm ²03.(.\r\n. BÁO CÁO KÉT QUẢ ĐỢT PHÁT HÀNH CỔ PHIÉU\r\nĐẺ TANG VÓN CÓ PHẢN TỪ NGUÔN VÓN CHỦ SsỞ HỮU\r\nREPORT ON THE RESULTS OF SHARE ISSUANCE TO INCRFEFASE\r\nCHARTER CAPITAL FROM EOUITY SOURCES\r\nKính gửi/ Respecfully tº: —\r\n— Ủy Ban Chứng khºán Nhà Nước\r\nSfates Securities Cºmmissiºn ºf Vietnam Á\r\n— Sở Giaº dịch Chứng khºán Tp. Hồ Chí Minh ể°fb\r\nHº Chi Minh Stºck Exchange (HOSE) bĩ ðW\r\n:|[0\r\n^\\µ0\r\nI. Giới thiệu về Tổ chức phát hành/ Intrºductiºn tº the Issuer j }\r\n1. Tên tổ chức phát hành: Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu khí\r\nName ºf the issuer: Petrºvietnam Drilling & Well Service Cºrpºratiºn\r\n². Tên viết tắt/4bbreviated name: PV Drilling\r\n3. Địa chỉ trụ sở chính: Lầu 4, tòa nhà Sailing, 111A Pasteur, Phường Sài Gòn,\r\nThành phố Hồ Chí Minh\r\nIFead Office Address: 4º Flººr, Sailing Tºwer, 1114 Pasteur, Saigºn Ward,\r\nHº Chi Minh City.\r\n4. Điện thºại/Phºne: (0²8) 3914 ²01²\r\nWebsite: www.pvdrilling.cºm.vn\r\n5. Vốn điều lệ: 5.56².960.060.000 đồng\r\nCharter capital: VND 5,56²,960,060,000\r\n6. Mã cổ phiếu/ Ticker symbºl: _ PVD\r\n7. Nơi mở tài khºản thanh tºán:  Công ty cổ phần Chứng khºán Thành phố Hồ Chí Minh\r\n(HSC) Số hiệu tài khºản: 011C368369\r\nSecurities accºunt: IFlº Chi Minh City Securities Cºrpºratiºn (HSC)\r\nAccºunt Nº.: 011C368369\r\n8. Giấy chứng nhận đăng ký dºanh nghiệp mã số dºanh nghiệp 030²4951²6 dº Sở Kế\r\nhºạch và Đầu tư TP. HCM cấp lần đầu ngày 15 tháng 0² năm ²006, dº Sở Tài chính TP.\r\nHCM cấp thay đổi lần thứ 18 ngày 16 tháng 09 năm ²0²5.\r\nBusiness Registratiºn Certificate Nº. 030²4951²6 initially issued by the Hº Chi Minh\r\nCity Department ºf Planning and Investment ºn February 15, ²006, and amended fºr the\r\n18`` time by the Hº Chi Minh City Department ºf Finance ºn September 16, ²0²5.\r\nLầu 4, Sailing Tºwer, 111A Pasteur, Phường Sài Gòn, Thành phố Hồ Chí Minh, Việt Nam\r\nTel: +84 — ²8 — 39 14² 01² : : Fax: +84 — ²8 — 39 14² 0²1 / 39 14² 0²² : Web: www.pvdrilling.cºm.vn\r\n",
+      "text_sha256": "90f9c78a3d1fbd887634c92c152c32377904bb7e284628a57ecc94eceee580cd"
+     },
+     {
+      "citation_id": "b933e4626c3db4a6d0416efcbf6f6216d1d5caddd0f4a76373b32380b9b09ae8",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "92411b32cbd42d9e300093a166de532b77b9b6a0d62c82900d07382e2cda05c9",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "0b59d0b941f6a4a9200b2e9d4ac768de14fb472df0ce5b82bc5d307f3bbd1128",
+      "text": "...._+._=.. Ngành nghề kinh dºanh chính, Mã ngành:\r\nMain business lines and business cºdes:\r\n+ : Hºạt động dịch vụ hỗ trợ khai thác dầu thô và khí tự nhiên (Mã ngành 0910);\r\nSuppºrt activities fºr petrºleum and natural gas extractiºn (Business Cºde: 0910); `\r\n+ . Bán buôn máy móc, thiết bị và phụ tùng máy khác (Mã ngành 4659);\r\nWhºlesale ºf machinery, equipment and ºther spare parts (Business Cºde: 4659);\r\n+ : Lắp đặt máy móc và thiết bị công nghiệp (Mã ngành 33²0);\r\nInstallatiºn ºf industrial machinery and equipment (Business Cºde: 33²0),;\r\n+ — Xử lý ô nhiễm và hºạt động quản lý chất thải khác (Mã ngành 3900);\r\n&emediatiºn activities and ºther waste management services (Business Cºde:\r\n3900); ln\r\n+ : Hºạt động hỗ trợ dịch vụ tài chính chưa được phân vàº đâu (Mã ngành 6619);\r\nOther activities auxiliary tº finanecial service activities (Business Cºde: 6619);.\r\n+ : Hºạt động thiết kế chuyên dụng (Mã ngành 7410); L ợa\r\nSpecialized design activities (Business Cºde: 7410); ²\r\n+ . Cung ứng nguồn nhân lực khác (Mã ngành 78²²); t\r\nOther manpºwer supply services (Business Cºde: 78²²); t1b\r\n+ ị-Ềozạỗ)động tư vấn quản lý kinh dºanh và hºạt động tư vấn quản lý khác (Mã ngành — ºỈ\r\nManagement cºnsultancy activities(Business Cºde: 70²0); 54\r\n+ . Sửa chữa, bảº dưỡng máy móc thiết bị (Mã ngành 331²);\r\n— Repair ºf machinery (Business Cºde: 331²);\r\n+ : Đàº tạº trung cấp (Mã ngành 853²). |\r\nJntermediate—level training and educatiºn (Business Cºde: 853²).\r\n— Sản phấrr1/dịch vụ chính:\r\nKey prºducts/ services:\r\n+ : Khºan và sửa chữa các giếng khºan dầu khí;\r\nDrilling and wºrkºver services fºr ºil and gas wells;\r\n+ . Cung ứng giàn khºan và giàn khai thác dầu khí; |\r\nPrºvisiºn ºf drilling rigs and ºil and gas prºductiºn platfºrms; l\r\n+ — Thử vỉa, bơm trám xi măng, đº địa vật lý giếng khºan và các dịch vụ khác liên quan\r\nđến công tác khºan và khai thác;\r\nWell testing, cementing, well lºgging, and ºther services related tº drilling and\r\nprºductiºn ºperatiºns;\r\n+ : Các dịch vụ liên quan đến công tác khºan dầu khí chº các dự án dầu khí ở nước ngºài;\r\nServices related tº ºil and gas drilling ºperatiºns fºr ºverseas prºjects;\r\n+ : Dịch vụ chế tạº, lắp đặt, kiểm tra chất lượng, sửa chữa, bảº dưỡng, vận hành giàn\r\nkhºan và giàn khºan khai thác dầu khí; .\r\nFabricatiºn, installatiºn, inspectiºn, repair, maintenance, and ºperatiºn services\r\nJfºr drilling rigs and prºductiºn plaifºrms; *\r\n+ — Mua bán vật tư, thiết bị khºan và khai thác;\r\nTráäding ºf drilling and prºductiºn materials and equipment;\r\n",
+      "text_sha256": "0b59d0b941f6a4a9200b2e9d4ac768de14fb472df0ce5b82bc5d307f3bbd1128"
+     },
+     {
+      "citation_id": "e8d45b1747fba6c4cb9ba721b9f87bed8a3545b5a6ac480749a99dceaa58f934",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "43d056637524af6ce3e88b76319c6beea4c2f84a5a3f0c11523eab26ca14ac0d",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "568d1fbc9ca1cdc52b71a8fd01638776af842a4d2b2279770f9cdf624977d6cc",
+      "text": "R + : Cung cấp vật tư, các thiết bị dây chuyền công nghiệp (Không thực hiện quyền xuất\r\nkhẩu, quyền nhập khẩu, quyền phân phối đối với các hàng hóa thuộc Danh mục\r\nhàng hóa mà nhà đầu tư nước ngºài, tổ chức kinh tế có vốn đầu tư nước ngºài không\r\nđược thực hiện quyền xuất khẩu, quyền nhập khẩu, quyền phân phối theº quy định của\r\npháp luật);\r\n\r\nSupply ºf materials and industrial prºductiºn line equipment (excluding the exercise\r\nºf expºrt rights, impºrt rights, and distributiºn rights with respect tº gººds ºn the list\r\nf gººds fºr which fºreign investºrs and fºreign—invested ecºnºmic ºrganizatiºns are\r\nprºhibited frºm exercising expºrt rights, impºrt rights, and distributiºn rights in\r\n\r\n| accºrdance with applicable laws);\r\n+ : Lắp đặt các thiết bị dây chuyền công nghiệp;\r\nInstallatiºn ºf industrial prºductiºn line equipmení;\r\n+ ... Dịch vụ ứng cứu sự cố dầu tràn và bảº vệ môi trường;\r\n\r\nOil spill respºnse and envirºnmental prºtectiºn services; —\r\n\r\n+ — Tư vấn đầu tư — quản lý dự án (trừ tư vấn tài chính, kế tºán, pháp luật); _ [\r\nInvestment cºnsultancy and prºject management services (excluding financial, k\r\naccºunting, and Iegal cºnsultancy services);\r\n\r\n+ .. Dịch vụ thiết kế giàn khºan và giàn khai thác dầu khí; R\r\nDesign services fºr ºil and gas drilling rigs and prºductiºn platfºrms; h\r\n\r\n+ ... Cung cấp laº động chº các giàn khºan, giàn khai thác dầu khí của Tập đºàn Công kã\r\nnghiệp — Năng lượng Quốc gia Việt Nam;\r\n\r\nPrºvisiºn ºf manpºwer fºr ºil and gas drilling rigs and prºductiºn platfºrms ºf the\r\nVietnam Natiºnal Industry — Energy Grºup;\r\n\r\n+ _ Cung cấp laº động có chuyên môn khºan dầu khí chº các nhà thầu trºng và ngºài\r\nnước (Không baº ggồm dịch vụ đưa người laº động đi làm việc ở nước ngºài theº\r\nhợp đồng.)\r\n\r\nSupply ºf skilled ºil and gas drilling persºnnel tº dºmestic and fºreign cºntractºrs\r\n(excluding services fºr sending Vienamese wºrkers abrºad under cºntracts);\r\n\r\n| + :. Hºạt động tư vấn quản lý (trừ tư vấn tài chính, kế tºán, pháp luật); .\r\nManagement cºnsultancy services (excluding financial, accºunting, and Iegal\r\ncºnsultaney services); — |\r\n\r\n+ ... Sửa chữa, bảº dưỡng các thiết bị dây chuyền công nghiệp;\r\n\r\nRepair and maintenance services fºr industrial prºductiºn line equipment;\r\n\r\n+ : Đàº tạº công nhân khºan dầu khí;\r\n\r\nTraining ºf ºil and gas drilling wºrkers;\r\n9. ... Giấy phép thành lập và hºạt động (ïbeº quy định của pháp luật chuyên ngành): Không\r\nOperating License and Establishment License (under specialized laws): Nºne. |\r\nII. Nội dung phương án phát hành/ Apprºved Share Issuance Plan\r\n1.  Tên cổ phiếu: Cổ phiếu Tổng công ty cổ phần Khºan và Dịch vụ Khºan Dầu khí\r\nName ºf shares: Shares ºf Petrºvietnam Drilling and Well Service Cºrpºratiºn\r\n². Lºại cổ phiếu: cổ phiếu phổ thông\r\n",
+      "text_sha256": "568d1fbc9ca1cdc52b71a8fd01638776af842a4d2b2279770f9cdf624977d6cc"
+     },
+     {
+      "citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "ca472d1b2c445273987e8208e545347981b9099557a1e33c21dc236a16087243",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 6,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "0ecc15c5108f459cc72aa31737ee4ed624ea447d4c56a3c9d17adce675b8d9a2",
+      "text": "R ; Type ºf shares: Ordinary shares\r\n3.. Tổng số cổ phiếu trước thời điểm phát hành:\r\nTºtal number ºf shares ºutstanding priºr tº the issuance:\r\n— : Tổng số cổ phiếu đã phát hành: 556.²96.006 cổ phiếu.\r\nTºtal number ºf issued shares: 556,²96,006 shares.\r\n— : Số lượng cổ phiếu đang lưu hành: 555.880.006 cổ phiếu.\r\n| Number ºf ºutstanding shares: 5535,880,006 shares.\r\n— : Số lượng cổ phiếu quỹ: 416.000 cổ phiếu.\r\nNumber ºf treasury shares: 416,000 shares.\r\n4.  Số lượng cổ phiếu dự kiến phát hành: 371.883.7²4 cổ phiếu.\r\nNumber ºf shares expected tº be issued: 371,883,7²4 shares.\r\n5.. Tỷ lệ thực hiện quyền: 66,9% (tương ứng tỷ lệ 100:66,9, nghĩa là cổ đông đang sở hữu\r\n100 cổ phiếu sẽ được nhận 66,9 cổ phiếu mới).\r\nExercise ratiº: 66.9% (equivalent tº a ratiº ºf 100:66.9, meaning that a sharehºlder\r\nºwning 100 shares will receive an additiºnal 66 9 shares). X\r\n3 r ` A # 6`\r\n6. Nguồn vôn phát hành: từ Quỹ Đầu tư phát triển tại ngày 31/1²/²0²5, theº Báº cáº tài ›\\\\\r\nchính riêng được kiểm tºán năm ²0²5 của PV Drilling. ở PH`\r\nSºurce ºf issuance capital: the Develºpment Investment Fund as ºf 31 December ²0²5, ẶỀH\r\nas reflected in PV Drilling`s audited separate financial statemenis fºr the year ended 31 /\r\nDecember ²0²5. ` ỹầỈl\r\n7. . Phương án xử lý phần lẻ cổ phần, cổ phiếu lẻ: Số lượng cổ phần phát hành thêm phân .\r\nphối chº cổ đông hiện hữu sẽ được làm tròn xuống đến hàng đơn vị. Phần lẻ cổ phần phát\r\nsinh (nếu có) sẽ bị hủy bỏ. |\r\nTreatment ºf fractiºnal shares: The number ºf additiºnal shares allºcated tº existing\r\n| sharehºlders shall be rºunded dºwn tº the nearest whºle share. Any fractiºnal shares\r\nresulting frºm such allºcatiºn (ïf any) shall be cancelled and shall nºt be issued.\r\n$. : Ngày kết thúc đợt phát hành: 15/7/²0²6.\r\n` Clºsing date ºf the share issuance: 15 July ²0²6. | |\r\n—9,.. Ngày dự kiến chuyển giaº cổ phiếu: tháng 8 — tháng 9/²0²6. |\r\nExpected share delivery date: August — September ²0²6.\r\nIII. Kết quả phát hành cố phiếu/ Results f the Share Issuance |\r\n1.  Tổng số cổ phiếu đã phân phối: — 371.86².185 cổ phiếu, trºng đó:\r\nNumber ºf distributed shares: 371,86²,185 shares, includīng:\r\n— : Số cổ phiếu thực tế phân phối: 371.86².185 cổ phiếu chº 46.955 cổ đông;\r\nActual number ºf shares distributed: 371,86²,185 shares, allºcated tº 46,955\r\nsharehºlders. `\r\n— : Số cổ phiếu xử lý phần lẻ cổ phần, cổ phiếu lẻ: ²1.447,03 cổ phiếu.\r\nNumber ºf shares resulting frºm the treatment ºf fractiºnal share entitlements:\r\n`_²7,447.03 shares.\r\n",
+      "text_sha256": "0ecc15c5108f459cc72aa31737ee4ed624ea447d4c56a3c9d17adce675b8d9a2"
+     },
+     {
+      "citation_id": "cfdc862c0597aab4e328394c36537c3cf5d8f179ed354c3ac636fd79a0116d9d",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "ea37ded967e765a81bee070462ce34d0c1bf32eae8f66294717c8f9c2a78b52a",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 7,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "ba60cc404d7f8b18075a8ae2b91995dbcc2f8d7dd38a9cdc1d12720b59417dc6",
+      "text": "ft (Theº phương án phát hành đã được Đại hội đồng cổ đông thông qua, tºàn bộ\r\n²1.447,03 cổ phiếu lẻ phát sinh đã được hủy bỏ và không được phát hành).\r\n(In accºrdance with the apprºved share issuance plan, all ²1,447.03 fractiºnal shares\r\nresulting frºm the rºunding ºf share entitlements were cancelled )\r\n².. Tổng số cổ phiếu sau đợt phát hành (ngày 15/7/²0²6): 9²8.158.191 cổ phiếu, trºng đó:\r\nTºtal ºf shares after the issuance (as ºf 15 July ²0²6): shares, including:\r\n— : Số lượng cổ phiếu đang lưu hành:  9²7.74².191 cổ phiếu.\r\nNumber ºf ºutstanding shares: 9²7,74²,191 shares.\r\n— : Số lượng cổ phiếu quỹ: 416.000 cổ phiếu.\r\nNumber ºf treasury shares: 416,000 shares.\r\nIV. Tài liệu gửi kèm: Không có\r\nEnclºsed dºcuments: Nºne\r\nNơi nhận/Recipients: NGƯỜI ĐẠI DIỆN THEO PHÁP LUẬT\r\n— Như trên/ As abºve; an\\Ễ` LEGAL REPRESENTATIVE /\r\n— Tưn VÉ Ban TCKUỬ Čºrpºrste Offiee PRESIDENT & CEO /\r\nand FA Divisiºn.\r\n/º²^95ï8\r\n/A m §. th\r\nJ“ TÔNG ² ^,,\\\r\ntûNG IY cũ PHÂN© Kủi\r\n@ HHÙM t} DIH v_ Ả |\r\n&\\__DẦU K '.ẩ/J'1 1 i /\r\nv %\r\n~ «\r\nFlO fJl'1ỉ \\Ẩ\\\r\nNGUYỄN XUÂN CƯỜNG\r\nÄ ^ Được ký bởi TÔNG\r\nTÓNG CONG côNc ry CỎ PHÀN\r\nKHOAN VẠ DỊCH VỤ\r\n’Ĩ`Y ACj () KHOAN DẦU KHIÍ\r\nPHAN Ngày ký: ²9.07.²0²6\r\nÀ 17:55\r\nKHOAN VA\r\nDỊCH VỤ\r\nKHOAN —\r\nDAU KHI\r\n",
+      "text_sha256": "ba60cc404d7f8b18075a8ae2b91995dbcc2f8d7dd38a9cdc1d12720b59417dc6"
+     }
+    ],
+    "pages_processed": 7,
+    "schema_version": "1.0.0",
+    "source_page_count": 7,
+    "ticker": "PVD"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+    "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6,
+     "6": 6,
+     "7": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6e52487b1552f5bc18065a791319c1f378edae757f2d9815e66614f6c0e4ca99",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "08baeeb6d957cb5d33e47f6dce4fa512d981c51add943d1bba05534bfcd0fa28",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "e36b54dd019cb31f3a0253cbd8caf11cc80e8067a8ecfdec9d71928cc984174d",
+      "text": "* TAP DOAN CONG NGHIEP - NANG LƯỢNG CỌNG Ht sa BREA CHỦNGHIA vat NAM\r\n— QUỐC GIA VIET NAM Doc lap — Ty do — Hanh phic\r\nPETROVIETNAM TONG CONG TY CO PHAN KHOAN wanna naan nanan anna ann nn === ===\r\nPYDrilling © VA DICH VY KHOAN DAU Kui\r\nTp. Hồ Chi Minh, ngay 29 thang — năm 2026\r\nsé: .796./ Iv0.-TUT\r\nCONG BO THONG TIN TREN CONG THONG TIN DIEN TU CUA UY BAN\r\nCHUNG KHOAN NHA NUOC VA SO GSCK TP.HCM\r\nDISCLOSURE OF INFORMATION OF WEB PORTALS OF THE STATE\r\nSECURITIES COMMISSION AND HO CHI MINH STOCK EXCHANGE\r\nKinh giri: Uy Ban Chirng khoan Nha Nước / Sở Giao dich Ching khoan\r\nThanh pho Ho Chi Minh\r\nTo: State Securities Commission of Vietnam/ Hochiminh Stock Exchange\r\n1. Tén t6 chtre/Name of Organization: Téng céng ty cổ phan Khoan va Dich vu Khoan Dau\r\nkhi (PV Drilling)/ Petrovietnam Drilling & Well Service Corporation (PV Drilling). A 30s!\r\n— Mã ching khoan/Ticker: PVD. kif . m\r\n— Dia chi/Address: Lau 4, toa nha Sailing, 111A Pasteur, P. Sai Gon, Tp. Hé Chi Mi 4 HOAN VA Dicw\r\nFloor, Sailing Tower, 111A Pasteur Street, Sai Gon Ward, Ho Chi Minh City. 3 DAU k\r\n- Dién thoai lién hé/Te/: (028) 3914 2012 Fax: (028) 3914 2021 O58 chi\r\n- E-mail: [IR@pvdrilling.com.vn\r\n2. Nội dung théng tin céng bé:\r\n— Ngay 28/7/2026 PV Drilling da céng bé thong tin Bao cáº két qua phat hanh cé phiéu dé\r\nting vén cổ phan tir nguén vén chu sé hitu. Dé phi hop véi thuc té thu tuc tai co quan nha\r\nnuéc, nay PV Drilling céng bé dinh chinh néi dung Bao cáº két qua phat hanh cé phiéu\r\nnhu sau:\r\nOn July 28, 2026, PV Drilling disclosed the Report on the Results of the Share Issuance to\r\nIncrease Share Capital from Equity. To align with the actual procedures at State\r\nauthorities, PV Drilling hereby issues a correction to the contents of the Report on the\r\nResults of the Share Issuance as follows:\r\nThong tin đã céng bố Thong tin dinh chinh\r\nDisclosed information Updated information\r\nIII. Két qua phat hanh cố phiéu: Il. Két qua phat hanh cé phiéu:\r\n1. Téng số cổ phiéu da phan phdi:| 1. Téng số cổ phiéu da phan phối:\r\n371.883.632.03 cé phiéu, trong do: 371.862.185 cé phiéu, trong do:\r\nSố cổ phiéu thực té phan phối: Số cổ phiếu thực té phân phối:\r\n371.862.185 cổ phiếu cho 46.955 cổ| 371.862.185 cé phiếu cho 46.955 cổ\r\ndéng; đông;\r\n1/²\r\n",
+      "text_sha256": "e36b54dd019cb31f3a0253cbd8caf11cc80e8067a8ecfdec9d71928cc984174d"
+     },
+     {
+      "citation_id": "1aa5c3ece38c87d821d91fd8fa0e99a2f01e99ed82bf7232e1c7c0ceeb241590",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "5806afe8d1927a04060ca7275f94af1b512846648123d20f8cb5b7eff234ca71",
+       "text": "no best words!!\r\n"
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "926be197e742a0930d3b8ecabd6fed3b942bfe10325f28e5fccae1d4f7575115",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "c3ad20247588f232a8c43d9c051cfc4c1b74ba92df82a070ec3688ecb8239bca",
+      "text": "| Số cổ phiếu xử ly phan lẻ cổ phan, cổ | Số cổ phiéu xử ly phan lẻ cổ phan, cổ\r\nphiếu lẻ: 21.447,03 cé phiếu. phiếu lẻ: 21.447,03 cé phiéu.\r\nIID. Results of the Share Issuance II. Results of the Share Issuance\r\nNumber of — distributed shares: | Number of _ distributed shares:\r\n371,883,632.03 shares, including: 371,862,185 shares, including:\r\nActual number of shares distributed: | Actual number of shares distributed:\r\n371,862,185 shares, allocated to 46,955 | 371,862,185 shares, allocated to 46,955\r\nshareholders. shareholders.\r\nNumber of shares resulting from the | Number of shares resulting from the\r\ntreatment of fractional share | treatment of fractional share\r\nentitlements: 21,447.03 shares. entitlements: 21,447.03 shares.\r\nCac thông tin con lai của Bao cáº két qua phat hanh cé phiéu không thay déi, PV Drilling\r\ndinh kém Bao cáº két qua phat hanh cé phiéu da được hiéu dinh, thay thé cho van ban da\r\nđược céng bé ngay 28/7/2026.\r\nAll other contents of the Report on the Results of the Share Issuance remain unchanged.\r\nPV Drilling hereby encloses the revised Report on the Results of the Share Issuance, which\r\nshall replace the version previously disclosed on July 28, 2026.\r\n3. Thong tin nay da dugc céng bé trén trang thong tin dién tir cla cong ty vao ngay 29/7/2026\r\ntai duong dan http:/Avww.pvdrilling.com.vn/quan-he-co-dong/.\r\nThis information was published on the company’s website on 29 July 2026, as in the li\r\nhttps://www.pvadrilling.com.vn/en-US/investor-relations . 3 on\r\nChing tdi xin cam két ce thong tin cong bé trén day 1a ding su that va hoan toan chiu age 8\r\nnhiém truce phap luat về ndi dung cac thong tin da céng bo. WA\r\nWe hereby certify that the information provided is true and correct and we bear th®S fill\r\nresponsibility to the law.\r\nNoi nhan/Recipients: NGUOI DALDIEN CONG BO THONG TIN\r\n— Như trén/As above, — PERSON AUT HORAULE DakQ DISCLOSE INFORMATION\r\n— LuwSave VT, B.TCKT [5 {WAGE RRESIDENT\r\n= [CONG TY CO PHAN\\S\r\nKAOAN VA DICH YU KHOAR\r\n& \\ DAU KHÍ ()\r\n,\r\nDO DANH RANG\r\n2/2\r\n",
+      "text_sha256": "c3ad20247588f232a8c43d9c051cfc4c1b74ba92df82a070ec3688ecb8239bca"
+     },
+     {
+      "citation_id": "ca2d99dd628f0fb145c2039447068461e3d2a5b7f59082c907d9dd2b29b93e58",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "6c665757865bbbe7f0412f33f501e5a0e1ce754b2b81517de33cb24325dc56ca",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "4948352334dbc9755fbf20d2199c4ab0892f3f4e4e8b6e9eb2c0e011816eff9b",
+      "text": "| TAP DOAN CONG NGHIEP — NANG LƯỢNG CONG HOA XA HOI CHU NGHIA VIET NAM\r\nQUOC GIA VIET NAM Doc lap — Tw do — Hanh phic\r\nPETROVIETNAM =©=§ TONG CONG TY CO PHAN KHOAN —\r\nPY Drilling VA DICH VỤ KHOAN DAU KHÍ Tp. Hé Chi Minh, ngày As: thang #†—. . nam 2026.\r\n_ BAO CAO KET QUA DOT PHAT HANH CO PHIEU\r\nDE TANG VON CO PHAN TU NGUON VON CHU SO HUU\r\nREPORT ON THE RESULTS OF SHARE ISSUANCE TO INCREASE\r\nCHARTER CAPITAL FROM EQUITY SOURCES\r\nKinh gửi/ Respecfully to: —\r\n- Uy Ban Chứng khoan Nha Nước\r\nStates Securities Commission of Vietnam Á\r\n— Sở Giaº dịch Chứng khºán Tp. Hồ Chí Minh Ay\r\nHo Chi Minh Stock Exchange (HOSE) Ss aN\r\n{0\r\n> \\\r\nI. Giới thiệu về T6 chire phat hanh/ Introduction to the Issuer j }\r\n1. Tên tổ chức phát hành: Tổng công ty cổ phan Khºan và Dịch vụ Khºan Dầu khí\r\nName of the issuer: Petrovietnam Drilling & Well Service Corporation\r\n2. Tén viét tat/Abbreviated name: PV Drilling\r\n3. Dia chi tru so chinh: Lau 4, toa nha Sailing, 111A Pasteur, Phuong Sai Gon,\r\nThanh phé H6 Chi Minh\r\nHead Office Address: 4\" Floor, Sailing Tower, 111A Pasteur, Saigon Ward,\r\nHo Chi Minh City.\r\n4. Dién thoai/Phone: (028) 3914 2012\r\nWebsite: www.pvdrilling.com.vn\r\n5. Vén diéu 1é: 5.562.960.060.000 déng\r\nCharter capital: VND 5,562,960,060,000\r\n6. Mã cé phiéu/ Ticker symbol: | PVD\r\n7. Noi mở tai khoan thanh to4n:  Công ty cổ phan Chimg khodn Thanh phé Hồ Chi Minh\r\n(HSC) Số hiéu tai khoan: 0110368369\r\nSecurities account: Ho Chi Minh City Securities Corporation (HSC)\r\nAccount No.: 011C368369\r\n8. Gidy chimg nhan dang ky doanh nghiép mã số doanh nghiép 0302495126 do Sở Ké\r\nhoach va Dau tu TP. HCM cap lan dau ngay 15 thang 02 nam 2006, do So Tai chinh TP.\r\nHCM cap thay đổi lan thir 18 ngay 16 thang 09 nam 2025.\r\nBusiness Registration Certificate No. 0302495126 initially issued by the Ho Chi Minh\r\nCity Department of Planning and Investment on February 15, 2006, and amended for the\r\n18\" time by the Ho Chi Minh City Department of Finance on September 16, 2025.\r\nLau 4, Sailing Tower, 111A Pasteur, Phuong Sai Gon, Thanh phé Hé Chi Minh, Viét Nam\r\nTel: +84-28-39142012 Fax: +84 — 28-39 14² 0²1 / 39 14² 0²² Web: ww .pvdrilling.com.vn\r\n",
+      "text_sha256": "4948352334dbc9755fbf20d2199c4ab0892f3f4e4e8b6e9eb2c0e011816eff9b"
+     },
+     {
+      "citation_id": "de0173b072b60168c544cc47b2e093a82ecac07aed06b9e0b1071a949454041f",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "46fcccaa5093edb28aea0eac897888e547673a21dd25c167a18d95f0b515f68c",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "155aff5df64f7478458ca1795e43637dac0ebceb895fef4de55f022189c34544",
+      "text": "+ = Nganh nghé kinh doanh chinh, Ma nganh:\r\nMain business lines and business codes:\r\n+ Hoat déng dich vu hé tro khai thac dau thé va khi tu nhién (M4 nganh 0910);\r\nSupport activities for petroleum and natural gas extraction (Business Code: 0910);\r\n+ Ban buén may moc, thiét bi va phu ting may khac (Ma nganh 4659);\r\nWholesale of machinery, equipment and other spare parts (Business Code: 4659),\r\n+ L&p dat may méc va thiét bi céng nghiép (Ma nganh 3320);\r\nInstallation of industrial machinery and equipment (Business Code; 3320);\r\n+ Xr ly 6 nhiém va hoat déng quan ly chat thai khác (Ma nganh 3900);\r\nRemediation activities and other waste management services (Business Code:\r\n3900); ln\r\n+ : Hºạt dong hé tro dich vu tai chinh chua duoc phan vao dau (Ma nganh 6619);\r\nOther activities auxiliary to financial service activities (Business Code: 6619),\r\n+ Hoat động thiét kế chuyén dung (Ma nganh 7410); =\r\nSpecialized design activities (Business Code: 7410); 2\r\n+  Cung tmg nguén nhan lực khac (Ma nganh 7822); t\r\nOther manpower supply services (Business Code: 7822); :\r\n+ 700. tu van quan ly kinh doanh va hoat dong tu van quan ly khac (Ma nganh — 9]\r\nManagement consultancy activities(Business Code: 7020); zt\r\n+ Stra chita, bao dudng may moc thiét bi (Ma nganh 3312);\r\n- Repair of machinery (Business Code: 3312);\r\n+ Dao tao trung cap (Ma nganh 8532). |\r\nIntermediate-level training and education (Business Code: 8532).\r\n- San pham/dich vu chinh:\r\nKey products/ services:\r\n+ Khoan va stra chita các giéng khoan dau khi;\r\nDrilling and workover services for oil and gas wells;\r\n+ Cung ứng gian khoan va gian khai thac dau khi;\r\nProvision of drilling rigs and oil and gas production platforms; l\r\n+ — Thử via, bom tram xi ming, do dia vat ly giéng khoan va cdc dich vu khác liên quan\r\ndén céng tac khoan va khai thac;\r\nWell testing, cementing, well logging, and other services related to drilling and\r\nproduction operations;\r\n+ : Các dich vy lién quan dén céng tac khoan dau khi cho các du án dau khi ở nước ngoai;\r\nServices related to oil and gas drilling operations for overseas projects;\r\n+ Dich vu ché tao, lap dat, kiém tra chat lượng, sửa chita, bao dưỡng, van hanh gian\r\nkhoan va gian khoan khai thac dau khi; .\r\nFabrication, installation, inspection, repair, maintenance, and operation services\r\njor drilling rigs and production platforms;\r\n+ Mua ban vat tu, thiét bi khoan va khai thác;\r\nTrading of drilling and production materials and equipment;\r\n",
+      "text_sha256": "155aff5df64f7478458ca1795e43637dac0ebceb895fef4de55f022189c34544"
+     },
+     {
+      "citation_id": "babd87a0bd126d7c5cf663c4a76778edd8a41cde700f9ebc0ac4ebd1db5a9e95",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "021dcb1fcc715100785dbef9505814663b8a5fddfaf7cdd3e8541f33d3a6b9da",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "04f9e8087c7fdae154a27eb857b2e39d518341b44f00aa6dc1ebec5fd8119cbc",
+      "text": "R + Cung cap vat tu, cdc thiét bi day chuyén cong nghiép (Khéng thuc hién quyén xuat\r\nkhau, quyén nhap khẩu, quyén phan phối đối với cdc hang héa thuéc Danh muc\r\nhang héa ma nha dau tu nude ngoai, t6 chức kinh té có vén dau tu nước ngoai khéng\r\nduoc thực hién quyén xuat khau, quyén nhap khau, quyén phan phối theo quy dinh của\r\nphap luat);\r\n\r\nSupply of materials and industrial production line equipment (excluding the exercise\r\nof export rights, import rights, and distribution rights with respect to goods on the list\r\nof goods for which foreign investors and foreign-invested economic organizations are\r\nprohibited from exercising export rights, import rights, and distribution rights in\r\n\r\n| accordance with applicable laws);\r\n+ Lap dat cdc thiét bi day chuyén cong nghiép;\r\nInstallation of industrial production line equipment;\r\n+ Dich vu tmg citu su cố dau tran va bao vé méi truong;\r\n\r\nOil spill response and environmental protection services; —\r\n\r\n+ Tu van dau tu — quan ly dy án (trừ tu vn tai chính, kế tºán, pháp luật); _\r\nInvestment consultancy and project management services (excluding financial, k\r\naccounting, and legal consultancy services);\r\n\r\n+ Dich vu thiét kế gian khoan va gian khai thac dau khi; R\r\nDesign services for oil and gas drilling rigs and production platforms; h\r\n\r\n+  Cung cấp lao động cho các giàn khºan, gian khai thác dau khi cia Tap doan Công kã\r\nnghiệp — Năng lượng Quốc gia Việt Nam;\r\n\r\nProvision of manpower for oil and gas drilling rigs and production platforms of the\r\nVietnam National Industry - Energy Group;\r\n\r\n+  Cung cap lao động cé chuyén mén khoan dau khi cho cdc nha thau trong va ngoai\r\nnước (Khéng bao gdm dich vu dua người lao déng di lam viéc 6 nước ngoai theo\r\nhop déng.)\r\n\r\nSupply of skilled oil and gas drilling personnel to domestic and foreign contractors\r\n(excluding services for sending Vienamese workers abroad under contracts);\r\n\r\n| +  Hoat động tu van quan ly (trừ tu van tai chinh, kế tºán, pháp luật); .\r\nManagement consultancy services (excluding financial, accounting, and legal\r\nconsultancy services); — |\r\n\r\n+ Sita chita, bao dưỡng các thiét bi day chuyén công nghiép;\r\n\r\nRepair and maintenance services for industrial production line equipment;\r\n\r\n+ Pao tao céng nhan khoan dau khi;\r\n\r\nTraining of oil and gas drilling workers;\r\n9.  Giay phép thanh lap va hoat động (theo quy dinh của pháp luét chuyén nganh): Khong\r\nOperating License and Establishment License (under specialized laws): None. |\r\nII. Nội dung phương án phat hanh/ Approved Share Issuance Plan\r\n1. Téncé phiéu: Cổ phiéu Téng céng ty cé phan Khoan va Dich vu Khoan Dau khi\r\nName of shares: Shares of Petrovietnam Drilling and Well Service Corporation\r\n2. Loaicé phiéu: cổ phiéu phé thong\r\n",
+      "text_sha256": "04f9e8087c7fdae154a27eb857b2e39d518341b44f00aa6dc1ebec5fd8119cbc"
+     },
+     {
+      "citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "4fdb46fe3e405c7ec437400752d121ee4c5ecf1ce1b05e9d8f8198c1c4b11aea",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 6,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "b9ea04ec4bbfe9bb6d12000c004d517d547eaf4c3b87ac40f2c72571cb66d93a",
+      "text": "R ; Type of shares: Ordinary shares\r\n3. Téng sé cé phiéu trước thoi diém phat hanh:\r\nTotal number of shares outstanding prior to the issuance:\r\n- Téng số cé phiéu da phat hanh: 556.296.006 cé phiéu.\r\nTotal number of issued shares: 556,296,006 shares.\r\n- 86 luong cé phiéu dang lưu hanh: 555.880.006 cổ phiéu.\r\n| Number of outstanding shares: 555,880,006 shares.\r\n- : Số lugng cé phiéu quy: 416.000 cé phiéu.\r\nNumber of treasury shares: 416,000 shares.\r\n4.  Số lượng cổ phiéu dy kién phat hanh: 371.883.724 cé phiéu.\r\nNumber of shares expected to be issued: 371,883,724 shares.\r\n5. Ty lé thuc hién quyén: 66,9% (tuong tmg ty 16 100:66,9, nghia 1a cé déng dang sé hitu\r\n100 cé phiéu sé được nhan 66,9 cổ phiéu mdi).\r\nExercise ratio: 66.9% (equivalent to a ratio of 100:66.9, meaning that a shareholder\r\nowning 100 shares will receive an additional 66.9 shares). Ss\r\nx r ` A # 6`\r\n6. Nguồn von phat hanh: tir Quy Dau tu phat trién tai ngày 31/12/2025, theo Bao cáº tai .\"\r\nchinh riéng duoc kiém tºán nim 2025 của PV Drilling. | ở PH\r\nSource of issuance capital: the Development Investment Fund as of 31 December 2025, by\r\nas reflected in PV Drilling's audited separate financial statements for the year ended 31 ZA\r\nDecember 2025, ` wy\r\n7. Phuong án xử ly phan lẻ cổ phan, cổ phiéu lẻ: Số lugng cé phan phat hanh thém phan .\r\nphối chº cổ đông hiện hữu sẽ được làm tròn xuống đến hàng đơn vị. Phần lẻ cổ phần phát\r\nsinh (nếu có) sẽ bị hủy bỏ. |\r\nTreatment of fractional shares: The number of additional shares allocated to existing\r\n| shareholders shall be rounded down to the nearest whole share. Any fractional shares\r\nresulting from such allocation (if any) shall be cancelled and shall not be issued.\r\n8. Ngay két thuc dot phat hanh: 15/7/2026.\r\nClosing date of the share issuance: 15 July 2026. | |\r\n9. Ngày dy kiến chuyển giao cé phiéu: thang 8 — thang 9/2026.\r\nExpected share delivery date: August - September 2026.\r\nIII. Két qua phat hanh cố phiéu/ Results of the Share Issuance |\r\n1. Téng số cổ phiếu da phan phối: — 371.86².185 cổ phiếu, trong dé:\r\nNumber of distributed shares: 371,862,185 shares, including:\r\n— $écé phiéu thuc té phan phéi: 371.862.185 cổ phiéu cho 46.955 cé dong:\r\nActual number of shares distributed: 371,862,185 shares, allocated to 46,955\r\nshareholders.\r\n- $66 phiéu xử ly phan lẻ cé phan, cổ phiéu lẻ: 21.447,03 cd phiéu.\r\nNumber of shares resulting from the treatment of fractional share entitlements:\r\n- 21,447.03 shares.\r\n",
+      "text_sha256": "b9ea04ec4bbfe9bb6d12000c004d517d547eaf4c3b87ac40f2c72571cb66d93a"
+     },
+     {
+      "citation_id": "809656133d06cbcb24e40fb6e92ffff82d2d4220bf32db6dfe71be2dae70c218",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "materialization_id": "83442a7250b1263c9a3a6ce610514964256a39b7f2a59e4f524d7050e89ed87a",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 7,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "be677f74848138b59d40529c4ad55b0c6823d6262735743cbaafbe5e8ed67645",
+      "text": "oa (Theo phuong án phat hanh đã được Dai hội déng cé dong théng qua, toan bộ\r\n21.447,03 cổ phiéu lẻ phat sinh da duoc hủy bé va khong duge phat hanh).\r\n(In accordance with the approved share issuance plan, all 21,447.03 fractional shares\r\nresulting from the rounding of share entitlements were cancelled.)\r\n2. Téng số cé phiéu sau dot phat hanh (ngay 15/7/2026): 928.158.191 cd phiéu, trong do:\r\nTotal of shares after the issuance (as of 15 July 2026): shares, including:\r\n— $6 lượng cé phiéu dang lưu hanh: = 927.742.191 cé phiéu.\r\nNumber of outstanding shares: 927,742,191 shares.\r\n- $6 lượng cé phiéu quy: 416.000 cổ phiéu.\r\nNumber of treasury shares: 416,000 shares.\r\nIV. Tai liéu gửi kém: Khong có\r\nEnclosed documents: None\r\nNoi nhGn/Recipients: NGUOI DAI DIEN THEO PHAP LUAT\r\n- Nhv trén/ As above; oni LEGAL REPRESENTATIVE /\r\n— Tart VÉ Ban TOKT Compan Office PRESIDENT & CEO ~~\r\nand FA Division.\r\nZq024 95738\r\n/A us > th\r\nsf TONG ² \\\r\n?[cONG TY CO PHÂN© A\r\n@ KHOAN VA ICH cay? i, |\r\n&\\__DẦU K WA ) | y/,\r\nv %\r\n~ Ky\r\nHG cHi Ww\r\nNGUYEN XUAN CUONG\r\nA A Được ky bởi TONG\r\nTONG CONG céne ry CO PHAN\r\nKHOAN VA DICH VU\r\nTY C O KHOAN DAU KHI\r\nPHAN Ngay ky: 29.07.2026\r\nA 17:55\r\nKHOAN VA\r\nDICH VU\r\nKHOAN |\r\nDAU KHI\r\n",
+      "text_sha256": "be677f74848138b59d40529c4ad55b0c6823d6262735743cbaafbe5e8ed67645"
+     }
+    ],
+    "pages_processed": 7,
+    "schema_version": "1.0.0",
+    "source_page_count": 7,
+    "ticker": "PVD"
+   }
+  }
+ },
+ "languages": [
+  "vie",
+  "vie+eng"
+ ],
+ "psm": 6,
+ "render_dpi": 300,
+ "schema_version": "1.0.0"
+}

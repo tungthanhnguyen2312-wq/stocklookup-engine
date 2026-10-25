@@ -53,6 +53,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from decimal import Decimal
 from typing import Any, Iterable, Mapping, Sequence
 
 VERSION = "1.0.0"
@@ -79,12 +80,27 @@ _LIFECYCLE_RANK = {
 _AGREEMENT_FIELDS = (
     "shares_before", "shares_after", "shares_issued", "ex_date", "record_date",
     "payment_or_execution_date", "cash_amount_per_share", "subscription_price",
+    "shares_planned", "shares_outstanding_before", "treasury_shares_before",
 )
 
 #: Fields taken from whichever observation states them, once agreement has been checked.
 _MERGE_FIELDS = _AGREEMENT_FIELDS + (
     "trading_date", "approval_date", "stock_ratio", "ratio_basis", "rights_ratio",
+    "fractional_shares_cancelled",
 )
+
+#: Entry fields that only reviewed-scan observations state. They are emitted only when stated,
+#: so a ledger built from observations that never carry them replays byte-identically.
+_OPTIONAL_ENTRY_FIELDS = ("shares_planned", "shares_outstanding_before", "treasury_shares_before",
+                          "fractional_shares_cancelled")
+
+#: Must equal `corporate_action_events.RATIO_SOURCE_EXPLICIT`. Kept literal so this module stays
+#: free of extractor imports.
+_RATIO_SOURCE_EXPLICIT = "explicit_official_entitlement"
+
+#: Event types whose price effect is the share factor alone. Any other leg on the same notice is
+#: a separate, unadjusted price effect on the same ex-date.
+_SHARE_FACTOR_TYPES = _DILUTIVE | _CONCENTRATING
 
 
 def _canonical_json(value: Any) -> str:
@@ -102,11 +118,71 @@ def event_key(observation: Mapping[str, Any]) -> tuple[str, str, str]:
     if issued is None and observation.get("shares_after") is not None \
             and observation.get("shares_before") is not None:
         issued = int(observation["shares_after"]) - int(observation["shares_before"])
+    if issued is None and observation.get("shares_planned") is not None:
+        # A planned count is an identity of the plan, never of the executed issuance. It links
+        # only through a document that states both counts (`_bridge_planned_groups`).
+        return (str(observation.get("ticker") or ""), str(observation.get("event_type") or "unknown"),
+                f"planned:{int(observation['shares_planned'])}")
     return (
         str(observation.get("ticker") or ""),
         str(observation.get("event_type") or "unknown"),
         str(issued) if issued is not None else "unidentified",
     )
+
+
+def _bridge_planned_groups(grouped: dict[tuple[str, str, str], list[Mapping[str, Any]]]
+                           ) -> tuple[dict[tuple[str, str, str], dict[str, Any]], list[dict[str, Any]]]:
+    """Join plan-only observations to the executed event whose own documents state that plan.
+
+    An exchange ex-right notice states the planned issuance ("dự kiến phát hành"); a listing
+    change states the executed count, smaller by the cancelled fractions. Neither cites the
+    other. An issuer result report states both counts in one document, which is a stated
+    identity, not an inference from dates or ratios. A plan group joins exactly one executed
+    group whose members state its planned count; zero or several candidates leave it separate.
+    """
+    bridges: dict[tuple[str, str, str], dict[str, Any]] = {}
+    ambiguous: list[dict[str, Any]] = []
+    for key in sorted(k for k in grouped if k[2].startswith("planned:")):
+        planned = int(key[2].split(":", 1)[1])
+        targets = sorted(k for k in grouped if k[:2] == key[:2] and not k[2].startswith("planned:")
+                         and any(o.get("shares_planned") is not None and int(o["shares_planned"]) == planned
+                                 for o in grouped[k]))
+        if len(targets) != 1:
+            if targets:
+                ambiguous.append({"planned_shares": planned, "candidate_share_changes": [t[2] for t in targets],
+                                  "reason": "planned count stated by more than one executed event"})
+            continue
+        target = targets[0]
+        stating = sorted({str(o.get("document_id")) for o in grouped[target]
+                          if o.get("shares_planned") is not None and int(o["shares_planned"]) == planned
+                          and o.get("shares_issued") is not None})
+        if not stating:
+            continue
+        bridges[target] = {"planned_shares": planned, "bridged_document_ids": sorted(
+                               {str(o.get("document_id")) for o in grouped[key]}),
+                           "stating_document_ids": stating,
+                           "basis": "one document states both the planned and the executed count"}
+        grouped[target].extend(grouped.pop(key))
+    return bridges, ambiguous
+
+
+def _co_documented_legs(entry: Mapping[str, Any],
+                        observations: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Other event legs recited by the same retained documents as this entry.
+
+    A notice that fixes one ex-date for a cash dividend and a share issuance is one document
+    about two price effects. Linking is unchanged; the entry only records what else its own
+    documents state, so a share factor is never read as the whole price effect of that date.
+    """
+    hashes = set(entry.get("source_content_hashes") or [])
+    own = set(entry.get("source_observation_ids") or [])
+    legs = [{"event_type": o.get("event_type"), "ex_date": o.get("ex_date"), "record_date": o.get("record_date"),
+             "cash_amount_per_share": o.get("cash_amount_per_share"), "payment_date": o.get("payment_date"),
+             "observation_id": o.get("observation_id"), "document_id": o.get("document_id")}
+            for o in observations
+            if str(o.get("content_sha256")) in hashes and str(o.get("observation_id")) not in own
+            and o.get("event_type") != entry.get("event_type")]
+    return sorted(legs, key=lambda leg: (str(leg["event_type"]), str(leg["observation_id"])))
 
 
 def build_ledger(observations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
@@ -136,7 +212,12 @@ def build_ledger(observations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
             continue
         grouped.setdefault(key, []).append(observation)
 
-    entries = [_reconcile(key, members) for key, members in sorted(grouped.items())]
+    bridges, ambiguous_plans = _bridge_planned_groups(grouped)
+    entries = [_reconcile(key, members, bridge=bridges.get(key)) for key, members in sorted(grouped.items())]
+    for entry in entries:
+        legs = _co_documented_legs(entry, deduplicated.values())
+        if legs:
+            entry["co_documented_legs"] = legs
     entries.sort(key=_ordering_key)
 
     superseded = _apply_supersession(entries)
@@ -146,7 +227,7 @@ def build_ledger(observations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         "entries": [{key: entry[key] for key in sorted(entry)
                      if key not in {"source_documents"}} for entry in entries],
     })
-    return {
+    result = {
         "schema_version": LEDGER_SCHEMA_VERSION,
         "ledger_version": VERSION,
         "adjustment_policy_version": ADJUSTMENT_POLICY_VERSION,
@@ -163,6 +244,9 @@ def build_ledger(observations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         "adjustment_factor_counts": _tally(entries, "adjustment_factor_status"),
         "lifecycle_counts": _tally(entries, "lifecycle_state"),
     }
+    if ambiguous_plans:
+        result["ambiguous_planned_count_bridges"] = ambiguous_plans
+    return result
 
 
 def _tally(entries: Sequence[Mapping[str, Any]], field: str) -> dict[str, int]:
@@ -186,7 +270,8 @@ def _ordering_key(entry: Mapping[str, Any]) -> tuple:
 
 
 def _reconcile(key: tuple[str, str, str],
-               members: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+               members: Sequence[Mapping[str, Any]], *,
+               bridge: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """One ledger entry from every observation that describes one event."""
     ticker, event_type, issued_key = key
     ordered = sorted(members, key=lambda item: (str(item.get("content_sha256") or ""),
@@ -194,7 +279,26 @@ def _reconcile(key: tuple[str, str, str],
 
     merged: dict[str, Any] = {}
     conflicts: list[dict[str, Any]] = []
+    entry_warnings: set[str] = set()
+    # A directly stated entitlement rate ("Tỷ lệ thực hiện") is the factor operand. A ratio
+    # derived from share counts is not: it absorbs cancelled fractions and, with treasury
+    # shares, divides by shares that receive nothing. Stated rates must agree with each other.
+    explicit = [(observation, observation["stock_ratio"]) for observation in ordered
+                if observation.get("ratio_source") == _RATIO_SOURCE_EXPLICIT
+                and observation.get("stock_ratio") is not None]
+    if explicit:
+        if len({_comparable(value) for _, value in explicit}) > 1:
+            conflicts.append({"field": "stock_ratio", "values": [
+                {"value": value, "document_id": observation.get("document_id"),
+                 "content_sha256": observation.get("content_sha256")} for observation, value in explicit]})
+        else:
+            merged["stock_ratio"], merged["ratio_basis"] = explicit[0][1], explicit[0][0].get("ratio_basis")
+        if any(observation.get("stock_ratio") is not None and observation.get("ratio_source") != _RATIO_SOURCE_EXPLICIT
+               for observation in ordered):
+            entry_warnings.add("count_derived_stock_ratio_superseded_by_explicit_entitlement")
     for field in _MERGE_FIELDS:
+        if explicit and field in {"stock_ratio", "ratio_basis"}:
+            continue
         stated = [(observation, observation.get(field)) for observation in ordered
                   if observation.get(field) is not None]
         if not stated:
@@ -212,7 +316,16 @@ def _reconcile(key: tuple[str, str, str],
             continue
         merged[field] = stated[0][1]
 
+    ratio_refusal = None
+    if not explicit and merged.get("stock_ratio") is not None and merged.get("treasury_shares_before"):
+        # Treasury shares receive no entitlement, so issued/before over a total that includes
+        # them is not the per-share entitlement rate. Refuse it rather than adjust prices by it.
+        merged.pop("stock_ratio")
+        merged.pop("ratio_basis", None)
+        ratio_refusal = "stock_ratio_denominator_includes_treasury_shares"
+
     corroboration = _corroborate(merged, ordered)
+    ratio_basis_check = _ratio_basis_corroboration(merged)
     lifecycle = max((str(observation.get("lifecycle_state") or "unknown")
                      for observation in ordered),
                     key=lambda state: _LIFECYCLE_RANK.get(state, 0))
@@ -229,10 +342,24 @@ def _reconcile(key: tuple[str, str, str],
             if merged.get(field) is None:
                 absent.setdefault(field, reason)
 
-    qualification, qualification_reason = _qualify(merged, conflicts, corroboration, lifecycle)
-    factor = _adjustment_factor(event_type, merged, qualification)
+    qualification, qualification_reason = _qualify(merged, conflicts, corroboration, lifecycle,
+                                                   ratio_basis_check)
+    factor = _adjustment_factor(event_type, merged, qualification, ratio_refusal=ratio_refusal)
+    optional: dict[str, Any] = {field: merged[field] for field in _OPTIONAL_ENTRY_FIELDS
+                                if merged.get(field) is not None}
+    if ratio_basis_check is not None:
+        optional["ratio_basis_corroboration"] = ratio_basis_check
+    if bridge is not None:
+        optional["planned_count_bridge"] = dict(bridge)
+    if explicit:
+        optional["ratio_source"] = _RATIO_SOURCE_EXPLICIT
+    if ratio_refusal:
+        entry_warnings.add(ratio_refusal)
+    if entry_warnings:
+        warnings = sorted(set(warnings) | entry_warnings)
 
     return {
+        **optional,
         "event_id": entry_id,
         "schema_version": LEDGER_SCHEMA_VERSION,
         "ledger_version": VERSION,
@@ -328,13 +455,37 @@ def _corroborate(merged: Mapping[str, Any],
     }
 
 
+def _ratio_basis_corroboration(merged: Mapping[str, Any]) -> dict[str, Any] | None:
+    """`stock_ratio x entitled shares` against the stated planned count, when all are stated.
+
+    Entitled shares are the outstanding shares before the issuance -- stated directly, or the
+    issued total less stated treasury shares. The planned count is that product rounded to a
+    whole share, so agreement within one share proves the denominator the rate applies to; a
+    larger gap means the rate, the plan or the treasury basis is misread.
+    """
+    ratio, planned = merged.get("stock_ratio"), merged.get("shares_planned")
+    entitled = merged.get("shares_outstanding_before")
+    if entitled is None and merged.get("shares_before") is not None and merged.get("treasury_shares_before") is not None:
+        entitled = int(merged["shares_before"]) - int(merged["treasury_shares_before"])
+    if ratio is None or planned is None or entitled is None:
+        return None
+    product = Decimal(str(ratio)) * int(entitled)
+    holds = abs(product - int(planned)) < 1
+    return {"state": "confirmed" if holds else "violated",
+            "reason": f"{ratio} x {entitled} = {product} {'~' if holds else '!='} planned {planned}",
+            "entitled_shares": int(entitled)}
+
+
 def _qualify(merged: Mapping[str, Any], conflicts: Sequence[Mapping[str, Any]],
-             corroboration: Mapping[str, Any], lifecycle: str) -> tuple[str, str]:
+             corroboration: Mapping[str, Any], lifecycle: str,
+             ratio_basis_check: Mapping[str, Any] | None = None) -> tuple[str, str]:
     if conflicts:
         return "conflicted", ("documents disagree on: "
                               + ", ".join(sorted(str(item["field"]) for item in conflicts)))
     if corroboration["state"] == "violated":
         return "conflicted", f"share-count identity does not hold ({corroboration['reason']})"
+    if ratio_basis_check is not None and ratio_basis_check["state"] == "violated":
+        return "conflicted", f"entitlement ratio does not reproduce the planned count ({ratio_basis_check['reason']})"
     if _LIFECYCLE_RANK.get(lifecycle, 0) < _LIFECYCLE_RANK["executed"]:
         return "provisional", (f"lifecycle is {lifecycle!r}; only an executed event is a "
                                "qualified historical fact")
@@ -352,7 +503,7 @@ def _qualify(merged: Mapping[str, Any], conflicts: Sequence[Mapping[str, Any]],
 
 
 def _adjustment_factor(event_type: str, merged: Mapping[str, Any],
-                       qualification: str) -> dict[str, Any]:
+                       qualification: str, *, ratio_refusal: str | None = None) -> dict[str, Any]:
     """A factor only where the evidence directly supports placing the event on the timeline."""
     base = {
         "adjustment_authority": ADJUSTMENT_AUTHORITY,
@@ -377,7 +528,7 @@ def _adjustment_factor(event_type: str, merged: Mapping[str, Any],
         blocked.append("missing_explicit_official_ex_date")
     ratio = merged.get("stock_ratio")
     if ratio is None:
-        blocked.append("missing_stock_ratio")
+        blocked.append(ratio_refusal or "missing_stock_ratio")
 
     if blocked:
         return {**base, "adjustment_factor_blocked_by": sorted(blocked),

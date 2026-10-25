@@ -1261,3 +1261,205 @@ def extract_text(payload: bytes, media_type: str) -> str:
         reader = PdfReader(io.BytesIO(payload))
         return normalize_text("\n".join((page.extract_text() or "") for page in reader.pages))
     raise ValueError(f"unsupported media type for extraction: {media_type!r}")
+
+
+# ==========================================================================
+# Reviewed-scan observations: image-only official notices with no text layer.
+#
+# The HOSE ex-right, listing-change and issuer result PDFs retained for HPG, PVD, SSI and POW
+# are scans. The governed OCR sidecar (`official_document_ocr_handoff`) reads them, but no
+# single engine configuration yields both the Vietnamese label cues the extractor above needs
+# and clean digits (the `vie` model emits `²` for `2`; `vie+eng` drops the diacritics), and an
+# OCR token is never repaired. So the extractor above cannot read these documents, and it is
+# not taught to.
+#
+# Instead a reviewer states, per field, the page and the token **exactly as printed**. No value
+# is typed: every value is parsed from that printed token by this module's own parsers, and
+# the token must occur verbatim in a governed OCR read of that exact page of the hash-verified
+# bytes. Which label a token belongs to is the reviewer's reading of the page and is recorded as
+# such (`evidence_method`); the OCR proves only that the token is on the page. The output has
+# the shape of `extract_event_observation`, so the ledger and everything downstream treat it
+# identically.
+#
+# Planned and executed share counts stay apart: "số lượng cổ phiếu dự kiến phát hành" is
+# `shares_planned`, never `shares_issued`. A stated entitlement ratio carries
+# `ratio_source = explicit_official_entitlement`, which the ledger prefers to any ratio derived
+# from share counts (a count-derived ratio absorbs fractional cancellations and, where the
+# issuer holds treasury shares, the wrong denominator).
+# ==========================================================================
+
+REVIEWED_SCAN_EVIDENCE_METHOD = "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED"
+RATIO_SOURCE_EXPLICIT = "explicit_official_entitlement"
+RATIO_BASIS_OUTSTANDING_ENTITLEMENT = "new_shares_per_outstanding_share_entitlement"
+
+_REVIEWED_DATE_FIELDS = ("ex_date", "record_date", "payment_date", "listing_effective_date", "trading_date")
+_REVIEWED_SHARE_COUNT_FIELDS = ("shares_planned", "shares_issued", "shares_before", "shares_after",
+                                "shares_outstanding_before")
+_REVIEWED_FIELDS = frozenset(_REVIEWED_DATE_FIELDS + _REVIEWED_SHARE_COUNT_FIELDS + (
+    "treasury_shares_before", "fractional_shares_cancelled", "stock_ratio", "cash_amount_per_share"))
+
+_PERCENT_RATIO_RE = re.compile(r"([0-9]{1,3}(?:,[0-9]+)?)\s*%")
+_COLON_RATIO_RE = re.compile(r"([0-9]{1,4}(?:,[0-9]+)?)\s*:\s*([0-9]{1,4}(?:,[0-9]+)?)")
+
+
+def _ocr_match_key(text: str) -> str:
+    return normalize_text(text).casefold()
+
+
+def _token_on_page(token: str, text: str) -> bool:
+    """`token` occurs in `text` as a whole printed value, not inside a longer number.
+
+    `10%` must not match inside `110%`, nor `1.000` inside `21.000` or `1.000.000`: a digit,
+    or a `.`/`,` digit group, adjoining the token on either side refuses the occurrence.
+    """
+    key, haystack = _ocr_match_key(token), _ocr_match_key(text)
+    if not key:
+        return False
+    boundary = r"(?<![0-9])(?<![0-9][.,])" + re.escape(key) + r"(?![0-9])(?![.,][0-9])"
+    return re.search(boundary, haystack) is not None
+
+
+def parse_entitlement_ratio(printed: str) -> float | None:
+    """New shares per existing entitled share from one printed rate.
+
+    `10%` -> 0.1, `66,9%` -> 0.669, `100:10` -> 0.1, `5:1` -> 0.2. The colon form is the
+    Vietnamese "old:new" convention ("Người sở hữu 05 cổ phiếu sẽ được nhận thêm 01"). Anything
+    else, or more than one rate in the token, returns None.
+    """
+    text = normalize_text(printed)
+    percents, colons = _PERCENT_RATIO_RE.findall(text), _COLON_RATIO_RE.findall(text)
+    if len(percents) + len(colons) != 1:
+        return None
+    if percents:
+        value = parse_vietnamese_number(percents[0])
+        return round(value / 100.0, 10) if value else None
+    old, new = (parse_vietnamese_number(part) for part in colons[0])
+    return round(new / old, 10) if old and new else None
+
+
+def _parse_reviewed_value(field: str, printed: str) -> Any:
+    if field in _REVIEWED_DATE_FIELDS:
+        return parse_vietnamese_date(printed)
+    if field in _REVIEWED_SHARE_COUNT_FIELDS:
+        return _parse_explicit_share_count(printed)
+    if field == "treasury_shares_before":
+        value = parse_vietnamese_number(printed)
+        return int(value) if value is not None and value.is_integer() and value <= _MAX_SHARES else None
+    if field == "fractional_shares_cancelled":
+        return parse_vietnamese_number(printed)
+    if field == "stock_ratio":
+        return parse_entitlement_ratio(printed)
+    if field == "cash_amount_per_share":
+        return _parse_currency_amount(printed)
+    raise ValueError(f"reviewed_field_unsupported:{field}")
+
+
+def reviewed_scan_observation(document: Mapping[str, Any], review: Mapping[str, Any],
+                              ocr_pages: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """One typed observation from a reviewed image-only official document.
+
+    `document` carries the retained identity (`document_id`, `ticker`, `document_type`,
+    `content_sha256`, `source_*`, `observed_at`). `review` names `event_type`,
+    `event_type_printed` and `fields`: ``{field: {"page": n, "printed": "...", "label": "..."}}``.
+    `ocr_pages` are governed OCR sidecar rows for this document. Raises on a token that is not on
+    its cited page, on an unparseable token, and on OCR rows of other bytes.
+    """
+    document_id = str(document.get("document_id") or "")
+    sha = str(document.get("content_sha256") or "")
+    document_type = str(document.get("document_type") or "")
+    if not document_id or not _SHA256_RE.fullmatch(sha) or document_type not in DOCUMENT_CLASS_CEILING:
+        raise ValueError("reviewed_document_identity_incomplete")
+    pages: dict[int, list[Mapping[str, Any]]] = {}
+    for row in ocr_pages:
+        if row.get("document_id") != document_id or row.get("document_sha256") != sha:
+            raise ValueError("reviewed_ocr_rows_belong_to_other_bytes")
+        if row.get("status") == "ocr_available":
+            pages.setdefault(int(row["page"]), []).append(row)
+
+    def located(printed: str, page: int | None) -> Mapping[str, Any] | None:
+        candidates = pages.get(page, []) if page is not None else [r for rows in pages.values() for r in rows]
+        return next((row for row in sorted(candidates, key=lambda r: str(r.get("citation_id")))
+                     if _token_on_page(printed, str(row.get("text") or ""))), None)
+
+    event_type = review.get("event_type")
+    type_phrase = str(review.get("event_type_printed") or "")
+    if event_type is not None and (event_type not in EVENT_TYPES or located(type_phrase, None) is None):
+        raise ValueError("reviewed_event_type_phrase_absent_from_governed_ocr")
+
+    fields: dict[str, Any] = {}
+    citations: list[dict[str, Any]] = []
+    for field, cited in sorted((review.get("fields") or {}).items()):
+        if field not in _REVIEWED_FIELDS:
+            raise ValueError(f"reviewed_field_unsupported:{field}")
+        printed, page = str(cited.get("printed") or ""), int(cited.get("page") or 0)
+        row = located(printed, page)
+        if row is None:
+            raise ValueError(f"reviewed_token_absent_from_governed_ocr:{field}")
+        value = _parse_reviewed_value(field, printed)
+        if value is None:
+            raise ValueError(f"reviewed_token_unparseable:{field}")
+        fields[field] = value
+        citations.append({"field": field, "cue": str(cited.get("label") or ""), "excerpt": printed,
+                          "page": page, "ocr_citation_id": row.get("citation_id"),
+                          "ocr_engine": row.get("ocr_engine"), "evidence_method": REVIEWED_SCAN_EVIDENCE_METHOD})
+
+    absent = {field: "not stated in this document" for field in sorted(_REVIEWED_FIELDS - set(fields))}
+    warnings = list(review.get("warnings") or [])
+    if "ex_date" not in fields:
+        warnings.append("ex_date_absent")
+        absent["ex_date"] = ("no explicit official ex-date in this document; a record, payment, "
+                             "listing or trading date is never substituted for one")
+    ceiling = DOCUMENT_CLASS_CEILING[document_type]
+    lifecycle = _lifecycle_for(document_type, fields, ceiling)
+    stock_ratio = fields.get("stock_ratio")
+    ticker = str(document.get("ticker") or "").upper()
+    identity = {"schema_version": SCHEMA_VERSION, "ticker": ticker, "event_type": event_type,
+                "document_id": document_id, "content_sha256": sha}
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "extractor_version": VERSION,
+        "observation_id": _fingerprint({**identity, "fields": fields}),
+        "ticker": ticker,
+        "event_type": event_type,
+        "event_type_reason": (f"reviewed printed purpose: {type_phrase}" if event_type
+                              else "event legs are not separable in this document"),
+        "evidence_method": REVIEWED_SCAN_EVIDENCE_METHOD,
+        "lifecycle_state": lifecycle["state"],
+        "lifecycle_reason": lifecycle["reason"],
+        "lifecycle_ceiling": ceiling,
+        "document_id": document_id,
+        "document_type": document_type,
+        "source_authority": document.get("source_authority"),
+        "source_id": document.get("source_id"),
+        "source_url": document.get("source_url"),
+        "content_sha256": sha,
+        "discovery_provenance": document.get("discovery_provenance"),
+        "published_at": document.get("published_at"),
+        "observed_at": document.get("observed_at"),
+        "approval_date": None,
+        "announcement_date": document.get("published_at"),
+        "ex_date": fields.get("ex_date"),
+        "record_date": fields.get("record_date"),
+        "payment_date": fields.get("payment_date"),
+        "listing_effective_date": fields.get("listing_effective_date"),
+        "payment_or_execution_date": fields.get("payment_date") or fields.get("listing_effective_date"),
+        "trading_date": fields.get("trading_date"),
+        "shares_planned": fields.get("shares_planned"),
+        "shares_before": fields.get("shares_before"),
+        "shares_outstanding_before": fields.get("shares_outstanding_before"),
+        "treasury_shares_before": fields.get("treasury_shares_before"),
+        "shares_issued": fields.get("shares_issued"),
+        "shares_after": fields.get("shares_after"),
+        "fractional_shares_cancelled": fields.get("fractional_shares_cancelled"),
+        "share_count_identity": "listed_shares" if document_type == "listing_change_notice" else "unknown",
+        "share_class": None,
+        "cash_amount_per_share": fields.get("cash_amount_per_share"),
+        "stock_ratio": stock_ratio,
+        "ratio_basis": RATIO_BASIS_OUTSTANDING_ENTITLEMENT if stock_ratio is not None else None,
+        "ratio_source": RATIO_SOURCE_EXPLICIT if stock_ratio is not None else None,
+        "rights_ratio": None,
+        "subscription_price": None,
+        "citations": sorted(citations, key=lambda item: str(item["field"])),
+        "absent_fields": dict(sorted(absent.items())),
+        "warnings": sorted(set(warnings)),
+    }

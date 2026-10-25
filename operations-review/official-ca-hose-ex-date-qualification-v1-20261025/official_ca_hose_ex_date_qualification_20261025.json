@@ -1,0 +1,1859 @@
+{
+  "artifact_sha256": "94bfc71d55257d2928e36a075291b9bf5598a491c1b1569470bd98db6ed3e8c4",
+  "authority_boundary": {
+    "active_universe": "UNKNOWN",
+    "applicable_corporate_action_coverage": "UNKNOWN",
+    "authority_promotion": false,
+    "authority_state": "outside_production_authority",
+    "cash_adjustment_policy": "NONE",
+    "event_free_interval_proven": false,
+    "execution_replay_eligible": false,
+    "historical_pit_eligible": false,
+    "knowledge_basis": "PRODUCER_RECEIPT_2026_10_25_FORWARD_ONLY",
+    "observed_market_ratio_used_as_factor": false,
+    "offline_scope_factor_chain_qualified_count": 2,
+    "pit_backtest_eligible": false
+  },
+  "contract_version": "official_ca_hose_ex_date_qualification/v1",
+  "documents": [
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2430881/20260114%20-%20POW%20-%20TB%20so%2072%20vv%20giao%20dich%20chung%20khoan%20thay%20doi%20dang%20ky%20niem%20yet.pdf",
+      "content_length": 325374,
+      "document_class": "listing_change_notice",
+      "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": true,
+      "hose_news_id": "2430881",
+      "http_last_modified": "Thu, 15 Jan 2026 06:53:32 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:16:56.412142Z",
+      "sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+      "ticker": "POW"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2462408/20260515%20-%20HPG%20-%20Thong%20bao%201121%20tra%20co%20tuc%20bang%20co%20phieu.pdf",
+      "content_length": 282386,
+      "document_class": "ex_right_notice",
+      "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": true,
+      "hose_news_id": "2462408",
+      "http_last_modified": "Fri, 15 May 2026 07:15:33 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:15:26.250689Z",
+      "sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+      "ticker": "HPG"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2469047/20260604%20-%20HPG%20-%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu%20tra%20co%20tuc%20nam%202025.pdf",
+      "content_length": 1447075,
+      "document_class": "corporate_action_notice",
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": null,
+      "hose_news_id": "2469047",
+      "http_last_modified": "Tue, 09 Jun 2026 10:10:28 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:15:48.164930Z",
+      "sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "ticker": "HPG"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2474001/20260625%20-%20PVD%20-%20TB%201421ve%20ngay%20DKCC%20thuc%20hien%20phat%20hanh%20co%20phieu%20de%20tang%20von%20CP%20tu%20nguon%20VCSH.pdf",
+      "content_length": 416944,
+      "document_class": "ex_right_notice",
+      "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": true,
+      "hose_news_id": "2474001",
+      "http_last_modified": "Fri, 26 Jun 2026 08:05:32 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:15:57.265524Z",
+      "sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+      "ticker": "PVD"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2477123/20260706%20-%20HPG%20-%20Thong%20bao%20giao%20dich%20co%20phieu%20thay%20doi%20dang%20ky%20niem%20yet.pdf",
+      "content_length": 250029,
+      "document_class": "listing_change_notice",
+      "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": true,
+      "hose_news_id": "2477123",
+      "http_last_modified": "Tue, 07 Jul 2026 07:07:47 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:15:36.188975Z",
+      "sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+      "ticker": "HPG"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2483453/20260728%20-%20PVD%20-%20CBTT%20Qd%20cua%20HdQT%20ve%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu_Signed.pdf",
+      "content_length": 3808893,
+      "document_class": "corporate_action_notice",
+      "document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": null,
+      "hose_news_id": "2483453",
+      "http_last_modified": "Tue, 28 Jul 2026 10:28:55 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:16:19.602492Z",
+      "sha256": "68048e5182d592abe48fd4dd83b40e3b527e70221474faa4940b6af14aec4e18",
+      "ticker": "PVD"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2484275/20260729%20-%20PVD%20-%20Cap%20nhat%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu_Signed.pdf",
+      "content_length": 2597490,
+      "document_class": "amendment_or_supersession_notice",
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": null,
+      "hose_news_id": "2484275",
+      "http_last_modified": "Thu, 30 Jul 2026 07:02:49 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:16:28.534785Z",
+      "sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "ticker": "PVD"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2485374/20260730%20-%20SSI%20-%20TB%20ngay%20DKCC%20tra%20co%20tuc%202025%20bang%20tien%20va%20PH%20CP%20de%20tang%20von%20CP%20tu%20NV%20CSH.pdf",
+      "content_length": 494753,
+      "document_class": "ex_right_notice",
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": true,
+      "hose_news_id": "2485374",
+      "http_last_modified": "Fri, 31 Jul 2026 10:40:44 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:16:46.745572Z",
+      "sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "ticker": "SSI"
+    },
+    {
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2492067/20260825%20-%20PVD%20-%20TB%20thay%20doi%20NY%20va%20giao%20dich.pdf",
+      "content_length": 255291,
+      "document_class": "listing_change_notice",
+      "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+      "extraction_status": "needs_ocr",
+      "grokbot_51_sha256_agreement": true,
+      "hose_news_id": "2492067",
+      "http_last_modified": "Wed, 26 Aug 2026 03:13:35 GMT",
+      "http_last_modified_role": "SERVER_FILE_CLOCK_NOT_PUBLICATION_OR_KNOWLEDGE_TIME",
+      "producer_receipt_at": "2026-10-25T11:16:09.052108Z",
+      "sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+      "ticker": "PVD"
+    }
+  ],
+  "event_outcomes": {
+    "HPG:stock_dividend:2026-05-25:b7a97e12cc2a": {
+      "adjustment_factor": 0.909090909091,
+      "classification": "FACTOR_CHAIN_QUALIFIED",
+      "ex_date": "2026-05-25",
+      "historical_pit_eligible_on_or_before_ex_date": false,
+      "knowledge_cutoff": "2026-10-25T11:15:48.164930Z",
+      "known_from": "PRODUCER_RECEIPT_FORWARD_ONLY",
+      "reason_codes": [
+        "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+        "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+        "SESSION_RESOLUTION_UNAVAILABLE",
+        "knowledge_research_session_unresolved_outside_governed_calendar"
+      ],
+      "record_date": "2026-05-26",
+      "source_document_ids": [
+        "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+        "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+        "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec"
+      ],
+      "status": "QUALIFIED"
+    },
+    "POW:COMBINED_LEGS:NO_EX_DATE:2264b7f39be6": {
+      "cash_amount_per_share": null,
+      "classification": "NOT_A_LEDGER_ENTRY",
+      "ex_date": null,
+      "ledger_reason": "no event type detected",
+      "lifecycle_state": "executed",
+      "reason_codes": [
+        "combined_stock_dividend_and_bonus_legs_not_separable_in_document",
+        "ex_date_absent",
+        "missing_explicit_official_ex_date",
+        "no_share_change_identity_for_ledger_link"
+      ],
+      "record_date": null,
+      "status": "NOT_QUALIFIED"
+    },
+    "PVD:bonus_shares:2026-07-14:54137128510f": {
+      "adjustment_factor": 0.599161174356,
+      "classification": "FACTOR_CHAIN_QUALIFIED",
+      "ex_date": "2026-07-14",
+      "historical_pit_eligible_on_or_before_ex_date": false,
+      "knowledge_cutoff": "2026-10-25T11:16:28.534785Z",
+      "known_from": "PRODUCER_RECEIPT_FORWARD_ONLY",
+      "reason_codes": [
+        "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+        "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+        "SESSION_RESOLUTION_UNAVAILABLE",
+        "knowledge_research_session_unresolved_outside_governed_calendar"
+      ],
+      "record_date": "2026-07-15",
+      "source_document_ids": [
+        "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+        "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+        "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245"
+      ],
+      "status": "QUALIFIED"
+    },
+    "SSI:bonus_shares:2026-08-17:6ab95063750c": {
+      "cash_amount_per_share": null,
+      "classification": "NOT_A_LEDGER_ENTRY",
+      "ex_date": "2026-08-17",
+      "ledger_reason": "no share-change identity; cannot be linked to an event",
+      "lifecycle_state": "record_date_confirmed",
+      "reason_codes": [
+        "no_share_change_identity_for_ledger_link",
+        "shares_planned_unreadable_in_every_governed_ocr_read"
+      ],
+      "record_date": "2026-08-18",
+      "status": "NOT_QUALIFIED"
+    },
+    "SSI:cash_dividend:2026-08-17:b471312aeb2c": {
+      "cash_amount_per_share": 1000.0,
+      "classification": "NOT_A_LEDGER_ENTRY",
+      "ex_date": "2026-08-17",
+      "ledger_reason": "no share-change identity; cannot be linked to an event",
+      "lifecycle_state": "record_date_confirmed",
+      "reason_codes": [
+        "no_share_change_identity_for_ledger_link"
+      ],
+      "record_date": "2026-08-18",
+      "status": "NOT_QUALIFIED"
+    }
+  },
+  "factor_chain_cohort": {
+    "classification_counts": {
+      "CONFLICTING": 0,
+      "FACTOR_CHAIN_QUALIFIED": 2,
+      "FACTOR_NOT_APPLICABLE": 0,
+      "MISSING_EXPLICIT_EX_DATE": 0,
+      "NOT_EXECUTED": 0,
+      "OTHER_EVIDENCE_GAP": 0
+    },
+    "cohort_size": 2,
+    "contract_version": "qualified_corporate_action_factor_chain/v1",
+    "events": [
+      {
+        "classification": "FACTOR_CHAIN_QUALIFIED",
+        "event_id": "b7a97e12cc2a1cba4ed6c0e4f0571702ea15e71bf5055d332dcf5069654ec58c",
+        "event_type": "stock_dividend",
+        "factor_chain": {
+          "adjustment_authority": "official_corporate_action_ledger",
+          "adjustment_factor": 0.909090909091,
+          "authority_state": "outside_production_authority",
+          "classification": "FACTOR_CHAIN_QUALIFIED",
+          "contract_version": "qualified_corporate_action_factor_chain/v1",
+          "event_types": [
+            "stock_dividend"
+          ],
+          "ex_date": "2026-05-25",
+          "ex_date_status": "EXPLICIT_OFFICIAL",
+          "factor_chain_identity": "qualified_corporate_action_factor_chain:f6d31ab35daea7128d085c47f0b197ff9316ef2302c16b6801637f64b60453e3",
+          "identity": "qualified_corporate_action_factor_chain:f6d31ab35daea7128d085c47f0b197ff9316ef2302c16b6801637f64b60453e3",
+          "knowledge_cutoff": "2026-10-25T11:15:48.164930Z",
+          "official_execution_status": "EXECUTED",
+          "reason_codes": [
+            "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+            "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+            "SESSION_RESOLUTION_UNAVAILABLE",
+            "knowledge_research_session_unresolved_outside_governed_calendar"
+          ],
+          "record_date": "2026-05-26",
+          "schema_version": "1.0.0",
+          "source_content_hashes": [
+            "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+            "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+            "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543"
+          ],
+          "source_document_ids": [
+            "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+            "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+            "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec"
+          ],
+          "source_event_id": "b7a97e12cc2a1cba4ed6c0e4f0571702ea15e71bf5055d332dcf5069654ec58c",
+          "source_ledger_entry_identity": "b7a97e12cc2a1cba4ed6c0e4f0571702ea15e71bf5055d332dcf5069654ec58c",
+          "status": "QUALIFIED"
+        },
+        "ticker": "HPG"
+      },
+      {
+        "classification": "FACTOR_CHAIN_QUALIFIED",
+        "event_id": "54137128510fca126167ff0465387d66e304d882baac90413a128ce7e63161bc",
+        "event_type": "bonus_shares",
+        "factor_chain": {
+          "adjustment_authority": "official_corporate_action_ledger",
+          "adjustment_factor": 0.599161174356,
+          "authority_state": "outside_production_authority",
+          "classification": "FACTOR_CHAIN_QUALIFIED",
+          "contract_version": "qualified_corporate_action_factor_chain/v1",
+          "event_types": [
+            "bonus_shares"
+          ],
+          "ex_date": "2026-07-14",
+          "ex_date_status": "EXPLICIT_OFFICIAL",
+          "factor_chain_identity": "qualified_corporate_action_factor_chain:3808d8ea1c27f5b62d7c1c72b2a8eee22356728455533533bb02d1a280fb0078",
+          "identity": "qualified_corporate_action_factor_chain:3808d8ea1c27f5b62d7c1c72b2a8eee22356728455533533bb02d1a280fb0078",
+          "knowledge_cutoff": "2026-10-25T11:16:28.534785Z",
+          "official_execution_status": "EXECUTED",
+          "reason_codes": [
+            "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+            "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+            "SESSION_RESOLUTION_UNAVAILABLE",
+            "knowledge_research_session_unresolved_outside_governed_calendar"
+          ],
+          "record_date": "2026-07-15",
+          "schema_version": "1.0.0",
+          "source_content_hashes": [
+            "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+            "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+            "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f"
+          ],
+          "source_document_ids": [
+            "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+            "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+            "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245"
+          ],
+          "source_event_id": "54137128510fca126167ff0465387d66e304d882baac90413a128ce7e63161bc",
+          "source_ledger_entry_identity": "54137128510fca126167ff0465387d66e304d882baac90413a128ce7e63161bc",
+          "status": "QUALIFIED"
+        },
+        "ticker": "PVD"
+      }
+    ],
+    "qualified_count": 2,
+    "schema_version": "1.0.0"
+  },
+  "ledger": {
+    "adjustment_authority": "official_corporate_action_ledger",
+    "adjustment_factor_counts": {
+      "ready": 2
+    },
+    "adjustment_policy_version": "1.0.0",
+    "authority_state": "outside_production_authority",
+    "duplicate_observations": [],
+    "entries": [
+      {
+        "absent_fields": {
+          "cash_amount_per_share": "not stated in this document",
+          "listing_effective_date": "not stated in this document",
+          "payment_date": "not stated in this document",
+          "treasury_shares_before": "not stated in this document"
+        },
+        "adjustment_authority": "official_corporate_action_ledger",
+        "adjustment_factor": 0.909090909091,
+        "adjustment_factor_blocked_by": [],
+        "adjustment_factor_reason": "1 / (1 + 0.1) applied to closes strictly before the ex-date 2026-05-25; derived for a directly supported event and held outside production authority",
+        "adjustment_factor_status": "ready",
+        "adjustment_policy_version": "1.0.0",
+        "announcement_date": null,
+        "approval_date": null,
+        "arithmetic_corroboration": {
+          "cross_document": true,
+          "documents": [
+            "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+            "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543"
+          ],
+          "reason": "7675465855 + 767498665 = 8442964520",
+          "state": "confirmed"
+        },
+        "authority_state": "outside_production_authority",
+        "cash_amount_per_share": null,
+        "conflict_status": "consistent",
+        "conflicts": [],
+        "event_id": "b7a97e12cc2a1cba4ed6c0e4f0571702ea15e71bf5055d332dcf5069654ec58c",
+        "event_type": "stock_dividend",
+        "ex_date": "2026-05-25",
+        "execution_status": "executed",
+        "fractional_shares_cancelled": 47920.0,
+        "ledger_version": "1.0.0",
+        "lifecycle_state": "executed",
+        "payment_or_execution_date": "2026-07-02",
+        "planned_count_bridge": {
+          "basis": "one document states both the planned and the executed count",
+          "bridged_document_ids": [
+            "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded"
+          ],
+          "planned_shares": 767546585,
+          "stating_document_ids": [
+            "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec"
+          ]
+        },
+        "qualification_reason": "executed, internally consistent, and the share-count identity is confirmed across independent documents",
+        "qualification_state": "qualified",
+        "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+        "ratio_basis_corroboration": {
+          "entitled_shares": 7675465855,
+          "reason": "0.1 x 7675465855 = 767546585.5 ~ planned 767546585",
+          "state": "confirmed"
+        },
+        "ratio_source": "explicit_official_entitlement",
+        "record_date": "2026-05-26",
+        "rights_ratio": null,
+        "schema_version": "1.0.0",
+        "share_class": null,
+        "share_count_identity": "listed_shares",
+        "shares_after": 8442964520,
+        "shares_before": 7675465855,
+        "shares_issued": 767498665,
+        "shares_outstanding_before": 7675465855,
+        "shares_planned": 767546585,
+        "source_content_hashes": [
+          "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+          "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+          "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543"
+        ],
+        "source_document_ids": [
+          "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+          "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+          "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec"
+        ],
+        "source_documents": [
+          {
+            "citations": [
+              {
+                "cue": "Ngày thay đổi niêm yết có hiệu lực",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "02/07/2026",
+                "field": "listing_effective_date",
+                "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng chứng khoán sau khi thay đổi niêm yết",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "8.442.964.520",
+                "field": "shares_after",
+                "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng chứng khoán thay đổi niêm yết",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "767.498.665",
+                "field": "shares_issued",
+                "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Ngày giao dịch bổ sung của chứng khoán thay đổi niêm yết",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "15/07/2026",
+                "field": "trading_date",
+                "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              }
+            ],
+            "content_sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+            "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+            "document_type": "listing_change_notice",
+            "share_class": null,
+            "share_count_identity": "listed_shares",
+            "source_authority": "exchange",
+            "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2477123/20260706%20-%20HPG%20-%20Thong%20bao%20giao%20dich%20co%20phieu%20thay%20doi%20dang%20ky%20niem%20yet.pdf"
+          },
+          {
+            "citations": [
+              {
+                "cue": "Ngày giao dịch không hưởng quyền",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "25/05/2026",
+                "field": "ex_date",
+                "ocr_citation_id": "f6ed74c76c513fdddc30c9a63ae51f2bcbdfffcb5cec475717b3eaf47959099e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Ngày đăng ký cuối cùng",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "26/05/2026",
+                "field": "record_date",
+                "ocr_citation_id": "f6ed74c76c513fdddc30c9a63ae51f2bcbdfffcb5cec475717b3eaf47959099e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng cổ phiếu dự kiến phát hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "767.546.585",
+                "field": "shares_planned",
+                "ocr_citation_id": "a4124d97720f32e50006261e8c839a773e8998396a80e19a97ba1e2b8b5c46ab",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Tỷ lệ thực hiện",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "10%",
+                "field": "stock_ratio",
+                "ocr_citation_id": "a4124d97720f32e50006261e8c839a773e8998396a80e19a97ba1e2b8b5c46ab",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 1
+              }
+            ],
+            "content_sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+            "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+            "document_type": "ex_right_notice",
+            "share_class": null,
+            "share_count_identity": "unknown",
+            "source_authority": "exchange",
+            "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2462408/20260515%20-%20HPG%20-%20Thong%20bao%201121%20tra%20co%20tuc%20bang%20co%20phieu.pdf"
+          },
+          {
+            "citations": [
+              {
+                "cue": "Số cổ phiếu xử lý phần lẻ (đã được hủy bỏ)",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "47.920",
+                "field": "fractional_shares_cancelled",
+                "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 2
+              },
+              {
+                "cue": "Tổng số cổ phiếu sau đợt phát hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "8.442.964.520",
+                "field": "shares_after",
+                "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 2
+              },
+              {
+                "cue": "Tổng số cổ phiếu đã phát hành (trước phát hành)",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "7.675.465.855",
+                "field": "shares_before",
+                "ocr_citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Tổng số cổ phiếu đã phân phối",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "767.498.665",
+                "field": "shares_issued",
+                "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 2
+              },
+              {
+                "cue": "Số lượng cổ phiếu đang lưu hành (trước phát hành)",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "7.675.465.855",
+                "field": "shares_outstanding_before",
+                "ocr_citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng cổ phiếu dự kiến phát hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "767.546.585",
+                "field": "shares_planned",
+                "ocr_citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Tỷ lệ thực hiện quyền",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "100:10",
+                "field": "stock_ratio",
+                "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 2
+              }
+            ],
+            "content_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+            "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+            "document_type": "corporate_action_notice",
+            "share_class": null,
+            "share_count_identity": "unknown",
+            "source_authority": "exchange",
+            "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2469047/20260604%20-%20HPG%20-%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu%20tra%20co%20tuc%20nam%202025.pdf"
+          }
+        ],
+        "source_observation_ids": [
+          "1623d6a57b6c4a02218e754f2e8fa198bbe05464973919365a4f4a379429bf72",
+          "6cfbd08c23ff4f408cdf68204c2432f1b5a62ac20b2112191012387cc13672f6",
+          "9380df84276ff617a1e31ef202ec9a9c16a0b53679549dcbba771e9a48cfd0fe"
+        ],
+        "stock_ratio": 0.1,
+        "subscription_price": null,
+        "superseded_by": null,
+        "supersedes": null,
+        "ticker": "HPG",
+        "trading_date": "2026-07-15",
+        "warnings": [
+          "ex_date_absent"
+        ]
+      },
+      {
+        "absent_fields": {
+          "cash_amount_per_share": "not stated in this document",
+          "listing_effective_date": "not stated in this document",
+          "payment_date": "not stated in this document"
+        },
+        "adjustment_authority": "official_corporate_action_ledger",
+        "adjustment_factor": 0.599161174356,
+        "adjustment_factor_blocked_by": [],
+        "adjustment_factor_reason": "1 / (1 + 0.669) applied to closes strictly before the ex-date 2026-07-14; derived for a directly supported event and held outside production authority",
+        "adjustment_factor_status": "ready",
+        "adjustment_policy_version": "1.0.0",
+        "announcement_date": null,
+        "approval_date": null,
+        "arithmetic_corroboration": {
+          "cross_document": true,
+          "documents": [
+            "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+            "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f"
+          ],
+          "reason": "556296006 + 371862185 = 928158191",
+          "state": "confirmed"
+        },
+        "authority_state": "outside_production_authority",
+        "cash_amount_per_share": null,
+        "conflict_status": "consistent",
+        "conflicts": [],
+        "event_id": "54137128510fca126167ff0465387d66e304d882baac90413a128ce7e63161bc",
+        "event_type": "bonus_shares",
+        "ex_date": "2026-07-14",
+        "execution_status": "executed",
+        "fractional_shares_cancelled": 21447.03,
+        "ledger_version": "1.0.0",
+        "lifecycle_state": "executed",
+        "payment_or_execution_date": "2026-08-24",
+        "planned_count_bridge": {
+          "basis": "one document states both the planned and the executed count",
+          "bridged_document_ids": [
+            "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031"
+          ],
+          "planned_shares": 371883724,
+          "stating_document_ids": [
+            "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245"
+          ]
+        },
+        "qualification_reason": "executed, internally consistent, and the share-count identity is confirmed across independent documents",
+        "qualification_state": "qualified",
+        "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+        "ratio_basis_corroboration": {
+          "entitled_shares": 555880006,
+          "reason": "0.669 x 555880006 = 371883724.014 ~ planned 371883724",
+          "state": "confirmed"
+        },
+        "ratio_source": "explicit_official_entitlement",
+        "record_date": "2026-07-15",
+        "rights_ratio": null,
+        "schema_version": "1.0.0",
+        "share_class": null,
+        "share_count_identity": "listed_shares",
+        "shares_after": 928158191,
+        "shares_before": 556296006,
+        "shares_issued": 371862185,
+        "shares_outstanding_before": 555880006,
+        "shares_planned": 371883724,
+        "source_content_hashes": [
+          "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+          "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+          "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f"
+        ],
+        "source_document_ids": [
+          "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+          "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+          "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245"
+        ],
+        "source_documents": [
+          {
+            "citations": [
+              {
+                "cue": "Ngày giao dịch không hưởng quyền",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "14/07/2026",
+                "field": "ex_date",
+                "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Ngày đăng ký cuối cùng",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "15/07/2026",
+                "field": "record_date",
+                "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng cổ phiếu dự kiến phát hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "371.883.724",
+                "field": "shares_planned",
+                "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Tỷ lệ thực hiện",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "66,9%",
+                "field": "stock_ratio",
+                "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              }
+            ],
+            "content_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+            "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+            "document_type": "ex_right_notice",
+            "share_class": null,
+            "share_count_identity": "unknown",
+            "source_authority": "exchange",
+            "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2474001/20260625%20-%20PVD%20-%20TB%201421ve%20ngay%20DKCC%20thuc%20hien%20phat%20hanh%20co%20phieu%20de%20tang%20von%20CP%20tu%20nguon%20VCSH.pdf"
+          },
+          {
+            "citations": [
+              {
+                "cue": "Ngày thay đổi niêm yết có hiệu lực",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "24/8/2026",
+                "field": "listing_effective_date",
+                "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng chứng khoán niêm yết sau khi thay đổi niêm yết",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "928.158.191",
+                "field": "shares_after",
+                "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Số lượng chứng khoán thay đổi niêm yết",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "371.862.185",
+                "field": "shares_issued",
+                "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              },
+              {
+                "cue": "Ngày giao dịch của chứng khoán thay đổi niêm yết",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "07/9/2026",
+                "field": "trading_date",
+                "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 1
+              }
+            ],
+            "content_sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+            "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+            "document_type": "listing_change_notice",
+            "share_class": null,
+            "share_count_identity": "listed_shares",
+            "source_authority": "exchange",
+            "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2492067/20260825%20-%20PVD%20-%20TB%20thay%20doi%20NY%20va%20giao%20dich.pdf"
+          },
+          {
+            "citations": [
+              {
+                "cue": "Số cổ phiếu xử lý phần lẻ",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "21.447,03",
+                "field": "fractional_shares_cancelled",
+                "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 6
+              },
+              {
+                "cue": "Tổng số cổ phiếu sau đợt phát hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "928.158.191",
+                "field": "shares_after",
+                "ocr_citation_id": "809656133d06cbcb24e40fb6e92ffff82d2d4220bf32db6dfe71be2dae70c218",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 7
+              },
+              {
+                "cue": "Tổng số cổ phiếu đã phát hành (trước phát hành)",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "556.296.006",
+                "field": "shares_before",
+                "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 6
+              },
+              {
+                "cue": "Tổng số cổ phiếu đã phân phối (đính chính)",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "371.862.185",
+                "field": "shares_issued",
+                "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 6
+              },
+              {
+                "cue": "Số lượng cổ phiếu đang lưu hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "555.880.006",
+                "field": "shares_outstanding_before",
+                "ocr_citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 6
+              },
+              {
+                "cue": "Số lượng cổ phiếu dự kiến phát hành",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "371.883.724",
+                "field": "shares_planned",
+                "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+                "page": 6
+              },
+              {
+                "cue": "Tỷ lệ thực hiện quyền",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "66,9%",
+                "field": "stock_ratio",
+                "ocr_citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 6
+              },
+              {
+                "cue": "Số lượng cổ phiếu quỹ",
+                "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+                "excerpt": "416.000",
+                "field": "treasury_shares_before",
+                "ocr_citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+                "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+                "page": 6
+              }
+            ],
+            "content_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+            "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+            "document_type": "amendment_or_supersession_notice",
+            "share_class": null,
+            "share_count_identity": "unknown",
+            "source_authority": "exchange",
+            "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2484275/20260729%20-%20PVD%20-%20Cap%20nhat%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu_Signed.pdf"
+          }
+        ],
+        "source_observation_ids": [
+          "10b23951c885817806c2e88c43589d20384ceeb23967e210583c0ff19229c23f",
+          "1ceff413676e9d5c377801a3407ede277087d92080cddac0f1880e9f62c59bbc",
+          "de15d79821914a9e12c48f0fa58ca13dafbdb2e5ef7d35acba888996c4b7e205"
+        ],
+        "stock_ratio": 0.669,
+        "subscription_price": null,
+        "superseded_by": null,
+        "supersedes": null,
+        "ticker": "PVD",
+        "trading_date": "2026-09-07",
+        "treasury_shares_before": 416000,
+        "warnings": [
+          "ex_date_absent"
+        ]
+      }
+    ],
+    "entry_count": 2,
+    "ledger_version": "1.0.0",
+    "lifecycle_counts": {
+      "executed": 2
+    },
+    "qualified_event_count": 2,
+    "replay_fingerprint": "ebdfe0a2b1da5b729b6db6e3ae1f534868e0d2b5b533b39810da844d28215f17",
+    "schema_version": "1.0.0",
+    "superseded_entry_ids": [],
+    "unlinked_observations": [
+      {
+        "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+        "observation_id": "2264b7f39be665af62834abee22aa0251c998f56c70ca676c4333a88fecb7dfc",
+        "reason": "no event type detected"
+      },
+      {
+        "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+        "observation_id": "b471312aeb2c26ded670a1f94a6719b8628ca5fb2799a14b85a3c54f38c90c6c",
+        "reason": "no share-change identity; cannot be linked to an event"
+      },
+      {
+        "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+        "observation_id": "6ab95063750c1b7f0d0c63650472fa543d98cfcb7e04a1bbbce10c4d5e55b072",
+        "reason": "no share-change identity; cannot be linked to an event"
+      }
+    ]
+  },
+  "milestone": "OFFICIAL_CORPORATE_ACTION_EVENT_EVIDENCE_PIT_BLOCKER_CLOSURE",
+  "observations": [
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "ex_date": "no explicit official ex-date in this document; a record, payment, listing or trading date is never substituted for one",
+        "fractional_shares_cancelled": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "record_date": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "shares_planned": "not stated in this document",
+        "stock_ratio": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Ngày thay đổi niêm yết có hiệu lực",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "13/01/2026",
+          "field": "listing_effective_date",
+          "ocr_citation_id": "6fb8165fd6057527c09b8f395718f295da178397cfeb65ae13931d4a6ded7d7d",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng chứng khoán sau khi thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "2.786.821.096",
+          "field": "shares_after",
+          "ocr_citation_id": "6fb8165fd6057527c09b8f395718f295da178397cfeb65ae13931d4a6ded7d7d",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng chứng khoán thay đổi niêm yết (hai đợt gộp)",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "444.949.496",
+          "field": "shares_issued",
+          "ocr_citation_id": "6fb8165fd6057527c09b8f395718f295da178397cfeb65ae13931d4a6ded7d7d",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày giao dịch của chứng khoán thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "27/01/2026",
+          "field": "trading_date",
+          "ocr_citation_id": "6fb8165fd6057527c09b8f395718f295da178397cfeb65ae13931d4a6ded7d7d",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "59a16702d0047c85ffbf2de5f06ab90d62ede992d107065c025403cf09ee0767",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2430881",
+      "document_id": "b1e183ff9f7c556ad751280453206cea825fdc25544fdce13d2a7e73bc2218a4",
+      "document_type": "listing_change_notice",
+      "event_type": null,
+      "event_type_reason": "event legs are not separable in this document",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": null,
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "executed",
+      "lifecycle_reason": "the document reports a completed change in listed or voting share count",
+      "lifecycle_state": "executed",
+      "listing_effective_date": "2026-01-13",
+      "observation_id": "2264b7f39be665af62834abee22aa0251c998f56c70ca676c4333a88fecb7dfc",
+      "observed_at": "2026-10-25T11:16:56.412142Z",
+      "payment_date": null,
+      "payment_or_execution_date": "2026-01-13",
+      "published_at": null,
+      "ratio_basis": null,
+      "ratio_source": null,
+      "record_date": null,
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "listed_shares",
+      "shares_after": 2786821096,
+      "shares_before": null,
+      "shares_issued": 444949496,
+      "shares_outstanding_before": null,
+      "shares_planned": null,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2430881/20260114%20-%20POW%20-%20TB%20so%2072%20vv%20giao%20dich%20chung%20khoan%20thay%20doi%20dang%20ky%20niem%20yet.pdf",
+      "stock_ratio": null,
+      "subscription_price": null,
+      "ticker": "POW",
+      "trading_date": "2026-01-27",
+      "treasury_shares_before": null,
+      "warnings": [
+        "combined_stock_dividend_and_bonus_legs_not_separable_in_document",
+        "ex_date_absent"
+      ]
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "fractional_shares_cancelled": "not stated in this document",
+        "listing_effective_date": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "shares_after": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_issued": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "trading_date": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Ngày giao dịch không hưởng quyền",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "25/05/2026",
+          "field": "ex_date",
+          "ocr_citation_id": "f6ed74c76c513fdddc30c9a63ae51f2bcbdfffcb5cec475717b3eaf47959099e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày đăng ký cuối cùng",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "26/05/2026",
+          "field": "record_date",
+          "ocr_citation_id": "f6ed74c76c513fdddc30c9a63ae51f2bcbdfffcb5cec475717b3eaf47959099e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng cổ phiếu dự kiến phát hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "767.546.585",
+          "field": "shares_planned",
+          "ocr_citation_id": "a4124d97720f32e50006261e8c839a773e8998396a80e19a97ba1e2b8b5c46ab",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Tỷ lệ thực hiện",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "10%",
+          "field": "stock_ratio",
+          "ocr_citation_id": "a4124d97720f32e50006261e8c839a773e8998396a80e19a97ba1e2b8b5c46ab",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "7051ea19b834737409f0e127440f166df888e8928fa9928c4c425ecaf2449f7c",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2462408",
+      "document_id": "0e62be9ac84e7a9c5000789557d989be25ea53e9cd824e61da370295f8a53ded",
+      "document_type": "ex_right_notice",
+      "event_type": "stock_dividend",
+      "event_type_reason": "reviewed printed purpose: trả cổ tức",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": "2026-05-25",
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "record_date_confirmed",
+      "lifecycle_reason": "the document states a confirmed record date",
+      "lifecycle_state": "record_date_confirmed",
+      "listing_effective_date": null,
+      "observation_id": "9380df84276ff617a1e31ef202ec9a9c16a0b53679549dcbba771e9a48cfd0fe",
+      "observed_at": "2026-10-25T11:15:26.250689Z",
+      "payment_date": null,
+      "payment_or_execution_date": null,
+      "published_at": null,
+      "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+      "ratio_source": "explicit_official_entitlement",
+      "record_date": "2026-05-26",
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "unknown",
+      "shares_after": null,
+      "shares_before": null,
+      "shares_issued": null,
+      "shares_outstanding_before": null,
+      "shares_planned": 767546585,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2462408/20260515%20-%20HPG%20-%20Thong%20bao%201121%20tra%20co%20tuc%20bang%20co%20phieu.pdf",
+      "stock_ratio": 0.1,
+      "subscription_price": null,
+      "ticker": "HPG",
+      "trading_date": null,
+      "treasury_shares_before": null,
+      "warnings": []
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "ex_date": "no explicit official ex-date in this document; a record, payment, listing or trading date is never substituted for one",
+        "listing_effective_date": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "record_date": "not stated in this document",
+        "trading_date": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Số cổ phiếu xử lý phần lẻ (đã được hủy bỏ)",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "47.920",
+          "field": "fractional_shares_cancelled",
+          "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 2
+        },
+        {
+          "cue": "Tổng số cổ phiếu sau đợt phát hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "8.442.964.520",
+          "field": "shares_after",
+          "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 2
+        },
+        {
+          "cue": "Tổng số cổ phiếu đã phát hành (trước phát hành)",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "7.675.465.855",
+          "field": "shares_before",
+          "ocr_citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Tổng số cổ phiếu đã phân phối",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "767.498.665",
+          "field": "shares_issued",
+          "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 2
+        },
+        {
+          "cue": "Số lượng cổ phiếu đang lưu hành (trước phát hành)",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "7.675.465.855",
+          "field": "shares_outstanding_before",
+          "ocr_citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng cổ phiếu dự kiến phát hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "767.546.585",
+          "field": "shares_planned",
+          "ocr_citation_id": "1bf664b6430c3caf77c1327f1b33ee3d3b74c455a2165bb637f0b7d59ea0012c",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Tỷ lệ thực hiện quyền",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "100:10",
+          "field": "stock_ratio",
+          "ocr_citation_id": "176f8356b9bd30604908b266694657efbec2d815505b2268c8c5d4d5eca9549e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 2
+        }
+      ],
+      "content_sha256": "da24dbd77e053d3c4f249133151703b79220a20fa350f860df71a5e6c171d543",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2469047",
+      "document_id": "c4b04d7235f307bf7b1a99b90e61ad2ef5ec64888395bd4edcd4200db629f9ec",
+      "document_type": "corporate_action_notice",
+      "event_type": "stock_dividend",
+      "event_type_reason": "reviewed printed purpose: trả cổ tức",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": null,
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": 47920.0,
+      "lifecycle_ceiling": "announced",
+      "lifecycle_reason": "the document reports a completed change in listed or voting share count, but a corporate_action_notice may not assert beyond 'announced'",
+      "lifecycle_state": "announced",
+      "listing_effective_date": null,
+      "observation_id": "6cfbd08c23ff4f408cdf68204c2432f1b5a62ac20b2112191012387cc13672f6",
+      "observed_at": "2026-10-25T11:15:48.164930Z",
+      "payment_date": null,
+      "payment_or_execution_date": null,
+      "published_at": null,
+      "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+      "ratio_source": "explicit_official_entitlement",
+      "record_date": null,
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "unknown",
+      "shares_after": 8442964520,
+      "shares_before": 7675465855,
+      "shares_issued": 767498665,
+      "shares_outstanding_before": 7675465855,
+      "shares_planned": 767546585,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2469047/20260604%20-%20HPG%20-%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu%20tra%20co%20tuc%20nam%202025.pdf",
+      "stock_ratio": 0.1,
+      "subscription_price": null,
+      "ticker": "HPG",
+      "trading_date": null,
+      "treasury_shares_before": null,
+      "warnings": [
+        "ex_date_absent"
+      ]
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "fractional_shares_cancelled": "not stated in this document",
+        "listing_effective_date": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "shares_after": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_issued": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "trading_date": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Ngày giao dịch không hưởng quyền",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "14/07/2026",
+          "field": "ex_date",
+          "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày đăng ký cuối cùng",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "15/07/2026",
+          "field": "record_date",
+          "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng cổ phiếu dự kiến phát hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "371.883.724",
+          "field": "shares_planned",
+          "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Tỷ lệ thực hiện",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "66,9%",
+          "field": "stock_ratio",
+          "ocr_citation_id": "78afaf843da1a37db737800498d2675bb18a7eff172f1ca89804055ae21189e7",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "4c1153c8286c56074e5fec8b1e301674988f4609061509f96d1eba3451f58f78",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2474001",
+      "document_id": "e48b26ca81fd8bb3e5caac86c13c86a4e1dcfec5045a91598f0d82990092b031",
+      "document_type": "ex_right_notice",
+      "event_type": "bonus_shares",
+      "event_type_reason": "reviewed printed purpose: tăng vốn cổ phần từ",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": "2026-07-14",
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "record_date_confirmed",
+      "lifecycle_reason": "the document states a confirmed record date",
+      "lifecycle_state": "record_date_confirmed",
+      "listing_effective_date": null,
+      "observation_id": "de15d79821914a9e12c48f0fa58ca13dafbdb2e5ef7d35acba888996c4b7e205",
+      "observed_at": "2026-10-25T11:15:57.265524Z",
+      "payment_date": null,
+      "payment_or_execution_date": null,
+      "published_at": null,
+      "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+      "ratio_source": "explicit_official_entitlement",
+      "record_date": "2026-07-15",
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "unknown",
+      "shares_after": null,
+      "shares_before": null,
+      "shares_issued": null,
+      "shares_outstanding_before": null,
+      "shares_planned": 371883724,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2474001/20260625%20-%20PVD%20-%20TB%201421ve%20ngay%20DKCC%20thuc%20hien%20phat%20hanh%20co%20phieu%20de%20tang%20von%20CP%20tu%20nguon%20VCSH.pdf",
+      "stock_ratio": 0.669,
+      "subscription_price": null,
+      "ticker": "PVD",
+      "trading_date": null,
+      "treasury_shares_before": null,
+      "warnings": []
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "ex_date": "no explicit official ex-date in this document; a record, payment, listing or trading date is never substituted for one",
+        "fractional_shares_cancelled": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "record_date": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "shares_planned": "not stated in this document",
+        "stock_ratio": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Ngày thay đổi niêm yết có hiệu lực",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "02/07/2026",
+          "field": "listing_effective_date",
+          "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng chứng khoán sau khi thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "8.442.964.520",
+          "field": "shares_after",
+          "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng chứng khoán thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "767.498.665",
+          "field": "shares_issued",
+          "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày giao dịch bổ sung của chứng khoán thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "15/07/2026",
+          "field": "trading_date",
+          "ocr_citation_id": "7af58c437568359c5cb78592bda7f2ea42d5191e8396211f51e9b530ba023b95",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "12a009fb660f4918d4158db507c43a1b53c5bdb39a3a4201e510dcf3c95d5cce",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2477123",
+      "document_id": "5a1327bd94d7339af9b0ca0a8f9bc88a96f84aa6ce98da15829664d58af1c85f",
+      "document_type": "listing_change_notice",
+      "event_type": "stock_dividend",
+      "event_type_reason": "reviewed printed purpose: để trả cổ tức",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": null,
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "executed",
+      "lifecycle_reason": "the document reports a completed change in listed or voting share count",
+      "lifecycle_state": "executed",
+      "listing_effective_date": "2026-07-02",
+      "observation_id": "1623d6a57b6c4a02218e754f2e8fa198bbe05464973919365a4f4a379429bf72",
+      "observed_at": "2026-10-25T11:15:36.188975Z",
+      "payment_date": null,
+      "payment_or_execution_date": "2026-07-02",
+      "published_at": null,
+      "ratio_basis": null,
+      "ratio_source": null,
+      "record_date": null,
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "listed_shares",
+      "shares_after": 8442964520,
+      "shares_before": null,
+      "shares_issued": 767498665,
+      "shares_outstanding_before": null,
+      "shares_planned": null,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2477123/20260706%20-%20HPG%20-%20Thong%20bao%20giao%20dich%20co%20phieu%20thay%20doi%20dang%20ky%20niem%20yet.pdf",
+      "stock_ratio": null,
+      "subscription_price": null,
+      "ticker": "HPG",
+      "trading_date": "2026-07-15",
+      "treasury_shares_before": null,
+      "warnings": [
+        "ex_date_absent"
+      ]
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "ex_date": "no explicit official ex-date in this document; a record, payment, listing or trading date is never substituted for one",
+        "listing_effective_date": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "record_date": "not stated in this document",
+        "trading_date": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Số cổ phiếu xử lý phần lẻ",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "21.447,03",
+          "field": "fractional_shares_cancelled",
+          "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 6
+        },
+        {
+          "cue": "Tổng số cổ phiếu sau đợt phát hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "928.158.191",
+          "field": "shares_after",
+          "ocr_citation_id": "809656133d06cbcb24e40fb6e92ffff82d2d4220bf32db6dfe71be2dae70c218",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 7
+        },
+        {
+          "cue": "Tổng số cổ phiếu đã phát hành (trước phát hành)",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "556.296.006",
+          "field": "shares_before",
+          "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 6
+        },
+        {
+          "cue": "Tổng số cổ phiếu đã phân phối (đính chính)",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "371.862.185",
+          "field": "shares_issued",
+          "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 6
+        },
+        {
+          "cue": "Số lượng cổ phiếu đang lưu hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "555.880.006",
+          "field": "shares_outstanding_before",
+          "ocr_citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 6
+        },
+        {
+          "cue": "Số lượng cổ phiếu dự kiến phát hành",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "371.883.724",
+          "field": "shares_planned",
+          "ocr_citation_id": "9086120e6b5e1e10232b3705e02997b9ee8202887921d740f819a8df3a0082e8",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 6
+        },
+        {
+          "cue": "Tỷ lệ thực hiện quyền",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "66,9%",
+          "field": "stock_ratio",
+          "ocr_citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 6
+        },
+        {
+          "cue": "Số lượng cổ phiếu quỹ",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "416.000",
+          "field": "treasury_shares_before",
+          "ocr_citation_id": "1d99f08a4409355c4e1374c11ee79f35b08dc883a5a37850299b1dc22737169e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+          "page": 6
+        }
+      ],
+      "content_sha256": "e593ea81b8b51ed69cd5c0223618cb372cdde02d0ad41b18cf89c5bb9c572e1f",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2484275",
+      "document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "document_type": "amendment_or_supersession_notice",
+      "event_type": "bonus_shares",
+      "event_type_reason": "reviewed printed purpose: tăng vốn cổ phần từ nguồn vốn chủ sở hữu",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": null,
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": 21447.03,
+      "lifecycle_ceiling": "amended",
+      "lifecycle_reason": "the document reports a completed change in listed or voting share count, but a amendment_or_supersession_notice may not assert beyond 'amended'",
+      "lifecycle_state": "amended",
+      "listing_effective_date": null,
+      "observation_id": "10b23951c885817806c2e88c43589d20384ceeb23967e210583c0ff19229c23f",
+      "observed_at": "2026-10-25T11:16:28.534785Z",
+      "payment_date": null,
+      "payment_or_execution_date": null,
+      "published_at": null,
+      "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+      "ratio_source": "explicit_official_entitlement",
+      "record_date": null,
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "unknown",
+      "shares_after": 928158191,
+      "shares_before": 556296006,
+      "shares_issued": 371862185,
+      "shares_outstanding_before": 555880006,
+      "shares_planned": 371883724,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2484275/20260729%20-%20PVD%20-%20Cap%20nhat%20Bao%20cao%20ket%20qua%20phat%20hanh%20co%20phieu_Signed.pdf",
+      "stock_ratio": 0.669,
+      "subscription_price": null,
+      "ticker": "PVD",
+      "trading_date": null,
+      "treasury_shares_before": 416000,
+      "warnings": [
+        "ex_date_absent"
+      ]
+    },
+    {
+      "absent_fields": {
+        "fractional_shares_cancelled": "not stated in this document",
+        "listing_effective_date": "not stated in this document",
+        "shares_after": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_issued": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "shares_planned": "not stated in this document",
+        "stock_ratio": "not stated in this document",
+        "trading_date": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": 1000.0,
+      "citations": [
+        {
+          "cue": "01 cổ phiếu được nhận 1.000 đồng",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "1.000",
+          "field": "cash_amount_per_share",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày giao dịch không hưởng quyền",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "17/08/2026",
+          "field": "ex_date",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày thanh toán",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "14/09/2026",
+          "field": "payment_date",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày đăng ký cuối cùng",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "18/08/2026",
+          "field": "record_date",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2485374",
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_type": "ex_right_notice",
+      "event_type": "cash_dividend",
+      "event_type_reason": "reviewed printed purpose: bằng tiền",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": "2026-08-17",
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "record_date_confirmed",
+      "lifecycle_reason": "the document states a confirmed record date",
+      "lifecycle_state": "record_date_confirmed",
+      "listing_effective_date": null,
+      "observation_id": "b471312aeb2c26ded670a1f94a6719b8628ca5fb2799a14b85a3c54f38c90c6c",
+      "observed_at": "2026-10-25T11:16:46.745572Z",
+      "payment_date": "2026-09-14",
+      "payment_or_execution_date": "2026-09-14",
+      "published_at": null,
+      "ratio_basis": null,
+      "ratio_source": null,
+      "record_date": "2026-08-18",
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "unknown",
+      "shares_after": null,
+      "shares_before": null,
+      "shares_issued": null,
+      "shares_outstanding_before": null,
+      "shares_planned": null,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2485374/20260730%20-%20SSI%20-%20TB%20ngay%20DKCC%20tra%20co%20tuc%202025%20bang%20tien%20va%20PH%20CP%20de%20tang%20von%20CP%20tu%20NV%20CSH.pdf",
+      "stock_ratio": null,
+      "subscription_price": null,
+      "ticker": "SSI",
+      "trading_date": null,
+      "treasury_shares_before": null,
+      "warnings": []
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "fractional_shares_cancelled": "not stated in this document",
+        "listing_effective_date": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "shares_after": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_issued": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "shares_planned": "not stated in this document",
+        "trading_date": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Ngày giao dịch không hưởng quyền",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "17/08/2026",
+          "field": "ex_date",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày đăng ký cuối cùng",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "18/08/2026",
+          "field": "record_date",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Tỷ lệ thực hiện",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "5:1",
+          "field": "stock_ratio",
+          "ocr_citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2485374",
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_type": "ex_right_notice",
+      "event_type": "bonus_shares",
+      "event_type_reason": "reviewed printed purpose: tăng vốn cổ phần từ nguồn vốn chủ sở hữu",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": "2026-08-17",
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "record_date_confirmed",
+      "lifecycle_reason": "the document states a confirmed record date",
+      "lifecycle_state": "record_date_confirmed",
+      "listing_effective_date": null,
+      "observation_id": "6ab95063750c1b7f0d0c63650472fa543d98cfcb7e04a1bbbce10c4d5e55b072",
+      "observed_at": "2026-10-25T11:16:46.745572Z",
+      "payment_date": null,
+      "payment_or_execution_date": null,
+      "published_at": null,
+      "ratio_basis": "new_shares_per_outstanding_share_entitlement",
+      "ratio_source": "explicit_official_entitlement",
+      "record_date": "2026-08-18",
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "unknown",
+      "shares_after": null,
+      "shares_before": null,
+      "shares_issued": null,
+      "shares_outstanding_before": null,
+      "shares_planned": null,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2485374/20260730%20-%20SSI%20-%20TB%20ngay%20DKCC%20tra%20co%20tuc%202025%20bang%20tien%20va%20PH%20CP%20de%20tang%20von%20CP%20tu%20NV%20CSH.pdf",
+      "stock_ratio": 0.2,
+      "subscription_price": null,
+      "ticker": "SSI",
+      "trading_date": null,
+      "treasury_shares_before": null,
+      "warnings": [
+        "shares_planned_unreadable_in_every_governed_ocr_read"
+      ]
+    },
+    {
+      "absent_fields": {
+        "cash_amount_per_share": "not stated in this document",
+        "ex_date": "no explicit official ex-date in this document; a record, payment, listing or trading date is never substituted for one",
+        "fractional_shares_cancelled": "not stated in this document",
+        "payment_date": "not stated in this document",
+        "record_date": "not stated in this document",
+        "shares_before": "not stated in this document",
+        "shares_outstanding_before": "not stated in this document",
+        "shares_planned": "not stated in this document",
+        "stock_ratio": "not stated in this document",
+        "treasury_shares_before": "not stated in this document"
+      },
+      "announcement_date": null,
+      "approval_date": null,
+      "cash_amount_per_share": null,
+      "citations": [
+        {
+          "cue": "Ngày thay đổi niêm yết có hiệu lực",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "24/8/2026",
+          "field": "listing_effective_date",
+          "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng chứng khoán niêm yết sau khi thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "928.158.191",
+          "field": "shares_after",
+          "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Số lượng chứng khoán thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "371.862.185",
+          "field": "shares_issued",
+          "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        },
+        {
+          "cue": "Ngày giao dịch của chứng khoán thay đổi niêm yết",
+          "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+          "excerpt": "07/9/2026",
+          "field": "trading_date",
+          "ocr_citation_id": "4025098d81144fe1b1e9b8ac263bddb0d568edc87aa8ca4c4e593c525bdb218a",
+          "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+          "page": 1
+        }
+      ],
+      "content_sha256": "950148fd4391b2e90ec1cb3a1e2992fa8964cd9188e6e7dcb9965f0eba3679d7",
+      "discovery_provenance": "grokbot_issue_51_locator:hose_news_id=2492067",
+      "document_id": "13b9b54ddeebf819d235bf4116c0eae6990ddcb3c86b6480501d8a92f7dfafe4",
+      "document_type": "listing_change_notice",
+      "event_type": "bonus_shares",
+      "event_type_reason": "reviewed printed purpose: từ nguồn vốn chủ sở hữu",
+      "evidence_method": "VISUALLY_REVIEWED_SCAN_OCR_TOKEN_CORROBORATED",
+      "ex_date": null,
+      "extractor_version": "1.0.0",
+      "fractional_shares_cancelled": null,
+      "lifecycle_ceiling": "executed",
+      "lifecycle_reason": "the document reports a completed change in listed or voting share count",
+      "lifecycle_state": "executed",
+      "listing_effective_date": "2026-08-24",
+      "observation_id": "1ceff413676e9d5c377801a3407ede277087d92080cddac0f1880e9f62c59bbc",
+      "observed_at": "2026-10-25T11:16:09.052108Z",
+      "payment_date": null,
+      "payment_or_execution_date": "2026-08-24",
+      "published_at": null,
+      "ratio_basis": null,
+      "ratio_source": null,
+      "record_date": null,
+      "rights_ratio": null,
+      "schema_version": "1.0.0",
+      "share_class": null,
+      "share_count_identity": "listed_shares",
+      "shares_after": 928158191,
+      "shares_before": null,
+      "shares_issued": 371862185,
+      "shares_outstanding_before": null,
+      "shares_planned": null,
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "source_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2492067/20260825%20-%20PVD%20-%20TB%20thay%20doi%20NY%20va%20giao%20dich.pdf",
+      "stock_ratio": null,
+      "subscription_price": null,
+      "ticker": "PVD",
+      "trading_date": "2026-09-07",
+      "treasury_shares_before": null,
+      "warnings": [
+        "ex_date_absent"
+      ]
+    }
+  ],
+  "ocr_sidecar": {
+    "languages": [
+      "vie",
+      "vie+eng"
+    ],
+    "path": "operations-review/official-ca-hose-ex-date-qualification-v1-20261025/derived/hose_scan_ocr_sidecar.json",
+    "render_dpi": 300,
+    "sha256": "b5cd002867055999c71afb22bff81f4425ce95135d6c88e19cb4f60ceeaa254f"
+  },
+  "scope": {
+    "documents": 9,
+    "lead_source": "ai-agent-inbox#51 bbc153fb42adbd9294125eac5e236a16f927ac0c (leads only)",
+    "source": "hose",
+    "tickers": [
+      "HPG",
+      "PVD",
+      "SSI",
+      "POW"
+    ]
+  },
+  "supersessions": [
+    {
+      "corrected_token": {
+        "label": "Tổng số cổ phiếu đã phân phối (thông tin đính chính)",
+        "page": 1,
+        "printed": "371.862.185"
+      },
+      "effect": "superseded report excluded from observations; executed count unchanged",
+      "superseded_document_id": "4d6dbc21e82bcccaf3c64b3af1566daf2a2c1946e417d5ea4c574a31e2d4a506",
+      "superseded_token": {
+        "label": "Tổng số cổ phiếu đã phân phối (bản 28/7/2026)",
+        "page": 3,
+        "printed": "371.883.632,03"
+      },
+      "superseding_document_id": "f1d176b32cf5943ccc6cd2aaf36464394fa88a1fa0a6af73db586f5d7590f245",
+      "unchanged_token": {
+        "label": "Số cổ phiếu thực tế phân phối (bản 28/7/2026, báo cáo kèm theo)",
+        "page": 8,
+        "printed": "371.862.185"
+      }
+    }
+  ]
+}
