@@ -37,6 +37,8 @@ env:
     tests/test_personal_investment_decision_action_center.py
     tests/test_portfolio_research_measurement_integrity.py
     tests/test_company_economics_packet_consumer.py
+    tests/test_financial_quality_decision_bridge.py
+    tests/test_interim_earnings_cash_research.py
     tests/test_research_inspection_integrity.py
     tests/test_correlation_concentration_guard.py
     tests/test_execution_capacity_research.py

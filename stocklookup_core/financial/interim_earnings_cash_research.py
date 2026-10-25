@@ -390,3 +390,199 @@ def interim_earnings_cash_research_context(record: Mapping[str, Any] | None, *, 
                               for s in statement_sets],
                           "issuer_cautions": copy.deepcopy(cautions)},
         "explanation": explanation}
+
+
+def financial_quality_decision_bridge(record: Mapping[str, Any] | None, *, ticker: str,
+                                      knowledge_cutoff: str) -> dict[str, Any]:
+    """Offline explanation over an existing admitted projection, never a fact intake.
+
+    This opt-in consumer does not change the released context above. A source
+    fingerprint verifies integrity, not authenticity or factual truth. Callers
+    must supply the existing Producer projection, not self-labelled Hub rows.
+    """
+    from long_term_company_economics_evidence import _time, _temporal_reasons
+
+    boundary = _time(knowledge_cutoff)
+    record = record or {}
+    if record.get("ticker") not in (None, ticker):
+        raise ValueError("FINANCIAL_QUALITY_SUBJECT_MISMATCH")
+    rows, receipt_refusals = [], []
+    for row in record.get("official_field_context") or []:
+        reasons = _temporal_reasons(row, boundary)
+        digest = row.get("document_sha256")
+        if (type(row.get("source_page")) is not int or row["source_page"] < 1
+                or not row.get("line_code") or not isinstance(digest, str) or len(digest) != 64
+                or any(c not in "0123456789abcdef" for c in digest)):
+            reasons.append("EXACT_DOCUMENT_PAGE_LINE_REFERENCE_REQUIRED")
+        if reasons:
+            receipt_refusals.append({"citation_id": row.get("citation_id"), "reason_codes": reasons})
+        else:
+            rows.append(copy.deepcopy(row))
+    rows = sorted({json.dumps(r, sort_keys=True, ensure_ascii=False): r for r in rows}.values(),
+                  key=lambda r: json.dumps(r, sort_keys=True, ensure_ascii=False))
+    citation_keys: dict[str, set[str]] = {}
+    for row in rows:
+        binding = {k: row.get(k) for k in ("canonical_metric", "document_sha256", "normalized_value",
+                   "period_start", "period_end", "statement_scope", "currency", "audit_or_review_status")}
+        citation_keys.setdefault(row.get("citation_id"), set()).add(json.dumps(binding, sort_keys=True))
+    collisions = {key for key, bindings in citation_keys.items() if len(bindings) > 1}
+    receipt_refusals.extend({"citation_id": key, "reason_codes": ["CITATION_IDENTITY_COLLISION"]} for key in collisions)
+    rows = [row for row in rows if row.get("citation_id") not in collisions]
+    context = interim_earnings_cash_research_context(
+        dict(record) | {"official_field_context": rows}, cutoff=knowledge_cutoff, ticker=ticker)
+    from stocklookup_core.financial.fundamental_signal_consumption_contract import official_research_row_reasons
+    extra_facts, extra_refusals = [], []
+    for row in rows:
+        if row.get("canonical_metric") not in FAMILY and row.get("canonical_metric") not in {
+                "total_assets", "shareholders_equity", "short_term_interest_bearing_debt", "long_term_interest_bearing_debt"}:
+            extra_refusals.append({"citation_id": row.get("citation_id"), "metric": row.get("canonical_metric"),
+                                   "reason_codes": ["METRIC_NOT_ADMITTED_TO_QUALITY_BRIDGE"]})
+            continue
+        if row.get("canonical_metric") not in {"total_assets", "shareholders_equity", "short_term_interest_bearing_debt", "long_term_interest_bearing_debt"}:
+            continue
+        reasons = official_research_row_reasons(row, boundary=boundary, entity=record.get("entity_class"),
+                                               ticker=ticker, statement_family="balance_sheet")
+        peers = [r for r in rows if all(r.get(k) == row.get(k) for k in (
+            "canonical_metric", "document_sha256", "period_start", "period_end", "statement_scope", "currency"))]
+        if len({r.get("normalized_value") for r in peers}) > 1:
+            reasons.append("CONFLICTING_OFFICIAL_VALUES_IN_STATEMENT_SET")
+        if reasons:
+            extra_refusals.append({"citation_id": row.get("citation_id"), "reason_codes": reasons})
+        else:
+            extra_facts.append(_fact(row))
+    facts = []
+    for fact in context["facts"] + extra_facts:
+        source = next(r for r in rows if r.get("citation_id") == fact["citation_id"]
+                      and r.get("normalized_value") == fact["normalized_value"])
+        facts.append(fact | {key: copy.deepcopy(source.get(key)) for key in (
+            "observed_at", "publication_date", "valuation_use", "annualization", "ttm_derivation",
+            "foreign_currency_conversion", "component_semantic_type", "component_direction")})
+    facts.sort(key=lambda f: (f["period_end"], f["canonical_metric"], f["citation_id"]))
+    by_id = {f["citation_id"]: f for f in facts}
+    profits = [f for f in facts if f["canonical_metric"] in PROFIT_METRICS]
+    components = [f for f in facts if f["canonical_metric"] in NON_OPERATING_LINES + NON_CASH_RECONCILING_LINES]
+    cash_pairs, pairing_refusals = [], []
+    for measured in context["cash_conversion"]["measurements"]:
+        # Group-wide cash does not measure conversion of parent-only profit.
+        if measured["profit_metric"] != "net_income":
+            continue
+        profit, cash = by_id[measured["profit_citation_id"]], by_id[measured["cash_citation_id"]]
+        if any(profit[key] != cash[key] for key in ("audit_or_review_status", "period_type")):
+            pairing_refusals.append({"citation_ids": [profit["citation_id"], cash["citation_id"]],
+                                     "reason_codes": ["CASH_PROFIT_ASSURANCE_OR_PERIOD_TYPE_MISMATCH"]})
+            continue
+        import math
+        if any(v is not None and not math.isfinite(v) for v in (
+                measured["conversion_ratio"], measured["operating_cash_minus_profit"])):
+            pairing_refusals.append({"citation_ids": [profit["citation_id"], cash["citation_id"]],
+                                     "reason_codes": ["CASH_PROFIT_ARITHMETIC_NOT_FINITE"]})
+            continue
+        cash_pairs.append(copy.deepcopy(measured) | {"currency": cash["currency"]})
+
+    confirming, counter, unknowns = [], [], []
+    def statement(code, text, refs=()):
+        return {"code": code, "text": text, "citation_ids": sorted(set(refs))}
+
+    for f in profits:
+        confirming.append(statement("REPORTED_PROFIT_OBSERVED",
+            f"{f['reporting_period']} {f['statement_scope']} {f['audit_or_review_status']} "
+            f"{f['canonical_metric']}: {f['normalized_value']} {f['currency']}. "
+            "This is reported accounting profit; sustainable or normalized earnings are not established.", [f["citation_id"]]))
+    for f in components:
+        if not f["normalized_value"]:
+            continue
+        disposal = f["canonical_metric"] in NON_OPERATING_LINES
+        counter.append(statement("REPORTED_DISPOSAL_COMPONENT" if disposal else "REPORTED_PROVISION_COMPONENT",
+            f"{f['reporting_period']} {f['canonical_metric']}: {f['normalized_value']} {f['currency']}. "
+            + ("A disposal line may distort a reported earnings multiple; recurrence and tax treatment are unproven."
+               if disposal else "A provision reconciliation is not cash received, a one-off classification or an earnings add-back."),
+            [f["citation_id"]]))
+    for m in cash_pairs:
+        refs = [m["profit_citation_id"], m["cash_citation_id"]]
+        ratio = "not meaningful (profit is non-positive)" if m["conversion_ratio"] is None else f"{m['conversion_ratio']:.4f}x"
+        item = statement(m["relationship"],
+            f"{m['bounds'][0]}..{m['bounds'][1]} {m['statement_scope']}: operating cash "
+            f"{m['operating_cash_flow']} versus total profit {m['profit']} {m['currency']}; "
+            f"CFO/PAT {ratio}. One period does not establish durable cash conversion or its cause.", refs)
+        (confirming if m["relationship"] == "OPERATING_CASH_AT_OR_ABOVE_PROFIT" else counter).append(item)
+
+    industrial = context["applicability"] == "CORPORATE_INDUSTRIAL_CASH_CONVERSION"
+    if not profits:
+        unknowns.append(statement("REPORTED_PROFIT_NOT_QUALIFIED", "No admitted reported profit supports an earnings conclusion."))
+    if not cash_pairs:
+        unknowns.append(statement("CASH_CONVERSION_NOT_ESTABLISHED",
+            "No comparable same-document total-profit/operating-cash pair. Historical annual cash cannot explain current interim profit."
+            if industrial else "Industrial CFO/PAT is not applied to financial or unresolved entities; specialist accounting evidence is required."))
+    unknowns.extend([
+        statement("RECURRENCE_NOT_ESTABLISHED", "A reported component is not normalized earnings; absence of a component is not proof of clean earnings."),
+        statement("WORKING_CAPITAL_CAUSALITY_NOT_ESTABLISHED", "Receivable/inventory/payable movements and collection or contractual due-date evidence are not admitted here. A cash gap does not prove its cause or that all receivables are overdue."),
+        statement("CASH_OBLIGATIONS_NOT_ESTABLISHED", "Cash balances do not establish available cash after debt maturities, tax, dividends or capital commitments; no free cash flow or net-debt conclusion."),
+        statement("OCI_NOT_ADMITTED", "No admitted OCI/tax/attribution bridge. For securities firms, PAT alone cannot establish comprehensive income; do not add pre-tax OCI to after-tax PAT."),
+        statement("VALUATION_DENOMINATOR_NOT_QUALIFIED", "Reported profit context does not supply qualified EPS, a compatible share basis or a recurring earnings denominator. A low reported P/E alone does not establish attractive value."),
+        statement("FISCAL_COMPARABILITY_LIMIT", "Explicit covered dates, source scope, currency and assurance apply to each observation. Calendar labels alone cannot establish fiscal or peer comparability."),
+    ])
+    for refusal in context["refused_comparisons"]:
+        unknowns.append(statement("COMPARISON_REFUSED", ", ".join(refusal["reason_codes"]),
+                                  [refusal["prior_citation_id"], refusal["current_citation_id"]]))
+    for blocker in context["cash_conversion"]["blockers"]:
+        unknowns.append(statement("CASH_PAIRING_REFUSED",
+            f"{blocker['bounds'][0]}..{blocker['bounds'][1]}: " + ", ".join(blocker["reason_codes"]) + "."))
+    if context.get("issuer_gate"):
+        for reason in context["issuer_gate"].get("qualification_blockers") or []:
+            unknowns.append(statement("SOURCE_QUALIFICATION_GAP", reason))
+    # Preserve useful provider/Financial V2 context, without treating it as an
+    # official amount, a specialist accounting qualification, or a quality vote.
+    retained = {key: copy.deepcopy(record[key]) for key in (
+        "entity_class", "fundamental_trajectory_context", "current_financial_momentum_context",
+        "baseline_metric_temporal_context", "metrics") if key in record}
+    return {"contract_version": "financial_quality_decision_bridge/v1", "ticker": ticker,
+        "knowledge_cutoff": knowledge_cutoff, "applicability": context["applicability"],
+        "assessment_scope": "OBSERVED_FIELDS_AND_UNSUPPORTED_CONCLUSIONS_NO_COMPANY_VERDICT",
+        "facts": facts, "reported_components": [f | {"recurrence_assessment": "UNKNOWN",
+            "normalization_status": "NOT_CALCULATED"} for f in components], "cash_conversion": cash_pairs,
+        "confirming_evidence": confirming, "counterevidence": counter, "unknowns": unknowns,
+        "rejected": [r for _, r in sorted({json.dumps(r, sort_keys=True): r for r in
+                     receipt_refusals + context["rejected"] + pairing_refusals + extra_refusals}.items())],
+        "cash_pairing_blockers": context["cash_conversion"]["blockers"],
+        "issuer_comparability_cautions": context["comparability"]["issuer_cautions"],
+        "retained_research_context": retained,
+        "retained_context_use": "UPSTREAM_CONTEXT_ONLY_NOT_OFFICIAL_FINANCIAL_FACT_OR_QUALITY_VOTE",
+        "investment_relevance": "Assess earnings repeatability and cash support before interpreting a valuation multiple; preserve the observed facts while withholding unsupported conclusions.",
+        "thesis_tests": [
+            {"claim": "Reported profit reflects sustainable earnings", "status": "UNSUPPORTED",
+             "confirming_evidence_needed": "Source-qualified recurring/non-recurring reconciliation on the same tax and attribution basis across comparable periods.",
+             "invalidation_condition": "A qualified same-period reconciliation demonstrates that reported earnings include non-recurring drivers; do not infer a normalized amount."},
+            {"claim": "Accounting profit is supported by operating cash", "status": "BOUNDED_MEASUREMENT_ONLY" if cash_pairs else "UNSUPPORTED",
+             "confirming_evidence_needed": "Comparable total PAT and CFO plus working-capital, collection and cash-obligation notes.",
+             "invalidation_condition": "Same-basis source evidence shows negative CFO despite positive PAT, or invalidates the period/scope/currency/assurance pairing."},
+            {"claim": "A low reported multiple represents attractive value", "status": "UNSUPPORTED",
+             "confirming_evidence_needed": "Existing valuation owner qualification of price, shares and exact denominator, plus evidence about its recurrence and cash support.",
+             "invalidation_condition": "Denominator contains unresolved unusual items or an incompatible period, scope, currency or share basis."}],
+        "availability_basis": context["availability_basis"], "non_voting": True, "is_actionable": False,
+        "authority_effect": "NONE", "strict_valuation_effect": "NONE", "production": "OFFLINE_OPT_IN_ONLY"}
+
+
+def render_financial_quality(bridge: Mapping[str, Any]) -> str:
+    """Investor-readable facts, counterevidence and exact unsupported conclusions."""
+    lines = [f"## {bridge['ticker']} — financial quality research",
+             f"Knowledge cutoff: {bridge['knowledge_cutoff']}; offline, non-voting."]
+    if "source_session" in bridge:
+        lines.append(f"Retained source session: {bridge['source_session']}; source cutoff: {bridge['source_cutoff']}.")
+    lines.append("Source-bound projected observations; content integrity alone is not factual verification or historical PIT authority.")
+    for title, key in (("Observed support", "confirming_evidence"), ("Counterevidence / accounting cautions", "counterevidence"),
+                       ("Unsupported conclusions / evidence needed", "unknowns")):
+        lines.extend(["", title])
+        for item in bridge[key]:
+            lines.append(f"- {item['text']}" + (" [" + ", ".join(item["citation_ids"]) + "]" if item["citation_ids"] else ""))
+    lines.extend(["", "Source basis (exact fields, not a normalized earnings estimate)"])
+    for f in bridge["facts"]:
+        lines.append(f"- {f['citation_id']}: {f['canonical_metric']} {f['normalized_value']} {f['currency']}; "
+            f"{f['period_start']}..{f['period_end']}, {f['statement_scope']}, "
+            f"{f['currency']} normalized unit {f['unit_scale']}, {f['audit_or_review_status']}; "
+            f"document {f['document_sha256']}, page {f['source_page']}; known {f['knowledge_available_at']}, "
+            f"retrieved {f['observed_at']}, publication {f['publication_date'] or 'UNKNOWN'}.")
+    lines.extend(["", "Thesis checks / invalidation"])
+    for test in bridge["thesis_tests"]:
+        lines.append(f"- {test['claim']}: {test['status']}. Need: {test['confirming_evidence_needed']} "
+                     f"Invalidation: {test['invalidation_condition']}")
+    return "\n".join(lines)

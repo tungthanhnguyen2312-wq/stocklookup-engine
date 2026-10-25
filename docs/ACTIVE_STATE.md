@@ -47,10 +47,9 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 - **COMPLETE — Vault V1:** PR97 merged `3f3d4fe`; offline/opt-in, 77 candidates,
   zero deletion authority; C retention/runtime recovery still gated. Queue empty.
   [Contract and acceptance](vault_incremental_snapshot_contract.md).
-- **COMPLETE — economics evidence:** PR96 `9db35f1`.
-  Offline, opt-in, non-voting PNJ/PVD/FPT matrix: exact observations versus interpretation;
-  gaps UNKNOWN, no normalized economics or strict valuation promotion. No Daily/deployment.
-  [Contract and acceptance](long_term_company_economics_evidence_contract.md).
+- **Economics research:** PR96 matrix / PR117 [packet](company_economics_research_packet_consumer_v1_contract.md).
+  Quality bridge LOCAL COMPLETE: offline/opt-in/non-voting; profit vs cash/components,
+  denominator limits and thesis tests. No normalized EPS, strict valuation or Daily change.
 - **HOST-LOCAL — October 8 Owner Daily completed; Macro live acceptance independently verified:**
   `MACRO_REGIME_20261008_LIVE_ACCEPTED`. Operation
   `daily_research_session_operation:537cda6b2e7085d1461d925c7f342cf5e870feca41abb6d5ecaccd71f7262a98`,

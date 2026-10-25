@@ -34,6 +34,11 @@ def configure_parser(sub):
     economics.add_argument("--cutoff", required=True, help="Explicit timezone-bearing consultation knowledge cutoff.")
     economics.add_argument("--ticker", action="append", required=True, help="Selected study ticker (repeatable); not a universe/peer cohort.")
     economics.add_argument("--canonical-packet", type=Path, help="Optional existing sealed decision packet reference; never enriched in place.")
+    quality = actions.add_parser("financial-quality", help="Explain existing admitted earnings/cash evidence and valuation limits; offline, non-voting.")
+    quality.add_argument("--fundamental", type=Path, required=True, help="Existing sealed market-wide current fundamental research projection; no raw/Hub intake.")
+    quality.add_argument("--cutoff", required=True, help="Timezone-bearing consultation knowledge cutoff.")
+    quality.add_argument("--ticker", action="append", required=True)
+    quality.add_argument("--format", choices=("json", "markdown"), default="json")
     currency = actions.add_parser("financial-currency", help="Selected financial reporting basis and source/cutoff reconciliation; offline opt-in.")
     currency.add_argument("--financial-product", type=Path, required=True, help="Exact financial_analysis_product_integration/v1 JSON.")
     currency.add_argument("--facts", type=Path, required=True, help="Exact existing official JSONL overlay; standing gates are rechecked.")
@@ -129,6 +134,49 @@ def _economics(args, paths):
             "packets": packets, "comparison": comparison, "production": "OFFLINE_OPT_IN_ONLY"}
 
 
+def _financial_quality(args, paths):
+    import market_wide_current_fundamental_research as owner
+    from long_term_company_economics_evidence import _time
+    from stocklookup_core.financial.interim_earnings_cash_research import financial_quality_decision_bridge, render_financial_quality
+    from stocklookup_core.decision.human_ai_decision_evidence_packet import build_packet
+
+    source = _json(paths["fundamental"])
+    if source.get("contract_version") != owner.CONTRACT_VERSION or any(
+            source.get(k) != v for k, v in owner.content_identity(source).items()):
+        raise ValueError("FINANCIAL_QUALITY_SOURCE_IDENTITY_INVALID")
+    boundary = _time(args.cutoff)
+    source_cutoff = _time(source.get("session_cutoff"))
+    if source_cutoff > boundary or _session(source.get("research_session")) != source_cutoff.date().isoformat():
+        raise ValueError("FINANCIAL_QUALITY_SOURCE_CUTOFF_INVALID")
+    tickers = [t.strip().upper() for t in args.ticker]
+    if not tickers or len(tickers) > 32 or len(set(tickers)) != len(tickers) or any(not re.fullmatch(r"[A-Z0-9]{1,16}", t) for t in tickers):
+        raise ValueError("INVALID_BOUNDED_TICKER_SELECTION")
+    if not isinstance(source.get("records"), dict):
+        raise ValueError("FINANCIAL_QUALITY_SOURCE_RECORDS_INVALID")
+    records, packets = {}, {}
+    for ticker in sorted(tickers):
+        record = source["records"].get(ticker)
+        if record is not None and not isinstance(record, dict):
+            raise ValueError("FINANCIAL_QUALITY_SOURCE_RECORDS_INVALID")
+        # Re-check field receipts at the ORIGINAL source cutoff as well as the
+        # consultation cutoff; a forged future field cannot ride an older seal.
+        bridge = financial_quality_decision_bridge(record, ticker=ticker, knowledge_cutoff=source["session_cutoff"])
+        bridge["knowledge_cutoff"] = args.cutoff
+        bridge["source_session"] = source["research_session"]
+        bridge["source_cutoff"] = source["session_cutoff"]
+        bridge["source_artifact_identity"] = source["artifact_identity"]
+        bridge["temporal_use"] = "RETAINED_PROJECTION_AT_SOURCE_CUTOFF_NOT_NEW_FACTS_OR_HISTORICAL_PIT_PROOF"
+        records[ticker] = bridge
+        packets[ticker] = build_packet(ticker=ticker, sections={
+            "stock": {"financial_quality_research": {"claim": {"warning": True}, "value": bridge}},
+            "uncertainty": {"financial_quality_unknowns": {"claim": {"warning": True}, "value": bridge["unknowns"]}},
+            "counter_thesis": {"financial_quality_thesis_tests": {"claim": {"warning": True}, "value": bridge["thesis_tests"]}}})
+    return {"contract_version": "financial_quality_decision_bridge/v1", "records": records, "packets": packets,
+            "source_artifact_identity": source["artifact_identity"], "source_session": source["research_session"],
+            "knowledge_cutoff": args.cutoff, "presentation": "\n\n".join(render_financial_quality(r) for r in records.values()),
+            "production": "OFFLINE_OPT_IN_ONLY", "non_voting": True, "is_actionable": False}
+
+
 def _financial_currency(args, paths):
     import gzip
     from stocklookup_core.financial import financial_reporting_currency as currency
@@ -181,7 +229,7 @@ def _financial_currency(args, paths):
 def inspect(args):
     # Hash before and after projection: a changing file never produces a success.
     names = {"coverage": list(SOURCES), "calibration": ["feedback"], "economics": ["facts"],
-             "financial-currency": ["financial_product", "facts"]}[args.research_action]
+             "financial-currency": ["financial_product", "facts"], "financial-quality": ["fundamental"]}[args.research_action]
     if args.research_action == "financial-currency":
         names.extend(name for name in ("cohort_report", "provider_observations", "source_checks", "canonical_packet") if getattr(args, name, None))
     if args.research_action == "coverage" and args.panel:
@@ -244,6 +292,8 @@ def inspect(args):
         result = _economics(args, paths)
     elif args.research_action == "financial-currency":
         result = _financial_currency(args, paths)
+    elif args.research_action == "financial-quality":
+        result = _financial_quality(args, paths)
     else:
         import decision_outcome_calibration_review as calibration
         import prospective_decision_outcome_feedback as feedback
