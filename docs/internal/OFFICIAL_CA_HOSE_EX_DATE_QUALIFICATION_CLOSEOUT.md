@@ -114,3 +114,55 @@ only to rebuild retention). Owner decisions open: (1) whether reviewed-scan fact
 non-PIT current-research adjusted series; (2) SSI execution needs a HOSE staticfile locator for
 715/QĐ or 1935/TB (only CafeF mirrors known); (3) POW needs an official ex-date document; (4) a cash
 adjustment policy; (5) governed calendar coverage past 2026-09-04.
+
+## 7. PR #192 integration closeout after PR #191
+
+Owner-authorized bounded closeout `OFFICIAL_CA_HOSE_EX_DATE_PR192_INTEGRATION_CLOSEOUT`;
+this is not a new native roadmap milestone. The preceding sections remain the
+original implementation-time record.
+
+- Verified live main `2957a55f77757afb67ba8297bcde970f403d0719`, after merged #189,
+  #190 and #191, and unchanged PR head `51892169702e292bd1a1f7da0929576c626a352b`.
+  GitHub reported mergeable and `git merge-tree --write-tree` independently found
+  a clean merge. Main was merged normally into the existing branch at
+  `69e5658a3dc3b704d2c6e92886bcbbb479a5bd0a`; no conflict was invented or history rewritten.
+- The existing test's `canonical_market_bars.pit` reference reaches the moved
+  package owner and preserves the contract. No compatibility shim, source retarget
+  workaround or corporate-action engine change was required.
+- Added the HOSE qualification and repository-layout source-transition tests to
+  the existing Producer focused CI selection. Only the changed workflow's LF
+  fingerprint in `daily_path_launchers.json` was refreshed; launcher targets and
+  frozen identity inputs are unchanged.
+- Compact CA navigation now explicitly distinguishes offline-qualified HPG/PVD
+  factors from zero historically knowable factors. The active set is 102,374 of
+  the unchanged 102,400-byte budget. The CA row in `AUTHORITY.md` remains byte-identical.
+- Focused qualification/ledger/factor, source-transition, active-navigation and
+  offline production call-shape checks: **76 passed**, including all 28 HOSE tests
+  against the already-retained originals. Exact offline artifact replay matched
+  the committed JSON; manifest, OCR sidecar and original artifact bytes were not written.
+- Named E2/E3 pins, archived migration sources, live retargeted orchestrators,
+  E4/E5 fixture boundaries and provider-bundle fixture boundaries match merged
+  main. Python 3.11 syntax parsing passed for the changed Python files. No frozen
+  digest, historical receipt or original acquisition clock was refreshed.
+- The first local curated-selection attempt hit six import-time refusals from
+  this workstation's real `active_workspace.json`: a development worktree is not
+  the active production writer. The identical six refusals were reproduced on a
+  detached checkout of the **actual** base `2957a55f`. No guard was weakened and
+  the binding was neither moved nor edited. The unchanged selection is rerun in
+  one foreground pytest interpreter with an isolated test-only `Path.home` and
+  no inherited Stock Lookup workspace variables, matching a clean hosted runner.
+  Final counts and exact hosted source-head validation are recorded on PR #192.
+- GrokBot #51/#52 terminal reports were reviewed only for relevant boundaries:
+  Hub chains are leads, not Producer qualification; #52 reports no qualified
+  historical ACTIVE interval and no OHLC unit/basis/board-scope closure. No
+  acquisition, browser search, credentialed probe, source registration or new
+  authority follows from those reports.
+
+HPG remains factor `0.909090909091`, known from
+`2026-10-25T11:15:48.164930Z`; PVD remains `0.599161174356`, known from
+`2026-10-25T11:16:28.534785Z`. Exact HOSE citations and receipt semantics are
+unchanged. Historical PIT, RAW_AS_TRADED, execution, market-wide CA authority,
+SSI cash/bonus factors and POW factors remain unpromoted/refused. Owner-authorized
+normal PR publication/merge is conditional on the final exact-head hosted checks;
+no Daily, production/DB/runtime write, Consumer/Dashboard change, deployment or
+successor milestone is included.
