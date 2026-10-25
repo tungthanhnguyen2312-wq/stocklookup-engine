@@ -19,10 +19,10 @@ from typing import Any, Mapping, Sequence
 from stocklookup_core.financial import monetary_basis_contract as basis_contract
 from stocklookup_core.financial import financial_analysis_engine_v2 as financial_engine
 from stocklookup_core.valuation.market_wide_current_valuation_input_scaleout import RESEARCH_SHARE_AUTHORITIES, _applicability, _market_cap_monetary_basis
-from operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
+from stocklookup_core.financial.operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
 from stocklookup_core.evidence.temporal_freshness import UNAVAILABLE, completed_quarter_lag, separate_financial_clock
 from stocklookup_core.valuation.freshness import classify_valuation_freshness, axis_is_research_usable
-from sector_relative_research_context import MIN_COHORT_MEMBERS
+from stocklookup_core.financial.sector_relative_research_context import MIN_COHORT_MEMBERS
 
 CONTRACT_VERSION = "current_research_valuation_context/v1"
 PE_TTM = "P/E_TTM"

@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from retained_official_route_ownership_evidence import execute
+from stocklookup_core.evidence.retained_official_route_ownership_evidence import execute
 
 
 OUTPUT_DIR = ROOT / "operations-review" / "retained-official-route-ownership-evidence-20260821"

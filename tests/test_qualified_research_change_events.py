@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from qualified_research_change_events import build, build_v2
+from stocklookup_core.research.qualified_research_change_events import build, build_v2
 from qualified_research_snapshot_v2 import SCHEMA_VERSION, build as build_snapshot_v2
 from tests.test_qualified_research_delta import brief
 

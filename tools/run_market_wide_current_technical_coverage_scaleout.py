@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT))
 
 from stocklookup_core.acquisition.artifact_io import atomic_write_json
 from dnse_access import CREDENTIAL_ENV_PAIRS, credentials_for_request
-from dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 from dnse_secrets_env import ensure_credentials_loaded
 from market_wide_current_technical_coverage_scaleout import (
     build_recovery_artifact,

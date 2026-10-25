@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from daily_opportunity_decision_queue import LANES, build, prospective_context, replay
+from stocklookup_core.decision.daily_opportunity_decision_queue import LANES, build, prospective_context, replay
 
 ROOT = Path(__file__).resolve().parents[1]
 OPERATIONS = ROOT / "operations-review"

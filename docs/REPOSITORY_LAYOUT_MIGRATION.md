@@ -26,6 +26,12 @@ frozen hashes, path launchers, source transitions, E4/provider digests), 159 are
 historically executed sources (sets overlap). The other 78 import at least one of those, and a core package may not import
 the root. Further reduction therefore goes through the reviewed frozen-source transition procedure, family by family.
 
+Progress (2026-10-25): 218 root `.py` files remain, 198 of them implementations and 20 re-export interfaces.
+[Layout migration V1](repository_layout_migration_frozen_source_transition_v1_contract.md) moved 40 implementations
+with no copy and 16 hub implementations behind root interfaces kept only for frozen or historically executed importers,
+through a versioned import-retarget transition of the four orchestration sources. Remaining root modules are held by
+E2/E3 pins, E4 code-digest inputs, the provider bundle, E5/E6 seams, path launchers or Consumer/Dashboard bindings.
+
 ## 2. Target shape
 
 The 2026-10-10 admitted scope uses ordinary source-checkout packages. No packaging

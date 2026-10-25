@@ -160,7 +160,7 @@ def load_entity_profiles(
                     profiles[ticker] = entity_type
         return profiles
 
-    from entity_classification_contract import load_layered_entity_profiles
+    from stocklookup_core.evidence.entity_classification_contract import load_layered_entity_profiles
     return load_layered_entity_profiles(seed_path=path, promoted_path=promoted_path)
 
 
@@ -212,7 +212,7 @@ def resolve_archetype(ticker: str, *, manual_entity_type: Any = None,
         authority_override = _AUTHORITY_MANUAL
         reason_override = "manually verified entity profile takes precedence over generated evidence"
     else:
-        from entity_classification_contract import resolve_layered_entity_classification
+        from stocklookup_core.evidence.entity_classification_contract import resolve_layered_entity_classification
         layered_res = resolve_layered_entity_classification(ticker)
         if layered_res.is_positive_authority and layered_res.resolved_entity_class.value in CORPORATE_ENTITY_TYPES | FINANCIAL_ENTITY_TYPES:
             manual = layered_res.resolved_entity_class.value

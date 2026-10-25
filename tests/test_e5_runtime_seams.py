@@ -200,7 +200,7 @@ for function in (roll.context_known_by,time.context_known_by):
 def test_foundations_load_without_orchestration_or_freshness_side_effects():
     script = '''import sys
 from stocklookup_core.evidence import field_identity,corporate_event_temporality,financial_document_text,research_output_fields
-assert not {'corporate_currency_rollforward','current_official_event_context','field_temporal_contract','freshness_history','official_financial_ocr_table_evidence','official_financial_assurance_evidence','stocklookup_core.decision.human_ai_decision_evidence_packet'} & set(sys.modules)
+assert not {'corporate_currency_rollforward','current_official_event_context','field_temporal_contract','freshness_history','stocklookup_core.evidence.freshness_history','official_financial_ocr_table_evidence','official_financial_assurance_evidence','stocklookup_core.decision.human_ai_decision_evidence_packet'} & set(sys.modules)
 '''
     subprocess.run([sys.executable,'-c',script],cwd=ROOT,check=True,capture_output=True)
     for filename in ('field_identity.py','corporate_event_temporality.py','financial_document_text.py','research_output_fields.py'):

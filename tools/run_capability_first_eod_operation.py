@@ -145,7 +145,7 @@ def _write_immutable_json(path: Path, payload: Mapping[str, Any]) -> None:
 def _working_dates_probe() -> dict[str, Any]:
     """Exactly one DNSE working_dates GET through the approved secret-loading path."""
     from dnse_access import credential_status, credentials_for_request
-    from dnse_bulk_market_data import fetch_capability_raw
+    from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
     from dnse_secrets_env import ensure_credentials_loaded
 
     ensure_credentials_loaded()

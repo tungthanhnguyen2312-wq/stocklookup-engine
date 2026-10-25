@@ -55,11 +55,11 @@ from stocklookup_core.financial.altman_applicability import (
     MANUFACTURING_INDUSTRIES,
     evaluate_altman_applicability,
 )
-from entity_classification_contract import (
+from stocklookup_core.evidence.entity_classification_contract import (
     EntityClass,
     resolve_layered_entity_classification,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     BANK_METRICS,
     CORPORATE_METRICS,
     SECURITIES_METRICS,

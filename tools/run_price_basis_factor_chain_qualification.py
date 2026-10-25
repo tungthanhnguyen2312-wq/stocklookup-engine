@@ -38,7 +38,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from stocklookup_core.evidence import official_corporate_action_ledger as ledger  # noqa: E402
-import pit_price_series_qualification as pit  # noqa: E402
+import stocklookup_core.evidence.pit_price_series_qualification as pit  # noqa: E402
 import price_basis_feature_fitness as fitness  # noqa: E402
 from stocklookup_core.evidence import provider_price_basis_registry as basis_registry  # noqa: E402
 from stocklookup_core.evidence import qualified_corporate_action_factor_chain as factor_chain  # noqa: E402

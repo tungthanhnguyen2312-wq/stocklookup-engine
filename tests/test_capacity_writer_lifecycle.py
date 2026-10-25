@@ -11,7 +11,7 @@ from threading import Barrier
 import pytest
 
 from atomic_io import AtomicWriteError
-import immutable_delivery as publication
+import stocklookup_core.acquisition.immutable_delivery as publication
 import daily_research_session_operations as dro
 import daily_producer_pipeline as producer
 from daily_producer_pipeline import _retain_owner_delivery, _write_immutable, DailyProducerError

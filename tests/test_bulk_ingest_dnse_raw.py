@@ -414,7 +414,7 @@ class DryRunTests(unittest.TestCase):
     def test_dry_run_with_symbols_prints_plan_without_network(self):
         output = io.StringIO()
         with patch.dict(os.environ, {}, clear=True), redirect_stdout(output), patch(
-            "dnse_bulk_market_data._default_request_get"
+            "stocklookup_core.acquisition.dnse_bulk_market_data._default_request_get"
         ) as request:
             exit_code = bulk.main(["--symbols", "HPG,VNM"])
         self.assertEqual(0, exit_code)
@@ -436,7 +436,7 @@ class LiveModeCliTests(unittest.TestCase):
     def test_live_without_credentials_exits_2(self):
         output = io.StringIO()
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {}, clear=True), redirect_stdout(output), patch(
-            "dnse_bulk_market_data._default_request_get"
+            "stocklookup_core.acquisition.dnse_bulk_market_data._default_request_get"
         ) as request:
             exit_code = bulk.main(["--live", "--symbols", "HPG",
                                   "--secrets-file", str(Path(tmp) / "nope.env")])
@@ -449,7 +449,7 @@ class LiveModeCliTests(unittest.TestCase):
         with TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
         ), redirect_stdout(output), patch(
-            "dnse_bulk_market_data._default_request_get",
+            "stocklookup_core.acquisition.dnse_bulk_market_data._default_request_get",
             side_effect=lambda url, *, params, headers, timeout: _FakeResponse(200, _ohlc_body(params["symbol"])),
         ):
             exit_code = bulk.main(["--live", "--symbols", "HPG,VNM", "--runtime-root", tmp,

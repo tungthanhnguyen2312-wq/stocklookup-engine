@@ -10,7 +10,7 @@ file can exercise QUALIFIED-series mechanics that the real retained corpus never
 import unittest
 
 from stocklookup_core.evidence import official_corporate_action_ledger as ledger
-import pit_price_series_qualification as pit
+import stocklookup_core.evidence.pit_price_series_qualification as pit
 import price_basis_feature_fitness as fitness
 from stocklookup_core.evidence import qualified_corporate_action_factor_chain as factor_chain
 

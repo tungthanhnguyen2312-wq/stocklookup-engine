@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os, subprocess
 import pytest
-from stocklookup_preflight import PreflightError, check
+from stocklookup_core.acquisition.stocklookup_preflight import PreflightError, check
 def make(tmp_path):
  p=tmp_path/'producer'; p.mkdir(); (p/'daily_analysis_pipeline.py').write_text('x'); r=tmp_path/'runtime'; r.mkdir(); t=tmp_path/'transport'; t.mkdir(); subprocess.run(['git','-C',str(t),'init','-q'],check=True); return p,r,t
 def test_pass_and_replay_does_not_require_credentials(tmp_path,monkeypatch):

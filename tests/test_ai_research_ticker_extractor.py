@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from ai_research_session_delivery import build_delivery
-from ai_research_ticker_extractor import (
+from stocklookup_core.research.ai_research_ticker_extractor import (
     ABSENT_STATUS,
     TickerExtractorError,
     extract_ai_research_tickers,
@@ -159,7 +159,7 @@ def test_write_packet_is_deterministic(tmp_path: Path):
 
 
 def test_extractor_module_has_no_network_or_latest_file_authority():
-    source = (ROOT / "ai_research_ticker_extractor.py").read_text(encoding="utf-8")
+    source = (ROOT / "stocklookup_core/research/ai_research_ticker_extractor.py").read_text(encoding="utf-8")
     assert "urllib" not in source
     assert "requests" not in source
     assert "http.client" not in source

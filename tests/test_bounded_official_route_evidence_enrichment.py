@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from bounded_official_route_evidence_enrichment import (
+from stocklookup_core.evidence.bounded_official_route_evidence_enrichment import (
     BRANDING_ONLY,
     CONTRACT_VERSION,
     ENRICHMENT_EVIDENCE_DIR,

@@ -32,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from market_wide_financial_coverage import load_universe  # noqa: E402
+from stocklookup_core.financial.market_wide_financial_coverage import load_universe  # noqa: E402
 from missing_payload_reconciliation import (  # noqa: E402
     DEFAULT_DELAY_SECONDS,
     DEFAULT_MAX_ATTEMPTS,

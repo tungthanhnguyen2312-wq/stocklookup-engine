@@ -45,6 +45,7 @@ BUILD_ID = "2026-08-26-dc82bad-testhash01"
 BANNED_IMPORTS = (
     "import urllib", "import requests", "import httpx", "import aiohttp",
     "import dnse_access", "import dnse_market_data",
+    "stocklookup_core.acquisition.dnse_access", "stocklookup_core.acquisition.dnse_market_data",
 )
 
 

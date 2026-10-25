@@ -15,7 +15,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Mapping
 
-from checkout_cleanliness_contract import classify_checkout_cleanliness
+from stocklookup_core.acquisition.checkout_cleanliness_contract import classify_checkout_cleanliness
 from pending_session_input_freeze import classify_pending_input_freeze
 
 

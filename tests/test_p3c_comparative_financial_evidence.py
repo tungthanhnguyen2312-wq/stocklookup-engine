@@ -12,7 +12,7 @@ from stocklookup_core.financial.p3c_comparative_financial_evidence import (
     build_starting_gap_inventory,
     verify_retained_document_bytes,
 )
-from sector_financial_taxonomy import PromotedScopeEvaluationState, evaluate_sector_extraction_authority_scope
+from stocklookup_core.financial.sector_financial_taxonomy import PromotedScopeEvaluationState, evaluate_sector_extraction_authority_scope
 
 
 class TestP3CComparativeFinancialEvidence(unittest.TestCase):

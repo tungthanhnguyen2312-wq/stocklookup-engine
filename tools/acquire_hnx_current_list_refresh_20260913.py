@@ -29,7 +29,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from hnx_enumerable_universe_kllh_event_disclosure_scaleout import (
+from stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout import (
     BASE, LISTS, RIGHTS, fetch, retain, _content, _total, _identity, parse_list, parse_events,
 )
 

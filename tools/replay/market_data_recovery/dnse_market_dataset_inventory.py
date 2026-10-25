@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from dnse_market_data import MARKET_DATA_ENDPOINTS
+from stocklookup_core.acquisition.dnse_market_data import MARKET_DATA_ENDPOINTS
 
 READY_FOR_RAW_INGEST = "READY_FOR_RAW_INGEST"
 REQUIRES_REQUEST_CONTRACT_FIX = "REQUIRES_REQUEST_CONTRACT_FIX"

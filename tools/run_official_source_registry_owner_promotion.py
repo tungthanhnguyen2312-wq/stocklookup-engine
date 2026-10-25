@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from official_source_registry_owner_promotion import build_artifact
+from stocklookup_core.evidence.official_source_registry_owner_promotion import build_artifact
 
 
 OUTPUT = ROOT / "operations-review" / "official-source-registry-owner-promotion-v1-20260821" / "official_source_registry_owner_promotion_artifact.json"

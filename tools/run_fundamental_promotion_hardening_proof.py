@@ -83,7 +83,7 @@ ENGINE_LINEAGE_FIELDS = frozenset({"ttm_source_context_identity", "source_financ
 #: Production modules this milestone changed (scanned for scratch/worktree-only path dependencies).
 CHANGED_PRODUCTION_MODULES = (
     "stocklookup_core/financial/fundamental_signal_consumption_contract.py", "stocklookup_core/decision/integrated_investment_decision_product.py",
-    "stocklookup_core/decision/current_research_decision_input.py", "asymmetric_dislocation_research.py", "multi_session_signal_velocity.py",
+    "stocklookup_core/decision/current_research_decision_input.py", "stocklookup_core/research/asymmetric_dislocation_research.py", "multi_session_signal_velocity.py",
     "next_session_decision_brief.py", "prospective_decision_outcome_feedback.py",
     "prospective_decision_outcome_measurement.py", "stocklookup_core/decision/daily_integrated_decision_brief.py",
     "stocklookup_core/financial/market_wide_financial_analysis_v2_scaleout.py", "canonical_daily_financial_v2_materialization.py",
@@ -278,7 +278,7 @@ def _module(path: Path, name: str):
 def summarize(args: argparse.Namespace) -> dict:
     roots = _roots(args)
     import stocklookup_core.financial.fundamental_signal_consumption_contract as contract
-    import asymmetric_dislocation_research as adr
+    import stocklookup_core.research.asymmetric_dislocation_research as adr
     import multi_session_signal_velocity as velocity
     import next_session_decision_brief as next_brief
     from stocklookup_core.financial import provider_financial_monetary_basis_verdict as verdict_pin

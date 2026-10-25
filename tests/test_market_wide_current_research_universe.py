@@ -1,4 +1,4 @@
-from market_wide_current_research_universe import build_artifact
+from stocklookup_core.evidence.market_wide_current_research_universe import build_artifact
 
 
 def test_full_ledger_keeps_unknown_and_non_equity_distinct():

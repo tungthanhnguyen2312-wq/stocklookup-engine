@@ -1,0 +1,38 @@
+{
+  "contract_version": "repository_layout_source_transition/v1",
+  "milestone": "REPOSITORY_LAYOUT_MIGRATION_FROZEN_SOURCE_AND_ROOT_DEPENDENCY_CONSOLIDATION",
+  "base_commit": "92fe761287f08d97ab88602dbe9349ab656a1fe6",
+  "exception_scope": "EXACT_IMPORT_RETARGET_ONLY_NO_BEHAVIOR_CHANGE",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "stocklookup.py": {
+      "archive": "tests/fixtures/repository_layout_v1_sources/stocklookup.py.txt",
+      "governing_manifest": "tests/fixtures/financial_research_source_transition_v1.json",
+      "historical_pin_sha256_lf": "640a09ee27e87a2a2901a98f06e6d9a8ee33ab5882aeb6112077c52a63e1309c",
+      "prior_sha256_lf": "6e3e63ae4379b39723a0c94c71a89d80af335c89310adeb305f02905f42d13d5",
+      "active_sha256_lf": "73e69872190eb13a019dffafc2b1c19ac2812f0858650d2edfbc7bcfe72f1938"
+    },
+    "tools/run_owner_daily.py": {
+      "archive": "tests/fixtures/repository_layout_v1_sources/tools/run_owner_daily.py.txt",
+      "governing_manifest": "tests/fixtures/storage_portability_source_transition_v1.json",
+      "historical_pin_sha256_lf": "18848d9f82e08dee2af6fa82c01a3491d033e1efdc7d6828461e3d0452a26311",
+      "prior_sha256_lf": "ff22d387aa979c659ced0813b5c0c7d1abf1cce4798f0027659792b17a32e2bb",
+      "active_sha256_lf": "8201ddb26c8f3ace60a23fd86c4ffe8d07490c60b3e6061178f602adda08d84d"
+    },
+    "canonical_daily_operation.py": {
+      "archive": "tests/fixtures/repository_layout_v1_sources/canonical_daily_operation.py.txt",
+      "governing_manifest": "tests/fixtures/evidence_valuation_orchestration_source_transition_v1.json",
+      "historical_pin_sha256_lf": "a4151d55564105df60b29e49036e35ae98287366daba1dc5f96444da3b31b730",
+      "prior_sha256_lf": "487a0b91b4ef8699bdacdd46111a12fb40b4731994acf8e83b80540631daf829",
+      "active_sha256_lf": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c"
+    },
+    "canonical_post_close_pipeline.py": {
+      "archive": "tests/fixtures/repository_layout_v1_sources/canonical_post_close_pipeline.py.txt",
+      "governing_manifest": "tests/fixtures/evidence_valuation_orchestration_source_transition_v1.json",
+      "historical_pin_sha256_lf": "db6e78370b57739888211d3c4381206daed7a542ac7123416bb0870c2427236a",
+      "prior_sha256_lf": "717cc48d90e25afca8271e0d159d55226a29f90ff5a7eb762f67b28893f997b8",
+      "active_sha256_lf": "042bc0541e8d6802c5c54912406d4a70a6f367508299c521ebe8eea731f58d54"
+    }
+  },
+  "compatibility": "Archived base bytes reproduce the digest each governing transition declared before this change; the governing transition now declares the live digest; original E2/E3 pins and their archives are unchanged and remain the only historical bytes. Only import lines change. A receipt for the base or original digest never proves the live source; active execution hashes live bytes."
+}

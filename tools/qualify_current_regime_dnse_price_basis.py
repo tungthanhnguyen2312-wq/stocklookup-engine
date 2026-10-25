@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dnse_access import credentials_for_request
-from dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 from tools.replay.market_data_recovery.dnse_current_regime_price_basis import (
     DATASET, promotion_analysis, qualify_event, query_for_window, reconcile, select_cohort,
     snapshot_coverage,

@@ -19,7 +19,7 @@ from atomic_io import atomic_copy_file, atomic_write_file, atomic_write_json, va
 from stocklookup_core.evidence.session_registry import load_registry
 from stocklookup_core.evidence.field_identity import stable_id
 import release_session_contract
-import dashboard_home_summary
+from stocklookup_core.decision import dashboard_home_summary
 from stocklookup_core.evidence.evidence_roots import governed_evidence_roots
 import stocklookup_core.decision.investment_decision_workspace_projection as workspace_contract
 from stocklookup_core.decision import screener_master_projection as screener_contract
@@ -761,7 +761,7 @@ def _derive_restaged_home_summary(
         # presentation twin with cards still fails the exact-identity check below.
         if include_notable_cards:
             try:
-                from workspace_public_read_model import build_public_read_model
+                from stocklookup_core.decision.workspace_public_read_model import build_public_read_model
                 workspace_index, _ = build_public_read_model(workspace)
                 summary = dashboard_home_summary.with_notable_cards(summary, workspace_index)
             except (ValueError, TypeError, KeyError):
@@ -1065,7 +1065,7 @@ def materialize_release_ready_runtime(
     )
     source = presentation_source
     if source is None:
-        from post_handoff_presentation_attestation import read_attestation
+        from stocklookup_core.decision.post_handoff_presentation_attestation import read_attestation
         attestation = read_attestation(root, session)
         if attestation is not None:
             source = attestation.get("presentation_projection")

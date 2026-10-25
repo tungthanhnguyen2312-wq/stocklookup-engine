@@ -37,6 +37,19 @@ _THESIS_FIELDS = frozenset({
 FINANCIAL_RESEARCH_MANIFEST = "tests/fixtures/financial_research_source_transition_v1.json"
 
 
+LAYOUT_MANIFEST = "tests/fixtures/repository_layout_source_transition_v1.json"
+LAYOUT_CONTRACT = "repository_layout_source_transition/v1"
+LAYOUT_BASE = "92fe761287f08d97ab88602dbe9349ab656a1fe6"
+LAYOUT_SCOPE = "EXACT_IMPORT_RETARGET_ONLY_NO_BEHAVIOR_CHANGE"
+# Each admitted source and the transition manifest that already governs its live digest.
+LAYOUT_SOURCES = {
+    "stocklookup.py": FINANCIAL_RESEARCH_MANIFEST,
+    "tools/run_owner_daily.py": STORAGE_MANIFEST,
+    "canonical_daily_operation.py": VALUATION_MANIFEST,
+    "canonical_post_close_pipeline.py": VALUATION_MANIFEST,
+}
+
+
 def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Same conservation rule as the storage transition, for the divergence pipeline leg."""
     manifest = root / FINANCIAL_RESEARCH_MANIFEST
@@ -271,3 +284,48 @@ def active_reader_identity(root: Path) -> dict:
     return {"reader_version": spec["reader_version"], "execution_code_digest": active["code_digest"],
             "source_version": "retention_reader_source/v2", "legacy_receipt_adoption": False,
             "cache_policy": "EXACT_EXECUTION_AND_VERIFIER_DIGEST_REQUIRED_NO_CROSS_VERSION_ADOPTION"}
+
+
+def layout_transition_identity(root: Path) -> dict:
+    """Bind the layout import-retarget transition to archived base bytes and the live files.
+
+    The archived base bytes reproduce the digest each governing manifest declared before
+    this transition; the governing manifest now declares the live digest; the original
+    E2/E3 pin is still reproduced only through ``historical_bytes``. Nothing is adopted
+    across versions, and every file is hashed on every call.
+    """
+    spec = json.loads((root / LAYOUT_MANIFEST).read_bytes())
+    if (spec.get("contract_version") != LAYOUT_CONTRACT or spec.get("base_commit") != LAYOUT_BASE
+            or spec.get("exception_scope") != LAYOUT_SCOPE or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(spec.get("sources"), dict) or list(spec["sources"]) != list(LAYOUT_SOURCES)):
+        raise ValueError("LAYOUT_SOURCE_TRANSITION_SCOPE_INVALID")
+    pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
+    rows = {}
+    for relative, governing in LAYOUT_SOURCES.items():
+        row = spec["sources"][relative]
+        expected_archive = "tests/fixtures/repository_layout_v1_sources/" + relative + ".txt"
+        if not isinstance(row, dict) or row.get("archive") != expected_archive or row.get("governing_manifest") != governing:
+            raise ValueError("LAYOUT_SOURCE_ARCHIVE_PATH_INVALID")
+        prior_sha = hashlib.sha256((root / expected_archive).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        active_sha = hashlib.sha256((root / relative).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        declared = json.loads((root / governing).read_bytes())["sources"][relative]["active_sha256_lf"]
+        if (row.get("prior_sha256_lf") != prior_sha or row.get("active_sha256_lf") != active_sha
+                or prior_sha == active_sha or declared != active_sha
+                or row.get("historical_pin_sha256_lf") != pins[relative]
+                or hashlib.sha256(historical_bytes(root, relative)).hexdigest() != pins[relative]):
+            raise ValueError("LAYOUT_SOURCE_TRANSITION_BINDING_INVALID")
+        rows[relative] = {"historical_pin_sha256_lf": pins[relative], "prior_sha256_lf": prior_sha,
+                          "active_sha256_lf": active_sha}
+    return {
+        "contract_version": LAYOUT_CONTRACT,
+        "base_commit": LAYOUT_BASE,
+        "sources": rows,
+        "historical_receipt_adoption": False,
+        "cache_policy": "EXACT_ACTIVE_BYTES_REQUIRED_NO_HISTORICAL_RECEIPT_ADOPTION",
+        "release_authority": "NOT_GRANTED",
+    }
+
+
+def layout_source_receipt_admissible(root: Path, relative: str, receipt_sha256_lf: str) -> bool:
+    """A source receipt proves only the exact live bytes; base and original digests never qualify."""
+    return receipt_sha256_lf == layout_transition_identity(root)["sources"][relative]["active_sha256_lf"]

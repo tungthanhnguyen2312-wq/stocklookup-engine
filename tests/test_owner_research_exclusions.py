@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-import owner_research_exclusions as ore
+import stocklookup_core.portfolio.owner_research_exclusions as ore
 
 
 def test_missing_file_is_the_honest_not_provided_default(tmp_path: Path):

@@ -9,7 +9,7 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from dnse_market_data import MARKET_DATA_ENDPOINTS
+from stocklookup_core.acquisition.dnse_market_data import MARKET_DATA_ENDPOINTS
 from tools.dnse_market_data_probe import (
     CREDENTIAL_INJECTION_REQUIRED,
     CURRENT_STATE_TICKER,
@@ -197,7 +197,7 @@ class DryRunTests(unittest.TestCase):
     def test_dry_run_makes_no_request_and_needs_no_credentials(self):
         output = io.StringIO()
         with patch.dict(os.environ, {}, clear=True), redirect_stdout(output), patch(
-            "dnse_market_data._default_request_get"
+            "stocklookup_core.acquisition.dnse_market_data._default_request_get"
         ) as request:
             self.assertEqual(0, main([]))
         request.assert_not_called()
@@ -209,7 +209,7 @@ class LiveModeTests(unittest.TestCase):
     def test_live_without_credentials_prints_sentinel_and_never_touches_secrets_env(self):
         output = io.StringIO()
         with patch.dict(os.environ, {}, clear=True), redirect_stdout(output), patch(
-            "dnse_market_data._default_request_get"
+            "stocklookup_core.acquisition.dnse_market_data._default_request_get"
         ) as request:
             self.assertEqual(2, main(["--live"]))
         request.assert_not_called()
@@ -224,7 +224,7 @@ class LiveModeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
-        ), patch("dnse_market_data._default_request_get", side_effect=fake_get):
+        ), patch("stocklookup_core.acquisition.dnse_market_data._default_request_get", side_effect=fake_get):
             report = run("auth", out_dir=Path(tmp))
             self.assertTrue((Path(tmp) / "probe_results.json").exists())
         self.assertEqual(1, len(calls))
@@ -239,7 +239,7 @@ class LiveModeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
-        ), patch("dnse_market_data._default_request_get", side_effect=fake_get):
+        ), patch("stocklookup_core.acquisition.dnse_market_data._default_request_get", side_effect=fake_get):
             report = run("matrix", out_dir=Path(tmp))
         self.assertEqual(1, len(calls), "matrix mode must not proceed past a failed auth check")
         self.assertEqual("DNSE_AUTHENTICATION_FAIL", report["status"])
@@ -253,7 +253,7 @@ class LiveModeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
-        ), patch("dnse_market_data._default_request_get", side_effect=fake_get):
+        ), patch("stocklookup_core.acquisition.dnse_market_data._default_request_get", side_effect=fake_get):
             report = run("matrix", out_dir=Path(tmp))
         self.assertEqual(len(build_call_plan()), len(calls))
         self.assertEqual(len(build_call_plan()), report["call_count"])
@@ -269,7 +269,7 @@ class LiveModeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
-        ), patch("dnse_market_data._default_request_get", side_effect=fake_get):
+        ), patch("stocklookup_core.acquisition.dnse_market_data._default_request_get", side_effect=fake_get):
             report = run("current-state", out_dir=Path(tmp))
         self.assertEqual(len(build_current_state_call_plan()), len(calls))
         self.assertEqual(2, report["call_count"])
@@ -285,7 +285,7 @@ class LiveModeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
-        ), patch("dnse_market_data._default_request_get", side_effect=fake_get):
+        ), patch("stocklookup_core.acquisition.dnse_market_data._default_request_get", side_effect=fake_get):
             report = run("index-return-series", out_dir=Path(tmp))
         self.assertEqual(len(build_index_return_series_call_plan()), len(calls))
         self.assertEqual(3, report["call_count"])
@@ -297,7 +297,7 @@ class LiveModeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "extremely-secret-hmac-value"}, clear=True
-        ), patch("dnse_market_data._default_request_get", side_effect=fake_get):
+        ), patch("stocklookup_core.acquisition.dnse_market_data._default_request_get", side_effect=fake_get):
             run("matrix", out_dir=Path(tmp))
             content = (Path(tmp) / "probe_results.json").read_text(encoding="utf-8")
         self.assertNotIn("extremely-secret-hmac-value", content)

@@ -6,7 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from official_financial_source_route_discovery import (
+from stocklookup_core.evidence.official_financial_source_route_discovery import (
     ROUTE_STATUS_EVIDENCE_MISSING,
     ROUTE_STATUS_OWNERSHIP_QUALIFIED,
     VALIDATION_COHORT_17,

@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from ai_research_ticker_extractor import TickerExtractorError, extract_ai_research_tickers, write_packet
+from stocklookup_core.research.ai_research_ticker_extractor import TickerExtractorError, extract_ai_research_tickers, write_packet
 
 
 def main() -> None:

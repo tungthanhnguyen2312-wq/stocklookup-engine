@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 
-from dnse_bulk_market_data import (
+from stocklookup_core.acquisition.dnse_bulk_market_data import (
     MARKET_DATA_ENDPOINTS,
     fetch_capability_raw,
     is_retryable,

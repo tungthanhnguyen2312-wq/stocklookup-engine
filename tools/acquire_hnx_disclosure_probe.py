@@ -2,7 +2,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
-from hnx_enumerable_universe_kllh_event_disclosure_scaleout import BASE,DISCLOSURES,fetch,retain,_content,_total
+from stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout import BASE,DISCLOSURES,fetch,retain,_content,_total
 DEST=ROOT/'operations-review'/'hnx-enumerable-universe-kllh-event-and-disclosure-scaleout-v1-20260824'
 def main()->None:
  for market,(_,endpoint) in DISCLOSURES.items():

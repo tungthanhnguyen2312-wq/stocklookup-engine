@@ -27,7 +27,7 @@ from entity_classification_contract import (
     EntityClass,
     resolve_layered_entity_classification,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     AuthoritativeSectorFact,
     PromotedScopeEvaluationState,
     ReconciliationStatus,
@@ -279,7 +279,7 @@ def run_p2f3_promotion(root: Path) -> dict[str, Any]:
     # 7. Invariant Governance Audit
     print(f"\n7. INVARIANT GOVERNANCE AUDIT:")
     prod_files = [
-        root / "sector_financial_taxonomy.py",
+        root / "stocklookup_core/financial/sector_financial_taxonomy.py",
         root / "financial_disclosure_recognizer.py",
     ]
     for p_file in prod_files:

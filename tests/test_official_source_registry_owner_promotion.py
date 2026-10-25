@@ -7,7 +7,7 @@ import subprocess
 from pathlib import Path
 
 from official_source_registry import ADMITTED, REASON_HOST_NOT_ALLOWED, admit, load_registry
-from official_source_registry_owner_promotion import OWNER_APPROVED_HOSTS, build_artifact
+from stocklookup_core.evidence.official_source_registry_owner_promotion import OWNER_APPROVED_HOSTS, build_artifact
 
 
 ROOT = Path(__file__).resolve().parents[1]

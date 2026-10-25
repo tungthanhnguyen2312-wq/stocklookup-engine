@@ -164,13 +164,13 @@ def _write_immutable(path: Path, value: bytes) -> None:
     if path.exists() and path.read_bytes() != value:
         raise DailyProducerError("IMMUTABLE_DAILY_PRODUCER_CONTENT_CONFLICT:" + path.name)
     path.parent.mkdir(parents=True, exist_ok=True)
-    from immutable_delivery import publish_bytes
+    from stocklookup_core.acquisition.immutable_delivery import publish_bytes
     publish_bytes(path, value)
 
 
 def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery: bool = False) -> dict:
     """The real Producer owner-file publication path, with unchanged manifest records."""
-    from immutable_delivery import DELIVERIES, retain_alias
+    from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, retain_alias
     from atomic_io import AtomicWriteError
     native_manifest = json.loads((operation_dir / "ai_research_bundle_manifest.json").read_bytes())
     copied = {}

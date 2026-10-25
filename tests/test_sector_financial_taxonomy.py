@@ -11,7 +11,7 @@ from entity_classification_contract import (
     EntityClass,
     resolve_layered_entity_classification,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     ALL_SECTOR_METRICS,
     BANK_METRICS,
     CORPORATE_METRICS,
@@ -319,7 +319,7 @@ class TestSectorFinancialTaxonomy(unittest.TestCase):
         """Verify zero ticker-specific logic or symbol branching in production modules."""
         root = Path(__file__).resolve().parents[1]
         prod_files = [
-            root / "sector_financial_taxonomy.py",
+            root / "stocklookup_core/financial/sector_financial_taxonomy.py",
             root / "financial_disclosure_recognizer.py",
         ]
         forbidden_symbols = ["VCB", "SSI", "ABI", "EVF", "BVH"]

@@ -79,7 +79,7 @@ def _run_streaming(*, root: str | Path, output: str | Path, result: str | Path |
                   prior_result: str | Path | None = None) -> dict:
     """Resource-bounded builder: streams every source, publishes atomically, returns a small status (never the artifact)."""
     import traceback
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
     import prospective_feedback_streaming as streaming
 
     def finish(payload: dict, code: int) -> int:

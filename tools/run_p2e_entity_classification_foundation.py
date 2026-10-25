@@ -38,7 +38,7 @@ from entity_classification_contract import (
     EntityClassificationRecord,
     SCHEMA_VERSION,
 )
-from evidence_backed_entity_classifier import (
+from stocklookup_core.financial.evidence_backed_entity_classifier import (
     TICKER_SPECIFIC_EXTRACTION_BRANCH_COUNT,
     classify_entity,
 )

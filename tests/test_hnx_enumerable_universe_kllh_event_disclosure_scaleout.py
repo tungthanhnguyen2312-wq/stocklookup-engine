@@ -1,5 +1,5 @@
 from __future__ import annotations
-from hnx_enumerable_universe_kllh_event_disclosure_scaleout import _content, _last_page, _total, parse_disclosures, parse_events, parse_list
+from stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout import _content, _last_page, _total, parse_disclosures, parse_events, parse_list
 
 CAPTURE = {'official_url': 'https://hnx.vn/x', 'sha256': 'a' * 64}
 LIST = '''<tbody><tr><td>1</td><td>AAA</td><td>Issuer</td><td>Industry</td><td>01/02/2026</td><td>120.000</td><td>100.000</td></tr></tbody><div>Tổng số 1 bản ghi</div>'''

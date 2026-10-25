@@ -8,7 +8,7 @@ import runpy
 
 import pytest
 
-import daily_opportunity_decision_queue as queues
+import stocklookup_core.decision.daily_opportunity_decision_queue as queues
 import daily_research_session_operations as ops
 import personal_investment_decision_action_center as action_center
 from stocklookup_core.decision import bounded_research_preview as preview

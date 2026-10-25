@@ -10,7 +10,7 @@ import pytest
 
 import canonical_daily_financial_v2_materialization as financial
 import stocklookup_core.decision.daily_integrated_decision_brief as brief
-import daily_opportunity_decision_queue as queue
+import stocklookup_core.decision.daily_opportunity_decision_queue as queue
 import stocklookup_core.decision.integrated_investment_decision_product as iid
 from _integrated_decision_fixture import integrated_decision
 from test_daily_opportunity_decision_queue import _opportunity, _triage

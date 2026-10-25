@@ -7,7 +7,7 @@ import pytest
 
 import tools.replay.market_data_recovery.adtv20_exact_reconciled_trailing_window_recovery as rec
 from stocklookup_core.evidence.historical_matched_traded_value_authority import MATCHED_VALUE_FORMULA
-from historical_matched_trading_value_authority import (
+from stocklookup_core.valuation.historical_matched_trading_value_authority import (
     ADTV20_BLOCKED,
     ADTV20_NOT_APPLICABLE,
     ADTV20_PARTIAL,

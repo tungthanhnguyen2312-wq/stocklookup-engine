@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import workspace_public_read_model as wprm  # noqa: E402
+import stocklookup_core.decision.workspace_public_read_model as wprm  # noqa: E402
 
 
 def _full_card(ticker: str, **overrides) -> dict:

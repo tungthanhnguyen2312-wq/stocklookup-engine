@@ -56,7 +56,7 @@ from typing import Any, Mapping
 import market_wide_current_descriptive_research as descriptive_module
 import stocklookup_core.decision.current_market_screening_opportunity_comparison_foundation as screening_module
 import market_wide_current_fundamental_research as fundamental_module
-from price_structure_breakout_context import NEAR as _NEAR_MA20_THRESHOLD
+from stocklookup_core.tactical.price_structure_breakout_context import NEAR as _NEAR_MA20_THRESHOLD
 
 CONTRACT_VERSION = "watchlist_tactical_entry_classifier/v1"
 MILESTONE = "WATCHLIST_TACTICAL_ENTRY_DECISION_V1"

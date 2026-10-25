@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from dnse_bulk_market_data import fetch_capability_raw, is_retryable
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw, is_retryable
 import tools.replay.market_data_recovery.dnse_intraday_history_raw as contract
 import market_raw_lake as lake
 from runtime_paths import runtime_root as resolve_runtime_root

@@ -16,7 +16,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from dnse_access import CREDENTIAL_ENV_PAIRS
-from dnse_market_data import MARKET_DATA_ENDPOINTS
+from stocklookup_core.acquisition.dnse_market_data import MARKET_DATA_ENDPOINTS
 from tools.derive_dnse_trades_liquidity_basis import (
     CREDENTIAL_INJECTION_REQUIRED,
     CURRENT_SESSION_TICKERS,

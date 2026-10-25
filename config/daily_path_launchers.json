@@ -10,16 +10,16 @@
       ]
     },
     "canonical_daily_operation.py": {
-      "ast_sha256": "835efc0bd2e4c2ae7efc7808867a6722622f22b2bbc702c17ed84b9512ae5e7b",
-      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main.",
+      "ast_sha256": "f1acfe23cdb262aba8ddd90a41f21c4e921bfec27194a756ef4cd489d88517f5",
+      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
       "targets": [
         "macro_sync.py",
         "tools/release_orchestrator.py"
       ]
     },
     "canonical_post_close_pipeline.py": {
-      "ast_sha256": "54bf949950b6eb6bfa02f736836cdda8bba593081e3987e3e93aa9afa7a39b54",
-      "reason": "Child argv passed to imported run_observed_subprocess and progress wrapper; exact source contract covers delegation. 2026-10-21 review: AST refresh is the approved evaluated-valuation join only; resolved subprocess argv is unchanged from origin/main. Shareholder research join only; invocation paths and unresolved argv sites match e86b5f96 exactly.",
+      "ast_sha256": "2d2b7ddc6a7a50b8cc76049226b700c5342180261ed84123c77dea7a17427aa2",
+      "reason": "Child argv passed to imported run_observed_subprocess and progress wrapper; exact source contract covers delegation. 2026-10-21 review: AST refresh is the approved evaluated-valuation join only; resolved subprocess argv is unchanged from origin/main. Shareholder research join only; invocation paths and unresolved argv sites match e86b5f96 exactly. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
       "targets": [
         "tools/run_prospective_decision_outcome_feedback.py",
         "tools/run_prospective_research_cohort_collection.py",
@@ -54,8 +54,8 @@
       ]
     },
     "stocklookup.py": {
-      "ast_sha256": "c7c02d79c3882c54f565b7c1705f15dfa1855c5ce73761a4393e54552dd60afa",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof.",
+      "ast_sha256": "710823f42f50ea375120cbcdff7725d52b56a20ff9c4e2a8622d6a76f116c97c",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/stocklookup_roadmap.py"
@@ -92,8 +92,8 @@
       ]
     },
     "tools/run_owner_daily.py": {
-      "ast_sha256": "5708d50af2c870ef644cb56b0ae93d50a219eabffd5240ef0952288a0a6319df",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof.",
+      "ast_sha256": "07de0b0c44685254ae5112d293d89e8c18bb0f158ac6bf7a3eb8ce7556738491",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/release_orchestrator.py",
