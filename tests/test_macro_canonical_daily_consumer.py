@@ -15,7 +15,7 @@ import pytest
 import canonical_daily_operation as daily
 import daily_producer_pipeline as producer
 import daily_research_session_operations as operations
-from ai_handoff_publication import build_package
+from stocklookup_core.research.ai_handoff_publication import build_package
 from current_macro_regime import build as macro_build, session_context
 from stocklookup_core.decision.current_research_decision_packet_product import verified_packet
 from field_temporal_contract import stable_id

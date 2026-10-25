@@ -1,9 +1,9 @@
 from __future__ import annotations
 import hashlib, json, subprocess
 from pathlib import Path
-import ai_handoff_publication as handoff
+import stocklookup_core.research.ai_handoff_publication as handoff
 import pytest
-from ai_handoff_publication import HandoffPublicationError, build_package, publish, verify_remote_publication
+from stocklookup_core.research.ai_handoff_publication import HandoffPublicationError, build_package, publish, verify_remote_publication
 
 def git(path,*args): subprocess.run(["git","-C",str(path),*args],check=True,capture_output=True)
 def source(path, *, version="one"):
@@ -389,7 +389,7 @@ def _remote_repo(tmp_path):
 
 
 def test_real_remote_identical_replay_reports_pointer_head_and_verifies(tmp_path):
-    import owner_daily_journal as journal
+    import stocklookup_core.acquisition.owner_daily_journal as journal
 
     s = tmp_path / "source"; source(s)
     r = _remote_repo(tmp_path)

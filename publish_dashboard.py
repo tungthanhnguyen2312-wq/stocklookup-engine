@@ -33,7 +33,7 @@ from atomic_io import atomic_copy_file, atomic_write_file, validate_json_file
 import dashboard_session_companions
 import release_session_contract
 import trusted_subset_contract
-import workspace_public_read_model
+from stocklookup_core.decision import workspace_public_read_model
 from release_checkout_identity import (
     CANONICAL_BACKEND_ROOT,
     CANONICAL_WEB_ROOT,
@@ -484,7 +484,7 @@ def validate_dashboard_home_summary(source: Path, market_session: str, *, screen
 
 def copy_dashboard_home_summary(source: Path) -> bool:
     """Copy the Producer Home-summary JSON and emit the identical JS fallback."""
-    from dashboard_home_summary import js_fallback
+    from stocklookup_core.decision.dashboard_home_summary import js_fallback
 
     target = WEB_ROOT / HOME_SUMMARY_ASSET
     js_target = WEB_ROOT / HOME_SUMMARY_JS_ASSET

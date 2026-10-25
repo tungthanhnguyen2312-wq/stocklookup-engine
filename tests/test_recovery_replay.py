@@ -1103,7 +1103,8 @@ def test_recovery_modules_never_import_a_vnstock_provider_package():
 
     imported = set(re.findall(r"^\s*(?:from|import)\s+([A-Za-z_][\w.]*)", source, flags=re.M))
     assert not imported & {"vnstock", "vnai", "vn_stock_pipeline", "vnstock_worker_client", "publish_dashboard",
-                           "ai_handoff_publication", "dashboard_release_publisher",
+                           "ai_handoff_publication", "stocklookup_core.research.ai_handoff_publication",
+                           "dashboard_release_publisher",
                            "integrated_investment_decision_product", "daily_integrated_decision_brief",
                            "canonical_daily_operation", "next_session_decision_brief"}
 

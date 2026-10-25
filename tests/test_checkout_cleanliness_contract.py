@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-import checkout_cleanliness_contract as contract
+import stocklookup_core.acquisition.checkout_cleanliness_contract as contract
 import daily_execution_environment as env
 from tools import run_owner_daily as workflow
 

@@ -4,7 +4,7 @@ import json, sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 OPS = ROOT / "operations-review"; OUT = OPS / "daily-opportunity-decision-queue-v1-20260824"
-from daily_opportunity_decision_queue import build, replay, prospective_context
+from stocklookup_core.decision.daily_opportunity_decision_queue import build, replay, prospective_context
 
 P = {
     "opportunity": "current-opportunity-prioritization-v1-20260824/current_opportunity_prioritization_artifact.json",

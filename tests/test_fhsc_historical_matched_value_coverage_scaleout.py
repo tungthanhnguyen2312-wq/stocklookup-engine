@@ -10,7 +10,7 @@ from stocklookup_core.evidence.historical_matched_traded_value_authority import 
     reconcile_fhsc_anchor,
     summarize_complete_trade_session,
 )
-from historical_matched_trading_value_authority import (
+from stocklookup_core.valuation.historical_matched_trading_value_authority import (
     ADTV20_PARTIAL,
     ADTV20_READY,
     adtv20_matched_value,

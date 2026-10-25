@@ -188,7 +188,7 @@ def test_unknown_never_action_and_independent_lenses(tmp_path):
 
 def test_compact_handoff_dashboard_ai_share_exact_cards(tmp_path):
     import dashboard_session_companions as dashboard
-    import ai_handoff_publication as ai
+    import stocklookup_core.research.ai_handoff_publication as ai
     args,*_=fixture(tmp_path)
     result=engine.build(**args,stage="current");result["status"]="COLLECTED"
     focus=runtime.focus_cards(tmp_path,result,tickers=["VNM"])

@@ -1,5 +1,5 @@
 import sys, unittest
-from subprocess_capture import run_utf8
+from stocklookup_core.acquisition.subprocess_capture import run_utf8
 class T(unittest.TestCase):
  def test_utf8_and_determinism(self):
   c=[sys.executable,"-c","import sys;sys.stdout.buffer.write('Tieng Viet'.encode('utf-8'))"];a=run_utf8(c);self.assertEqual(a[1],'Tieng Viet');self.assertEqual(a,run_utf8(c))
@@ -16,7 +16,7 @@ class T(unittest.TestCase):
  def test_utf8_evidence_bytes(self):
   import tempfile
   from pathlib import Path
-  from subprocess_capture import write_utf8
+  from stocklookup_core.acquisition.subprocess_capture import write_utf8
   with tempfile.TemporaryDirectory() as d:
    p=Path(d)/'evidence.log';write_utf8(p,'Ti?ng Vi?t\n');a=p.read_bytes();write_utf8(p,'Ti?ng Vi?t\n');self.assertEqual(a,p.read_bytes())
 if __name__=='__main__':unittest.main()

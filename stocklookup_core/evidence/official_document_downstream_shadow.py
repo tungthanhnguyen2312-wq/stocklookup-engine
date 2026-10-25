@@ -2,7 +2,7 @@
 from __future__ import annotations
 import hashlib,json
 from typing import Any,Mapping
-from fundamental_quality import evaluate_fundamental_quality
+from stocklookup_core.evidence.fundamental_quality import evaluate_fundamental_quality
 from stocklookup_core.valuation.intrinsic_valuation import evaluate_intrinsic_valuation
 from stocklookup_core.valuation.relative_valuation import evaluate_relative_valuation
 

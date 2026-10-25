@@ -1368,7 +1368,7 @@ def test_run_post_handoff_observers_forwards_live_foreign_flow_flag(tmp_path, mo
 
 def _admit_everything(monkeypatch):
     """Resource admission is host-dependent (free RAM/disk); these tests exercise the wiring, not the host."""
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
     monkeypatch.setattr(guard, "admit", lambda policy, **k: {"admitted": True, "reason_code": None, "reasons": [], "available_physical_bytes": 1,
                                                               "available_commit_bytes": 1, "free_disk_bytes": 1})
 
@@ -1387,7 +1387,7 @@ def _completed_bounded(identity="prospective_decision_outcome_feedback:test", **
 
 
 def test_complete_child_with_unconfirmed_reaping_is_fail_soft_unavailable(tmp_path, monkeypatch):
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
     _admit_everything(monkeypatch)
     runner = _completed_bounded()
     def unreaped(*args, **kwargs):
@@ -1398,7 +1398,7 @@ def test_complete_child_with_unconfirmed_reaping_is_fail_soft_unavailable(tmp_pa
 
 
 def test_run_post_handoff_prospective_outcome_feedback_writes_to_distinct_post_handoff_path(tmp_path, monkeypatch):
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
     session = "2026-08-25"
     seen = {}
     _admit_everything(monkeypatch)
@@ -1427,7 +1427,7 @@ def test_run_post_handoff_prospective_outcome_feedback_writes_to_distinct_post_h
 
 
 def test_run_post_handoff_prospective_outcome_feedback_degrades_on_subprocess_failure(tmp_path, monkeypatch):
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
 
     _admit_everything(monkeypatch)
     monkeypatch.setattr(guard, "run_bounded", lambda *a, **k: {
@@ -1440,7 +1440,7 @@ def test_run_post_handoff_prospective_outcome_feedback_degrades_on_subprocess_fa
 
 
 def test_feedback_timeout_and_admission_refusal_are_resource_reasons_and_launch_no_unbounded_work(tmp_path, monkeypatch):
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
 
     launched = []
     _admit_everything(monkeypatch)
@@ -1462,7 +1462,7 @@ def test_feedback_timeout_and_admission_refusal_are_resource_reasons_and_launch_
 
 
 def test_pre_handoff_collection_keeps_only_a_compact_feedback_status_in_the_parent(tmp_path, monkeypatch):
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
 
     session = "2026-10-05"
 

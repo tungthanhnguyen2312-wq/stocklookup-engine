@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-import owner_daily_journal as journal
+import stocklookup_core.acquisition.owner_daily_journal as journal
 
 
 SESSION = "2026-09-22"

@@ -1232,7 +1232,7 @@ def run_canonical_daily_operation(
     # to have been attempted". Best-effort: must never revise or block the already-sealed Daily
     # result above.
     try:
-        from post_handoff_presentation_attestation import write_attestation
+        from stocklookup_core.decision.post_handoff_presentation_attestation import write_attestation
         write_attestation(
             operation_output_root, resolved_session,
             presentation_projection=post_handoff_presentation_projection,

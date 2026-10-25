@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from subprocess_capture import run_utf8
+from stocklookup_core.acquisition.subprocess_capture import run_utf8
 
 try:
     from field_temporal_contract import stable_id

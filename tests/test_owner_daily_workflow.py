@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from tools import run_owner_daily as workflow
-import owner_daily_journal as journal
-import post_handoff_presentation_attestation as presentation_attestation
+import stocklookup_core.acquisition.owner_daily_journal as journal
+import stocklookup_core.decision.post_handoff_presentation_attestation as presentation_attestation
 import governed_publication_completion as gpc
 from release_checkout_identity import PUBLISHED
 
@@ -1781,7 +1781,7 @@ def test_external_result_path_is_accepted_and_written_unchanged(tmp_path, monkey
 def test_result_path_guard_leaves_governed_untracked_data_semantics_unchanged(tmp_path):
     """The guard is a CLI argument check only: approved runtime/evidence under data/ still passes
     the (unchanged) shared cleanliness contract and repository preflight."""
-    import checkout_cleanliness_contract as cleanliness
+    import stocklookup_core.acquisition.checkout_cleanliness_contract as cleanliness
     assert "data/dnse-foreign-flow/" in cleanliness.APPROVED_RUNTIME_EVIDENCE_PREFIXES
     root, _origin = _clone_with_origin(tmp_path)
     evidence = root / "data" / "dnse-foreign-flow" / "observations" / "HPG.json"

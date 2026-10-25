@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import publish_dashboard as pd  # noqa: E402
-import dashboard_home_summary  # noqa: E402
+from stocklookup_core.decision import dashboard_home_summary  # noqa: E402
 
 
 def _home_summary_payload(*, session="2026-09-18", denominator=5, source_identity="screener_master_projection/v1:abc"):

@@ -643,7 +643,7 @@ def _enriched_presentation_fixture(root, session, workspace, source):
         "workspace_artifact_identity": enriched_workspace["artifact_identity"],
         "sealed_producer_workspace_artifact_identity": workspace.get("artifact_identity"),
     }
-    import post_handoff_presentation_attestation as attestation
+    import stocklookup_core.decision.post_handoff_presentation_attestation as attestation
     attestation.write_attestation(
         root, session,
         presentation_projection=presentation_result,
@@ -775,7 +775,7 @@ def _presentation_with_new_screener(root, workspace, source, *, with_screener=Tr
     if new_screener is not None and declared_screener_identity:
         presentation_result["screener_master_projection_artifact_identity"] = new_screener.get("artifact_identity")
     if attest:
-        import post_handoff_presentation_attestation as attestation
+        import stocklookup_core.decision.post_handoff_presentation_attestation as attestation
         attestation.write_attestation(root, RESTAGE_SESSION, presentation_projection=presentation_result)
     return enriched_workspace, new_screener, presentation_result
 
@@ -834,8 +834,7 @@ def test_restage_rederives_home_summary_from_restaged_screener(tmp_path, monkeyp
 
 
 def test_restage_preserves_qualified_notable_cards_from_exact_presentation_workspace(tmp_path, monkeypatch):
-    import workspace_public_read_model
-
+    from stocklookup_core.decision import workspace_public_read_model
     root, source, workspace, _ = _workspace_release_fixture(tmp_path, monkeypatch)
     runtime = tmp_path / "runtime"
     runtime_release.materialize_canonical_runtime_release(root, runtime, RESTAGE_SESSION)

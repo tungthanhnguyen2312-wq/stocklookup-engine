@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import asymmetric_dislocation_research as adr  # noqa: E402
+import stocklookup_core.research.asymmetric_dislocation_research as adr  # noqa: E402
 import runtime_paths  # noqa: E402
 
 

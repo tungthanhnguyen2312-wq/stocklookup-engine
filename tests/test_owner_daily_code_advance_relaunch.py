@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from tools import run_owner_daily as workflow
-import owner_daily_journal as journal
+import stocklookup_core.acquisition.owner_daily_journal as journal
 import owner_daily_progress as progress
 from release_checkout_identity import PUBLISHED
 

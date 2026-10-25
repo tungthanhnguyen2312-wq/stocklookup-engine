@@ -163,7 +163,7 @@ def test_publisher_single_root_relative_directory_still_matches(tmp_path, monkey
 
 
 def test_presentation_attestation_is_read_from_the_operation_output_root(split):
-    import post_handoff_presentation_attestation as attestation
+    import stocklookup_core.decision.post_handoff_presentation_attestation as attestation
     producer, retained = split
     path = attestation.attestation_path(retained, SESSION)
     path.parent.mkdir(parents=True)
@@ -172,7 +172,7 @@ def test_presentation_attestation_is_read_from_the_operation_output_root(split):
 
 
 def test_presentation_attestation_single_root_unchanged(tmp_path, monkeypatch):
-    import post_handoff_presentation_attestation as attestation
+    import stocklookup_core.decision.post_handoff_presentation_attestation as attestation
     monkeypatch.delenv(evidence_roots.OPERATION_OUTPUT_ROOT_ENV, raising=False)
     monkeypatch.delenv(evidence_roots.RETAINED_EVIDENCE_ROOT_ENV, raising=False)
     assert attestation.read_attestation(tmp_path, SESSION) is None

@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import feedback_resource_guard as guard
+import stocklookup_core.acquisition.feedback_resource_guard as guard
 
 SMALL = guard.ResourcePolicy(deadline_seconds=30, memory_limit_bytes=None, min_available_physical_bytes=0,
                              min_available_commit_bytes=0, min_free_disk_bytes=0)

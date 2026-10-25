@@ -21,7 +21,7 @@ from stocklookup_core.portfolio.current_portfolio_risk_envelope import build as 
 from stocklookup_core.research.current_market_flow_positioning import prospective_context as flow_prospective_context
 from current_macro_regime import session_context as macro_session_context
 from stocklookup_core.decision.current_opportunity_prioritization import build as build_opportunity, content_identity as opportunity_identity
-from daily_opportunity_decision_queue import build as build_decision_queue, content_identity as decision_queue_identity, prospective_context as decision_queue_prospective_context
+from stocklookup_core.decision.daily_opportunity_decision_queue import build as build_decision_queue, content_identity as decision_queue_identity, prospective_context as decision_queue_prospective_context
 from stocklookup_core.research.prospective_research_learning import freeze_current_decision_surface
 from stocklookup_core.research.sector_aware_relative_research import build as build_peer, content_identity as peer_identity
 from ai_research_session_delivery import build_delivery, _integrated_delivery_inputs
@@ -474,7 +474,7 @@ def materialize(output_dir: Path, operation: Mapping[str, Any], *, protect_deliv
     for filename, value in (("ai_research_session_bundle.json", delivery["primary"]), ("ai_research_full_universe.ndjson", delivery["full_universe"]), ("ai_research_bundle_manifest.json", delivery["manifest"]), ("ai_research_session_brief.md", delivery["brief"]), ("current_decision_cockpit_projection.json", delivery["projection"])):
         path = output_dir / filename
         if path.exists() and path.read_bytes() != value: raise ValueError("IMMUTABLE_SESSION_OPERATION_DELIVERY_CONFLICT:" + filename)
-        from immutable_delivery import DELIVERIES, publish_bytes
+        from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, publish_bytes
         publish_bytes(path, value, protect=protect_delivery and filename in DELIVERIES)
     retained_brief = _integrated_brief_retention_artifact(operation)
     if retained_brief is not None:

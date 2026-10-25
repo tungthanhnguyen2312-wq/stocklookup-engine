@@ -475,3 +475,41 @@ def test_w3_moved_engines_keep_the_checkout_root():
             if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "ROOT" for t in node.targets):
                 assert ast.unparse(node.value) == "Path(__file__).resolve().parents[3]", new
                 assert (ROOT / new).resolve().parents[3] == ROOT.resolve(), new
+
+
+W4 = json.loads((ROOT / "tests/fixtures/repository_layout_migration_20261025_relocations.json").read_text(encoding="utf-8"))
+
+
+def test_layout_migration_20261025_moves_leave_one_owner_and_no_root_dependency():
+    """2026-10-25 layout migration: moved roots keep no copy; their owners import no root module."""
+    import subprocess
+    launch = json.loads((ROOT / "config/daily_path_launchers.json").read_text(encoding="utf-8"))
+    pinned = {item["path"] for item in launch["targets"]} | set(launch["python_callers"])
+    pinned |= set(json.loads((ROOT / "tests/fixtures/e2e3_frozen_sources.json").read_text(encoding="utf-8"))["source_sha256_lf"])
+    root_names = {p.stem for p in ROOT.glob("*.py")}
+    assert W4["relocations"] == {k: v for c in W4["cohorts"].values() for k, v in c["relocations"].items()}
+    for old, new in W4["relocations"].items():
+        assert LAYOUT["relocations"][old] == new
+        assert old not in LAYOUT["grandfathered_root_python"] and old not in LAYOUT["compatibility_entrypoints"]
+        assert old not in pinned and new not in pinned, old
+        assert not (ROOT / old).exists() and importlib.util.find_spec(old[:-3]) is None, old
+        assert Path(importlib.util.find_spec(new[:-3].replace("/", ".")).origin) == ROOT / new
+        for node in ast.walk(ast.parse((ROOT / new).read_text(encoding="utf-8"))):
+            names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
+                [node.module] if isinstance(node, ast.ImportFrom) and node.module and not node.level else []
+            assert not root_names.intersection(n.split(".")[0] for n in names), (new, names)
+    moved = {old[:-3] for old in W4["relocations"]}
+    for ref, relative in BULK["historically_executed_sources"]:
+        tree = ast.parse(subprocess.check_output(["git", "show", f"{ref}:{relative}"], cwd=ROOT))
+        for node in ast.walk(tree):
+            names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
+                [node.module] if isinstance(node, ast.ImportFrom) and node.module and not node.level else []
+            assert not moved.intersection(n.split(".")[0] for n in names), (ref, relative, names)
+
+
+def test_layout_source_transition_binding_runs_in_structural_ci():
+    """The import-retarget transition stays bound to its archived base bytes and live digests."""
+    from tools.verify_retention_reader_transition import layout_transition_identity
+    identity = layout_transition_identity(ROOT)
+    assert identity["historical_receipt_adoption"] is False
+    assert all(len(set(row.values())) == 3 for row in identity["sources"].values())

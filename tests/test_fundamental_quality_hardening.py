@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 import export_ai_bundle as bundle_mod  # noqa: E402
-import fundamental_quality as fq  # noqa: E402
+import stocklookup_core.evidence.fundamental_quality as fq  # noqa: E402
 import stocklookup_core.financial.fundamental_quality_evidence as fqe  # noqa: E402
 
 _ORIGINAL_MODEL_KEYS = frozenset({

@@ -25,7 +25,7 @@ from tools.replay.market_data_recovery.adtv20_exact_reconciled_trailing_window_r
     run_bounded_acquisition,
 )
 from stocklookup_core.evidence.fhsc_retained_live_reconciliation import load_finhay_api_key
-from historical_matched_trading_value_authority import EXACT_RECONCILED
+from stocklookup_core.valuation.historical_matched_trading_value_authority import EXACT_RECONCILED
 
 
 def _load_dnse_pages(ticker: str, session: str) -> tuple[list[dict[str, Any]], list[str]] | tuple[None, None]:

@@ -7,7 +7,7 @@ from pathlib import Path
 import export_ai_bundle as bundle
 
 from stocklookup_core.evidence.historical_matched_traded_value_authority import MATCHED_VALUE_FORMULA, summarize_complete_trade_session
-from historical_matched_trading_value_authority import (
+from stocklookup_core.valuation.historical_matched_trading_value_authority import (
     ADTV20_BLOCKED,
     ADTV20_NOT_APPLICABLE,
     ADTV20_PARTIAL,

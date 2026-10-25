@@ -5,7 +5,7 @@ import copy
 import json
 from pathlib import Path
 
-from daily_opportunity_decision_queue import content_identity
+from stocklookup_core.decision.daily_opportunity_decision_queue import content_identity
 from export_ai_bundle import (
     attach_daily_opportunity_decision_queue,
     load_daily_opportunity_decision_queue_artifact,

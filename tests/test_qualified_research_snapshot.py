@@ -5,7 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from qualified_research_snapshot import (
+from stocklookup_core.research.qualified_research_snapshot import (
     SnapshotCollisionError, SnapshotIntegrityError, _canonical, retain, replay,
     snapshot_as_bundle, validate_snapshot,
 )

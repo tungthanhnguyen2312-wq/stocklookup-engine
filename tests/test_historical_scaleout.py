@@ -1,5 +1,5 @@
 import unittest
-from historical_scaleout import select,attach
+from stocklookup_core.decision.historical_scaleout import select,attach
 def e(entity="corporate",ok=True):return {"entity_type":entity,"financial_canonical":{"status":"available" if ok else "missing","records":[{"quality_state":"available","value":0,"canonical_metric":"net_income"}] if ok else []}}
 class T(unittest.TestCase):
  def test_selection_is_sorted_bounded_and_fail_closed(self):

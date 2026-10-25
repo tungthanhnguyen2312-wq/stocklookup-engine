@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 import canonical_post_close_pipeline as cpc
-import feedback_resource_guard as guard
+import stocklookup_core.acquisition.feedback_resource_guard as guard
 import prospective_feedback_streaming as streaming
 from tests.test_prospective_feedback_streaming import _corpus, _legacy_artifact
 

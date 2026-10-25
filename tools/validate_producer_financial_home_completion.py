@@ -167,7 +167,7 @@ def financial_probe(probe_path, evidence_root, manifest_path, official_path, mat
 
 
 def card_parity(summary, index):
-    import dashboard_home_summary as home
+    import stocklookup_core.decision.dashboard_home_summary as home
     require(home.content_identity(summary)["artifact_identity"] == summary["artifact_identity"], "HOME_IDENTITY_MISMATCH")
     block = summary["notable_cards"]
     require(block.get("contract_version") == "dashboard_home_notable_cards/v1"
@@ -191,8 +191,8 @@ def card_parity(summary, index):
 
 
 def home_probe(presentation):
-    import dashboard_home_summary as home
-    from workspace_public_read_model import build_public_read_model
+    import stocklookup_core.decision.dashboard_home_summary as home
+    from stocklookup_core.decision.workspace_public_read_model import build_public_read_model
     from canonical_dashboard_runtime_release import _derive_restaged_home_summary
     presentation = Path(presentation)
     screener = read_json(presentation / "screener_master_projection.json")

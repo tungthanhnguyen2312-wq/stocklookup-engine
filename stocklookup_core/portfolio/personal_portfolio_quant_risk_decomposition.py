@@ -697,7 +697,7 @@ def evaluate_from_retained_artifacts(*, repo_root, portfolio_root=None, session:
     snapshot exists for the resolved session -- never fabricates a substitute for either.
     """
     from pathlib import Path
-    import owner_research_exclusions as _exclusions
+    import stocklookup_core.portfolio.owner_research_exclusions as _exclusions
     import stocklookup_core.portfolio.private_portfolio_context as _ppc
 
     repo_root = Path(repo_root)

@@ -1,0 +1,51 @@
+{
+  "milestone": "REPOSITORY_LAYOUT_MIGRATION_FROZEN_SOURCE_AND_ROOT_DEPENDENCY_CONSOLIDATION",
+  "baseline": "92fe761287f08d97ab88602dbe9349ab656a1fe6",
+  "selection": "Root implementations with no frozen-byte, path-launch, historical-execution, Consumer or Dashboard binding on their own name, whose importers are editable and whose package owner imports no root module. Daily-reachable modules move with exact bytes except import lines.",
+  "cohorts": {
+    "c1_leaf_owners": {
+      "purpose": "Leaf implementations imported only by editable root modules, packages, tools and tests; each joins the lowest layer that owns its domain and that its importers may depend on.",
+      "relocations": {
+        "fundamental_quality.py": "stocklookup_core/evidence/fundamental_quality.py",
+        "historical_matched_trading_value_authority.py": "stocklookup_core/valuation/historical_matched_trading_value_authority.py",
+        "historical_scaleout.py": "stocklookup_core/decision/historical_scaleout.py",
+        "immutable_delivery.py": "stocklookup_core/acquisition/immutable_delivery.py",
+        "qualified_research_snapshot.py": "stocklookup_core/research/qualified_research_snapshot.py",
+        "subprocess_capture.py": "stocklookup_core/acquisition/subprocess_capture.py",
+        "workspace_public_read_model.py": "stocklookup_core/decision/workspace_public_read_model.py",
+        "dashboard_home_summary.py": "stocklookup_core/decision/dashboard_home_summary.py"
+      }
+    },
+    "c2_transition_released_owners": {
+      "purpose": "Implementations whose only frozen importers are the Owner Daily/canonical orchestration sources admitted by the repository layout source transition; those importers change import lines only.",
+      "relocations": {
+        "ai_handoff_publication.py": "stocklookup_core/research/ai_handoff_publication.py",
+        "asymmetric_dislocation_research.py": "stocklookup_core/research/asymmetric_dislocation_research.py",
+        "checkout_cleanliness_contract.py": "stocklookup_core/acquisition/checkout_cleanliness_contract.py",
+        "daily_opportunity_decision_queue.py": "stocklookup_core/decision/daily_opportunity_decision_queue.py",
+        "feedback_resource_guard.py": "stocklookup_core/acquisition/feedback_resource_guard.py",
+        "owner_daily_journal.py": "stocklookup_core/acquisition/owner_daily_journal.py",
+        "owner_research_exclusions.py": "stocklookup_core/portfolio/owner_research_exclusions.py",
+        "post_handoff_presentation_attestation.py": "stocklookup_core/decision/post_handoff_presentation_attestation.py"
+      }
+    }
+  },
+  "relocations": {
+    "ai_handoff_publication.py": "stocklookup_core/research/ai_handoff_publication.py",
+    "asymmetric_dislocation_research.py": "stocklookup_core/research/asymmetric_dislocation_research.py",
+    "checkout_cleanliness_contract.py": "stocklookup_core/acquisition/checkout_cleanliness_contract.py",
+    "daily_opportunity_decision_queue.py": "stocklookup_core/decision/daily_opportunity_decision_queue.py",
+    "dashboard_home_summary.py": "stocklookup_core/decision/dashboard_home_summary.py",
+    "feedback_resource_guard.py": "stocklookup_core/acquisition/feedback_resource_guard.py",
+    "fundamental_quality.py": "stocklookup_core/evidence/fundamental_quality.py",
+    "historical_matched_trading_value_authority.py": "stocklookup_core/valuation/historical_matched_trading_value_authority.py",
+    "historical_scaleout.py": "stocklookup_core/decision/historical_scaleout.py",
+    "immutable_delivery.py": "stocklookup_core/acquisition/immutable_delivery.py",
+    "owner_daily_journal.py": "stocklookup_core/acquisition/owner_daily_journal.py",
+    "owner_research_exclusions.py": "stocklookup_core/portfolio/owner_research_exclusions.py",
+    "post_handoff_presentation_attestation.py": "stocklookup_core/decision/post_handoff_presentation_attestation.py",
+    "qualified_research_snapshot.py": "stocklookup_core/research/qualified_research_snapshot.py",
+    "subprocess_capture.py": "stocklookup_core/acquisition/subprocess_capture.py",
+    "workspace_public_read_model.py": "stocklookup_core/decision/workspace_public_read_model.py"
+  }
+}

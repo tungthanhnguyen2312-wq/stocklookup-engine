@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 import canonical_daily_operation
-from checkout_cleanliness_contract import APPROVED_RUNTIME_EVIDENCE_PREFIXES, CONSUMER_APPROVED_UNTRACKED_PREFIXES
+from stocklookup_core.acquisition.checkout_cleanliness_contract import APPROVED_RUNTIME_EVIDENCE_PREFIXES, CONSUMER_APPROVED_UNTRACKED_PREFIXES
 from tools import run_owner_daily as workflow
 
 SESSION = "2026-09-24"
@@ -539,8 +539,8 @@ def _publish_stubs(monkeypatch, source: Path) -> dict:
         (source / name).write_text("{}")
     monkeypatch.setattr(workflow, "preflight_repository", lambda *a, **k: {"head": "h", "status": "UP_TO_DATE"})
     monkeypatch.setattr(workflow, "_git", lambda *a, **k: "producer-head")
-    import ai_handoff_publication
-    import post_handoff_presentation_attestation
+    from stocklookup_core.research import ai_handoff_publication
+    from stocklookup_core.decision import post_handoff_presentation_attestation
     captured: dict = {}
     monkeypatch.setattr(ai_handoff_publication, "publish", lambda *a, **k: captured.update(k, called=True) or {"status": "PUBLISHED"})
     monkeypatch.setattr(ai_handoff_publication, "verify_remote_publication", lambda *a, **k: {"remote_sha": "r"})
