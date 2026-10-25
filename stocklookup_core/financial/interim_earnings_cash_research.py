@@ -400,15 +400,37 @@ def financial_quality_decision_bridge(record: Mapping[str, Any] | None, *, ticke
     fingerprint verifies integrity, not authenticity or factual truth. Callers
     must supply the existing Producer projection, not self-labelled Hub rows.
     """
-    from long_term_company_economics_evidence import _time, _temporal_reasons
+    from stocklookup_core.evidence.bitemporal_semantic_contract import _parse_aware
 
-    boundary = _time(knowledge_cutoff)
+    boundary = _parse_aware(knowledge_cutoff)
+    if boundary is None:
+        raise ValueError("EXPLICIT_TIMEZONE_BEARING_KNOWLEDGE_TIME_REQUIRED")
     record = record or {}
     if record.get("ticker") not in (None, ticker):
         raise ValueError("FINANCIAL_QUALITY_SUBJECT_MISMATCH")
     rows, receipt_refusals = [], []
     for row in record.get("official_field_context") or []:
-        reasons = _temporal_reasons(row, boundary)
+        reasons = []
+        for key in ("knowledge_available_at", "observed_at"):
+            stamp = _parse_aware(row.get(key))
+            if stamp is None:
+                reasons.append(key.upper() + "_INVALID")
+            elif stamp > boundary:
+                reasons.append(key.upper() + "_AFTER_CUTOFF")
+        publication = row.get("publication_date")
+        if publication:
+            try:
+                if len(str(publication)) == 10:
+                    if date.fromisoformat(publication) > boundary.date():
+                        reasons.append("PUBLICATION_AFTER_CUTOFF")
+                else:
+                    published = _parse_aware(publication)
+                    if published is None:
+                        reasons.append("PUBLICATION_TIME_INVALID")
+                    elif published > boundary:
+                        reasons.append("PUBLICATION_AFTER_CUTOFF")
+            except (TypeError, ValueError):
+                reasons.append("PUBLICATION_TIME_INVALID")
         digest = row.get("document_sha256")
         if (type(row.get("source_page")) is not int or row["source_page"] < 1
                 or not row.get("line_code") or not isinstance(digest, str) or len(digest) != 64

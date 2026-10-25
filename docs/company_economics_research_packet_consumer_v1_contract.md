@@ -176,3 +176,11 @@ frozen fixtures, official overlays and historical evidence match the exact base.
 Existing Producer focused CI now selects the bridge and released interim suites;
 only its workflow fingerprint changes in the launcher manifest. Hosted results and
 exact publication/merge checkpoints are recorded on the feature PR.
+
+Hosted structural CI caught a feature regression: using the higher-level economics
+module's private timestamp helpers introduced a backward dependency/cycle edge.
+The bridge now uses the existing lower-level bitemporal aware-time parser, with
+the same receipt/publication cutoff checks local to this consumer. Architecture
+policy and baselines are unchanged. Corrective validation: **217 passed**, covering
+the bridge, released interim context, repository layout and architecture ratchet.
+Released interim AST and default Daily behavior remain unchanged.
