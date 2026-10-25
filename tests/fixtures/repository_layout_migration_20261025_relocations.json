@@ -59,6 +59,19 @@
         "qualified_research_change_events.py": "stocklookup_core/research/qualified_research_change_events.py",
         "hnx_enumerable_universe_kllh_event_disclosure_scaleout.py": "stocklookup_core/evidence/hnx_enumerable_universe_kllh_event_disclosure_scaleout.py"
       }
+    },
+    "c6_entity_classification_and_route_owners": {
+      "purpose": "Layered entity classification joins evidence beside exchange industry classification, so evidence route discovery may use it; evidence-backed classification, its scale-out and sector taxonomy join financial; official issuer route discovery, ownership evidence, review, bounded enrichment and owner promotion join evidence. Path anchors resolve the same repository directories.",
+      "relocations": {
+        "evidence_backed_entity_classifier.py": "stocklookup_core/financial/evidence_backed_entity_classifier.py",
+        "entity_classification_scaleout.py": "stocklookup_core/financial/entity_classification_scaleout.py",
+        "sector_financial_taxonomy.py": "stocklookup_core/financial/sector_financial_taxonomy.py",
+        "official_financial_source_route_discovery.py": "stocklookup_core/evidence/official_financial_source_route_discovery.py",
+        "retained_official_route_ownership_evidence.py": "stocklookup_core/evidence/retained_official_route_ownership_evidence.py",
+        "prospective_route_ownership_review.py": "stocklookup_core/evidence/prospective_route_ownership_review.py",
+        "bounded_official_route_evidence_enrichment.py": "stocklookup_core/evidence/bounded_official_route_evidence_enrichment.py",
+        "official_source_registry_owner_promotion.py": "stocklookup_core/evidence/official_source_registry_owner_promotion.py"
+      }
     }
   },
   "relocations": {
@@ -66,6 +79,7 @@
     "ai_handoff_source_freshness_matrix.py": "stocklookup_core/research/ai_handoff_source_freshness_matrix.py",
     "ai_research_ticker_extractor.py": "stocklookup_core/research/ai_research_ticker_extractor.py",
     "asymmetric_dislocation_research.py": "stocklookup_core/research/asymmetric_dislocation_research.py",
+    "bounded_official_route_evidence_enrichment.py": "stocklookup_core/evidence/bounded_official_route_evidence_enrichment.py",
     "checkout_cleanliness_contract.py": "stocklookup_core/acquisition/checkout_cleanliness_contract.py",
     "current_macro_regime.py": "stocklookup_core/evidence/current_macro_regime.py",
     "daily_opportunity_decision_queue.py": "stocklookup_core/decision/daily_opportunity_decision_queue.py",
@@ -74,6 +88,8 @@
     "dnse_instrument_universe.py": "stocklookup_core/evidence/dnse_instrument_universe.py",
     "dnse_market_data.py": "stocklookup_core/acquisition/dnse_market_data.py",
     "dnse_security_group_semantics.py": "stocklookup_core/evidence/dnse_security_group_semantics.py",
+    "entity_classification_scaleout.py": "stocklookup_core/financial/entity_classification_scaleout.py",
+    "evidence_backed_entity_classifier.py": "stocklookup_core/financial/evidence_backed_entity_classifier.py",
     "feedback_resource_guard.py": "stocklookup_core/acquisition/feedback_resource_guard.py",
     "fundamental_quality.py": "stocklookup_core/evidence/fundamental_quality.py",
     "historical_matched_trading_value_authority.py": "stocklookup_core/valuation/historical_matched_trading_value_authority.py",
@@ -84,12 +100,17 @@
     "market_only_pit_eligibility.py": "stocklookup_core/evidence/market_only_pit_eligibility.py",
     "market_wide_current_research_universe.py": "stocklookup_core/evidence/market_wide_current_research_universe.py",
     "market_wide_financial_coverage.py": "stocklookup_core/financial/market_wide_financial_coverage.py",
+    "official_financial_source_route_discovery.py": "stocklookup_core/evidence/official_financial_source_route_discovery.py",
+    "official_source_registry_owner_promotion.py": "stocklookup_core/evidence/official_source_registry_owner_promotion.py",
     "owner_daily_journal.py": "stocklookup_core/acquisition/owner_daily_journal.py",
     "owner_research_exclusions.py": "stocklookup_core/portfolio/owner_research_exclusions.py",
     "pit_price_series_qualification.py": "stocklookup_core/evidence/pit_price_series_qualification.py",
     "post_handoff_presentation_attestation.py": "stocklookup_core/decision/post_handoff_presentation_attestation.py",
+    "prospective_route_ownership_review.py": "stocklookup_core/evidence/prospective_route_ownership_review.py",
     "qualified_research_change_events.py": "stocklookup_core/research/qualified_research_change_events.py",
     "qualified_research_snapshot.py": "stocklookup_core/research/qualified_research_snapshot.py",
+    "retained_official_route_ownership_evidence.py": "stocklookup_core/evidence/retained_official_route_ownership_evidence.py",
+    "sector_financial_taxonomy.py": "stocklookup_core/financial/sector_financial_taxonomy.py",
     "stocklookup_preflight.py": "stocklookup_core/acquisition/stocklookup_preflight.py",
     "subprocess_capture.py": "stocklookup_core/acquisition/subprocess_capture.py",
     "vnm_shadow_backtest.py": "stocklookup_core/portfolio/vnm_shadow_backtest.py",
@@ -172,6 +193,42 @@
       "owner": "stocklookup_core/acquisition/official_acquisition_budget.py",
       "required_by": [
         "historically executed sources (retained root for historical execution)"
+      ]
+    },
+    "entity_classification_contract.py": {
+      "owner": "stocklookup_core/evidence/entity_classification_contract.py",
+      "required_by": [
+        "stocklookup_core/decision/integrated_investment_decision_product.py (E4 V2 input; patched through the root attribute by existing tests)",
+        "canonical_post_close_pipeline.py",
+        "historically executed sources"
+      ]
+    },
+    "operational_fundamental_context_integration.py": {
+      "owner": "stocklookup_core/financial/operational_fundamental_context_integration.py",
+      "required_by": [
+        "stocklookup_core/decision/integrated_investment_decision_product.py (E4 V2 input)",
+        "stocklookup_core/financial/fundamental_signal_consumption_contract.py (E4 V1 input)",
+        "canonical_post_close_pipeline.py",
+        "historically executed sources"
+      ]
+    },
+    "sector_relative_research_context.py": {
+      "owner": "stocklookup_core/financial/sector_relative_research_context.py",
+      "required_by": [
+        "historically executed sources (retained root for historical execution)"
+      ]
+    },
+    "macro_market_regime_decision_context.py": {
+      "owner": "stocklookup_core/decision/macro_market_regime_decision_context.py",
+      "required_by": [
+        "historically executed sources"
+      ]
+    },
+    "price_structure_breakout_context.py": {
+      "owner": "stocklookup_core/tactical/price_structure_breakout_context.py",
+      "required_by": [
+        "technical_structure_context.py (E5 frozen technical owner)",
+        "historically executed sources"
       ]
     }
   }

@@ -27,7 +27,7 @@ from entity_classification_contract import (
     SCHEMA_VERSION,
     compute_classification_evidence_id,
 )
-from evidence_backed_entity_classifier import (
+from stocklookup_core.financial.evidence_backed_entity_classifier import (
     TICKER_SPECIFIC_EXTRACTION_BRANCH_COUNT,
     _normalize_text,
     classify_entity,
@@ -229,7 +229,7 @@ class ZeroTickerBranchGovernanceTests(unittest.TestCase):
     """Governance tests ensuring zero hardcoded ticker logic in production classification code."""
 
     def test_zero_ticker_branches_in_classifier(self):
-        code_path = REPO_ROOT / "evidence_backed_entity_classifier.py"
+        code_path = REPO_ROOT / "stocklookup_core/financial/evidence_backed_entity_classifier.py"
         tree = ast.parse(code_path.read_text(encoding="utf-8"))
 
         forbidden_tickers = {"GAS", "VRE", "MWG", "VIC", "VNM", "HPG", "VCB", "SSI", "BID", "MBB", "TCB"}

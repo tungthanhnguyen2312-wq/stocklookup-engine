@@ -17,11 +17,11 @@ from typing import Any, Mapping
 import unicodedata
 from urllib.parse import urlsplit
 
-from official_financial_source_route_discovery import LEGAL_IDENTITY_HINTS, STATIC_ISSUER_ROUTE_HINTS, normalize_domain
-from retained_official_route_ownership_evidence import EVIDENCE_STORE_DIR, OFFLINE_RETAINED_EVIDENCE_CATALOG
+from stocklookup_core.evidence.official_financial_source_route_discovery import LEGAL_IDENTITY_HINTS, STATIC_ISSUER_ROUTE_HINTS, normalize_domain
+from stocklookup_core.evidence.retained_official_route_ownership_evidence import EVIDENCE_STORE_DIR, OFFLINE_RETAINED_EVIDENCE_CATALOG
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 VERSION = "1.0.0"
 CONTRACT_VERSION = "prospective_route_ownership_review/v1"
 ARTIFACT_TYPE = "PROSPECTIVE_ROUTE_OWNERSHIP_REVIEW"

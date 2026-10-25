@@ -6,13 +6,13 @@ import json
 from pathlib import Path
 import unittest
 
-from official_financial_source_route_discovery import (
+from stocklookup_core.evidence.official_financial_source_route_discovery import (
     discover_and_qualify_routes,
     ROUTE_STATUS_OWNERSHIP_QUALIFIED,
     ROUTE_STATUS_EVIDENCE_MISSING,
     VALIDATION_COHORT_17,
 )
-from retained_official_route_ownership_evidence import (
+from stocklookup_core.evidence.retained_official_route_ownership_evidence import (
     execute,
     build_retained_evidence_records,
     OFFLINE_RETAINED_EVIDENCE_CATALOG,

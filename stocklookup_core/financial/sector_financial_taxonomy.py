@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 import unicodedata
 
-from entity_classification_contract import (
+from stocklookup_core.evidence.entity_classification_contract import (
     EntityClass,
     resolve_layered_entity_classification,
 )
@@ -1189,7 +1189,7 @@ def evaluate_metric_sector_applicability(
 def load_promoted_sector_extractions(config_path: Path | None = None) -> dict[str, Any]:
     """Load promoted sector extraction registry config."""
     if config_path is None:
-        config_path = Path(__file__).resolve().parent / "config" / "promoted_sector_extractions.json"
+        config_path = Path(__file__).resolve().parents[2] / "config" / "promoted_sector_extractions.json"
     if not config_path.is_file():
         return {}
     return json.loads(config_path.read_text(encoding="utf-8"))

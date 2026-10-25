@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from prospective_route_ownership_review import execute
+from stocklookup_core.evidence.prospective_route_ownership_review import execute
 
 
 OUTPUT = (

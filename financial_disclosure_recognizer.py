@@ -42,7 +42,7 @@ from entity_classification_contract import (
     EntityClass,
     resolve_layered_entity_classification,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     ALL_SECTOR_METRICS,
     MetricApplicabilityState,
     MetricDefinition,

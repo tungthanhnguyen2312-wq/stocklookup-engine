@@ -19,7 +19,7 @@ from typing import Any, Mapping, Sequence
 import urllib.parse
 import urllib.request
 
-from official_financial_source_route_discovery import (
+from stocklookup_core.evidence.official_financial_source_route_discovery import (
     discover_and_qualify_routes,
     normalize_domain,
     LEGAL_IDENTITY_HINTS,
@@ -28,7 +28,7 @@ from official_financial_source_route_discovery import (
 )
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 VERSION = "1.0.0"
 CONTRACT_VERSION = "retained_official_route_ownership_evidence/v1"
 ARTIFACT_TYPE = "RETAINED_OFFICIAL_ROUTE_OWNERSHIP_EVIDENCE"

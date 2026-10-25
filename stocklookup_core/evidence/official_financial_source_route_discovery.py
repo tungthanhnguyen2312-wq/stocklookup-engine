@@ -13,11 +13,11 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 import urllib.parse
 
-from entity_classification_contract import load_layered_entity_profiles
+from stocklookup_core.evidence.entity_classification_contract import load_layered_entity_profiles
 from stocklookup_core.evidence.official_route_ownership_evidence import qualify as qualify_issuer_route
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 VERSION = "2.0.0"
 CONTRACT_VERSION = "official_financial_source_route_discovery/v2"
 ARTIFACT_TYPE = "OFFICIAL_FINANCIAL_SOURCE_ROUTE_DISCOVERY"

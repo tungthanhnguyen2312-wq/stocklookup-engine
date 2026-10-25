@@ -34,7 +34,7 @@ from stocklookup_core.financial.multi_period_financial_panel import (
     load_promoted_sector_citations,
     load_retained_baseline_citations,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     BANK_METRICS,
     SECURITIES_METRICS,
     SectorAuthorityTier,

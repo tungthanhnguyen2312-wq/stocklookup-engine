@@ -36,7 +36,7 @@ from entity_classification_contract import (  # noqa: E402
     load_promoted_entity_classifications,
     load_seed_profiles,
 )
-from entity_classification_scaleout import ReconciliationInput, reconcile_ticker  # noqa: E402
+from stocklookup_core.financial.entity_classification_scaleout import ReconciliationInput, reconcile_ticker  # noqa: E402
 from field_temporal_contract import stable_id  # noqa: E402
 from statement_taxonomy_sidecar import load_sidecar, taxonomy_index  # noqa: E402
 

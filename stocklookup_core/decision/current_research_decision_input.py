@@ -21,7 +21,7 @@ from typing import Any, Iterable, Mapping
 
 import stocklookup_core.portfolio.execution_capacity_research as execution_capacity
 import stocklookup_core.financial.fundamental_signal_consumption_contract as fundamental_signals
-from operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
+from stocklookup_core.financial.operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
 from stocklookup_core.decision.opportunity_axis_freshness import STALE_BUT_RESEARCH_USABLE, classify_financial_period_freshness
 
 CONTRACT_VERSION = "current_research_decision_input/v1"

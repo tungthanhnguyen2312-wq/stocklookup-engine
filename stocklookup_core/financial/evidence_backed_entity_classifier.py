@@ -23,7 +23,7 @@ import re
 from typing import Any, Mapping, Sequence
 import unicodedata
 
-from entity_classification_contract import (
+from stocklookup_core.evidence.entity_classification_contract import (
     CONTRACT_VERSION,
     ConfidenceSemantics,
     EntityClass,

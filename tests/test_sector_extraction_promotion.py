@@ -16,7 +16,7 @@ from generic_financial_canonicalizer import (
     LegacyModuleRole,
     classify_legacy_materializers,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     AuthoritativeSectorFact,
     PromotedScopeEvaluationState,
     ReconciliationStatus,
@@ -263,7 +263,7 @@ class TestSectorExtractionPromotion(unittest.TestCase):
     def test_zero_ticker_specific_branches_in_production(self):
         """Proof Criterion 6: No ticker/SHA/host-specific production extraction branches exist."""
         prod_files = [
-            self.root / "sector_financial_taxonomy.py",
+            self.root / "stocklookup_core/financial/sector_financial_taxonomy.py",
             self.root / "financial_disclosure_recognizer.py",
         ]
         forbidden_symbols = ["VCB", "SSI", "ABI", "EVF", "BVH"]

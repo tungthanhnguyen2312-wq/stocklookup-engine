@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from entity_classification_contract import ClassificationStatus, EntityClass, EvidenceTier
-from entity_classification_scaleout import (
+from stocklookup_core.financial.entity_classification_scaleout import (
     REASON_AMBIGUOUS_NO_SUBTYPE,
     REASON_ENTITY_TYPE_MISSING,
     ReconciliationInput,
@@ -216,7 +216,7 @@ def test_different_ticker_same_evidence_produces_different_evidence_id():
 # --- 6. No heuristics: static checks on the production module --------------------------
 
 def test_zero_ticker_branches_in_scaleout_reconciler():
-    tree = ast.parse((REPO_ROOT / "entity_classification_scaleout.py").read_text(encoding="utf-8"))
+    tree = ast.parse((REPO_ROOT / "stocklookup_core/financial/entity_classification_scaleout.py").read_text(encoding="utf-8"))
     forbidden_tickers = {"GAS", "VRE", "MWG", "VIC", "VNM", "HPG", "VCB", "SSI", "BID", "MBB", "TCB",
                          "AIC", "PGI", "PRE", "PTI", "ART", "TVB"}
     for node in ast.walk(tree):

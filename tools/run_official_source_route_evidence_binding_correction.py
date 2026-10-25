@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from official_financial_source_route_discovery import build_evidence_binding_correction, execute
+from stocklookup_core.evidence.official_financial_source_route_discovery import build_evidence_binding_correction, execute
 
 
 PRIOR_V1 = ROOT / "operations-review/official-financial-source-route-discovery-v1-20260821/official_financial_source_route_discovery_artifact.json"

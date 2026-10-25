@@ -163,7 +163,7 @@ def build_packet(
             # Mixed observations/unknown interpretations are a bounded research view.
             current[field] = {"claim": {"warning": True}, "value": value}
     if regime_context is not None:
-        from macro_market_regime_decision_context import packet_section_overlay
+        from stocklookup_core.decision.macro_market_regime_decision_context import packet_section_overlay
 
         overlay = packet_section_overlay(regime_context, decision_session=decision_session)
         if overlay.get("bind_status") == "BOUND":

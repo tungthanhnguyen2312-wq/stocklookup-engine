@@ -24,11 +24,11 @@ import urllib.parse
 import urllib.request
 import certifi
 
-from official_financial_source_route_discovery import (
+from stocklookup_core.evidence.official_financial_source_route_discovery import (
     LEGAL_IDENTITY_HINTS,
     normalize_domain,
 )
-from prospective_route_ownership_review import (
+from stocklookup_core.evidence.prospective_route_ownership_review import (
     BRANDING_ONLY,
     COPYRIGHT_LEGAL_ENTITY,
     FULL_LEGAL_ENTITY_NAME,
@@ -45,7 +45,7 @@ from prospective_route_ownership_review import (
     normalize_legal_identity,
 )
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 VERSION = "1.0.0"
 CONTRACT_VERSION = "bounded_official_route_evidence_enrichment/v1"
 ARTIFACT_TYPE = "BOUNDED_OFFICIAL_ROUTE_EVIDENCE_ENRICHMENT"

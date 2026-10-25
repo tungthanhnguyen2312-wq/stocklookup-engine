@@ -37,7 +37,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Mapping, NamedTuple
 
-from entity_classification_contract import (
+from stocklookup_core.evidence.entity_classification_contract import (
     CONTRACT_VERSION,
     ClassificationStatus,
     ConfidenceSemantics,
@@ -46,7 +46,7 @@ from entity_classification_contract import (
     EvidenceTier,
     compute_classification_evidence_id,
 )
-from evidence_backed_entity_classifier import evaluate_legal_charter_evidence
+from stocklookup_core.financial.evidence_backed_entity_classifier import evaluate_legal_charter_evidence
 from stocklookup_core.evidence.exchange_industry_classification import (
     HINT_AMBIGUOUS_FINANCIAL,
     HINT_BANK,

@@ -11,13 +11,13 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
-from bounded_official_route_evidence_enrichment import execute_bounded_enrichment
-from official_financial_source_route_discovery import normalize_domain
+from stocklookup_core.evidence.bounded_official_route_evidence_enrichment import execute_bounded_enrichment
+from stocklookup_core.evidence.official_financial_source_route_discovery import normalize_domain
 from stocklookup_core.evidence.official_route_ownership_evidence import qualify
-from prospective_route_ownership_review import OWNER_REVIEW_READY, build_prospective_owner_review_artifact
+from stocklookup_core.evidence.prospective_route_ownership_review import OWNER_REVIEW_READY, build_prospective_owner_review_artifact
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parents[2]
 VERSION = "1.0.0"
 CONTRACT_VERSION = "official_source_registry_owner_promotion/v1"
 ARTIFACT_TYPE = "OFFICIAL_SOURCE_REGISTRY_OWNER_PROMOTION"
