@@ -36,7 +36,7 @@ exact retained identities in ACTIVE_STATE). Source authority unchanged.
 - Input: existing qualified official overlay with explicit cutoff; optional verified, timed thesis research references and method-qualified relative context
 - Predecessor: existing financial qualification, earnings-component and thesis contracts (unchanged)
 - Blocker: no qualified multi-year structural/cycle proof, recurrence/accounting normalization bridge or strict share continuity
-- Next trigger: qualified evidence; [packet consumer](company_economics_research_packet_consumer_v1_contract.md) released PR117, offline only
+- Next trigger: qualified evidence; [packet/quality bridge](company_economics_research_packet_consumer_v1_contract.md), offline/non-voting
 
 ### Vault snapshot / retention
 - Contract: [vault_incremental_snapshot_contract.md](vault_incremental_snapshot_contract.md)

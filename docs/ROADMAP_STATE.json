@@ -15,11 +15,33 @@
     "config/daily_research_session_input_registry.json"
   ],
   "current": {
-    "milestone": "OFFICIAL_PRIOR_PERIOD_PAIRING_DAILY_FROZEN_SOURCE_TRANSITION_V1",
+    "milestone": "CURRENT_RESEARCH_FINANCIAL_QUALITY_DECISION_BRIDGE_V1",
     "state": "COMPLETE"
   },
   "queued_next": [],
   "milestones": [
+    {
+      "milestone_id": "CURRENT_RESEARCH_FINANCIAL_QUALITY_DECISION_BRIDGE_V1",
+      "state": "COMPLETE",
+      "starting_checkpoint": "fe3e6e5ed87136d5d75e923f1be69a14311066ea",
+      "candidate_branch": "feature/current-research-financial-quality-decision-bridge-v1",
+      "dependencies": [
+        "OFFICIAL_PRIOR_PERIOD_PAIRING_DAILY_FROZEN_SOURCE_TRANSITION_V1"
+      ],
+      "unlocks": [],
+      "owner_authorized": true,
+      "owner_override": "Owner request 2026-10-25: extend existing earnings/cash and Human-AI packet consumption with offline non-voting financial-quality decision explanations, source-bound representative cases and one focused PR; conditional normal merge after CI; no Daily publication, authority promotion, production writes or successor.",
+      "authority_effect": "NONE",
+      "source_doc": "docs/company_economics_research_packet_consumer_v1_contract.md",
+      "state_history": [
+        "DEFERRED",
+        "ACTIVE",
+        "COMPLETE"
+      ],
+      "checkpoint": "09b557a131e4ac479e43d4a445512eabd3e3d744",
+      "terminal_disposition": "LOCAL_IMPLEMENTATION_COMPLETE_NOT_PROMOTED",
+      "notes": "Owner request 2026-10-25: extend existing earnings/cash and Human-AI packet consumption with offline non-voting financial-quality decision explanations, source-bound representative cases and one focused PR; conditional normal merge after CI; no Daily publication, authority promotion, production writes or successor. Local closeout: Local offline financial-quality bridge complete: 254 regressions passed, 3 expected skips; final bridge hardening 44 passed, active-state 12 passed; retained projected acceptance PNJ/HPG/FPT with explicit QNS/VNM/POW/VCI gaps. No Daily/authority/publication path change. Owner permits one feature PR and normal merge only after exact-head hosted CI and source review; no successor.; no main release, authority promotion or successor."
+    },
     {
       "milestone_id": "OFFICIAL_PRIOR_PERIOD_PAIRING_DAILY_FROZEN_SOURCE_TRANSITION_V1",
       "state": "COMPLETE",
