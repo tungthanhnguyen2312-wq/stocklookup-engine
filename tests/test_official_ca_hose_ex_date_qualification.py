@@ -12,12 +12,14 @@ from datetime import datetime, timedelta
 
 import pytest
 
+import canonical_market_bars
 import pit_price_reconstruction_contract as pit
 
-try:  # PR #191 relocates this root module; accept either side of that migration.
-    from stocklookup_core.evidence import market_only_pit_eligibility as market_only
-except ImportError:
-    import market_only_pit_eligibility as market_only
+# PR #191 moves the market-only gate from the root into `stocklookup_core.evidence`, and the
+# architecture guard rejects any import of the side that does not exist. `canonical_market_bars`
+# stays put and binds the gate as `pit` on both sides, so reach it through that one import.
+market_only = canonical_market_bars.pit
+assert market_only.CONTRACT_VERSION == "market_only_pit_eligibility/v1"
 import price_basis_feature_fitness as fitness
 from stocklookup_core.evidence import official_corporate_action_ledger as ledger
 from stocklookup_core.evidence import qualified_corporate_action_factor_chain as factor_chain
