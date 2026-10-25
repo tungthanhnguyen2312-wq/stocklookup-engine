@@ -32,8 +32,10 @@ FAIL-CLOSED CLASSIFICATION
                                   ``not_applicable`` for exactly this reason.
     OTHER_EVIDENCE_GAP        -- executed, conflict-free, explicit ex-date, but still missing
                                   something else required for QUALIFIED -- most commonly a
-                                  missing ``stock_ratio`` on the ledger entry, or a missing
-                                  caller-supplied knowledge/publication cutoff.
+                                  missing ``stock_ratio`` on the ledger entry, a missing
+                                  caller-supplied knowledge/publication cutoff, or another leg
+                                  (e.g. a cash dividend) its own notice fixes on the same
+                                  ex-date, which no adjustment policy covers.
 
     Only ``FACTOR_CHAIN_QUALIFIED`` produces a factor-chain identity and a non-null
     ``adjustment_factor``. Every other bucket returns ``status: "NOT_QUALIFIED"`` with the exact
@@ -89,8 +91,12 @@ REASON_CONFLICTING_SHARE_IDENTITY = "share_count_identity_violated"
 REASON_FACTOR_NOT_APPLICABLE = "event_type_not_dilutive_or_concentrating"
 REASON_MISSING_KNOWLEDGE_CUTOFF = "missing_knowledge_publication_cutoff"
 REASON_RECORD_DATE_NOT_EX_DATE = "record_date_does_not_establish_ex_date"
+REASON_MIXED_EVENT_UNADJUSTED_LEG = "same_ex_date_leg_without_adjustment_policy"
 
 _EXECUTED_LIFECYCLE = "executed"
+#: The ledger's own share-rescaling types (`official_corporate_action_ledger._DILUTIVE` and
+#: `_CONCENTRATING`); any other leg recited for the same ex-date is a separate price effect.
+_SHARE_FACTOR_EVENT_TYPES = frozenset({"stock_dividend", "bonus_shares", "stock_split", "reverse_split"})
 
 
 def _canonical_json(value: Any) -> str:
@@ -125,6 +131,15 @@ def classify_ledger_entry(entry: Mapping[str, Any]) -> tuple[str, list[str]]:
         if entry.get("record_date"):
             reasons.append(REASON_RECORD_DATE_NOT_EX_DATE)
         return CLASSIFICATION_MISSING_EXPLICIT_EX_DATE, reasons
+
+    # A notice that fixes one ex-date for a share issuance and, say, a cash dividend states two
+    # price effects. The share factor covers only its own; with no qualified policy for the
+    # other leg, the date's price effect is not explained and no chain may claim it is.
+    other_legs = sorted({str(leg.get("event_type")) for leg in entry.get("co_documented_legs") or []
+                         if leg.get("event_type") not in _SHARE_FACTOR_EVENT_TYPES
+                         and leg.get("ex_date") in (None, entry.get("ex_date"))})
+    if other_legs:
+        return CLASSIFICATION_OTHER_EVIDENCE_GAP, [f"{REASON_MIXED_EVENT_UNADJUSTED_LEG}:{leg}" for leg in other_legs]
 
     if factor_status != "ready" or entry.get("adjustment_factor") is None:
         blocked_by = list(entry.get("adjustment_factor_blocked_by") or [])
