@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.run_portfolio_pit_execution_acceptance import Inputs
-import market_only_pit_eligibility as eligibility
+import stocklookup_core.evidence.market_only_pit_eligibility as eligibility
 import prospective_market_snapshot_contract as market
 from completed_market_session_gate import pit_calendar_at_cutoff, build_working_dates_calendar_receipt
 

@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-import dashboard_home_summary as dhs
+import stocklookup_core.decision.dashboard_home_summary as dhs
 
 
 SESSION = "2026-09-18"

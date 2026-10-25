@@ -66,8 +66,7 @@ import json
 from typing import Any, Mapping, Sequence
 
 from stocklookup_core.evidence import current_research_official_universe_scope as current_research_official_universe_scope_module
-import price_basis_feature_fitness
-
+from stocklookup_core.evidence import price_basis_feature_fitness
 CONTRACT_VERSION = "current_research_ai_handoff_packet/v1"
 WATCHLIST_CONTRACT_VERSION = "current_research_ai_handoff_watchlist/v1"
 MILESTONE = "CURRENT_RESEARCH_AI_HANDOFF_PACKET_V1"

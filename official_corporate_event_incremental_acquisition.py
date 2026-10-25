@@ -27,7 +27,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-import hnx_enumerable_universe_kllh_event_disclosure_scaleout as hnx_module
+import stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout as hnx_module
 import hose_public_xhr_and_periodic_series_recon as hose_module
 from vn_time import vn_now_iso, vn_today
 from official_acquisition_budget import AcquisitionBudget, AcquisitionBudgetExceeded

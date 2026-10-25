@@ -332,7 +332,7 @@ def main(argv=None) -> int:
                     root = (a.portfolio_root or __import__('stocklookup_core.portfolio.private_portfolio_context', fromlist=['*']).default_portfolio_root()).expanduser()
                     portfolio_path = root / "portfolio_aware_decisions" / a.session / "portfolio_aware_decision_v1.json"
                     integrated = pad.load_integrated_decision_artifact(ROOT, a.session)
-                    import asymmetric_dislocation_research as adr
+                    import stocklookup_core.research.asymmetric_dislocation_research as adr
                     asymmetric = adr.build_artifact(session=a.session, integrated_product=integrated)
                     artifact = pas.build_artifact(session=a.session, integrated_decision=integrated,
                         portfolio_aware_decision=json.loads(portfolio_path.read_text(encoding="utf-8")),
@@ -349,7 +349,7 @@ def main(argv=None) -> int:
                 path = root / "portfolio_aware_opportunity_shortlists" / a.session / "portfolio_aware_opportunity_shortlist_v1.json"
                 try:
                     import stocklookup_core.portfolio.portfolio_aware_decision as pad
-                    import asymmetric_dislocation_research as adr
+                    import stocklookup_core.research.asymmetric_dislocation_research as adr
                     shortlist = json.loads(path.read_text(encoding="utf-8"))
                     integrated = pad.load_integrated_decision_artifact(ROOT, a.session)
                     portfolio = json.loads((root / "portfolio_aware_decisions" / a.session / "portfolio_aware_decision_v1.json").read_text(encoding="utf-8"))
@@ -361,7 +361,7 @@ def main(argv=None) -> int:
                 print(json.dumps(packet.public_console_summary(artifact),ensure_ascii=False,sort_keys=True)); return 0
             if a.portfolio_action == "exclude":
                 import datetime as _dt_exclude
-                import owner_research_exclusions as ore
+                import stocklookup_core.portfolio.owner_research_exclusions as ore
                 try:
                     for ticker in a.remove:
                         ore.remove_research_exclusion(ticker, portfolio_root=a.portfolio_root)
@@ -466,7 +466,7 @@ def main(argv=None) -> int:
         daily_output_root = Path(environment["roots"]["output_root"])
 
     try:
-        from stocklookup_preflight import check
+        from stocklookup_core.acquisition.stocklookup_preflight import check
         check(
             producer_root=a.replay_root if a.replay_operation else ROOT,
             runtime_root=daily_runtime or _runtime(),
@@ -513,7 +513,7 @@ def main(argv=None) -> int:
     )
 
     try:
-        from ai_handoff_publication import publish
+        from stocklookup_core.research.ai_handoff_publication import publish
         result = publish(
             _handoff(),
             operation,

@@ -885,7 +885,7 @@ def resolve_current_session_priority_queue(
     queue resurrected to make coverage nonzero.
     """
     import stocklookup_core.decision.current_opportunity_prioritization as opportunity_module
-    import daily_opportunity_decision_queue as queue_module
+    import stocklookup_core.decision.daily_opportunity_decision_queue as queue_module
     import full_universe_entry_candidate_triage as triage_module
 
     def unavailable(reason: str) -> tuple[None, dict[str, Any]]:
@@ -2182,7 +2182,7 @@ def run_bounded_prospective_feedback(
     result carrying a *resource or defect* reason code, never an investment/feedback state. The parent
     exchanges only paths and a small status sidecar with the child; the artifact itself is never loaded here.
     """
-    import feedback_resource_guard as guard
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
 
     policy = policy or guard.default_feedback_policy()
     status_path = output.with_name(output.name + ".status.json")

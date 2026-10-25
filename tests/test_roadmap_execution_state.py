@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import roadmap_execution_state as res
-from subprocess_capture import run_utf8
+from stocklookup_core.acquisition.subprocess_capture import run_utf8
 
 _TOOLS_PARENT = Path(__file__).resolve().parents[1]
 if str(_TOOLS_PARENT) not in sys.path:

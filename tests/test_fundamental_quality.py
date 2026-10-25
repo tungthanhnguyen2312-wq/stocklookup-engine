@@ -4,7 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from fundamental_quality import evaluate_fundamental_quality
+from stocklookup_core.evidence.fundamental_quality import evaluate_fundamental_quality
 
 
 def r(metric, value, period="2025", **extra):
@@ -62,7 +62,7 @@ class FundamentalQualityTests(unittest.TestCase):
 
     def test_isolated_pilot_uses_exporter_canonical_evaluator_entrypoint(self):
         from export_ai_bundle import evaluate_fundamental_quality as exporter_evaluator
-        from fundamental_quality import evaluate_fundamental_quality as canonical_evaluator
+        from stocklookup_core.evidence.fundamental_quality import evaluate_fundamental_quality as canonical_evaluator
         self.assertIs(exporter_evaluator, canonical_evaluator)
 
     def test_isolated_pilot_import_resolves_explicit_runtime_root(self):

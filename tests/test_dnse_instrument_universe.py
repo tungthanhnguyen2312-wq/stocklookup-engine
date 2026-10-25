@@ -4,7 +4,7 @@ import unittest
 
 import pandas as pd
 
-import dnse_instrument_universe as universe
+import stocklookup_core.evidence.dnse_instrument_universe as universe
 
 
 class _FakeResponse:

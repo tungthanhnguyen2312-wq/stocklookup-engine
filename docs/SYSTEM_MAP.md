@@ -3,18 +3,18 @@
 > Navigation aid only. Milestone state is in ROADMAP_STATE.json; contracts/code govern semantics; STATE/ROADMAP/DECISIONS preserve history. Follow AGENTS.md's Authority by domain rule.
 > Start with the compact active set: [ACTIVE_STATE](ACTIVE_STATE.md), [CAPABILITIES](CAPABILITIES.md), [AUTHORITY](AUTHORITY.md), [DAILY_PIPELINE](DAILY_PIPELINE.md), [ROADMAP_CURRENT](ROADMAP_CURRENT.md); history index: [HISTORICAL_INDEX](HISTORICAL_INDEX.md).
 
-Outcome-feedback children (pre- and post-handoff) run bounded: `feedback_resource_guard.py` (admission, one total deadline, memory ceiling, reaping) around
+Outcome-feedback children (pre- and post-handoff) run bounded: `stocklookup_core/acquisition/feedback_resource_guard.py` (admission, one total deadline, memory ceiling, reaping) around
 `prospective_feedback_streaming.py` (streamed proof and output, atomic COMPLETE publication). Content and `artifact_identity` equal the original
 `prospective_decision_outcome_feedback.build_feedback_artifact`; resource reasons are never feedback evidence. [Contract](owner_daily_feedback_resource_containment_contract.md).
 
-Prospective market continuity: `prospective_market_snapshot_contract.py` owns price/volume
+Prospective market continuity: `stocklookup_core/evidence/prospective_market_snapshot_contract.py` owns price/volume
 fitness and scoped official comparison; `prospective_market_evidence_retention.py` is its
 immutable Daily I/O boundary, using the existing universe verifier/retainer and corporate
 ledger/factor engine. `canonical_post_close_pipeline.acquire_and_materialize` retains
 market receipts before optional work. [Contract](market_pit_foundation_contract.md).
 
-`market_only_pit_eligibility.py` owns signal-specific input, contiguous-region and
-D/W/M constituent gates. `vnm_shadow_backtest.py` reuses its existing signal/return
+`stocklookup_core/evidence/market_only_pit_eligibility.py` owns signal-specific input, contiguous-region and
+D/W/M constituent gates. `stocklookup_core/portfolio/vnm_shadow_backtest.py` reuses its existing signal/return
 primitives for bound gross research. `tools/run_market_only_pit_acceptance.py` scans
 exact R7 inputs offline. [Contract](market_only_pit_eligibility_contract.md).
 
@@ -105,9 +105,9 @@ R5–R7 merged in PR #35. The [post-release system review](internal/POST_R1_R7_S
 ## R7 authority-readiness navigation
 
 See [contract](portfolio_pit_execution_authority_contract.md) and [acceptance](internal/R7_PORTFOLIO_PIT_EXECUTION_ACCEPTANCE.json).
-`raw_pit_authority_matrix` owns the consumer matrix/dossier and final non-voting PORTFOLIO_FIT adapter.
+`evidence/raw_pit_authority_matrix` owns the consumer matrix/dossier and final non-voting PORTFOLIO_FIT adapter.
 The implementations in `stocklookup_core/portfolio/` (`portfolio_aware_decision`,
-`current_portfolio_risk_envelope` and `current_portfolio_risk_research`) reuse the existing governed risk/minimum-cap, exposure and window engines. `vnm_shadow_backtest`
+`current_portfolio_risk_envelope` and `current_portfolio_risk_research`) reuse the existing governed risk/minimum-cap, exposure and window engines. `portfolio/vnm_shadow_backtest`
 reuses the isolated VNM replay engine through explicit authority gates; no generic or live order path
 is added. `tools/run_portfolio_pit_execution_acceptance.py` is an offline exact-manifest review tool,
 not another production entrypoint. Source registries and promoted authority are unchanged.
@@ -125,7 +125,7 @@ stocklookup.ps1
               ├─> Valuation & Opportunity Integration (current_valuation_opportunity_integration.py)
               ├─> Investment Decision Workspace (investment_decision_workspace_projection.py)
               ├─> Screener Master Projection (screener_master_projection.py)
-              ├─> AI Handoff Publication (ai_handoff_publication.py / next_session_decision_brief.py)
+              ├─> AI Handoff Publication (research/ai_handoff_publication.py / next_session_decision_brief.py)
               └─> Dashboard Release (dashboard_release_publisher.py / publish_dashboard.py)
 ```
 
@@ -216,7 +216,7 @@ and [acceptance](internal/R6_PROSPECTIVE_LEARNING_ACCEPTANCE.json).
 
 ### 11. AI Handoff
 - **Responsibility:** Deterministic packaging and idempotent git publication of daily research session bundle and next-session decision brief to the private AI handoff repository.
-- **Primary Entry Module:** [`ai_handoff_publication.py`](../ai_handoff_publication.py) / [`next_session_decision_brief.py`](../next_session_decision_brief.py)
+- **Primary Entry Module:** [`ai_handoff_publication.py`](../stocklookup_core/research/ai_handoff_publication.py) / [`next_session_decision_brief.py`](../next_session_decision_brief.py)
 - **Key Output Contract:** Git commit in private handoff repo (`LATEST.json`, `ai_research_session_bundle.json`, `next_session_decision_brief.json`).
 
 ### 12. Dashboard Release

@@ -324,7 +324,7 @@ class PolicyInvarianceTests(unittest.TestCase):
 
     def test_posture_structure_and_priority_modules_do_not_use_the_reference_window(self) -> None:
         for name in ("stocklookup_core/decision/integrated_investment_decision_product.py", "technical_structure_context.py",
-                     "stocklookup_core/tactical/market_structure_breakout_product_projection.py", "daily_opportunity_decision_queue.py",
+                     "stocklookup_core/tactical/market_structure_breakout_product_projection.py", "stocklookup_core/decision/daily_opportunity_decision_queue.py",
                      "stocklookup_core/decision/current_opportunity_prioritization.py"):
             with self.subTest(module=name):
                 self.assertNotIn("tactical_reference_window", (REPO / name).read_text(encoding="utf-8"))

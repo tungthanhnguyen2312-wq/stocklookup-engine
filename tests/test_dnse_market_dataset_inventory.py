@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 import tools.replay.market_data_recovery.dnse_market_dataset_inventory as inventory
-from dnse_market_data import MARKET_DATA_ENDPOINTS
+from stocklookup_core.acquisition.dnse_market_data import MARKET_DATA_ENDPOINTS
 
 
 class DatasetInventoryTests(unittest.TestCase):

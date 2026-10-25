@@ -5,8 +5,8 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 import dnse_secrets_env
 from dnse_access import CREDENTIAL_ENV_PAIRS,credentials_for_request
-from dnse_bulk_market_data import fetch_capability_raw
-from market_wide_current_research_universe import build_artifact
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.evidence.market_wide_current_research_universe import build_artifact
 SNAPSHOT=ROOT/'operations-review/p3f9b-market-wide-exact-session-scaleout-20260821/p3f9b_mva_exact_session_snapshot.json'
 OUT=ROOT/'operations-review/market-wide-current-research-universe-qualification-v1-20260823'
 def page(out,index,size):

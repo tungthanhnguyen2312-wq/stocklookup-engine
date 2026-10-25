@@ -10,7 +10,7 @@ import pytest
 
 import completed_market_session_gate as gate
 import governed_session_chain as chains
-import market_only_pit_eligibility as eligibility
+import stocklookup_core.evidence.market_only_pit_eligibility as eligibility
 import prospective_market_evidence_retention as old_retention
 import prospective_market_snapshot_contract as market
 import prospective_pit_capture as capture
@@ -441,7 +441,7 @@ def test_exact_official_ledger_uses_native_rows_no_scale_guess_and_retains_misma
 def test_actual_existing_probe_once_and_true_response_time(tmp_path, monkeypatch):
     import canonical_daily_operation as daily
     import dnse_access
-    import dnse_bulk_market_data
+    from stocklookup_core.acquisition import dnse_bulk_market_data
     import dnse_secrets_env
     from test_production_call_shape_smoke import _offline_smoke_guard
     raw = b'{ "workingDates" : ["2026-10-05", "2026-10-06"] }'

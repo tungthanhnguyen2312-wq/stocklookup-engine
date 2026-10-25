@@ -79,7 +79,7 @@ from stocklookup_core.evidence import current_official_market_universe
 from stocklookup_core.evidence import current_research_official_universe_scope
 import stocklookup_core.decision.current_thesis_case_context as current_thesis_case_context
 import stocklookup_core.valuation.current_valuation_opportunity_integration as current_valuation_opportunity_integration
-import dashboard_home_summary
+from stocklookup_core.decision import dashboard_home_summary
 import stocklookup_core.financial.financial_v2_current_input_authority as financial_v2_current_input_authority
 import current_foreign_flow_enrichment_operation
 import dnse_foreign_flow_store
@@ -779,7 +779,7 @@ def materialize_and_write_current_product_projections(
     try:
         home_summary = dashboard_home_summary.build_home_summary(screener_master, requested_at=requested_at)
         try:
-            from workspace_public_read_model import build_public_read_model
+            from stocklookup_core.decision.workspace_public_read_model import build_public_read_model
             workspace_index, _ = build_public_read_model(workspace)
             home_summary = dashboard_home_summary.with_notable_cards(home_summary, workspace_index)
         except (ValueError, TypeError, KeyError):

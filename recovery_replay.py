@@ -913,7 +913,7 @@ class RunCounters:
 
 def governed_recovery_fetcher() -> Fetcher:
     """The existing governed DNSE fetch boundary, asked to retain the exact response bytes."""
-    from dnse_bulk_market_data import fetch_capability_raw
+    from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 
     def fetch(capability: str, **kwargs: Any) -> Mapping[str, Any]:
         return fetch_capability_raw(capability, retain_raw_bytes=True, **kwargs)

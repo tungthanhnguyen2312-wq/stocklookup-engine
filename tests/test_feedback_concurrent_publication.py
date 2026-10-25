@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-import feedback_resource_guard as guard
+import stocklookup_core.acquisition.feedback_resource_guard as guard
 from feedback_publication_lock import publication_locks
 import prospective_feedback_streaming as streaming
 from tests.test_prospective_feedback_streaming import _corpus, _add_modern

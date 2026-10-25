@@ -94,7 +94,7 @@ class DryRunTests(unittest.TestCase):
     def test_dry_run_makes_no_request_and_needs_no_credentials(self):
         output = io.StringIO()
         with patch.dict(os.environ, {}, clear=True), redirect_stdout(output), patch(
-            "dnse_bulk_market_data._default_request_get"
+            "stocklookup_core.acquisition.dnse_bulk_market_data._default_request_get"
         ) as request:
             self.assertEqual(0, main([]))
         request.assert_not_called()
@@ -107,7 +107,7 @@ class LiveModeCredentialTests(unittest.TestCase):
     def test_live_without_credentials_prints_sentinel_and_exits_2(self):
         output = io.StringIO()
         with TemporaryDirectory() as tmp, patch.dict(os.environ, {}, clear=True), redirect_stdout(output), patch(
-            "dnse_bulk_market_data._default_request_get"
+            "stocklookup_core.acquisition.dnse_bulk_market_data._default_request_get"
         ) as request:
             exit_code = main(["--live", "--secrets-file", str(Path(tmp) / "does-not-exist.env")])
         self.assertEqual(2, exit_code)
@@ -120,7 +120,7 @@ class LiveModeCredentialTests(unittest.TestCase):
         with TemporaryDirectory() as tmp, patch.dict(
             os.environ, {"DNSE_API_KEY": "k", "DNSE_API_SECRET": "s"}, clear=True
         ), redirect_stdout(output), patch(
-            "dnse_bulk_market_data._default_request_get",
+            "stocklookup_core.acquisition.dnse_bulk_market_data._default_request_get",
             side_effect=lambda *_a, **_k: _FakeResponse(200, payload),
         ):
             exit_code = main(["--live", "--runtime-root", tmp, "--run-id", "cli-run-1",

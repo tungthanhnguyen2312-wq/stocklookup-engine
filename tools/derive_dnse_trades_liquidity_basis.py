@@ -42,7 +42,7 @@ import dnse_secrets_env  # noqa: E402
 import dnse_trades_liquidity_basis as basis  # noqa: E402
 import vn_time  # noqa: E402
 from dnse_access import BASE_URL, CREDENTIAL_ENV_PAIRS, auth_headers, credentials_for_request  # noqa: E402
-from dnse_market_data import resolve_endpoint  # noqa: E402
+from stocklookup_core.acquisition.dnse_market_data import resolve_endpoint  # noqa: E402
 
 CREDENTIAL_INJECTION_REQUIRED = "DNSE_CREDENTIAL_INJECTION_REQUIRED"
 

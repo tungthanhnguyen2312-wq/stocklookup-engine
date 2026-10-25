@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 import personal_investment_decision_action_center as ac
-import asymmetric_dislocation_research as asymmetric
-import daily_opportunity_decision_queue as queue
+import stocklookup_core.research.asymmetric_dislocation_research as asymmetric
+import stocklookup_core.decision.daily_opportunity_decision_queue as queue
 from stocklookup_core.decision import current_opportunity_prioritization as priority
 from stocklookup_core.decision import integrated_investment_decision_product as iid
 

@@ -94,7 +94,7 @@ from canonical_dashboard_runtime_release import (  # noqa: E402
 from canonical_trusted_subset_release import (  # noqa: E402
     CanonicalTrustedSubsetError, materialize_canonical_trusted_subset,
 )
-from checkout_cleanliness_contract import (  # noqa: E402
+from stocklookup_core.acquisition.checkout_cleanliness_contract import (  # noqa: E402
     CONSUMER_APPROVED_UNTRACKED_PREFIXES, classify_checkout_cleanliness,
 )
 from pending_session_input_freeze import classify_pending_input_freeze  # noqa: E402
@@ -102,7 +102,7 @@ from governed_publication_completion import (  # noqa: E402
     resolve_dashboard_origin_main_sha,
     verify_existing_publication_completion,
 )
-import owner_daily_journal as journal  # noqa: E402
+import stocklookup_core.acquisition.owner_daily_journal as journal  # noqa: E402
 from owner_daily_progress import OwnerDailyProgress, PHASES, PROGRESS_PATH_ENV, safe_progress_path, recent_phase_estimates  # noqa: E402
 from owner_daily_progress import RUN_ID_ENV, RUN_STARTED_AT_ENV, RUN_STARTED_MONOTONIC_ENV  # noqa: E402
 
@@ -947,8 +947,8 @@ def verify_retained_daily_brief_for_handoff(source: Path, session: str, *, root:
 
 
 def publish_ai_handoff(root: Path, handoff_repo: Path, completion: Mapping[str, Any]) -> dict[str, Any]:
-    from ai_handoff_publication import HandoffPublicationError, publish, required_files, verify_remote_publication
-    from post_handoff_presentation_attestation import read_attestation
+    from stocklookup_core.research.ai_handoff_publication import HandoffPublicationError, publish, required_files, verify_remote_publication
+    from stocklookup_core.decision.post_handoff_presentation_attestation import read_attestation
     preflight_repository(handoff_repo, expected_name="stocklookup-ai-handoffs", expected_remote_fragment="stocklookup-ai-handoffs")
     source = Path(completion["source"])
     # The sealed operation manifest decides whether the conditional opportunity queue is part of
@@ -1196,7 +1196,7 @@ def _presentation_bound_state(root: Path, session: str) -> str:
     an unknown basis. See CANONICAL_DAILY_OWNER_PUBLICATION_RESUME_AND_PRESENTATION_JOIN_V1
     section 4."""
     try:
-        from post_handoff_presentation_attestation import presentation_bound_state, read_attestation
+        from stocklookup_core.decision.post_handoff_presentation_attestation import presentation_bound_state, read_attestation
         return presentation_bound_state(read_attestation(root, session))
     except Exception:
         return "UNKNOWN"
@@ -1532,7 +1532,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         record = completion.get("record") or {}
         presentation_attestation = None
         try:
-            from post_handoff_presentation_attestation import read_attestation as _read_attestation
+            from stocklookup_core.decision.post_handoff_presentation_attestation import read_attestation as _read_attestation
             presentation_attestation = _read_attestation(root, str(completion["session"]))
         except Exception:
             presentation_attestation = None

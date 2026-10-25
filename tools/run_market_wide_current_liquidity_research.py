@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
 import dnse_secrets_env, vn_time
 from dnse_access import CREDENTIAL_ENV_PAIRS, credentials_for_request
-from dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 from market_wide_current_liquidity_research import build_artifact, content_identity
 DEFAULT_SNAPSHOT=ROOT/"operations-review"/"p3f9b-market-wide-exact-session-scaleout-20260821"/"p3f9b_mva_exact_session_snapshot.json"; DEFAULT_OUT=ROOT/"operations-review"/"market-wide-current-liquidity-research-v1-20260823"
 def _norm(x): return {"ok":bool(x.get("ok")),"body":x.get("body"),"disposition":"PROVIDER_REJECTED" if not x.get("ok") else None,"reason":x.get("error_code")}

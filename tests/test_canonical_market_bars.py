@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import canonical_market_bars as bars
 import prospective_market_snapshot_contract as market
-import market_only_pit_eligibility as pit
+import stocklookup_core.evidence.market_only_pit_eligibility as pit
 import stocklookup_core.decision.integrated_investment_decision_product as product
 import market_wide_historical_research_context as history
 from test_market_only_pit_eligibility import observation, rehash

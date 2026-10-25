@@ -4,7 +4,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from dnse_market_data import (
+from stocklookup_core.acquisition.dnse_market_data import (
     MARKET_DATA_ENDPOINTS,
     DnseProbeError,
     request_capability,

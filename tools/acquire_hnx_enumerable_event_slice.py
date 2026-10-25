@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse, sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(ROOT))
-from hnx_enumerable_universe_kllh_event_disclosure_scaleout import BASE, RIGHTS, fetch, retain, _content, _total
+from stocklookup_core.evidence.hnx_enumerable_universe_kllh_event_disclosure_scaleout import BASE, RIGHTS, fetch, retain, _content, _total
 
 def main() -> None:
     parser = argparse.ArgumentParser()

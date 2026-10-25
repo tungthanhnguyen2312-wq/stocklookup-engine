@@ -1,4 +1,4 @@
-from current_macro_regime import build, content_identity, session_context
+from stocklookup_core.evidence.current_macro_regime import build, content_identity, session_context
 
 def row(identifier,value,previous,release=None):
  return {'indicator_id':identifier,'country_or_region':'X','category':'x','value':value,'unit':'x','observation_date':'2026-08-20','released_at':release,'source':'official','source_identity':identifier,'url':'https://official.example','retrieved_at':'2026-08-24T00:00:00Z','freshness':{'status':'CURRENT_RESEARCH_NOT_HISTORICAL_PIT'},'revision_state':'UNKNOWN','authority':'OFFICIAL_PUBLIC_SOURCE','status':'AVAILABLE','limitations':[],'previous_observation_date':'2026-08-19','previous_value':previous,'raw_payload_sha256':'a'}

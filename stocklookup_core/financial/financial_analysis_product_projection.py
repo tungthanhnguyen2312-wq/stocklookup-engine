@@ -287,8 +287,8 @@ def financial_peer_contexts(*, materialization: Mapping[str, Any] | None,
     if materialization is None:
         return {}
     from stocklookup_core.financial.period_freshness import classify_financial_period_freshness
-    from operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
-    from sector_relative_research_context import MIN_COHORT_MEMBERS
+    from stocklookup_core.financial.operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
+    from stocklookup_core.financial.sector_relative_research_context import MIN_COHORT_MEMBERS
     from stocklookup_core.valuation.current_research_valuation_context import ENGINE_PEER_FEATURES
     from stocklookup_core.financial.financial_analysis_engine_v2 import EXTENDED_RATIO_HISTORY_INPUTS
     contract = "canonical_daily_financial_v2_materialization/v1"

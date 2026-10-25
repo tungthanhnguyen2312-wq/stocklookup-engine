@@ -55,7 +55,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from dnse_access import credential_status, credentials_for_request  # noqa: E402
-from dnse_bulk_market_data import fetch_capability_raw, is_retryable  # noqa: E402
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw, is_retryable  # noqa: E402
 from dnse_secrets_env import ensure_credentials_loaded  # noqa: E402
 import market_raw_lake as lake  # noqa: E402
 from market_data_contracts import RawObservation  # noqa: E402

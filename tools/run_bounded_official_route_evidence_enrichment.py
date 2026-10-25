@@ -11,7 +11,7 @@ if str(ROOT) not in sys.path:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from bounded_official_route_evidence_enrichment import (
+from stocklookup_core.evidence.bounded_official_route_evidence_enrichment import (
     execute_bounded_enrichment,
     OPERATIONS_REVIEW_DIR,
     ENRICHMENT_EVIDENCE_DIR,

@@ -40,7 +40,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from stocklookup_core.acquisition.artifact_io import atomic_write_file, atomic_write_json  # noqa: E402
-from market_wide_financial_coverage import (  # noqa: E402
+from stocklookup_core.financial.market_wide_financial_coverage import (  # noqa: E402
     COVERAGE_CSV_FILENAME,
     COVERAGE_FILENAME,
     build_coverage,

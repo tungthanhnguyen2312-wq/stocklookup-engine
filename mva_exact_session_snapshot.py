@@ -14,7 +14,7 @@ from pathlib import Path
 import sqlite3
 from typing import Any, Callable, Mapping
 
-from dnse_bulk_market_data import fetch_capability_raw
+from stocklookup_core.acquisition.dnse_bulk_market_data import fetch_capability_raw
 from stocklookup_core.evidence.field_identity import stable_id
 from freshness_history import latest_completed_market_day
 

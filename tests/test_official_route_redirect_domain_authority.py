@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from bounded_official_route_evidence_enrichment import (
+from stocklookup_core.evidence.bounded_official_route_evidence_enrichment import (
     CROSS_DOMAIN_REDIRECT_REQUIRES_EVIDENCE,
     ENRICHMENT_EVIDENCE_DIR,
     NO_REDIRECT_SAME_HOST,

@@ -39,7 +39,7 @@ if str(ROOT) not in sys.path:
 from stocklookup_core.acquisition.artifact_io import atomic_write_json  # noqa: E402
 from dnse_access import credential_status, credentials_for_request  # noqa: E402
 from dnse_secrets_env import ensure_credentials_loaded  # noqa: E402
-import dnse_instrument_universe as universe  # noqa: E402
+import stocklookup_core.evidence.dnse_instrument_universe as universe  # noqa: E402
 import market_raw_lake as lake  # noqa: E402
 from market_data_contracts import RawObservation  # noqa: E402
 from runtime_paths import runtime_root as resolve_runtime_root  # noqa: E402

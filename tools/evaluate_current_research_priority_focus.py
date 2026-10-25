@@ -15,7 +15,7 @@ from typing import Any, Mapping, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import daily_opportunity_decision_queue as decision_queue
+import stocklookup_core.decision.daily_opportunity_decision_queue as decision_queue
 import daily_research_session_operations as operations
 import next_session_decision_brief as next_session
 import personal_investment_decision_action_center as action_center

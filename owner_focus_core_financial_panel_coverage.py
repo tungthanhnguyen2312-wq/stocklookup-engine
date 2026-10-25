@@ -15,7 +15,7 @@ from typing import Any, Mapping, Sequence
 from owner_research_focus import CONTRACT_VERSION as OWNER_FOCUS_CONTRACT, owner_focus_tickers
 from p3f13_official_financial_evidence_scaleout import execute as execute_p3f13
 from market_wide_current_fundamental_research import execute as execute_fundamental
-from sector_financial_taxonomy import REAL_DATA_VALIDATED_SECTORS
+from stocklookup_core.financial.sector_financial_taxonomy import REAL_DATA_VALIDATED_SECTORS
 
 
 ROOT = Path(__file__).resolve().parent

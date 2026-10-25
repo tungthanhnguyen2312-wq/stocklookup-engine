@@ -213,7 +213,7 @@ def test_no_opt_in_is_identical_and_no_production_or_public_consumer():
     tree = ast.parse((root / "personal_investment_decision_action_center.py").read_text(encoding="utf-8"))
     resolver = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "evaluate_from_retained_artifacts")
     assert "opportunity_cost_input" not in ast.unparse(resolver)
-    for filename in ("canonical_post_close_pipeline.py", "tools/release_orchestrator.py", "ai_handoff_publication.py", "tools/run_owner_daily.py"):
+    for filename in ("canonical_post_close_pipeline.py", "tools/release_orchestrator.py", "stocklookup_core/research/ai_handoff_publication.py", "tools/run_owner_daily.py"):
         assert "action_center_opportunity_cost" not in (root / filename).read_text(encoding="utf-8")
 
 

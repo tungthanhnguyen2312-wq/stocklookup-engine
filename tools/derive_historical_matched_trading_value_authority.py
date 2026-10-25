@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from stocklookup_core.evidence.current_official_market_universe import _identity as official_identity
-from historical_matched_trading_value_authority import build_historical_matched_trading_value_authority, content_identity
+from stocklookup_core.valuation.historical_matched_trading_value_authority import build_historical_matched_trading_value_authority, content_identity
 
 OPS = ROOT / "operations-review"
 DEFAULT_OUTPUT_DIR = OPS / "historical-matched-trading-value-authority-v1"

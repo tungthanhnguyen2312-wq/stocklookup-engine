@@ -26,7 +26,7 @@ from entity_classification_contract import (
     EntityClass,
     resolve_layered_entity_classification,
 )
-from sector_financial_taxonomy import (
+from stocklookup_core.financial.sector_financial_taxonomy import (
     ALL_SECTOR_METRICS,
     BANK_METRICS,
     CORPORATE_METRICS,
@@ -290,7 +290,7 @@ def run_p2f1_validation(root: Path) -> dict[str, Any]:
     # 7. Zero Ticker-Specific Branch Governance Audit
     print(f"\n7. ZERO TICKER-SPECIFIC PRODUCTION BRANCH AUDIT:")
     prod_files = [
-        ROOT / "sector_financial_taxonomy.py",
+        ROOT / "stocklookup_core/financial/sector_financial_taxonomy.py",
         ROOT / "financial_disclosure_recognizer.py",
     ]
     ticker_branch_findings = []

@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from stocklookup_core.evidence.official_route_ownership_evidence import qualify
-from prospective_route_ownership_review import (
+from stocklookup_core.evidence.prospective_route_ownership_review import (
     BRANDING_ONLY,
     FULL_LEGAL_ENTITY_NAME,
     IDENTITY_CONFLICT,
@@ -18,7 +18,7 @@ from prospective_route_ownership_review import (
     generate_registry_candidates,
     review_retained_object,
 )
-from retained_official_route_ownership_evidence import OFFLINE_RETAINED_EVIDENCE_CATALOG
+from stocklookup_core.evidence.retained_official_route_ownership_evidence import OFFLINE_RETAINED_EVIDENCE_CATALOG
 
 
 ROOT = Path(__file__).resolve().parents[1]

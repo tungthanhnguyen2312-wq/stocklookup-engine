@@ -549,7 +549,7 @@ def test_fetcher_without_exact_bytes_is_an_integrity_stop(tmp_path):
 
 
 def test_governed_fetch_boundary_returns_exact_bytes_without_credentials():
-    import dnse_bulk_market_data as bulk
+    import stocklookup_core.acquisition.dnse_bulk_market_data as bulk
 
     exact = b'{ "t" : [1714000000] ,"o":[1],"h":[1],"l":[1],"c":[1],"v":[1] }'
 
@@ -587,7 +587,7 @@ def test_governed_fetch_boundary_returns_exact_bytes_without_credentials():
 
 
 def test_governed_recovery_fetcher_asks_the_boundary_for_exact_bytes(monkeypatch):
-    import dnse_bulk_market_data as bulk
+    import stocklookup_core.acquisition.dnse_bulk_market_data as bulk
 
     captured = {}
     monkeypatch.setattr(bulk, "fetch_capability_raw", lambda capability, **kw: captured.update(kw, capability=capability) or {})
@@ -596,7 +596,7 @@ def test_governed_recovery_fetcher_asks_the_boundary_for_exact_bytes(monkeypatch
 
 
 def test_http_date_retry_after_is_exposed_only_for_recovery_opt_in():
-    import dnse_bulk_market_data as bulk
+    import stocklookup_core.acquisition.dnse_bulk_market_data as bulk
     from datetime import timezone
     from email.utils import format_datetime
 
@@ -1103,7 +1103,8 @@ def test_recovery_modules_never_import_a_vnstock_provider_package():
 
     imported = set(re.findall(r"^\s*(?:from|import)\s+([A-Za-z_][\w.]*)", source, flags=re.M))
     assert not imported & {"vnstock", "vnai", "vn_stock_pipeline", "vnstock_worker_client", "publish_dashboard",
-                           "ai_handoff_publication", "dashboard_release_publisher",
+                           "ai_handoff_publication", "stocklookup_core.research.ai_handoff_publication",
+                           "dashboard_release_publisher",
                            "integrated_investment_decision_product", "daily_integrated_decision_brief",
                            "canonical_daily_operation", "next_session_decision_brief"}
 

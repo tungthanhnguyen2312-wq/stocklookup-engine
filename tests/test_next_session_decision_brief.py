@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ai_handoff_publication import _unsafe
+from stocklookup_core.research.ai_handoff_publication import _unsafe
 from daily_research_session_operations import load_registry
 from next_session_decision_brief import (
     AVAILABLE,
@@ -302,7 +302,7 @@ class TestReal27To28Replay:
         assert via_path["artifact_sha256"] == direct["artifact_sha256"]
 
     def test_handoff_inclusion(self, brief, tmp_path):
-        from ai_handoff_publication import build_package
+        from stocklookup_core.research.ai_handoff_publication import build_package
 
         current_dir, _previous_dir = _current_and_previous_dirs()
         brief_path = tmp_path / "next_session_decision_brief.json"

@@ -7,7 +7,7 @@ import calendar as civil_calendar
 from typing import Mapping, Sequence
 
 import prospective_market_snapshot_contract as market
-import market_only_pit_eligibility as pit
+import stocklookup_core.evidence.market_only_pit_eligibility as pit
 import session_bar_integrity as integrity
 
 CONTRACT_VERSION = "canonical_market_bar/v1"

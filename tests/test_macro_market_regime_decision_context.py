@@ -44,7 +44,7 @@ def test_missing_axis_is_unknown_and_unofficial_source_cannot_promote_it():
 
 
 def test_omitted_axis_and_wrong_contract_stay_unknown():
-    from current_macro_regime import build as build_macro
+    from stocklookup_core.evidence.current_macro_regime import build as build_macro
 
     scratch = regime.scratch_acceptance()
     macro = build_macro(
@@ -55,7 +55,7 @@ def test_omitted_axis_and_wrong_contract_stay_unknown():
     del macro["state_axes"]["DOMESTIC_LIQUIDITY"]
     macro.pop("artifact_identity", None)
     macro.pop("artifact_sha256", None)
-    from current_macro_regime import content_identity
+    from stocklookup_core.evidence.current_macro_regime import content_identity
     macro.update(content_identity(macro))
     context = regime.build_context(macro=macro, session="SCRATCH_CURRENT")
     assert context["dimensions"]["DOMESTIC_LIQUIDITY"]["state"] == "UNKNOWN"
@@ -72,7 +72,7 @@ def test_current_evidence_cannot_backdate_and_publication_date_is_respected():
     # The scratch context is not a macro artifact. Use the macro built inside scratch via a fresh call.
     fresh = regime.scratch_acceptance()
     # session_context reads current_macro_regime artifacts only. Reconstruct by identity check:
-    from current_macro_regime import build as build_macro
+    from stocklookup_core.evidence.current_macro_regime import build as build_macro
 
     observations = []
     # Pull the already-classified scratch by rebuilding through the module helper's macro identity.
@@ -94,7 +94,7 @@ def test_fred_latest_vintage_is_not_historical_pit_and_release_date_blocks_an_ea
     assert "GLOBAL_RATES" in context["coverage"]["current_research_only_macro_dimensions"]
     macro_identity = context["upstream_identities"]["macro"]
     # A publication after the equity session makes the whole macro bind unavailable.
-    from current_macro_regime import build as build_macro
+    from stocklookup_core.evidence.current_macro_regime import build as build_macro
 
     def row(identifier, value, previous, release=None):
         return {

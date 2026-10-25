@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 
 import bounded_artifact_stream as bas  # noqa: E402
 import canonical_post_close_pipeline as pipeline  # noqa: E402
-import feedback_resource_guard as guard  # noqa: E402
+import stocklookup_core.acquisition.feedback_resource_guard as guard  # noqa: E402
 import prospective_feedback_streaming as streaming  # noqa: E402
 
 try:

@@ -138,7 +138,7 @@ def build_artifact(*, opportunity: Mapping[str,Any], scenario: Mapping[str,Any]|
   artifact["source_artifact_identities"]["integrated_scenario_binding"]=integrated_scenario_binding["artifact_identity"]
   artifact["integrated_scenario_binding_header"]={k:copy.deepcopy(v) for k,v in integrated_scenario_binding.items() if k!="records"}
  if regime_context is not None:
-  from macro_market_regime_decision_context import validate_context
+  from stocklookup_core.decision.macro_market_regime_decision_context import validate_context
   validate_context(regime_context, opportunity.get("research_session"))
   artifact["macro_market_regime_context"]=copy.deepcopy(regime_context)
   artifact["source_artifact_identities"]["macro_market_regime_context"]=regime_context["artifact_identity"]
@@ -150,7 +150,7 @@ def build_artifact(*, opportunity: Mapping[str,Any], scenario: Mapping[str,Any]|
  artifact.update(content_identity(artifact));return artifact
 def replay(a:Mapping[str,Any])->None:
  if a.get("macro_market_regime_context") is not None:
-  from macro_market_regime_decision_context import validate_context
+  from stocklookup_core.decision.macro_market_regime_decision_context import validate_context
   validate_context(a["macro_market_regime_context"], a.get("research_session"))
  if a.get("contract_version")!=CONTRACT_VERSION or a.get("artifact_sha256")!=content_identity(a).get("artifact_sha256"):raise CurrentResearchDecisionPacketError("PACKET_IDENTITY_MISMATCH")
  records=a.get("records") or {}

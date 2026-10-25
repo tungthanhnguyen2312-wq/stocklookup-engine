@@ -116,7 +116,7 @@ def test_duplicate_matrix_rows_refused(tmp_path):
 
 
 def card_fixture():
-    import dashboard_home_summary as home
+    import stocklookup_core.decision.dashboard_home_summary as home
     cards = {ticker: {"ticker": ticker, "as_of_session": "2026-10-14",
                        "research_action_posture": "EARLY_WATCH", "entry_state": "BASE_BUILDING",
                        "evidence_currency": "CURRENT_SESSION", "position_context": {"status": "UNKNOWN"},
@@ -146,7 +146,7 @@ def test_card_audit_uses_insertion_order_and_all_nine_fields():
     ("selection", "CARD_CONTRACT_MISMATCH"),
 ])
 def test_card_audit_rejects_rehashed_semantic_tampering(defect, reason):
-    import dashboard_home_summary as home
+    import stocklookup_core.decision.dashboard_home_summary as home
     summary, index = card_fixture()
     block = summary["notable_cards"]
     if defect == "reason":

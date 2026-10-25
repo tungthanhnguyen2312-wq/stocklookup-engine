@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from current_macro_regime import build as build_macro, content_identity as macro_identity
+from stocklookup_core.evidence.current_macro_regime import build as build_macro, content_identity as macro_identity
 from stocklookup_core.evidence.vietnam_official_macro_evidence import acquire, build, current_macro_observations
 
 BASE_MACRO = ROOT / "operations-review" / "current-macro-regime-v1-20260824" / "current_macro_regime_artifact.json"

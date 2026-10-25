@@ -24,11 +24,11 @@ from pathlib import Path
 
 import pytest
 
-import ai_handoff_publication as handoff
+import stocklookup_core.research.ai_handoff_publication as handoff
 import canonical_post_close_pipeline as pipeline
 import current_official_event_context as event_context
-import owner_daily_journal as journal
-import post_handoff_presentation_attestation as presentation_attestation
+import stocklookup_core.acquisition.owner_daily_journal as journal
+import stocklookup_core.decision.post_handoff_presentation_attestation as presentation_attestation
 from daily_research_session_operations import _identity as operation_identity_of
 from tools import run_owner_daily as workflow
 

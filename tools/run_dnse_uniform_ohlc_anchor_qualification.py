@@ -17,7 +17,7 @@ from dnse_access import BASE_URL, auth_headers, credentials_for_request
 from stocklookup_core.evidence.dnse_closed_session_ohlc_representation import (  # noqa: E402
     CONTRACT_VERSION, FIELDS, IDENTITY_TRANSFORMATION, parse_raw_ohlc_bytes, uniform_anchor,
 )
-from dnse_market_data import resolve_endpoint  # noqa: E402
+from stocklookup_core.acquisition.dnse_market_data import resolve_endpoint  # noqa: E402
 from dnse_secrets_env import ensure_credentials_loaded  # noqa: E402
 from stocklookup_core.evidence.fhsc_retained_live_reconciliation import parse_retained_history  # noqa: E402
 from stocklookup_core.evidence.provider_reference_reconciliation import (  # noqa: E402

@@ -23,7 +23,7 @@ def child(args):
     import daily_research_session_operations as operations
     import stocklookup_core.decision.integrated_investment_decision_product as iid
     from ai_research_session_delivery import build_delivery
-    from feedback_resource_guard import memory_status
+    from stocklookup_core.acquisition.feedback_resource_guard import memory_status
     code_paths = [Path(module.__file__) for module in (operations,iid)]
     code_paths += [args.code_root/name for name in ('bounded_artifact_stream.py',
         'ai_research_session_delivery.py','prospective_decision_retention.py','multi_session_signal_velocity.py',
@@ -200,7 +200,7 @@ def main():
         child(args)
         return
     sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-    from feedback_resource_guard import ResourcePolicy, run_bounded
+    from stocklookup_core.acquisition.feedback_resource_guard import ResourcePolicy, run_bounded
     command = [sys.executable,'-B',str(Path(__file__).resolve()),*sys.argv[1:],'--child']
     policy = ResourcePolicy(args.deadline,int(args.memory_gib*1024**3),0,0,0)
     result = run_bounded(command,cwd=args.code_root,policy=policy,result_path=args.result,

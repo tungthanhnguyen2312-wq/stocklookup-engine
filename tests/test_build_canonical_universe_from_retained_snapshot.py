@@ -16,7 +16,7 @@ if str(TOOLS) not in sys.path:
 from build_canonical_universe_from_retained_snapshot import (  # noqa: E402
     RetainedSnapshotIntegrationError, build_from_retained_snapshot,
 )
-import dnse_instrument_universe as universe  # noqa: E402
+import stocklookup_core.evidence.dnse_instrument_universe as universe  # noqa: E402
 
 
 def _raw_instrument(symbol: str, security_group_id: str, *, market_id: str = "STO") -> dict:

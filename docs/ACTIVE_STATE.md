@@ -27,7 +27,7 @@ Verify governing sources; chat memory/prose recency are not authority (§6).
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
-- [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): LOCAL COMPLETE, OFFLINE/NON_VOTING; #39 candidate; no authority promotion or release.
+- [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Prior-period Daily integration:** [scope](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md); base PR182-184 merged; source transition + historical non-voting cards; LOCAL COMPLETE / NOT PROMOTED.
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.
 - **RELEASED:** PR145/146 source wave; exact historical acceptance remains in [SYSTEM_MAP](SYSTEM_MAP.md). No new source authority or production admission follows.
@@ -159,7 +159,7 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
    checkout. Bands: [owner_daily_host_preflight_contract.md](owner_daily_host_preflight_contract.md).
 2. Producer, Consumer (`ai-core-private`) and Dashboard (`market-dashboard`) folders (GitHub `stocklookup-engine`/`-ai-research`/`-dashboard` since 2026-10-24, [identity](../release_checkout_identity.py)) pass the Owner
    repository preflight (`tools/run_owner_daily.py`): right repo/origin, on `main`, clean, fast-forwardable.
-   Untracked-path allowances are **per checkout** and defined by `checkout_cleanliness_contract.py` as applied
+   Untracked-path allowances are **per checkout** and defined by `acquisition/checkout_cleanliness_contract.py` as applied
    there: the Consumer allows only `.worktrees/` (`CONSUMER_APPROVED_UNTRACKED_PREFIXES`); Producer and
    Dashboard checks use the default `APPROVED_RUNTIME_EVIDENCE_PREFIXES` (specific `data/<store>/` evidence
    subdirectories, not all of `data/`). Tracked changes block, except one additive pre-Producer registry

@@ -7,7 +7,7 @@ from stocklookup_core.decision.opportunity_ranking import evaluate_opportunity
 from stocklookup_core.research.scenario_analysis import evaluate_scenario_analysis
 from stocklookup_core.decision.opportunity_snapshot import build_snapshot
 from stocklookup_core.decision.opportunity_snapshot import RetentionError,append_snapshot,replay_vnm
-from vnm_shadow_backtest import run_shadow_backtest
+from stocklookup_core.portfolio.vnm_shadow_backtest import run_shadow_backtest
 
 VERSION="1.0.0"
 class ReconstructionError(ValueError):pass
