@@ -1,12 +1,6 @@
 # Stock Lookup — Canonical Daily Pipeline
 
 Canonical Daily order, including the Macro V1 corrective. Code governs this view.
-
-The [16-GiB host corrective](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md)
-keeps this order: delivery projects rows on demand, large registered JSON avoids whole-file
-Unicode buffers, Producer planning inputs die before operation resolution, and Owner M1
-verification reads its required IID graph through the core bounded parser.
-Host admission thresholds and all production/evidence gates remain unchanged.
 Current-state facts: [ACTIVE_STATE.md](ACTIVE_STATE.md). Authority per output: [AUTHORITY.md](AUTHORITY.md).
 
 [Capacity](capacity_recovery_phase1_contract.md): adapter offline; delivery reuse disabled.
