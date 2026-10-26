@@ -120,3 +120,6 @@ Hosted CI and the final exact PR head are delivery evidence, not historical know
 or a main release. Stop at the open review PR; no Owner decision is needed to accept
 these bounded source facts. Any factor-policy or stronger authority change needs
 its own separate authorization and evidence.
+
+Native local implementation checkpoint: `0a3073b62675cdabff1b6e21b3522f7cf0aeaca1`.
+Current milestone COMPLETE / LOCAL_IMPLEMENTATION_COMPLETE_NOT_PROMOTED; queue empty.

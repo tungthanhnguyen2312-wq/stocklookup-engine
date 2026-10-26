@@ -5,7 +5,7 @@ Verified analytical baseline 2026-10-14 `a9c799397a74641a0e16c8ea84454d2dc4d0745
 Nothing below auto-starts; native standing admission required (AI_RULES 11).
 Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
-## NOW — SSI/POW OFFICIAL CA EVIDENCE (REVIEW CANDIDATE)
+## NOW — SSI/POW OFFICIAL CA EVIDENCE (LOCAL COMPLETE / REVIEW CANDIDATE)
 
 [Scope](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md): eight complete
 originals; separate event legs, receipt-forward facts, existing ledger/continuity/factor gates.
