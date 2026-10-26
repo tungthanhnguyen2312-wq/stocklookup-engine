@@ -263,9 +263,8 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 5. BLOCKED (evidence-blocked; do not work around)
 
-- CA: HPG/PVD factors qualified offline, known from 2026-10-25 receipts only;
-  0 historically knowable factors. PIT-adjusted history/backtest/execution stay blocked.
-  Prospective raw-as-traded: only bars equal to official HOSE; historical raw PARTIAL/research.
+- [CA](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md): SSI/POW facts qualified offline; mixed factors/PIT blocked.
+  HPG/PVD unchanged, known from Oct25 receipts only. Historical raw PARTIAL; prospective raw needs HOSE parity.
 - `ACTIVE_UNIVERSE` authority: `UNKNOWN` for all instruments (no official listing-status proof from DNSE).
 - Reverse / intrinsic valuation outputs: no governed intrinsic evaluator output or FCFF inputs.
 - Execution-grade liquidity, canonical participation/horizon policy, position sizing authority.

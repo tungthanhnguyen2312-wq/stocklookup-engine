@@ -1,0 +1,1542 @@
+{
+ "documents": {
+  "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+    "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6
+    },
+    "pages": [
+     {
+      "citation_id": "e5a0d0e44d1acec24e0b4c94b84db79880869d7f4918a1e5485bbe0cc58aa271",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "materialization_id": "84d7acc115d8a11d608b5731d44dbd579bba32ee61c778c660aa4bbc8a7a1649",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "59cc3d885df1b7a9689042d0ab166a8725eaaa1b4c13eff2bda3eb05545c7875",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHÒ HÓ CHỈ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố: ²²30 /TB—SGDHCM Thành phố Hồ Chí Minh, ngày 04 tháng 1² năm ²0²5\r\nTHÔNG BÁO\r\nVề ngày đăng ký cuối cùng\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký cuối\r\ncùng như sau:\r\n— — Tổ chức niêm yết: Tống Công ty Điện lực Dầu khí Việt Nam — Công ty cổ phần\r\n— : Mã chứng khºán : POW\r\n— : Lºại chứng khºán : Cổ phiếu phổ thông\r\n— : Mệnh giá : 10.000 đồng (mười nghìn đồng)\r\n— — Ngày giaº dịch không hưởng quyền : 10/1²/²0²5 c emā\r\n— — Ngày đăng ký cuối cùng : 11/1²/²0²5 gẹj1f>õ\r\n— : Lý dº và mục đích: ` gỖ GIA\r\n— : Thực hiện quyền mua cổ phiếu Ká\r\n— — Trả cổ tức bằng cổ phiếu \\ .TRN\r\n— : Nhận cổ phiếu phát hành dº thực hiện tăng vốn cố phần từ nguồn vốn chủ sở hữu kề74`,ìỊ1C> v\r\n— — Nội dung cụ thể: u\r\n1. Thực hiện quyền mua cổ phiếu ¥\r\n— — Tỷ lệ thực hiện: 100:1² (100 cổ phiếu được hưởng 100 quyền, 100 quyền được mua\r\n1² cổ phiếu mới).\r\n— — Số lượng chứng khºán dự kiến phát hành: ²81.0²4.59² cổ phiếu\r\n— — Giá phát hành: 10.000 đồng/cổ phiếu\r\n— — Phương án làm tròn, phương án xử lý cổ phiếu lẻ, phương án xử lý cổ phiếu không\r\nđặt mua hết (nếu có):\r\n+ Nguyên tắc làm tròn: Số cổ ủiếu được mua sẽ được làm tròn xuống hàng đơn vị\r\ntheº nguyên tắc làm tròn xuống. Số cổ phiếu lẻ (nếu có) phát sinh khi thực hiện quyền\r\nvà tºàn bộ số phiếu cổ đông hiện hữu không thực hiện quyền mua được xử lý theº\r\nphương án xử lý cổ phiếu lẻ và cổ phiếu không phân phối hết nêu tại Phương án xử\r\n| lý cổ phiếu lẻ và cổ phiếu không đặt mua hết.\r\nVí dụ: cổ đông A hiện đang sở hữu 3²9 cổ phiếu của Tổng Công tỵy vàº ngày chốt\r\ndanh sách cổ đông để thực hiện quyền sẽ nhận được quyền mua 3²9 x 1²/100#39,48\r\ncổ phiếu chàº bán thêm, theº nguyên tắc làm tròn cổ đông 4 sẽ được mua 39 cổ\r\nphiếu.\r\n| + Phương án xử lý cổ phiếu lẻ và cổ phiếu không đặt mua hết (nếu có): Số cổ phiếu |\r\nlẻ (nếu có) phát sinh khi thực hiện quyền và tºàn bộ số cổ phiếu cổ đông hiện hữu\r\nkhông thực hiện quyền mua sẽ dº Hội đồng quản trị xác định tiêu chí và quyết định\r\nchàº bán chº đối tượng khác theº cách thức và điều kiện phù hợp nhưng không thuận\r\nlợi hơn các điều kiện chàº bán chº cổ đông hiện hữu. Số lượng cổ phi`=^Ệu này (nếu cÓ)\r\nHOSE_BM—7.337/1—BH0²—07/²0²² ² ²² 0000000000\r\n",
+      "text_sha256": "59cc3d885df1b7a9689042d0ab166a8725eaaa1b4c13eff2bda3eb05545c7875"
+     },
+     {
+      "citation_id": "e27de5973f7a0f7b191dd9dd031853ffad21c9c8c60e21ec520f6e3dfff00139",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "materialization_id": "3f9fd598b03ce1e1a28a68588fa04af6511c1014c95f57d0827f64a0b64bb7a0",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "7c412f207a1a71635cec73c7b542db096def4bf6151a233e86b3c3729a23f9d4",
+      "text": "sẽ bị hạn chế chuyển nhượng trºng vòng một (01) năm kể từ ngày hºàn thành đợt\r\nchàº bán.\r\n— : Quy định về chuyến nhượng quyền mua:\r\n+ Thời gian chuyển nhượng quyền mua: từ ngày 18/1²/²0²5 đến ngày ²9/1²/²0²5\r\n+ Quyền mua cổ phiếu được chuyển nhượng 01 lần. Bên nhận chuyển nhượng không\r\nđược chuyển nhượng tiếp chº bên thứ ba. Bên chuyển nhượng và bên nhận chuyển\r\nnhượng tự thỏa thuận mức giá chuyển nhượng, thanh tºán tiền và chịu trách nhiệm\r\nthực hiện các nghĩa vụ theº quy định liên quan đến việc chuyển nhượng.\r\n— Quy định về chứng khºán đặt mua:\r\n+ Thời gian đăng ký đặt mua và nộp tiền mua cổ phiếu: từ ngày 18/1²/²0²5 đến ngày\r\n06/01/²0²6\r\n+ Chứng khºán đặt mua là lºại tự dº chuyển nhượng.\r\n— — Địa điểm thực hiện:\r\n+ Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục chuyển nhượng quyền mua,\r\nđăng ký đặt mua và nộp tiền đặt mua cổ phiếu tại các Thành viên lưu ký nơi mở tài\r\nkhºản lưu ký.\r\n+ Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục chuyển nhượng quyền\r\nmua, đăng ký đặt mua và nộp tiền đặt mua cổ phiếu tại Tổng công ty Điện lực Dầu\r\nkhí Việt Nam — CTCP, Tòa nhà Viện Dầu khí Việt Nam, 167 đường Trung Kính,\r\nPhường Yên Hòa, Thành phố Hà Nội và xuất trình căn cước công dân/căn cước.\r\n— — Thông tin về tài khºản phºng tỏa đặt mua chứng khºán:\r\n+ Tên chủ tài khºản: Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\n+ Số TK: 8686663979\r\n+ Nơi mở TK: Ngân hàng TMCP Đầu tư và Phát triển Việt Nam —Chi nhánh Quang Minh.\r\n².. Trả cổ tức bằng cố phiếu.\r\n— — Tỷ lệ thực hiện: 100:4 (Người sở hữu 100 cổ phiếu được nhận 4 cổ phiếu mới).\r\n— : Số lượng chứng khºán dự kiến phát hành: 93.674.864 cổ phiếu\r\n— — Phương án làm tròn, phương án xử lý cổ phiếu lẻ: Số cổ phiếu mỗi cổ đông nhận được\r\nsẽ làm tròn xuống đến hàng đơn vị, số cổ phiếu lẻ (phần thập phân) phát sinh dº làm\r\ntròn xuống đến hàng đơn vị (nếu có) sẽ được hủy bỏ.\r\nJí dụ: Tại ngày đăng ký cuối cùng thực hiện quyền, cố đông A sở hữu 3²9 cổ phiếu,\r\nsố cổ phiếu trả cổ tức mà cổ đông A nhận được theº tỷ lệ phát hành là 3²9 x 4/100 =\r\n13,16 cổ phiếu. Sau khi làm tròn xuống, số cổ phiếu cổ đông A nhận được là 13 cổ\r\nphiếu; 0,16 cổ phiếu lẻ sẽ bị hủy bỏ.\r\n— — Địa điểm thực hiện:\r\n+ Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng cổ phiếu\r\ntại các Thành viên lưu ký nơi mở tài khºản lưu ký.\r\n+ Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng cổ\r\nphiếu tại Tổng công ty Điện lực Dầu khí Việt Nam — CTCP, Tòa nhà Viện Dầu khí\r\nViệt Nam, 167 đường Trung Kính, Phường Yên Hòa, Thành phố Hà Nội và xuất trình\r\ncăn cước công dân/căn cước.\r\nHOSE_BM—7.33/1—BH0²—07/²0²² e ² ² ² ² s ộnh\r\n",
+      "text_sha256": "7c412f207a1a71635cec73c7b542db096def4bf6151a233e86b3c3729a23f9d4"
+     },
+     {
+      "citation_id": "d21ffee05708932bdee1934c481871a4591a0c75ed8a702ff9ab07a2546e21a7",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "materialization_id": "221f172d9688021f947a25c2063f7d774a6883484b1b705885fbe4ebea3cffef",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "e06b53fc1ce21a81941d992937ec45410902d3b9038dc91412eb1df793deaa19",
+      "text": "Eiz²smdaieºmºzeieºiiisaassauauaaaunººazuasuje=me = 0ớ uadaaauaauauaazºaeºmPaPemmazeie=asaaaaaaaaaaaaaaaaaaaaeaiieºalºsssaiaaaiaaauaauuaaaaaaaaa a s ua²²²² 0000000000 00 000 00000000 000000üü0jüüüüaa)\r\n3. Nhận cố phiếu phát hành dº thực hiện tăng vốn cổ phần từ nguồn vốn chủ sở\r\nhữu.\r\n— — Tỷ lệ thực hiện: 100:15 (Người sở hữu 100 cổ phiếu được nhận 15 cổ phiếu mới).\r\n— : Số lượng chứng khºán dự kiến phát hành: 351.²80.740 cổ phiếu\r\n— — Phương án làm tròn, phương án xử lý cổ phiếu lẻ: Số cổ phiếu mỗi cổ đông nhận được\r\n| sẽ làm tròn xuống đến hàng đơn vị, số cổ phiếu lẻ (phần thập phân) phát sinh dº làm\r\ntròn xuống đến hàng đơn vị (nếu có) sẽ được hủy bỏ.\r\nVí dụ: Tại ngày đăng ký cuối cùng thực hiện quyền, cổ đông A sở hữu 3²9 cổ phiếu,\r\nsố cổ phiếu phát hành cổ phiếu tăng vốn cổ phần từ nguồn vốn chủ sở hữu mà cổ\r\nđông A nhận được theº tỷ lệ phát hành là 3²9 x 15/100 = 49,35 cổ phiếu: Sau khi làm\r\ntròn xuống, số cổ phiếu cổ đông A nhận được là 49 cổ phiếu; 0,35 cổ phiếu lẻ sẽ bị\r\nhủy bỏ.\r\n— — Địa điểm thực hiện:\r\n+ Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cổ phiếu phát hành\r\nđể tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại các Thành viên lưu ký nơi mở tài\r\nkhºản lưu ký. “C\r\n+ Đối với chứng khºán chưa lưu ký: người sở hữu làm thủ tục nhận cổ phiếu phát `DỊCH Ề\r\nhành để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại Tổng công ty Điện lực Dầu fflOẶN &\r\nkhí Việt Nam — CTCP, Tòa nhà Viện Dầu khí Việt Nam, 167 đường Trung Kính, fflSH A\r\nPhường Yên Hòa, Thành phố Hà Nội và xuất trình căn cước công dân/căn cước: #.° f ơâ\\ầ\r\nHỌ\r\nKT. TỔNG—GIÁM ĐÓC\r\nNơi nhận: PHÓ TỔ “eếC ỄỄỈỀ’ẸỀ\\\\ PHỤ TRÁCH\r\n— TCNÝY;\r\n— HTGD, GS, TTTT; — ||[#[ CHỨNG KHOÁM\r\n— Lưu: VT, NY ffl).ìk/ | THÀNH PH É\r\nQ V HỒ cHí\r\ns/\r\n| ào\r\n______——_—/r\\ỹ`ỳlỳ\r\n",
+      "text_sha256": "e06b53fc1ce21a81941d992937ec45410902d3b9038dc91412eb1df793deaa19"
+     }
+    ],
+    "pages_processed": 3,
+    "schema_version": "1.0.0",
+    "source_page_count": 3,
+    "ticker": "POW"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+    "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6
+    },
+    "pages": [
+     {
+      "citation_id": "c36c61c635ee38516b06d69a91fc5e0834d84aa8505591e27757231690bf81fe",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "materialization_id": "470dedf461d2eb5aeda0e367de931aa62e8c88db82f41a789982b21bfca388c9",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "d87b92e103b6378fbe68e7ac48b5f70c0495b0370c8a0acee7b4717c53e1c01d",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHO HO CHI MINH Doc lap - Tw do - Hanh phic\r\nSố: 2280 /TB-SGDHCM Thanh phé Hé Chi Minh, ngày 04 thang 12 năm 2025\r\nTHONG BAO\r\nVề ngay dang ky cuối cing\r\nSở Giao dich Chimg khºán Thanh phé Hồ Chi Minh théng bao về ngay dang ky cudi\r\ncling nhu sau:\r\n— — Tổ chức niém yét: Tong Cong ty Dién lực Dau khi Viet Nam — Cong ty cổ phan\r\n- Ma ching khoan : POW\r\n- Loai ching khoan : Cổ phiéu phé thong\r\n- Ménh gia : 10.000 déng (mudi nghin déng)\r\n- Ngay giao dich khong huong quyền : 10/12/2025 aan\r\n— Ngay dang ky cuối cing : 11/12/2025 Zp\r\n- Ly do va muc dich: 1/86 GIA\r\n- Thue hién quyén mua cổ phiéu =\r\n- Tra cé tire bang c6 phiéu igh .TRN\r\n- Nhan c6 phiéu phat hanh do thuc hién ting von cé phan tir nguon von chủ sở hiru Lae =\r\n- N6i dung cu thé: JP.\r\n1. Thue hién quyén mua co phiéu\r\n— Ty lé thu hién: 100:12 (100 cổ phiéu duge hưởng 100 quyén, 100 quyén được mua\r\n12 cổ phiéu mdi).\r\n- §6 luong chứng khoan dy kién phat hanh: 281.024.592 cổ phiéu\r\n- Gia phat hanh: 10.000 déng/cé phiéu\r\n— Phuong án lam tron, phuong án xử ly cổ phiéu lé, phuong án xw ly cổ phiéu khong\r\ndat mua hét (néu có):\r\n+ Nguyén tac lam tron: Số cổ phiéu duoc mua sé được lam tron xudng hang don vi\r\ntheo nguyén tac lam tron xudng. Số cổ phiéu lẻ (néu có) phat sinh khi thuc hién quyén\r\nva toan bộ số phiéu cổ đông hién hữu khéng thuc hién quyén mua được xt ly theo\r\nphuong án xử ly cổ phiéu lẻ va cổ phiéu khong phan phối hét néu tai Phuong án xtr\r\n| lý cổ phiếu lẻ và cổ phiếu không đặt mua hết.\r\nVi du: cổ đông A hién dang sé hitu 329 cổ phiéu của Tong Cong ty vao ngay chét\r\ndanh sách cổ déng dé thuc hién quyén sé nhận được quyền mua 329 x 12/100=39, 48\r\ncổ phiéu chao ban thém, theo nguyén tac lam tron co dong A sé duoc mua 39 cổ\r\nphiếu.\r\n| + Phương án xử lý cổ phiếu lẻ và cổ phiếu không đặt mua hết (nếu có): Số cổ phiếu |\r\nlẻ (nếu có) phát sinh khi thực hiện quyền và tºàn bộ số cổ phiếu cổ đông hiện hữu\r\nkhông thực hiện quyền mua sẽ dº Hội đồng quản trị xác định tiêu chí và quyết định\r\nchàº bán chº đối tượng khác theº cách thức và điều kiện phù hợp nhưng không thuận\r\nlợi hơn các điều kiện chàº bán chº cổ đông hién hữu. Số lượng cổ phiéu nay (néu cé)\r\nHOSE_BM—7.337/1—BH0²—07/²0²² ² ²² 0000000000\r\n",
+      "text_sha256": "d87b92e103b6378fbe68e7ac48b5f70c0495b0370c8a0acee7b4717c53e1c01d"
+     },
+     {
+      "citation_id": "fc1856571240ccc6f757720e457f4cc8ae72f6879e873ead64795cad93c3a407",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "materialization_id": "7ba9c53f1efd1adb635c3a726c0d0bc211e48c310f8551f49c1b487d17cfaa10",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "858dfd3b47b390c5cc77def1ad90f8ef068b687c3250c0bb6dc38ec7ee79552e",
+      "text": "sẽ bị hạn chế chuyển nhượng trºng vòng một (01) năm kể từ ngày hºàn thành đợt\r\nchàº bán.\r\n- Quy dinh về chuyén nhượng quyền mua:\r\n+ Thời gian chuyển nhượng quyền mua: từ ngày 18/1²/²0²5 đến ngày ²9/1²/²0²5\r\n+ Quyền mua cổ phiếu được chuyển nhượng 01 lần. Bên nhận chuyển nhượng không\r\nđược chuyển nhượng tiếp chº bên thứ ba. Bên chuyển nhượng và bên nhận chuyển\r\nnhuong tu thỏa thuận mire gia chuyén nhuong, thanh toan tién va chiu trach nhiém\r\nthuc hién cac nghia vu theo quy dinh lién quan dén viéc chuyén nhuong.\r\n- Quy dinh về ching khoan dit mua:\r\n+ Thời gian dang ky dat mua va n6p tién mua cổ phiéu: tir ngay 18/12/2025 dén ngay\r\n06/01/2026\r\n+ Ching khoan dat mua 1a loai tu do chuyén nhugng.\r\n- Pia diém thực hién:\r\n+ Déi voi ching khoan luu ky: Ngudi sé hữu lam thi tuc chuyén nhuong quyén mua,\r\ndang ky dat mua va nép tién dat mua cé phiéu tai các Thanh vién lưu ky noi mé tai\r\nkhoan luu ky.\r\n+ Déi voi chứng khºán chưa luu ky: Ngudi sở hữu lam thu tuc chuyén nhugng quyén\r\nmua, dang ky dat mua va ndp tién dat mua cé phiéu tai Téng céng ty Dién luc Dau\r\nkhi Viét Nam - CTCP, Toa nha Vién Dau khi Viét Nam, 167 dudng Trung Kinh,\r\nPhuong Yén Hoa, Thanh phé Ha Nội va xuat trinh cin cước céng dân/căn cước.\r\n— Thong tin về tai khoan phong téa dit mua ching khoan:\r\n+ Tén chu tai khoan: Téng Cong ty Dién luc Dau khi Viét Nam - CTCP\r\n+ Số TK: 8686663979\r\n+ Noi mé TK: Ngan hang TMCP Dau tu va Phat trién Viét Nam — Chi nhénh Quang Minh.\r\n2. Tra co ttre bang c6 phiéu.\r\n- Ty lệ thuc hién: 100:4 (Người sé hữu 100 cé phiéu dugc nhan 4 cổ phiéu mdi).\r\n— $6 lượng ching khoan dy kién phat hanh: 93.674.864 cổ phiéu\r\n— Phuong án lam tron, phuong án xử ly cé phiéu lé: Số cổ phiéu mdi cé déng nhan duge\r\nsé lam tron xuống dén hang don vi, số cổ phiéu lẻ (phan thap phan) phat sinh do lam\r\ntron xuống dén hang don vi (néu có) sé được huy bo.\r\nVi du: Tai ngay dang ký cudi cing thc hién quyén, cố đông A so hitu 329 cổ phiéu,\r\nsố cổ phiéu tra cổ tức ma cổ déng A nhận được theo ty lé phat hanh la 329 x 4/100 =\r\n13,16 co phiéu. Sau khi lam tron xudng, số cổ phiéu cé déng A nhận duoc là 13 cd\r\nphiéu; 0,16 cé phiéu lé sé bi hủy bo.\r\n- Pia diém thực hién:\r\n+ Déi voi chimg khºán lưu ky: Nguoi sé hữu lam thu tuc nhận cé tite bang cổ phiéu\r\ntai cac Thanh vién luu ky noi mo tai khoan luu ky.\r\n+ Déi voi ching khoan chưa luu ky: Người so hữu lam thu tuc nhan cổ ttre bang cổ\r\nphiéu tai Téng công ty Dién luc Dau khi Viét Nam — CTCP, Tòa nha Vién Dau khi\r\nViét Nam, 167 dwong Trung Kinh, Phuong Yén Hoa, Thanh phé Ha N6i va xuat trinh\r\ncan cudc cong dan/can cước.\r\nHOSE_BM-7.33/1-BH02-0772022, e ² ² ² ² s ộnh\r\n",
+      "text_sha256": "858dfd3b47b390c5cc77def1ad90f8ef068b687c3250c0bb6dc38ec7ee79552e"
+     },
+     {
+      "citation_id": "d9808dade7e1ceb56eb792ab2696ba5ad6b71e499647228c0a75c9d853eb8731",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "document_sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "materialization_id": "d38d288c20619f080126c01300bc04c2d0f9aefc571a6602b3e515c1973d1c13",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "e9807cd17806ae15bf50e82eb0675e0246cb9d9e1a0006d5e6f0f0168e3b6e22",
+      "text": "Eiz²smdaieºmºzeieºiiisaassauauaaaunººazuasuje=me = 0ớ uadaaauaauauaazºaeºmPaPemmazeie=asaaaaaaaaaaaaaaaaaaaaeaiieºalºsssaiaaaiaaauaauuaaaaaaaaa a s ua²²²² 0000000000 00 000 00000000 000000üü0jüüüüaa)\r\n3. Nhận co phiéu phat hanh dº thực hién tang von co phan tir nguồn von chi sé\r\nhiru.\r\n- Ty lệ thực hién: 100:15 (Ngudi sé hitu 100 cé phiéu duoc nhan 15 cổ phiéu mdi).\r\n— $6 luong ching khodn dy kién phat hanh: 351.280.740 cổ phiéu\r\n— Phuong án lam tron, phương án xt ly cổ phiéu lé: Số cổ phiéu mdi cổ déng nhan duge\r\n| sé lam tron xuống dén hang don vi, số cé phiéu 1é (phan thap phan) phat sinh do lam\r\ntron xuống dén hang don vi (néu c6) sé duge hủy bd.\r\nVi du: Tai ngay dang ký cudi cing thực hién quyén, cổ đông A sé hitu 329 cổ phiéu,\r\nsố cổ phiéu phat hanh cổ phiéu tang vén cé phan tir nguon von chit sở hitu ma co\r\ndong A nhan được theo ty lệ phat hanh la 329 x 15/100 = 49,35 cổ phiéu: Sau khi lam\r\ntron xuong, số cổ phiéu cổ đông A nhận duoc 1a 49 cổ phiéu; 0,35 cổ phiéu lé sé bi\r\nhiy bo.\r\n- Dia diém thực hién:\r\n+ Đối voi ching khºán lưu ky: Ngudi sở hữu lam thu tuc nhan cé phiéu phat hanh\r\ndé tang v6n cổ phan từ nguồn vén chu sé hữu tai cdc Thanh vién luu ky noi mé tai\r\nkhoan lưu ky. “C\r\n+ Đối với chứng khºán chưa lưu ký: người sở hữu làm thủ tục nhận cổ phiếu phát )DICH ‘ay\r\nhanh dé tang von cé phan tir nguén vén chu sở hữu tai Tong céng ty Dién luc Dau <HOAN =\r\nkhi Viét Nam — CTCP, Téa nha Vién Dau khi Viét Nam, 167 dudng Trung Kinh, al A\r\nPhuong Yén Hoa, Thanh phố Ha Nội va xuất trinh cin cước công dân/căn cước: #.° f AY\r\nHO\r\nKT. LON@-GIAM DOC\r\nNoi nhận: PHO TO “eếC ìhồìẠ PHỤ TRÁCH\r\n— TCNY;\r\n— HTGD, GS, TTTT; {f= CHUNG KHOA\r\n- Luu: VT, NY (6).4/ | THANH i É\r\n2\\HO CHI\r\ns/\r\n| ào\r\na\r\n",
+      "text_sha256": "e9807cd17806ae15bf50e82eb0675e0246cb9d9e1a0006d5e6f0f0168e3b6e22"
+     }
+    ],
+    "pages_processed": 3,
+    "schema_version": "1.0.0",
+    "source_page_count": 3,
+    "ticker": "POW"
+   }
+  },
+  "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+    "document_sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6e61dea1da28dac4c39cd2a5a410a413b91ccfb66d467d1a384f3ae1c8cc050b",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+      "document_sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+      "materialization_id": "c7f8b3f0424f946bb82cd9d4772f5327078b14f18144b1fa1ab1e273429c9fec",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "eceb1b589251637343b5e3cf2bbebc8477b3c040914ae17d516f592ab3d4fd9c",
+      "text": "TẬP ĐOÀN CÔNG NGHIỆP — NĂNG LƯỢNG _ CỘNG HÒAXĂHỘICHỦ NGHĨA vIỆT NAM\r\nQUỐC GIA VIỆT NAM Độc lập — Tự dº — Hạnh phúc\r\nTỔNG CÔNG TY ī\r\nĐIỆN LỰC DẦU KHÍ VIỆT NAM — CTCP\r\nTỔNG GÔNG]Hgye:gºớ“ Số: ²¶34 /TB—ĐLDK Hà Nội, ngày:ßå tháng 1² năm ²0²5\r\nCÔNG BÓ THÔNG TIN\r\n— Ủy ban Chứng khºán Nhà nước;\r\n— Sở Giaº dịch Chứng khºán thành phố Hồ Chí Minh.\r\n1. Tên tổ chức: Tổng công ty Điện lực Dầu khí Việt Nam — Công ty cổ phần.\r\n— Mã chứng khºán: POW\r\n— Địa chỉ: Tòa nhà Viện Dầu khí Việt Nam, số 167 đường Trung Kính,\r\nPhường Yên Hòa, Thành phố Hà Nội, Việt Nam.\r\n— Điện thºại:(0²4)²²²10²88 — Fax:(0²4)²²²10388\r\n— E—mail: quanhecºdºng@pvpºwer.vn «\r\n². Nội dung thông tin công bố: 04\r\nNgày ²3/1²/²0²5, Tổng công ty Điện lực Dầu khí Việt Nam — Công ty cổ s|ßůNü1\r\nphần (PV Pºwer) đã nhận được Công văn số 9119/UBCK—QLCB ngày\\«\\“^! mi\r\n²²/1²/²0²5 của Uỷ Ban Chứng khºán Nhà nước về việc Báº cáº kết quả phát Ễợl-v\r\nhành cổ phiếu để trả cổ tức và tăng vố cổ phần từ nguồn vốn chủ sở hữu của POW. ỉ=\r\n3. Thông tin này đã được công bố trên trang thông tin điện tử của Tổng công ty\r\nvàº ngày ²3/1²/²0²5 tại đường dân https://pvpºwer.vn.\r\nChúng tôi xin cam kết các thông tin công bố trên đây là đúng sự thật và hºàn\r\ntºàn chịu trách nhiệm trước pháp luật về nội dung các thông tin đã công bố.\r\nTrân trọng./.\r\nTUQ. TỔNG GIÁM ĐÓC\r\nNơi nhận: NGƯỜI ĐƯỢC ỦyY QUYỀN CBTT\r\n— Như trên; ___. mƯOỄG_BgKINH TẾ KÉ HOẠCH\r\n— HĐQT TCT (để b/c); P —CTTHX}N\r\n— TGĐ TCT (đề b/c); / _«.... \\\r\n— Ban KS TCT (để b/c); _ h na nL hhtt, , .RẦ C\r\n— P.TGĐ T. V. Phương (để b/c); 5 ỀẫỆIJKJHDIIEET ẮỉUC ,;Jl\r\n— Lưu: VT, KTKH (NMT). x 000 Khh 19 ớ |\r\nTài liệu đính kèm: ( àu ẨC;Ự ²²\r\n— CV số 9119/UBCK—QLCB ngày x pµj@&//\r\n²²/1²/²0²5. Ngll}’ễIl Đình Thi\r\n",
+      "text_sha256": "eceb1b589251637343b5e3cf2bbebc8477b3c040914ae17d516f592ab3d4fd9c"
+     },
+     {
+      "citation_id": "7a32ba7e169f6951c3c76a1890472b8a269909c55855abe2e5c735d955d609ad",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+      "document_sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+      "materialization_id": "79d968a8ca865d9268e7572c51dac2142b8a4c2f2a7d15dac00a641de5ff621b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "d50960094f2a452c9e83f9dc379583bc0031fb92e6e0d412e0762c0ceeb68620",
+      "text": "| BỘ TÀI CHÍNH CỘNG HOÀ XÂ HỘI CHỦNGHĨA VIỆTNAM\r\nỦY BAN CHỨNG KHOÁN NHÀ NƯỚC Độc lập — Tự dº — Hạnh phúc\r\nsố:7//² /UBCK—QLCB Hà Nội, ngày.3. tháng |ßnăm ²0²5\r\nV/v báº cáº kết quả phát hành cổ phiếu\r\nđể trả cổ tức và tăng vốn cổ phần từ nguồn\r\nvốn chủ sở hữu của POW\r\nKính gửi: Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\nNgày 19/1²/²0²5, Uỷ ban Chứng khºán Nhà nước (UBCKNN) nhận được Ị\r\nBáº cáº kết quả phát hành cổ phiếu để trả cổ tức và phát hành cổ phiếu để tăng\r\nvốn cổ phần từ nguồn vốn chủ sở hữu theº Báº cáº số ²545/BC—ĐLDK ngày\r\n19/1²/²0²5 của Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP (Công ty, Mã\r\ncổ phiếu: POW, niêm yết tại Sở Giaº dịch Chứng khºán TP. Hồ Chí Minh).\r\nTheº đó, số cổ phiếu Công ty đã phân phối chº cổ đông để trả cổ tức là\r\n93.67².39² cô phiếu, số cổ phiếu Công ty đã phân phối chº cổ đông để tăng vốn |\r\ncổ phần từ nguồn vốn chủ sở hữu là 351.²77.104 cổ phiếu.\r\nUBCKNN đề nghị Công ty liên hệ với Sở Giaº dịch Chứng khºán TP. Hồ T`\\Ễ\r\nChí Minh và Tổng Công ty Lưu ký và Bù trừ Chứng khºán Việt Nam để thực jfg'ịJ nh “5\r\nhiện các thủ tục về đăng ký, lưu ký và niêm yết bổ sung cổ phiếu theº quy định. … ,J,{,Ề l\r\nUBCKNN thông báº để Công ty được biết và thực hiện.`. # CP\r\nNơi nhận: TL. CHỦ TỊCH »8)²\r\n— Như trên; TRƯỞNG BAN QUẢN LÝ CHÀO BÁNCHỨNGKHOÁN\r\n— Chủ tịch (để b/c); ² h 1N\r\n— HSX; f/ỹ Ml'ẹ\r\n—VSDC; ( ß <«—\r\n— Lưu: VT, QLCB, (01b).\\j tả K'Ĩ’ẮỀẮ ²|\r\n\"\"i`ỉử…g; Piến Hùng\r\n",
+      "text_sha256": "d50960094f2a452c9e83f9dc379583bc0031fb92e6e0d412e0762c0ceeb68620"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "POW"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+    "document_sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "a508af52f0c2a9c8c9288e646f49a888fe837ce4b78e2a0641127f94b6465e6f",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+      "document_sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+      "materialization_id": "6aefcf05d673329225cecfce1ac7bacd6d40e5c7d49a7471837d3df18aafadd9",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "f95caf512d6dd5a9d45ca2ed756d0a83193d39e9c96ab2754eb25a7162aa7d7e",
+      "text": "TAP DOAN CONG NGHIỆP — NĂNG LƯỢNG = CỘNG HÒAXĂHỘICHỦ NGHIA VIET NAM\r\nQUOC GIA VIET NAM Déc lap — Ty do — Hanh phic\r\nTONG CONG TY ~~\r\nDIEN LUC DAU KHi VIET NAM — CTCP\r\nTONG GÔNG]Hgye:gºớ“ Sé: 244 /TB-DLDK Ha Nội, ngay2$ thang 12 năm 2025\r\nCONG BO THONG TIN\r\n— Uy ban Chứng khºán Nha nước;\r\n— Sở Giaº dịch Chứng khºán thành phố Hồ Chí Minh.\r\n1. Tên tổ chức: Tổng công ty Điện lực Dầu khí Việt Nam — Công ty cổ phần.\r\n- Mã chứng khºán: POW\r\n— Địa chỉ: Tòa nhà Viện Dầu khí Việt Nam, số 167 đường Trung Kính,\r\nPhường Yên Hoa, Thanh pho Ha Ndi, Việt Nam.\r\n— Dién thoai: (024) 22210288 — Fax: (024) 22210388\r\n- E-mail: quanhecodong@pvpower.vn Ja\r\n2. Noi dung thong tin cong bé: Lf\r\nNgay 23/12/2025, Téng céng ty Dién luc Dau khi Viét Nam — Céng ty cé = (CONG 1\r\nphan (PV Power) da nhận duoc Céng van số 9119/UBCK-QLCB ngày\\«\\“^! 7\r\n22/12/2025 cua Uy Ban Chitng khoan Nha nước về viéc Bao cáº két qua phat es\r\nhanh cé phiéu dé tra cổ tite va tang v6 cổ phan tir nguén vén chu sé hitu cia POW. ar:\r\n3. Thong tin nay da duge céng bố trén trang thong tin dién tir cua Tong céng ty\r\nvao ngay 23/12/2025 tai đường dan https://pvpower.vn.\r\nChing tôi xin cam két cdc théng tin céng bé trén day 1a ding sy that va hoan\r\ntoan chju trach nhiém trước phap luật về nội dung các théng tin da céng bé.\r\nTran trong./.\r\nTUQ. TONG GIAM DOC\r\nNoi nhận: NGUOI DUQC UY QUYEN CBTT\r\n— Như trên; ___. TRUONG BAN KINH TE KE HOACH\r\n— HDQT TCT (4é b/c); SDN\r\n- TGD TCT (dé b/c); iar. S\\\r\n— Ban KS TCT (dé b/c); _ of FONG NN\r\n— P.TGD T. V. Phuong (dé b/c); 5 Ểỉ…ưỄ ẮỉUC |ll\r\n— Lưu: VT, KTKH (NMT). x 000 KH VIET 19 ớ |\r\nTài liệu đính kèm: ca Vt. _\r\n— CV số 9119/UBCK-QLCB ngay i CRF\r\n22/12/2025. Nguyen Pinh Thi\r\n",
+      "text_sha256": "f95caf512d6dd5a9d45ca2ed756d0a83193d39e9c96ab2754eb25a7162aa7d7e"
+     },
+     {
+      "citation_id": "878fd7ed659a9b73658e7e5f95d08eb6a1a5323d6e7add3592aa2ed66430738f",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+      "document_sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+      "materialization_id": "8d89e564b4733a8847357552548a22d269146bad99253312e62ddc26634b0511",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "2e4391274098a512cf02ed46b7a6388311ea4066a155fa70dc81e1dcd25dee1b",
+      "text": "| BỘ TÀI CHÍNH CONG HOA XA HOI CHU NGHIA VIETNAM\r\nUY BAN CHUNG KHOAN NHA NƯỚC Doc lip — Ty do — Hanh phiic\r\n56:9//9 /UBCK—QLCB Ha NGi, ngayI2 thang |ßnăm 2025\r\nViv bao cáº két qua phat hanh cé phiéu\r\ndé tra cổ tức va ting von cổ phan tir nguén\r\nvon chi sé hữu cla POW\r\nKinh gui: Tong Céng ty Dién luc Dau khi Viét Nam — CTCP\r\nNgay 19/12/2025, Uy ban Chimg khoan Nha nước (UBCKNN) nhận duge\r\nBao cáº két qua phat hanh cé phiéu dé tra cé tức va phat hanh cổ phiéu dé tang\r\nvon cé phan tir nguén vén chu sé hữu theo Báº cáº số 2545/BC-DLDK ngày\r\n19/12/2025 cia Tong Céng ty Dién luc Dau khi Viét Nam - CTCP (Cong ty, Ma\r\nco phiéu: POW, niém yet tai Sở Giao dich Chimg khºán TP. Hồ Chi Minh).\r\nTheo dé, số cd phiéu Céng ty da phan phéi cho cé déng dé tra cé tite IA\r\n93.672.392 cô phiéu, số cổ phiéu Céng ty da phan phdi cho cổ déng dé ting von |\r\ncé phan tir nguồn von chi sé hữu là 351.277.104 cổ phiéu.\r\nUBCKNN dé nghi Céng ty lién hé voi Sé Giao dich Chimg khoan TP. Hd ZR\r\nChi Minh va Téng Céng ty Luu ky va Bi trừ Chimg khºán Viét Nam để thuc = nh a\r\nhién cdc thi tuc về dang ky, lưu ky va niém yét bổ sung cé phiéu theo quy dinh. niet a ie\r\nUBCKNN théng bao dé Céng ty duge biét va thực hiện.`. # CP\r\nNơi nhận: TL. CHỦ TỊCH ow\r\n— Nhu trén; TRUONG BAN QUAN LY CHAO BAN CHUNG KHOAN\r\n— Chui tich (4é b/c); faa oe\r\n- HSX; } eR NO\r\n- VSDC; es\r\n— Luu: VT, QLCB, (O78). tả xẮẮỀẮ 2\r\n\\nifong Ven Hing\r\n",
+      "text_sha256": "2e4391274098a512cf02ed46b7a6388311ea4066a155fa70dc81e1dcd25dee1b"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "POW"
+   }
+  },
+  "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554": {
+   "eng_psm6": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+    "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "8c2c8fc8431fae996ebeb10c87244553feefd7631e9ae54c60f582fc5a1cdec8",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+      "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+      "materialization_id": "95565540b4b463733048014f0ab536c9cce47463dc9873a9964e0b6210088073",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=eng psm=6",
+      "ocr_language": "eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "b2d697d7b17ff84be02cce70e7986f18583e62c9c9f0bca7283af9189190a20d",
+      "text": "SO GIAO DICH CHUNG KHOAN CONG HOA XA HOI CHU NGHIA VIET NAM\r\nTHANH PHO HO CHI MINH Doc lap - Tw do - Hanh phic\r\nS6é: 45 /QD-SGDH ai\r\n° Q tea a Thanh pho H6é Chi Minh, ngay 16 thang 09 ndém 2026\r\nQUYET DINH\r\nVé viéc thay doi dang ky niém yét\r\n| —\r\nTONG GIAM BOC SO GIAO DICH CHUNG KHOAN\r\n\r\nTHANH PHO HO CHI MINH\r\n\r\nCan cur Lugt Ching khodn ngay 26 thang 11 nam 2019;\r\n\r\nCan cir Ludt stra déi, bé sung mot sé diéu cia Ludt Ching khodn, Ludt Ké ton,\r\nLudt Kiém todn d6c ldap, Luat Ngén sach nha nuoc, Lugt Quan ly, su dung tai san cong,\r\nLug@t Quan ly thué, Lu@t Thué thu nhdp cé nhén, Luét Dy trit quéc gia, Lut Xv ly vi\r\npham hanh chinh ngay 29 thang 11 ndm 2024;\r\n\r\nCan ck Nghi dinh so 1 55/2020/ND-CP ngay 31 thang 12 nam 2020 cia Chinh phi\r\nquy dinh chi tiét thi hanh m6t s6 diéu cia Luét Ching khodn;\r\n\r\nCan cite Nghi dinh s6 245/2025/ND-CP ngay 11 thang 9 nam 2025 cua Chinh phi\r\nstta doi, b6 sung mét s6 diéu cia Nghi dinh sé ] 55/2020/ND-CP ngay 31 thang 12 nam\r\n2020 cua Chinh phi quy dinh chi tiét thi hanh mét s6 diéu cua Ludt Ching khodn;\r\n\r\nCan ctr Quyét dinh so 07/OD-HDTV ngay 09 thang 7 nim 2021 ctia H6i dong\r\nthanh vién So Giao dich Ching khodn Viét Nam ban hanh Diéu lé t6 chic va hoat déng\r\ncua So Giao dich Chieng khodn Thanh pho H6 Chi Minh;\r\n\r\nCain ctr Quyét dinh s6 22/OD-HDTV ngay 16 thang 3 nam 2026 ctia H6i dong\r\nthanh vién So Giao dich Ching khoan Viét Nam vé viéc ban hanh Quy ché niém yét va\r\ngiao dich chitng khodn niém yét;\r\n\r\nCan ct hé so dé nghi thay doi ding kj niém yét cua Céng ty co phan Ching khodn\r\nSST;\r\n\r\nTheo dé nghi ctia Gidm déc Phong Quan ly niém yet.\r\n\r\nQUYET DINH:\r\n\r\nDiéu 1. Chap thuan cho Céng ty cé phan Ching khoan SSI dugc thay doi niém\r\nyét ching khoan v6i ndi dung nhu sau:\r\n\r\n- Loai ching khodn — : Cé phiéu phé thong\r\n\r\n-Machttng khoan _ : SSI\r\n\r\n- Ménh gid : 10.000 déng\r\n\r\n- $6 lugng ching khodn truée khi thay d6i niém yét: 2.503.089.220 cd phiéu (Hai\r\nty nam tram lé ba triéu khéng tram tam muoi chin nghin hai tram hai muoi cé phiéu)\r\nHOSE_BM-7.34/1-BH03-07/2026\r\n",
+      "text_sha256": "b2d697d7b17ff84be02cce70e7986f18583e62c9c9f0bca7283af9189190a20d"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   },
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+    "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "9733a4d9794574fde50737c51b9dc369e4541ffaaec393750435b1c018c0c0d4",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+      "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+      "materialization_id": "cad65873ed8e4087a7fcd8c9d350f5162b4abfe9ad7ef0dadae8434a7977d371",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "13d70651eadf551d7804d2cd8fa2cc24a3603f14034d4f8b482cca6b90a75e72",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHÒ HỎ CHỈ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố: 745 /QĐ—SGDH thpgā\r\n9 Q DHOM Thành ph Hồô Chí Minh, ngày 16 tháng 09 năm ²0²6\r\n— QUYÉT ĐỊNH\r\nVề việc thay đối đăng ký niêm yết\r\n| —\r\nTỔNG GIÁM ĐÓC SỞ GIAO DỊCH CHỨNG KHOÁN\r\n\r\nTHANH PHÒ HÓ CHỈ MINH\r\n\r\nCăn cứ Luật Chứng khºán ngày ²6 tháng 11 năm ²019;\r\n\r\nGịn cứ Luật sửa đổi, bổ sung một số điều của Luật Chứng khºán, Luật Kế tºán,\r\nLuật Kiêm tºán ă'ộp lập, Luật Ngân sách nhà nước, Luật Quản lý, sử dụng tài sản công,\r\nLuật Quản lý thuê, Luật Thuê thu nhập cá nhân, Luật Dự trữ quốc gia, Luật Xử lý vi\r\nphạm hành chính ngày ²9 tháng 11 năm ²0²4;\r\n\r\nCăn cứ Nghị định số 1 359/²0²0/NĐ—CP ngày 31 tháng 1² năm ²0²0 của Chính phủ\r\nquỵ định chi tiết thi hành một số điều của Luật Chứng khºán;\r\n\r\nCăn cứ Nghị định Ạ’ố`245/2025/NĐ—CP ngày 11 tháng 9 năm ²0²5 của Chính phủ\r\nsửa đổi, bồ sung một số điều của Nghị định số 1 59/²0²0/NĐ—CP ngày 31 tháng 1² năm\r\n²0²0 của Chính phủ quy định chỉ tiết thi hành một số điều của Luật Chứng khºán;\r\n\r\nCăn cứ Quyết định số 07/QĐ—HĐTV ngày 09 tháng 7 năm ²0²1 của Hội đồng\r\nthành viên Sở Giaº dịch Chứng khºán Wệt'Nam ban hành Điểu lệ tô chức và hºạt động\r\ncủa Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh;\r\n\r\nCăn cứ Quyết định số ²²/QĐ—HĐTV ngày 16 tháng 3 năm ²0²6 của Hội đồng\r\nthành viên Sở Giaº dịch Chú'J1_ìg khºán Việt Nam về việc ban hành Quy chề niêm yết và\r\ngiaº dịch chứng khºán niêm yết;\r\n\r\nCăn cứ hồ sơ đề nghị thay đổi đăng ký niêm yết của Công ty cổ phần Chứng khºán\r\nSS1;\r\n\r\nTheº đề nghị của Giám đốc Phòng Quản lý niêm yết.\r\n\r\nQUYÉT ĐỊNH:\r\n\r\nĐiều 1. Chấp thuận chº Công ty cổ phần Chứng khºán SSI được thay đổi niêm\r\nyết chứng khºán với nội dung như sau:\r\n\r\n— Lºại chứng khºán : Cổ phiếu phổ thông\r\n\r\n— Mã chứng khºán : SSI\r\n\r\n— Mệnh giá : 10.000 đồng\r\n\r\n— Số lượng chứng khºán trước khi thay đổi niêm yết: ².503.089.²²0 cổ phiếu (F`ai\r\ntỷ năm trăm lẻ ba triệu không trăm tám mươi chín nghìn hai trăm hai mươi cô phiêu)\r\nHOSE_BM—7.34/1—BH03—07/²0²6\r\n",
+      "text_sha256": "13d70651eadf551d7804d2cd8fa2cc24a3603f14034d4f8b482cca6b90a75e72"
+     },
+     {
+      "citation_id": "60c9e6335456f29bb40ba3ce593f1a595a6c1e94441dc0d70994cbbbad1ec3b8",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+      "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+      "materialization_id": "5f239180ae046c29ecf5208ec804188ff06e97fa8be6c575d8ca059d0289a4c9",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "ff44ea4a7cb9fdb40cd7cdb52c2c15536a69812b4c059d133fa6a5ed232a44a5",
+      "text": "²\r\n\r\n— Số lượng chứng khºán thay đổi niêm yết: 500.²04.581 cổ phiếu (Năm trăm triệu\r\nhai trăm lẻ bôn nghìn năm trăm tám mươi môt cô phiêu)\r\n\r\n— Giá trị chứng khºán thay đổi niêm yết (theº mệnh giá): 5.00².045.810.000 đồng\r\n| (Năm nghìn không trăm lẻ hai tỷ không trăm bôn mươi lăm triệu tám trăm mười nghìn\r\n| đông)\r\n\r\n— Số lượng chứng khºán sau khi thay đổi niêm yết: 3.003.²93.801 cổ phiếu (Ba tỷ\r\n\r\nkhông trăm lẻ ba triệu hai trăm chín mươi ba nghìn tám trăm lẻ một cô phiêu)\r\n\r\n— Giá trị chứng khºán niêm yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n30.03².938.010.000 đồng (Ba mươi nghìn không trăm ba mươi hai tỷ chín trăm ba mươi\r\ntám triệu không trăm mười nghìn đồng)\r\n\r\n— Ngày thay đổi niêm yết có hiệu lực: 18/09/²0²6\r\n\r\n— Lý dº thay đổi niêm yết: Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn\r\nchủ sở hữu.\r\n\r\nĐiều ². Quyết định này có hiệu lực kể từ ngày ký.\r\n\r\nfflệu 3. Công ty gổ phần Chứng khºán SSI, Giám đốc phòng Quản lý niêm wỄt,\r\nGiám đốc phòng Hệ thông giaº dịch, Giám đốc phòng Giám sát giaº dịch, Giám đốc\r\nphòng Thông tin thị trường của Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh\r\nchịu trách nhiệm thi hành Quyết định ủy./ffl,ỉ/\r\n\r\nNơi nhận: 511QNG LÁM ĐÓC\r\n— Như điều 3; ởo'l'ĩ\r\n` — VSDC; ^// SỞGIAODỊCHN——X µ\r\n\r\n— Lưu: VT, NY ffl7ằW »/ CHỨNG ›ẽỀKẵALbJ/ \\ bbỉ/\r\n\r\n* | ,THÀNH PHỜ—//+ ]\r\n\r\n@ \\HỖ CHÍ MINH\r\n\r\nỵỳl B\r\n~Nguyềến Thị Việt Hà\r\nHOSE_BM—7.34/1—BH03—07²0²6 _ ————————————————\r\n/\r\n//\r\n",
+      "text_sha256": "ff44ea4a7cb9fdb40cd7cdb52c2c15536a69812b4c059d133fa6a5ed232a44a5"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+    "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "4a3c40171bfb5d53e63f9cb99e4cfb7c4a513b0436450352ce61bdbea64d5510",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+      "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+      "materialization_id": "d29139a37fbb29006bbbf49c3a6e0f016e90f6e9e3cec9f74f5d01c53cb8a843",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "a550b7e08805f35dc28f38305eb7bf949e0347101ae17a357ed0bceb2ccaf687",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHO HO CHI MINH Doc lap - Tw do - Hanh phic\r\nSố: 745 /QD-SGDH ai\r\n9 Q tea a Thanh pho H6é Chi Minh, ngay 16 thang 09 năm 2026\r\n— QUYET ĐỊNH\r\nVề việc thay doi dang ky niém yết\r\n| —\r\nTONG GIAM BOC SO GIAO DICH CHUNG KHOAN\r\n\r\nTHANH PHO HO CHI MINH\r\n\r\nCan cur Lugt Ching khodn ngay 26 thang 11 nam 2019;\r\n\r\nCan cứ Ludt stra déi, bé sung mot số diéu của Luật Ching khodn, Luật Ké tºán,\r\nLuật Kiém tºán d6c ldap, Luật Ngân sach nha nước, Luật Quan ly, su dung tai san cong,\r\nLuật Quan ly thué, Luật Thué thu nhập cá nhén, Luật Dy trit quéc gia, Luật Xử ly vi\r\npham hanh chinh ngay 29 thang 11 năm 2024;\r\n\r\nCan cứ Nghi dinh số 1 55/2020/ND-CP ngay 31 thang 12 năm 2020 của Chinh phi\r\nquy dinh chi tiét thi hanh m6t số diéu cia Luét Ching khodn;\r\n\r\nCan cứ Nghi dinh s6 245/2025/ND-CP ngay 11 thang 9 nam 2025 cua Chinh phi\r\nstta doi, b6 sung mét số diéu cia Nghị dinh sé 1 55/2020/ND-CP ngay 31 thang 12 nam\r\n2020 cua Chinh phi quy dinh chi tiét thi hanh một số diéu cua Luật Ching khodn;\r\n\r\nCan ctr Quyét dinh số 07/OD-HDTV ngay 09 thang 7 năm 2021 của H6i dong\r\nthanh vién So Giao dich Ching khodn Viét Nam ban hanh Diéu lé t6 chức va hoat déng\r\ncua So Giao dich Chứng khodn Thanh pho Hồ Chi Minh;\r\n\r\nCain ctr Quyét dinh số 22/OD-HDTV ngày 16 thang 3 năm 2026 của H6i dong\r\nthanh vién Sở Giao dich Ching khoan Viét Nam về viéc ban hanh Quy ché niém yét va\r\ngiao dich chitng khodn niém yét;\r\n\r\nCan cứ hé so dé nghi thay doi ding ký niém yét cua Céng ty co phan Ching khodn\r\nSST;\r\n\r\nTheo dé nghi của Gidm déc Phong Quan ly niém yet.\r\n\r\nQUYET DINH:\r\n\r\nDiéu 1. Chap thuận cho Céng ty cổ phan Chứng khoan SSI được thay đổi niém\r\nyét ching khoan với ndi dung nhu sau:\r\n\r\n— Loai chứng khºán : Cổ phiéu phé thong\r\n\r\n— Mã chứng khºán _ : SSI\r\n\r\n— Mệnh giá : 10.000 đồng\r\n\r\n— Số lượng chứng khºán trước khi thay đổi niêm yết: ².503.089.²²0 cổ phiếu (Hai\r\nty năm tram lẻ ba triệu không tram tam muoi chin nghin hai trăm hai mươi cé phiéu)\r\nHOSE_BM-7.34/1-BH03-07/2026\r\n",
+      "text_sha256": "a550b7e08805f35dc28f38305eb7bf949e0347101ae17a357ed0bceb2ccaf687"
+     },
+     {
+      "citation_id": "b5bd08bf74f0bd11cce7d7eabcf37d9ac6502c1796648c6331c2d518dae638a1",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "5806afe8d1927a04060ca7275f94af1b512846648123d20f8cb5b7eff234ca71",
+       "text": "no best words!!\r\n"
+      },
+      "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+      "document_sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+      "materialization_id": "d80d5045849bb68c81952b8a33f800bb7668585663bf4a4cba514f79de4148ed",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "49688fa40ede314b39187729cee3816a6d235af0a9943fda19979211495d3fee",
+      "text": "²\r\n\r\n— Số lượng chứng khºán thay đổi niêm yét: 500.204.581 cổ phiếu (Nam tram triệu\r\nhai tram le bôn nghin năm trăm tam muoi mot cô phiéu)\r\n\r\n— Gia tri ching khodn thay d6i niém yét (theo ménh gid): 5.002.045.810.000 déng\r\n| (Nam nghin khéng tram lẻ hai ty không tram bôn mươi lam triéu tam trăm mudi nghìn\r\n| dong)\r\n\r\n— Số long chứng khodn sau khi thay déi niém yét: 3.003.293.801 cd phiéu (Ba ty\r\n\r\nkhéng tram lé ba triéu hai tram chin muoi ba nghin tam tram lé mét cô phiéu)\r\n\r\n— Gia tri chimg khodn niém yét sau khi thay đổi niém yét (theo ménh gi):\r\n30.032.938.010.000 dong (Ba muoi nghin khéng tram ba muoi hai ty chin tram ba mươi\r\ntam triéu khong tram mudi nghin dong)\r\n\r\n— Ngay thay déi niém yét có hiéu luc: 18/09/2026\r\n\r\n— Ly do thay déi niém yét: Phat hanh cd phiéu dé tang vén cổ phan tir nguén vén\r\nchu so hữu.\r\n\r\nDiéu 2. Quyét dinh nay có hiéu luc ké tir ngay ky.\r\n\r\nDiéu 3. Cong ty cé phan Ching khoan SSI, Giám déc phong Quan ly niém yet,\r\nGiam doc phong Hé thong giao dich, Giám đốc phong Gidm sat giao dich, Giam doc\r\nphong Thong tin thi truong cua So Giao dich Ching khoan Thanh phé H6 Chi Minh\r\nchiu trach nhiém thi hanh Quyét dinh nay./gf _\r\n\r\nNoi nhén: 7 TONG IAM DOC\r\n- Nhu diéu 3; KS\r\n` — VSDC; ^// SỞGIAODỊCHN——X µ\r\n\r\n— Luu: VT, NY Cy »/ cHUNG moan ) Le\r\n\r\n* | THANH PHO] ]\r\n\r\n@ \\HỖ CHÍ MINH\r\n\r\n,'74lJ B\r\nNgiyen Thi Việt Ha\r\nHOSE_BM-7.34/1-BH03-072026 ~~\r\n/\r\n//\r\n",
+      "text_sha256": "49688fa40ede314b39187729cee3816a6d235af0a9943fda19979211495d3fee"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   }
+  },
+  "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a": {
+   "eng_psm6": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+    "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "5dc90b67a80e0300ff1ff126a356b1f96d8d3fa326ae46b77589d8a66f68ac4a",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+      "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+      "materialization_id": "9e23a91e58d014655540e68cd83e99db5a93f5c8bde2241d30c05e5aa251b8cf",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=eng psm=6",
+      "ocr_language": "eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "edd1f40ce992c706e196fdfff1bdf70537f0fc4147e7f2c2e23b6cf5b27ada02",
+      "text": "SO GIAO DICH CHUNG KHOAN CONG HOA XA HOI CHU NGHIA VIET NAM\r\nTHANH PHO HO CHi MINH Doc lap - Tw do - Hanh phic\r\nSé: 4955 /TB-SGDHCM Thanh phé Hé Chi Minh, ngay 23 thang 09 ném 2026.\r\nTHONG BAO\r\nVé viée giao dich ching khoan thay déi dang ky niém yét\r\n86 Giao dich Ching khoan Thanh phé H6 Chi Minh thong bao vé viée giao dich\r\nching khoan thay doi dang ky niém yét nhu sau:\r\n- Té chire niém yet: Céng ty cé phan Ching khoan SSI\r\n- Tru sé chinh: 72 Nguyén Hué, Phuong Sai Gon, TP. Hé Chi Minh\r\n- Di€n thoai: 028 3824 2897\r\nDuge thay déi dang ky niém yét (theo Quyét dinh sé 715/QD-SGDHCM ngay\r\n16/09/2026) tai S6 Giao dich Chimg khoaén Thanh pho H6 Chi Minh véi néi dung nhu\r\nsau:\r\n- Loaichimg khodn — : Cé phiéu phé thong\r\n- Machtngkhoén  : SSI\r\n- Ménh gid : 10.000 déng\r\n- Sd lugng chimg khodn thay déi niém yét: 500.204.581 cé phiéu\r\n- Ly do thay déi niém yét: Phat hanh cé phiéu dé tang von cé phan tir nguén vén\r\nchu sé hitu.\r\n- Téngsd lugng chitng khoan sau khi thay déi niém yét: 3.003.293.801 cd phiéu\r\n- Tong gia tri ching khoan niém yét sau khi thay déi niém yét (theo ménh gia):\r\n30.032.938.010.000 dong\r\n- Ngay thay déi niém yét co hiéu luc: 18/09/2026\r\n- Ngay giao dich ctia ching khodn thay déi niém yét: 01/10/2026 (V/_\r\nTUQ.TONG GIAMBOC\r\nGIAM DOC PHONG:QUAN LY NIEM YET\r\nNoi nhan: “ss SENN\r\n- TCNY; <:/86 GIAO DICH \\% /\r\n- VSDC;_ =/ CHUNG mio\r\n- TGD (dé b/c); *\\ THANH PHO\r\n- HTGD, GS, TTTT; eh HO CH{ MINH\r\n- Luu: VT, NY (08). >\r\noa NguvéenNam Anh\r\nHOSE_BM-7.34/2-BH03-07/2026\r\nWV\r\n",
+      "text_sha256": "edd1f40ce992c706e196fdfff1bdf70537f0fc4147e7f2c2e23b6cf5b27ada02"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "SSI"
+   },
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+    "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6b60d434feb8b305eae79c756250ea2aaaefef806f99b61f584199da70bc01c8",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+      "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+      "materialization_id": "17fb4259d9bab885334720f95390b6724e178b684b8ed2938983c1035f64cbe9",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "341764d54c754248560d893653eae5126f88ba4a5cb52cfdc998863dc67b25a3",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HỎ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố: 4955 /TB—SGDHCM Thành phố Hồ Chí Minh, ngày ²3 tháng 09 năm ²0²6 _\r\nTHÔNG BÁO\r\nVề việc giaº dịch chứng khºán thay đổi đăng ký niêm yết\r\nSở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về việc giaº dịch\r\nchứng khºán thay đối đăng ký niêm yêết như sau:\r\n— : Tổ chức niêm yết: Công ty cổ phần Chứng khºán SSI\r\n— Trụ sở chính: 7² Nguyễn Huệ, Phường Sài Gòn, TP. Hồ Chí Minh\r\n— Điện thºại: 0²8 38²4 ²897\r\nĐược thay đổi đăng ký niêm yết (theº Quyết định số 715/QĐ—SGDHCM ngày\r\n16/09/²0²6) tại Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh với nội dung như\r\nsau:\r\n— Lºại chứng khºán : Cổ phiếu phố thông\r\n— Mã chứng khºán : SSI\r\n— : Mệnh giá : 10.000 đồng\r\n— Số lượng chứng khºán thay đổi niêm yết: 500.²04.581 cố phiếu\r\n— : Lý dº thay đổi niêm yết: Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn\r\nchủ sở hữu.\r\n— : Tổng số lượng chứng khºán sau khi thay đổi niêm yết: 3.003.²93.801 cổ phiếu\r\n— Tổng giá trị chứng khg›ản niêm yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n30.03².938.010.000 đồng\r\n— : Ngày thay đổi niêm yết có hiệu lực: 18/09/²0²6\r\n— Ngày giaº dịch của chứng khºán thay đổi niêm yết: 01/10/²0²6/7/[ —\r\nTỤQ.TỎNG GIÁM ĐÓC ____\r\nGIÁM ĐÓCPHÒỜNG—QUẢN LÝ NIÊM vÉT\r\nNơi nhận: * J.\r\n— TCNY; ² SỎ GIAODỊCHNZ \\(\r\n— VSDC; — #[ CHÚNG moÁ\r\n— TGĐ (để b/c); * \\ _ THÀNH PHÔ\r\n— HTGD, GS, TTTT; @ HỔ CHÍ MINH\r\n— Lưu: VT, NỸ (08). @\r\n²Ẻ—— Nguyên—Kam Anh\r\nHOSE_BM—7.34/²—BH03—07/²0²6\r\n~\\/`\r\n",
+      "text_sha256": "341764d54c754248560d893653eae5126f88ba4a5cb52cfdc998863dc67b25a3"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "SSI"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+    "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "27ff502775466be38b3a3215ec3f3b31636161115fbcff336c9d2f6de82f29e1",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+      "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+      "materialization_id": "748bf6805e40c3982b8198ce89bd51da2dc3237ebdcf37c358b2867e72076ba7",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "5819edf96834d0b0531ef2f6fbfea14798c37520a9d039224809ca1339d8cb8a",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CONG HOA XA HOI CHU NGHIA VIET NAM\r\nTHANH PHO HO CHi MINH Doc lap — Tw do — Hanh phic\r\nSố: 4955 /TB-SGDHCM Thanh phé Hồ Chi Minh, ngày 23 thang 09 năm ²0²6 _\r\nTHÔNG BÁO\r\nVề việc giaº dịch chứng khºán thay déi dang ký niém yét\r\nSở Giao dich Ching khºán Thanh phé Hồ Chi Minh thong bao về việc giao dich\r\nching khoan thay doi dang ky niém yét nhu sau:\r\n- Té chức niém yet: Céng ty cé phan Ching khoan SSI\r\n- Tru sé chinh: 72 Nguyén Hué, Phuong Sai Gon, TP. Hé Chi Minh\r\n— Di€n thoai: 028 3824 2897\r\nDuge thay déi dang ky niém yét (theo Quyét dinh số 715/QD-SGDHCM ngay\r\n16/09/2026) tai Sở Giao dich Chứng khºán Thanh pho H6 Chi Minh véi nội dung nhu\r\nsau:\r\n- Loaichimg khºán : Cổ phiéu phé thong\r\n— Mã chứng khºán : SSI\r\n— Ménh gid : 10.000 déng\r\n— Sd lugng chimg khºán thay déi niém yét: 500.204.581 cé phiéu\r\n- Ly do thay déi niém yét: Phat hanh cé phiéu dé tang von cổ phan tir nguồn vén\r\nchu sé hữu.\r\n- : Tổng số lượng chứng khºán sau khi thay đổi niêm yét: 3.003.293.801 cổ phiếu\r\n— Tổng giá trị chứng khoan niém yét sau khi thay déi niém yét (theo ménh gia):\r\n30.032.938.010.000 dong\r\n- : Ngày thay déi niém yét co hiéu luc: 18/09/2026\r\n- Ngày giao dich ctia ching khodn thay déi niém yét: 01/10/²0²6/7/[ —\r\nTUQ.TONG GIÁM ĐÓC ____\r\nGIAM DOC PHONG:QUAN LY NIEM YET\r\nNoi nhận: “ss SENN\r\n- TCNY; <:/86 GIAO DICH \\% /\r\n— VSDC;_ =/ CHUNG mio\r\n- TGD (dé b/c); * \\ THANH PHO\r\n- HTGD, GS, TTTT; @ HO CHÍ MINH\r\n- Luu: VT, NY (08). >\r\noa NguvéenNam Anh\r\nHOSE_BM-7.34/2-BH03-07/2026\r\nWV\r\n",
+      "text_sha256": "5819edf96834d0b0531ef2f6fbfea14798c37520a9d039224809ca1339d8cb8a"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "SSI"
+   },
+   "vie+eng_psm11": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+    "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 11
+    },
+    "pages": [
+     {
+      "citation_id": "36a52c6f17cca34fa2ce95e0d09d5c4b5aa0fb9745690f8d6093ed5c8f6ade38",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+      "document_sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+      "materialization_id": "17bf29e59c91944215e3a8618f44a3519770bc7401ef9412b449e67aa2847019",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=11",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 11,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "30f2b4f1244a8d4fd848ba33515b6f3bc20e82fac08cd7f471b59479ea5098a6",
+      "text": "SO GIAO DICH CHUNG KHOAN\r\n\r\nCONG HOA XA HOI CHU NGHIA VIET NAM\r\n\r\nTHANH PHO HO CHi MINH\r\n\r\nDoc lap — Tw do — Hanh phic\r\n\r\nSố: 1935 /TB-SGDHCM\r\n\r\nThanh pho Hồ Chi Minh, ngay 23 thang 09 năm 2026\r\n\r\nTHONG BAO\r\n\r\nVề viée giao dich ching khoan thay di dang ky niém yét\r\n\r\nSở Giao dich Chimg khoan Thanh phé Hồ Chi Minh thong bao về việc giao dich\r\n\r\nching khodn thay déi Gang ky niém yét nhu sau:\r\n\r\n- Té chức niém yet: Céng ty cé phan Ching khoan SSI\r\n\r\n- Tru sé chinh: 72 Nguyén Hué, Phuong Sai Gon, TP. Hé Chi Minh\r\n\r\n— Dién thoai: 028 3824 2897\r\n\r\nDuge thay doi ding ky niém yét (theo Quyét dinh số 715/QD-SGDHCM ngay\r\n\r\n16/09/2026) tai Sở Giao dich Chứng khodn Thanh phé Hé Chi Minh véi nội dung nhu\r\n\r\nsau:\r\n\r\nLoai chứng khºán\r\n\r\n: Cổ phiếu phé thong\r\n\r\nMa ching khoan\r\n\r\n: SSI\r\n\r\nMénh gid\r\n\r\n: 10.000 dong\r\n\r\nsố lượng chứng khºán thay đổi niêm yết: 500.204.581 cố phiếu\r\n\r\nLy do thay đổi niêm yét: Phat hanh cé phiéu dé tang von cổ phan tir nguồn vén\r\n\r\nchu sở hữu.\r\n\r\nTổng số lượng chứng khºán sau khi thay đổi niêm yét: 3.003.293.801 cổ phiếu\r\n\r\nTổng giá trị chứng khºán niêm\r\n\r\nyết sau khi thay đổi niêm yết (theº mệnh giá):\r\n\r\n30.03².938.010.000 đồng\r\n\r\nNgày thay đổi niêm yết có hiệu lực: 18/09/²0²6\r\n\r\nNgày giao dich của chứng khºán thay đổi niém yét: 01/10/²0²6/7/[ —\r\n\r\nTUQ.TONG GIAM BOC\r\n\r\nGIAM DOC P;\r\n\r\nrCUINA\r\n\r\nQUAN LY NIEM YET\r\n\r\nNoi nhan:\r\n\r\n- TCNY;\r\n\r\niy\r\n\r\n- VSDC;\r\n\r\nS6 GIAO DICH\r\n\r\n=/ CHUNG KHO\r\n\r\n- TGD (dé b/c);\r\n\r\nTHANH PHO\r\n\r\n- HTGD, GS, TTTT;\r\n\r\n@\\\\HO CHÍ MINH\r\n\r\n- Luu: VT, NY (08\r\n\r\ny\r\n\r\npe\r\n\r\n—_\r\n\r\nANam Anh\r\n\r\n²\r\n\r\nHOSE_BM—7.34/²—BH03—07/²0²6\r\n\r\nWV\r\n\r\nsansa\r\n\r\n———\r\n\r\n—\r\n",
+      "text_sha256": "30f2b4f1244a8d4fd848ba33515b6f3bc20e82fac08cd7f471b59479ea5098a6"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "SSI"
+   }
+  },
+  "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+    "document_sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "141a5f0cb5622c40704ba77ef81b52d5924f8d7e1767d0e632d6bdb5476fb487",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+      "document_sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+      "materialization_id": "b977993098244ce4e56a7753d9fbe7326d424541dfdf028430a98a68899abada",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "44c515023bc5779e3359158b81d57009004902714855c32b3de04b7986aa0a92",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HỒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố: J0§  /TB—SGDHCM Thành phố Hồ Chí Miình, ngày 13 tháng 03 năm ²0²6\r\nTHÔNG BÁO\r\nVề việc giaº dịch chứng khºán thay đối đăng ký niêm yết\r\nSở Giaº dịch Chứng ;khºán Thành phố Hồ Chí Minh thông báº về việc giaº dịch\r\nchứng khºán thay đổi đăng ký niêm yết như sau:\r\n— : Tổ chức niêm yết: Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\n— Trụ sở chính: Tòa nhà Viện Dầu khí Việt Nam, số 167 Đường Trung Kính,\r\nPhường Yên Hòa, Thành phố Hà Nội\r\n— Điện thºại: (84—²4) ²²²1 0²88 Fax: (84—²4) ²²²1 0388\r\n— Website: www.pvpºwer.vn\r\nĐược thay đổi đăng ký niêm yết (theº Quyết định số ²²6/QĐ—SGDHCM ngày\r\n09/03/²0²6) tại Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh với nội dung như\r\nsau:\r\n— : Lºại chứng khºán : Cổ phiếu phổ thông\r\n— Mã chứng khºán : POW\r\n— : Mệnh giá : 10.000 đồng\r\n— : Số lượng chứng khºán thay đổi niêm yết: ²81.0²4.59² cổ phiếu\r\n— : Lý dº thay đổi niêm yết: Chàº bán thêm cổ phiếu ra công chúng chº cổ đông\r\nhiện hữu\r\n— : Số lượng chứng khºán sau khi thay đổi niêm yết: 3.067.845.688 cổ phiếu\r\n— Giá trị chứng khºán niêm yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n30.678.456.880.000 đồng\r\n— : Ngày thay đổi niêm yết có hiệu lực: 11/03/²0²6\r\n— : Ngày giaº dịch của chứng khºán thay đổi niêm yết:\r\n+ Đối với ²76.606.691 cổ phiếu tự dº chuyển nhượng : ²6/03/²0²6\r\n+ Đối với 4.417.901 cổ phiếu bị hạn chế chuyển nhượng :²8/01/²0²7—%6C\r\n| Nơi nhận: TUQ. TỔNG GIÁM ĐÓC _\r\n— TCNY; GIÁM ĐÓG+TPHỜNG QUẢN LÝ NIÊM YÉT\r\n— VSDC; ïnh gD'ử V.=n=»=.. ợ_\r\n— Lưu: VT, NỸ ffl8)ỡq/ 1'ẵ`ẦỀỈfỔÍỈ’\r\nNHỖ CH\r\nỀụ — Neuỳ z1m Ảnh\r\n. JNguỹ@i\r\n",
+      "text_sha256": "44c515023bc5779e3359158b81d57009004902714855c32b3de04b7986aa0a92"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "POW"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+    "document_sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "ee6aed44ea6799001a8c74e21b16a2894e122f7335a0f8dc07b88b15371fb32e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+      "document_sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+      "materialization_id": "b65cb5a97acfb994412174fd749f576a91fb5577a8a422cd8db24a88c5e89dfd",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "001a902c63944d004f4a8ed82d6681c7a21fcceba05418611e3bc534c5297286",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CONG HOA XA HOI CHU NGHĨA VIET NAM\r\nTHANH PHO HO CHi MINH Doc lap — Tw do — Hanh phic\r\nSo: 40% /TB-SGDHCM Thanh phé Hé Chi Minh, ngay 13 thang 03 nam 2026\r\nTHONG BAO\r\nVề viée giao dich ching khoan thay déi dang ky niém yét\r\nSở Giao dich Chứng ;khoan Thanh phé Hồ Chi Minh théng bao về việc giao dich\r\nching khodn thay đổi ding ky niém yét như sau:\r\n- Té chức niém yét: Téng Công ty Dién lực Dau khi Viét Nam — CTCP\r\n- Tru sé chinh: Toa nha Vién Dau khi Viét Nam, số 167 Duong Trung Kinh,\r\nPhuong Yén Hoda, Thanh phố Ha Nội\r\n- Dién thoai: (84-24) 2221 0288 Fax: (84-24) 2221 0388\r\n- Website: www.pvpower.vn\r\nDuoc thay đổi dang ky niém yét (theo Quyét dinh số 226/QD-SGDHCM ngay\r\n09/03/2026) tai Sở Giao dich Chứng khoan Thanh phé Hồ Chi Minh véi nội dung nhu\r\nsau:\r\n- : Lºại chứng khºán : Cổ phiéu pho thong\r\n- Mã chứng khºán :POW\r\n— Ménh gid : 10.000 ding\r\n- S6 lượng chimg khodn thay déi niém yét: 281.024.592 cd phiéu\r\n- Ly do thay déi niém yét: Chao ban thém cé phiéu ra céng chung cho cổ déng\r\nhién hữu\r\n- S6 lượng ching khodn sau khi thay déi niém yét: 3.067.845.688 cổ phiéu\r\n— Gia tri chimg khodn niém yét sau khi thay đổi niém yét (theo ménh gia):\r\n30.678.456.880.000 dong\r\n- Ngay thay đổi niém yét có hiéu hye: 11/03/2026\r\n- Ngay giao dich cia ching khoan thay déi niém yét:\r\n+ Đối voi 276.606.691 cd phiéu tu do chuyén nhugng : 26/03/2026\r\n+ Déi voi 4.417.901 cổ phiéu bi han ché chuyén nhuong : 28/01/202795¢\r\n| Nơi nhận: TUQ. TONG GIÁM ĐÓC _\r\n— TCNY; GIÁM DOGPHONG QUAN LY NIEM YET\r\n- VSDC; ay KE — uN\r\n- Luu: VT, NY (08) 9¢_- Tyan\r\n\\HO CH\r\neS — Nowy Sl Anh\r\n_ euy Ss\r\n",
+      "text_sha256": "001a902c63944d004f4a8ed82d6681c7a21fcceba05418611e3bc534c5297286"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "POW"
+   },
+   "vie+eng_psm11": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+    "document_sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 11
+    },
+    "pages": [
+     {
+      "citation_id": "8a3653a4628f1919b2a0c53eb6c88807ce7a5446131c965e454b64448bcbf89c",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+      "document_sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+      "materialization_id": "d84df41f707c0d338416073590fc66c45924518502f74028d2c4de0d7b1ef05f",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=11",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 11,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "f22cc62c6847f22e87176ac27f788240e60110e228e649b3593a00b366f38c18",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN\r\n\r\nCONG HOA XA HOI CHU NGHĨA VIET NAM\r\n\r\nTHANH PHO HO CHi MINH\r\n\r\nDoc lap - Tu do - Hanh phic\r\n\r\nSé: 408 /TB-SGDHCM\r\n\r\nThanh phé Hồ Chi Minh, ngay 13 thang 03 nam 2026\r\n\r\nTHONG BAO\r\n\r\nVề viée giao dich ching khoan thay déi dang ky niém yét\r\n\r\nSở Giao dich Chứng ;khoan Thanh phé Hồ Chi Minh théng bao về việc giao dich\r\n\r\nching khodn thay đổi ding ky niém yét như sau:\r\n\r\n-\r\n\r\nTổ chức niém yét: Tong Công ty Dién lực Dau khi Viét Nam — CTCP\r\n\r\n=\r\n\r\nTru so chính: Toa nha Viện Dau khí Viét Nam, số 167 Đường Trung Kinh,\r\n\r\nPhuong Yén Hoda, Thanh phố Ha Nội\r\n\r\n-\r\n\r\nDién thoai: (84-24) 2221 0288\r\n\r\nFax: (84-24) 2221 0388\r\n\r\n-\r\n\r\nWebsite: www.pvpower.vn\r\n\r\nDuoc thay đổi dang ky niém yét (theo Quyét dinh số 226/QD-SGDHCM ngay\r\n\r\n09/03/2026) tai Sở Giao dich Ching khoan Thanh phé H6 Chi Minh với nội dung nhu\r\n\r\nsau:\r\n\r\nLoai ching khoan\r\n\r\n: Cổ phiéu phé thong\r\n\r\nMa ching khoan\r\n\r\n: POW\r\n\r\nMénh gia\r\n\r\n: 10.000 ding\r\n\r\nSố lượng chimg khodn thay đổi niém yét: 281.024.592 cổ phiéu\r\n\r\nLy do thay déi niém yét: Chao ban thém cé phiéu ra céng chung cho cổ déng\r\n\r\nhién hữu\r\n\r\nSé lượng ching khºán sau khi thay déi niém yét: 3.067.845.688 cổ phiéu\r\n\r\nGia tri chtmg khodn niém yét sau khi thay đổi niém yét (theo ménh gid):\r\n\r\n30.678.456.880.000 dong\r\n\r\nNgay thay déi niém yét có hiéu lực: 11/03/2026\r\n\r\nNgày giao dich của ching khoan thay déi niém yét:\r\n\r\n+ Déi voi 276.606.691 cổ phiéu tu do chuyén nhugng\r\n\r\n: 26/03/2026\r\n\r\n: 28/01/2027\r\n\r\n+ Déi voi 4.417.901 cổ phiéu bi han ché chuyén nhuong\r\n\r\nrane ae\r\n\r\nNoi nhận:\r\n\r\nNG GIAM DOC\r\n\r\n- TCNY;\r\n\r\nTUQ. TO\r\n\r\n«\r\n\r\nGIAM DOG4\r\n\r\nQUAN LY NIEM YET\r\n\r\n«\r\n\r\nVSDC;\r\n\r\nOo\r\n\r\nPal\r\n\r\n«\r\n\r\nTGĐ (dé b/c);\r\n\r\ngd GIAO DIC\r\n\r\nHTGD,GS,TTTT;\r\n\r\n)\r\n\r\n-\r\n\r\nLuu: VT, NY (08) 9¢_-\r\n\r\nCHUNG KHQ\r\n\r\nTHANH PHY\r\n\r\nH6 CHI\r\n\r\nay\r\n\r\nouy enenNn\r\n\r\nese\r\n\r\nam Anh\r\n\r\nHOSE_BM-7.34/2-BH02-07/2022\r\n\r\n00000 uzsc s\r\n\r\nmerrem\r\n\r\n—\r\n",
+      "text_sha256": "f22cc62c6847f22e87176ac27f788240e60110e228e649b3593a00b366f38c18"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 1,
+    "ticker": "POW"
+   }
+  },
+  "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2": {
+   "eng_psm6": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+    "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "eng",
+    "ocr_psm": {
+     "1": 6
+    },
+    "pages": [
+     {
+      "citation_id": "72c50dfcdd52053112898747bc1cf53956574513542133eb7c03bbfaa7959a88",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "9a930b1493040c7337198d2888ff64dd4cc6236fa8624027dbd8244287df2ecf",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "3a86203c0995509aab6df4db791a0187865a6c00b34dd1c5abe65968fe53d8d0",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=eng psm=6",
+      "ocr_language": "eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "44f555a1e131767d51a5e1a5efba15e3dd7bab1f7a95105561b22b2e0637b9b9",
+      "text": "SO GIAO DICH CHUNG KHOAN CONG HOA XA HOI CHU NGHIA VIET NAM\r\nTHANH PHO HO CHi MINH Doc lap - Tw do - Hanh phic\r\nS6: 1654/TB-SGDHCM Thanh phé Hé Chi Minh, ngay 30 thang 07 nam 2026\r\nTHONG BAO\r\nVé ngay dang ky cudi cing\r\nSé Giao dich Chimg khoan Thanh phé Hé Chi Minh thong bdo vé ngay dang ky\r\ncudi cung nhu sau:\r\n- Té chite niém yét : Cong ty Cé phan Chirng khodn SSI\r\n- Ma ching khoan : SSI\r\n- Loai ching khoan 368 phiéu phé théng\r\n- Ménh gid : 10.000 déng (Mudi nghin dong)\r\n- Ngay giao dich khong huéng quyén: 17/08/2026\r\n- Ngay dang ky cudi cing : 18/08/2026\r\n- Ly do va muc dich:\r\n- Chitra cé tire nim 2025 bang tién;\r\n- Phat hanh c6é phiéu dé tang von cé phan tir nguon von chi s@ hitu\r\n- N6i dung cu thé:\r\n1) Chi tra cé tire nam 2025 bang tién\r\n+ Ty 1é thuc hién: 10%/ménh gia (01 cd phiéu duc nhan 1.000 déng)\r\n+ Ngay thanh toan: 14/09/2026\r\n+ Dia diém thuc hién:\r\n» Déivéi ching khodn luu ky: Nguoi sé hitu 1am thi tuc nhan cé tire bang tién\r\ntai cac Thanh vién luu ky noi mé tai khoan luu ky.\r\n- Déi véi chimg khodn chua luu ky: Ngudi sé hitu lam thu tue nhan cé tire\r\nbang tién tai Tru so chinh Céng ty s6 72 Nguyén Hué, phudng Sai Gon, TP.\r\nHé Chi Minh hoac Chi nhanh Ha Noi cia Céng ty sé 1C Ng6 Quyén, phudng\r\nHoan Kiém, TP. Ha Ndi (vao cdc ngay lam viéc trong tuan) bat dau ti ngay\r\n14/09/2026 va xuat trinh cin cuéc cong dan/can cuéc.\r\n2) Phat hanh cé phiéu dé ting von cé phan tir nguon von chi sé hiru\r\n| + Ty lé thuc hién: 5:1 (Ngudi sé hitu 05 cé phiéu sé dugc nhan thém 01 cé phiéu\r\nm6i).\r\n+ Séluong cé phiéu dy kién phat hanh: 500.219.550 c6 phiéu\r\n+ Phuong 4n lam tron va phuong an xu ly phan le cé phan, cé phiéu 1é (néu cé):\r\nSau khi nhan véi ty 1é thyc hién quyén, s6 lugng cé phan phat hanh sé dugc lam\r\nHOSE BM-733/1-BH30020282«2«*°@20202”,.”~—C~C”——————OO\r\n",
+      "text_sha256": "44f555a1e131767d51a5e1a5efba15e3dd7bab1f7a95105561b22b2e0637b9b9"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   },
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+    "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "4f2a48d5f9eaf9f2ac8864337d70e4ae877671346b87e0fbb648c70a2b5cbbf2",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "80cbb47b9354fd0b134ba1dd7d4304eba570732440f5ae0bae4915f54e0bead7",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8fd58dbc57266cb2b9b1ff8e2cf10cead0e1fe0f34556bcb046c440fdaf4e302",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HỒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố: 4657 /TB—SGDHCM Thành phố Hồ Chí Minh, ngày 30 tháng 07 năm ²0²6\r\nTHÔNG BÁO\r\nVề ngày đăng ký cuối cùng\r\n| Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký\r\ncuối cùng như sau:\r\n— : Tổ chức niêm yết : Công ty Cổ phần Chứng khºán SSI\r\n— : Mã chứng khºán : SSI\r\n— Lºại chứng khºán : Cổ phiếu phổ thông\r\n— : Mệnh giá : 10.000 đồng (Mười nghìn đồng)\r\n— : Ngày giaº dịch không hưởng quyền : 17/08/²0²6\r\n— : Ngày đăng ký cuối cùng : 18/08/²0²6\r\n— : Lý dº và mục đích:\r\n— Chi trả cố tức năm ²0²5 bằng tiền;\r\n+ — Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\n— : Nội dung cụ thể:\r\n1) Chi trả cổ tức năm ²0²5 bằng tiền\r\n+ : Tỷ lệ thực hiện: 10%/mệnh giá (01 cổ phiếu được nhận 1.000 đồng)\r\n+ : Ngày thanh tºán: 14/09/²0²6\r\n+ : Địa điểm thực hiện:\r\n. : Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cổ tức bằng tiền\r\ntại các Thành viên lưu ký nơi mở tài khºản lưu ký.\r\n+.:. Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ tức\r\nbằng tiền tại Trụ sở chính Công ty số 7² Nguyễn Huệ, phường Sài Gòn, TP.\r\nHồ Chí Minh hºặc Chi nhánh Hà Nội của Công ty số 1C Ngô Quyền, phường\r\nHºàn Kiếm, TP. Hà Nội (vàº các ngày làm việc trºng tuần) bắt đầu từ ngày\r\n14/09/²0²6 và xuất trình căn cước công dân/căn cước.\r\n| ²) Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\n| + — Tỷ lệ thực hiện: 5:1 (Người sở hữu 05 cổ phiếu sẽ được nhận thêm 01 cổ phiếu\r\nmới).\r\n+ : Số lượng cổ phiếu dự kiến phát hành: 500.²19.550 cổ phiếu\r\n+ : Phương án làm tròn và phương án xử lý _phzẦìn lẻ qổ ffl'{ần› cổ phiếu lẻ (nếu có):\r\nSau khi nhân với tỷ lệ thực hiện quyền, số lượng cố phần phát hành sẽ được làm\r\nHOSR_BM—7.33/1—BH3—06/²0²6 _ / /5 0000000000\r\n",
+      "text_sha256": "8fd58dbc57266cb2b9b1ff8e2cf10cead0e1fe0f34556bcb046c440fdaf4e302"
+     },
+     {
+      "citation_id": "db47a5475ad6fd9a25f5eb5ae62260c3e168e45991d835c817fc810ca4167b5f",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "1b470144e26d417fc12b07cd98e79c83022cdc7d16a1f1722d935a62b692cfc1",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "b24391ac0f52893e7ea6d61ef4a79217eb39b63d964a82a2b184fba1d85192a1",
+      "text": "²\r\ntròn xuống đến hàng đơn vị, phần lẻ thập phân (nếu có) sẽ được hủy bỏ.\r\nVí dụ: Cổ đông 4 sở hữu 506 cổ phần, với tỷ lệ thực hiện gJuye”`n 5:1 thì số Ổ\r\nphân mà cô đông A nhận được là: (506x1)/5 = 101,² cô phân. Theº nguyên tăc\r\nlàm tròn nêu trên, số cô phần mới mà cô đông A được nhận là 101 cô phân. Sô\r\n| cô phân lẻ (0,² cô phán) sẽ được hủy bỏ.\r\n| + : Tºàn bộ số cổ phiếu lẻ phát sinh khi phát hành cổ phiếu để tăng vốn cổ phần từ\r\nnguồn vôn chủ sở hữu sẽ bị hủy bỏ.\r\n+ . Địa điểm thực hiện:\r\n+.:. Đối với chứng khºán lưu ký: Người sở hữu làm thủ tục nhận cố phiếu phát\r\nhành để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại các Thành viên lưu ký\r\nnơi mở tài khºản lưu ký.\r\n... Đối với chứng khºán chưa lưu ký: Người sở hữu làm thủ tục nhận cổ phiếu\r\nphát hành để tăng vốn cổ phần từ nguồn vốn chủ sở hữu tại Trụ sở chính\r\nCông ty số 7² Nguyễn Huệ, phường Sài Gòn, TP. Hồ Chí Minh hºặc Chi\r\nnhánh Hà Nội của Công ty số 1C Ngô Quyền, phường Hºàn Kiếm, TP. Hà\r\nNội (vàº các ngày làm việc trºng tuần) và xuất trình căn cước công dân/căn\r\ncướcøf_/` |\r\nNơi nhận: | TUỌ.TỎNG GIÁM ĐÓC_\r\n— TCNY;, GIÁM ĐÓ€PHÒNG QUÁẢN LÝ NIÊM YÉT\r\n— TGĐ (để b/c); aº t /\r\n1 — HTGD, GS, TTTT; 4 SỎ GIAO DỊCHN%ç\r\n— Lưu: VT,NY U)âa/ . x| CHỨNG KHOÁN } z}| số\r\n* | _ THÀNH PHÔ |Íl (\r\n` C  HÔ CHÍ MINH/>\r\nỔẸJ Vỳ\r\n~ J×p ` Q\r\nụg=-«’- Nam Anh\r\nHOSE_BM—7.33/1—BH3—06²0² _ — >»/\r\nF«.....\r\n",
+      "text_sha256": "b24391ac0f52893e7ea6d61ef4a79217eb39b63d964a82a2b184fba1d85192a1"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+    "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "3f8becc2a35ff9ee7b8b85ff6e89531edfdd8caa1ab5b2333cc71d50f9fabe4e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "9a930b1493040c7337198d2888ff64dd4cc6236fa8624027dbd8244287df2ecf",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "49dea8514afcd5ef6574e593d86f8f6d1d14a5f4fd0d6a5913ad3368e9a8928b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "76a7f1c2ad0c122c3de7dafa3974ca07b201de91e2ee8d443e6bac48fa06b606",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHO HO CHi MINH Độc lap — Tw do — Hanh phic\r\nSố: 1654/TB-SGDHCM Thanh phé Hé Chi Minh, ngay 30 thang 07 nam 2026\r\nTHONG BAO\r\nVé ngay dang ky cudi cing\r\n| Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh thông báº về ngày đăng ký\r\ncudi cùng nhu sau:\r\n— Té chite niém yét : Cong ty Cổ phan Chirng khºán SSI\r\n- Ma ching khoan : SSI\r\n- Loai ching khoan 368 phiéu phé théng\r\n- Ménh gid : 10.000 déng (Mudi nghin dong)\r\n- Ngay giao dich khong huéng quyén: 17/08/2026\r\n- Ngay dang ky cudi cing : 18/08/2026\r\n- Ly do va muc dich:\r\n- Chitra cé tire nim 2025 bang tién;\r\n+ Phat hanh cổ phiéu dé tang von cé phan tir nguon von chi sở hitu\r\n- N6i dung cu thé:\r\n1) Chi tra cé tire nam 2025 bang tién\r\n+ Ty lệ thuc hién: 10%/ménh gia (01 cổ phiéu được nhan 1.000 déng)\r\n+ Ngay thanh toan: 14/09/2026\r\n+ Dia diém thuc hién:\r\n. Déivéi ching khodn luu ky: Nguoi sé hữu 1am thi tuc nhan cổ tire bang tién\r\ntai cac Thanh vién luu ky noi mé tai khoan luu ky.\r\n- Déi với chứng khodn chua luu ky: Ngudi sé hữu lam thu tue nhận cổ tire\r\nbang tién tai Tru so chinh Céng ty số 72 Nguyén Hué, phudng Sai Gon, TP.\r\nHé Chi Minh hºặc Chi nhanh Ha Noi cia Céng ty số 1C Ngô Quyén, phudng\r\nHoan Kiém, TP. Ha Ndi (vao cdc ngay lam viéc trong tuan) bat dau ti ngay\r\n14/09/2026 va xuat trinh cin cước cong dân/căn cước.\r\n| 2) Phat hanh cé phiéu dé ting von cé phan tir nguon von chi sé hữu\r\n| + Ty lệ thuc hién: 5:1 (Ngudi sé hitu 05 cổ phiéu sé được nhan thém 01 cé phiéu\r\nmới).\r\n+ Séluong cổ phiếu dy kién phat hành: 500.²19.550 c6 phiếu\r\n+ Phuong án lam tron va phuong án xu ly phan lẻ cé phan, cổ phiéu lẻ (néu có):\r\nSau khi nhân với ty lệ thực hién quyền, số lượng cé phan phat hanh sé được lam\r\nHOSE BM-733/1-BH30020282«2«*°@20202”,.”~—C~C”——————OO\r\n",
+      "text_sha256": "76a7f1c2ad0c122c3de7dafa3974ca07b201de91e2ee8d443e6bac48fa06b606"
+     },
+     {
+      "citation_id": "377ca5c3ea4103ccac1845f4521334cf8d7586864b1de5f5e431279c6a8b5be9",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "4544a559b1d507aaf0c197e74053a1e1b9a675dd8c7b0dc6cb1d579331429cfc",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "1376265ab80417067320f60f8a3da9fbee77f62e3dc90ba44393f1da7362f891",
+      "text": "2\r\ntron xuéng dén hang don vi, phan lẻ thap phan (néu c6) sé duge hủy bd.\r\nVi du: Cổ déng A sé hitu 506 cổ phan, voi ty lé thuc hién quyén 5:1 thi số cé\r\nphan ma cô đông A nhận được la: (506x1)/5 = 101,2 co phan. Theo nguyén tac\r\nlam tron néu trén, số c6 phan méi ma cé déng A dugc nhận la 101 cô phan. Sô\r\n| cô phan lẻ (0,2 cô phan) sé được hủy bo.\r\n| + Toan bộ số cổ phiéu lẻ phat sinh khi phat hanh cổ phiéu dé tang von cổ phan tir\r\nnguon von chu sé hữu sé bi huy bo.\r\n+ Dia diém thuc hién:\r\n\r\n- Đối voi ching khoan luu ky: Ngudi sé hữu lam thi tuc nhan c6 phiéu phat\r\nhanh dé tang von cé phan tir ngu6n von chu sở hữu tai cdc Thanh vién lưu ky\r\nnoi mở tai khoan luu ky.\r\n\r\n» Đối với chứng khodn chưa lưu ky: Ngudi sé hitu lam thi tuc nhan cé phiéu\r\nphat hanh dé tang vén cổ phan tir nguon vốn chi sé hữu tai Tru sé chinh\r\nCong ty số 72 Nguyén Hué, phudng Sai Gon, TP. Hé Chi Minh hºặc Chi\r\nnhanh Ha N6i của Cong ty số 1C Ngô Quyén, phudng Hoan Kiém, TP. Ha\r\nNội (vao cac ngay lam viéc trong tudn) va xuất trinh cin cước céng dân/căn\r\ncudegye |\r\n\r\nNơi nhận: | TUQ.TONG GIAM DOC.\r\n\r\n- TONY; | GIAM DOGRHONG. QUAN LY NIEM YET\r\n\r\n- TGD (dé b/c); Ze <a /\r\n: — HTGD, GS, TTTT; 4 SỎ GIAO DICH\\*,\r\n\r\n- Luu: VT, NY (7)-ge- . x| CHUNG KHOÁN } z}| số\r\n\r\n* | _ THÀNH PHO (A te\r\n%\\HO CHI MINH/ >\r\n> cy\r\n~ Tp Fay Ce\r\nNeRyen Nam Anh\r\nHOSE_BM-7.33/1-BH3-062026. 2 SCSCSCSCS<«;«7«;<S; 7S\r\n—_\r\n",
+      "text_sha256": "1376265ab80417067320f60f8a3da9fbee77f62e3dc90ba44393f1da7362f891"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   },
+   "vie+eng_psm11": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+    "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 11
+    },
+    "pages": [
+     {
+      "citation_id": "4adbe1ff84e557fb9dd38d84820e5508de8ef47a3e2cd5742205a8782723f378",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "a441218714cb9d943a4d228a5a5db01a9ea6360e30781bac2c1557d407bd92db",
+       "text": "Error in boxClipToRectangle: box outside rectangle\r\nError in pixScanForForeground: invalid box\r\n"
+      },
+      "document_id": "65fc9e4ab22e39c56fcec0effff555fdc7c31fdee0cd48c7fd95e5a7a9a650f2",
+      "document_sha256": "4be4d1f807f789134b8ed883d8265a57a84e99a66ba69943c58d429962e01e1a",
+      "materialization_id": "8ca0e57fc20addbf324d2c97e2cc1720c86777966d2586b63f81e70eb1c69708",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=11",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 11,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "9d735ed2594df5d76dd0dcd700683cc733d0773e2b743d2da76c627a3b8dd075",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN\r\n\r\nCỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n\r\nTHANH PHO HO CHÍ MINH\r\n\r\nDoc lap - Tw do - Hanh phic\r\n\r\nSố: 4634/TB-SGDHCM\r\n\r\nThanh phé Hồ Chi Minh, ngay 30 thang 07 năm 2026\r\n\r\nTHONG BAO\r\n\r\nVề ngay dang ky cudi cing\r\n\r\nSé Giao dich Chứng khºán Thanh phé Hé Chi Minh thong bao về ngay dang ky\r\n\r\ncudi cling nhu sau:\r\n\r\nw.\r\n\r\nTổ chức niêm yết\r\n\r\nCông ty Cổ phan Chứng khºán SSI\r\n\r\n=\r\n\r\nSSI\r\n\r\nMa ching khoan\r\n\r\n«\r\n\r\nLºại chứng khºán\r\n\r\nCổ phiếu phổ thông\r\n\r\nMệnh giá\r\n\r\n: 10.000 đồng (Mudi nghin dong)\r\n\r\nNgay giao dich khong huéng quyén: 17/08/2026\r\n\r\nNgay dang ky cudi cing\r\n\r\n: 18/08/2026\r\n\r\nLy do va muc dich:\r\n\r\nChi tra c6 tire nim 2025 bang tién;\r\n\r\nPhat hanh cé phiéu dé tang von cé phan tir nguon von chi sở hitu\r\n\r\nNoi dung cu thé:\r\n\r\n1)\r\n\r\nChi tra c6 tire nim 2025 bang tién\r\n\r\n+ Ty lệ thuc hién: 10%/ménh gia (01 cổ phiéu được nhan 1.000 déng)\r\n\r\n+ Ngay thanh todn: 14/09/2026\r\n\r\n+ Dia diém thuc hién:\r\n\r\n. Déivéi ching khodn luu ky: Nguoi sé hữu 1am thi tuc nhan cổ tire bang tién\r\n\r\ntai cac Thanh vién luu ky noi mở tai khoan luu ky.\r\n\r\nĐối voi chứng khoan chua luu ky: Ngudi sé hữu lam thi tuc nhan cổ tức\r\n\r\nbằng tiền tại Trụ sở chính Công ty số 7² Nguyễn Huệ, phường Sài Gòn, TP.\r\n\r\nHồ Chi Minh hºặc Chi nhánh Ha Nội của Céng ty số 1C Ngô Quyền, phường\r\n\r\nHºàn Kiếm, TP. Hà Nội (vàº các ngày làm việc trºng tuần) bắt đầu từ ngày\r\n\r\n14/09/²0²6 và xuất trình căn cước công dân/căn cước.\r\n\r\n2) Phat hanh cé phiéu dé ting von cé phan tir nguon von chi sé hữu\r\n\r\n+ Ty lệ thuc hién: 5:1 (Ngudi sé hitu 05 cổ phiéu sé được nhan thém 01 cé phiéu\r\n\r\nmới).\r\n\r\n+ Séluong cổ phiếu dy kién phat hành: 500.²19.550 c6 phiếu\r\n\r\n+ Phuong án lam tron va phuong án xu ly phan 1é cé phan, cé phiéu lẻ (néu có):\r\n\r\nSau khi nhan véi ty 1é thực hién quyén, số luong cd phan phat hanh sé duge lam\r\n\r\nHOSE_BM-7.33/1-BH3-06/2026\r\n\r\n—\r\n",
+      "text_sha256": "9d735ed2594df5d76dd0dcd700683cc733d0773e2b743d2da76c627a3b8dd075"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "SSI"
+   }
+  },
+  "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+    "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6
+    },
+    "pages": [
+     {
+      "citation_id": "6eab4509cdb1982fef06b8d744a709699b5ae1e18b1b263878839cc734d85117",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "f5fa1c31a07fc0650b5c1581e4a17e3ea8f5d4afe322238603dc52728622d327",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "497d2c96feeef3ab65377745db76bd113e8d3c9dcbd694c160cf0cb43b00c372",
+      "text": "CÔNG TY CỔ PHẦN CHỨNG KHOÁN SSI CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\n$S$S! SECURITIES CORPORATION Độc lập — Tự dº — Hạnh phúc\r\nTHE SOCIALIST REPUBLIC OF VIETNAM\r\nIndependence — Freedºm — Happiness\r\nSố/Nº: 1440/²0²6/CV—SSI.CTHĐQT TP. Hồ Chí Minh, ngày ²7 tháng 8 năm ²0²6\r\nV/v: Công bổ Nghị quyết Hội đồng quản trị thông qua Hº Chi Minh City, August ²7%, ²0²6\r\nkết ffllả phát hành cổ phiêu để tăng vốn cố phân từ\r\nnguồn vốn chủ sở hữu\r\nRe: Disclºse Resºlutiºn ºf the Bºard ºf Directºrs\r\napprºving the results ºf the share issuance fºr charter\r\ncapital injectiºn frºm the ºwner`s equity\r\nCÔNG BÓ THÔNG TIN BẤT THƯỜNG\r\nEXTRAORDINARY INFORMATION DISCLOSURE\r\nKính gửi/Tº: — Ủy ban Chứng khºán Nhà nước/ The State Securities Cºmmissiºn\r\n— Sở Giaº dịch Chứng khºán Việt Nam/ Vietnam Exchange\r\n— Sở Giaº dịch Chứng khºán TP. Hồ Chí Minh/ Hºchiminh Stºck Exchange\r\n— Sở Giaº dịch Chứng khºán Hà Nội/ Hanºi Stºck Exchange\r\n1. . Tên tổ chức: CÔNG TY CỔ PHẦN CHỨNG KHOÁN SS!\r\nOrganizatiºn name $S! SECURITIES CORPORATION\r\n— Mã chứng khºán: SSỈI\r\nTicker SS!/\r\n— : Địa chỉ: 7² Nguyễn Huệ, Phường Sài Gòn, TP. Hồ Chí Minh\r\nAddress 7² Nguyen Hue, Sai Gºn Ward, Hº Chi Minh City\r\n—.:. Điện thºại liên hệ: 0²8—38²4²897\r\nTelephºne 0²8—38²4²897\r\n— Fax: 0²8—38²4²997\r\n— Email: cºngbºthºngtin@ssi.cºm.vn\r\n².. Nội dung thông tin công bố/ Cºntents ºf disclºsure:\r\nNghị quyết số ²7/²0²6/NQ—SSI.HĐQT ngày ²6/8/²0²6 của Hội đồng quản trị Công ty Cổ phần Chứng\r\nkhºán SSI thông qua kết quả phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu.\r\nResºlutiºn Nº. ²7/²0²6/NQ—SS!I.HĐQT dated August ²6%, ²0²6 ºf the Bºard ºf Directºrs ºf SS!\r\nSecurities Cºrpºratiºn apprºving the results ºf the share issuance fºr charter capital injectiºn frºm the\r\nºwner`s equity\r\n3. . Thông tin này đã được công bố trên trang thông tin điện tử của Công ty vàº ngày ²7/8/²0²6 tại đường\r\ndẫn www.ssi.cºm.vn.\r\nThis infºrmatiºn was pºsted ºn SS! website ºn August ²7#, ²0²6 at this link www.ssi.cºm.vn.\r\nChúng tôi xin cam kết các thông tin công bố trên đây là đúng sự thật và hºàn tºàn chịu trách nhiệm trước\r\npháp luật về nội dung các thông tin đã công bố.\r\nWe hereby declare tº be respºnsible fºr the accuracy and cºmpleteness ºf the abºve infºrmatiºn.\r\nA Digitaly signed by CÔNG TY CỎ\r\nCO PHÂN : ee......\r\n",
+      "text_sha256": "497d2c96feeef3ab65377745db76bd113e8d3c9dcbd694c160cf0cb43b00c372"
+     },
+     {
+      "citation_id": "f63dcd094a4be1343be7018319f5663c80b5300851b66958bace92c6a3f04d85",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "84418612df1cd32532b94b173ff781a9339706760c8f27ddcb6626f5e13dab38",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "e744d3de82a8629d1b50fe0f421f8eb090d86a8aa3a4e863f6437f463b7712b4",
+      "text": "Tài liệu đính kèm/Atffached dºcuments: Đại diện tổ chức\r\n( R rự Organizatiºn representative\r\nResºlutiºn Nº. ²7/²0²6/NQ—SSI.HĐQT Party.autpºrized tº dişclºse infºrmatiºn\r\ndated August ²6%, ²0²6 ºf the Bºard ºf c, —:^ =\r\nDirectºrs {ề\"f\"' ` cCÔNG TY /\r\nll | ) 5“ 14 JI + | l .\r\n1 CH JING KHOÄN E || ///\r\n= — Nguyễn Kim Lºng\r\nGiám đốc Luật và Kiếm sºát tuân thủ\r\nDirectºr, Legal and Cºmpliance\r\n²\r\n",
+      "text_sha256": "e744d3de82a8629d1b50fe0f421f8eb090d86a8aa3a4e863f6437f463b7712b4"
+     },
+     {
+      "citation_id": "9c735f9603f7eea33cfaddbd584e25fee828814f0fd9d86384c9a61d57c4fe00",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "d3b76e5b4e6c1f5d05d8a9744e40e0ccf4955909d557207a848ecfabec744f06",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "6c0ba085d58bef08e051198238dd1a4bfb62732140b88e84065e8451614742ad",
+      "text": "` Số/Nº: ²7/²0²6/NQ—SSI.HĐQT Thành phố Hồ Chí Minh, ngày ²6 tháng 8 năm ²0²6\r\nHº Chi Minh City, August ²6!, ²0²6\r\nNGHỊ QUYẾT\r\n| HỘI ĐỒNG QUẢN TRỊ |\r\nRESOLUTION OF THE BOARD OF DIRECTORS\r\nV/v Thông qua kết quả phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\nRe: Apprºval ºf the results ºf the share issuance fºr charter capital injectiºn\r\nfrºm the ºwner`s equity\r\nHỘI ĐỒNG QUẢN TRỊ\r\nCÔNG TÝ CỎ PHẦN CHỨNG KHOÁN SSI ây\r\nỄ THE BOARD OF DIRECTORS OF <a`\r\n4 SS/ SECURITIES CORPORATION X ë\r\n¦ “9\r\n| qỹ.\r\n\\ Căn cứ: Á\r\n` Pursuant tº\r\n1 — : Điều lệ Công ty Cổ phần Chứng khºán SSI;\r\n| The Charter ºf SS! Securities Cºrpºratiºn\r\n| — Nghị quyết số 01/²0²6/NQ—SSI.ĐHĐCĐ ngày ²3/4/²0²6 của Đại hội đồng cổ đông Công ty;\r\n| Resºlutiºn Nº. 01/²0²6/NQ—SSI.ĐHĐCĐ dated April ²3r², ²0²6 ºf the General Meeting ºf Sharehºlders\r\n| ºf the Cºmpany\r\n| — Nghị quyết số ²4/²0²6/NQ—SSI.HĐQT ngày 13/7/²0²6 của Hội đồng quản trị Công ty thông qua việc\r\n| triển khai thực hiện Phương án phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu;\r\nẫ Resºlutiºn Nº. ²4/²0²6/NQ—SSI.HĐQT dated July 13!h, ²0²6 ºf the Bºard ºf Directºrs ºf SS! Securifies\r\n| Cºrpºratiºn apprºving the implementatiºn ºf the Plan ºn share issuance fºr charter capital injectiºn\r\n\\ frºm the ºwners equity\r\nẫ — Văn bản số 6811/UBCK—QLKD ngày ²1/7/²0²6 của Ủy ban Chứng khºán Nhà nước về việc đã nhận\r\n| được tài liệu báº cáº phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu;\r\n| Dºcument Nº. 6811/UBCK—QLKD dated July ²1st, ²0²6 ºf the State Securities Cºmmissiºn cºnfirming\r\n| íts receipt ºf the repºrt dºssier fºr the issuance ºf shares fºr charter capital injectiºn frºm the ºwner`s\r\nequity\r\n1 — Nghị quyết số ²5/²0²6/NQ—SSI.HĐQT ngày ²8/7/²0²6 của Hội đồng quản trị Công ty thông qua ngày\r\n| đăng ký cuối cùng lập danh sách cổ đông để trả cổ tức năm ²0²5 bằng tiền và phát hành cổ phiếu để\r\n| tăng vốn cổ phần từ nguồn vốn chủ sở hữu;\r\n| ßesºlutiºn Nº. ²5/²0²6/NQ—SSI.HĐQT dated July ²8t, ²0²6 ºf the Bºard ºf Directºrs ºf SS! Securities\r\n| Cºrpºratiºn apprºving the recºrd date tº finalize the Iist ºf sharehºlders entitled tº receive the ²0²5\r\n| cash dividend and the issuance ºf shares fºr charter capital injectiºn frºm the ºwner`s equity\r\n— Danh sách tổng hợp người sở hữu chứng khºán thực hiện quyền (ngày đăng ký cuối cùng 18/8/²0²6\r\n\\ 1 SSI SECURITIES CORPORATION\r\n| WWW.SSI.COM.VN\r\n|\r\n",
+      "text_sha256": "6c0ba085d58bef08e051198238dd1a4bfb62732140b88e84065e8451614742ad"
+     },
+     {
+      "citation_id": "07e036f9aff51ce14ce6fc4d532c50c5c1b2a757a6d9bd4d36e9c432b42db817",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "616e30513222ce1819e70e386f33fd97934240ae6bc1c90c409af0d50a7cdc8d",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "0c7cf273af9e71940761e50927d3bc78b038efc3284463b6bad6e6925c8682ca",
+      "text": "để phát hành cổ phiếu để tăng Ổr1 cổ phần từ nguồn vốn chủ sở hữu) dº Tổng công ty Lưu ký và Bù\r\ntrừ chứng khºán Việt Nam cung cấp;\r\nCºnsºlidated Iist ºf securities hºlders entitled tº exercise rights (recºrd date: August 18!, ²0²6 fºr the\r\nissuance ºf shares fºr charter capital injectiºn frºm the ºwners equity) prºvided by the Vietnam\r\nSecurities Depºsitºry and Clearing Cºrpºratiºn\r\nÎ QUYẾÉẾT NGHỊ\r\nRESOLVED THAT\r\nĐiều 1: Thông qua tºàn bộ kết quả phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu theº\r\nNghị quyết số 01/²0²6/NQ—SSI.ĐHĐCĐ ngày ²3/4/²0²6 của Đại hội đồng cổ đông Công ty, chi tiết như\r\nsau:\r\nArticle 1: Tº apprºve all results ºf the issuance ºf shares fºr charter capital injectiºn frºm the ºwners\r\nequity pursuant tº Resºlutiºn Nº. 01/²0²6/NQ—SSI.ĐHĐCĐ dated April ²3!đ, ²0²6 ºf the General Meeting\r\nOf Sharehºlders ºf the Cºmpany, with details as fºllºws:\r\n| 1. Tên cổ phiếu: Cổ phiếu Công ty Cổ phần Chứng khºán SSI\r\nName ºf share: SS! Securities Cºrpºratiºn shares\r\n².. Mã chứng khºán: SSI\r\nTicker: SS!I Ễ/—Ể\r\n3. . Lºại cổ phiếu: Cổ phiếu phổ thông 73\r\n| Type ºf share: Ordinary shares Ể;cO\"J'f\\lp›cdn;\"4\r\n4.. Mệnh giá: 10.000 đồng lỚNG K\r\nPar value: VND 10,000 SS\r\n5.. Số lượng cổ phiếu phát hành/The number ºf issued shares: ỀT—-\\3—\r\n5.1. Số lượng cổ phiếu dự kiến phát hành: 500.²19.550 cổ phiếu ì ām\r\nEstimated number ºf issued shares: 500,²19,550 shares\r\n5.². Số lượng cổ phiếu đã phân phối: 500.²04.581 cổ phiếu\r\nNumber ºf distributed shares: 500,²04,581 shares\r\n5.3. Số cổ phiếu xử lý phần lẻ cổ phần, cổ phiếu lẻ: 14.969 cổ phiếu bị hủy bỏ\r\nNumber ºf fractiºnal shares, shares fºrmed frºm aggregated fractiºnal shares: 14,969 shares\r\nwere cancelled\r\n| 5.4. Tổng số lượng cổ phiếu sau khi kết thúc đợt phát hành: 3.003.²93.801 cổ phiếu (trºng đó baº\r\ngồm 1.991.468 cổ phiếu quỹ)\r\nTºtal number ºf shares after clºsing the share issuance: 3,003,²93,801 shares (including\r\n1,991,468 treasury shares)\r\n6. Ngày kết thúc đợt phát hành: ngày 18/8/²0²6\r\nẺ Clºsing date ºf the issuance: August 18%, ²0²6\r\n| 7.. Tổng vốn điều lệ sau khi kết thúc đợt phát hành: 30.03².938.010.000 đồng\r\n| Tºtal charter capital after clºsing the share issuance: VND 30,03²,938,010,000\r\n| Điều ²: Thông qua nguồn vốn thực tế phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\nÌỳ theº Nghị quyết số ²4/²0²6/NQ—SSI.HĐQT ngày 13/7/²0²6 như sau:\r\n|\r\nĩ ²\r\n|\r\n|\r\n|\r\n",
+      "text_sha256": "0c7cf273af9e71940761e50927d3bc78b038efc3284463b6bad6e6925c8682ca"
+     },
+     {
+      "citation_id": "c85e0db771ae39cea02a5155144289eaac6399964ec9b891bd0ad59fd1470110",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "77d5b98ed27acf25b49fa8497e994b15f70d4e7f13273470ceb4edb2328519f5",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "70eff32f4473f7154e3d2e58df58976e39a3d850f5ed1641686263aec6254840",
+      "text": "| Article ²: Tº apprºve the actual capital resºurces fºr issuing shares fºr charter capital injectiºn frºm the\r\n| ºwner`s equity in accºrdance with Resºlutiºn Nº. ²4/²0²6/NQ—SSI.HĐQT dated July 13, ²0²6, as fºllºws\r\n| Nguồn vốn thực tế phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu là 5.00².045.810.000\r\n| đồng tương ứng số lượng cổ phiếu đã phát hành 500.²04.581 cổ phiếu, trºng đó:\r\n| — Trích từ Thặng dư vốn cổ phần: 3.309.0²7.581.013 đồng;\r\n4 — Trích từ Lợi nhuận sau thuế chưa phân phối: 1.693.018.²²8.987 đồng.\r\n| The actual capital resºurces fºr issuing shares fºr charter capital injectiºn frºm the ºwner`s equity are VND\r\n5,00²,045,810,000, cºrrespºnding tº 500,²04,581 shares issued, ºf which:\r\n| — Drawn frºm share premium: VND 3,309,0²7,581,013\r\n| — Drawn frºm undlistributed after—tax prºfits: VND 1,693,018,²²8,987\r\n|\r\nĐiều 3: Nghị quyết này có hiệu lực thi hành kể từ ngày ký. Các thành viên HĐQT, Ban Tổng Giám đốc chịu\r\ntrách nhiệm thi hành Nghị quyết này.\r\n| Article 3: This Resºlutiºn cºmes intº effect frºm the signing date. Members ºf the Bºard ºf Directºrs and\r\n| the Bºard ºf Management are respºnsible fºr the implementatiºn ºf this Resºlutiºn.\r\n| Nơi nhận/Recipients: TMI. HỘI ĐỒNG QUẢN TRỊ\r\n| .. Theº Điều 3/ As Aridjle ð ON BEHALE OF THE f30_ARD OF DIRECTORS\r\n| 8 Chủ tịch\r\n| — Lưu/ Archives. — . 100 —©.®hairman\r\n@ ©\r\n` CỘNGTY. X²\r\n| / CỡPHẦN \\ ²\r\n| = | CHỨNG—KHOÁM/7/+` ^ c\r\n«. _ sởi “²/ sº\r\nCn x> l áA (\r\n@ £C )\r\n7 — rp µỒ AN — Ìxw\r\nNguyễn Duy Hưng lOÁN / ..\r\n[| >\r\nA\r\nC\r\n| HỒ C\r\n|\r\n3\r\n",
+      "text_sha256": "70eff32f4473f7154e3d2e58df58976e39a3d850f5ed1641686263aec6254840"
+     }
+    ],
+    "pages_processed": 5,
+    "schema_version": "1.0.0",
+    "source_page_count": 5,
+    "ticker": "SSI"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+    "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6,
+     "4": 6,
+     "5": 6
+    },
+    "pages": [
+     {
+      "citation_id": "527224dd15563d80a9ef834216d37b02e2bf688ac894d7ec471b903847c5e8c7",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "d3a066a125c359f282354a9bfa86fcf1ae7b15ad5682e712842885b9413c2cc4",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "5d4e19dfe0224c63d3a5788b87900b08a9f9914f53c02478147de41681c020b6",
+      "text": "CONG TY CO PHAN CHUNG KHOAN SSI CONG HOA XA HOI! CHU NGHIA VIET NAM\r\nSS/ SECURITIES CORPORATION Doc lap — Tw do — Hanh phic\r\nTHE SOCIALIST REPUBLIC OF VIETNAM\r\nIndependence — Freedom — Happiness\r\nSO/No: 1440/2026/CV-SSI.CTHDQT TP. Hé Chi Minh, ngay 27 thang 8 nam 2026\r\nViv: Cong bo Nghi quyét Hdi dong quan tri thong qua Ho Chi Minh City, August 27\", 2026\r\nkét qua phat hanh co phiéu de tang von co phan từ\r\nngudn von chu so’ hữu\r\nRe: Disclose Resolution of the Board of Directors\r\napproving the results of the share issuance for charter\r\ncapital injection from the owner’s equity\r\nCONG BO THONG TIN BAT THUO'NG\r\nEXTRAORDINARY INFORMATION DISCLOSURE\r\nKinh gửi/Tº: — Uy ban Chứng khoan Nha nước/ The State Securities Commission\r\n— So Giao dich Chứng khoan Viét Nam/ Vietnam Exchange\r\n— Sở Giao dich Chteng khoan TP. Ho Chi Minh/ Hochiminh Stock Exchange\r\n— S& Giao dich Chứng khoan Ha Nội/ Hanoi Stock Exchange\r\n1. Tén tổ chức: CONG TY CO PHAN CHUNG KHOAN SSI\r\nOrganization name SS/ SECURITIES CORPORATION\r\n- Mã chứng khoan: SSI\r\nTicker SS/\r\n- Dia chi: 72 Nguyén Hué, Phuong Sai Gon, TP. Hd Chi Minh\r\nAddress 72 Nguyen Hue, Sai Gon Ward, Ho Chi Minh City\r\n-  Dién thoai lién hé: 028-38242897\r\nTelephone 028-38242897\r\n- Fax: 028-38242997\r\n- Email: congbothongtin@ssi.com.vn\r\n2. Ndi dung théng tin céng bố/ Contents of disclosure:\r\nNghi quyét số 27/2026/NQ-SSI.HDQT ngay 26/8/2026 của Hội déng quan tri Céng ty Cổ phan Chứng\r\nkhoan SSI théng qua két qua phat hanh cé phiéu dé tang vốn cé phan từ nguén vén chu sở hữu.\r\nResolution No. 27/2026/NQ-SSI.HDQT dated August 26, 2026 of the Board of Directors of SSI\r\nSecurities Corporation approving the results of the share issuance for charter capital injection from the\r\nowner’s equity\r\n3. Théng tin nay đã dugc công bé trén trang thong tin dién tử cia Cong ty vao ngay 27/8/2026 tai dwong\r\ndan www.ssi.com.vn.\r\nThis information was posted on SSI website on August 27\", 2026 at this link www.ssi.com.vn.\r\nChung tdi xin cam két cdc thong tin công bé trén day la dung sy that va hoan toan chiu trach nhiém trước\r\nphap luat về nội dung cac théng tin da céng bố.\r\nWe hereby declare to be responsible for the accuracy and completeness of the above information.\r\nA Digitally signed by CONG TY CO\r\nCO HAN eee an\r\n",
+      "text_sha256": "5d4e19dfe0224c63d3a5788b87900b08a9f9914f53c02478147de41681c020b6"
+     },
+     {
+      "citation_id": "fa6910d578b390fa1232f544c39ca5538fcba4ff4cc2302caf0551d0f8eda630",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "1f273952d3cd1eec995a707fc4f18fcdc677d2b0869502588246063f886d3566",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "11bbbecbe9ba12519e8ff8b165f8660018cc3d606ede3b171964c67365f2045a",
+      "text": "Tai liệu đính kem/Attached documents: Dai dién tổ chirc\r\n( R Ck Organizatiºn representative\r\nResolution No. ²7/²0²6/NQ—SSI.HĐQT Party authorized to disclose information\r\ndated August 26\", 2026 of the Board of c, —:^ =\r\nDirectºrs fi ` CONG TY Yip\r\n| | ) 5“ 14 JI + } |} .\r\n\\ CH ING KHOA E || ///\r\n= — Nguyễn Kim Long\r\nGiám doc Luật va Kiém sºát tuan thu\r\nDirector, Legal and Compliance\r\n2\r\n",
+      "text_sha256": "11bbbecbe9ba12519e8ff8b165f8660018cc3d606ede3b171964c67365f2045a"
+     },
+     {
+      "citation_id": "857cbcb413cb6cc14b40c166ba0b05d10e1f31c6ca3a94a1bfb69b9334a82ef9",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "a32c18ff312bf1adf496195f603383ee44382d30ca9e7d7984e5b54bb682babf",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "17a568d164beaa8aa7bcbfb6d8a41e806a7a53b653b01413e8d9b0d841a924a7",
+      "text": "S6/No: 27/2026/NQ-SSI.HDQT Thanh phé Hé Chi Minh, ngay 26 thang 8 nam 2026\r\nHo Chi Minh City, August 26\", 2026\r\nNGHI QUYET\r\n| HỘI ĐỒNG QUẢN TRỊ |\r\nRESOLUTION OF THE BOARD OF DIRECTORS\r\nViv Théng qua két qua phat hanh cé phiéu dé tang vốn cé phan tiv nguén vén chu sở hivu\r\nRe: Approval of the results of the share issuance for charter capital injection\r\nfrom the owner’s equity\r\nHOI DONG QUAN TRI\r\nCONG TY CO PHAN CHUNG KHOAN SSI Ay\r\n| THE BOARD OF DIRECTORS OF <a`\r\n| SSI SECURITIES CORPORATION * i\r\n| “9\r\n| g.\r\nCan ctr: Á\r\nPursuant to\r\n| - Piéu lệ Céng ty Cổ phan Chứng khoan SSI;\r\n| The Charter of SS! Securities Corporation\r\n| - Nghị quyét số 01/²0²6/NQ—SSI.ĐHĐCĐ ngay 23/4/2026 của Dai hội đồng cd đông Công ty;\r\n| Resolution No. 01/²0²6/NQ—SSI.ĐHĐCĐ dated April 23, 2026 of the General Meeting of Shareholders\r\n| ºf the Cºmpany\r\n| - Nghị quyét số 24/2026/NQ-SSI.HDQT ngay 13/7/2026 của Hội đồng quan tri Công ty thông qua việc\r\n| triển khai thực hiện Phương an phat hanh cé phiéu dé tang vốn cổ phan từ nguồn vốn chu sở hữu;\r\nResolution No. 24/2026/NQ-SSI.HPQT dated July 13\", 2026 of the Board of Directors of SSI Securities\r\n| Corporation approving the implementation of the Plan on share issuance for charter capital injection\r\n| from the owner's equity\r\n| - Văn ban số 6811/UBCK-QLKD ngay 21/7/2026 ctia Uy ban Chteng khoan Nha nước về viéc đã nhan\r\n| được tai ligu bao cao phat hanh cổ phiéu dé tang vén cé phan tiv ngudn vén chủ s& hữu;\r\n| Document No. 6811/UBCK-QLKD dated July 21%, 2026 of the State Securities Commission confirming\r\n| its receipt of the report dossier for the issuance of shares for charter capital injection from the ºwner`s\r\nequity\r\n| - Nghi quyét số 25/2026/NQ-SSI.HDQT ngay 28/7/2026 của Hội déng quan tri Cong ty théng qua ngay\r\n| dang ky cuối cùng lap danh sách cổ đông dé tra cổ tức nam 2025 bang tién va phat hanh cé phiéu dé\r\n| tang vốn cổ phan tir nguồn vốn chủ sở hữu;\r\n| Resolution No. ²5/²0²6/NQ—SSI.HĐQT dated July 28\", 2026 of the Board of Directors of SSI Securities\r\n| Corporation approving the record date to finalize the list of shareholders entitled to receive the 2025\r\n| cash dividend and the issuance of shares for charter capital injection from the owner's equity\r\n- Danh sach tang hop nguoi sở hữu chứng khoan thực hién quyén (ngay dang ky cudi cling 18/8/2026\r\n1 SSI SECURITIES CORPORATION\r\n| WWW.SSI.COM.VN\r\n|\r\n",
+      "text_sha256": "17a568d164beaa8aa7bcbfb6d8a41e806a7a53b653b01413e8d9b0d841a924a7"
+     },
+     {
+      "citation_id": "4218b8769f120539ffad69008465b147a02b013c7b74691b1becbd173b321880",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "7dff1fd029a0c752cc8ed914ad479905c7d4b4ae6b0f9a1ea5ff85ea8eb3c48c",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "6d724c180183031b522065f4c6d8e311412ad77b0d2d305b425b826d4ff31604",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 4,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "8acd9f905caaf34e13f4996811cb1fcebb15d5fee46e5f3e2783c3e66c35ab2d",
+      "text": "dé phat hanh cổ phiéu dé tang von cé phan tiv nguén vén chủ sở hữu) do Téng céng ty Luu ky va Bu\r\ntrừ chteng khoan Viét Nam cung cap;\r\nConsolidated list of securities holders entitled to exercise rights (record date: August 18\", 2026 for the\r\nissuance of shares for charter capital injection from the owner's equity) provided by the Vietnam\r\nSecurities Depository and Clearing Corporation\r\nÎ QUYET NGHỊ\r\nRESOLVED THAT\r\nĐiều 1: Thông qua tºàn bộ kết qua phat hanh cổ phiếu dé tang vốn cổ phan từ nguồn vốn chủ sé hữu theo\r\nNghi quyết số 01/²0²6/NQ—SSI.ĐHĐCĐ ngày 23/4/2026 của Dai hội đồng cd đông Céng ty, chi tiét như\r\nsau:\r\nArticle 1: To approve all results of the issuance of shares for charter capital injection from the owner's\r\nequity pursuant to Resolution No. 01/2026/NQ-SSI.DHDCD dated April 234, 2026 of the General Meeting\r\nof Shareholders of the Company, with details as follows:\r\n| 1. Tên cổ phiếu: Cổ phiếu Công ty Cổ phan Chứng khºán SSI\r\nName of share: SS! Securities Corporation shares\r\n2. Mã chứng khoan: SSI\r\nTicker: SSI 00.\r\n3. Loai cé phiéu: Cổ phiéu phé thong 73\r\n| Type ºf share: Ordinary shares orn\r\n4, Ménh gia: 10.000 déng WING K\r\nPar value: VND 10,000 Ss\r\n5. Số lượng cé phiéu phat hanh/The number of issued shares: wees\r\n5.1. Số lượng cé phiéu dy kién phat hanh: 500.219.550 cé phiéu =\r\nEstimated number of issued shares: 500,219,550 shares\r\n5.2. Sélwong cé phiéu da phan phdi: 500.204.581 cé phiéu\r\nNumber of distributed shares: 500,204,581 shares\r\n5.3. Sécé phiéu xi ly phan lẻ cd phan, cé phiéu lẻ: 14.969 cổ phiéu bj hủy bd\r\nNumber of fractional shares, shares formed from aggregated fractional shares: 14,969 shares\r\nwere cancelled\r\n| 5.4. Tổng số lượng cổ phiếu sau khi kết thúc dot phat hành: 3.003.293.801 cổ phiéu (trong đó bao\r\ngồm 1.991.468 cd phiéu quỹ)\r\nTotal number of shares after closing the share issuance: 3,003,293,801 shares (including\r\n1,991,468 treasury shares)\r\n6. Ngay két thuc dot phat hanh: ngay 18/8/2026\r\n| Closing date of the issuance: August 18\", 2026\r\n| 7. Tổng vén didu lệ sau khi két thúc dot phat hanh: 30.032.938.010.000 déng\r\n| Total charter capital after closing the share issuance: VND 30,032, 938,010,000\r\n| Diéu 2: Thong qua ngudn vốn thực té phat hanh cd phiéu dé tang vốn cd phan tl ngudn von chủ s& hữu\r\n| theo Nghi quyét số 24/2026/NQ-SSI.HDQT ngay 13/7/2026 nhu sau:\r\n|\r\n2\r\n|\r\n|\r\n|\r\n",
+      "text_sha256": "8acd9f905caaf34e13f4996811cb1fcebb15d5fee46e5f3e2783c3e66c35ab2d"
+     },
+     {
+      "citation_id": "eda9782d22fd7aa8821e5f2f7bed68e76c0b7fce238575ebafd67d6d8e0c2b6e",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "document_sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "materialization_id": "cebe871de95698077915b424f7517d133d4694888c663a1c1bb7eb9412744999",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 5,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "ebb63c031f93507313859955c85deda3099c5592ef800a48804457b932bbc0e5",
+      "text": "| Article 2: To approve the actual capital resources for issuing shares for charter capital injection from the\r\n| ºwner`s equity in accordance with Resolution No. ²4/²0²6/NQ—SSI.HĐQT dated July 13\", 2026, as follows\r\n| Nguồn vốn thực tế phat hành cé phiếu dé tang vốn cổ phan tiv nguồn vốn chủ sở hữu la 5.00².045.810.000\r\n| đồng tương ứng số lượng cổ phiếu da phat hanh 500.²04.581 cé phiéu, trong do:\r\n| - Trích từ Thang du vốn cd phan: 3.309.027.581.013 đồng;\r\n| -  Trich từ Loi nhuan sau thué chwa phan phối: 1.693.018.228.987 đồng.\r\n| The actual capital resources for issuing shares for charter capital injection from the owner's equity are VND\r\n5,002,045,810,000, corresponding to 500,204,581 shares issued, of which:\r\n| - Drawn from share premium: VND 3,309,0²7,581,013\r\n| - Drawn from undistributed after-tax profits: VND 1,693,018,²²8,987\r\n|\r\nĐiều 3: Nghi quyét nay có hiệu lực thi hành kể từ ngày ky. Cac thanh viên HĐQT, Ban Téng Giám đốc chiu\r\ntrách nhiệm thi hành Nghị quyết này.\r\n| Article 3: This Resolution comes into effect from the signing date. Members of the Board of Directors and\r\n| the Board of Management are responsible for the implementation of this Resolution.\r\n| Noi nhan/Recipients: TM. HOI BONG QUAN TRI\r\n| .. Theo Điều 3/ As Article 3: ON BEHALF OF THE BOARD OF DIRECTORS\r\n| 8 Chủ tịch\r\n| - Lưu/ Archives. — . 100 —©.®hairman\r\n@ Ke)\r\n` CONGTY \\®\r\n| */ COPHAN \\* ²\r\n| = | CHỨNG—KHOÁM/7/+` ^ c\r\n«. _ wT sº\r\nCn x> ree\r\n@ aC =\r\n7 — +p pO AN \\ye\r\nVguyén Duy Hwng 10AN / ..\r\n| >\r\nA\r\nC\r\n| HO C\r\n|\r\n3\r\n",
+      "text_sha256": "ebb63c031f93507313859955c85deda3099c5592ef800a48804457b932bbc0e5"
+     }
+    ],
+    "pages_processed": 5,
+    "schema_version": "1.0.0",
+    "source_page_count": 5,
+    "ticker": "SSI"
+   }
+  },
+  "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5": {
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+    "document_sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "d0b1ca10266e2cbaca74c83b7f7b2b374ebb7b1d77c4c212b3bd261b3f8b24cb",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+      "document_sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+      "materialization_id": "c3f3c00b555aaea75bf705e554b3d50781295805be0e6b8286ccc4c7dd7d6130",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "9b383ccccf108acb0878d4aefd72f6e9d0b89aba112ca4f0dcfa18f9575f667b",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHÀNH PHÓ HÒ CHÍ MINH Độc lập — Tự dº — Hạnh phúc\r\nSố:²²C /QĐ—SGDHCM Thành phố Hồ Chí Minh, ngày 09 tháng 03 năm ²0²6 |\r\n— QUYẾÉT ĐỊNH\r\nVề việc thay đối đăng ký niêm yết\r\nTÓNG GIÁM ĐÓC SỞ GIAO DỊCH CHỨNG KHOÁN\r\nTHANH PHỎÒ HỎ CHỈ MINH\r\n\r\n,Căn cứ Luật Chứng khºán ngày ²6 tháng 11 năm ²019 và Luật sửa đổi, bổ sung\r\nmột số điều của Luật Chứng khºán, Luật Kể tºán, Luật Kiểm tºán ảõchập, Luật Ặfgân\r\nsách nhà nước, Luật Quản lý, gử dụng tài sản công, Luật Quán lý Thuê, Luật Thuê thu\r\nnhập cá nhân, Luật Dữ trữ quốc gia, Luật xử lý vi phạm hành chính ngày ²9 tháng 11\r\nnăm ²0²4,;\r\n\r\nCấăn cứ Nghị định số 1 539/²0²0/NĐ—CP ngày 31 tháng 1² năm ²0²0 của Chính\r\nphủ quy định chi tiệt thi hành một số điều của Luật Chứng khºán và Nghị định số\r\n²45/²0²5/NĐ—CP ngày 11/09/²0²5 của Chính phủ sửa đổi, bố sung một số điều của\r\nNghị định số 155/²0²0/NĐ—CP ngày 31 tháng 1² năm ²0²0;\r\n\r\nCăn cứ Quyết định số 0²/QĐ—HĐTV ngày 30 tháng 06 năm ²0²1 của Hội đồng\r\nthành viên Sở Giaº dịch Chứng khºán Việt Nam về việc thành lập Sở Giaº dịch Chứng\r\nkhºán Thành phô Hồ Chí Minh;\r\n\r\nCăn cứ Quyết định số 07/QĐ—HĐTV ngày 09 tháng 07 năm ²0²1 của Hội đồng\r\nthành viên Sở Giaº dịch Chứng khºán Việt Ncz`J11 ban hành Điều lệ tô chức và hºạt động\r\ncủa Sở Giaº dịch Chứng khºán Thành phổ Hồ Chí Minh;\r\n\r\nCăn cứ Quyết định số ²²/QĐ—HĐTV ngày 18 tháng 04 năm ²0²5 của Hội Ởng\r\nthành viên Sở Giaº dịch Chứng khºán Việt Nam về việc ban hành Quy chế niêm yêt và\r\ngiaº dịch chứng khºán niêm yết;\r\n\r\nCăn cứ hồ sơ đề nghị thay đổi đăng ký niêm yết của Tổng Công ty Điện lực Dầu\r\nkhí Việt Nam — CTCP,; . `\r\n\r\nTheº đề nghị của Giám đốc Phòng Quản lý Niêm yết.\r\n' QUYÉT ĐỊNH:\r\n\r\nĐiều 1. Chấp thuận chº Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\nđược thay đổi đăng ký niêm yết với nội dung như sau:\r\n\r\n— : Lºại chứng khºán: Cổ phiếu phổ thông\r\n\r\n— : Mã chứng khºán:  . POW\r\n\r\n— : Mệnh giá: 10.000 đồng/cổ phiếu\r\nHOSE_BM—7.34/1—BH0²—07/²0²²\r\n\r\n|\r\n²/00000000000000000000.....________...…..—...cnnnnnmnnnneannnnnnnnnnnnnnnannnannnnannnnsassāāāuuuuuuuuuuuuuuuuuuuuīās\r\n",
+      "text_sha256": "9b383ccccf108acb0878d4aefd72f6e9d0b89aba112ca4f0dcfa18f9575f667b"
+     },
+     {
+      "citation_id": "6402837729892b6dd06fc13fa9cd4a04f98fbcbaa904e5dd06afa78a29bc40f1",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+      "document_sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+      "materialization_id": "74a22df2cb43caca25aa4f777145e889b0fe1f8e37c51ba2e4c137b1d73303b7",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "5a044be98ba0c2112f2f11f9d0180fe876e14a122d179ddffe806b307bd3cd22",
+      "text": "²\r\n\r\n— Số lượng chứng khºán trước khi thay đổi niêm yết: ².786.8²1.096 cổ phiếu\r\n(Hai tỷ bảy trăm tám mươi sáu triệu tám trăm hai mươi một nghìn không trăm chín mươi\r\nsáu cổ phiếu)\r\n\r\n— : Số lượng chứng khºán thay đổi niêm yết: ²81.0²4.59² cổ phiếu (Hai trăm tám\r\nmươi mốt triệu không trăm hai mươi bốn nghìn năm trăm chín mươi hai cô phiêu)\r\n\r\n— : Giá trị chứng khºán thay đổi niêm yết (theº mệnh giá): ².810.²45.9²0.000\r\nđồng (Hai nghìn tám trăm mười tỷ hai trăm bốn mươi lăm triệu chín trăm hai mươi\r\nnghìn đồng)\r\n\r\n— : Số lượng chứng khºán sau khi thay đổi niêm yết: 3.067.845.688 cổ phiếu (Ba\r\ntỷ không trăm sáu mươi bảy triệu tám trăm bốn mươi lăm nghìn sáu trăm tám mươi tám\r\ncổ phiếu)\r\n\r\n— : Giá trị chứng khºán niêm yết sau khi thay đổi niêm yết (theº mệnh giá):\r\n30.678.456.880.000 đồn g (Ba mươi nghìn sáu trăm bảy mươi tám tỷ bôn trăm năm mươi\r\nsáu triệu tám trăm tám mươi nghìn đồng)\r\n\r\n— — Ngày thay đổi niêm yết có hiệu lực: 11/03/²0²6\r\n\r\n— : Lý dº thay đổi niêm yết: Chàº bán thêm cổ phiếu ra công chúng chº cổ đông\r\nhiện hữu.\r\n\r\nĐiều ². Quyết định này có hiệu lực kể từ ngày ký.\r\n\r\nĐiều 3. Giám đốc Phòng Hệ thống giaº dịch, Giám đốc Phòng Thông tin Thị\r\ntrường, Giám đốc Phòng Quản lý Niêm yết và Tổng Công ty Điện lực Dầu khí Việt Nam\r\n— CTCP có trách nhiệm thi hành Quyết định my./.'Ìj’(fflosaĩ_c S\r\nNơi nhận: / S¶+K¶&ß®ì¶&\\ ĐÓC\r\n\r\n— Như điều 3; | CHỨNG KHOẢN Ề\\,\r\n— VSDC: | w | _ THÀNH PHÔ ắ,'\r\n— Lưu: VT, NY (6W— 9\\HỒ CNMINH/¶(4. —\r\n88\r\nNguyễn Thị Việt Hà\r\n“HOSE_BM—7.34/1—BH0²—07/²0²² _\r\n",
+      "text_sha256": "5a044be98ba0c2112f2f11f9d0180fe876e14a122d179ddffe806b307bd3cd22"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "POW"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+    "document_sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "f3d49d9528442302210e00da472ec590ba5169d6c3e1c3e37e6cbaaf47fecf37",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "9a930b1493040c7337198d2888ff64dd4cc6236fa8624027dbd8244287df2ecf",
+       "text": "Image too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\nImage too small to scale!! (2x36 vs min width of 3)\r\nLine cannot be recognized!!\r\n"
+      },
+      "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+      "document_sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+      "materialization_id": "e850772dae282d0f3c79c218138c82b764d2e738f5e919ba0719e20ffc23e3e0",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "610fbdb56194f693305b239bb533a80fd16e52a0521ac8892f3e1027fae15826",
+      "text": "SỞ GIAO DỊCH CHỨNG KHOÁN CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nTHANH PHO HO CHÍ MINH Doc lap — Tw do — Hanh phic\r\nS226 /QD-SGDHCM Thanh phé Hé Chi Minh, ngay 09 thang 03 năm 2026 |\r\n— QUYET ĐỊNH\r\nVề việc thay đối đăng ký niém yét\r\nTONG GIÁM DOC SO GIAO DICH CHUNG KHOAN\r\nTHANH PHO HO CHI MINH\r\n\r\nCan cw Luật Chitng khodn ngay 26 thang 11 năm 2019 va Luật sửa doi, bé sung\r\nmot số diéu cua Luật Ching khodn, Luật Ké todn, Luật Kiém tºán d6c lap, Luat Ngan\r\nsach nha nước, Luật Quan ly, su dung tai san cong, Luật Quan ly Thué, Luật Thué thu\r\nnhdp ca nhan, Ludt Dit trữ quéc gia, Luật xử lý vi pham hanh chinh ngay 29 thang 11\r\nndm 2024;\r\n\r\nCan cir Nghi dinh số 1 539/²0²0/NĐ—CP ngày 31 thang 12 năm 2020 cua Chính\r\nphu quy dinh chi tiét thi hanh mét số diéu của Luật Chieng khºán va Nghi dinh số\r\n245/2025/ND-CP ngay 11/09/2025 ctia Chinh phi sta doi, bd sung một số diéu cua\r\nNeghi dinh sé 155/2020/ND-CP ngay 31 thang 12 nam 2020;\r\n\r\nCan ctr Quyét dinh số 02/OD-HPTV ngay 30 thang 06 nam 2021 của H6i dong\r\nthanh vién So Giao dich Ching khºán Viét Nam về viéc thanh lap So Giao dich Ching\r\nkhºán Thanh pho H6 Chi Minh;\r\n\r\nCan ctr Quyét dinh số 07/OD-HDTV ngay 09 thang 07 nam 2021 của H6i dong\r\nthanh vién So Giao dich Ching khºán Viét Nam ban hanh Diéu lé t6 chức va hoat déng\r\ncua So Giao dich Ching khºán Thanh pho H6 Chi Minh;\r\n\r\nCan cứ Quyét dinh số 22/OD-HPTV ngay 18 thang 04 nam 2025 cua Hoi dong\r\nthanh vién Sở Giao dich Ching khodn Viét Nam về viéc ban hanh Quy ché niém yét va\r\ngiao dich ching khodn niém yét;\r\n\r\nCan cứ hé so dé nghj thay doi dang ký niém yét của Téng Cong ty Dién luc Dau\r\nkhi Viét Nam — CTCP; . `\r\n\r\nTheº đề nghị của Giám đốc Phòng Quản lý Niêm yết.\r\n| QUYET DINH:\r\n\r\nDiéu 1. Chap thuận cho Téng Céng ty Dién le Dau khi Viét Nam — CTCP\r\nđược thay déi dang ky niém yét véi ndi dung nhu sau:\r\n\r\n- Loaichtmgkhoan: Cổ phiéu phé thong\r\n\r\n- Mã chứng khoan: POW\r\n\r\n- Ménh gia: 10.000 déng/cé phiéu\r\nHOSE_BM-7.34/1-BH02-07/2022\r\n\r\n|\r\n²/00000000000000000000.....________...…..—...cnnnnnmnnnneannnnnnnnnnnnnnnannnannnnannnnsassāāāuuuuuuuuuuuuuuuuuuuuīās\r\n",
+      "text_sha256": "610fbdb56194f693305b239bb533a80fd16e52a0521ac8892f3e1027fae15826"
+     },
+     {
+      "citation_id": "2358400951d88f6d8edaf94e519666ec60fbc7dcef53f548df5d00fe6065cad0",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+      "document_sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+      "materialization_id": "2970f797baeba82e1b5f758a4e3bd739b4e08379e75bfce32727dfe30a0d219a",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "cd95d535828cc3c49244def7bfc7b5eba4782b45eda2ed7b2c0891b79e471b27",
+      "text": "²\r\n\r\n- Số lượng ching khºán trước khi thay đổi niém yét: 2.786.821.096 cổ phiéu\r\n(Hai ty bay tram tam muoi sdu triéu tam trăm hai muoi mét nghin khéng tram chin muoi\r\nsdu co phiéu)\r\n\r\n- S6lugng chimg khoan thay déi niém yét: 281.024.592 cổ phiéu (Hai tram tam\r\nmuoi mot triéu khong tram hai muoi bốn nghin nam tram chin muoi hai cé phiéu)\r\n\r\n- Gia tri chứng khoan thay đổi niém yét (theo ménh gid): 2.810.245.920.000\r\ndong (Hai nghin tam tram mudi ty hai tram bốn muoi lam triéu chin tram hai muoi\r\nnghin đồng)\r\n\r\n— : Số lượng chứng khodn sau khi thay déi niém yét: 3.067.845.688 c6 phiéu (Ba\r\nty khong tram sdu muoi bay triéu tam tram bon muoi lam nghin sáu tram tam muoi tam\r\ncổ phiéu)\r\n\r\n- Gia tri chimg khodn niém yét sau khi thay déi niém yét (theo ménh gid):\r\n30.678.456.880.000 don g (Ba mui nghin sau tram bay muoi tam ty bôn tram nam muoi\r\nsau triéu tam tram tém muoi nghin dong)\r\n\r\n- Ngay thay đổi niém yét có hiéu luc: 11/03/2026\r\n\r\n- Ly do thay déi niém yét: Chao ban thém cé phiéu ra cong ching cho cổ déng\r\nhién hữu.\r\n\r\nDiéu 2. Quyét dinh nay có hiéu luc ké tir ngay ky.\r\n\r\nDiéu 3. Gidm déc Phong Hé théng giao dich, Gidm déc Phong Thong tin Thi\r\ntrudng, Giám déc Phong Quan ly Niém yét va Téng Céng ty Dién luc Dau khi Viét Nam\r\n— CTCP có trach nhiém thi hanh Quyét dinh nay! areare .\r\n\r\nNoi nhan: 5/ STONEIGNEM DOC\r\n— Nhu điều 3; | CHUNG KHOAN Ra\r\n— VSDC: | w | _ THÀNH PHO |\r\n- Luu: VT, NY Oy 2\\HO CRY MINH/ Se 4_—\r\n88\r\nNguyễn Thị Việt Hà\r\n“HOSE_BM—7.34/1—BH0²—07/²0²² _\r\n",
+      "text_sha256": "cd95d535828cc3c49244def7bfc7b5eba4782b45eda2ed7b2c0891b79e471b27"
+     }
+    ],
+    "pages_processed": 2,
+    "schema_version": "1.0.0",
+    "source_page_count": 2,
+    "ticker": "POW"
+   }
+  },
+  "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe": {
+   "eng_psm6": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+    "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "eng",
+    "ocr_psm": {
+     "2": 6
+    },
+    "pages": [
+     {
+      "citation_id": "634f5b820399a8638b6bbd42c485259efc07e8a7ae006ba42fd0e5a22037133a",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "80283b77554e10beb209670f6a4d3aade0c2c86a4e8fc248bc85d8bd82650477",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=eng psm=6",
+      "ocr_language": "eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "9dbd2c84f88bee06b2f17b54340c6cf3d252ad2dcae2dd05a603282a2e10d16b",
+      "text": "TAP DOAN CONG NGHIEP - NANG LUQNG CONG HOA XA HOI CHU NGHIA VIET NAM\r\nQUOC GIA VIET NAM Doc lip - Ty do - Hanh phic\r\nTONG CONG TY se\r\nDIEN LUC DAU KHi VIET NAM - CTCP\r\n86: 4 7BC-DLDK Ha N6i, ngay{g thang 12 nam 2025\r\nBAO CAO\r\nKét qua dot phat hanh c6 phiéu dé tra 6 tire va phat hanh cé phiéu\r\ndé ting vén cé phan tir nguon von chi sé hiru\r\nKinh gti: Uy ban Chimng khoén Nha nue,\r\nL. Gidi thigu vé Té chire phat hanh\r\n1. Tén Té chite phat hanh: Téng Céng ty Dién luc Dau khi Viét Nam - CTCP\r\n2. Tén viét tat: PV Power\r\n3. Dia chi try sé chinh: Toa nha Vién Dau khi Viét Nam, s6 167 Dudng Trung Kinh,\r\nPhuéng Yén Hoa, Thanh pho Ha Noi\r\n4. Dién thoai: (84-24) 222 10 288 Fax: (84-24) 222 10388 Website: www.pvpower.vn\r\n5. Vén diéu 1é; 23.418.716.000.000 déng\r\n6. Ma cé phiéu:; POW\r\n7. Noi mé tai khoan thanh toan: Ngan hing Thuong mai Co phan Dau tu va Phat trién\r\nViét Nam — Chi nhanh Quang Minh. $6 hiéu tai khoan: 427.966.966.6\r\n8. Gidy chimg nhan dang ky doanh nghigp s6: 0102276173 do Sé Ké hoach va Dau tu\r\nThanh pho Ha Ni cap lan dau ngay 31/06/2007 va dang ky thay doi lan thir 18 ngay\r\n14/10/2025.\r\n9. Giay phép thanh lap va hoat dong: Khéng. ;\r\nII. Phuong an phat banh\r\n1. Tén c6é phiéu: Cé phiéu Téng Cong ty Dién lye Dau khi Viét Nam - CTCP\r\n2. Loai cé phiéu: Cé phiéu phd thong\r\n3. $6 luong c6 phiéu true thoi diém phat hanh:\r\n- Tong sé cé phiéu da phat hanh 2.341.871.600 cé phiéu\r\n- $6 lugng c6 phiéu dang luu hanh: 2.341.871.600 6 phiéu\r\n- $6 hong cé phiéu quy: 0 cé phiéu\r\n4. $6 lugng cé phiéu dy kién phat hanh: 444.955.604 cd phiéu, trong do:\r\n- Phat hanh ¢6 phiéu tra c6 ttre: 93.674.864 cd phiéu |\r\n- Phat hanh cé phiéu dé tang vn cé phan tir nguén vén chi sé hitu: 351.280.740 cd\r\nphiéu\r\n5. Ty 1é thu hién quyén: , _ .\r\n- Doi v6i phat hanh cé phiéu tra cé tire: 100:4 (tai ngay dang ky cting thyc hign quyén\r\nnhan c6 tire, c6 déng sé htru 100 co phiéu sé nhan 4 co phieu tra co tire).\r\nfi\r\n",
+      "text_sha256": "9dbd2c84f88bee06b2f17b54340c6cf3d252ad2dcae2dd05a603282a2e10d16b"
+     }
+    ],
+    "pages_processed": 1,
+    "schema_version": "1.0.0",
+    "source_page_count": 3,
+    "ticker": "POW"
+   },
+   "vie": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+    "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6
+    },
+    "pages": [
+     {
+      "citation_id": "2f80c41acc67864a0d9b77c4c4cad2b8424139c4e6e8386136068241c5af726c",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "e6913ad51c5d26a70c2d824bd68d739e4b52b84374c7f7a201a7837a3a21b42b",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "21358c36b9507581b905d82873373857844163ea12f43acee7dcaab9c732dc80",
+      "text": "TẬP DOÀN CÔNG NGHIỆP —NĂNG LƯỢNG _ CỘNGHÒA XẢ HỘI CHỦ NGHĨA VIỆT NAM\r\nQUỐC GIA VIỆT NAM Độc lập — Tự dº — Hạnh phúc\r\nTỔNG CÔNG TY I\r\nĐIỆN LỰC DẦU KHÍ VIỆT NAM — CTCP\r\n[HỰH ( số:#)+Ý /TB—ĐLDK Hà Nội, ngày ¡3 tháng 1² năm ²0²5\r\nCÔNG BÓ THÔNG TIN\r\nKính gửi:\r\n— Uy ban Chứng khºán Nhà nước;\r\n— Sở Giaº dịch Chứng khºán thành phổ Hô Chí Minh.\r\n1. Tên tổ chức: Tổng công ty Điện lực Dầu khí Việt Nam — Công ty cổ phần.\r\n— Mã chứng khºán: POW\r\n— Địa chỉ: Tòa nhà Viện Dầu khí Việt Nam, 167 Phố Trung Kính, Phường\r\nYên Hòa, Thành phố Hà Nội, Việt Nam.\r\n— Điện thºại: (0²4) ²²²10²88 Fax: (0²4) ²²²10388\r\n— FE—mail: quanhecºdºng@pvpºwer.vn\r\n². Nội dung thông tin công bố:\r\n— Báº cáº Kết quả đợt phát hành cổ phiếu để trả cổ tức và phát hành cổ phiếu\r\nđể tăng vốn cổ phần từ nguồn vốn chủ sở hữu.\r\n3. Thông tin này đã được công bố trên trang thông tin điện tử của Tổng công ty\r\nvàº ngày / /1²/²0²5 tại đường dân https://pvpºwer.vn. .\r\nChúng tôi xin cam kết các thông tin công bố trên đây là đúng sự thật và hºàn\r\ntºàn chịu trách nhiệm trước pháp luật về nội dung các thông tin đã công bố.\r\nTrân trọng./.\r\nTUQ. TỔNG GIÁM ĐÓC\r\nNơi nhận: NGƯỜI ĐƯỢC ỦY QUYỀN CBTT\r\n— Như trên; __. TRƯỞNG BAN KINH TẾ KÉ HOẠCH\r\n— HĐQT TCT (để b/c); #/²²²?7«3>>\r\n— TGĐ TCT (để b/c); &ę..“..> %\r\n— Ban KS TCT (đê b/c); ẩ> ... TỒNG : `ể †\r\n— P.TGĐ T. V. Phương (để b/c); > [Dô\\G Tỵ tiệu /\r\n— Lưu: VT, KTKH (NMT). w \\DAU KHÍ VI V//ßB/á |K._ —\r\nTài liệu đính kèm: | ² ,ỷ/. —\r\n— Báº cáº Kết quả đợt phát hành cổ phiếu e ²º\r\nđể trả cô tức và phát hành cô phiếu để tăng Npuyến Đình Thi\r\nvốn cổ phần từ nguồn vốn chủ sở hữu.\r\n",
+      "text_sha256": "21358c36b9507581b905d82873373857844163ea12f43acee7dcaab9c732dc80"
+     },
+     {
+      "citation_id": "28e2cd7eb4ba0550e3ffb7c3350cab11df738e34abc56a04bd9e6cdcd353545b",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "4a4c80ed68f081a7f1d0fd05bef2673aa3502ca7c3963f3a19ac48186dad49c5",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "f8dbc1e88f1de26cfa5dd97b974cdee63804736edc9acecd56ac7387aca1ad52",
+      "text": "TẬP ĐOÀN CÔNG NGHIỆP — NĂNG LƯỢNG  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM\r\nQUỐC GIA VIỆT NAM Độc lập — Tự dº — Hạnh phúc\r\nTỔNG CÔNG TY —\r\nĐIỆN LỰC DẦU KHÍ VIỆT NAM — CTCP\r\nSố: .`fJ#BC—ĐLDK Llà Nội, ngày { — tháng 1² năm ²0²5\r\nBÁO CÁO\r\nKết quả đợt phát hành cổ phiếu để trả cổ tức và phát hành cổ phiếu\r\nđể tăng vốn cổ phần từ nguồn vốn chủ sở hữu\r\nKính gửi: Ủy ban Chứng khºán Nhà nước.\r\nI. Giới thiệu về Tốổ chức phát hành\r\n1. Tên Tổ chức phát hành: Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\n². Tên viết tắt: PV Pºwer\r\n3. Địa chỉ trụ sở chính: Tòa nhà Viện Dầu khí Việt Nam, số 167 Đường Trung Kính,\r\nPhường Yên Hòa, Thành phô Hà Nội\r\n4. Điện thºại: (84—²4) ²²² 10 ²88 Fax: (84—²4) ²²² 10 388 : Website: www.pvpºweër.vn\r\n5. Vốn điều lệ: ²3.418.716.000.000 đồng\r\n6. Mã cổ phiếu: POW\r\n7. Nơi mở tài khºản thanh tºán: Ngân hàng Thương mại Cổ phần Đầu tư và Phát triển\r\nViệt Nam —Chi nhánh Quang Minh. Số hiệu tài khºản: 4²7.966.966.6\r\n8. Giấy chứng nhận đăng ký dºanh nghiệp số: 010²²76173 dº Sở ựẹ hºạch và Đầu tư\r\nThành phố Hà Nội cấp lân đâu ngày 31/06/²007 và đăng ký thay đôi lần thứ 18 ngày\r\n14/10/²0²5.\r\n9. Giấy phép thành lập và hºạt động: Không. |\r\nII. Phương án phát bành\r\n1. Tên cổ phiếu: Cổ phiếu Tổng Công ty Điện lực Dầu khí Việt Nam — CTCP\r\n². Lºại cổ phiếu: Cổ phiếu phổ thông\r\n3. Số lượng cổ phiếu trước thời điểm phát hành:\r\n— Tổng số cổ phiếu đã phát hành ².341.871.600 cổ phiếu\r\n— Số lượng cổ phiếu đang lưu hành: ².341.871.600 cổ phiếu\r\n— Số lượng cổ phiếu quỹ: 0 cổ phiếu\r\n4. Số lượng cổ phiếu dự kiến phát hành: 444.955.604 cổ phiếu, trºng đó:\r\n— Phát hành cổ phiếu trả cổ tức: 93.674.864 cổ phiếu |\r\n— N}ảt hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu: 351.²80.740 cổ\r\nphiêu t\r\n5. Tỷ lệ thực hiện wyền: ` @² |\r\n— Đối với phát hành cổ phiếu trả uặ tức: 100:4 (tại ngày đăng ký cùng thực hiện quyền\r\nnhận cô tức, cô đông sở hữu 100 cô phiêu sẽ nhận 4 cô phiếu trả cô tức).\r\nhũ yà\r\n",
+      "text_sha256": "f8dbc1e88f1de26cfa5dd97b974cdee63804736edc9acecd56ac7387aca1ad52"
+     },
+     {
+      "citation_id": "12f604daa0b738456c740ffb3071bd5f9179f4ac0eaf7a7e63ee63ac78668437",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "e205a54ebc210f34e4007c258467a71936444ac46c5411443f6409b1da543489",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie psm=6",
+      "ocr_language": "vie",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "520b409b52137ea74f894b685c4ea556156616334eaaa99374596eeb434417bc",
+      "text": "— Đối với phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu: 100:15 (tại\r\nngày đăng ký cùng thực hiện quyền nhận cổ phiếu phát hành để tăng vốn cổ phần từ\r\nnguồn vốn chủ sở hữu, cổ đông sở hữu 100 cổ phiếu sẽ nhận thêm 15 cổ phiếu mới).\r\n6. Nguồn vốn phát hành:\r\n— Phát hành cổ phiếu trả cổ tức: Lợi nhuận sau thuế chưa phân phối trên Báº cáº tài\r\nchính kiểm tºán năm ²0²4 của PV Pºwer.\r\n— Phát hành cổ phiếu để tăng vốn cổ phần từ nguồn vốn chủ sở hữu: Từ nguồn quỹ đầu\r\ntư phát triển trên Báº cáº tải chính kiểm tºán năm ²0²4 của PV Pºwer.\r\n7. Phương án xử lý phần lẻ cổ phần, cổ phiếu lẻ:\r\n— Phát hành cổ phiếu trả cổ tức: Số cổ phiếu mỗi cổ đông nhận được sẽ làm tròn xuống\r\nđến hàng đơn vị, số cổ phiếu lẻ (phần thập phân) phát sinh dº làm tròn xuống đến hàng\r\nđơn vị (nếu có) sẽ được hủy bỏ.\r\n— Phát hành cổ phiếu để tăng Ổn'cố ủần từ nguồn vốn ợ1ù'sở hC'ru: Số Ổ`phiếu mỗi cổ\r\nđông nhận được sẽ lảm Ệròn xpông đên hàng Qcm vị, số cô phiêu lẻ (phân thập phân)\r\nphát sinh dº làm tròn xuông đền hàng đơn vị (nều có) sẽ được hủy bỏ.\r\n8. Ngày kết thúc đợt phát hành: 11/1²/²0²5.\r\n9. Ngày dự Ụến chuyển ựp cổ phiếu: Dự kiến trºng Tl.ìáng 1 năm ²0²6, sau khi PV\r\nPºwer hºàn tất việc thay đôi đăng ký chứng khºán tại Tông công ty Lưu ký và Bừ trừ\r\nChứng khºán Việt Nam và đăng ký thay đổi niêm yết bổ sung số lượng cổ phiếu mới\r\nphát hành tại Sở Giaº dịch Chứng khºán Thành phố Hồ Chí Minh.\r\nIII. Kết quả phát hành cốổ phiếu\r\n\r\nI. Tổng số cổ phiếu đã phân phối: 444.949.496 cổ phiếu, trºng đỏ:\r\n— Số cổ phiếu phân phối chº cổ đông để trả cổ tức theº tỷ lệ: 93.67².39² cổ phiếu chº\r\n48.²68 cổ đông;\r\n— Số cổ phiếu phân phối chº cổ đông để tăng vốn cổ phần từ nguồn vốn chủ sở hữu theº\r\ntỷ lệ: 351.²77.104 cổ phiếu chº 48.²68 cổ đông;\r\n— Số cổ phiếu xử lý phần lẻ cổ phần, cổ phiếu lẻ bị hủy bỏ: 6.108 cổ phiếu.\r\n². Tổng số cổ phiếu sau đợt phát hành (ngày 11/1²/²0²5): ².786.8²1.096 cổ phiếu, trºng đó:\r\n— Số lượng cổ phiếu đang lưu hành: ².786.8²1.096 cổ phiếu;\r\n— Số lượng cổ phiếu quỹ: 0 cổ phiếu.\r\nIV. Tài liệu gửi kèm: Không có\r\n\r\nHà Nội, ngày [|¶ — tháng 1² năm ²0²5\r\n\r\nNơi nhận: TỔNG CÔNG TY\r\n\r\n— Như trên; — ĐIỆN LỰC DẦÀU KHÍ VIỆT NAM — CTCP\r\n\r\n— ỆỄỄ.ỆỀềẸ HCV:.. NGƯỜI ĐẠI DIỆN THEO PHÁP LUẬT\r\n\r\n= (để b/c); w) { #\r\n\r\n— BKS TCT (e—cºpy); /éh VÂỵ ®GIAM ĐÓC\r\n\r\n— Các PTGĐ TCT (e—cºpy); ợ²` ứ›ủ\r\n\r\n— Các Ban/VP TCT: ĐTXD, KTKH, @ / « ^, — n vạº\r\n\r\nPC, KSNB, TCNS, VP (để p/h); Ỉì\r\n\r\n— Lưu: VT, TCKT. ỉ +jgTÚP\r\n\r\nkuyở??/Î — _<^\r\nTạ¡i # PuỐ VP\r\nLê Như Linh\r\n3\r\n",
+      "text_sha256": "520b409b52137ea74f894b685c4ea556156616334eaaa99374596eeb434417bc"
+     }
+    ],
+    "pages_processed": 3,
+    "schema_version": "1.0.0",
+    "source_page_count": 3,
+    "ticker": "POW"
+   },
+   "vie+eng": {
+    "contract": "annual_financial_ocr_materialization/v1",
+    "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+    "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+    "ocr_engine": "tesseract v5.5.0.20241111",
+    "ocr_language": "vie+eng",
+    "ocr_psm": {
+     "1": 6,
+     "2": 6,
+     "3": 6
+    },
+    "pages": [
+     {
+      "citation_id": "02025ef10140efa0a04ef11a3aeb1bba9db89f5ba4f12c3582951f60860c4e30",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "f95b4e2a5bdd7fd4a320111051dbb1b699694be393fc51e089fc484b02f1692c",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 1,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "c7fcba52e1048df6902eb3225b14531877c3b1d0ca52d1e80e814017f20d75f5",
+      "text": "TAP DOAN CONG NGHIỆP —NĂNG LƯỢNG _ CỘNGHÒA XA HỘI CHỦ NGHIA VIET NAM\r\nQUOC GIA VIET NAM Doc lip — Ty do — Hanh phic\r\nTONG CONG TY rs\r\nDIEN LU'C DAU KHi VIET NAM — CTCP\r\n[HỰH ( số:#)+Ý /TB-DLDK Ha Nội, ngày ¡3 thang 12 năm 2025\r\nCONG BO THONG TIN\r\nKinh gti:\r\n— Uy ban Ching khoan Nha nước;\r\n— Sở Giao dich Chimg khoan thanh pho H6 Chi Minh.\r\n1. Tén tổ chức: Téng céng ty Dién luc Dau khi Viét Nam — Céng ty cổ phan.\r\n— Machimg khoan: POW\r\n- Dia chi: Toa nha Vién Dau khi Viét Nam, 167 Phé Trung Kinh, Phuong\r\nYén Hoa, Thanh pho Ha Ndi, Viét Nam.\r\n— Dién thoai: (024) 22210288 Fax: (024) 22210388\r\n- E-mail: quanhecodong@pvpower.vn\r\n2. Ndi dung théng tin céng bo:\r\n— Bao cdo Két qua dot phat hanh cé phiéu dé tra cổ ttre va phat hanh cd phiéu\r\ndé ting von cổ phan tir nguồn von chủ sé hữu.\r\n3. Théng tin nay da duoc céng bố trén trang théng tin dién tir cla Tong céng ty\r\nvao ngay 79 /12/2025 tai dwong dan https://pvpower.vn. .\r\nChúng tôi xin cam kết các thông tin công bố trên đây là đúng sự thật và hºàn\r\ntºàn chịu trách nhiệm trước pháp luật về nội dung các thông tin đã công bo.\r\nTran trong./.\r\nTUQ. TONG GIAM DOC\r\nNoi nhận: NGUOI ĐƯỢC UY QUYEN CBTT\r\n~Nhutrén; __. TRUONG BAN KINH TE KE HOACH\r\n— HDQT TCT (dé b/c); #/²²²?7«3>>\r\n— TGĐ TCT (để b/c); — XA\r\n- Ban KS TCT (dé b/c); ik, , TONG : ‘sa †\r\n— P.TGĐ T. V. Phương (để b/c); = (SONG Ty IEW i) Yi\r\n— Luu: VT, KTKH (NMT). w \\DAU KHÍ vi TK —\r\nTài liệu đính kèm: | ow YOR —\r\n— Báº cáº Kết quả đợt phát hành cổ phiếu Or 5\r\ndé tra cô tite va phat hanh c6 phiéu dé tang Nguyen Dinh Thi\r\nvén cổ phan tir nguén von chi sé hữu.\r\n",
+      "text_sha256": "c7fcba52e1048df6902eb3225b14531877c3b1d0ca52d1e80e814017f20d75f5"
+     },
+     {
+      "citation_id": "5052dad6e78cd44eff83bccbbd9183da6085278e9ddcaabba9e55784bc178d35",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "426207a75e41266cead9fb4c3be7afd3e789a9d91b12b3b53b07e08023ccd7b6",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 2,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "104d08b3d9a62d1ae9faa723f657d3d742ea23470f4da529508bd37edc058bde",
+      "text": "TAP DOAN CONG NGHIEP — NANG LƯỢNG CONG HOA XA HOI CHU NGHIA VIET NAM\r\nQUOC GIA VIET NAM Doc lip — Ty do — Hanh phic\r\nTONG CONG TY —\r\nDIEN LUC DAU KHÍ VIET NAM — CTCP\r\n86: 4 7BC-DLDK Ha N6i, ngay{g thang 12 nam 2025\r\nBAO CAO\r\nKét qua dot phat hanh cổ phiéu dé tra cổ tire va phat hanh cé phiéu\r\ndé ting vén cé phan tir nguon von chi sé hữu\r\nKinh gửi: Uy ban Chứng khoén Nha nước.\r\nL. Giới thigu về Té chire phat hanh\r\n1. Tén Té chite phat hanh: Téng Céng ty Dién lực Dau khi Viét Nam — CTCP\r\n2. Tén viét tat: PV Power\r\n3. Dia chi try sé chinh: Toa nha Vién Dau khi Viét Nam, số 167 Dudng Trung Kinh,\r\nPhường Yén Hoa, Thanh pho Ha Noi\r\n4. Dién thoai: (84-24) 222 10 288 Fax: (84-24) 222 10388 Website: www.pvpower.vn\r\n5. Vén diéu lệ: 23.418.716.000.000 déng\r\n6. Ma cổ phiếu: POW\r\n7. Noi mé tai khoan thanh toan: Ngan hing Thuong mai Co phan Dau tu va Phat trién\r\nViét Nam — Chi nhanh Quang Minh. Số hiéu tai khoan: 427.966.966.6\r\n8. Giấy chimg nhận dang ky doanh nghiệp s6: 0102276173 do Sở Ké hoach va Dau tu\r\nThanh pho Ha Nội cap lan dau ngay 31/06/2007 va dang ky thay doi lan thir 18 ngay\r\n14/10/2025.\r\n9. Giay phép thanh lap va hoat dong: Khéng. |\r\nII. Phương án phát bành\r\n1. Tén cổ phiếu: Cổ phiéu Tổng Công ty Điện lực Dau khi Việt Nam — CTCP\r\n2. Loai cổ phiếu: Cổ phiéu phổ thông\r\n3. Số lượng cổ phiéu trước thoi điểm phat hanh:\r\n— Tổng số cổ phiếu đã phát hành ².341.871.600 cổ phiếu\r\n— Số lượng cổ phiếu đang lưu hành: ².341.871.600 cổ phiếu\r\n— Số lượng cổ phiếu quỹ: 0 cổ phiếu\r\n4. Số lượng cổ phiéu dy kiến phat hanh: 444.955.604 cd phiéu, trong đó:\r\n— Phat hanh cổ phiéu tra cổ ttre: 93.674.864 cd phiéu |\r\n— Phat hanh cổ phiéu dé tang vốn cé phan tir nguén vén chủ sé hữu: 351.280.740 cổ\r\nphiéu t\r\n5. Tỷ lệ thực hiện wyền: ` @² |\r\n— Đối với phát hành cổ phiếu trả uỆ tire: 100:4 (tai ngày dang ky cùng thực hiện quyền\r\nnhận cô tire, cô đông sé hữu 100 co phiéu sé nhận 4 cô phiếu tra co tire).\r\nfi\r\n",
+      "text_sha256": "104d08b3d9a62d1ae9faa723f657d3d742ea23470f4da529508bd37edc058bde"
+     },
+     {
+      "citation_id": "6b7df00187d7a75220e47b43a1003a24ddf1293d9d8ec92c8c86e72c63938ecd",
+      "contract": "annual_financial_ocr_materialization/v1",
+      "diagnostic": {
+       "encoding": "utf-8",
+       "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+       "text": ""
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "document_sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "materialization_id": "9c0c2981feb4e5fdf6a5044aad5aa746d819688dce338e91837dd1f2d9d72287",
+      "ocr_engine": "tesseract v5.5.0.20241111 language=vie+eng psm=6",
+      "ocr_language": "vie+eng",
+      "ocr_psm": 6,
+      "page": 3,
+      "provenance": "ocr",
+      "render_dpi": 300,
+      "status": "ocr_available",
+      "stdout_sha256": "f04d695412bc887b37eaa26d187ec12a85c764f6401ae7e6207a8c9c7f6d8724",
+      "text": "— Đối voi phat hanh cổ phiéu dé tang vốn cé phan tir nguồn vốn cha sé hitu: 100:15 (tai\r\nngay dang ky cing thực hién quyén nhan cé phiéu phat hanh dé tang von cổ phan tir\r\nnguồn vén chu sở hitu, cổ déng sé hữu 100 cổ phiéu sé nhận thém 15 cổ phiéu mdi).\r\n6. Nguén vén phat hanh:\r\n— Phat hanh cổ phiéu tra cé ttre: Loi nhudn sau thué chua phan phdi trén Bao cao tai\r\nchinh kiém tºán nam 2024 ctia PV Power.\r\n— Phat hanh cổ phiéu dé tang von cé phan tir nguén vốn cha sé hitu: Tir nguén quy dau\r\ntư phat trién trén Bao cáº tai chinh kiém todn nam 2024 của PV Power.\r\n7. Phuong an xử Ly phan lẻ cổ phan, cổ phiéu lẻ:\r\n— Phat hanh cổ phiéu tra cé tire: $6 cổ phiéu mdi cé dong nhận duge sé lam tron xuống\r\ndén hang don vi, số cổ phiéu lẻ (phan thap phan) phat sinh do lam tron xuống dén hang\r\ndon vi (néu có) sé được hủy bo.\r\n— Phat hanh cé phiéu dé tang von cé phan tit nguồn von chu so hiru: Số cé phiéu moi cd\r\nđông nhan duge sé lam tron xuong dén hang don vi, số cô phiéu lẻ (phan thap phan)\r\nphat sinh do lam tron xu6ng den hang don vj (néu cd) sé duge hay bd.\r\n8. Ngay két thúc dot phat hanh: 11/12/2025.\r\n9, Ngay du kién chuyén giao cé phiéu: Du kién trong Thang 1 nam 2026, sau khi PV\r\nPower hoan tat việc thay doi ding ky chứng khoan tai Tong céng ty Luu ky va Bt trir\r\nChing khºán Viét Nam va dang ky thay déi niém yét bd sung sé lugng cé phiéu mdi\r\nphat hanh tai Sở Giao dich Ching khºán Thanh phé Hồ Chi Minh.\r\nIIL. Két qua phat hanh cé phiéu\r\n\r\n1. Téng số cổ phiéu da phan phdi: 444.949.496 cổ phiéu, trong do:\r\n— $6 cổ phiéu phan phối cho cổ déng dé tra cổ tite theo ty 1é: 93.672.392 cổ phiéu cho\r\n48.268 cd dong;\r\n— $6 cé phiéu phan phéi cho cổ déng dé ting vốn cổ phan tir nguồn vốn chi sé hữu theo\r\nty 16: 351.277.104 cổ phiéu cho 48.268 cd dong;\r\n— $6 cé phiéu xử ly phan lẻ cổ phan, cé phiéu lẻ bj hay bỏ: 6.108 cổ phiéu.\r\n2. Téng số cổ phiéu sau dot phat hanh (ngay 11/12/2025): 2.786.821.096 cổ phiéu, trong đó:\r\n— Số lugng cổ phiéu dang luu hanh: 2.786.821.096 cd phiéu;\r\n— Số lugng cé phiéu quy: 0 cổ phiếu.\r\nIV. Tai li¢u giri kem: Khéng có\r\n\r\nHa Nội, ngày (J thang 12 ndm 2025\r\n\r\nNoi nhận: TONG CONG TY\r\n\r\n— Nhu trén; — DIEN LUC DAU KHI VIET NAM — CTCP\r\n\r\n— ẵỄỄẸỀềẸ eee NGUOI DAI DIEN THEO PHAP LUAT\r\n\r\n= (dé b/c); w) { #\r\n\r\n— BKS TCT (e—cºpy); PESTS &.GIAM DOC\r\n\r\n— Các PTGD TCT (e-copy); oy PON\r\n\r\n- Cac Ban/VP TCT: DTXD, KTKH, af aus n vạº\r\n\r\nPC, KSNB, TCNS, VP (để p/h); Ỉì\r\n\r\n— Luu: VT, TCKT. 2 eh\r\n\r\neer — _\r\nPi # PHO VP\r\nLé Như Linh\r\nZi.\r\n",
+      "text_sha256": "f04d695412bc887b37eaa26d187ec12a85c764f6401ae7e6207a8c9c7f6d8724"
+     }
+    ],
+    "pages_processed": 3,
+    "schema_version": "1.0.0",
+    "source_page_count": 3,
+    "ticker": "POW"
+   }
+  }
+ },
+ "languages": [
+  "vie",
+  "vie+eng"
+ ],
+ "numeric_profile_scope": [
+  "2499239 page1 eng psm6",
+  "2485374 page1 eng psm6",
+  "2497826 page1 eng psm6",
+  "2425221 page2 eng psm6"
+ ],
+ "psm": 6,
+ "render_dpi": 300,
+ "schema_version": "1.0.0",
+ "sparse_profile_scope": [
+  "2444347 page1",
+  "2499239 page1",
+  "2485374 page1"
+ ]
+}

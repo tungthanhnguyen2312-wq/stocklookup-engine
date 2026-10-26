@@ -120,7 +120,8 @@ def classify_ledger_entry(entry: Mapping[str, Any]) -> tuple[str, list[str]]:
 
     factor_status = str(entry.get("adjustment_factor_status") or "")
     if factor_status == "not_applicable":
-        return CLASSIFICATION_FACTOR_NOT_APPLICABLE, [REASON_FACTOR_NOT_APPLICABLE]
+        return CLASSIFICATION_FACTOR_NOT_APPLICABLE, [REASON_FACTOR_NOT_APPLICABLE] + (
+            ["UNSUPPORTED_FACTOR_TYPE"] if entry.get("event_type") == "rights_issue" else [])
 
     execution_status = str(entry.get("execution_status") or entry.get("lifecycle_state") or "").lower()
     if execution_status != _EXECUTED_LIFECYCLE:
@@ -139,7 +140,8 @@ def classify_ledger_entry(entry: Mapping[str, Any]) -> tuple[str, list[str]]:
                          if leg.get("event_type") not in _SHARE_FACTOR_EVENT_TYPES
                          and leg.get("ex_date") in (None, entry.get("ex_date"))})
     if other_legs:
-        return CLASSIFICATION_OTHER_EVIDENCE_GAP, [f"{REASON_MIXED_EVENT_UNADJUSTED_LEG}:{leg}" for leg in other_legs]
+        return CLASSIFICATION_OTHER_EVIDENCE_GAP, [f"{REASON_MIXED_EVENT_UNADJUSTED_LEG}:{leg}" for leg in other_legs] + (
+            ["UNSUPPORTED_FACTOR_TYPE"] if "rights_issue" in other_legs else [])
 
     if factor_status != "ready" or entry.get("adjustment_factor") is None:
         blocked_by = list(entry.get("adjustment_factor_blocked_by") or [])

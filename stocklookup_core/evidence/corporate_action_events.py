@@ -1297,6 +1297,11 @@ _REVIEWED_SHARE_COUNT_FIELDS = ("shares_planned", "shares_issued", "shares_befor
                                 "shares_outstanding_before")
 _REVIEWED_FIELDS = frozenset(_REVIEWED_DATE_FIELDS + _REVIEWED_SHARE_COUNT_FIELDS + (
     "treasury_shares_before", "fractional_shares_cancelled", "stock_ratio", "cash_amount_per_share"))
+# Conditional fields: absent extensions must not change PR192 observations/identities.
+_REVIEWED_EXTRA_DATES = frozenset({"issuance_completion_date", "unrestricted_trading_date", "restricted_trading_date"})
+_REVIEWED_EXTRA_COUNTS = frozenset({"treasury_shares_after", "unrestricted_shares", "restricted_shares",
+                                   "combined_shares_issued", "co_issued_shares", "shares_outstanding_after"})
+_REVIEWED_EXTRA_FIELDS = _REVIEWED_EXTRA_DATES | _REVIEWED_EXTRA_COUNTS | {"rights_ratio", "subscription_price"}
 
 _PERCENT_RATIO_RE = re.compile(r"([0-9]{1,3}(?:,[0-9]+)?)\s*%")
 _COLON_RATIO_RE = re.compile(r"([0-9]{1,4}(?:,[0-9]+)?)\s*:\s*([0-9]{1,4}(?:,[0-9]+)?)")
@@ -1338,18 +1343,18 @@ def parse_entitlement_ratio(printed: str) -> float | None:
 
 
 def _parse_reviewed_value(field: str, printed: str) -> Any:
-    if field in _REVIEWED_DATE_FIELDS:
+    if field in _REVIEWED_DATE_FIELDS or field in _REVIEWED_EXTRA_DATES:
         return parse_vietnamese_date(printed)
     if field in _REVIEWED_SHARE_COUNT_FIELDS:
         return _parse_explicit_share_count(printed)
-    if field == "treasury_shares_before":
+    if field == "treasury_shares_before" or field in _REVIEWED_EXTRA_COUNTS:
         value = parse_vietnamese_number(printed)
-        return int(value) if value is not None and value.is_integer() and value <= _MAX_SHARES else None
+        return int(value) if value is not None and value.is_integer() and 0 <= value <= _MAX_SHARES else None
     if field == "fractional_shares_cancelled":
         return parse_vietnamese_number(printed)
-    if field == "stock_ratio":
+    if field in {"stock_ratio", "rights_ratio"}:
         return parse_entitlement_ratio(printed)
-    if field == "cash_amount_per_share":
+    if field in {"cash_amount_per_share", "subscription_price"}:
         return _parse_currency_amount(printed)
     raise ValueError(f"reviewed_field_unsupported:{field}")
 
@@ -1389,7 +1394,7 @@ def reviewed_scan_observation(document: Mapping[str, Any], review: Mapping[str, 
     fields: dict[str, Any] = {}
     citations: list[dict[str, Any]] = []
     for field, cited in sorted((review.get("fields") or {}).items()):
-        if field not in _REVIEWED_FIELDS:
+        if field not in _REVIEWED_FIELDS | _REVIEWED_EXTRA_FIELDS:
             raise ValueError(f"reviewed_field_unsupported:{field}")
         printed, page = str(cited.get("printed") or ""), int(cited.get("page") or 0)
         row = located(printed, page)
@@ -1416,6 +1421,8 @@ def reviewed_scan_observation(document: Mapping[str, Any], review: Mapping[str, 
     identity = {"schema_version": SCHEMA_VERSION, "ticker": ticker, "event_type": event_type,
                 "document_id": document_id, "content_sha256": sha}
     return {
+        **{key: value for key, value in fields.items() if key in _REVIEWED_EXTRA_FIELDS
+           and key not in {"rights_ratio", "subscription_price"}},
         "schema_version": SCHEMA_VERSION,
         "extractor_version": VERSION,
         "observation_id": _fingerprint({**identity, "fields": fields}),
@@ -1457,8 +1464,8 @@ def reviewed_scan_observation(document: Mapping[str, Any], review: Mapping[str, 
         "stock_ratio": stock_ratio,
         "ratio_basis": RATIO_BASIS_OUTSTANDING_ENTITLEMENT if stock_ratio is not None else None,
         "ratio_source": RATIO_SOURCE_EXPLICIT if stock_ratio is not None else None,
-        "rights_ratio": None,
-        "subscription_price": None,
+        "rights_ratio": fields.get("rights_ratio"),
+        "subscription_price": fields.get("subscription_price"),
         "citations": sorted(citations, key=lambda item: str(item["field"])),
         "absent_fields": dict(sorted(absent.items())),
         "warnings": sorted(set(warnings)),
