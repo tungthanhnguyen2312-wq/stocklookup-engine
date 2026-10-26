@@ -7,9 +7,8 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — SSI/POW OFFICIAL CA EVIDENCE (LOCAL COMPLETE / REVIEW CANDIDATE)
 
-[Scope](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md): eight complete
-originals; separate event legs, receipt-forward facts, existing ledger/continuity/factor gates.
-One Producer PR; no merge, runtime/Daily, authority promotion or successor. Base PR193 `89eec3e0`.
+[Facts/limits](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md): eight originals;
+receipt-forward, offline only. Open review PR; no merge, promotion or successor. Base PR193 `89eec3e0`.
 
 ## PRIOR — STOCKLOOKUP_PRODUCER_DEEP_SIMPLIFICATION (RELEASED PR146)
 
