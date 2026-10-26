@@ -8,6 +8,13 @@ remains a separate optional dependency. The historic descriptions below document
 CI split and must not be read as current runtime instructions. The current zero-active contract
 is tested by `tests/test_zero_active_vnstock.py` and `tools/audit_zero_active_vnstock.py`.
 
+**2026-10-26 bounded SSI/POW CA test admission:** `pypdf==6.14.2` is pinned in
+`constraints.txt` and declared in `requirements-test.txt` for strict PDF structure,
+partial-response and immutable-cache tests. It remains an opt-in acquisition-tool
+requirement; no Daily caller or provider/runtime activation changes. This supersedes
+the historical "undeclared pypdf" description below only for this test dependency;
+other optional PDF/OCR tools and unrelated retained suites are not newly admitted.
+
 Milestone: `CI_HERMETIC_DEPENDENCY_AND_EVIDENCE_TIER_V1` (2026-09-25). Scope: CI and test
 infrastructure only. No production analytical, provider or authority behavior changed.
 
@@ -54,6 +61,7 @@ python -m pip install -r requirements.txt -r requirements-providers.txt -c const
 | pandas, numpy, requests, pyarrow | `CORE_RUNTIME` | the core pipeline, the feature/quant engines and the hermetic tests |
 | openpyxl | `CORE_RUNTIME` | private local-only portfolio workbook import (`private_portfolio_context.py`) |
 | pytest | `CORE_TEST` | the test runner |
+| pypdf | `CORE_TEST` | complete official PDF intake and strict cache/partial-response fixtures |
 | vnstock | `OPTIONAL_PROVIDER_RUNTIME` | production KBS/VCI supplemental lane: `daily_session_level2_package` → `vnstock_worker_client` → `vnstock_worker_process` → `vn_stock_pipeline`; also the `*_sync.py` provider scripts |
 | vnai | `OPTIONAL_PROVIDER_RUNTIME` | a transitive dependency of vnstock. `vnstock_worker_process` also imports it directly, inside `try/except`. It is never declared directly |
 | anthropic | `OPTIONAL_PROVIDER_RUNTIME` | `ai_analyzer.py` for real API calls only (not `--dry-run`) |

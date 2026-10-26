@@ -123,3 +123,10 @@ its own separate authorization and evidence.
 
 Native local implementation checkpoint: `0a3073b62675cdabff1b6e21b3522f7cf0aeaca1`.
 Current milestone COMPLETE / LOCAL_IMPLEMENTATION_COMPLETE_NOT_PROMOTED; queue empty.
+
+Hosted clean-clone correction: the local host supplied `pypdf`, but the initial
+CI test tier did not. The new strict-PDF tests exposed that missing declaration
+(collection error, not an evidence or semantic discrepancy). `requirements-test.txt`
+and `constraints.txt` now declare/pin the independently exercised6.14.2 version;
+Daily/runtime dependencies and providers remain unchanged. The corrected head must
+pass hosted CI before review handoff.
