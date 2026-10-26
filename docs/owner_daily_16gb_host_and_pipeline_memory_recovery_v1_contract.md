@@ -45,6 +45,10 @@ No threshold, IID multiplier or scaling reference is relaxed by this corrective.
   projection through its unchanged pinned launcher source. Header/contract/session/coverage,
   sealed operation/Brief/product/index, exact delivery scopes and all projected fields remain
   checked. The required graph remains resident; the whole-file Unicode decoding buffer does not.
+- The velocity observer encodes each T0 record field once and feeds those bytes
+  to both original record/snapshot hash domains. Both identities, all unconsumed
+  content and the seven-axis projection remain verified by the unchanged frozen
+  sorted-unique parser; no T0 bytes or authority semantics change.
 - The existing failure hint names each failing dimension, observed/READY GiB and reason from
   the already generated observation; it takes no additional probe and grants no override.
 
@@ -65,3 +69,28 @@ The Owner relaunches the existing one-click Daily only after integration and a g
 READY observation. Historical T0 and capture knowledge cannot be reconstructed from later
 inputs. The [capture contract](prospective_pit_capture_completeness_contract.md) and
 [Monday contract](monday_live_readiness_closeout_contract.md) continue to govern missed sessions.
+
+
+## October 26 retained qualification continuation
+
+The 2,382,095,742-byte IID and a conservative full live set were retained through
+observer build/write and both downstream full-velocity reads. This completed with
+6.823 GiB peak private / 6.504 GiB peak RSS in 1,385.2 seconds under the existing
+7-GiB/1,800-second lifetime guard. Native observer build/write took 1,150.2 seconds
+under its unchanged 1,200-second guard. Velocity's 48,807 records, canonical identity
+and raw output bytes match the original reference. All 30 original T0 files
+(26,603,798,823 bytes, including the originally excluded source) retain their exact
+before/after hashes; the same 29 sessions qualify. No excluded session is promoted.
+
+The prior timeout combined native work with redundant serialization and independent
+raw-source/parity audit work. Sharing encoded fields removes duplicate serialization;
+independent raw-byte audits run in separate bounded phases, while native verification,
+limits and final parity remain mandatory. A warm 100-record profile reduced encoding
+CPU from 1.78 to 0.91 seconds and total CPU from 4.20 to 3.36 seconds.
+
+Prior Producer, M1, Action Center and complete current-product measurements remain
+applicable. The largest private peak remains 6.952 GiB, only about 48.8 MiB below the
+diagnostic cap; the native observer has about 49.8 seconds below its deadline.
+These are current-scale retained qualifications, not future-growth guarantees or
+a host READY permit. Main integration, fresh host admission and real provider/session
+acceptance remain Owner-controlled. No memory threshold or timeout is increased.

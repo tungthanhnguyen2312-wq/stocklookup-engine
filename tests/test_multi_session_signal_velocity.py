@@ -309,3 +309,28 @@ def test_retained_session_counter_preserves_streaming_identity(tmp_path):
     def broken(_):
         raise ValueError("telemetry")
     assert velocity.build_from_retained_root(tmp_path, progress_callback=broken) == baseline
+
+
+@pytest.mark.parametrize('newline', ['\n', '\r\n'])
+@pytest.mark.parametrize('resign_record', [True, False])
+def test_projected_reader_checks_both_original_domains_with_unconsumed_unicode(tmp_path, newline, resign_record):
+    snapshot = _snapshot('2026-01-02', _decision('2026-01-02'))
+    row = snapshot['records']['FPT']
+    row['z_unconsumed_evidence'] = {'unicode': 'Việt Nam\n' * 8192,
+                                  'types': [None, False, -0.0, 1e-9], 'quoted': '\"\\'}
+    if resign_record:
+        row.pop('prospective_snapshot_record_identity')
+        retention._identity(row, retention.RECORD_PREFIX, 'prospective_snapshot_record_identity')
+    snapshot.pop('snapshot_identity')
+    retention._identity(snapshot, retention.SNAPSHOT_PREFIX, 'snapshot_identity')
+    path = tmp_path/'snapshot.json'
+    with path.open('w', encoding='utf-8', newline=newline) as handle:
+        json.dump(snapshot, handle, ensure_ascii=False, sort_keys=True, indent=2)
+    projected, valid = velocity._project_snapshot(path)
+    assert valid is resign_record
+    assert valid == retention.validate_snapshot(snapshot)
+    assert projected['snapshot_identity'] == snapshot['snapshot_identity']
+    assert 'z_unconsumed_evidence' not in projected['records']['FPT']
+    assert projected['records']['FPT']['velocity_axes'] == {
+        name: velocity._axis(snapshot['records']['FPT']['integrated_decision_at_t0'], name)
+        for name in velocity.AXES}

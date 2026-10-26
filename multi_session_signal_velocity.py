@@ -52,7 +52,7 @@ def _project_snapshot(path: Path) -> tuple[dict[str, Any] | None, bool]:
     A projection is private to the observer, never a replacement T0. Full public
     discovery remains available for callers explicitly requiring the snapshot.
     """
-    from bounded_artifact_stream import canonical_bytes, stream_artifact
+    from bounded_artifact_stream import ObjectStream, canonical_bytes
     records = {}
     valid = True
     def consume(ticker, row):
@@ -60,16 +60,55 @@ def _project_snapshot(path: Path) -> tuple[dict[str, Any] | None, bool]:
         if not isinstance(row, Mapping) or row.get("ticker") != ticker:
             valid = False
             return
-        body = dict(row)
-        identity = body.pop("prospective_snapshot_record_identity", None)
-        if identity != retention.RECORD_PREFIX + hashlib.sha256(canonical_bytes(body)).hexdigest():
-            valid = False
         decision = row.get("integrated_decision_at_t0")
         if isinstance(decision, Mapping) and decision.get("ticker") == ticker:
             records[ticker] = {"integrated_decision_identity": row.get("integrated_decision_identity"),
                               "velocity_axes": {name: _axis(decision, name) for name in AXES}}
+    # Both native hash domains contain the same record fields. Encode each
+    # field once, feeding the bytes to both digests; the record domain excludes
+    # only its own identity. Keep the frozen sorted-unique parser unchanged.
+    root_digest = hashlib.sha256(b"{")
+    metadata, first = {}, True
     try:
-        metadata, digest, _ = stream_artifact(path, excluded={"snapshot_identity"}, on_record=consume)
+        with path.open(encoding="utf-8") as source:
+            parser = ObjectStream(source)
+            for key in parser.members():
+                included = key != "snapshot_identity"
+                if included:
+                    if not first: root_digest.update(b",")
+                    first = False
+                    root_digest.update(canonical_bytes(key)); root_digest.update(b":")
+                if key == "records":
+                    root_digest.update(b"{")
+                    for index, ticker in enumerate(parser.members()):
+                        row = parser.value()
+                        if index: root_digest.update(b",")
+                        root_digest.update(canonical_bytes(ticker)); root_digest.update(b":")
+                        if not isinstance(row, Mapping):
+                            root_digest.update(canonical_bytes(row)); valid = False
+                            continue
+                        record_digest = hashlib.sha256(b"{")
+                        root_digest.update(b"{"); record_first = True
+                        for position, name in enumerate(sorted(row)):
+                            prefix = canonical_bytes(name) + b":"
+                            value = canonical_bytes(row[name])
+                            if position: root_digest.update(b",")
+                            root_digest.update(prefix); root_digest.update(value)
+                            if name != "prospective_snapshot_record_identity":
+                                if not record_first: record_digest.update(b",")
+                                record_first = False
+                                record_digest.update(prefix); record_digest.update(value)
+                        root_digest.update(b"}"); record_digest.update(b"}")
+                        if row.get("prospective_snapshot_record_identity") != retention.RECORD_PREFIX + record_digest.hexdigest():
+                            valid = False
+                        consume(ticker, row)
+                    root_digest.update(b"}")
+                else:
+                    value = parser.value(); metadata[key] = value
+                    if included: root_digest.update(canonical_bytes(value))
+            if parser.peek(): raise ValueError("ACCEPTANCE_TRAILING_JSON")
+        root_digest.update(b"}")
+        digest = root_digest.hexdigest()
     except (OSError, ValueError):
         return None, False
     valid = valid and metadata.get("contract_version") == retention.CONTRACT_VERSION
