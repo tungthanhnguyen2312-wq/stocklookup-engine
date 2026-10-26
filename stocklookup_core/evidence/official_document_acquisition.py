@@ -121,7 +121,7 @@ def declared_document_types(registry: Mapping[str, Any]) -> frozenset[str]:
     it comes from the registry so the two vocabularies cannot drift: the module's own
     `DOCUMENT_CLASSES` was missing `ex_right_notice`, `listing_change_notice` and
     `last_registration_date_notice`, so the acquirer refused, as malformed, requests for the
-    exact notices that carry an ex-date — the field the price-adjustment factor is blocked on.
+    exact notices that carry an ex-date â€” the field the price-adjustment factor is blocked on.
 
     Index page types (`index_document_types`) are included: an announcement index must be
     requestable, or links can never be read from a stored artifact and every entry URL stays a
@@ -266,6 +266,44 @@ def _extraction_state(path: Path) -> str:
     except Exception: return "malformed_document"
 
 
+def complete_pdf_proof(path: Path, status: int, headers: Mapping[str, str]) -> dict[str, Any]:
+    """Opt-in complete-document intake, never accept a renderable partial PDF.
+
+    An HTTP range or length mismatch is not cured by rendering some pages.
+    Structural validation complements the transport evidence, not publication/PIT.
+    """
+    from pypdf import PdfReader
+    lower = {str(k).lower(): str(v) for k, v in headers.items()}
+    if status != 200 or lower.get("content-range"):
+        raise ValueError("partial_document_response")
+    size = path.stat().st_size
+    length = lower.get("content-length")
+    if length is not None and (not length.isdigit() or int(length) != size):
+        raise ValueError("document_content_length_mismatch")
+    if lower.get("content-encoding", "identity").lower() not in {"identity", ""}:
+        raise ValueError("document_encoded_length_unverified")
+    with path.open("rb") as handle:
+        if not handle.read(8).startswith(b"%PDF-"):
+            raise ValueError("complete_pdf_required")
+        handle.seek(max(0, size - 1024))
+        if not handle.read().rstrip().endswith(b"%%EOF"):
+            raise ValueError("document_final_eof_missing")
+    try:
+        reader = PdfReader(str(path), strict=True)
+        pages = len(reader.pages)
+        if not pages:
+            raise ValueError()
+        # Force every page object to resolve, rather than merely reading its count.
+        for page in reader.pages:
+            _ = page.mediabox
+    except Exception as exc:
+        raise ValueError("document_pdf_structure_incomplete") from exc
+    return {"state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE", "sha256": _sha_file(path),
+            "content_length": size, "http_content_length": int(length) if length else None,
+            "http_status": status, "pdf_pages": pages, "validator": "pypdf_strict_all_pages_and_final_eof/v1",
+            "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY"}
+
+
 def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetcher: Callable[..., tuple[Any, ...]] = fetch_http,
             timeout_seconds: int = READ_TIMEOUT_SECONDS, max_attempts: int = 2, observed_at: str | None = None,
             sleep: Callable[[float], None] = time.sleep, connect_timeout_seconds: int = CONNECT_TIMEOUT_SECONDS,
@@ -297,6 +335,16 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
         try: ticker, document_class, period, url, source_id = _validate_spec(spec, allowed_types, allowed_tickers=allowed_tickers)
         except ValueError as exc: outcomes.append({"state": str(exc), "ticker": str(spec.get("ticker", "")).upper()}); continue
         cached = _cached(root, records, ticker, url)
+        if cached and spec.get("require_complete_pdf") is True:
+            proof = cached.get("document_completeness") or {}
+            try:
+                verified = complete_pdf_proof(root / cached["relative_path"], int(cached["http_status"]),
+                    {"Content-Length": str(proof["http_content_length"])}
+                    if proof.get("http_content_length") is not None else {})
+                if verified != proof or proof.get("sha256") != cached.get("sha256"):
+                    cached = None
+            except (ValueError, KeyError, OSError, TypeError):
+                cached = None
         if cached and not (refresh_index_pages and document_class == "issuer_ir_index_page"):
             outcomes.append({"ticker": ticker, "document_id": cached["document_id"], "state": "cached_valid"}); continue
         # Honour the source's declared minimum interval before asking, so the rate rule shapes
@@ -337,6 +385,12 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
                 last_request_at[source_id] = clock()
         size = temporary.stat().st_size if temporary.exists() else 0
         failure = failure or ("response_size_limit" if size > max_response_bytes else _response_failure(int(status), headers, prefix, size))
+        completeness = None
+        if not failure and spec.get("require_complete_pdf") is True:
+            try:
+                completeness = complete_pdf_proof(temporary, int(status), headers)
+            except ValueError as exc:
+                failure = str(exc)
         if failure:
             temporary.unlink(missing_ok=True); outcomes.append({"ticker": ticker, "canonical_url": url, "state": failure, "http_status": status or None}); continue
         try: final_url = canonical_url(str(final_url))
@@ -364,6 +418,13 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
         else: temporary.unlink(missing_ok=True)
         document_id, prior = _document_id(ticker, url, sha256), [r for r in records if r.get("ticker") == ticker and r.get("canonical_url") == url]
         if any(r.get("document_id") == document_id for r in records):
+            prior_record = next(r for r in records if r.get("document_id") == document_id)
+            # A strict refresh never silently blesses legacy/forged metadata and
+            # never rewrites that immutable receipt merely to add a new proof.
+            if completeness is not None and prior_record.get("document_completeness") != completeness:
+                outcomes.append({"ticker": ticker, "document_id": document_id,
+                                 "state": "document_completeness_metadata_conflict"})
+                continue
             outcomes.append({"ticker": ticker, "document_id": document_id, "state": "cached_valid",
                              "refreshed_same_bytes": True})
             continue
@@ -394,6 +455,8 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
                   "extraction_status": _extraction_state(path),
                   "temporal_retention": temporal_retention,
                   "a1_temporal_projection": project_retention_to_a1(temporal_retention)}
+        if completeness is not None:
+            record["document_completeness"] = completeness
         records.append(record); outcomes.append({"ticker": ticker, "document_id": document_id, "state": "retained", "extraction_status": record["extraction_status"]})
     if len(records) != initial_record_count or not manifest_path.exists():
         _write_manifest(manifest_path, records)

@@ -81,6 +81,9 @@ _AGREEMENT_FIELDS = (
     "shares_before", "shares_after", "shares_issued", "ex_date", "record_date",
     "payment_or_execution_date", "cash_amount_per_share", "subscription_price",
     "shares_planned", "shares_outstanding_before", "treasury_shares_before",
+    "rights_ratio", "treasury_shares_after", "issuance_completion_date",
+    "unrestricted_shares", "restricted_shares", "unrestricted_trading_date", "restricted_trading_date",
+    "combined_shares_issued", "co_issued_shares", "shares_outstanding_after",
 )
 
 #: Fields taken from whichever observation states them, once agreement has been checked.
@@ -92,7 +95,9 @@ _MERGE_FIELDS = _AGREEMENT_FIELDS + (
 #: Entry fields that only reviewed-scan observations state. They are emitted only when stated,
 #: so a ledger built from observations that never carry them replays byte-identically.
 _OPTIONAL_ENTRY_FIELDS = ("shares_planned", "shares_outstanding_before", "treasury_shares_before",
-                          "fractional_shares_cancelled")
+                          "fractional_shares_cancelled", "treasury_shares_after", "issuance_completion_date",
+                          "unrestricted_shares", "restricted_shares", "unrestricted_trading_date", "restricted_trading_date")
+_OPTIONAL_ENTRY_FIELDS += ("combined_shares_issued", "co_issued_shares", "shares_outstanding_after")
 
 #: Must equal `corporate_action_events.RATIO_SOURCE_EXPLICIT`. Kept literal so this module stays
 #: free of extractor imports.
@@ -185,6 +190,35 @@ def _co_documented_legs(entry: Mapping[str, Any],
     return sorted(legs, key=lambda leg: (str(leg["event_type"]), str(leg["observation_id"])))
 
 
+def _composite_execution_anchor(members, observations):
+    """A directly reported component total may match one executed aggregate listing.
+
+    Do not attach the aggregate quantity as this leg's issued quantity. The
+    issuer report must state its own leg, companion, total, before and after.
+    Only the exchange listing anchor supplies executed lifecycle authority.
+    """
+    anchors = {}
+    for report in members:
+        required = ("shares_before", "shares_issued", "co_issued_shares", "combined_shares_issued", "shares_after")
+        if (report.get("document_type") != "corporate_action_notice"
+                or report.get("source_authority") not in {"issuer_ir", "exchange"}
+                or any(not isinstance(report.get(k), int) or isinstance(report.get(k), bool)
+                       or report[k] <= 0 for k in required)):
+            continue
+        before, own, companion, total, after = (report[k] for k in required)
+        if own + companion != total or before + total != after:
+            continue
+        for anchor in observations:
+            if (anchor.get("ticker") == report.get("ticker") and anchor.get("event_type") is None
+                    and anchor.get("document_type") == "listing_change_notice"
+                    and anchor.get("source_authority") == "exchange"
+                    and len(str(anchor.get("content_sha256") or "")) == 64
+                    and anchor.get("lifecycle_state") == "executed"
+                    and anchor.get("shares_issued") == total and anchor.get("shares_after") == after):
+                anchors[str(anchor["observation_id"])] = anchor
+    return next(iter(anchors.values())) if len(anchors) == 1 else None
+
+
 def build_ledger(observations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     """Link, deduplicate and reconcile observations into an immutable event ledger."""
     deduplicated: dict[str, Mapping[str, Any]] = {}
@@ -213,7 +247,9 @@ def build_ledger(observations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
         grouped.setdefault(key, []).append(observation)
 
     bridges, ambiguous_plans = _bridge_planned_groups(grouped)
-    entries = [_reconcile(key, members, bridge=bridges.get(key)) for key, members in sorted(grouped.items())]
+    entries = [_reconcile(key, members, bridge=bridges.get(key),
+                          composite_anchor=_composite_execution_anchor(members, deduplicated.values()))
+               for key, members in sorted(grouped.items())]
     for entry in entries:
         legs = _co_documented_legs(entry, deduplicated.values())
         if legs:
@@ -271,7 +307,8 @@ def _ordering_key(entry: Mapping[str, Any]) -> tuple:
 
 def _reconcile(key: tuple[str, str, str],
                members: Sequence[Mapping[str, Any]], *,
-               bridge: Mapping[str, Any] | None = None) -> dict[str, Any]:
+               bridge: Mapping[str, Any] | None = None,
+               composite_anchor: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """One ledger entry from every observation that describes one event."""
     ticker, event_type, issued_key = key
     ordered = sorted(members, key=lambda item: (str(item.get("content_sha256") or ""),
@@ -324,10 +361,11 @@ def _reconcile(key: tuple[str, str, str],
         merged.pop("ratio_basis", None)
         ratio_refusal = "stock_ratio_denominator_includes_treasury_shares"
 
-    corroboration = _corroborate(merged, ordered)
+    source_members = ordered + ([composite_anchor] if composite_anchor is not None else [])
+    corroboration = _corroborate(merged, source_members)
     ratio_basis_check = _ratio_basis_corroboration(merged)
     lifecycle = max((str(observation.get("lifecycle_state") or "unknown")
-                     for observation in ordered),
+                     for observation in source_members),
                     key=lambda state: _LIFECYCLE_RANK.get(state, 0))
 
     identity = {"ticker": ticker, "event_type": event_type, "share_change": issued_key,
@@ -351,6 +389,11 @@ def _reconcile(key: tuple[str, str, str],
         optional["ratio_basis_corroboration"] = ratio_basis_check
     if bridge is not None:
         optional["planned_count_bridge"] = dict(bridge)
+    if composite_anchor is not None:
+        optional["composite_execution_anchor"] = {
+            "document_id": composite_anchor["document_id"], "content_sha256": composite_anchor["content_sha256"],
+            "observation_id": composite_anchor["observation_id"],
+            "basis": "reported_component_plus_companion_equals_reported_total_and_executed_aggregate_listing"}
     if explicit:
         optional["ratio_source"] = _RATIO_SOURCE_EXPLICIT
     if ratio_refusal:
@@ -386,11 +429,11 @@ def _reconcile(key: tuple[str, str, str],
         "rights_ratio": merged.get("rights_ratio"),
         "subscription_price": merged.get("subscription_price"),
         "source_document_ids": sorted({str(observation.get("document_id"))
-                                       for observation in ordered}),
+                                       for observation in source_members}),
         "source_content_hashes": sorted({str(observation.get("content_sha256"))
-                                         for observation in ordered}),
+                                         for observation in source_members}),
         "source_observation_ids": sorted({str(observation.get("observation_id"))
-                                          for observation in ordered}),
+                                          for observation in source_members}),
         "source_documents": [
             {"document_id": observation.get("document_id"),
              "document_type": observation.get("document_type"),
@@ -400,7 +443,7 @@ def _reconcile(key: tuple[str, str, str],
              "share_count_identity": observation.get('share_count_identity'),
              "share_class": observation.get('share_class'),
              "citations": observation.get("citations") or []}
-            for observation in ordered
+            for observation in source_members
         ],
         "arithmetic_corroboration": corroboration,
         "conflicts": conflicts,
@@ -431,6 +474,16 @@ def _corroborate(merged: Mapping[str, Any],
     """`shares_before + shares_issued == shares_after`, across whichever documents state them."""
     before, issued, after = (merged.get("shares_before"), merged.get("shares_issued"),
                              merged.get("shares_after"))
+    total, companion = merged.get("combined_shares_issued"), merged.get("co_issued_shares")
+    if total is not None or companion is not None:
+        if any(value is None for value in (before, issued, after, total, companion)):
+            return {"state": "not_testable", "reason": "composite issuance needs stated component, companion, total, before and after", "documents": []}
+        holds = int(issued) + int(companion) == int(total) and int(before) + int(total) == int(after)
+        contributors = sorted({str(o.get("content_sha256")) for o in members})
+        return {"state": "confirmed" if holds else "violated",
+                "reason": f"component {issued} + companion {companion} = total {total}; {before} + {total} = {after}",
+                "documents": contributors, "cross_document": len(contributors) > 1,
+                "basis": "REPORTED_COMPOSITE_ISSUANCE_NOT_INDIVIDUAL_LEG_TOTAL"}
     if None in (before, issued, after):
         present = [name for name, value in (("shares_before", before),
                                             ("shares_issued", issued),
@@ -515,6 +568,10 @@ def _adjustment_factor(event_type: str, merged: Mapping[str, Any],
         "adjustment_factor_blocked_by": [],
     }
     if event_type not in _DILUTIVE | _CONCENTRATING:
+        if event_type == "rights_issue":
+            return {**base, "adjustment_factor_status": FACTOR_NOT_APPLICABLE,
+                    "adjustment_factor_reason": "UNSUPPORTED_FACTOR_TYPE: rights require a qualified subscription/reference-price factor policy",
+                    "adjustment_factor_blocked_by": ["UNSUPPORTED_FACTOR_TYPE"]}
         return {**base, "adjustment_factor_status": FACTOR_NOT_APPLICABLE,
                 "adjustment_factor_reason": (
                     f"{event_type} does not mechanically rescale the share count; a factor "

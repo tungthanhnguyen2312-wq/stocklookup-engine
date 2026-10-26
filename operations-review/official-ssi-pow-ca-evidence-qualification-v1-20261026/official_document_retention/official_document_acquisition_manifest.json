@@ -1,0 +1,901 @@
+{
+  "records": [
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:10:50.922802Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:10:50.922802Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2422161/20251205%20-%20POW%20-%20TB%20ngay%20dkcc%20de%20thuc%20hien%20quyen.pdf",
+      "content_length": 851251,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2422161",
+      "document_class": "ex_right_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 851251,
+        "http_content_length": 851251,
+        "http_status": 200,
+        "pdf_pages": 3,
+        "sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "1375c859425aa4d487d2bf7c6ff2c68516eecf3a3c794119ea415fba1dafdb51",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2422161/20251205%20-%20POW%20-%20TB%20ngay%20dkcc%20de%20thuc%20hien%20quyen.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:10:50.922802Z",
+      "published_at": null,
+      "relative_path": "documents/POW/2025/ex_right_notice/22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2025",
+      "sha256": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:10:50.922802Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"4fc73fed9965dc1:0\"",
+        "http_last_modified": "Fri, 05 Dec 2025 03:47:49 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:10:49 GMT",
+        "last_observed_at": "2026-10-26T00:10:50.922802Z",
+        "observation_count": 1,
+        "observation_identity": "22c9abea2fdfdfb34ffc595ebf628a2d2ab48ad0f45b6734ef592b646193a5d4",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:10:50.922802Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "POW"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:11:00.660480Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:11:00.660480Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2425695/20251223%20-%20POW%20-%20CV%20cua%20UBCKNN%20Vv%20Bao%20cao%20ket%20qua%20phat%20hanh%20cua%20POW.pdf",
+      "content_length": 231390,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2425695",
+      "document_class": "corporate_action_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 231390,
+        "http_content_length": 231390,
+        "http_status": 200,
+        "pdf_pages": 2,
+        "sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "277ff07cfe19d451fb52d3eec50e3a3862aa69ae8258caa05c6dd80c691cc45f",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2425695/20251223%20-%20POW%20-%20CV%20cua%20UBCKNN%20Vv%20Bao%20cao%20ket%20qua%20phat%20hanh%20cua%20POW.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:11:00.660480Z",
+      "published_at": null,
+      "relative_path": "documents/POW/2025/corporate_action_notice/cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2025",
+      "sha256": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:11:00.660480Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"a4955185e973dc1:0\"",
+        "http_last_modified": "Tue, 23 Dec 2025 08:52:51 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:10:59 GMT",
+        "last_observed_at": "2026-10-26T00:11:00.660480Z",
+        "observation_count": 1,
+        "observation_identity": "cb47737e190fd1017dc91af25fb94e6d7951a10787d8377ad01a508973167761",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:11:00.660480Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "POW"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:11:10.650953Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:11:10.650953Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2443111/20260309%20-%20POW%20-%20QD%20226%20vv%20thay%20doi%20dang%20ky%20niem%20yet.pdf",
+      "content_length": 502826,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2443111",
+      "document_class": "listing_change_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 502826,
+        "http_content_length": 502826,
+        "http_status": 200,
+        "pdf_pages": 2,
+        "sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "8d3fc43678921bcd2a0666cebb800b724cfaa87b6a75432ea7e562f6880236f5",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2443111/20260309%20-%20POW%20-%20QD%20226%20vv%20thay%20doi%20dang%20ky%20niem%20yet.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:11:10.650953Z",
+      "published_at": null,
+      "relative_path": "documents/POW/2026/listing_change_notice/4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2026",
+      "sha256": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:11:10.650953Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"50cd812e6bb0dc1:0\"",
+        "http_last_modified": "Tue, 10 Mar 2026 08:52:10 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:11:09 GMT",
+        "last_observed_at": "2026-10-26T00:11:10.650953Z",
+        "observation_count": 1,
+        "observation_identity": "4e292966d2e9f791c13ecfd6e7e37a166656b84a4763d0b741c58b5a4bcbe31c",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:11:10.650953Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "POW"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:11:20.616727Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:11:20.616727Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2444347/20260313%20-%20POW%20-%20TB%20708%20GD%20CK%20thay%20doi%20DKNY.pdf",
+      "content_length": 255143,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2444347",
+      "document_class": "listing_change_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 255143,
+        "http_content_length": 255143,
+        "http_status": 200,
+        "pdf_pages": 1,
+        "sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "510833e121d931ef30a177ca0543afabfb660194f21a8df8213c47836b46b14f",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2444347/20260313%20-%20POW%20-%20TB%20708%20GD%20CK%20thay%20doi%20DKNY.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:11:20.616727Z",
+      "published_at": null,
+      "relative_path": "documents/POW/2026/listing_change_notice/d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2026",
+      "sha256": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:11:20.616727Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"e97dbf85e4b2dc1:0\"",
+        "http_last_modified": "Fri, 13 Mar 2026 12:25:48 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:11:19 GMT",
+        "last_observed_at": "2026-10-26T00:11:20.616727Z",
+        "observation_count": 1,
+        "observation_identity": "d397e8e440711fecf1e48b0f02adf8e6d46b6d3ee5688eaa679868bf04d0dae1",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:11:20.616727Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "POW"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:11:30.760984Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:11:30.760984Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2492611/20260827%20-%20SSI%20-%20NQ%20HDQT%20thong%20qua%20ket%20qua%20phat%20hanh%20co%20phieu%20tang%20VCP%20tu%20NVCSH_signed.pdf",
+      "content_length": 1951939,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2492611",
+      "document_class": "corporate_action_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 1951939,
+        "http_content_length": 1951939,
+        "http_status": 200,
+        "pdf_pages": 5,
+        "sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "8527911e30d1e5b4cc486914ceb79adbab8d598648884ae4a94aa57083bb13fb",
+      "extraction_status": "ready_for_direct_citations",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2492611/20260827%20-%20SSI%20-%20NQ%20HDQT%20thong%20qua%20ket%20qua%20phat%20hanh%20co%20phieu%20tang%20VCP%20tu%20NVCSH_signed.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:11:30.760984Z",
+      "published_at": null,
+      "relative_path": "documents/SSI/2026/corporate_action_notice/221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2026",
+      "sha256": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:11:30.760984Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"b81a5987b36dd1:0\"",
+        "http_last_modified": "Thu, 27 Aug 2026 10:05:03 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:11:29 GMT",
+        "last_observed_at": "2026-10-26T00:11:30.760984Z",
+        "observation_count": 1,
+        "observation_identity": "221c1507f533bdb7b8565ed905d9b9482355eb4bb2bf80ba71397ade5a3259be",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:11:30.760984Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "SSI"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:11:40.659004Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:11:40.659004Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2497826/20260916%20-%20SSI%20-%20QD%20ve%20viec%20thay%20doi%20DKNY.pdf",
+      "content_length": 522424,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2497826",
+      "document_class": "listing_change_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 522424,
+        "http_content_length": 522424,
+        "http_status": 200,
+        "pdf_pages": 2,
+        "sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "286988130d230268eee1b5eb71aabbde36df37b1da0f4593a794b54a11edf554",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2497826/20260916%20-%20SSI%20-%20QD%20ve%20viec%20thay%20doi%20DKNY.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:11:40.659004Z",
+      "published_at": null,
+      "relative_path": "documents/SSI/2026/listing_change_notice/6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2026",
+      "sha256": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:11:40.659004Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"63e1f07f7746dd1:0\"",
+        "http_last_modified": "Thu, 17 Sep 2026 07:38:15 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:11:39 GMT",
+        "last_observed_at": "2026-10-26T00:11:40.659004Z",
+        "observation_count": 1,
+        "observation_identity": "6e156b76ec7e513a43a23e7d586c11bbe5798ca9c5e5bdcbbedfaf21dd9a0ea9",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:11:40.659004Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "SSI"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:11:50.619875Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:11:50.619875Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2499239/20260923%20-%20SSI%20-%20TB%20GD%20CK%20thay%20doi%20DK%20NY.pdf",
+      "content_length": 257221,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_53_locator:hose_news_id=2499239",
+      "document_class": "listing_change_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 257221,
+        "http_content_length": 257221,
+        "http_status": 200,
+        "pdf_pages": 1,
+        "sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "344b7461474fe142fe47f31db72db739b45960e743069d4923d3022495dbb46a",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2499239/20260923%20-%20SSI%20-%20TB%20GD%20CK%20thay%20doi%20DK%20NY.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:11:50.619875Z",
+      "published_at": null,
+      "relative_path": "documents/SSI/2026/listing_change_notice/4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2026",
+      "sha256": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:11:50.619875Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"23ae6a314a4bdd1:0\"",
+        "http_last_modified": "Wed, 23 Sep 2026 10:56:31 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:11:48 GMT",
+        "last_observed_at": "2026-10-26T00:11:50.619875Z",
+        "observation_count": 1,
+        "observation_identity": "4b12bb8d3c549661d0bd1fb9c861ba956f48d6846ddafb492a617a995d9fcb00",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:11:50.619875Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "SSI"
+    },
+    {
+      "a1_temporal_projection": {
+        "authority_boundaries": {
+          "historical_price_pit": "BLOCKED",
+          "http_metadata_is_not_publication": true,
+          "raw_as_traded": "NOT_PROMOTED",
+          "same_close_execution": "NOT_ESTABLISHED"
+        },
+        "knowledge_resolution": {
+          "close_price_execution_eligibility": "NOT_ESTABLISHED",
+          "eod_resolution_rule": "FIRST_OBSERVED_CONSERVATIVE",
+          "historical_reconstruction_scope": "FROM_FIRST_OBSERVED_FORWARD_ONLY",
+          "knowledge_available_at": "2026-10-26T00:20:06.807785Z",
+          "knowledge_available_research_session": null,
+          "knowledge_time_status": "KNOWLEDGE_RESOLVED_FIRST_OBSERVED_CONSERVATIVE",
+          "warnings": [
+            "SESSION_RESOLUTION_UNAVAILABLE"
+          ]
+        },
+        "observation_time": {
+          "first_observed_at": "2026-10-26T00:20:06.807785Z",
+          "first_observed_status": "RETAINED",
+          "observation_identity": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+          "observation_identity_status": "OBSERVATION_IDENTITY_READY"
+        },
+        "provider_temporal_metadata": {
+          "provider_event_time": null,
+          "provider_record_update_time": null,
+          "provider_reported_date": null,
+          "provider_time_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN",
+          "warnings": [
+            "PROVIDER_TEMPORAL_MAPPING_UNAVAILABLE"
+          ]
+        },
+        "publication_time": {
+          "publication_authority_tier": "UNVERIFIED",
+          "qualification_status": "RETAINED_METADATA",
+          "source_identity": "hose",
+          "source_published_at": null,
+          "source_published_at_precision": "UNKNOWN",
+          "timezone_status": "UNKNOWN"
+        },
+        "retention_fitness": {
+          "historical_price_pit": "BLOCKED",
+          "raw_as_traded": "NOT_PROMOTED",
+          "reason": "provider_or_unqualified_source_receipt",
+          "same_close_execution": "NOT_ESTABLISHED",
+          "temporal_fitness": "FIRST_OBSERVED_FORWARD_ONLY"
+        }
+      },
+      "acquisition_status": "retained",
+      "canonical_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2425221/20251219%20-%20POW%20-%20Bao%20cao%20ket%20qua%20dot%20phat%20hanh.pdf",
+      "content_length": 348338,
+      "content_type": "application/pdf",
+      "discovery_provenance": "grokbot_issue_51_bridge_locator:hose_news_id=2425221",
+      "document_class": "corporate_action_notice",
+      "document_completeness": {
+        "authority_effect": "NONE_TRANSPORT_AND_STRUCTURE_ONLY",
+        "content_length": 348338,
+        "http_content_length": 348338,
+        "http_status": 200,
+        "pdf_pages": 3,
+        "sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+        "state": "COMPLETE_HTTP_BODY_AND_PDF_STRUCTURE",
+        "validator": "pypdf_strict_all_pages_and_final_eof/v1"
+      },
+      "document_id": "f0c67efc8ab7bd32f4870ed7a55dd92040f409bd9d954e2fd3ad382f3c8632fe",
+      "extraction_status": "needs_ocr",
+      "final_url": "https://staticfile.hsx.vn/Uploads/UploadDocuments/2425221/20251219%20-%20POW%20-%20Bao%20cao%20ket%20qua%20dot%20phat%20hanh.pdf",
+      "http_status": 200,
+      "media_type_detection_rationale": "declared_header",
+      "observed_at": "2026-10-26T00:20:06.807785Z",
+      "published_at": null,
+      "relative_path": "documents/POW/2025/corporate_action_notice/8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a.pdf",
+      "reported_content_type": "application/pdf",
+      "reporting_period": "2025",
+      "sha256": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+      "source_authority": "exchange",
+      "source_id": "hose",
+      "supersedes_document_id": null,
+      "temporal_retention": {
+        "acquisition_method": "GOVERNED_OFFICIAL_DOCUMENT_ACQUISITION_V1",
+        "content_type": "application/pdf",
+        "first_observed_at": "2026-10-26T00:20:06.807785Z",
+        "first_observed_status": "RETAINED",
+        "http_etag": "\"dcff2ae4da70dc1:0\"",
+        "http_last_modified": "Fri, 19 Dec 2025 11:30:34 GMT",
+        "http_response_date": "Mon, 26 Oct 2026 00:20:04 GMT",
+        "last_observed_at": "2026-10-26T00:20:06.807785Z",
+        "observation_count": 1,
+        "observation_identity": "8609d428fa5bcebf55d5ab70be558835f985c1416355de748cfe3944d0dd575a",
+        "observation_identity_method": "RAW_BYTES_SHA256",
+        "observation_identity_status": "OBSERVATION_IDENTITY_READY",
+        "provider_event_at": null,
+        "provider_or_source": "hose",
+        "provider_record_update_at": null,
+        "provider_reported_date": null,
+        "publication_authority_tier": "UNVERIFIED",
+        "raw_received_at": "2026-10-26T00:20:06.807785Z",
+        "raw_received_timezone": "UTC",
+        "source_identity": "hose",
+        "source_published_at": null,
+        "source_published_at_precision": "UNKNOWN",
+        "temporal_retention_contract_version": "provider_temporal_retention/v1",
+        "warnings": [
+          "HTTP_METADATA_NOT_PUBLICATION_AUTHORITY",
+          "OFFICIAL_PUBLICATION_NOT_QUALIFIED"
+        ]
+      },
+      "ticker": "POW"
+    }
+  ],
+  "schema_version": "1.2.0"
+}

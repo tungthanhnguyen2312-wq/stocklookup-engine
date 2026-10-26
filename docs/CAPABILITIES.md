@@ -300,3 +300,5 @@ NVL's newly retained H1 filing proves reviewed consolidated assurance after expl
 zero-candidate native fallback. Every exact financial value remains blocked; no current
 field, valuation input or quality score is added. Source receipt and exact blockers:
 [October8 campaign](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md).
+
+SSI/POW: [receipt-forward CA facts and limits](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md).
