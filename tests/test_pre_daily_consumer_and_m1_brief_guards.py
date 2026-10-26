@@ -285,6 +285,33 @@ def _canonical_iid(rows: list[dict], *, m1: bool) -> dict:
     return artifact
 
 
+@pytest.mark.parametrize('tamper', [False, True])
+def test_large_iid_streamed_load_preserves_full_m1_verification(tmp_path, monkeypatch, tamper):
+    import stocklookup_core.decision.integrated_investment_decision_product as contract
+    original = _canonical_iid
+    def large(rows, *, m1):
+        artifact = original(rows, m1=m1)
+        for row in artifact['records'].values():
+            row['unprojected_evidence'] = 'x' * 1024**2
+        artifact.update(contract.content_identity(artifact))
+        return artifact
+    monkeypatch.setitem(globals(), '_canonical_iid', large)
+    source = _operation(tmp_path, denominator=18)
+    iid_path = _root(source)/'operations-review/canonical-post-close-v1'/SESSION/'enrichment/integrated_investment_decision_product.json'
+    if tamper:
+        artifact = json.loads(iid_path.read_text())
+        artifact['records']['T000']['unprojected_evidence'] = 'tampered'
+        iid_path.write_text(json.dumps(artifact),encoding='utf-8')
+    original_read = Path.read_text
+    monkeypatch.setattr(Path, 'read_text', lambda self, *a, **k:
+        pytest.fail('whole IID text loaded') if self == iid_path else original_read(self, *a, **k))
+    if tamper:
+        with pytest.raises(workflow.OwnerDailyError, match='M1_CANONICAL_INTEGRATED_DECISION_IDENTITY_MISMATCH'):
+            _verify(source)
+    else:
+        assert _verify(source)['status'] == 'M1_BRIEF_AND_INDEX_VERIFIED'
+
+
 def _root(source: Path) -> Path:
     return source.parent / "root"
 

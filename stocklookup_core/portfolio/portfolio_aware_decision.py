@@ -2057,6 +2057,9 @@ def load_integrated_decision_artifact(repo_root: Path, session: str) -> dict[str
     path = repo_root / "operations-review" / "canonical-post-close-v1" / session / "enrichment" / "integrated_investment_decision_product.json"
     if not path.is_file():
         raise FileNotFoundError(f"INTEGRATED_DECISION_ARTIFACT_NOT_RETAINED_FOR_SESSION:{session}")
+    if path.stat().st_size > 16 * 1024**2:
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+        return load_record_artifact(path)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -2101,11 +2104,15 @@ def resolve_operation_bound_integrated_decision(repo_root: Path, session: str, d
             if path.stat().st_size == 0:
                 outcomes.append("EMPTY")
                 continue
-            artifact = json.loads(path.read_text(encoding="utf-8"))
+            if path.stat().st_size > 16 * 1024**2:
+                from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+                artifact = load_record_artifact(path)
+            else:
+                artifact = json.loads(path.read_text(encoding="utf-8"))
         except OSError:
             outcomes.append("UNREADABLE")
             continue
-        except (json.JSONDecodeError, UnicodeError):
+        except (ValueError, UnicodeError):
             outcomes.append("MALFORMED")
             continue
         if not isinstance(artifact, dict):

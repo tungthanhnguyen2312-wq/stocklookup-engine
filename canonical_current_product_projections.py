@@ -70,10 +70,11 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import tempfile
 from pathlib import Path
 from typing import Any, Mapping
 
-from atomic_io import atomic_write_file, atomic_write_json
+from atomic_io import atomic_copy_file, atomic_write_file, atomic_write_json
 import canonical_daily_financial_v2_materialization
 from stocklookup_core.evidence import current_official_market_universe
 from stocklookup_core.evidence import current_research_official_universe_scope
@@ -196,7 +197,27 @@ def _session_compact(session: str) -> str:
 
 
 def _load_json(path: Path) -> dict[str, Any]:
+    if path.stat().st_size > 16 * 1024**2:
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+        return load_record_artifact(path)
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_workspace_json(path: Path, workspace: Mapping[str, Any]) -> None:
+    """Native JSON bytes without the full pretty Unicode string; atomic promotion.
+
+    Keep the frozen atomic writer and its validation/events. Its existing copy
+    API holds UTF-8 bytes, while bounded validation avoids another full Unicode
+    decode alongside the resident Daily graphs.
+    """
+    from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+    encoder = json.JSONEncoder(ensure_ascii=False, indent=2, allow_nan=False)
+    with tempfile.TemporaryDirectory(dir=path.parent, prefix=".workspace-json-") as staging:
+        prepared = Path(staging) / "workspace.json"
+        with prepared.open("w", encoding="utf-8", newline="\n") as handle:
+            handle.writelines(encoder.iterencode(workspace))
+            handle.write("\n")
+        atomic_copy_file(prepared, path, validator=load_record_artifact)
 
 
 def resolve_supplementary_inputs(root: Path, session: str) -> dict[str, dict[str, Any] | None]:
@@ -712,12 +733,14 @@ def materialize_and_write_current_product_projections(
     root = Path(root)
     operation_dir = Path(operation_dir)
     try:
-        supplementary = resolve_supplementary_inputs(root, session)
-        supplementary.update(resolve_velocity_and_flow_price_inputs(root, session))
-        current_research_scope = resolve_current_research_official_universe_scope(root, session)
+        # Periodic semantics loading is independent of Daily supplementary
+        # universes. Finish and release its source rows before loading those.
         feature_store_result = materialize_current_fundamental_feature_store_context(
             root=root, requested_at=requested_at,
         )
+        supplementary = resolve_supplementary_inputs(root, session)
+        supplementary.update(resolve_velocity_and_flow_price_inputs(root, session))
+        current_research_scope = resolve_current_research_official_universe_scope(root, session)
         tactical_behavior_result = materialize_current_tactical_behavior_context(
             session=session, registry_inputs=registry_inputs, supplementary=supplementary,
             requested_at=requested_at,
@@ -755,6 +778,12 @@ def materialize_and_write_current_product_projections(
             "contract_version": CONTRACT_VERSION,
         }
 
+    # Projection consumers have finished. Retain only the small availability
+    # summary and the optional case artifact, not supplementary universes or
+    # intermediate opportunity/decision graphs while serializing the Workspace.
+    supplementary_available = {name: value is not None for name, value in supplementary.items()}
+    thesis_case_result = workspace_bundle.get("thesis_case_context") or {}
+    del supplementary, workspace_bundle
     operation_dir.mkdir(parents=True, exist_ok=True)
     if evaluated_valuation is not None:
         atomic_write_json(
@@ -764,7 +793,7 @@ def materialize_and_write_current_product_projections(
     workspace_path = operation_dir / WORKSPACE_ARTIFACT_FILENAME
     screener_json_path = operation_dir / SCREENER_MASTER_JSON_FILENAME
     screener_js_path = operation_dir / SCREENER_MASTER_JS_FILENAME
-    atomic_write_json(workspace_path, workspace)
+    _write_workspace_json(workspace_path, workspace)
     atomic_write_json(screener_json_path, screener_master)
     atomic_write_file(screener_js_path, screener_master_projection.js_fallback(screener_master), encoding="utf-8", newline="\n")
 
@@ -849,7 +878,6 @@ def materialize_and_write_current_product_projections(
     else:
         tactical_behavior_status["reason_code"] = tactical_behavior_result.get("reason_code")
 
-    thesis_case_result = workspace_bundle.get("thesis_case_context") or {}
     thesis_case_artifact = thesis_case_result.get("artifact") if thesis_case_result.get("status") == "MATERIALIZED" else None
     thesis_case_status: dict[str, Any] = {"status": thesis_case_result.get("status")}
     if thesis_case_artifact is not None:
@@ -910,6 +938,6 @@ def materialize_and_write_current_product_projections(
         "thesis_case_context": thesis_case_status,
         "current_research_official_universe_scope": current_research_official_universe_scope_status,
         "context_axes": context_axis_status,
-        "supplementary_inputs_available": {name: value is not None for name, value in supplementary.items()},
+        "supplementary_inputs_available": supplementary_available,
         "unavailable_optional_axes": sorted(unavailable_optional_axes),
     }

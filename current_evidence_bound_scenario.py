@@ -6,10 +6,11 @@ every case is conditional and descriptive, never a forecast or recommendation.
 from __future__ import annotations
 
 import copy
+import hashlib
 from collections import Counter
 from typing import Any, Mapping
 
-from stocklookup_core.evidence.field_identity import stable_id
+from stocklookup_core.evidence.field_identity import canonical_json, stable_id
 
 CONTRACT_VERSION = "current_evidence_bound_scenario/v1"
 WATCHLIST = ("EVF", "FPT", "HPG", "NVL", "PAN", "PNJ", "POW", "PVD", "QNS", "SSI", "VNM")
@@ -143,7 +144,34 @@ def _require_binding(condition: bool, reason: str) -> None:
 
 def binding_content_identity(artifact: Mapping[str, Any]) -> dict[str, str]:
     payload = {k: v for k, v in artifact.items() if k not in {"artifact_identity", "artifact_sha256"}}
-    digest = stable_id(payload)
+    records = payload.get("records")
+    if (not isinstance(records, dict) or any(not isinstance(key, str) for key in payload)
+            or any(not isinstance(key, str) for key in records)):
+        digest = stable_id(payload)
+    else:
+        # The field serializer sanitizes its argument into a second graph. Keep
+        # that copy and its Unicode/UTF-8 buffers bounded to one bound record,
+        # with exactly the same canonical bytes (including NaN/default=str).
+        hasher = hashlib.sha256()
+        hasher.update(b"{")
+        for index, key in enumerate(sorted(payload)):
+            if index:
+                hasher.update(b",")
+            hasher.update(canonical_json(key).encode("utf-8"))
+            hasher.update(b":")
+            if key == "records":
+                hasher.update(b"{")
+                for position, ticker in enumerate(sorted(records)):
+                    if position:
+                        hasher.update(b",")
+                    hasher.update(canonical_json(ticker).encode("utf-8"))
+                    hasher.update(b":")
+                    hasher.update(canonical_json(records[ticker]).encode("utf-8"))
+                hasher.update(b"}")
+            else:
+                hasher.update(canonical_json(payload[key]).encode("utf-8"))
+        hasher.update(b"}")
+        digest = hasher.hexdigest()
     return {"artifact_sha256": digest, "artifact_identity": INTEGRATED_BINDING_CONTRACT + ":" + digest}
 
 

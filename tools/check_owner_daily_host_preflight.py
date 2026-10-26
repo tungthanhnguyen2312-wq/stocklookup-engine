@@ -259,13 +259,30 @@ def evaluate(observation: dict) -> dict:
                            "monday_measured_peak_bytes": None,
                            "historical_peak_bytes": 9853145088, "historical_peak_classification": "STALE"},
             "operator_action_required": classification != "READY",
-            "operator_guidance": GUIDANCE if classification != "READY" else ["Launch Daily alone; existing evidence/runtime gates still apply."],
+            "operator_guidance": failure_guidance({"dimensions": dimensions}) if classification != "READY" else ["Launch Daily alone; existing evidence/runtime gates still apply."],
             "limitations": ["Point-in-time observation, not a writer lease or a measured Monday peak.",
                             "T0 file size is optional metadata; capture completeness and T0 availability remain independent."]}
 
 
 def check(root: Path, retained_root: Path | None = None) -> dict:
     return evaluate(observe(Path(root).resolve(), retained_root))
+
+
+def failure_guidance(result: dict) -> list[str]:
+    """Explain the already observed gate; never take another measurement or override it."""
+    lines = []
+    for name, dimension in result.get("dimensions", {}).items():
+        if dimension.get("classification") == "READY":
+            continue
+        observed, required = dimension.get("observed_bytes"), dimension.get("green_min_bytes")
+        detail = (f"{observed / GIB:.3f} GiB available; READY requires {required / GIB:.3f} GiB"
+                  if observed is not None and required is not None else "observation unavailable or not qualified")
+        lines.append(f"{name}: {dimension.get('classification')} / {dimension.get('reason', 'UNQUALIFIED')}: {detail}.")
+    if any(name in result.get("dimensions", {}) and
+           result["dimensions"][name].get("classification") != "READY" for name in ("physical", "commit")):
+        lines.append("Insufficient observed memory headroom; compare the host baseline with the retained workload model. "
+                     "A larger pagefile does not create physical RAM.")
+    return lines + ["Re-run host preflight; launch Daily alone only when READY."]
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -560,3 +560,29 @@ def test_phase8_call_shape_reaches_the_resolver_unchanged():
     tree = ast.parse((_P(__file__).resolve().parents[1] / "tools" / "run_owner_daily.py").read_text(encoding="utf-8"))
     calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call) and getattr(node.func, "attr", None) == "evaluate_from_retained_artifacts"]
     assert len(calls) == 1 and {kw.arg for kw in calls[0].keywords} == {"repo_root", "session", "requested_at"}
+
+
+def test_ready_portfolio_reuses_the_already_resolved_iid_graph(tmp_path, monkeypatch):
+    _rr_isolate(monkeypatch, None)
+    _rr_write_iid(tmp_path)
+    loaded = []
+    original_load = ac._pad.load_integrated_decision_artifact
+    def load(*args):
+        assert not loaded, 'second full IID parse'
+        artifact = original_load(*args)
+        loaded.append(artifact)
+        return artifact
+    def portfolio(**kwargs):
+        assert kwargs['integrated_decision_artifact'] is loaded[0]
+        return {'session': SESSION, 'records': {}}
+    def no_price_history(**kwargs):
+        raise FileNotFoundError
+    monkeypatch.setattr(ac._pad, 'load_integrated_decision_artifact', load)
+    monkeypatch.setattr(ac._pad, 'evaluate_from_retained_artifacts', portfolio)
+    monkeypatch.setattr(ac._private_portfolio_context, 'portfolio_status',
+                        lambda **kwargs: {'status': 'READY', 'snapshot': {}})
+    monkeypatch.setattr(ac._quant, 'evaluate_from_retained_artifacts', no_price_history)
+    monkeypatch.setattr(ac, 'build_artifact', lambda **kwargs: {
+        'same_graph': kwargs['integrated_decision_artifact'] is loaded[0]})
+    assert ac.evaluate_from_retained_artifacts(repo_root=tmp_path, session=SESSION, requested_at='x') == {'same_graph': True}
+    assert len(loaded) == 1

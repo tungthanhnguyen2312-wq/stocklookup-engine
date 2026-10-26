@@ -67,6 +67,24 @@ def _operation():
     return {"product": product, "manifest": manifest, "peer": {"records": {"AAA": {"status": "AVAILABLE"}}}, "scenario": {"records": {"AAA": {"probability_status": "UNKNOWN_UNCALIBRATED"}}}, "strategy": {"records": {"AAA": {"strategies": []}}}, "portfolio_risk": None}
 
 
+def test_lazy_delivery_keeps_all_five_eager_output_bytes_and_source_ownership(monkeypatch):
+    import ai_research_session_delivery as delivery
+    integrated = _integrated_delivery_fixture()
+    brief = _daily_brief_fixture(integrated)
+    inputs = {"descriptive": {"records": {"AAA": {}}}, "tactical": {"records": {"AAA": {}}},
+              "fundamental": {"records": {}}, "valuation": {"records": {}},
+              "integrated_investment_decision_product": integrated, "daily_integrated_decision_brief": brief}
+    before = deepcopy(integrated)
+    actual = delivery.build_delivery(_operation(), inputs)
+    projected = delivery._DeliveryRecordProjections(integrated, integrated['session'])
+    projected['AAA']['counter_thesis'].append('caller mutation')
+    assert integrated == before
+    monkeypatch.setattr(delivery, '_DeliveryRecordProjections', lambda value, session:
+        delivery.project_integrated_decision_delivery_overlay(session, value, brief)['records'])
+    assert delivery.build_delivery(_operation(), inputs) == actual
+    assert integrated == before
+
+
 def test_valuation_handoff_preserves_research_proxy_versus_authoritative_unavailable():
     from ai_research_session_delivery import _valuation_handoff
     row = {
