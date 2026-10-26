@@ -15,11 +15,32 @@
     "config/daily_research_session_input_registry.json"
   ],
   "current": {
-    "milestone": "OFFICIAL_SSI_POW_CORPORATE_ACTION_EVIDENCE_QUALIFICATION_V1",
-    "state": "COMPLETE"
+    "milestone": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
+    "state": "ACTIVE"
   },
   "queued_next": [],
   "milestones": [
+    {
+      "milestone_id": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
+      "state": "ACTIVE",
+      "starting_checkpoint": "102bc7fcda40f04636f935f3fad47981dd5c067a",
+      "candidate_branch": "fix/owner-daily-16gb-memory-recovery-v1",
+      "dependencies": [
+        "OFFICIAL_SSI_POW_CORPORATE_ACTION_EVIDENCE_QUALIFICATION_V1"
+      ],
+      "unlocks": [],
+      "owner_authorized": true,
+      "owner_override": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor.",
+      "authority_effect": "NONE",
+      "source_doc": "docs/owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md",
+      "state_history": [
+        "DEFERRED",
+        "ACTIVE"
+      ],
+      "checkpoint": null,
+      "terminal_disposition": null,
+      "notes": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor."
+    },
     {
       "milestone_id": "OFFICIAL_SSI_POW_CORPORATE_ACTION_EVIDENCE_QUALIFICATION_V1",
       "state": "COMPLETE",

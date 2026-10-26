@@ -706,3 +706,42 @@ def test_retained_2026_09_11_replay_materializes_genuinely_current_products(tmp_
     assert result["screener_master_projection"]["as_of_session"] == REPLAY_SESSION
     assert result["workspace"]["ticker_denominator"] > 1000
     assert result["screener_master_projection"]["denominator"]["ticker_count"] > 1000
+
+
+def test_current_product_serialization_releases_consumed_universes(tmp_path, monkeypatch):
+    import weakref
+    class Graph(dict):
+        pass
+    references = []
+    original_resolve = ccpp.resolve_supplementary_inputs
+    original_workspace = ccpp.materialize_current_investment_decision_workspace
+    original_write = ccpp._write_workspace_json
+    def tracked_resolve(*args):
+        result = original_resolve(*args)
+        graph = Graph()
+        references.append(weakref.ref(graph))
+        result['memory_probe'] = graph
+        return result
+    def tracked_workspace(**kwargs):
+        result = original_workspace(**kwargs)
+        graph = Graph()
+        references.append(weakref.ref(graph))
+        result['unused_intermediate'] = graph
+        return result
+    observed = []
+    def write(path, payload, *args, **kwargs):
+        if path.name == ccpp.WORKSPACE_ARTIFACT_FILENAME:
+            assert references and all(reference() is None for reference in references)
+            observed.append(path)
+        return original_write(path, payload, *args, **kwargs)
+    runtime = tmp_path/'runtime'
+    runtime.mkdir()
+    _snapshot_csv(runtime/'screen_snapshot.csv')
+    monkeypatch.setenv('STOCK_LOOKUP_RUNTIME_ROOT', str(runtime))
+    monkeypatch.setattr(ccpp, 'resolve_supplementary_inputs', tracked_resolve)
+    monkeypatch.setattr(ccpp, 'materialize_current_investment_decision_workspace', tracked_workspace)
+    monkeypatch.setattr(ccpp, '_write_workspace_json', write)
+    result = _materialize_and_write(root=tmp_path, session=SESSION, operation_dir=tmp_path/'operation',
+        registry_inputs=_registry_inputs(), requested_at=f'{SESSION}T18:00:00+07:00')
+    assert result['status'] == 'MATERIALIZED' and len(observed) == 1
+    assert result['supplementary_inputs_available']['memory_probe'] is True

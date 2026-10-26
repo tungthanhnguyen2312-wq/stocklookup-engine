@@ -1,6 +1,8 @@
 # Stock Lookup — Active State
 
-Verified release baseline: `a9c799397a74641a0e16c8ea84454d2dc4d0745b`. PR146 released; all five post-merge CI jobs PASS (38512024681); Codex native revision96.
+[Qualified memory recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): live pending.
+
+Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.
 ## 0. How this file relates to the others
 | Question | Answer lives in |
@@ -22,7 +24,6 @@ Verified release baseline: `a9c799397a74641a0e16c8ea84454d2dc4d0745b`. PR146 rel
 - *Preserved `STATE.md` / `ROADMAP.md` / `DECISIONS.md`*: history, rationale and recorded invariants; not the
   default current-state source. A compact view never overrides a recorded invariant: surface the conflict
   and obtain an explicit owner decision.
-Verify governing sources; chat memory/prose recency are not authority (§6).
 
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 

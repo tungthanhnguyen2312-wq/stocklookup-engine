@@ -220,7 +220,8 @@ def _verify_delivery(operation: Mapping[str, Any], operation_dir: Path) -> dict[
                 raise DailyProducerError("DAILY_INTEGRATED_BRIEF_RETENTION_MISSING")
     for filename, record in manifest.get("files", {}).items():
         path = operation_dir / filename
-        if not path.is_file() or _sha(path.read_bytes()) != record.get("sha256"):
+        from bounded_artifact_stream import source_hash
+        if not path.is_file() or source_hash(path) != record.get("sha256"):
             raise DailyProducerError("AI_DELIVERY_SELF_VERIFICATION_FAILED:" + filename)
     return {"status": "PASS", "session": bundle["session"], "operation_identity": expected_operation, "product_identity": expected_product, "input_identity_parity": "PASS", "files_verified": sorted(manifest["files"])}
 
@@ -312,6 +313,11 @@ def run_daily_producer(
         raise DailyProducerError("DAILY_SHADOW_AUTOSOURCE_INTEGRITY_FAILURE:" + str(exc)) from exc
     if not isinstance(shadow_resolution["chain"].get("fundamental_cohort_selection"), Mapping):
         raise DailyProducerError("DAILY_SHADOW_AUTOSOURCE_FUNDAMENTAL_COHORT_LINEAGE_MISSING")
+    # Planning/shadow resolution has consumed this independently parsed input
+    # graph. The operation resolves the same frozen registry selection and owns
+    # the authoritative graph used by delivery and current-product projections.
+    # Do not overlap two full valuation/fundamental universes while sealing it.
+    del inputs
     operation, operation_dir = run_session_operation(
         root,
         session=selected,
@@ -330,6 +336,7 @@ def run_daily_producer(
         daily_integrated_decision_brief_builder=daily_integrated_decision_brief_builder,
         **({"protect_delivery": True} if reuse_immutable_delivery else {}),
     )
+    inputs = operation["inputs"]
     parity = _verify_delivery(operation, operation_dir)
     # Current-product projections (Investment Decision Workspace, Screener Master Projection):
     # optional, non-blocking step, exactly like the macro-refresh step in

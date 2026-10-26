@@ -728,6 +728,28 @@ def project_opportunity_comparison_for_ai_delivery(comparison):
     return verified_integrated_comparison(comparison)
 
 
+class _DeliveryRecordProjections(Mapping):
+    """Borrow verified source records and project only the row currently consumed.
+
+    The public eager overlay API stays unchanged. Delivery consumes these projections
+    read-only and copies each retained card; no second universe graph is needed.
+    """
+    def __init__(self, integrated, session):
+        self.records = integrated.get("records") or {}
+        self.identity = integrated["artifact_identity"]
+        self.session = session
+
+    def __len__(self):
+        return len(self.records)
+
+    def __iter__(self):
+        return iter(self.records)
+
+    def __getitem__(self, ticker):
+        return project_integrated_decision_for_ai_delivery(
+            self.records[ticker], integrated_identity=self.identity, source_session=self.session)
+
+
 def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, opportunity_comparison_request=None,
                    include_thesis_discovery: bool = False) -> dict[str, Any]:
     """Return primary JSON, NDJSON companion, manifest, brief, and cockpit projection bytes."""
@@ -741,7 +763,8 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
     boundary = _authority_boundary(product)
     integrated_decision, daily_integrated_brief = _integrated_delivery_inputs(session, inputs)
     integrated_overlay = (
-        project_integrated_decision_delivery_overlay(session, integrated_decision, daily_integrated_brief)
+        {**_integrated_overlay_header(session, integrated_decision, daily_integrated_brief),
+         "records": _DeliveryRecordProjections(integrated_decision, session)}
         if integrated_decision is not None else None
     )
     # A presentation copy only: immutable producer records/identities are untouched.

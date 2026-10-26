@@ -61,7 +61,33 @@ def _canonical(value: Any) -> str:
 
 def content_identity(value: Mapping[str, Any]) -> dict[str, str]:
     payload = {key: item for key, item in value.items() if key not in _IDENTITY_EXCLUDED}
-    digest = hashlib.sha256(_canonical(payload).encode("utf-8")).hexdigest()
+    cards = payload.get("cards")
+    if (not isinstance(cards, dict) or any(not isinstance(key, str) for key in payload)
+            or any(not isinstance(key, str) for key in cards)):
+        digest = hashlib.sha256(_canonical(payload).encode("utf-8")).hexdigest()
+    else:
+        # Preserve the strict canonical identity without a universe-sized
+        # Unicode string and UTF-8 buffer alongside the live Daily graphs.
+        hasher = hashlib.sha256()
+        hasher.update(b"{")
+        for index, key in enumerate(sorted(payload)):
+            if index:
+                hasher.update(b",")
+            hasher.update(_canonical(key).encode("utf-8"))
+            hasher.update(b":")
+            if key == "cards":
+                hasher.update(b"{")
+                for position, ticker in enumerate(sorted(cards)):
+                    if position:
+                        hasher.update(b",")
+                    hasher.update(_canonical(ticker).encode("utf-8"))
+                    hasher.update(b":")
+                    hasher.update(_canonical(cards[ticker]).encode("utf-8"))
+                hasher.update(b"}")
+            else:
+                hasher.update(_canonical(payload[key]).encode("utf-8"))
+        hasher.update(b"}")
+        digest = hasher.hexdigest()
     return {"artifact_sha256": digest, "artifact_identity": f"{CONTRACT_VERSION}:{digest}"}
 
 

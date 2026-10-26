@@ -12,6 +12,7 @@ from stocklookup_core.valuation.current_research_valuation_context import (
     attach_fundamental_peers, attach_peer_relative, evaluate_ticker_valuation, freshness_for_valuation,
     source_session_for_valuation,
 )
+from stocklookup_core.evidence.bounded_json import record_mapping_digest
 from stocklookup_core.evidence.temporal_freshness import assert_artifact_session_not_future
 from stocklookup_core.decision.opportunity_axis_freshness import classify_axis_freshness
 from stocklookup_core.decision.opportunity_context import (
@@ -34,7 +35,7 @@ def _canonical(value: Any) -> str:
 
 def content_identity(value: Mapping[str, Any]) -> dict[str, str]:
     payload = {key: item for key, item in value.items() if key not in _IDENTITY_EXCLUDED}
-    digest = hashlib.sha256(_canonical(payload).encode("utf-8")).hexdigest()
+    digest = record_mapping_digest(payload)
     kind = value.get("contract_version") or "current_valuation_opportunity_integration"
     return {"artifact_sha256": digest, "artifact_identity": f"{kind}:{digest}"}
 

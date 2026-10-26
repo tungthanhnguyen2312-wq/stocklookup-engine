@@ -166,7 +166,11 @@ def resolve_inputs(root: Path, session: str, registry: Mapping[str, Any]) -> tup
         if not isinstance(entry, Mapping) or not isinstance(entry.get("path"), str) or not isinstance(entry.get("artifact_identity"), str):
             raise ValueError("SESSION_INPUT_REGISTRY_ENTRY_INVALID:" + name)
         path = root / entry["path"]
-        value = json.loads(path.read_text(encoding="utf-8"))
+        if path.stat().st_size > 16 * 1024**2:
+            from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+            value = load_record_artifact(path)
+        else:
+            value = json.loads(path.read_text(encoding="utf-8"))
         if value.get("artifact_identity") != entry["artifact_identity"]:
             raise ValueError("SESSION_INPUT_IDENTITY_MISMATCH:" + name)
         values[name], metadata[name] = value, entry

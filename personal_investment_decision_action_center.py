@@ -1378,6 +1378,7 @@ def evaluate_from_retained_artifacts(
     if status.get("status") == "READY":
         portfolio_aware_decision_artifact = _pad.evaluate_from_retained_artifacts(
             repo_root=evidence_root, session=resolved_session, portfolio_root=portfolio_root, requested_at=requested_at,
+            integrated_decision_artifact=integrated_decision_artifact,
         )
         portfolio_snapshot = status.get("snapshot")
         excluded_tickers = _owner_research_exclusions.excluded_ticker_set(_owner_research_exclusions.load_research_exclusions(portfolio_root))

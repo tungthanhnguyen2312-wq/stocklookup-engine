@@ -109,7 +109,11 @@ def test_daily_producer_autosources_without_manual_parameter_and_threads_exact_p
     for filename in producer.OWNER_FILENAMES:
         (operation_dir / filename).write_bytes(b"{}")
     (operation_dir / "current_decision_cockpit_projection.json").write_text(json.dumps({"projection_identity": "projection:test"}), encoding="utf-8")
+    # The real operation already returns its resolved inputs (build_operation).
+    # Model its distinct owned map so reuse cannot regress to the planning map.
+    operation_inputs = dict(inputs)
     operation = {
+        "inputs": operation_inputs,
         "manifest": {"operation_identity": "operation:test", "input_artifacts": {}, "coverage_summary": {}, "warnings": [], "authority_boundary": {}},
         "product": {"artifact_identity": "product:test"},
     }
@@ -134,6 +138,11 @@ def test_daily_producer_autosources_without_manual_parameter_and_threads_exact_p
 
     monkeypatch.setattr(producer, "resolve_or_build_daily_session_shadow_recommendation", autosource)
     monkeypatch.setattr(producer, "run_session_operation", session_operation)
+    original_projections = producer.materialize_and_write_current_product_projections
+    def current_projections(**kwargs):
+        assert kwargs["registry_inputs"] is operation_inputs
+        return original_projections(**kwargs)
+    monkeypatch.setattr(producer, "materialize_and_write_current_product_projections", current_projections)
     result = producer.run_daily_producer(
         tmp_path, session=SESSION, latest_completed_session=False,
         producer_head="producer", consumer_head="consumer", now=None,
