@@ -1128,7 +1128,7 @@
     "tools/materialize_dnse_trades_canonical_shadow.py": "2423608ebbc170c97c4fd59b88bcdd221c7fad3b2b8ef68d67097fbe324af160",
     "tools/materialize_hnx_enumerable_universe_artifact.py": "44fee2aed9cda2554291980406917ceb095b5866063ee377d3fe63458871e272",
     "tools/operate_stocklookup.py": "ac3ec2712f0f4326a453ddbc4bd5407c86ab5f11bf19fa4c29cf3823ef4abfa7",
-    "tools/owner_daily_presentation.ps1": "a2be229e3a989eea85e8ab41960800cf48934a68d0a12d86b67ae15476994365",
+    "tools/owner_daily_host.py": "b18773c9f5424d6832a04a68e8318d72dfe0fb52cf021a23e0a15488c5fa6c33",
     "tools/prepare_current_foreign_flow_retention.py": "7912c4d360cc077c13ae33b43bb96ca45c089a2ae7b5358b16945545a36b1d1c",
     "tools/produce_and_validate_daily_session_shadow_recommendation_v1.py": "cc9d77647b62302d5a81f811d6cd4a1792814e7eefee9c678adbda67bbd70870",
     "tools/provider_containment_probe.py": "72d45efd9968a87191d58398775ebe6eaba0ef050839d03e57f8bf1dabf86045",
@@ -1362,7 +1362,8 @@
     "tools/run_official_source_route_evidence_binding_correction.py": "9a98f2b25173e86041380f8610ac82855444fa7d3a8bc1c450510f33461bb65e",
     "tools/run_official_ssi_pow_ca_qualification.py": "44e19eb69941d6a622adc22f6e7199403f3e483967b8621b6b41e5ed6eb624f9",
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
-    "tools/run_owner_daily.ps1": "b64c0a92f15a43be5c57f1907002e43694a7112b5f6d60c7461dd8df2e73fafb",
+    "tools/run_owner_daily.cmd": "fd62709ebd133ed950ad204ea2aef115104d3b6d65ddafba9df8cc0b3df4602a",
+    "tools/run_owner_daily.ps1": "a5b616a2127cd11b6a23a375331adf698f1630ff102fe73a27e6605c5c05783b",
     "tools/run_owner_daily.py": "877dd76c24ae25b1a5d9a9774a5d561b60f2ef5f5d7803d852d22455b0bd00a4",
     "tools/run_owner_daily_feedback_rehearsal.py": "994b36e2c066cce0effc77428688e53ea25ad8ae9a4d7530f83ba39e2da6b55f",
     "tools/run_owner_focus_core_financial_panel_coverage.py": "afbc3b454fc4618b941db0cbb4046d88bd8e7586f30741019f82609ef57a4691",
@@ -1486,6 +1487,7 @@
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
     "scope": "SEQUENTIAL_RELAUNCH_AND_DEFERRED_PUBLICATION_IMPORTS_ONLY",
     "stage_qualification": "UNCHANGED_BODIES_AND_RETAINED_SOURCE_INTEGRITY_REUSED_NOT_NEW_DAILY",
-    "source_transition": "tests/fixtures/owner_daily_launcher_source_transition_v1.json"
+    "source_transition": "tests/fixtures/owner_daily_launcher_source_transition_v1.json",
+    "presentation_host": "STDLIB_PYTHON_HOST_REPLACES_RESIDENT_POWERSHELL_SAME_OWNER_ARGV"
   }
 }

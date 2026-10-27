@@ -1,4 +1,4 @@
-"""M1_LIVE_ACCEPTANCE_CORRECTIVE_V1 -- Desktop Owner Daily launcher (tools/run_owner_daily.ps1).
+"""M1_LIVE_ACCEPTANCE_CORRECTIVE_V1 -- Desktop Owner Daily launcher (tools/run_owner_daily.ps1 -> owner_daily_host.py).
 
 Under Windows PowerShell 5.1 the launcher combined ``$ErrorActionPreference = 'Stop'`` with
 ``& $python ... 2>&1 | Tee-Object``: the first native stderr line became a terminating
@@ -258,24 +258,89 @@ def test_host_refusal_shows_operator_action_in_normal_owner_window(tmp_path, cla
     assert "launch Daily alone only when READY" in completed.stdout
 
 
-def test_launcher_scopes_continue_to_the_native_call_and_keeps_the_canonical_route():
+def test_powershell_front_door_only_forwards_to_the_python_host_and_keeps_the_canonical_route():
     source = LAUNCHER.read_text(encoding="utf-8")
-    native_call = "& $python @arguments 2>&1"
-    assert source.count(native_call) == 1
-    before, after = source.split(native_call)
-    # 'Continue' is the preference in force at the native call; the script preference is restored after.
-    assert before.rfind("$ErrorActionPreference = 'Continue'") > before.rfind("$ErrorActionPreference = 'Stop'")
-    assert "$ErrorActionPreference = $scriptPreference" in after
-    assert "[System.Management.Automation.ErrorRecord]" in after.split("Tee-Object")[0]
-    # Canonical owner route unchanged when the Desktop CMD passes no seams.
-    assert "$entry = Join-Path $PSScriptRoot 'run_owner_daily.py'" in source
-    assert "$logDir = Join-Path $workspace 'run-logs'" in source
-    assert "workspace_profile()" in source
-    assert source.index("workspace_profile()") < source.index("New-Item -ItemType Directory")
-    assert '$progress = Join-Path $logDir "stock_lookup_daily_$stamp.progress.jsonl"' in source
-    assert "'--progress-path', $progress" in source
-    assert "if (-not $NoPause) { Read-Host 'Nhấn Enter để đóng' }" in source
-    assert "exit $finalExitCode" in source
+    # The active-writer refusal still precedes everything; then one forwarding native call.
+    assert source.index("Checkout is not the active production writer") < source.index("& $python @hostArguments")
+    assert source.count("& $python") == 1 and source.rstrip().endswith("exit $LASTEXITCODE")
+    assert "(Join-Path $PSScriptRoot 'owner_daily_host.py')" in source
+    for removed in ("ConvertFrom-Json -ErrorAction Stop", "Read-Host", "SetCursorPosition", "OWNER_DAILY_PROGRESS="):
+        assert removed not in source  # no presentation or relaunch logic left resident in PowerShell
+    command = (LAUNCHER.parent / "run_owner_daily.cmd").read_text(encoding="utf-8")
+    assert not [line for line in command.lower().splitlines() if "powershell" in line and not line.startswith("rem ")]
+    assert '-I -X utf8 -B "%~dp0owner_daily_host.py" %*' in command and "exit /b %errorlevel%" in command
+    host = (LAUNCHER.parent / "owner_daily_host.py").read_text(encoding="utf-8")
+    # Canonical owner route unchanged when the Desktop entry passes no seams.
+    assert 'os.path.join(TOOLS, "run_owner_daily.py")' in host
+    assert 'logs = os.path.join(workspace, "run-logs")' in host
+    assert host.index("workspace_profile()") < host.index("os.makedirs(logs")
+    assert 'f"stock_lookup_daily_{stamp}.progress.jsonl"' in host
+    assert '"--progress-path", progress' in host
+    assert 'input("Nhấn Enter để đóng: ")' in host
+
+
+def test_host_holds_no_repository_or_heavy_modules_resident():
+    probe = ("import sys; sys.path.insert(0, sys.argv[1]); import owner_daily_host; "
+             "print(' '.join(sorted(sys.modules)))")
+    modules = set(subprocess.run([sys.executable, "-I", "-c", probe, str(LAUNCHER.parent)],
+                                 capture_output=True, text=True, check=True).stdout.split())
+    forbidden = {"pandas", "numpy", "runtime_paths", "tools", "hashlib", "_hashlib", "ctypes",
+                 "decimal", "tempfile", "run_owner_daily"}
+    assert not modules & forbidden, modules & forbidden
+
+
+def _host():
+    sys.path.insert(0, str(LAUNCHER.parent))
+    try:
+        import owner_daily_host
+    finally:
+        sys.path.remove(str(LAUNCHER.parent))
+    return owner_daily_host
+
+
+class _Exited:
+    def __init__(self, code, lines=()):
+        self.code, self.stdout = code, [line.encode("utf-8") + b"\n" for line in lines]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def wait(self):
+        return self.code
+
+
+@pytest.mark.parametrize("second", ["missing_interpreter", "second_request"])
+def test_host_relaunch_failures_after_a_valid_first_handoff_fail_closed(tmp_path, second):
+    host = _host()
+    request = tmp_path / "request.json"
+    seen = []
+    def popen(argv, **options):
+        seen.append(dict(options["env"]))
+        if len(seen) == 1:
+            request.write_text(json.dumps({"head": "a" * 40, "environment": {key: "x" for key in host.REQUEST_KEYS[:3]}}))
+            return _Exited(75, ["STATUS: PRODUCER_CODE_ADVANCED_RELAUNCH"])
+        if second == "missing_interpreter":
+            raise FileNotFoundError(argv[0])
+        request.write_text(json.dumps({"head": "b" * 40, "environment": {key: "x" for key in host.REQUEST_KEYS[:3]}}))
+        return _Exited(75)
+    view = host.OwnerView(host.Console(False), lambda text: None, False)
+    assert host.run_owner("python", ["-u", "entry.py"], {}, view, str(request), popen=popen) == (1, True)
+    assert len(seen) == 2 and seen[1][host.CODE_HEAD_ENV] == "a" * 40
+    assert host.CODE_HEAD_ENV not in seen[0]
+
+
+@pytest.mark.parametrize("request_body", [
+    {"head": "a" * 40, "environment": {"PATH": "injected"}},
+    {"head": "A" * 40, "environment": {}},
+    {"head": "a" * 40, "environment": {}, "argv": ["evil"]},
+    ["not", "an", "object"],
+])
+def test_host_rejects_relaunch_requests_that_carry_more_than_run_metadata(request_body):
+    with pytest.raises(ValueError, match="INVALID_RELAUNCH_REQUEST"):
+        _host().validate_request(request_body)
 
 
 @windows_powershell
@@ -300,29 +365,19 @@ def test_gui_noise_cannot_escape_real_detached_launch_into_owner_fixture(tmp_pat
         assert noise not in completed.stdout + completed.stderr + _log_text(logs)
 
 
-@windows_powershell
 @pytest.mark.parametrize("width", [20, 40, 79, 160])
-def test_interactive_render_plan_retains_progress_and_vietnamese_at_narrow_width(tmp_path, width):
-    # Execute the same pure render plan that the actual cursor-writing path consumes.
-    renderer = LAUNCHER.parent / "owner_daily_presentation.ps1"
-    script = tmp_path / "render.ps1"
-    script.write_text(f"""
-[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-function Format-Duration($Seconds) {{ return '00:31:24' }}
-. '{renderer}'
-$event = [pscustomobject]@{{phase_index=2;phase_label='Chạy Daily chuẩn';phase_state='ĐANG CHẠY';task_label='Tạo gói quyết định';elapsed_seconds=1884;owner_line='bad internal_function'}}
-$checkpoint = [pscustomobject]@{{checkpoint_completed=7;checkpoint_total=13;checkpoint_percent=53.85}}
-Format-OwnerPresentation $event $checkpoint 0 {width} | ConvertTo-Json -Compress
-""", encoding="utf-8-sig")
-    result = subprocess.run([POWERSHELL, "-NoProfile", "-NonInteractive", "-File", str(script)],
-                            capture_output=True, text=True, encoding="utf-8", timeout=30)
-    assert result.returncode == 0, result.stderr
-    rendered = json.loads(result.stdout)
+def test_interactive_render_plan_retains_progress_and_vietnamese_at_narrow_width(width):
+    # The same pure render plan that the actual cursor-writing path consumes.
+    host = _host()
+    event = {"phase_index": 2, "phase_label": "Chạy Daily chuẩn", "phase_state": "ĐANG CHẠY",
+             "task_label": "Tạo gói quyết định", "elapsed_seconds": 1884, "owner_line": "bad internal_function"}
+    checkpoint = {"checkpoint_completed": 7, "checkpoint_total": 13, "checkpoint_percent": 53.85}
+    rendered = host.format_presentation(event, checkpoint, 0, width)
     assert len(rendered["Row"]) <= width
     assert "7/13 (54%)" in rendered["Row"]
     assert "00:31:24" in " ".join(rendered["Details"])
     assert "chưa đủ dữ liệu" in " ".join(rendered["Details"])
-    assert "internal_function" not in result.stdout
+    assert "internal_function" not in json.dumps(rendered, ensure_ascii=False)
     if width >= 160:
         assert "Chạy Daily chuẩn" in rendered["Row"] and "Tạo gói quyết định" in rendered["Row"]
 
@@ -441,3 +496,50 @@ def test_workspace_action_center_stays_private_and_off_system_volume(volumes, mo
     assert path.is_relative_to(private) and path.is_file()
     with pytest.raises(action_center.ActionCenterError, match="PRIVATE_ACTION_CENTER_ROOT"):
         action_center.write_private_artifact(artifact, root=Path(profile["roles"]["handoff"]))
+
+
+ANCESTRY_FIXTURE = r'''
+import ctypes, ctypes.wintypes as wt, json, os, sys
+class Entry(ctypes.Structure):
+    _fields_ = [("dwSize", wt.DWORD), ("cntUsage", wt.DWORD), ("th32ProcessID", wt.DWORD),
+                ("th32DefaultHeapID", ctypes.c_void_p), ("th32ModuleID", wt.DWORD), ("cntThreads", wt.DWORD),
+                ("th32ParentProcessID", wt.DWORD), ("pcPriClassBase", ctypes.c_long), ("dwFlags", wt.DWORD),
+                ("szExeFile", ctypes.c_wchar * 260)]
+kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+kernel.CreateToolhelp32Snapshot.restype = ctypes.c_void_p
+kernel.Process32FirstW.argtypes = kernel.Process32NextW.argtypes = [ctypes.c_void_p, ctypes.POINTER(Entry)]
+snapshot = kernel.CreateToolhelp32Snapshot(2, 0)
+entry, table = Entry(), {}
+entry.dwSize = ctypes.sizeof(Entry)
+ok = kernel.Process32FirstW(snapshot, ctypes.byref(entry))
+while ok:
+    table[entry.th32ProcessID] = (entry.th32ParentProcessID, entry.szExeFile.lower())
+    ok = kernel.Process32NextW(snapshot, ctypes.byref(entry))
+chain, pid = [], os.getpid()
+while pid in table and len(chain) < 8:
+    chain.append(table[pid][1]); pid = table[pid][0]
+print("OWNER_ANCESTRY=" + json.dumps(chain), flush=True)
+args = sys.argv[1:]
+with open(args[args.index("--result-path") + 1], "w", encoding="utf-8") as fh:
+    json.dump({"status": "PASS", "session": "2026-10-27", "telemetry": {"elapsed_seconds": 1}}, fh)
+'''
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="native Windows one-click route")
+def test_one_click_cmd_route_admits_with_no_resident_powershell(tmp_path):
+    entry = tmp_path / "ancestry.py"
+    entry.write_text(ANCESTRY_FIXTURE, encoding="utf-8")
+    logs = tmp_path / "logs"
+    environment = {**os.environ, "STOCK_LOOKUP_PYTHON": sys.executable}
+    completed = subprocess.run(["cmd.exe", "/d", "/c", str(LAUNCHER.with_suffix(".cmd")), "--entry-script", str(entry),
+                                "--log-directory", str(logs), "--no-pause", "--diagnostic"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=60, env=environment)
+    assert completed.returncode == 0, completed.stdout + completed.stderr
+    assert "HOÀN TẤT DAILY" in completed.stdout and "Trạng thái: PASS" in completed.stdout
+    [line] = [line for line in completed.stdout.splitlines() if line.startswith("OWNER_ANCESTRY=")]
+    chain = json.loads(line.split("=", 1)[1])
+    # Owner -> (venv redirector) -> Python host -> cmd: no PowerShell anywhere above the Owner.
+    assert chain.index("cmd.exe") <= 4, chain
+    assert not any("powershell" in name or "pwsh" in name for name in chain[:chain.index("cmd.exe")]), chain
+    assert next(logs.glob("*.result.json"))

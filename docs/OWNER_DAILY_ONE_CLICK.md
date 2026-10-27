@@ -7,6 +7,14 @@ It safely fast-forwards a clean Producer checkout, runs Canonical Daily, verifie
 completion evidence, commits only the governed session registry when needed, and publishes the
 compact private AI handoff.
 
+The Desktop file should contain only a call to the Producer's own launcher, which keeps no
+PowerShell host resident during host admission or the Daily:
+
+    @"T:\StockLookup\production-v1\stock-core-private\tools\run_owner_daily.cmd" %*
+un_owner_daily.cmd" %*
+
+`tools/run_owner_daily.ps1` remains a forwarding front door to the same Python host.
+
 ## Green result
 
 `FINAL STATUS: PASS` means the remote AI handoff is `READY_FOR_AI`.

@@ -244,3 +244,40 @@ alone must not be declared sufficient either. If the consolidated minimum
 launcher still cannot close the measured gap, the 16-GiB host at that competing
 load is outside the unchanged admission envelope. This record grants no merge,
 production run, threshold reduction, containment change or successor milestone.
+
+## Consolidated presentation host (same incident)
+
+The resident Windows PowerShell host is replaced by `tools/owner_daily_host.py`, a
+stdlib-only Python port of the same presentation, log/result/progress paths, exit
+codes and one-relaunch protocol. The zero-PowerShell one-click route is
+`tools/run_owner_daily.cmd` (cmd -> host -> Owner). `tools/run_owner_daily.ps1`
+keeps its pre-log active-writer refusal and only forwards to the host, for
+`stocklookup.ps1 daily` and the legacy Desktop CMD. Owner argv, guards, the
+9.25-GiB threshold, commit requirements and runtime containment are unchanged.
+
+Page-level measurement (QueryWorkingSet, three samples, at the Owner admission
+point, `admission-exclusive-pages.json` / `consolidated-host-memory.json` in the
+local incident report):
+
+| Launcher at admission | Private MiB |
+| --- | ---: |
+| Morning-equivalent: two full Owners + PowerShell host + cmd | 193.03–193.73 |
+| Sequential relaunch, PowerShell host + one Owner | 73.77–73.97 |
+| Consolidated: cmd + Python host + one Owner | 24.40–24.46 |
+
+The PowerShell host held 57.68–57.85 MiB private while supervising the Owner;
+the Python host holds 7.31 MiB. Private recovery against the morning-equivalent
+launcher is **168.63–169.27 MiB** against the 166.57-MiB 07:46 deficit: a
+conservative margin of only 2.06–2.70 MiB. Image pages mapped only by the
+morning launcher add at most 64.6 MiB, but cannot be proven exclusive because
+Windows reports ShareCount saturated at 7. The morning PowerShell host is
+measured through its closest successor script. This closes the launcher-owned
+share of that single counterfactual; it is not a READY permit for any other
+host load, because unrelated host activity moved available physical memory by
+97.70–423.20 MiB between observations.
+
+Deployment: the Owner's Desktop `Stock Lookup Daily.cmd` must invoke
+`T:\StockLookup\production-v1\stock-core-private\tools\run_owner_daily.cmd`
+instead of `powershell.exe ... run_owner_daily.ps1`; until then the legacy route
+still keeps PowerShell resident. Pull the Producer before switching the shortcut;
+an already-running old launcher cannot adopt the new host.

@@ -470,7 +470,7 @@ def test_native_powershell_profile_router(tmp_path, monkeypatch):
         roles=roles, hot_volume=vault.native_volume(parent))))
     tools = Path(roles["producer"]) / "tools"
     tools.mkdir()
-    for name in ("run_owner_daily.ps1", "owner_daily_presentation.ps1"):
+    for name in ("run_owner_daily.ps1", "owner_daily_host.py"):
         shutil.copyfile(root / "tools" / name, tools / name)
     dummy = tmp_path / "dummy.py"
     dummy.write_text('''import argparse,json,pathlib
