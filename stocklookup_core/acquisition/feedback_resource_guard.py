@@ -245,6 +245,7 @@ class _Job:
                                                      ctypes.POINTER(ctypes.c_size_t), ctypes.POINTER(ctypes.c_void_p), wintypes.DWORD]
         self.port = None
         self.memory_limit_exceeded = False
+        self.memory_limit_events = []
         self.handle = kernel.CreateJobObjectW(None, None)
         if not self.handle:
             raise OSError(ctypes.get_last_error(), "CreateJobObjectW failed")
@@ -284,6 +285,30 @@ class _Job:
             return int(info.PeakProcessMemoryUsed)
         return None
 
+    def memory_diagnostics(self) -> dict[str, Any]:
+        """Kernel private-commit accounting, retained even after the tree exits.
+
+        A denied allocation need not appear in either peak. Only a positive
+        completion-port notification identifies which allocation ceiling fired.
+        """
+        info = self.EXTENDED()
+        returned = self.wintypes.DWORD()
+        available = bool(self.kernel.QueryInformationJobObject(
+            self.handle, 9, self.ctypes.byref(info), self.ctypes.sizeof(info), self.ctypes.byref(returned)))
+        events = list(self.memory_limit_events)
+        scopes = sorted({event["scope"] for event in events})
+        return {
+            "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+            "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+            "limit_scope": "BOTH" if len(scopes) > 1 else (scopes[0] if scopes else "UNKNOWN"),
+            "limit_events": events,
+            "accounting_available": available,
+            "process_memory_limit_bytes": int(info.ProcessMemoryLimit) if available else None,
+            "job_memory_limit_bytes": int(info.JobMemoryLimit) if available else None,
+            "peak_process_committed_bytes": int(info.PeakProcessMemoryUsed) if available else None,
+            "peak_job_committed_bytes": int(info.PeakJobMemoryUsed) if available else None,
+        }
+
     def active_processes(self) -> int | None:
         info = self.ACCOUNTING()
         returned = self.wintypes.DWORD()
@@ -308,6 +333,10 @@ class _Job:
             return None
         if key.value == 1 and message.value in {9, 10}:  # PROCESS_MEMORY_LIMIT / JOB_MEMORY_LIMIT
             self.memory_limit_exceeded = True
+            event = {"scope": "PROCESS" if message.value == 9 else "JOB", "process_id": overlap.value}
+            # Keep the first evidence for each scope; repeated denial cannot grow diagnostics.
+            if not any(prior["scope"] == event["scope"] for prior in self.memory_limit_events):
+                self.memory_limit_events.append(event)
         return message.value
 
     def wait_empty(self, timeout: float) -> bool:
@@ -341,8 +370,14 @@ def _resume_suspended(process: subprocess.Popen) -> None:
         raise OSError(status, "NtResumeProcess failed")
 
 
+class DailyCapacityError(OSError):
+    def __init__(self, reason: str, diagnostics: dict[str, Any] | None = None):
+        super().__init__(reason)
+        self.diagnostics = diagnostics if diagnostics is not None else {}
+
+
 def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str, str],
-                         memory_probe, on_start=None) -> int:
+                         memory_probe, on_start=None, on_diagnostics=None) -> int:
     """Qualified Owner child only: strict Windows Job, inherited logs, no degraded launch.
 
     Reuse the existing containment/reap primitives. System probes use GetPerformanceInfo,
@@ -365,6 +400,7 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
     job = _Job(7 * GIB, job_memory_limit_bytes=8 * GIB)
     process = None
     assigned = False
+    failure = None
     try:
         require_reserves()
         process = subprocess.Popen(list(command), cwd=cwd, env=dict(env),
@@ -393,6 +429,9 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
         if job.memory_limit_exceeded:
             raise OSError("DAILY_CAPACITY_MEMORY_LIMIT")
         return returncode
+    except OSError as exc:
+        failure = DailyCapacityError(str(exc))
+        raise failure from exc
     finally:
         if process is not None:
             _terminate(process, job if assigned else None)
@@ -400,9 +439,25 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
             reaped = process.poll() is not None
         else:
             empty = reaped = True
-        job.close()
+        try:
+            diagnostics = job.memory_diagnostics()
+        except Exception as exc:
+            diagnostics = {"authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+                           "accounting_available": False, "diagnostic_error": type(exc).__name__,
+                           "limit_scope": "UNKNOWN", "peak_process_committed_bytes": None,
+                           "peak_job_committed_bytes": None}
+        finally:
+            job.close()
+        diagnostics.update(immediate_child_reaped=reaped, tree_termination_confirmed=empty)
+        if failure is not None:
+            failure.diagnostics.update(diagnostics)
+        if on_diagnostics is not None:
+            try:
+                on_diagnostics(diagnostics)
+            except Exception:
+                pass  # Observation cannot turn a refused run into success or mask cleanup.
         if not empty or not reaped:
-            raise OSError(CHILD_REAP_UNCONFIRMED)
+            raise DailyCapacityError(CHILD_REAP_UNCONFIRMED, diagnostics)
 
 
 def _read_small_json(path: Path) -> dict[str, Any] | None:

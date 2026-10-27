@@ -18,8 +18,8 @@
       ]
     },
     "canonical_post_close_pipeline.py": {
-      "ast_sha256": "2d2b7ddc6a7a50b8cc76049226b700c5342180261ed84123c77dea7a17427aa2",
-      "reason": "Child argv passed to imported run_observed_subprocess and progress wrapper; exact source contract covers delegation. 2026-10-21 review: AST refresh is the approved evaluated-valuation join only; resolved subprocess argv is unchanged from origin/main. Shareholder research join only; invocation paths and unresolved argv sites match e86b5f96 exactly. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
+      "ast_sha256": "a3c4d0eb67752717f39e7e4b24a2d74ace990788a0514ecbe8923f665337617e",
+      "reason": "Child argv passed to imported run_observed_subprocess and progress wrapper; exact source contract covers delegation. 2026-10-21 review: AST refresh is the approved evaluated-valuation join only; resolved subprocess argv is unchanged from origin/main. Shareholder research join only; invocation paths and unresolved argv sites match e86b5f96 exactly. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. IID runtime-memory corrective: resolved subprocess argv and unresolved sites are unchanged; AST refresh is graph lifetime only.",
       "targets": [
         "tools/run_prospective_decision_outcome_feedback.py",
         "tools/run_prospective_research_cohort_collection.py",
@@ -92,8 +92,8 @@
       ]
     },
     "tools/run_owner_daily.py": {
-      "ast_sha256": "7a03660e477943739ef2c0a1ed3cd28135e4bd1675cbcf219331af603bfa5895",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only.",
+      "ast_sha256": "3b27404e54d8af2989bbef79bb2f84df80264198766d0437295a63efea489b66",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only. IID runtime-memory corrective: same canonical argv; capacity diagnostics only.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/release_orchestrator.py",

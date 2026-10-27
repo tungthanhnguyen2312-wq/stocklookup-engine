@@ -85,8 +85,9 @@ def _hash(value: Any) -> str:
 
 
 def content_identity(value: Mapping[str, Any]) -> dict[str, str]:
+    from stocklookup_core.evidence.bounded_json import record_mapping_digest
     payload = {key: item for key, item in value.items() if key not in {"artifact_sha256", "artifact_identity"}}
-    digest = _hash(payload)
+    digest = record_mapping_digest(payload)
     return {
         "artifact_sha256": digest,
         "artifact_identity": f"market_wide_historical_research_context:{digest}",

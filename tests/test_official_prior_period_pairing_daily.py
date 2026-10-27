@@ -159,8 +159,10 @@ def test_active_coupled_digest_refuses_both_prior_declared_and_main_receipts():
         digest.update(label.encode() + b"\0" + hashlib.sha256(content).digest())
     assert digest.hexdigest() == row["base_live_e4_v2_digest"]
     live = e4.source_identity(ROOT, version="v2")
-    assert live["code_digest"] == row["active_e4_v2_digest"]
-    for old in (row["prior_declared_e4_v2_digest"], row["base_live_e4_v2_digest"]):
+    successor = json.loads((ROOT / "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json").read_bytes())
+    assert row["active_e4_v2_digest"] == successor["previous_e4_v2_digest"]
+    assert live["code_digest"] == successor["active_e4_v2_digest"]
+    for old in (row["prior_declared_e4_v2_digest"], row["base_live_e4_v2_digest"], row["active_e4_v2_digest"]):
         assert old != live["code_digest"]
         assert not e4.candidate_reuse_eligible({"source_version": "v2",
             "contract_version": "e4_infrastructure_source/v2", "code_digest": old,

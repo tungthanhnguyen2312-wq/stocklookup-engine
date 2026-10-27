@@ -88,7 +88,11 @@ def _copy_boundary(tmp_path: Path) -> None:
     spec = json.loads((ROOT / LAYOUT_MANIFEST).read_bytes())
     paths = {LAYOUT_MANIFEST, "tests/fixtures/e2e3_frozen_sources.json", *LAYOUT_SOURCES, *LAYOUT_SOURCES.values(),
              "tests/fixtures/retention_reader_transition_v2.json", CAPACITY_MANIFEST, CAPACITY_ARCHIVE, LAUNCHER_MANIFEST,
-             *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in LAUNCHER_SOURCES)}
+             "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json",
+             *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in LAUNCHER_SOURCES),
+             *("tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/" + p + ".txt"
+               for p in ("tools/run_owner_daily.py", "canonical_post_close_pipeline.py",
+                         "stocklookup_core/decision/integrated_investment_decision_product.py"))}
     for relative, row in spec["sources"].items():
         paths.add(row["archive"])
         for manifest in set(LAYOUT_SOURCES.values()):
@@ -168,7 +172,8 @@ def test_launcher_successor_preserves_every_workflow_body_and_historical_boundar
         live = _lf((ROOT / relative).read_bytes())
         assert _launcher_prior_bytes(ROOT, relative, live) == base
         if relative == CAPACITY_SOURCE:
-            assert body(base) == body(live)
+            pre_corrective = _lf((ROOT / "tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/tools/run_owner_daily.py.txt").read_bytes())
+            assert body(base) == body(pre_corrective)
         else:
             assert ast.dump(ast.parse(live.replace(b"owner_daily.supervised_main(", b"owner_daily.main("))) == ast.dump(ast.parse(base))
     historical = {LAYOUT_MANIFEST, CAPACITY_MANIFEST, CAPACITY_ARCHIVE, *LAYOUT_SOURCES.values(),
@@ -191,5 +196,5 @@ def test_launcher_successor_rejects_tampering(tmp_path, tamper):
         spec = json.loads(manifest.read_bytes())
         spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
         manifest.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="LAUNCHER_SOURCE_TRANSITION"):
+    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY)_SOURCE_TRANSITION"):
         _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))
