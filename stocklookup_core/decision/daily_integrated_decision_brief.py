@@ -637,11 +637,35 @@ def build_artifact(
     return artifact
 
 
+_IID_CONTRACT = "integrated_investment_decision_product/v1"
+
+
 def _load_json(path: Path) -> Mapping[str, Any] | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
 
 
-def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[str, Any]) -> dict[str, Any] | None:
+def _resident_integrated(path: Path, artifact: Mapping[str, Any], session: str) -> Mapping[str, Any] | None:
+    """Use the caller-owned same-session product. Do not parse the multi-gigabyte file again.
+
+    The caller proves the on-disk artifact is this session and this identity before
+    passing it in. A missing file stays the not-materialized result. The records
+    mapping is the caller's object: this does not parse the multi-gigabyte file.
+    """
+    if not path.is_file():
+        return None
+    if artifact.get("session") != session:
+        raise ValueError(
+            f"INTEGRATED_DECISION_SESSION_MISMATCH:expected={session}:observed={artifact.get('session')}")
+    if artifact.get("contract_version") != _IID_CONTRACT:
+        raise ValueError("INTEGRATED_DECISION_DELIVERY_CONTRACT_MISMATCH")
+    if not isinstance(artifact.get("artifact_identity"), str) or not artifact["artifact_identity"]:
+        raise ValueError("INTEGRATED_DECISION_DELIVERY_IDENTITY_MISSING")
+    if not isinstance(artifact.get("records"), Mapping):
+        raise ValueError("INTEGRATED_DECISION_DELIVERY_RECORDS_MISSING")
+    return artifact
+
+
+def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[str, Any], integrated_decision_current: Mapping[str, Any] | None = None) -> dict[str, Any] | None:
     """CLI-level convenience mirroring next_session_decision_brief.build_from_previous_bundle_path:
     resolve every input from the canonical session-scoped path registry and build one artifact.
 
@@ -650,9 +674,16 @@ def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[
     already auto-builds it; if it is genuinely missing this session should not silently fall back to
     a stale prior-session product per Section 15). Every other input degrades gracefully inside the
     section builders themselves.
+
+    Canonical Daily already holds that current-session product. Passing it avoids a second
+    full-file decode. The file is still the session and identity authority.
     """
     paths = fixed_session_artifact_paths(root, session)
-    integrated_current = _load_json(paths["integrated_investment_decision_product"])
+    iid_path = paths["integrated_investment_decision_product"]
+    if integrated_decision_current is None:
+        integrated_current = _load_json(iid_path)
+    else:
+        integrated_current = _resident_integrated(iid_path, integrated_decision_current, session)
     if integrated_current is None:
         return None
     descriptive_current = _load_json(paths["descriptive_research"])

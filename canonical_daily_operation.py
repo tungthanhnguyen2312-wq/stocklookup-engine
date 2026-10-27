@@ -633,7 +633,8 @@ def _build_preseal_daily_integrated_brief(
     """
     from ai_research_session_delivery import build_delivery
     from stocklookup_core.decision.daily_integrated_decision_brief import build_from_session
-    from next_session_decision_brief import build_from_current_delivery_payload
+    from stocklookup_core.evidence.session_paths import fixed_session_artifact_paths
+    from next_session_decision_brief import _bind_resident_file, build_from_current_delivery_payload
 
     binding = operation.get("integrated_delivery")
     if not isinstance(binding, Mapping):
@@ -663,7 +664,14 @@ def _build_preseal_daily_integrated_brief(
         registry=registry,
         current_integrated=integrated,
     )
-    brief = build_from_session(root=root, session=session, next_session_brief=next_brief)
+    _bind_resident_file(
+        fixed_session_artifact_paths(root, session)["integrated_investment_decision_product"],
+        integrated,
+    )
+    brief = build_from_session(
+        root=root, session=session, next_session_brief=next_brief,
+        integrated_decision_current=integrated,
+    )
     if not isinstance(brief, Mapping):
         raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, "PRESEAL_DAILY_INTEGRATED_BRIEF_UNAVAILABLE")
     return brief

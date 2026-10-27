@@ -4,7 +4,7 @@
   "scope": "EXACT_IID_RUNTIME_MEMORY_CORRECTIVE_ONLY",
   "release_authority": "NOT_GRANTED",
   "previous_e4_v2_digest": "ebb592d0ceddc67f9186184c6e13f093c18ff0ddb749ccfc4e6b6cb49599a693",
-  "active_e4_v2_digest": "20e68ede0e489af6408ee8f6aa93037e7167a4b11ed308dca899d373bbfd1d78",
+  "active_e4_v2_digest": "d3a019eba7e40381b72e1f2f7bf3eb28f76756d239b13c0e91b2e853243bfe1b",
   "sources": {
     "tools/run_owner_daily.py": {
       "archive": "tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/tools/run_owner_daily.py.txt",

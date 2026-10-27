@@ -432,7 +432,7 @@ def child(experiment: Path) -> int:
 
 
 def main() -> None:
-    experiment = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r7")
+    experiment = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r8")
     if "--child" not in sys.argv:
         from tools.check_owner_daily_host_preflight import check, producer_seal_measurement_admission
         host = check(ROOT, PRODUCTION_RETAINED)

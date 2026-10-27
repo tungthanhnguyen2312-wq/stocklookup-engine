@@ -66,6 +66,42 @@ PRESEAL_CONSUMER_MANIFEST = "tests/fixtures/owner_daily_preseal_consumer_memory_
 PRESEAL_CONSUMER_BASE = "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb"
 PRESEAL_CONSUMER_SCOPE = "EXACT_PRESEAL_CONSUMER_MEMORY_CORRECTIVE_ONLY"
 PRESEAL_CONSUMER_SOURCE = "canonical_daily_operation.py"
+BRIEF_RESIDENT_MANIFEST = "tests/fixtures/owner_daily_preseal_brief_resident_source_transition_v1.json"
+BRIEF_RESIDENT_BASE = "e60901774a01cb36e702dd08f760348b96f52960"
+BRIEF_RESIDENT_SCOPE = "EXACT_PRESEAL_BRIEF_RESIDENT_IID_ONLY"
+BRIEF_RESIDENT_SOURCE = "stocklookup_core/decision/daily_integrated_decision_brief.py"
+
+
+def _brief_resident_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the resident-IID brief successor before every older source pin.
+
+    The archived bytes are the exact pre-corrective Daily Integrated Decision Brief.
+    A missing manifest keeps older checkouts valid.
+    """
+    manifest = root / BRIEF_RESIDENT_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources"}
+            or spec.get("contract_version") != "owner_daily_preseal_brief_resident_source_transition/v1"
+            or spec.get("base_commit") != BRIEF_RESIDENT_BASE
+            or spec.get("scope") != BRIEF_RESIDENT_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (BRIEF_RESIDENT_SOURCE,)):
+        raise ValueError("PRESEAL_BRIEF_RESIDENT_SOURCE_TRANSITION_SCOPE_INVALID")
+    if relative != BRIEF_RESIDENT_SOURCE:
+        return active
+    row = sources[relative]
+    archive = "tests/fixtures/owner_daily_preseal_brief_resident_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("PRESEAL_BRIEF_RESIDENT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("PRESEAL_BRIEF_RESIDENT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _preseal_consumer_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
@@ -74,6 +110,7 @@ def _preseal_consumer_prior_bytes(root: Path, relative: str, active: bytes) -> b
     The archived bytes are the exact pre-corrective canonical daily operation.
     Older manifests stay unchanged. A missing manifest keeps older checkouts valid.
     """
+    active = _brief_resident_prior_bytes(root, relative, active)
     manifest = root / PRESEAL_CONSUMER_MANIFEST
     if not manifest.is_file():
         return active

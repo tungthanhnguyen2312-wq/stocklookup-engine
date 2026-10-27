@@ -7,7 +7,7 @@
     "canonical_daily_operation.py": {
       "archive": "tests/fixtures/owner_daily_preseal_consumer_memory_v1_sources/canonical_daily_operation.py.txt",
       "prior_sha256_lf": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
-      "active_sha256_lf": "52fc13317ba39cf55719f2c49b3b0ba1044f58303fe32a5dd81b67ccace783df"
+      "active_sha256_lf": "d828e9710d559192dbd4bfd19743fba414851942e0c4ae8bc99a38b1fb0622b8"
     }
   }
 }
