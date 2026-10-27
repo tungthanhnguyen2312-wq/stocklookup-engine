@@ -177,3 +177,70 @@ no replacement completed-M1 measurement. The earlier completed M1/current-produc
 observer measurements are reused; output/serializer parity regressions remain
 mandatory. Safe admission at the observed 9.493145-GiB condition is supported by
 the bounded model, while provider-to-publication completion remains unmeasured.
+
+## Launcher corrective — October 27 failed startup
+
+The retained 07:46:27 attempt on `bff837a9` matched the capacity fingerprint,
+but had 9,757,450,240 physical bytes available against 9,932,111,872 required:
+166.5703125 MiB short. Its progress/log records show Owner PIDs 10740 and
+4364 concurrently. The old relaunch used synchronous `subprocess.run`, so the
+first interpreter remained resident throughout the successor's preflight.
+The log records working sets, not private commit or parent PIDs; those facts
+are established separately by bounded, harmless source-replay observations.
+
+The existing PowerShell presentation host now waits for the old interpreter's
+exit before starting the same executable/argv once more. Only exit 75 together
+with a bounded, validated run-metadata request permits handoff. The request
+cannot replace an executable, arguments or arbitrary environment variables.
+Run origin, result/progress paths and the one presentation remain continuous;
+the successor uses the existing journal/session/completion gates. A second
+fast-forward, malformed/missing request or launch failure refuses success.
+An interrupted handoff leaves the incomplete journal available for normal
+recovery; it never invents completion. Direct Python callers use a small
+sequential supervisor; the canonical one-click path uses its existing native
+PowerShell host without another Python supervisor.
+
+Integration must place the corrected PowerShell and Python sources in the
+production checkout before starting its next process. An already running
+pre-corrective PowerShell host cannot acquire the new supervisor by pulling
+Python source. An updated entrypoint reached through that legacy synchronous
+parent refuses before host admission (`LEGACY_SYNCHRONOUS_SUPERVISOR`) rather
+than claiming the overlap has been removed. This source-only PR does not
+perform that Owner-controlled integration or run Daily.
+
+Publication-only imports now occur at their existing consumers. Intended-session
+resolution calls the identical calendar leaf directly, with the same Vietnam
+timezone conversion, instead of importing the producer graph. Calendar parity,
+unchanged workflow bodies, canonical argv/guards, historical pins and source
+boundaries are separately checked. The exact capacity receipt is refreshed for
+these startup-only source changes; earlier finite stage qualifications are
+reused, not represented as another whole-Daily qualification.
+
+Two admission-path rehearsals with the production Python environment found
+the old parent/child relationship through the Windows venv redirectors.
+Each old Owner used about 294–295 MiB private commit and 65.7–66.0 MiB unique
+resident memory. The corrected Owner used about 14.5 MiB private commit and
+12.9 MiB unique resident memory. Including redirectors, removing overlap and
+eager startup imports reduced private commit by 575.65–576.30 MiB and unique
+resident RAM by **119.16–119.59 MiB**. Summed working-set differences are not
+claimed as reclaimed physical memory because shared pages would be counted
+twice. Host available-physical changes varied by 97.70–423.20 MiB while unrelated
+host activity continued; these are noisy observations, not a repeatable permit.
+
+**Admission remains unresolved.** Subtracting the conservative unique-resident
+recovery from the original deficit leaves approximately **47.4 MiB**; this is a
+counterfactual residual, not a fresh measurement of the old morning baseline.
+A real native presentation/handoff rehearsal confirmed the old PID was gone,
+with PowerShell itself retaining 39.07 MiB unique resident memory and the Owner
+13.13 MiB. At that later observation only 3,244,044,288 physical bytes were
+available (6,688,067,584 below READY), so this busy host was not READY. No apps
+were terminated to improve these observations, and no production Daily ran.
+
+The exact next corrective in this same incident is to qualify a presentation/
+Owner process consolidation against at least the remaining 47.4-MiB resident
+budget. Removing the measured PowerShell process alone provides at most
+39.07 MiB unique resident recovery before replacement costs, so that change
+alone must not be declared sufficient either. If the consolidated minimum
+launcher still cannot close the measured gap, the 16-GiB host at that competing
+load is outside the unchanged admission envelope. This record grants no merge,
+production run, threshold reduction, containment change or successor milestone.

@@ -52,6 +52,32 @@ LAYOUT_SOURCES = {
 CAPACITY_SOURCE = "tools/run_owner_daily.py"
 CAPACITY_MANIFEST = "tests/fixtures/owner_daily_capacity_source_transition_v1.json"
 CAPACITY_ARCHIVE = "tests/fixtures/owner_daily_capacity_v1_sources/tools/run_owner_daily.py.txt"
+LAUNCHER_MANIFEST = "tests/fixtures/owner_daily_launcher_source_transition_v1.json"
+LAUNCHER_SOURCES = ("tools/run_owner_daily.py", "stocklookup.py")
+
+
+def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
+    if relative not in LAUNCHER_SOURCES or not (root / LAUNCHER_MANIFEST).exists():
+        return active
+    spec = json.loads((root / LAUNCHER_MANIFEST).read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources"}
+            or spec["contract_version"] != "owner_daily_launcher_source_transition/v1"
+            or spec["base_commit"] != "bff837a9f11fd127eb9326f5411fb6dee8c116f5"
+            or spec["scope"] != "SEQUENTIAL_RELAUNCH_AND_DEFERRED_PUBLICATION_IMPORTS_ONLY"
+            or spec["release_authority"] != "NOT_GRANTED"
+            or tuple(spec["sources"]) != LAUNCHER_SOURCES):
+        raise ValueError("LAUNCHER_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    archive = "tests/fixtures/owner_daily_launcher_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row["archive"] != archive:
+        raise ValueError("LAUNCHER_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("LAUNCHER_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _capacity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
@@ -60,6 +86,7 @@ def _capacity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     Only historical verification consumes the archive. Execution receipts still
     require the actual live bytes, never the pre-capacity launcher digest.
     """
+    active = _launcher_prior_bytes(root, relative, active)
     if relative != CAPACITY_SOURCE or not (root / CAPACITY_MANIFEST).exists():
         return active
     spec = json.loads((root / CAPACITY_MANIFEST).read_bytes())

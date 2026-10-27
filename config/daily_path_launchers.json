@@ -54,8 +54,8 @@
       ]
     },
     "stocklookup.py": {
-      "ast_sha256": "710823f42f50ea375120cbcdff7725d52b56a20ff9c4e2a8622d6a76f116c97c",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
+      "ast_sha256": "c99b4008056c8580dfe02f438776f5c8fe5978452e3cb707d9bd24939e4c96c4",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/stocklookup_roadmap.py"
@@ -92,8 +92,8 @@
       ]
     },
     "tools/run_owner_daily.py": {
-      "ast_sha256": "2fc4e1c81316b7a1df81edbab1864f8e69349186f54a0e5c54984c65500bcec6",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged.",
+      "ast_sha256": "7a03660e477943739ef2c0a1ed3cd28135e4bd1675cbcf219331af603bfa5895",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/release_orchestrator.py",
@@ -118,8 +118,8 @@
   "non_python_callers": {
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
-      "reason": "Exact reviewed shell/CI command contract, normalized line endings.",
-      "sha256": "717333a6041efc7eb58a48fa6fd9ecc6ccb59faefb0c1ad08505f50604c5321e",
+      "reason": "Exact reviewed shell/CI command contract, normalized line endings. Windows-only real launcher handoff regressions; production commands unchanged.",
+      "sha256": "46ec00e125c4835424f1587f131927b4f9be1ac013269e4a15771e19a7acb923",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",

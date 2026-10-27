@@ -21,6 +21,75 @@ LAUNCHER = Path(__file__).resolve().parents[1] / "tools" / "run_owner_daily.ps1"
 POWERSHELL = shutil.which("powershell.exe") if os.name == "nt" else None
 windows_powershell = pytest.mark.skipif(POWERSHELL is None, reason="needs Windows PowerShell 5.1 (the real launcher host)")
 
+HANDOFF_FIXTURE = r'''
+import ctypes, json, os, sys
+from pathlib import Path
+sys.path.insert(0, REPO_ROOT)
+from tools import run_owner_daily as owner
+args = sys.argv[1:]
+result = Path(args[args.index('--result-path') + 1])
+state = result.with_suffix('.old.json')
+mode = MODE
+if mode == 'missing': sys.exit(75)
+if mode == 'invalid':
+    Path(os.environ[owner.RELAUNCH_PATH_ENV]).write_text(json.dumps({'head':'a'*40,'environment':{'PATH':'injected'}}))
+    sys.exit(75)
+def workflow(**kwargs):
+    if not os.environ.get(owner.CODE_HEAD_ENV):
+        state.write_text(json.dumps({'pid':os.getpid(),'run_id':kwargs['telemetry'].run_id}))
+        if mode == 'launch_failure': Path(os.environ['STOCK_LOOKUP_PYTHON']).unlink()
+        print('OLD_STDOUT', flush=True)
+        print('OLD_STDERR', file=sys.stderr, flush=True)
+        raise owner.ProducerCodeAdvanced('a'*40)
+    old = json.loads(state.read_text())
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.OpenProcess.restype = ctypes.c_void_p
+    kernel.WaitForSingleObject.argtypes = [ctypes.c_void_p, ctypes.c_uint32]
+    kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+    handle = kernel.OpenProcess(0x100000, False, old['pid'])
+    if handle:
+        try: assert kernel.WaitForSingleObject(handle, 0) == 0, 'old owner still alive at admission'
+        finally: kernel.CloseHandle(handle)
+    assert old['run_id'] == kwargs['telemetry'].run_id
+    assert os.environ[owner.CODE_HEAD_ENV] == 'a'*40
+    print('SINGLE_OWNER_AT_ADMISSION', flush=True)
+    print('NEW_STDOUT', flush=True)
+    print('NEW_STDERR', file=sys.stderr, flush=True)
+    if mode == 'repeat': raise owner.ProducerCodeAdvanced('b'*40)
+    return {'status':'PASS' if mode == 'pass' else 'PARTIAL', 'session':'2026-10-27'}
+owner.run_workflow = workflow
+owner._auto_resumable_session = lambda *a, **k: None
+sys.exit(owner.main(args))
+'''
+
+
+@windows_powershell
+@pytest.mark.parametrize('mode,exit_code', [('pass',0), ('partial',3), ('missing',1), ('invalid',1), ('repeat',1), ('launch_failure',1)])
+def test_sequential_handoff_waits_for_old_owner_and_preserves_streams(tmp_path, mode, exit_code):
+    entry = tmp_path / 'handoff.py'
+    entry.write_text(HANDOFF_FIXTURE.replace('REPO_ROOT', repr(str(LAUNCHER.parent.parent))).replace('MODE', repr(mode)), encoding='utf-8')
+    logs = tmp_path / 'logs'
+    environment = dict(os.environ)
+    if mode == 'launch_failure':
+        python_wrapper = tmp_path / 'python-fixture.ps1'
+        python_wrapper.write_text("& '" + sys.executable.replace("'", "''") + "' @args\nexit $LASTEXITCODE\n")
+        environment['STOCK_LOOKUP_PYTHON'] = str(python_wrapper)
+    completed = subprocess.run([POWERSHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+        '-File', str(LAUNCHER), '-EntryScript', str(entry), '-LogDirectory', str(logs), '-NoPause', '-Diagnostic'],
+        capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60, env=environment)
+    assert completed.returncode == exit_code, completed.stdout + completed.stderr
+    assert list(logs.glob('*.result.json')), completed.stdout + completed.stderr
+    result = json.loads(next(logs.glob('*.result.json')).read_text(encoding='utf-8'))
+    log = _log_text(logs)
+    if mode in {'pass', 'partial', 'repeat'}:
+        assert 'SINGLE_OWNER_AT_ADMISSION' in log
+        assert all(log.count(s) == 1 for s in ('OLD_STDOUT', 'OLD_STDERR', 'NEW_STDOUT', 'NEW_STDERR'))
+        assert log.count('OWNER_DAILY_PRESENTATION=') == 1
+        assert log.count('STATUS: PRODUCER_CODE_ADVANCED_RELAUNCH') == 1
+    if mode in {'missing', 'invalid', 'repeat', 'launch_failure'}:
+        assert result['status'] == 'FAILED'
+        assert 'RELAUNCH_FAILED' in result['reason']
+
 FIXTURE = r'''
 import json, sys, time
 args = sys.argv[1:]

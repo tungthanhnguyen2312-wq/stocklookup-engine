@@ -29,7 +29,7 @@ def test_zero_flag_daily_delegates_to_run_owner_daily_main(monkeypatch, tmp_path
         }), encoding="utf-8")
         return 0
 
-    monkeypatch.setattr("tools.run_owner_daily.main", fake_owner_daily_main)
+    monkeypatch.setattr("tools.run_owner_daily.supervised_main", fake_owner_daily_main)
     monkeypatch.setattr(stocklookup, "ROOT", tmp_path)
     code = stocklookup.main(["daily"])
     assert code == 0

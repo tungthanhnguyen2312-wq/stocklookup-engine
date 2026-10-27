@@ -88,12 +88,27 @@ DEFAULT_RUNTIME = configured_runtime_root(DEFAULT_RUNTIME)
 DEFAULT_HANDOFF_REPO = workspace_path("handoff", DEFAULT_HANDOFF_REPO)
 DEFAULT_RESULT_LOG_ROOT = workspace_path("logs", DEFAULT_RESULT_LOG_ROOT)
 from release_checkout_identity import CANONICAL_WEB_ROOT, origin_matches_checkout, origin_repository  # noqa: E402
-from canonical_dashboard_runtime_release import (  # noqa: E402
-    CanonicalRuntimeReleaseError, materialize_canonical_runtime_release, materialize_release_ready_runtime,
-)
-from canonical_trusted_subset_release import (  # noqa: E402
-    CanonicalTrustedSubsetError, materialize_canonical_trusted_subset,
-)
+# Publication imports pull in pandas/NumPy and the full analytical graph. Admission
+# needs none of that graph; resolve it only when its existing consumer runs.
+def materialize_release_ready_runtime(*args, **kwargs):
+    from canonical_dashboard_runtime_release import materialize_release_ready_runtime as materialize
+    return materialize(*args, **kwargs)
+
+
+def materialize_canonical_trusted_subset(*args, **kwargs):
+    from canonical_trusted_subset_release import materialize_canonical_trusted_subset as materialize
+    return materialize(*args, **kwargs)
+
+
+def __getattr__(name):
+    # Preserve the existing exception exports for callers without eager imports.
+    if name == "CanonicalRuntimeReleaseError":
+        from canonical_dashboard_runtime_release import CanonicalRuntimeReleaseError
+        return CanonicalRuntimeReleaseError
+    if name == "CanonicalTrustedSubsetError":
+        from canonical_trusted_subset_release import CanonicalTrustedSubsetError
+        return CanonicalTrustedSubsetError
+    raise AttributeError(name)
 from stocklookup_core.acquisition.checkout_cleanliness_contract import (  # noqa: E402
     CONSUMER_APPROVED_UNTRACKED_PREFIXES, classify_checkout_cleanliness,
 )
@@ -118,6 +133,8 @@ class OwnerDailyError(RuntimeError):
 # OWNER_DAILY_AI_HANDOFF_IMPORT_RECOVERY_20261012: set only on the one relaunch below, to the
 # Producer HEAD the relaunched process was started on.
 CODE_HEAD_ENV = "STOCK_LOOKUP_OWNER_DAILY_CODE_HEAD"
+RELAUNCH_PATH_ENV = "STOCK_LOOKUP_OWNER_DAILY_RELAUNCH_PATH"
+RELAUNCH_EXIT = 75
 
 
 class ProducerCodeAdvanced(Exception):
@@ -446,6 +463,8 @@ def publish_dashboard_release(root: Path, runtime_root: Path, session: str, *, w
     # release. Normal Daily reaches this same boundary after its canonical completion record is
     # verified, so neither route can send an unproven bundle_manifest downstream, and neither can
     # leave same-session Signal Velocity/Flow-Price erased by a second sealed-baseline copy.
+    from canonical_dashboard_runtime_release import CanonicalRuntimeReleaseError
+    from canonical_trusted_subset_release import CanonicalTrustedSubsetError
     try:
         materialize_release_ready_runtime(
             root, runtime_root, session, producer_run_identity=producer_run_identity,
@@ -1103,8 +1122,13 @@ def _resolve_intended_session(now: datetime | None = None) -> str | None:
     cannot safely happen", not as license to fall back to the pre-fix unsafe behavior.
     """
     try:
-        from daily_session_level2_package import resolve_level2_session
-        return resolve_level2_session(None, now=now)["session"]
+        # Follow the very same calendar leaf used by resolve_level2_session /
+        # resolved_completed_session, without importing their producer graph.
+        from stocklookup_core.evidence.freshness_history import latest_completed_market_day
+        from vn_time import VN_TZ, vn_now
+        observed = now or vn_now()
+        local = observed.astimezone(VN_TZ) if observed.tzinfo else observed.replace(tzinfo=VN_TZ)
+        return latest_completed_market_day(local).isoformat()
     except Exception:
         return None
 
@@ -1633,18 +1657,94 @@ def default_result_path(*, root: Path = ROOT, log_root: Path | None = None, now:
 
 
 def relaunch_on_advanced_code(head: str, argv: list[str], telemetry: OwnerDailyProgress) -> int:
-    """Run this same entrypoint, with the same arguments, as a fresh interpreter on ``head``.
+    """Exit to the existing supervisor; it starts the successor only after wait().
 
-    Its console output reaches the launcher directly and its exit code is this process's own.
-    ``CODE_HEAD_ENV`` marks the relaunch so a second fast-forward fails closed instead of looping.
+    The request contains run metadata, never an executable or replacement argv.
+    Only a successful exit 75 plus a valid request permits the one handoff.
     """
     sys.stdout.flush()
     sys.stderr.flush()
-    environment = {**os.environ, **telemetry.child_environment(), CODE_HEAD_ENV: head}
+    if os.environ.get(CODE_HEAD_ENV):
+        raise OSError("PRODUCER_CODE_ADVANCED_AFTER_RELAUNCH")
+    path = os.environ.get(RELAUNCH_PATH_ENV)
+    if not path or not re.fullmatch(r"[0-9a-f]{40}", head):
+        raise OSError("PRODUCER_CODE_RELAUNCH_SUPERVISOR_REQUIRED")
+    request = {"head": head, "environment": telemetry.child_environment()}
+    target = Path(path)
+    temporary = target.with_suffix(".tmp")
+    try:
+        temporary.write_text(json.dumps(request), encoding="utf-8")
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
     print("STATUS: PRODUCER_CODE_ADVANCED_RELAUNCH")
     print(f"PRODUCER_CODE_HEAD: {head}", flush=True)
-    return subprocess.run([sys.executable, "-u", str(ROOT / "tools" / "run_owner_daily.py"), *argv],
-                          cwd=ROOT, env=environment, check=False).returncode
+    return RELAUNCH_EXIT
+
+
+def supervised_main(argv: list[str] | None = None) -> int:
+    """Direct Python callers share the sequential protocol used by PowerShell.
+
+    The canonical one-click route already has a native supervisor and calls main
+    directly. This small fallback imports no publication/analytical dependencies.
+    """
+    if os.environ.get(RELAUNCH_PATH_ENV):
+        return main(argv)
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if os.environ.get(CODE_HEAD_ENV):
+        # An already running pre-corrective launcher cannot acquire the new
+        # supervisor by pulling source. Never admit under its synchronous parent.
+        return write_relaunch_failure(arguments, "LEGACY_SYNCHRONOUS_SUPERVISOR")
+    import tempfile
+    command = [sys.executable, "-u", str(ROOT / "tools/run_owner_daily.py"), *arguments]
+    with tempfile.TemporaryDirectory(prefix="owner-daily-relaunch-") as directory:
+        request_path = Path(directory) / "request.json"
+        environment = {**os.environ, RELAUNCH_PATH_ENV: str(request_path)}
+        for attempt in range(2):
+            try:
+                code = subprocess.run(command, cwd=ROOT, env=environment, check=False).returncode
+                if code != RELAUNCH_EXIT:
+                    return code
+                if attempt:
+                    raise ValueError("SECOND_RELAUNCH_REQUEST")
+                if request_path.stat().st_size > 16384:
+                    raise ValueError("INVALID_RELAUNCH_REQUEST")
+                request = json.loads(request_path.read_text(encoding="utf-8"))
+                updates = validate_relaunch_request(request)
+                environment.update(updates)
+                request_path.unlink()
+            except (OSError, ValueError, KeyError, TypeError) as exc:
+                return write_relaunch_failure(arguments, type(exc).__name__)
+    return 1
+
+
+def validate_relaunch_request(request: dict) -> dict[str, str]:
+    keys = {RUN_ID_ENV, RUN_STARTED_AT_ENV, RUN_STARTED_MONOTONIC_ENV, PROGRESS_PATH_ENV}
+    if (set(request) != {"head", "environment"}
+            or not isinstance(request["head"], str)
+            or not re.fullmatch(r"[0-9a-f]{40}", request["head"])
+            or not isinstance(request["environment"], dict)
+            or not set(request["environment"]).issubset(keys)
+            or not {RUN_ID_ENV, RUN_STARTED_AT_ENV, RUN_STARTED_MONOTONIC_ENV}.issubset(request["environment"])
+            or any(not isinstance(v, str) for v in request["environment"].values())):
+        raise ValueError("INVALID_RELAUNCH_REQUEST")
+    return {**request["environment"], CODE_HEAD_ENV: request["head"]}
+
+
+def write_relaunch_failure(argv: list[str], detail: str) -> int:
+    """External operational failure only; an incomplete journal remains resumable."""
+    result = {"status": "FAILED", "failed_step": "Repository preflight",
+              "reason": "PRODUCER_CODE_RELAUNCH_FAILED:" + detail,
+              "hint": "Nothing analytical ran; start the existing Daily launcher again.",
+              "resume_completed_session": False}
+    try:
+        target = validate_result_path(Path(argv[argv.index("--result-path") + 1]), root=ROOT)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        print("OWNER_DAILY_RESULT=" + str(target), flush=True)
+    except (OSError, ValueError, IndexError, OwnerDailyError):
+        print(result["reason"], file=sys.stderr, flush=True)
+    return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1757,4 +1857,4 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(supervised_main())

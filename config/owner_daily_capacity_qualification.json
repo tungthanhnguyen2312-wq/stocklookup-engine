@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "68b33558b72691ff08b316df2270f2dbe46c5c767f9f59fa17e959a8edeb4b74",
+    "config/daily_path_launchers.json": "6adbe298aa4921d7c219490e07a9fd9f340c9680205dba26cd84784ccbbe5892",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
     "config/feature_dictionary.json": "cd75526ff92f9c61a352b551943a3bbfaea13206ebf44a26b99aae8752ce2067",
@@ -652,7 +652,7 @@
     "statement_taxonomy_sidecar.py": "f4cd655e555a50f1fe0f28d09bdf2236aa36cb8acd745199bfa85d17b1939963",
     "stock_analyzer.py": "fbb39bcd8d42c09441804c3a4f38fe1960b767caf6fc3e1ce9af525850faadf4",
     "stocklookup.ps1": "fa1f8b6121dcc6d81837a5174ea5650e9dc83c50c50e077b9f000ae06f551afc",
-    "stocklookup.py": "73e69872190eb13a019dffafc2b1c19ac2812f0858650d2edfbc7bcfe72f1938",
+    "stocklookup.py": "8d8e093cdd7b08ed0a7ce1ad5a0e14aacf617da48431a05de0ae83316d53bdb4",
     "stocklookup_core/__init__.py": "e904f3b86fd9a18db67692d66b06a85e5951199552dc554b6c1bb1747b0c0cda",
     "stocklookup_core/acquisition/__init__.py": "2d3c4cf664ee8e1cb22f39b6e9ab79ab75d0145ac3f26eb598e1ac5fe6e00136",
     "stocklookup_core/acquisition/acquisition_landing_atomic_io.py": "67772d9941db65886c5f496757c4e8e240c5086f29ef4055e1a9cd8adc323b1f",
@@ -1362,8 +1362,8 @@
     "tools/run_official_source_route_evidence_binding_correction.py": "9a98f2b25173e86041380f8610ac82855444fa7d3a8bc1c450510f33461bb65e",
     "tools/run_official_ssi_pow_ca_qualification.py": "44e19eb69941d6a622adc22f6e7199403f3e483967b8621b6b41e5ed6eb624f9",
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
-    "tools/run_owner_daily.ps1": "ac217db17c4b82c7ee897b406a7235c4a78b79881509e07907a70a6a557c486a",
-    "tools/run_owner_daily.py": "515b6cbdc7ec7eca902726b91386e5a56258a817d9da6730a2aa920aa7224402",
+    "tools/run_owner_daily.ps1": "b64c0a92f15a43be5c57f1907002e43694a7112b5f6d60c7461dd8df2e73fafb",
+    "tools/run_owner_daily.py": "877dd76c24ae25b1a5d9a9774a5d561b60f2ef5f5d7803d852d22455b0bd00a4",
     "tools/run_owner_daily_feedback_rehearsal.py": "994b36e2c066cce0effc77428688e53ea25ad8ae9a4d7530f83ba39e2da6b55f",
     "tools/run_owner_focus_core_financial_panel_coverage.py": "afbc3b454fc4618b941db0cbb4046d88bd8e7586f30741019f82609ef57a4691",
     "tools/run_owner_focus_image_only_corporate_ocr_batch.py": "a64d726c5ff985da2996ec3d2dcd47623d26aa768eaa25928a4950793ed2446e",
@@ -1471,7 +1471,7 @@
     "tools/vault_retention.py": "8b01db1034795711db5e2921d8d3183a472b8d37524ff916c03a02e758dde9a6",
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "1c74dc61a0bc604eaa476d3c9567e51b4a97b2d29b4eee8e31d72d9301e2474f",
+    "tools/verify_retention_reader_transition.py": "e27cf8e053a81b0b63733a17b2b4ac3e03e08c36126b501663ab318221847d6d",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1481,5 +1481,11 @@
     "volume_and_flow_retained.py": "6fd3cc95391a3ec4dc138ae809ad5d3dd11e8d82cfab81803016d5bfd0f8abc3",
     "volume_and_flow_retained_v2.py": "0a74da82bfdc1da88edbcf1ab4a4bab4bf599103944dd631aece977d72304b20",
     "watchlist_eval.py": "51042477e5305317368b6af52f5d4859be4477388dd46662fef43e398b5dc5c9"
+  },
+  "launcher_corrective": {
+    "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
+    "scope": "SEQUENTIAL_RELAUNCH_AND_DEFERRED_PUBLICATION_IMPORTS_ONLY",
+    "stage_qualification": "UNCHANGED_BODIES_AND_RETAINED_SOURCE_INTEGRITY_REUSED_NOT_NEW_DAILY",
+    "source_transition": "tests/fixtures/owner_daily_launcher_source_transition_v1.json"
   }
 }

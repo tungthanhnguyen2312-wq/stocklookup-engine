@@ -126,9 +126,20 @@ $priorStructured = $env:STOCK_LOOKUP_OWNER_STRUCTURED_CONSOLE
 $env:STOCK_LOOKUP_OWNER_STRUCTURED_CONSOLE = '1'
 $exitCode = $null
 $scriptPreference = $ErrorActionPreference
+$relaunchPath = Join-Path ([IO.Path]::GetTempPath()) ('owner-daily-' + [guid]::NewGuid().ToString('N') + '.json')
+$handoffKeys = @('STOCK_LOOKUP_OWNER_DAILY_CODE_HEAD', 'STOCK_LOOKUP_OWNER_DAILY_RELAUNCH_PATH',
+    'STOCK_LOOKUP_OWNER_DAILY_RUN_ID', 'STOCK_LOOKUP_OWNER_DAILY_RUN_STARTED_AT',
+    'STOCK_LOOKUP_OWNER_DAILY_RUN_STARTED_MONOTONIC', 'STOCK_LOOKUP_OWNER_DAILY_PROGRESS_PATH')
+$priorHandoff = @{}
+foreach ($key in $handoffKeys) { $priorHandoff[$key] = [Environment]::GetEnvironmentVariable($key, 'Process') }
+$env:STOCK_LOOKUP_OWNER_DAILY_RELAUNCH_PATH = $relaunchPath
+$relaunchFailure = $false
 # Native stderr is data under Windows PowerShell 5.1; preserve its text and native exit code.
 $ErrorActionPreference = 'Continue'
 try {
+  for ($attempt = 0; $attempt -lt 2; $attempt++) {
+    $LASTEXITCODE = $null
+    try {
     & $python @arguments 2>&1 | ForEach-Object {
         $text = if ($_ -is [System.Management.Automation.ErrorRecord]) { $_.ToString() } else { [string]$_ }
         $logWriter.WriteLine($text)
@@ -169,10 +180,53 @@ try {
             } else { [Console]::WriteLine((@($rendered.Row) + $rendered.Details) -join ' | ') }
         } elseif ($Diagnostic) { [Console]::WriteLine($text) }
     }
+    } catch {
+        $exitCode = 1
+        $relaunchFailure = $true
+        break
+    }
     $exitCode = $LASTEXITCODE
+    # The native pipeline has completed: the previous interpreter has exited.
+    # The request may carry only run metadata; executable and argv stay fixed.
+    if ($exitCode -ne 75) { break }
+    try {
+        if ($attempt -ne 0) { throw 'SECOND_RELAUNCH_REQUEST' }
+        if ((Get-Item -LiteralPath $relaunchPath -ErrorAction Stop).Length -gt 16384) { throw 'INVALID_RELAUNCH_REQUEST' }
+        $request = Get-Content -LiteralPath $relaunchPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $fields = @($request.PSObject.Properties.Name)
+        $allowed = @($handoffKeys | Where-Object { $_ -ne 'STOCK_LOOKUP_OWNER_DAILY_CODE_HEAD' -and $_ -ne 'STOCK_LOOKUP_OWNER_DAILY_RELAUNCH_PATH' })
+        $actual = @($request.environment.PSObject.Properties.Name)
+        if ($fields.Count -ne 2 -or 'head' -notin $fields -or 'environment' -notin $fields -or
+            $request.head -isnot [string] -or $request.head -cnotmatch '^[0-9a-f]{40}$' -or
+            @($actual | Where-Object { $_ -notin $allowed }).Count -ne 0 -or
+            @($allowed[0..2] | Where-Object { $_ -notin $actual }).Count -ne 0) { throw 'INVALID_RELAUNCH_REQUEST' }
+        foreach ($key in $actual) {
+            if ($request.environment.$key -isnot [string]) { throw 'INVALID_RELAUNCH_REQUEST' }
+            [Environment]::SetEnvironmentVariable($key, $request.environment.$key, 'Process')
+        }
+        $env:STOCK_LOOKUP_OWNER_DAILY_CODE_HEAD = $request.head
+        Remove-Item -LiteralPath $relaunchPath -ErrorAction Stop
+    } catch {
+        $exitCode = 1
+        $relaunchFailure = $true
+        break
+    }
+  }
+  if ($null -eq $exitCode -or $exitCode -eq 75) {
+      $exitCode = 1
+      $relaunchFailure = $true
+  }
+  if ($relaunchFailure) {
+      $failure = @{status='FAILED';failed_step='Repository preflight';reason='PRODUCER_CODE_RELAUNCH_FAILED';
+          hint='Nothing analytical ran; start the existing Daily launcher again.';resume_completed_session=$false}
+      [IO.File]::WriteAllText($result, ($failure | ConvertTo-Json), $utf8)
+  }
 } finally {
     $ErrorActionPreference = $scriptPreference
     $env:STOCK_LOOKUP_OWNER_STRUCTURED_CONSOLE = $priorStructured
+    foreach ($key in $handoffKeys) { [Environment]::SetEnvironmentVariable($key, $priorHandoff[$key], 'Process') }
+    Remove-Item -LiteralPath $relaunchPath -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath ([IO.Path]::ChangeExtension($relaunchPath, '.tmp')) -ErrorAction SilentlyContinue
 }
 if ($interactive -and $viewReady) {
     try { [Console]::SetCursorPosition(0, $rowTop + 14) } catch {}
