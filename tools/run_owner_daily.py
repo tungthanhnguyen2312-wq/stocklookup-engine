@@ -125,9 +125,40 @@ DEFAULT_WEB_DIR = CANONICAL_WEB_ROOT
 
 
 class OwnerDailyError(RuntimeError):
-    def __init__(self, step: str, reason: str, hint: str = "") -> None:
+    def __init__(self, step: str, reason: str, hint: str = "", *, capacity_diagnostics=None) -> None:
         super().__init__(reason)
         self.step, self.reason, self.hint = step, reason, hint
+        self.capacity_diagnostics = capacity_diagnostics
+
+
+def _last_capacity_stage(telemetry) -> dict[str, Any] | None:
+    """Read a bounded sidecar tail after the child stops; never sample an artifact.
+
+    Parent and child intentionally have separate telemetry instances. Match the
+    run ID so stale events cannot describe this capacity failure.
+    """
+    if telemetry is None or telemetry.progress_path is None:
+        return None
+    try:
+        with telemetry.progress_path.open("rb") as handle:
+            handle.seek(0, 2)
+            start = max(0, handle.tell() - 256 * 1024)
+            handle.seek(start)
+            if start:
+                handle.readline()
+            lines = handle.read().splitlines()
+        for line in reversed(lines):
+            try:
+                event = json.loads(line)
+            except (ValueError, UnicodeError):
+                continue
+            if (isinstance(event, dict) and event.get("run_id") == telemetry.run_id
+                    and event.get("writer_role") == "DAILY_CHILD" and event.get("subtask")):
+                return {key: event.get(key) for key in (
+                    "timestamp", "session", "component", "subtask", "status", "writer_pid")}
+    except OSError:
+        pass
+    return None
 
 
 # OWNER_DAILY_AI_HANDOFF_IMPORT_RECOVERY_20261012: set only on the one relaunch below, to the
@@ -597,7 +628,10 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
                 memory_probe=windows_memory,
                 on_start=telemetry.set_child_pid if telemetry is not None else None)
         except OSError as exc:
-            raise OwnerDailyError("Canonical Daily", "OWNER_DAILY_CAPACITY_GUARD", str(exc)) from exc
+            diagnostics = dict(getattr(exc, "diagnostics", {}))
+            diagnostics["last_child_stage"] = _last_capacity_stage(telemetry)
+            raise OwnerDailyError("Canonical Daily", "OWNER_DAILY_CAPACITY_GUARD", str(exc),
+                                  capacity_diagnostics=diagnostics) from exc
         finally:
             if telemetry is not None:
                 telemetry.set_child_pid(None)
@@ -1819,6 +1853,8 @@ def main(argv: list[str] | None = None) -> int:
     except OwnerDailyError as exc:
         code = 1
         result = {"status": "FAILED", "failed_step": exc.step, "reason": exc.reason, "hint": exc.hint}
+        if exc.capacity_diagnostics is not None:
+            result["capacity_diagnostics"] = exc.capacity_diagnostics
         phase = next((i for i, name in PHASES.items() if name == exc.step), 1)
         telemetry.emit(phase_index=phase, status="FAILED", reason=exc.reason)
         result["resume_completed_session"] = bool(_auto_resumable_session(ROOT, args.runtime_root, intended_session=telemetry.session))

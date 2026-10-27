@@ -1,0 +1,25 @@
+{
+  "contract_version": "owner_daily_iid_runtime_memory_source_transition/v1",
+  "base_commit": "eaaf7c946d54b2f6b0ef41137b8dfa294e3dc77d",
+  "scope": "EXACT_IID_RUNTIME_MEMORY_CORRECTIVE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "ebb592d0ceddc67f9186184c6e13f093c18ff0ddb749ccfc4e6b6cb49599a693",
+  "active_e4_v2_digest": "20e68ede0e489af6408ee8f6aa93037e7167a4b11ed308dca899d373bbfd1d78",
+  "sources": {
+    "tools/run_owner_daily.py": {
+      "archive": "tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/tools/run_owner_daily.py.txt",
+      "prior_sha256_lf": "877dd76c24ae25b1a5d9a9774a5d561b60f2ef5f5d7803d852d22455b0bd00a4",
+      "active_sha256_lf": "b12dd4ca7ad4efd38dcce262e99177e254c4df05934e2c1f78959a17f3e963a9"
+    },
+    "canonical_post_close_pipeline.py": {
+      "archive": "tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/canonical_post_close_pipeline.py.txt",
+      "prior_sha256_lf": "042bc0541e8d6802c5c54912406d4a70a6f367508299c521ebe8eea731f58d54",
+      "active_sha256_lf": "d5bd706e785bc33990641b57452a48e937a0fbe047d563e73575bb0d5412cbe4"
+    },
+    "stocklookup_core/decision/integrated_investment_decision_product.py": {
+      "archive": "tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/stocklookup_core/decision/integrated_investment_decision_product.py.txt",
+      "prior_sha256_lf": "893c97e405d3c1bc1bc4830a471f6f505443ec6980153d4fac771398326ad2b1",
+      "active_sha256_lf": "48b2d51d2cd261981f328a6fa17636f022ee10e208de1cd89f2af8ec73225299"
+    }
+  }
+}

@@ -4,6 +4,39 @@ Owner-authorized `OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1` is a bo
 operational corrective. Authority effect: **NONE / MEMORY_AND_FAILURE_DIAGNOSTICS_ONLY**.
 It introduces no provider, analytical policy, production entrypoint or evidence authority.
 
+## IID runtime corrective — October 27
+
+The October-26 Daily invocation at production `eaaf7c946d54b2f6b0ef41137b8dfa294e3dc77d`
+passed host admission but failed with `DAILY_CAPACITY_MEMORY_LIMIT` while building IID.
+This continues the same milestone; the earlier stage qualifications below do not
+constitute successful acceptance of that Daily or authorize post-run publication.
+
+The corrective reuses the existing record artifact loader for large pipeline inputs,
+releases technical source graphs after their final projection, and releases financial
+engine/semantic/readiness and feature-store graphs after their final consumers.
+The caller's acquisition snapshot and the returned historical context stay intact.
+IID consumes its private verified peer/divergence projection rows one at a time.
+Historical content verification uses the existing strict record digest with its
+original exclusions (including the original inclusion of `requested_at`).
+Evaluated valuation verification also uses that digest with its original
+`requested_at` exclusion, avoiding a whole-universe Unicode/UTF-8 hash buffer.
+The atomic/streaming IID writer and working-view receipt are unchanged.
+
+Windows capacity failures retain positive process/job allocation-limit events and
+the available kernel peak process/job committed bytes through tree reaping. The
+Owner result adds that diagnostic block and the last same-run child stage from
+the bounded progress tail. These operational fields never enter artifact content
+or identities. Missing limit notifications remain `UNKNOWN`; a low peak does not
+disprove a denied allocation. Limits remain 7 GiB per process and 8 GiB per Job;
+physical/commit reserves and containment refusal remain unchanged.
+
+`tools/replay_iid_runtime_memory.py` exercises enrichment from copied full-scale
+retained session inputs in a new experiment directory. It uses the production
+capacity guard, real reserve probes, a finite experiment deadline, network/write
+refusal, and optional exact retained corporate overlay and held acquisition graph.
+It invokes neither Daily, T0 capture nor publication. Experiment telemetry and
+source-byte manifests live outside production evidence.
+
 The existing [host preflight](owner_daily_host_preflight_contract.md), single writer,
 immutable retention, release, calendar/session, runtime and completion gates remain binding.
 PR195 left thresholds unchanged. The final admission corrective below supersedes

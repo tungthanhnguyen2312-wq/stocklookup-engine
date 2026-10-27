@@ -208,6 +208,9 @@ def _git_head(path: Path) -> str | None:
 def _load(path: Path) -> dict[str, Any] | None:
     if not path.is_file():
         return None
+    if path.stat().st_size > 16 * 1024**2:
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+        return load_record_artifact(path)
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -1116,6 +1119,7 @@ def build_enrichment_components(
         if not technical_recovery:
             raise CanonicalPostCloseError("RESOLVED_TECHNICAL_RECOVERY_ARTIFACT_UNAVAILABLE")
         requested_at = f"{session}T15:00:00+07:00"
+        product_requested_at = p3f9b.get("requested_at") or requested_at
         technical_structure = tsc.build_artifact(
             current_descriptive=desc, p3f9b_snapshot=p3f9b, requested_at=requested_at,
             technical_history_recovery_artifact=technical_recovery,
@@ -1180,6 +1184,11 @@ def build_enrichment_components(
         _write_json(paths["technical_structure_context"], technical_structure)
         if tactical_setup_tags_artifact is not None:
             _write_json(paths["tactical_setup_tags"], tactical_setup_tags_artifact)
+        # These large source/derivative graphs have reached their last consumer.
+        # Keep the compact decision inputs, not the raw snapshot and structure,
+        # alive during the independent periodic financial build below.
+        del p3f9b, desc, technical_recovery, technical_structure
+        del screening, tactical_classifier, tactical_setup_tags_artifact
         # Financial V2 previously had NO canonical daily-materialization path anywhere in this
         # pipeline: the prior wiring here loaded the legacy, structurally incompatible
         # market_wide_current_fundamental_research/v1 artifact (523-record shape;
@@ -1223,6 +1232,7 @@ def build_enrichment_components(
             divergence_financial_materialization=financial_session_artifact,
             divergence_industry_authority=fin_authority,
         )
+        del engine_artifact, semantic_rows, readiness_context
         _write_json(paths["financial_analysis_product"], financial_session_artifact)
         _write_json(paths["current_valuation_evaluated"], evaluated_valuation)
         _write_json(paths["current_research_entity_applicability"], entity_applicability)
@@ -1232,6 +1242,7 @@ def build_enrichment_components(
         # leaves the direction insufficient. Any failure is component-local: the Integrated
         # Decision then builds without the bridge rather than trusting an unverified source.
         operational_integration = None
+        feature_store_result = None
         try:
             feature_store_result = product_projections.materialize_current_fundamental_feature_store_context(
                 root=retained_evidence_root, requested_at=requested_at,
@@ -1260,6 +1271,10 @@ def build_enrichment_components(
         except Exception as exc:  # noqa: BLE001 -- component-local: the decision builds without the bridge
             operational_integration = None
             results["operational_fundamental_binding"] = {"status": "UNAVAILABLE", "reason": f"{type(exc).__name__}:{exc}"}
+        finally:
+            # The integration owns its required projection; the full feature
+            # store is no longer an input to IID construction or serialization.
+            feature_store_result = None
         # Same-session descriptive liquidity research feeds only the decision input's liquidity
         # dimension. A missing or other-session artifact is simply unavailable, never substituted.
         liquidity_research = _load(paths["liquidity_research"]) or _load(retained_paths["liquidity_research"])
@@ -1317,6 +1332,7 @@ def build_enrichment_components(
                 )
         except Exception:
             corporate_intelligence_artifact = None
+        del raw_val
         if corporate_intelligence_artifact is not None:
             _write_json(enrichment_output_path(output_root, session, "corporate_intelligence_axis"), corporate_intelligence_artifact)
         # CURRENT_DECISION_SURFACE_CONVERGENCE_V1: evidence currency is sourced from this exact
@@ -1337,7 +1353,7 @@ def build_enrichment_components(
             session=session,
             # The additive bar context needs the actual retained acquisition cutoff.
             # Existing feature builders above keep their standing calculation inputs.
-            requested_at=p3f9b.get("requested_at") or requested_at,
+            requested_at=product_requested_at,
             technical_structure_artifact=tactical_projection,
             financial_analysis_artifact=financial_session_artifact["financial_analysis_product"],
             financial_peer_materialization_artifact=financial_session_artifact,

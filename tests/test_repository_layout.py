@@ -520,8 +520,9 @@ def test_capacity_successor_conserves_historical_launcher_and_rejects_tampering(
     from tools import verify_retention_reader_transition as transition
     import hashlib
     for name in (transition.CAPACITY_MANIFEST, transition.CAPACITY_ARCHIVE, transition.LAYOUT_MANIFEST,
-                 transition.LAUNCHER_MANIFEST,
-                 *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in transition.LAUNCHER_SOURCES)):
+                 transition.LAUNCHER_MANIFEST, transition.IID_RUNTIME_MANIFEST,
+                 *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in transition.LAUNCHER_SOURCES),
+                 *("tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/" + p + ".txt" for p in transition.IID_RUNTIME_SOURCES)):
         target = tmp_path / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes((ROOT / name).read_bytes())
@@ -542,7 +543,7 @@ def test_capacity_successor_conserves_historical_launcher_and_rejects_tampering(
         spec = json.loads(path.read_text())
         spec["source_path"] = "another.py"
         path.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:CAPACITY|LAUNCHER)_SOURCE_TRANSITION_"):
+    with pytest.raises(ValueError, match="(?:CAPACITY|LAUNCHER|IID_RUNTIME_MEMORY)_SOURCE_TRANSITION_"):
         transition._capacity_prior_bytes(tmp_path, transition.CAPACITY_SOURCE, live)
 
 

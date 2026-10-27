@@ -2200,8 +2200,10 @@ def build_artifact(
             liquidity_research_record=liquidity_records.get(ticker),
             entity_applicability_record=applicability_records.get(ticker),
             official_liquidity_record=official_liquidity_records.get(ticker),
-            financial_peer_context=financial_peers.get(ticker),
-            valuation_balance_sheet_divergence=divergence_records.get(ticker),
+            # Both mappings are private verified projections created above.
+            # Release each source after its output copies have been constructed.
+            financial_peer_context=financial_peers.pop(ticker, None),
+            valuation_balance_sheet_divergence=divergence_records.pop(ticker, None),
         )
         if historical_context_artifact is not None:
             dec["market_sector_context"]["multi_timeframe"] = market_bars.get(ticker, {

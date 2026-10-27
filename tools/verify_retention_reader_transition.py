@@ -54,10 +54,53 @@ CAPACITY_MANIFEST = "tests/fixtures/owner_daily_capacity_source_transition_v1.js
 CAPACITY_ARCHIVE = "tests/fixtures/owner_daily_capacity_v1_sources/tools/run_owner_daily.py.txt"
 LAUNCHER_MANIFEST = "tests/fixtures/owner_daily_launcher_source_transition_v1.json"
 LAUNCHER_SOURCES = ("tools/run_owner_daily.py", "stocklookup.py")
+IID_RUNTIME_MANIFEST = "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json"
+IID_RUNTIME_BASE = "eaaf7c946d54b2f6b0ef41137b8dfa294e3dc77d"
+IID_RUNTIME_SCOPE = "EXACT_IID_RUNTIME_MEMORY_CORRECTIVE_ONLY"
+IID_RUNTIME_SOURCES = (
+    "tools/run_owner_daily.py",
+    "canonical_post_close_pipeline.py",
+    "stocklookup_core/decision/integrated_investment_decision_product.py",
+)
+
+
+def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the IID runtime-memory successor before every older source pin.
+
+    The archived bytes are the exact pre-corrective sources. Older manifests stay
+    unchanged and still bind those bytes. A missing manifest keeps older checkouts valid.
+    """
+    manifest = root / IID_RUNTIME_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "owner_daily_iid_runtime_memory_source_transition/v1"
+            or spec.get("base_commit") != IID_RUNTIME_BASE
+            or spec.get("scope") != IID_RUNTIME_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("previous_e4_v2_digest") != "ebb592d0ceddc67f9186184c6e13f093c18ff0ddb749ccfc4e6b6cb49599a693"
+            or not isinstance(sources, dict) or tuple(sources) != IID_RUNTIME_SOURCES):
+        raise ValueError("IID_RUNTIME_MEMORY_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources.get(relative)
+    if row is None:
+        return active
+    archive = "tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("IID_RUNTIME_MEMORY_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("IID_RUNTIME_MEMORY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
+    active = _iid_runtime_prior_bytes(root, relative, active)
     if relative not in LAUNCHER_SOURCES or not (root / LAUNCHER_MANIFEST).exists():
         return active
     spec = json.loads((root / LAUNCHER_MANIFEST).read_bytes())
@@ -184,7 +227,8 @@ def _valuation_orchestration_prior_bytes(root: Path, relative: str) -> bytes:
         raise ValueError("VALUATION_SOURCE_ARCHIVE_PATH_INVALID")
     if row.get("base_commit") != VALUATION_BASE:
         raise ValueError("VALUATION_SOURCE_TRANSITION_BASE_INVALID")
-    active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    active = _iid_runtime_prior_bytes(
+        root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n"))
     prior = (root / expected_archive).read_bytes().replace(b"\r\n", b"\n")
     pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
     prior_sha = hashlib.sha256(prior).hexdigest()
@@ -274,7 +318,8 @@ def active_valuation_orchestration_identity(root: Path) -> dict:
     rows = {}
     for relative in VALUATION_SOURCES:
         historical = historical_bytes(root, relative)
-        active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+        active = _iid_runtime_prior_bytes(
+            root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n"))
         historical_sha = hashlib.sha256(historical).hexdigest()
         active_sha = hashlib.sha256(active).hexdigest()
         declared = spec["sources"][relative]

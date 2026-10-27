@@ -155,6 +155,7 @@ def _queued_job(events, *, active=0, clear_on_zero=True):
     job.port = 1
     job.kernel = SimpleNamespace(GetQueuedCompletionStatus=receive)
     job.memory_limit_exceeded = False
+    job.memory_limit_events = []
     job.active_processes = lambda: state[0]
     return job, queue, waits
 
@@ -176,6 +177,7 @@ def test_waiting_job_keeps_limit_events_before_and_after_tree_zero():
     job, queue, waits = _queued_job([(9, 1), (4, 1), (10, 1)], active=1)
     assert job.wait_empty(1) is True
     assert job.memory_limit_exceeded and not queue
+    assert [event["scope"] for event in job.memory_limit_events] == ["PROCESS", "JOB"]
     assert waits[0] > 0 and waits[-1] == 0
 
 
@@ -288,6 +290,9 @@ def test_daily_capacity_guard_contains_before_resume_and_never_degrades(tmp_path
             return failure != "reap"
         def close(self):
             events.append("close")
+        def memory_diagnostics(self):
+            return {"limit_scope": "PROCESS" if failure == "memory" else "UNKNOWN",
+                    "peak_process_committed_bytes": 123, "peak_job_committed_bytes": 456}
     class Process:
         pid = 10
         _handle = 12
@@ -349,4 +354,28 @@ def test_aggregate_job_limit_is_kernel_enforced_across_two_children(tmp_path):
     finally:
         guard._terminate(process, job)
         assert job.wait_empty(5)
+        diagnostics = job.memory_diagnostics()
+        assert diagnostics["limit_scope"] == "JOB"
+        assert diagnostics["peak_job_committed_bytes"] >= diagnostics["peak_process_committed_bytes"] > 0
+        job.close()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows process Job ceiling")
+def test_process_limit_diagnostics_survive_child_exit_and_denied_allocation(tmp_path):
+    command = _script(tmp_path, "x=bytearray(256*1024**2)\n")
+    job = guard._Job(128 * 1024**2, job_memory_limit_bytes=512 * 1024**2)
+    process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        job.assign(int(process._handle))
+        guard._resume_suspended(process)
+        assert process.wait(timeout=15) != 0
+        assert job.wait_empty(5)
+        diagnostics = job.memory_diagnostics()
+        assert diagnostics["limit_scope"] == "PROCESS"
+        assert diagnostics["limit_events"] == [{"scope": "PROCESS", "process_id": process.pid}]
+        assert 0 < diagnostics["peak_process_committed_bytes"] < diagnostics["process_memory_limit_bytes"]
+        assert diagnostics["process_memory_limit_bytes"] == 128 * 1024**2
+        assert diagnostics["job_memory_limit_bytes"] == 512 * 1024**2
+    finally:
+        guard._terminate(process, job)
         job.close()

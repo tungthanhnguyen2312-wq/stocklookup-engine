@@ -1451,10 +1451,9 @@ DIVERGENCE_FEATURES = (
 
 
 def _research_identity(payload, contract):
-    import hashlib
+    from stocklookup_core.evidence.bounded_json import record_mapping_digest
     body = {k:v for k,v in payload.items() if k not in {"artifact_identity", "artifact_sha256", "requested_at"}}
-    digest = hashlib.sha256(json.dumps(body, ensure_ascii=False, sort_keys=True,
-        separators=(",", ":"), allow_nan=False).encode()).hexdigest()
+    digest = record_mapping_digest(body)
     return {"artifact_identity": f"{contract}:{digest}", "artifact_sha256": digest}
 
 

@@ -7,7 +7,7 @@
   "prior_sha256_lf": "10aea634a50e83d5e8db4951155c5a7b6f753e3f091305bf7bee1ecadc463367",
   "active_sha256_lf": "9f384915d23661497e9132091a2aaac0030e5d54bc5060caeda89094b33901c7",
   "historical_e4_v2_digest": "07c2a363df0e91a1dee230f0316a081249b247f7aa74bd67e04e45b1d1886567",
-  "active_e4_v2_digest": "ebb592d0ceddc67f9186184c6e13f093c18ff0ddb749ccfc4e6b6cb49599a693",
+  "active_e4_v2_digest": "20e68ede0e489af6408ee8f6aa93037e7167a4b11ed308dca899d373bbfd1d78",
   "rejected_mixed_digest": "c705b386c927a49adaf97be0a711cda5b27b2432cae2aaaa098a087a58b88698",
   "exception_scope": "EXACT_ONE_FILE_OWNER_APPROVED_NOT_A_GENERAL_TRANSITION",
   "release_authority": "NOT_GRANTED",
