@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
@@ -305,6 +306,15 @@ def child(experiment: Path) -> int:
     import canonical_daily_operation as daily
     from datetime import datetime, timedelta, timezone
     from completed_market_session_gate import CompletedSessionGateError
+    import tests.preseal_consumer_dependency as consumer_dependency
+
+    try:
+        consumer_dependency.assert_relocated_binding(ROOT)
+    except consumer_dependency.ConsumerDependencyError as exc:
+        (experiment / "child-result.json").write_text(json.dumps({
+            "seal_boundary": "FAILED", "stage": "CONSUMER_DEPENDENCY", "error": str(exc),
+        }, indent=2), encoding="utf-8")
+        return 1
 
     sandbox = experiment / "sandbox"
     copied = build_sandbox(sandbox)
@@ -396,6 +406,11 @@ def child(experiment: Path) -> int:
         outcome["stage"] = type(exc).__name__
         outcome["error"] = str(exc)
         outcome["seal_boundary"] = "FAILED"
+    except Exception as exc:
+        outcome["stage"] = type(exc).__name__
+        outcome["error"] = str(exc)
+        outcome["traceback"] = traceback.format_exc()
+        outcome["seal_boundary"] = "FAILED"
     finally:
         trace.close()
     manifests = sorted((sandbox / "operations-review" / "daily-producer-runs-v1").glob("*/run_manifest.json"))
@@ -432,13 +447,24 @@ def child(experiment: Path) -> int:
 
 
 def main() -> None:
-    experiment = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r8")
+    experiment = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r9")
+    import tests.preseal_consumer_dependency as consumer_dependency
     if "--child" not in sys.argv:
+        try:
+            dependency = consumer_dependency.preflight_producer_seal_consumer(ROOT)
+        except consumer_dependency.ConsumerDependencyError as exc:
+            print("DEPENDENCY_PREFLIGHT_FAILED:" + str(exc), flush=True)
+            raise SystemExit(2) from exc
+        preflight_path = Path(r"T:\StockLookup\scratch\preseal-consumer-dependency-preflight.json")
+        preflight_path.write_text(json.dumps(dependency, indent=2), encoding="utf-8")
+        print(json.dumps({"dependency_preflight": dependency["status"], "consumer_head": dependency["qualified"]["head"]}),
+              flush=True)
         from tools.check_owner_daily_host_preflight import check, producer_seal_measurement_admission
         host = check(ROOT, PRODUCTION_RETAINED)
         admission = producer_seal_measurement_admission(host)
         report = experiment.with_name(experiment.name + "-admission.json")
-        report.write_text(json.dumps({"admission": admission, "classification": host.get("classification")}, indent=2),
+        report.write_text(json.dumps({"admission": admission, "classification": host.get("classification"),
+                                      "dependency_preflight": dependency["status"]}, indent=2),
                           encoding="utf-8")
         print(json.dumps(admission), flush=True)
         if not admission["admitted"]:
@@ -449,34 +475,41 @@ def main() -> None:
             raise SystemExit("EXPERIMENT_INSIDE_PROTECTED_ROOT")
     if experiment.exists():
         raise SystemExit("EXPERIMENT_ALREADY_EXISTS")
-    experiment.mkdir(parents=True)
-    from stocklookup_core.acquisition import feedback_resource_guard as guard
-    from tools.check_owner_daily_host_preflight import windows_memory
+    qualified_consumer = Path(consumer_dependency.qualify_consumer()["consumer"])
+    consumer_dependency.bind_relocated_consumer(ROOT, qualified_consumer)
     diagnostics: dict = {}
     started = time.perf_counter()
-
-    def probe():
-        if time.perf_counter() - started > 7200:
-            raise OSError("PRESEAL_SEAL_REGRESSION_DEADLINE_7200_SECONDS")
-        return windows_memory()
-
-    command = [sys.executable, "-B", "-u", str(Path(__file__).resolve()), "--child", str(experiment)]
     try:
-        if "--child" in sys.argv:
-            raise SystemExit(child(Path(sys.argv[-1])))
-        returncode = guard.run_capacity_guarded(
-            command, cwd=ROOT, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-            memory_probe=probe, on_diagnostics=diagnostics.update)
-        diagnostics.update(returncode=returncode)
-    except OSError as exc:
-        diagnostics.update(reason=str(exc), returncode=1, guard_diagnostics=getattr(exc, "diagnostics", {}))
+        experiment.mkdir(parents=True)
+        from stocklookup_core.acquisition import feedback_resource_guard as guard
+        from tools.check_owner_daily_host_preflight import windows_memory
+
+        def probe():
+            if time.perf_counter() - started > 7200:
+                raise OSError("PRESEAL_SEAL_REGRESSION_DEADLINE_7200_SECONDS")
+            return windows_memory()
+
+        command = [sys.executable, "-B", "-u", str(Path(__file__).resolve()), "--child", str(experiment)]
+        try:
+            returncode = guard.run_capacity_guarded(
+                command, cwd=ROOT, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+                memory_probe=probe, on_diagnostics=diagnostics.update)
+            diagnostics.update(returncode=returncode)
+        except OSError as exc:
+            diagnostics.update(reason=str(exc), returncode=1, guard_diagnostics=getattr(exc, "diagnostics", {}))
     finally:
-        remove_producer_links(experiment)
-        remove_frozen_copies(experiment)
+        diagnostics["wall_seconds"] = round(time.perf_counter() - started, 3)
+        try:
+            consumer_dependency.unbind_relocated_consumer(ROOT, qualified_consumer)
+        except consumer_dependency.ConsumerDependencyError as exc:
+            diagnostics["consumer_unbind"] = str(exc)
+            diagnostics["returncode"] = 1
+        if experiment.exists():
+            remove_producer_links(experiment)
+            remove_frozen_copies(experiment)
         restore_registry()
-    diagnostics["wall_seconds"] = round(time.perf_counter() - started, 3)
-    if "--child" not in sys.argv:
-        (experiment / "guard-result.json").write_text(json.dumps(diagnostics, indent=2), encoding="utf-8")
+        if experiment.exists():
+            (experiment / "guard-result.json").write_text(json.dumps(diagnostics, indent=2), encoding="utf-8")
         print(json.dumps(diagnostics), flush=True)
     raise SystemExit(diagnostics.get("returncode", 1))
 
