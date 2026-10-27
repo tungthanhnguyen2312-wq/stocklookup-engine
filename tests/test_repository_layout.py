@@ -515,6 +515,35 @@ def test_layout_source_transition_binding_runs_in_structural_ci():
     assert all(len(set(row.values())) == 3 for row in identity["sources"].values())
 
 
+@pytest.mark.parametrize("tamper", ["live", "archive", "scope"])
+def test_capacity_successor_conserves_historical_launcher_and_rejects_tampering(tmp_path, tamper):
+    from tools import verify_retention_reader_transition as transition
+    import hashlib
+    for name in (transition.CAPACITY_MANIFEST, transition.CAPACITY_ARCHIVE, transition.LAYOUT_MANIFEST):
+        target = tmp_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
+    live = (ROOT / transition.CAPACITY_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    prior = transition._capacity_prior_bytes(tmp_path, transition.CAPACITY_SOURCE, live)
+    assert hashlib.sha256(prior).hexdigest() == "8201ddb26c8f3ace60a23fd86c4ffe8d07490c60b3e6061178f602adda08d84d"
+    assert prior != live
+    assert transition.layout_source_receipt_admissible(ROOT, transition.CAPACITY_SOURCE,
+        hashlib.sha256(live).hexdigest())
+    assert not transition.layout_source_receipt_admissible(ROOT, transition.CAPACITY_SOURCE,
+        hashlib.sha256(prior).hexdigest())
+    if tamper == "live":
+        live += b"# unqualified\n"
+    elif tamper == "archive":
+        (tmp_path / transition.CAPACITY_ARCHIVE).write_bytes(b"changed")
+    else:
+        path = tmp_path / transition.CAPACITY_MANIFEST
+        spec = json.loads(path.read_text())
+        spec["source_path"] = "another.py"
+        path.write_text(json.dumps(spec))
+    with pytest.raises(ValueError, match="CAPACITY_SOURCE_TRANSITION_"):
+        transition._capacity_prior_bytes(tmp_path, transition.CAPACITY_SOURCE, live)
+
+
 def test_layout_migration_20261025_root_interfaces_reexport_one_owner():
     """Root interfaces kept for frozen importers hold no implementation and export the owner's objects."""
     import subprocess

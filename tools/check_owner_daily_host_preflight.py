@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,8 +17,36 @@ ROOT = Path(__file__).resolve().parents[1]
 GIB = 1024 ** 3
 CONTRACT_VERSION = "owner_daily_host_preflight/v1"
 MODEL_MAIN = "2c6c79224ae2a3a57b50dae7b96666bd2ec09715"
-GUIDANCE = ["Close browsers / IDEs / unrelated Python workloads.",
-            "Re-run host preflight; launch Daily alone only when READY."]
+QUALIFIED_IID_BYTES = 2382095742
+QUALIFIED_PHYSICAL_BYTES = int(9.25 * GIB)
+GUIDANCE = ["Re-run host preflight; launch Daily alone only when READY."]
+
+
+def capacity_source_paths(root: Path) -> list[str]:
+    """Tracked executable/config surface, not retained data, tests or documentation."""
+    tracked = _git(root, "ls-files", "--", "*.py", "*.ps1", "*.cmd", "*.bat", "*.json", "*requirements*.txt", "constraints.txt")
+    if tracked is None:
+        return []
+    return sorted(p for p in tracked.splitlines() if not p.startswith(
+        ("tests/", "docs/", ".github/")) and p not in {
+            "config/owner_daily_capacity_qualification.json",
+            "config/daily_research_session_input_registry.json"})
+
+
+def capacity_qualification(root: Path) -> dict:
+    """Fail back to the legacy model unless the qualified source surface is exact.
+
+    This is a finite retained experiment receipt, not an authority or freshness claim.
+    Every runtime/config source change requires explicit requalification of this receipt.
+    """
+    try:
+        receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_text(encoding="utf-8"))
+        paths = capacity_source_paths(root)
+        actual = {p: hashlib.sha256((root / p).read_bytes().replace(b"\r\n", b"\n")).hexdigest() for p in paths}
+        matched = bool(actual) and actual == receipt["source_sha256"]
+    except (OSError, ValueError, KeyError, TypeError):
+        matched = False
+    return {"source_matches": matched, "profile": "PR195_CURRENT_SCALE_BOUNDED_V1" if matched else None}
 
 
 def _git(root: Path, *args: str) -> str | None:
@@ -190,6 +219,7 @@ def observe(root: Path, retained_root: Path | None = None) -> dict:
         except (OSError, ValueError, KeyError, TypeError) as exc:
             storage = {"classification": "BLOCKED", "reason": str(exc)}
     return {**windows_memory(), "c_free_bytes": disk, "disk_path": "C:\\", "storage": storage,
+            "capacity_qualification": capacity_qualification(root) if os.name == "nt" else {},
             "pagefiles": inventory.get("pagefiles"), "pagefile_unit": "CIM_MEGABYTES",
             **process_summary(inventory.get("processes"), root, own_pid=os.getpid()),
             "repository": repository_observation(root),
@@ -202,6 +232,12 @@ def evaluate(observation: dict) -> dict:
     size = iid.get("file_bytes")
     peak = int(size * 5.05) if isinstance(size, int) and size > 0 else None
     factor = max(1.0, peak / (7 * GIB)) if peak is not None else 1.0
+    qualified = (observation.get("capacity_qualification", {}).get("source_matches") is True
+                 and observation.get("capacity_qualification", {}).get("profile") == "PR195_CURRENT_SCALE_BOUNDED_V1"
+                 and isinstance(size, int) and 0 < size <= QUALIFIED_IID_BYTES)
+    legacy_physical = int(6 * GIB * factor)
+    physical_green = min(legacy_physical, QUALIFIED_PHYSICAL_BYTES) if qualified else legacy_physical
+    bounded_physical = physical_green < legacy_physical
     dimensions = {}
     if observation.get("storage") is not None:
         dimensions["storage"] = observation["storage"]
@@ -216,7 +252,9 @@ def evaluate(observation: dict) -> dict:
         reasons.append(reason)
 
     dimension("commit", observation.get("available_commit_bytes"), 12.0 * GIB * factor, 9.2 * GIB * factor, "COMMIT_HEADROOM")
-    dimension("physical", observation.get("available_physical_bytes"), 6 * GIB * factor, 2.5 * GIB * factor, "PHYSICAL_HEADROOM")
+    dimension("physical", observation.get("available_physical_bytes"), physical_green, 2.5 * GIB * factor, "PHYSICAL_HEADROOM")
+    dimensions["physical"]["legacy_green_min_bytes"] = legacy_physical
+    dimensions["physical"]["capacity_basis"] = "QUALIFIED_BOUNDED_PIPELINE" if bounded_physical else "LEGACY_IID_MODEL"
     dimension("disk", observation.get("c_free_bytes"), 25 * GIB, 17 * GIB, "DISK_HEADROOM")
     dimensions["physical"]["recommended_amber_min_bytes"] = int(3.5 * GIB * factor)
     repo = observation.get("repository", {})
@@ -242,6 +280,15 @@ def evaluate(observation: dict) -> dict:
     if classification == "READY":
         reasons.append("HOST_PREFLIGHT_READY")
     return {"contract_version": CONTRACT_VERSION, "classification": classification,
+            "runtime_capacity_guard_required": bounded_physical,
+            "capacity_admission": {"qualified_current_scale": qualified,
+                "basis": "MEASURED_STAGES_PLUS_MODELED_RESERVES_NOT_LIVE_DAILY",
+                "qualified_iid_max_bytes": QUALIFIED_IID_BYTES,
+                "measured_max_private_bytes": 7464976384, "measured_max_rss_bytes": 7217766400,
+                "child_tree_commit_ceiling_bytes": 8 * GIB,
+                "child_process_commit_ceiling_bytes": 7 * GIB,
+                "owner_allowance_bytes": GIB // 4, "physical_reserve_bytes": GIB,
+                "runtime_commit_reserve_bytes": 2 * GIB},
             "authority_effect": "NONE / OWNER_DAILY_HOST_PREFLIGHT_ONLY", "dimensions": dimensions,
             "reasons": reasons, "observations": observation,
             "peak_model": {"peak_basis": "MODELED_FROM_RETAINED_CURRENT_MAIN", "modeled_peak_bytes": peak,

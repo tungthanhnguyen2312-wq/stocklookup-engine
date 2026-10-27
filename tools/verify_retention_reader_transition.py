@@ -49,6 +49,37 @@ LAYOUT_SOURCES = {
     "canonical_post_close_pipeline.py": VALUATION_MANIFEST,
 }
 
+CAPACITY_SOURCE = "tools/run_owner_daily.py"
+CAPACITY_MANIFEST = "tests/fixtures/owner_daily_capacity_source_transition_v1.json"
+CAPACITY_ARCHIVE = "tests/fixtures/owner_daily_capacity_v1_sources/tools/run_owner_daily.py.txt"
+
+
+def _capacity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Verify the one-file capacity successor while conserving all earlier pins.
+
+    Only historical verification consumes the archive. Execution receipts still
+    require the actual live bytes, never the pre-capacity launcher digest.
+    """
+    if relative != CAPACITY_SOURCE or not (root / CAPACITY_MANIFEST).exists():
+        return active
+    spec = json.loads((root / CAPACITY_MANIFEST).read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "source_path", "archive",
+                      "prior_sha256_lf", "active_sha256_lf", "scope", "release_authority"}
+            or spec.get("contract_version") != "owner_daily_capacity_source_transition/v1"
+            or spec.get("base_commit") != "c19f72d794dccdeb34ecfe23a40e9ad7dbeef676"
+            or spec.get("source_path") != CAPACITY_SOURCE or spec.get("archive") != CAPACITY_ARCHIVE
+            or spec.get("scope") != "EXACT_ONE_FILE_CAPACITY_LAUNCH_CONTROL_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"):
+        raise ValueError("CAPACITY_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / CAPACITY_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    layout = json.loads((root / LAYOUT_MANIFEST).read_bytes())["sources"][relative]
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or spec["prior_sha256_lf"] != layout["active_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or spec["active_sha256_lf"] == spec["prior_sha256_lf"]):
+        raise ValueError("CAPACITY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
 
 def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Same conservation rule as the storage transition, for the divergence pipeline leg."""
@@ -171,6 +202,7 @@ def _thesis_production_prior_bytes(root: Path, relative: str) -> bytes:
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _capacity_prior_bytes(root, relative, content)
     content = _storage_prior_bytes(root, relative, content)
     if relative in VALUATION_SOURCES:
         return _valuation_orchestration_prior_bytes(root, relative)
@@ -307,7 +339,8 @@ def layout_transition_identity(root: Path) -> dict:
         if not isinstance(row, dict) or row.get("archive") != expected_archive or row.get("governing_manifest") != governing:
             raise ValueError("LAYOUT_SOURCE_ARCHIVE_PATH_INVALID")
         prior_sha = hashlib.sha256((root / expected_archive).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-        active_sha = hashlib.sha256((root / relative).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+        active_sha = hashlib.sha256(_capacity_prior_bytes(root, relative, live)).hexdigest()
         declared = json.loads((root / governing).read_bytes())["sources"][relative]["active_sha256_lf"]
         if (row.get("prior_sha256_lf") != prior_sha or row.get("active_sha256_lf") != active_sha
                 or prior_sha == active_sha or declared != active_sha
@@ -315,7 +348,7 @@ def layout_transition_identity(root: Path) -> dict:
                 or hashlib.sha256(historical_bytes(root, relative)).hexdigest() != pins[relative]):
             raise ValueError("LAYOUT_SOURCE_TRANSITION_BINDING_INVALID")
         rows[relative] = {"historical_pin_sha256_lf": pins[relative], "prior_sha256_lf": prior_sha,
-                          "active_sha256_lf": active_sha}
+                          "active_sha256_lf": hashlib.sha256(live).hexdigest()}
     return {
         "contract_version": LAYOUT_CONTRACT,
         "base_commit": LAYOUT_BASE,

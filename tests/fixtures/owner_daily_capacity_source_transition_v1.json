@@ -1,0 +1,10 @@
+{
+  "contract_version": "owner_daily_capacity_source_transition/v1",
+  "base_commit": "c19f72d794dccdeb34ecfe23a40e9ad7dbeef676",
+  "source_path": "tools/run_owner_daily.py",
+  "archive": "tests/fixtures/owner_daily_capacity_v1_sources/tools/run_owner_daily.py.txt",
+  "prior_sha256_lf": "8201ddb26c8f3ace60a23fd86c4ffe8d07490c60b3e6061178f602adda08d84d",
+  "active_sha256_lf": "515b6cbdc7ec7eca902726b91386e5a56258a817d9da6730a2aa920aa7224402",
+  "scope": "EXACT_ONE_FILE_CAPACITY_LAUNCH_CONTROL_ONLY",
+  "release_authority": "NOT_GRANTED"
+}
