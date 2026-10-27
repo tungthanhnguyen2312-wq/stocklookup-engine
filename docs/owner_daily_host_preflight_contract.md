@@ -19,6 +19,11 @@ is provided. Current machine readings are observations, not durable launch permi
 | Writers | None observed | — | Runtime writer, Git index lock, or unobservable writer state |
 
 These are evidence-backed Windows V1 operator bands, not universal requirements.
+The [October-27 final corrective](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md#final-admission-corrective--october-27)
+caps physical READY at 9.25 GiB only for the fingerprinted optimized pipeline
+and qualified IID scale, with mandatory kernel/runtime containment. Commit
+scaling and every other admission dimension remain strict. Missing qualification
+or larger inputs retain the legacy bands below.
 The unspecified 2.5–3.5 GiB physical band conservatively requires operator action.
 Unknown pagefile state, missing IID model input, or unqualified current-main
 provenance produces at least AMBER. Missing T0 is optional metadata and does not
@@ -63,9 +68,8 @@ In the owner result, nested `telemetry.status` is progress-sidecar health only (
 `telemetry_health` with `status_scope = TELEMETRY_SIDECAR_HEALTH_ONLY_NOT_RUN_OUTCOME`); the
 top-level `status` is the run outcome. Results written before 2026-10-05 lack the two explicit
 fields and are not reinterpreted.
-BLOCKED refuses acquisition; AMBER refuses automatic launch and requires the
-operator to close ordinary background browsers/IDEs/unrelated Python workloads,
-rerun preflight and launch alone only when READY. There is no override flag. READY
+BLOCKED refuses acquisition; AMBER refuses automatic launch. The reported failing
+dimension must satisfy its qualified capacity rule before launch. There is no override flag. READY
 continues through the existing Daily evidence/runtime gates; it does not bypass
 them. Verified completed-session publication replay does not launch acquisition
 and retains its existing gates. Launcher logging/journaling is separate from this

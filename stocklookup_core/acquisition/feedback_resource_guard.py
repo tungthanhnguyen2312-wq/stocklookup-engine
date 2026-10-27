@@ -204,7 +204,7 @@ def admit(policy: ResourcePolicy, *, output_dir: Path, expected_output_bytes: in
 class _Job:
     """One job per child: kill-on-close, optional per-process commit ceiling, peak accounting."""
 
-    def __init__(self, memory_limit_bytes: int | None):
+    def __init__(self, memory_limit_bytes: int | None, *, job_memory_limit_bytes: int | None = None):
         import ctypes
         from ctypes import wintypes
         self.ctypes, self.wintypes = ctypes, wintypes
@@ -253,6 +253,9 @@ class _Job:
         if memory_limit_bytes:
             flags |= 0x100  # JOB_OBJECT_LIMIT_PROCESS_MEMORY (committed bytes per process)
             info.ProcessMemoryLimit = int(memory_limit_bytes)
+        if job_memory_limit_bytes:
+            flags |= 0x200  # JOB_OBJECT_LIMIT_JOB_MEMORY (aggregate committed bytes)
+            info.JobMemoryLimit = int(job_memory_limit_bytes)
         info.BasicLimitInformation.LimitFlags = flags
         if not kernel.SetInformationJobObject(self.handle, 9, ctypes.byref(info), ctypes.sizeof(info)):
             error = ctypes.get_last_error()
@@ -336,6 +339,70 @@ def _resume_suspended(process: subprocess.Popen) -> None:
     status = ntdll.NtResumeProcess(wintypes.HANDLE(int(process._handle)))
     if status != 0:
         raise OSError(status, "NtResumeProcess failed")
+
+
+def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str, str],
+                         memory_probe, on_start=None) -> int:
+    """Qualified Owner child only: strict Windows Job, inherited logs, no degraded launch.
+
+    Reuse the existing containment/reap primitives. System probes use GetPerformanceInfo,
+    never GlobalMemoryStatusEx's process-limited available-pagefile value. A half-second
+    reserve check compensates for other applications growing after point-in-time admission.
+    The kernel aggregate ceiling also covers nested feedback children and grandchildren.
+    """
+    if os.name != "nt":
+        raise OSError("DAILY_CAPACITY_CONTAINMENT_UNAVAILABLE")
+    owner_peak = peak_memory_bytes()
+    if owner_peak is None or owner_peak > GIB // 4:
+        raise OSError("DAILY_CAPACITY_OWNER_ALLOWANCE_EXCEEDED")
+    def require_reserves():
+        memory = memory_probe()
+        for key, floor in (("available_physical_bytes", GIB), ("available_commit_bytes", 2 * GIB)):
+            value = memory.get(key)
+            if value is None or value < floor:
+                raise OSError("DAILY_CAPACITY_RESERVE_LOW:" + key)
+
+    job = _Job(7 * GIB, job_memory_limit_bytes=8 * GIB)
+    process = None
+    assigned = False
+    try:
+        require_reserves()
+        process = subprocess.Popen(list(command), cwd=cwd, env=dict(env),
+                                   creationflags=0x00000004)  # contain before any user code
+        job.assign(int(process._handle))
+        assigned = True
+        if on_start is not None:
+            on_start(process.pid)
+        _resume_suspended(process)
+        while True:
+            require_reserves()
+            # Allocation denial may be caught by an optional stage. It still invalidates
+            # capacity qualification: never silently publish a resource-degraded success.
+            while job._completion_message(0) is not None:
+                pass
+            if job.memory_limit_exceeded:
+                raise OSError("DAILY_CAPACITY_MEMORY_LIMIT")
+            try:
+                returncode = process.wait(timeout=0.5)
+                break
+            except subprocess.TimeoutExpired:
+                pass
+        job.terminate()  # no surviving descendants, even after a nominal exit
+        if not job.wait_empty(REAP_GRACE_SECONDS):
+            raise OSError(CHILD_REAP_UNCONFIRMED)
+        if job.memory_limit_exceeded:
+            raise OSError("DAILY_CAPACITY_MEMORY_LIMIT")
+        return returncode
+    finally:
+        if process is not None:
+            _terminate(process, job if assigned else None)
+            empty = job.wait_empty(REAP_GRACE_SECONDS)
+            reaped = process.poll() is not None
+        else:
+            empty = reaped = True
+        job.close()
+        if not empty or not reaped:
+            raise OSError(CHILD_REAP_UNCONFIRMED)
 
 
 def _read_small_json(path: Path) -> dict[str, Any] | None:

@@ -92,8 +92,8 @@
       ]
     },
     "tools/run_owner_daily.py": {
-      "ast_sha256": "07de0b0c44685254ae5112d293d89e8c18bb0f158ac6bf7a3eb8ce7556738491",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612.",
+      "ast_sha256": "2fc4e1c81316b7a1df81edbab1864f8e69349186f54a0e5c54984c65500bcec6",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/release_orchestrator.py",

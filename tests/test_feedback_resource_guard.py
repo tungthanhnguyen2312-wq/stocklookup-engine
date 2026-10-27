@@ -265,3 +265,88 @@ def test_child_status_writer_is_atomic_and_never_raises(tmp_path):
     guard.write_child_result(None, {"status": "ignored"})
     guard.write_child_result(tmp_path / "a" / "s.json" / "nested", {"status": "cannot be created"})  # parent is a file: must not raise
     assert not list(tmp_path.rglob(".child-result-*"))
+
+
+@pytest.mark.parametrize("failure", [None, "reserve", "unknown", "assign", "memory", "reap", "cancel"])
+def test_daily_capacity_guard_contains_before_resume_and_never_degrades(tmp_path, monkeypatch, failure):
+    events = []
+    class Job:
+        handle = 1
+        memory_limit_exceeded = False
+        def __init__(self, limit, *, job_memory_limit_bytes):
+            assert limit == 7 * guard.GIB and job_memory_limit_bytes == 8 * guard.GIB
+        def assign(self, handle):
+            events.append("assign")
+            if failure == "assign":
+                raise OSError("assign failed")
+        def _completion_message(self, timeout):
+            self.memory_limit_exceeded = failure == "memory"
+            return None
+        def terminate(self):
+            events.append("terminate")
+        def wait_empty(self, timeout):
+            return failure != "reap"
+        def close(self):
+            events.append("close")
+    class Process:
+        pid = 10
+        _handle = 12
+        returncode = None
+        def kill(self):
+            events.append("terminate")
+            self.returncode = 1
+        def wait(self, timeout):
+            if failure == "cancel" and "terminate" not in events:
+                raise KeyboardInterrupt()
+            self.returncode = 0
+            return 0
+        def poll(self):
+            return self.returncode
+    def popen(*args, **kwargs):
+        assert kwargs["creationflags"] == 4
+        events.append("spawn_suspended")
+        return Process()
+    probes = 0
+    def memory():
+        nonlocal probes
+        probes += 1
+        return {"available_physical_bytes": None if failure == "unknown" else (
+                0 if failure == "reserve" and probes > 1 else 2 * guard.GIB),
+                "available_commit_bytes": 3 * guard.GIB}
+    monkeypatch.setattr(guard, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(guard, "peak_memory_bytes", lambda: 100 * 1024**2)
+    monkeypatch.setattr(guard, "_Job", Job)
+    monkeypatch.setattr(guard.subprocess, "Popen", popen)
+    monkeypatch.setattr(guard, "_resume_suspended", lambda p: events.append("resume"))
+    if failure is None:
+        assert guard.run_capacity_guarded(["synthetic"], cwd=tmp_path, env={}, memory_probe=memory) == 0
+    else:
+        with pytest.raises(KeyboardInterrupt if failure == "cancel" else OSError):
+            guard.run_capacity_guarded(["synthetic"], cwd=tmp_path, env={}, memory_probe=memory)
+    assert events[-1] == "close"
+    if "spawn_suspended" in events:
+        assert "terminate" in events
+    if "resume" in events:
+        assert events.index("assign") < events.index("resume")
+    if failure == "assign":
+        assert "resume" not in events
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows aggregate Job ceiling")
+def test_aggregate_job_limit_is_kernel_enforced_across_two_children(tmp_path):
+    # Each process fits its individual 128-MiB ceiling; their retained allocations
+    # together exceed the 160-MiB Job ceiling. A successful allocation is a failure.
+    grandchild = "import time; x=bytearray(90*1024**2); time.sleep(20)"
+    command = _script(tmp_path, "import subprocess,sys,time\n"
+        f"p=subprocess.Popen([sys.executable,'-c',{grandchild!r}])\n"
+        "time.sleep(2)\nx=bytearray(90*1024**2)\np.wait()\n")
+    job = guard._Job(128 * 1024**2, job_memory_limit_bytes=160 * 1024**2)
+    process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        job.assign(int(process._handle))
+        guard._resume_suspended(process)
+        assert process.wait(timeout=15) != 0
+    finally:
+        guard._terminate(process, job)
+        assert job.wait_empty(5)
+        job.close()

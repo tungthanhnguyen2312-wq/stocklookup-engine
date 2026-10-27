@@ -226,3 +226,88 @@ def test_nonwindows_standalone_fails_closed_without_network_or_bytecode(tmp_path
     assert result.returncode == 3
     assert json.loads(result.stdout)["classification"] == "BLOCKED"
     assert list(tmp_path.iterdir()) == []
+
+
+def qualified_observation():
+    observation = safe_observation()
+    observation.update(available_physical_bytes=10193186816, available_commit_bytes=24732172288,
+                       capacity_qualification={"source_matches": True, "profile": "PR195_CURRENT_SCALE_BOUNDED_V1"})
+    observation["retained"]["iid"]["file_bytes"] = 2382095742
+    return observation
+
+
+def test_observed_oct27_condition_admits_only_with_compensating_guard():
+    observation = qualified_observation()
+    result = preflight.evaluate(observation)
+    assert result["classification"] == "READY"
+    assert result["runtime_capacity_guard_required"] is True
+    physical = result["dimensions"]["physical"]
+    assert physical["green_min_bytes"] == int(9.25 * GIB)
+    assert physical["legacy_green_min_bytes"] == 10311071568
+    assert result["dimensions"]["commit"]["green_min_bytes"] == 20622143137
+    assert result["peak_model"]["monday_measured_peak_bytes"] is None
+    observation["available_physical_bytes"] = physical["green_min_bytes"] - 1
+    assert preflight.evaluate(observation)["classification"] == "AMBER"
+    observation["available_physical_bytes"] += 1
+    assert preflight.evaluate(observation)["classification"] == "READY"
+
+
+@pytest.mark.parametrize("cause", ["source", "larger", "commit", "writer", "provenance", "disk", "pagefile"])
+def test_bounded_admission_never_bypasses_other_guards(cause):
+    observation = qualified_observation()
+    if cause == "source":
+        observation["capacity_qualification"]["source_matches"] = False
+    elif cause == "larger":
+        observation["retained"]["iid"]["file_bytes"] += 1
+    elif cause == "commit":
+        observation["available_commit_bytes"] = 20622143136
+    elif cause == "writer":
+        observation["active_writers"] = [{"pid": 17}]
+    elif cause == "provenance":
+        observation["repository"]["head_sha"] = "candidate"
+    elif cause == "disk":
+        observation["c_free_bytes"] = 24 * GIB
+    else:
+        observation["pagefiles"] = None
+    result = preflight.evaluate(observation)
+    assert result["classification"] != "READY"
+    if cause in {"source", "larger"}:
+        assert not result["runtime_capacity_guard_required"]
+        assert result["dimensions"]["physical"]["capacity_basis"] == "LEGACY_IID_MODEL"
+
+
+def test_source_receipt_matches_candidate_and_refuses_tampering(tmp_path, monkeypatch):
+    assert preflight.capacity_qualification(preflight.ROOT)["source_matches"]
+    (tmp_path / "config").mkdir()
+    source = tmp_path / "runtime.py"
+    source.write_bytes(b"original\r\n")
+    receipt = {"source_sha256": {"runtime.py": hashlib.sha256(b"original\n").hexdigest()}}
+    (tmp_path / "config/owner_daily_capacity_qualification.json").write_text(json.dumps(receipt))
+    monkeypatch.setattr(preflight, "capacity_source_paths", lambda root: ["runtime.py"])
+    assert preflight.capacity_qualification(tmp_path)["source_matches"]
+    source.write_bytes(b"changed\n")
+    assert not preflight.capacity_qualification(tmp_path)["source_matches"]
+    source.unlink()
+    assert not preflight.capacity_qualification(tmp_path)["source_matches"]
+
+
+def test_source_fingerprint_excludes_only_noncode_and_normal_session_registry(monkeypatch, tmp_path):
+    monkeypatch.setattr(preflight, "_git", lambda *a: "\n".join([
+        "runtime.py", "tools/run_owner_daily.py", "config/policy.json",
+        "config/daily_research_session_input_registry.json",
+        "config/owner_daily_capacity_qualification.json", "tests/fixture.json", "docs/state.json"]))
+    assert preflight.capacity_source_paths(tmp_path) == [
+        "config/policy.json", "runtime.py", "tools/run_owner_daily.py"]
+
+
+def test_bounded_ready_requires_strict_runner_and_propagates_failure(tmp_path, monkeypatch):
+    from stocklookup_core.acquisition import feedback_resource_guard as guard
+    host = preflight.evaluate(qualified_observation())
+    monkeypatch.setattr(preflight, "check", lambda *a: host)
+    monkeypatch.setattr(owner.subprocess, "Popen", lambda *a, **k: pytest.fail("no unguarded fallback"))
+    def refused(*a, **k):
+        assert k["memory_probe"] is preflight.windows_memory
+        raise OSError("DAILY_CAPACITY_RESERVE_LOW")
+    monkeypatch.setattr(guard, "run_capacity_guarded", refused)
+    with pytest.raises(owner.OwnerDailyError, match="OWNER_DAILY_CAPACITY_GUARD"):
+        owner._run_daily(tmp_path, tmp_path)

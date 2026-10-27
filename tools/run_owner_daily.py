@@ -559,7 +559,7 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
     passes the accepted READY result here. A direct caller without one is still gated.
     """
     if host_ready is None or host_ready.get("classification") != "READY":
-        _require_host_ready(root)
+        host_ready = _require_host_ready(root)
     env = os.environ.copy()
     if telemetry is not None and telemetry.progress_path is not None:
         env[PROGRESS_PATH_ENV] = str(telemetry.progress_path)
@@ -568,11 +568,25 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
         # only intentional sidecar writer; the parent only waits and retains its PID locally.
         telemetry.emit(phase_index=2, progress_kind="PIPELINE", component="Canonical Daily",
                        subtask="child_process", status="CHILD_STARTING")
-    process = subprocess.Popen(
-        [sys.executable, "-u", "daily_analysis_pipeline.py", "--runtime-root", str(runtime_root),
-         "--canonical-post-close"],
-        cwd=root, env=env,
-    )
+    command = [sys.executable, "-u", "daily_analysis_pipeline.py", "--runtime-root", str(runtime_root),
+               "--canonical-post-close"]
+    if host_ready.get("runtime_capacity_guard_required"):
+        from stocklookup_core.acquisition.feedback_resource_guard import run_capacity_guarded
+        from tools.check_owner_daily_host_preflight import windows_memory
+        try:
+            returncode = run_capacity_guarded(command, cwd=root, env=env,
+                memory_probe=windows_memory,
+                on_start=telemetry.set_child_pid if telemetry is not None else None)
+        except OSError as exc:
+            raise OwnerDailyError("Canonical Daily", "OWNER_DAILY_CAPACITY_GUARD", str(exc)) from exc
+        finally:
+            if telemetry is not None:
+                telemetry.set_child_pid(None)
+        if returncode:
+            raise OwnerDailyError("Canonical Daily", f"CANONICAL_DAILY_EXIT_{returncode}",
+                                  "Read the log; no state or AI publication was attempted.")
+        return
+    process = subprocess.Popen(command, cwd=root, env=env)
     if telemetry is not None:
         telemetry.set_child_pid(process.pid)
     try:

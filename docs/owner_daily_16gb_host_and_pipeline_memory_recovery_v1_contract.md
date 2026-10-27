@@ -6,7 +6,8 @@ It introduces no provider, analytical policy, production entrypoint or evidence 
 
 The existing [host preflight](owner_daily_host_preflight_contract.md), single writer,
 immutable retention, release, calendar/session, runtime and completion gates remain binding.
-No threshold, IID multiplier or scaling reference is relaxed by this corrective.
+PR195 left thresholds unchanged. The final admission corrective below supersedes
+only the physical READY band for its exact qualified source/input envelope.
 
 ## Corrective boundaries
 
@@ -94,3 +95,85 @@ diagnostic cap; the native observer has about 49.8 seconds below its deadline.
 These are current-scale retained qualifications, not future-growth guarantees or
 a host READY permit. Main integration, fresh host admission and real provider/session
 acceptance remain Owner-controlled. No memory threshold or timeout is increased.
+
+## Final admission corrective — October 27
+
+The legacy 5.05 × IID estimate is 11.203 GiB at the 2,382,095,742-byte IID,
+scaling physical READY to 9.602934 GiB. It predates PR195 and no longer directly
+describes the optimized whole-stage requirements. October-23 real Daily telemetry
+(11.825 GiB Canonical RSS, 10.631 GiB Action Center RSS, 7.786 GiB handoff RSS)
+remains historical evidence of the previous implementation; these sequential
+peaks are neither added nor relabeled as corrected measurements.
+
+The finite corrected stage evidence is: Producer 6.588 GiB private / 6.262 RSS;
+M1 5.078 / 4.813; Action Center 4.689 / 4.448; complete current products
+6.952301 / 6.722069; held-live observer plus both downstream reads 6.823 / 6.504.
+Acquisition/history/IID/input graphs were retained in the corresponding stage
+experiments. The held-live replay is not a new live provider-to-publication Daily.
+The measured maximum private bytes are 7,464,976,384; maximum RSS 7,217,766,400.
+M1 and Action Center follow child exit, so their maxima are not concurrent with
+the canonical child. Optional feedback descendants can overlap the child and
+are included in the new aggregate Job ceiling, in addition to their own guards.
+
+For an exact executable/config fingerprint matching
+`config/owner_daily_capacity_qualification.json`, Windows, and IID size no greater
+than the measured envelope, physical READY becomes the smaller of its legacy
+value and **9.25 GiB**. The 9.25 calculation is an **8-GiB aggregate private-commit
+child budget + 0.25-GiB Owner allowance + 1-GiB physical reserve**. This is a
+modeled conservative admission envelope informed by stage measurements, not a
+measured whole-Daily peak. The child budget exceeds the largest private peak by
+1.047699 GiB. RSS was below private bytes in the qualified stages; shared/file
+pages and subsequent competing application growth are additionally covered by
+runtime reserve checks. The Owner peak must fit the allowance before spawn.
+
+The canonical child starts suspended, joins the existing Windows Job containment,
+then resumes. Its per-process private-commit ceiling remains 7 GiB; the aggregate
+child/descendant ceiling is 8 GiB. Every 0.5 seconds the parent requires at least
+1 GiB physical and 2 GiB **system-wide** available commit (`GetPerformanceInfo`).
+Unknown probes, failed containment, kernel allocation-limit notifications,
+cancel, low reserves or unconfirmed whole-tree reaping refuse success and stop
+the Owner workflow before downstream publication. No uncontained retry exists.
+This sampling is not a reservation against an arbitrary simultaneous external
+allocation; the kernel ceilings bound the workload itself. Existing stage
+deadlines, optional feedback policy, session/completion and immutable-write
+contracts remain unchanged. No second monitor or production entrypoint exists.
+
+Commit READY/floor remain exactly IID-scaled **19.205867 / 14.724498 GiB** at this
+scale; physical BLOCKED floor, disk, writer, provenance, source/evidence and
+pagefile-observation gates remain unchanged. Missing/mismatched source receipt,
+unknown IID or any larger IID falls back to the legacy rule. Runtime/config
+changes require requalification; newline normalization is CRLF to LF so the
+same tracked source is portable across Git checkouts.
+The ordinary Daily input registry is operational state, excluded from the source
+fingerprint; its existing identity/provenance checks and the retained-size bound
+remain mandatory. Normal session advancement does not invalidate the code receipt.
+
+The Owner launch-control edit has an exact one-file successor source boundary in
+`tests/fixtures/owner_daily_capacity_source_transition_v1.json`. Its archived
+PR195 launcher reproduces the earlier layout/storage active digest. Every old
+manifest, archive and E2/E3 pin remains unchanged. Historical verification walks
+through the new boundary before the existing ones; active-source receipt admission
+still requires the actual current launcher hash and rejects the archived digest.
+The launcher AST pin is updated only for its unchanged canonical argv and explicit
+guarded dispatch. M1 identity verification and session/publication bodies are unchanged.
+
+Replaying the three unmodified October-27 log observations under this candidate
+rule gives 8.814838 GiB → AMBER, 9.520615 → READY, and 9.493145 → READY. The last
+observation had 23.033630 GiB system commit available. These are counterfactual
+rule evaluations of original observations, not fresh canonical-main READY
+permits. No original log, T0, seal, capture or session is edited. Integration,
+CI and a fresh real preflight remain necessary; production Daily is not run by
+this source corrective.
+
+Final representative retained replay through the new strict Job completed the
+full IID canonical identity (1,683 records; digest
+`62f32b6fb6b1f5bb65dc8ee715849de5a41c5102d964abc4359c033ebb40a0de`)
+and rehashed all 130 protected originals from the held-live qualification,
+including the 30 T0 sources. All hashes matched. This streaming audit used
+70,602,752 peak private bytes; it is not a new full-graph memory measurement.
+A separate M1 attempt on the busy development desktop stopped at the 1-GiB
+physical reserve after 52.5 seconds, confirming guard enforcement and providing
+no replacement completed-M1 measurement. The earlier completed M1/current-product/
+observer measurements are reused; output/serializer parity regressions remain
+mandatory. Safe admission at the observed 9.493145-GiB condition is supported by
+the bounded model, while provider-to-publication completion remains unmeasured.
