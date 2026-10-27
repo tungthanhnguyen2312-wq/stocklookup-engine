@@ -1,0 +1,13 @@
+{
+  "contract_version": "owner_daily_preseal_consumer_memory_source_transition/v1",
+  "base_commit": "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb",
+  "scope": "EXACT_PRESEAL_CONSUMER_MEMORY_CORRECTIVE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "archive": "tests/fixtures/owner_daily_preseal_consumer_memory_v1_sources/canonical_daily_operation.py.txt",
+      "prior_sha256_lf": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
+      "active_sha256_lf": "52fc13317ba39cf55719f2c49b3b0ba1044f58303fe32a5dd81b67ccace783df"
+    }
+  }
+}

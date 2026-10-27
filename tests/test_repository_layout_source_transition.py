@@ -89,6 +89,8 @@ def _copy_boundary(tmp_path: Path) -> None:
     paths = {LAYOUT_MANIFEST, "tests/fixtures/e2e3_frozen_sources.json", *LAYOUT_SOURCES, *LAYOUT_SOURCES.values(),
              "tests/fixtures/retention_reader_transition_v2.json", CAPACITY_MANIFEST, CAPACITY_ARCHIVE, LAUNCHER_MANIFEST,
              "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json",
+             "tests/fixtures/owner_daily_preseal_consumer_memory_source_transition_v1.json",
+             "tests/fixtures/owner_daily_preseal_consumer_memory_v1_sources/canonical_daily_operation.py.txt",
              *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in LAUNCHER_SOURCES),
              *("tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/" + p + ".txt"
                for p in ("tools/run_owner_daily.py", "canonical_post_close_pipeline.py",

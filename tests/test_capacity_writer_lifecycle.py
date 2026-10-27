@@ -98,6 +98,26 @@ sys.exit(1)
     assert path.read_bytes() == b'{"ticker":"AAA"}\n'
 
 
+def test_staged_companion_publishes_by_digest_and_reuses_the_same_bytes(tmp_path):
+    target = tmp_path / "ai_research_full_universe.ndjson"
+    payload = b'{"ticker":"AAA"}\n{"ticker":"BBB"}\n'
+    stage = tmp_path / ".delivery-staging-one"
+    stage.write_bytes(payload)
+    digest = hashlib.sha256(payload).hexdigest()
+    assert publication.publish_staged(stage, target, expected_sha=digest, expected_size=len(payload)) == "PUBLISHED_IMMUTABLE"
+    assert not stage.exists()
+    assert target.read_bytes() == payload
+    again = tmp_path / ".delivery-staging-two"
+    again.write_bytes(payload)
+    assert publication.publish_staged(again, target, expected_sha=digest, expected_size=len(payload)) == "REUSED"
+    assert not again.exists()
+    conflict = tmp_path / ".delivery-staging-three"
+    conflict.write_bytes(b'{"ticker":"CONFLICT"}\n')
+    with pytest.raises(publication.AtomicWriteError, match="IMMUTABLE_DELIVERY_CONTENT_CONFLICT"):
+        publication.publish_staged(conflict, target, expected_sha=hashlib.sha256(conflict.read_bytes()).hexdigest(), expected_size=conflict.stat().st_size)
+    assert target.read_bytes() == payload
+
+
 def test_producer_entry_integrates_opt_in_and_preserves_run_identity(tmp_path, monkeypatch):
     op = operation_fixture()
     op["manifest"]["authority_boundary"] = op["product"]["authority_boundary"]

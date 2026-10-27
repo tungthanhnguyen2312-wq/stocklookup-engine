@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import copy
 import json
+import os
+import stat
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -474,11 +477,29 @@ def materialize(output_dir: Path, operation: Mapping[str, Any], *, protect_deliv
         delivery_inputs["integrated_investment_decision_product"] = integrated_delivery["integrated_investment_decision_product"]
         if integrated_delivery.get("daily_integrated_decision_brief") is not None:
             delivery_inputs["daily_integrated_decision_brief"] = integrated_delivery["daily_integrated_decision_brief"]
-    delivery = build_delivery(operation, delivery_inputs)
-    for filename, value in (("ai_research_session_bundle.json", delivery["primary"]), ("ai_research_full_universe.ndjson", delivery["full_universe"]), ("ai_research_bundle_manifest.json", delivery["manifest"]), ("ai_research_session_brief.md", delivery["brief"]), ("current_decision_cockpit_projection.json", delivery["projection"])):
+    output_dir.mkdir(parents=True, exist_ok=True)
+    companion_target = output_dir / "ai_research_full_universe.ndjson"
+    descriptor, staged_name = tempfile.mkstemp(prefix=".delivery-staging-", dir=output_dir)
+    staged = Path(staged_name)
+    try:
+        with os.fdopen(descriptor, "wb") as companion_stream:
+            delivery = build_delivery(operation, delivery_inputs, companion_stream=companion_stream)
+            companion_stream.flush()
+            os.fsync(companion_stream.fileno())
+        from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, publish_bytes, publish_staged
+        publish_staged(
+            staged, companion_target,
+            expected_sha=delivery["full_universe_sha256"], expected_size=delivery["full_universe_bytes"],
+            protect=protect_delivery and companion_target.name in DELIVERIES,
+        )
+    finally:
+        if staged.exists():
+            if os.name == "nt":
+                staged.chmod(stat.S_IREAD | stat.S_IWRITE)
+            staged.unlink()
+    for filename, value in (("ai_research_session_bundle.json", delivery["primary"]), ("ai_research_bundle_manifest.json", delivery["manifest"]), ("ai_research_session_brief.md", delivery["brief"]), ("current_decision_cockpit_projection.json", delivery["projection"])):
         path = output_dir / filename
         if path.exists() and path.read_bytes() != value: raise ValueError("IMMUTABLE_SESSION_OPERATION_DELIVERY_CONFLICT:" + filename)
-        from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, publish_bytes
         publish_bytes(path, value, protect=protect_delivery and filename in DELIVERIES)
     retained_brief = _integrated_brief_retention_artifact(operation)
     if retained_brief is not None:

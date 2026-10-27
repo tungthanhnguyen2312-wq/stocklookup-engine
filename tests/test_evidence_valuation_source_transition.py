@@ -42,7 +42,9 @@ def test_two_file_transition_checks_archive_and_active_bytes():
         assert historical == archive
         assert hashlib.sha256(archive).hexdigest() == PINS[relative] == frozen[relative]
         successor = json.loads((ROOT / "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json").read_bytes())["sources"]
-        expected_live = successor[relative]["active_sha256_lf"] if relative in successor else ACTIVE[relative]
+        preseal = json.loads((ROOT / "tests/fixtures/owner_daily_preseal_consumer_memory_source_transition_v1.json").read_bytes())["sources"]
+        expected_live = (preseal[relative]["active_sha256_lf"] if relative in preseal
+                         else successor[relative]["active_sha256_lf"] if relative in successor else ACTIVE[relative])
         assert hashlib.sha256(active).hexdigest() == expected_live
         assert hashlib.sha256(active).hexdigest() != hashlib.sha256(historical).hexdigest()
     identity = active_valuation_orchestration_identity(ROOT)

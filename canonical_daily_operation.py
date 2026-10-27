@@ -36,6 +36,7 @@ from __future__ import annotations
 from owner_daily_progress import CanonicalCheckpointProgress, observe_canonical_failure
 
 import argparse
+import gc
 import hashlib
 import json
 import os
@@ -642,20 +643,25 @@ def _build_preseal_daily_integrated_brief(
         raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, "PRESEAL_INTEGRATED_DECISION_MISSING")
     delivery_inputs = dict(operation.get("inputs") or {})
     delivery_inputs["integrated_investment_decision_product"] = integrated
-    draft_delivery = build_delivery(operation, delivery_inputs)
-    draft_bundle_bytes = draft_delivery["primary"]
-    draft_bundle = json.loads(draft_bundle_bytes.decode("utf-8"))
+    draft_delivery = build_delivery(operation, delivery_inputs, retain_delivery_companions=False)
+    draft_bundle_bytes = draft_delivery.pop("primary")
+    del draft_delivery
+    draft_bundle_sha256 = hashlib.sha256(draft_bundle_bytes).hexdigest()
+    draft_bundle = json.loads(draft_bundle_bytes)
+    del draft_bundle_bytes
+    gc.collect()
     previous = _previous_qualified_operation_source(root, session=session, registry=registry)
     next_brief = build_from_current_delivery_payload(
         root=root,
         current_session=session,
         current_manifest=operation["manifest"],
         current_bundle=draft_bundle,
-        current_bundle_sha256=hashlib.sha256(draft_bundle_bytes).hexdigest(),
+        current_bundle_sha256=draft_bundle_sha256,
         current_queue=operation.get("decision_queue"),
         previous_session=previous[0] if previous else None,
         previous_source=previous[1] if previous else None,
         registry=registry,
+        current_integrated=integrated,
     )
     brief = build_from_session(root=root, session=session, next_session_brief=next_brief)
     if not isinstance(brief, Mapping):

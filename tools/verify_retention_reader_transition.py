@@ -62,6 +62,42 @@ IID_RUNTIME_SOURCES = (
     "canonical_post_close_pipeline.py",
     "stocklookup_core/decision/integrated_investment_decision_product.py",
 )
+PRESEAL_CONSUMER_MANIFEST = "tests/fixtures/owner_daily_preseal_consumer_memory_source_transition_v1.json"
+PRESEAL_CONSUMER_BASE = "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb"
+PRESEAL_CONSUMER_SCOPE = "EXACT_PRESEAL_CONSUMER_MEMORY_CORRECTIVE_ONLY"
+PRESEAL_CONSUMER_SOURCE = "canonical_daily_operation.py"
+
+
+def _preseal_consumer_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the preseal-consumer successor before every older source pin.
+
+    The archived bytes are the exact pre-corrective canonical daily operation.
+    Older manifests stay unchanged. A missing manifest keeps older checkouts valid.
+    """
+    manifest = root / PRESEAL_CONSUMER_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources"}
+            or spec.get("contract_version") != "owner_daily_preseal_consumer_memory_source_transition/v1"
+            or spec.get("base_commit") != PRESEAL_CONSUMER_BASE
+            or spec.get("scope") != PRESEAL_CONSUMER_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (PRESEAL_CONSUMER_SOURCE,)):
+        raise ValueError("PRESEAL_CONSUMER_MEMORY_SOURCE_TRANSITION_SCOPE_INVALID")
+    if relative != PRESEAL_CONSUMER_SOURCE:
+        return active
+    row = sources[relative]
+    archive = "tests/fixtures/owner_daily_preseal_consumer_memory_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("PRESEAL_CONSUMER_MEMORY_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("PRESEAL_CONSUMER_MEMORY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
@@ -70,6 +106,7 @@ def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     The archived bytes are the exact pre-corrective sources. Older manifests stay
     unchanged and still bind those bytes. A missing manifest keeps older checkouts valid.
     """
+    active = _preseal_consumer_prior_bytes(root, relative, active)
     manifest = root / IID_RUNTIME_MANIFEST
     if not manifest.is_file():
         return active

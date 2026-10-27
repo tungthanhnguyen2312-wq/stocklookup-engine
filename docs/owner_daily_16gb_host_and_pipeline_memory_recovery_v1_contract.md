@@ -314,3 +314,27 @@ Deployment: the Owner's Desktop `Stock Lookup Daily.cmd` must invoke
 instead of `powershell.exe ... run_owner_daily.ps1`; until then the legacy route
 still keeps PowerShell resident. Pull the Producer before switching the shortcut;
 an already-running old launcher cannot adopt the new host.
+
+## Preseal consumer memory (same incident)
+
+The 2026-10-27 14:16:29 run for session 2026-10-26 built the same-session
+integrated investment decision product, then failed during Producer sealing
+while the preseal Daily Brief re-parsed that multi-gigabyte artifact, and would
+have re-parsed the previous session's artifact, to read posture fields.
+`canonical_daily_operation._build_preseal_daily_integrated_brief` now passes the
+resident same-session product. `next_session_decision_brief` binds that object
+to the on-disk identity from a head/tail window and projects the previous
+session one record at a time. Transition policy, epochs, ticker union, counts,
+lineage and content identity stay the same. A sorted artifact whose digest does
+not match is refused. An unverified large-file binding is refused. The 7 GiB
+process ceiling and 8 GiB tree ceiling are unchanged. This does not complete
+the 2026-10-26 Daily, fabricate T0, or authorize another production retry.
+
+The guarded replay that reached integrated-decision completion committed
+6,395,334,656 bytes, leaving 1,120,858,112 bytes under the 7,516,192,768-byte
+process ceiling. The retained 2026-10-23 full-universe companion is
+1,033,647,612 bytes and is not an input of the preseal brief. Preseal therefore
+builds only the primary bundle. Producer materialization writes that companion
+once to its stage file and publishes it by size and digest, so the byte string
+is not held beside the resident decision product. Primary bundle bytes and the
+companion line contract are unchanged.

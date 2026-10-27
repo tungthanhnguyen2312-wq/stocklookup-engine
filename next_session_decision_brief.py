@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from typing import Any, Mapping
@@ -455,26 +456,223 @@ def _classify_posture_transition(previous: Mapping[str, Any] | None, current: Ma
     return "POSTURE_CHANGED_OTHER"
 
 
+_IID_CONTRACT = "integrated_investment_decision_product/v1"
+_IID_DIGEST_EXCLUDED = frozenset({"artifact_sha256", "artifact_identity", "requested_at"})
+_COMPACT_RECORD_FIELDS = (
+    "research_action_posture", "tactical_phase", "posture_condition_class",
+    "research_action_policy_version", "decision_identity", "fundamental_state",
+    "fundamental_decision_policy_version",
+)
+_WINDOW_HEADER_BYTES = 256 * 1024
+_WINDOW_TAIL_BYTES = 512 * 1024
+_FULL_ARTIFACT_READ_LIMIT = 8 * 1024 * 1024
+_RECORD_MEMBER_LIMIT = 64 * 1024 * 1024
+_WINDOW_KEYS = ("artifact_identity", "artifact_sha256", "session", "contract_version")
+
+
+def _compact_record(record: Any) -> Any:
+    """Copy only the fields posture comparison reads. Absent keys stay absent."""
+    if not isinstance(record, Mapping):
+        return record
+    compact: dict[str, Any] = {}
+    for key in _COMPACT_RECORD_FIELDS:
+        if key in record:
+            compact[key] = record[key]
+    if "fundamental_synthesis" in record and isinstance(record["fundamental_synthesis"], Mapping):
+        synthesis = record["fundamental_synthesis"]
+        compact["fundamental_synthesis"] = (
+            {"signal_policy": synthesis["signal_policy"]} if "signal_policy" in synthesis else {}
+        )
+    return compact
+
+
+def _project_integrated_artifact(metadata: Mapping[str, Any], records: Mapping[str, Any]) -> dict[str, Any]:
+    projected: dict[str, Any] = {}
+    for key in ("session", "artifact_identity", "artifact_sha256", "contract_version"):
+        if key in metadata:
+            projected[key] = metadata[key]
+    if "research_action_policy_version" in metadata:
+        projected["research_action_policy_version"] = metadata["research_action_policy_version"]
+    projected["records"] = dict(records)
+    return projected
+
+
+def _project_resident_integrated(artifact: Mapping[str, Any], session: str) -> dict[str, Any]:
+    """Bind a caller-owned same-session artifact and retain only its posture fields."""
+    if artifact.get("session") != session:
+        raise NextSessionDecisionBriefError(
+            f"INTEGRATED_DECISION_ARTIFACT_SESSION_MISMATCH:expected={session}:observed={artifact.get('session')}")
+    if artifact.get("contract_version") != _IID_CONTRACT:
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_DELIVERY_CONTRACT_MISMATCH")
+    if not isinstance(artifact.get("artifact_identity"), str) or not artifact["artifact_identity"]:
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_DELIVERY_IDENTITY_MISSING")
+    records = artifact.get("records")
+    if not isinstance(records, Mapping):
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_DELIVERY_RECORDS_MISSING")
+    return _project_integrated_artifact(artifact, {ticker: _compact_record(records[ticker]) for ticker in records})
+
+
+def _window_header(path: Path) -> dict[str, Any]:
+    """Read the pretty-file head and tail. This does not parse records."""
+    size = path.stat().st_size
+    with path.open("rb") as source:
+        beginning = source.read(_WINDOW_HEADER_BYTES)
+        source.seek(max(0, size - _WINDOW_TAIL_BYTES))
+        ending = source.read()
+    text = (beginning + b"\n" + ending).decode("utf-8", errors="replace")
+    found: dict[str, Any] = {}
+    for key in _WINDOW_KEYS:
+        matches = re.findall(r'^  "' + re.escape(key) + r'": (.*?),?\r?$', text, flags=re.MULTILINE)
+        if matches:
+            found[key] = json.loads(matches[-1].rstrip(","))
+    return found
+
+
+def _bind_resident_file(path: Path, resident: Mapping[str, Any]) -> None:
+    """Prove the on-disk artifact is the resident object without a second full parse."""
+    if not path.is_file():
+        return
+    if path.stat().st_size <= _FULL_ARTIFACT_READ_LIMIT:
+        disk = _stream_compact_integrated(path, session=str(resident.get("session")))
+        if disk.get("artifact_identity") != resident.get("artifact_identity"):
+            raise NextSessionDecisionBriefError("INTEGRATED_DECISION_BINDING_IDENTITY_MISMATCH")
+        if ("artifact_sha256" in disk and "artifact_sha256" in resident
+                and disk.get("artifact_sha256") != resident.get("artifact_sha256")):
+            raise NextSessionDecisionBriefError("INTEGRATED_DECISION_BINDING_IDENTITY_MISMATCH")
+        return
+    found = _window_header(path)
+    if "artifact_identity" not in found or "session" not in found:
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_BINDING_UNVERIFIED")
+    if found["artifact_identity"] != resident.get("artifact_identity") or found["session"] != resident.get("session"):
+        raise NextSessionDecisionBriefError(
+            f"INTEGRATED_DECISION_ARTIFACT_SESSION_MISMATCH:expected={resident.get('session')}:observed={found.get('session')}")
+    if ("artifact_sha256" in found and resident.get("artifact_sha256") not in (None, found["artifact_sha256"])):
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_BINDING_IDENTITY_MISMATCH")
+
+
+def _stream_compact_integrated(path: Path, *, session: str) -> dict[str, Any]:
+    """Project one artifact one record at a time. A sorted digest is verified; an unsorted file is not refused."""
+    from stocklookup_core.evidence.artifact_stream import ObjectStream
+    from stocklookup_core.evidence.bounded_json import canonical_bytes
+
+    metadata: dict[str, Any] = {}
+    records: dict[str, Any] = {}
+    sorted_keys = True
+    digest = hashlib.sha256()
+    digest.update(b"{")
+    included = 0
+
+    def include(key: str, encoded: bytes) -> None:
+        nonlocal included
+        if not sorted_keys:
+            return
+        if included:
+            digest.update(b",")
+        included += 1
+        digest.update(canonical_bytes(key))
+        digest.update(b":")
+        digest.update(encoded)
+
+    with path.open(encoding="utf-8") as source:
+        parser = ObjectStream(source, limit=_RECORD_MEMBER_LIMIT, sorted_required=False)
+        previous = None
+        for key in parser.members():
+            if previous is not None and key <= previous:
+                sorted_keys = False
+            previous = key
+            if key == "records":
+                if parser.peek() != "{":
+                    raise NextSessionDecisionBriefError("INTEGRATED_DECISION_RECORDS_NOT_OBJECT")
+                # Hash the records object as it is read. Retaining its canonical
+                # bytes would keep a second multi-gigabyte copy beside the resident artifact.
+                streaming = sorted_keys
+                if streaming:
+                    if included:
+                        digest.update(b",")
+                    included += 1
+                    digest.update(canonical_bytes(key))
+                    digest.update(b":")
+                    digest.update(b"{")
+                record_previous = None
+                record_count = 0
+                for ticker in parser.members():
+                    if record_previous is not None and ticker <= record_previous:
+                        sorted_keys = False
+                        streaming = False
+                    record_previous = ticker
+                    row = parser.value()
+                    if streaming:
+                        if record_count:
+                            digest.update(b",")
+                        digest.update(canonical_bytes(ticker))
+                        digest.update(b":")
+                        digest.update(canonical_bytes(row))
+                    record_count += 1
+                    records[ticker] = _compact_record(row)
+                    del row
+                if streaming:
+                    digest.update(b"}")
+            else:
+                value = parser.value()
+                if key in {"session", "artifact_identity", "artifact_sha256", "contract_version", "research_action_policy_version"}:
+                    metadata[key] = value
+                if key not in _IID_DIGEST_EXCLUDED:
+                    include(key, canonical_bytes(value))
+        if parser.peek():
+            raise NextSessionDecisionBriefError("INTEGRATED_DECISION_ARTIFACT_TRAILING_JSON")
+    digest.update(b"}")
+    if metadata.get("session") != session:
+        raise NextSessionDecisionBriefError(
+            f"INTEGRATED_DECISION_ARTIFACT_SESSION_MISMATCH:expected={session}:observed={metadata.get('session')}")
+    sha = metadata.get("artifact_sha256")
+    if sorted_keys and isinstance(sha, str) and sha and digest.hexdigest() != sha:
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_ARTIFACT_IDENTITY_MISMATCH")
+    return _project_integrated_artifact(metadata, records)
+
+
 def _resolve_integrated_decision_artifact(root: Path, session: str | None) -> Mapping[str, Any] | None:
     """Load the per-session integrated_investment_decision_product/v1 artifact if materialized.
 
     Same canonical session-scoped path canonical_post_close_pipeline.py writes and
     export_ai_bundle.py auto-resolves from (daily_session_level2_package.session_artifact_paths);
     fails soft to None (not yet materialized) rather than guessing a different session's artifact.
+    A multi-gigabyte artifact is refused here. Posture comparison uses the bounded projection.
     """
     if not session:
         return None
     path = daily_session_level2_package.session_artifact_paths(root, session)["integrated_investment_decision_product"]
     if not path.is_file():
         return None
+    if path.stat().st_size > _FULL_ARTIFACT_READ_LIMIT:
+        raise NextSessionDecisionBriefError("INTEGRATED_DECISION_ARTIFACT_UNBOUNDED_READ_REFUSED")
     artifact = _read_json(path)
     if artifact.get("session") != session:
         raise NextSessionDecisionBriefError(f"INTEGRATED_DECISION_ARTIFACT_SESSION_MISMATCH:expected={session}:observed={artifact.get('session')}")
     return artifact
 
 
-def _posture_transition(*, root: Path, current_session: str, previous_session: str | None) -> dict[str, Any]:
-    current_integrated = _resolve_integrated_decision_artifact(root, current_session)
+def _load_compact_integrated(root: Path, session: str | None) -> dict[str, Any] | None:
+    if not session:
+        return None
+    path = daily_session_level2_package.session_artifact_paths(root, session)["integrated_investment_decision_product"]
+    if not path.is_file():
+        return None
+    return _stream_compact_integrated(path, session=session)
+
+
+def _posture_transition(
+    *, root: Path, current_session: str, previous_session: str | None,
+    current_integrated: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    if current_integrated is not None:
+        current_artifact = _project_resident_integrated(current_integrated, current_session)
+        _bind_resident_file(
+            daily_session_level2_package.session_artifact_paths(root, current_session)["integrated_investment_decision_product"],
+            current_artifact,
+        )
+    else:
+        current_artifact = _load_compact_integrated(root, current_session)
+    current_integrated = current_artifact
     if current_integrated is None:
         return _section(availability=UNAVAILABLE, reason_codes=["CURRENT_INTEGRATED_DECISION_ARTIFACT_NOT_MATERIALIZED"], transition_counts={}, records={})
     current_records = current_integrated.get("records") or {}
@@ -484,7 +682,7 @@ def _posture_transition(*, root: Path, current_session: str, previous_session: s
             current_universe_count=len(current_records),
             source_lineage={"current_integrated_decision_identity": current_integrated.get("artifact_identity")},
         )
-    previous_integrated = _resolve_integrated_decision_artifact(root, previous_session)
+    previous_integrated = _load_compact_integrated(root, previous_session)
     if previous_integrated is None:
         return _section(
             availability=PARTIAL, reason_codes=["PREVIOUS_INTEGRATED_DECISION_ARTIFACT_NOT_MATERIALIZED"], transition_counts={}, records={},
@@ -532,7 +730,7 @@ def _posture_transition(*, root: Path, current_session: str, previous_session: s
 def _build_from_resolved_operations(
     *, root: Path, current_session: str, current: Mapping[str, Any],
     previous: Mapping[str, Any] | None, run_identity: str | None,
-    registry: Mapping[str, Any],
+    registry: Mapping[str, Any], current_integrated: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Assemble the transition projection from already-validated operation payloads."""
     resolved_previous_session = previous["session"] if previous else None
@@ -561,7 +759,10 @@ def _build_from_resolved_operations(
         "recommendation_transition": _retention_transition(current["bundle"], previous["bundle"] if previous else None, "recommendation_retention", "recommendation"),
         "invalidation_transition": _retention_transition(current["bundle"], previous["bundle"] if previous else None, "fundamental_invalidation_retention", "fundamental_invalidation"),
         "tactical_transition": _tactical_transition(root=root, registry=registry, current_session=current_session, previous_session=resolved_previous_session),
-        "posture_transition": _posture_transition(root=root, current_session=current_session, previous_session=resolved_previous_session),
+        "posture_transition": _posture_transition(
+            root=root, current_session=current_session, previous_session=resolved_previous_session,
+            current_integrated=current_integrated,
+        ),
         "correlation_concentration_context": _correlation_concentration_context(),
         "next_session_watch_conditions": _watch_conditions(current["bundle"]),
         "authority_boundary": {
@@ -618,6 +819,7 @@ def build_from_current_delivery_payload(
     previous_source: Path | None = None,
     run_identity: str | None = None,
     registry: Mapping[str, Any] | None = None,
+    current_integrated: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a transition projection from an explicit pre-seal delivery payload.
 
@@ -654,7 +856,7 @@ def build_from_current_delivery_payload(
     }
     return _build_from_resolved_operations(
         root=root, current_session=current_session, current=current, previous=previous,
-        run_identity=run_identity, registry=registry,
+        run_identity=run_identity, registry=registry, current_integrated=current_integrated,
     )
 
 
