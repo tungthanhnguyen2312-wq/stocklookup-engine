@@ -11,7 +11,7 @@ import pytest
 from tools.verify_retention_reader_transition import (
     LAYOUT_BASE, LAYOUT_MANIFEST, LAYOUT_SOURCES, historical_bytes, layout_source_receipt_admissible,
     layout_transition_identity,
-    CAPACITY_SOURCE, CAPACITY_ARCHIVE, CAPACITY_MANIFEST, _capacity_prior_bytes,
+    CAPACITY_SOURCE, CAPACITY_ARCHIVE, CAPACITY_MANIFEST, _capacity_prior_bytes, _launcher_prior_bytes, LAUNCHER_MANIFEST, LAUNCHER_SOURCES,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,7 +87,8 @@ def test_superseded_and_original_receipts_never_prove_the_live_source():
 def _copy_boundary(tmp_path: Path) -> None:
     spec = json.loads((ROOT / LAYOUT_MANIFEST).read_bytes())
     paths = {LAYOUT_MANIFEST, "tests/fixtures/e2e3_frozen_sources.json", *LAYOUT_SOURCES, *LAYOUT_SOURCES.values(),
-             "tests/fixtures/retention_reader_transition_v2.json", CAPACITY_MANIFEST, CAPACITY_ARCHIVE}
+             "tests/fixtures/retention_reader_transition_v2.json", CAPACITY_MANIFEST, CAPACITY_ARCHIVE, LAUNCHER_MANIFEST,
+             *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in LAUNCHER_SOURCES)}
     for relative, row in spec["sources"].items():
         paths.add(row["archive"])
         for manifest in set(LAYOUT_SOURCES.values()):
@@ -135,7 +136,7 @@ def test_capacity_changes_only_child_launch_control_and_preserves_all_historical
     base = "c19f72d794dccdeb34ecfe23a40e9ad7dbeef676"
     assert prior == _lf(subprocess.check_output(["git", "show", f"{base}:{CAPACITY_SOURCE}"], cwd=ROOT))
     before = ast.parse(prior.decode())
-    after = ast.parse((ROOT / CAPACITY_SOURCE).read_text(encoding="utf-8-sig"))
+    after = ast.parse(_launcher_prior_bytes(ROOT, CAPACITY_SOURCE, _lf((ROOT / CAPACITY_SOURCE).read_bytes())).decode())
     def without_launch(tree):
         tree.body = [node for node in tree.body if not (isinstance(node, ast.FunctionDef) and node.name == "_run_daily")]
         return ast.dump(tree, include_attributes=False)
@@ -143,3 +144,52 @@ def test_capacity_changes_only_child_launch_control_and_preserves_all_historical
     for relative in {LAYOUT_MANIFEST, *LAYOUT_SOURCES.values(), "tests/fixtures/e2e3_frozen_sources.json"}:
         assert _lf((ROOT / relative).read_bytes()) == _lf(subprocess.check_output([
             "git", "show", f"{base}:{relative}"], cwd=ROOT))
+
+
+def test_launcher_successor_preserves_every_workflow_body_and_historical_boundary():
+    spec = json.loads((ROOT / LAUNCHER_MANIFEST).read_bytes())
+    class StripImports(ast.NodeTransformer):
+        def visit_Import(self, node):
+            return None
+        visit_ImportFrom = visit_Import
+    additions = {"materialize_release_ready_runtime", "materialize_canonical_trusted_subset", "__getattr__",
+                 "supervised_main", "validate_relaunch_request", "write_relaunch_failure"}
+    def body(source):
+        tree = ast.parse(source)
+        tree.body = [n for n in tree.body if not (
+            isinstance(n, ast.FunctionDef) and n.name in additions | {"relaunch_on_advanced_code", "_resolve_intended_session"}
+            or isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id in {"RELAUNCH_PATH_ENV", "RELAUNCH_EXIT"} for t in n.targets)
+            or isinstance(n, ast.If) and isinstance(n.test, ast.Compare) and isinstance(n.test.left, ast.Name) and n.test.left.id == "__name__")]
+        return ast.dump(StripImports().visit(tree), include_attributes=False)
+    for relative, row in spec["sources"].items():
+        archived = _lf((ROOT / row["archive"]).read_bytes())
+        base = _lf(subprocess.check_output(["git", "show", f"{spec['base_commit']}:{relative}"], cwd=ROOT))
+        assert archived == base
+        live = _lf((ROOT / relative).read_bytes())
+        assert _launcher_prior_bytes(ROOT, relative, live) == base
+        if relative == CAPACITY_SOURCE:
+            assert body(base) == body(live)
+        else:
+            assert ast.dump(ast.parse(live.replace(b"owner_daily.supervised_main(", b"owner_daily.main("))) == ast.dump(ast.parse(base))
+    historical = {LAYOUT_MANIFEST, CAPACITY_MANIFEST, CAPACITY_ARCHIVE, *LAYOUT_SOURCES.values(),
+                  "tests/fixtures/e2e3_frozen_sources.json"}
+    for relative in historical:
+        assert _lf((ROOT / relative).read_bytes()) == _lf(subprocess.check_output([
+            "git", "show", f"{spec['base_commit']}:{relative}"], cwd=ROOT))
+
+
+@pytest.mark.parametrize("tamper", ["live", "archive", "scope"])
+def test_launcher_successor_rejects_tampering(tmp_path, tamper):
+    _copy_boundary(tmp_path)
+    source = tmp_path / CAPACITY_SOURCE
+    if tamper == "live":
+        source.write_bytes(source.read_bytes() + b"# tamper\n")
+    elif tamper == "archive":
+        (tmp_path / ("tests/fixtures/owner_daily_launcher_v1_sources/" + CAPACITY_SOURCE + ".txt")).write_bytes(b"tamper")
+    else:
+        manifest = tmp_path / LAUNCHER_MANIFEST
+        spec = json.loads(manifest.read_bytes())
+        spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
+        manifest.write_text(json.dumps(spec))
+    with pytest.raises(ValueError, match="LAUNCHER_SOURCE_TRANSITION"):
+        _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))

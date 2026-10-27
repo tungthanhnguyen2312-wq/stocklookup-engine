@@ -367,7 +367,9 @@ def test_workflow_installs_only_the_constrained_core_tier():
     assert install_lines == [
         "CORE_INSTALL: python -m pip install -r requirements.txt -r requirements-test.txt -c constraints.txt",
     ]
-    assert workflow.count("run: ${{ env.CORE_INSTALL }}") == 5  # + extended-hermetic (non-blocking)
+    assert workflow.count("run: ${{ env.CORE_INSTALL }}") == 6  # + extended-hermetic (non-blocking), windows-launcher-handoff
+    windows_job = _workflow_job_block(workflow, "windows-launcher-handoff")
+    assert "      - run: python -m pytest -q tests/test_owner_daily_launcher.py tests/test_owner_daily_code_advance_relaunch.py" in windows_job
     assert "PYTHONPATH: ${{ github.workspace }}/tests/provider_import_block" in workflow
     assert "python tools/verify_dependency_tiers.py --installed" in workflow
     assert "secrets." not in workflow

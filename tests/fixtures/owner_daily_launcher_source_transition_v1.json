@@ -1,0 +1,18 @@
+{
+  "contract_version": "owner_daily_launcher_source_transition/v1",
+  "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
+  "scope": "SEQUENTIAL_RELAUNCH_AND_DEFERRED_PUBLICATION_IMPORTS_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "tools/run_owner_daily.py": {
+      "archive": "tests/fixtures/owner_daily_launcher_v1_sources/tools/run_owner_daily.py.txt",
+      "prior_sha256_lf": "515b6cbdc7ec7eca902726b91386e5a56258a817d9da6730a2aa920aa7224402",
+      "active_sha256_lf": "877dd76c24ae25b1a5d9a9774a5d561b60f2ef5f5d7803d852d22455b0bd00a4"
+    },
+    "stocklookup.py": {
+      "archive": "tests/fixtures/owner_daily_launcher_v1_sources/stocklookup.py.txt",
+      "prior_sha256_lf": "73e69872190eb13a019dffafc2b1c19ac2812f0858650d2edfbc7bcfe72f1938",
+      "active_sha256_lf": "8d8e093cdd7b08ed0a7ce1ad5a0e14aacf617da48431a05de0ae83316d53bdb4"
+    }
+  }
+}

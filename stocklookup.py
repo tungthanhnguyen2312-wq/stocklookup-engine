@@ -194,7 +194,7 @@ def _run_owner_daily_workflow() -> int:
     # refused by run_owner_daily.validate_result_path (RESULT_PATH_INSIDE_PRODUCER_CHECKOUT), so
     # this entrypoint must never compute its own. run_owner_daily.main creates the directory.
     result_path = owner_daily.default_result_path(root=ROOT)
-    code = owner_daily.main(["--result-path", str(result_path)])
+    code = owner_daily.supervised_main(["--result-path", str(result_path)])
     try:
         result = json.loads(result_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):

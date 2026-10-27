@@ -133,31 +133,22 @@ def test_main_relaunches_the_same_entrypoint_once_on_the_new_head(monkeypatch, t
     argv = ["--result-path", str(result_path), "--progress-path", str(progress_path),
             "--replay-completed-session", SESSION]
     monkeypatch.setattr(workflow, "run_workflow", lambda **_k: (_ for _ in ()).throw(workflow.ProducerCodeAdvanced("a" * 40)))
-    launched: list[tuple[list[str], dict]] = []
-
-    def fake_run(command, **kwargs):
-        launched.append((command, kwargs))
-        return subprocess.CompletedProcess(command, 3)
-
-    monkeypatch.setattr(workflow.subprocess, "run", fake_run)
+    request_path = tmp_path / "handoff.json"
+    monkeypatch.setenv(workflow.RELAUNCH_PATH_ENV, str(request_path))
+    monkeypatch.setattr(workflow.subprocess, "run", lambda *a, **k: pytest.fail("worker cannot spawn successor"))
     monkeypatch.setattr(workflow, "safe_progress_path", lambda path, root: path)
-
-    assert workflow.main(argv) == 3
-
-    assert len(launched) == 1
-    command, kwargs = launched[0]
-    assert command == [sys.executable, "-u", str(ENTRY), *argv]
-    assert kwargs["cwd"] == workflow.ROOT and kwargs["check"] is False
-    env = kwargs["env"]
+    assert workflow.main(argv) == workflow.RELAUNCH_EXIT
+    request = json.loads(request_path.read_text())
+    env = workflow.validate_relaunch_request(request)
     assert env[workflow.CODE_HEAD_ENV] == "a" * 40
     assert len(env[progress.RUN_ID_ENV]) == 32
     assert progress.RUN_STARTED_AT_ENV in env and progress.RUN_STARTED_MONOTONIC_ENV in env
-    assert not result_path.exists()  # the relaunched process owns the result file
+    assert not result_path.exists()
 
 
 def test_relaunch_that_cannot_start_writes_a_failed_result(monkeypatch, tmp_path):
     monkeypatch.setattr(workflow, "run_workflow", lambda **_k: (_ for _ in ()).throw(workflow.ProducerCodeAdvanced("a" * 40)))
-    monkeypatch.setattr(workflow.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(FileNotFoundError("python")))
+    monkeypatch.setenv(workflow.RELAUNCH_PATH_ENV, str(tmp_path / "absent" / "request.json"))
     monkeypatch.setattr(workflow, "_auto_resumable_session", lambda *a, **k: None)
     result_path = tmp_path / "result.json"
 
@@ -221,6 +212,78 @@ def test_up_to_date_producer_runs_in_process_without_relaunch(monkeypatch, tmp_p
                                    publish_dashboard=False, replay_completed_session=SESSION)
 
     assert result["status"] == "PASS"
+
+
+def test_supervisor_waits_before_relaunch_and_keeps_fixed_argv(monkeypatch, tmp_path):
+    monkeypatch.delenv(workflow.RELAUNCH_PATH_ENV, raising=False)
+    argv = ["--result-path", str(tmp_path / "result.json")]
+    calls = []
+    def run(command, **kwargs):
+        calls.append((command, dict(kwargs["env"])))
+        path = Path(kwargs["env"][workflow.RELAUNCH_PATH_ENV])
+        if len(calls) == 1:
+            path.write_text(json.dumps({"head": "a" * 40, "environment": {
+                progress.RUN_ID_ENV: "same-run", progress.RUN_STARTED_AT_ENV: "origin",
+                progress.RUN_STARTED_MONOTONIC_ENV: "1.0"}}))
+            return subprocess.CompletedProcess(command, 75)
+        assert kwargs["env"][workflow.CODE_HEAD_ENV] == "a" * 40
+        assert not path.exists()
+        return subprocess.CompletedProcess(command, 3)
+    monkeypatch.setattr(workflow.subprocess, "run", run)
+    assert workflow.supervised_main(argv) == 3
+    assert len(calls) == 2
+    assert calls[0][0] == calls[1][0] == [sys.executable, "-u", str(ENTRY), *argv]
+
+
+def test_legacy_synchronous_parent_is_refused_before_updated_admission(monkeypatch, tmp_path):
+    monkeypatch.delenv(workflow.RELAUNCH_PATH_ENV, raising=False)
+    monkeypatch.setenv(workflow.CODE_HEAD_ENV, "a" * 40)
+    monkeypatch.setattr(workflow, "main", lambda *a: pytest.fail("no admission under legacy parent"))
+    monkeypatch.setattr(workflow.subprocess, "run", lambda *a, **k: pytest.fail("no nested supervisor"))
+    path = tmp_path / "result.json"
+    assert workflow.supervised_main(["--result-path", str(path)]) == 1
+    assert json.loads(path.read_text())["reason"].endswith("LEGACY_SYNCHRONOUS_SUPERVISOR")
+
+
+@pytest.mark.parametrize("fault", ["spawn", "missing", "invalid", "second"])
+def test_supervisor_failure_paths_are_bounded_and_write_result(monkeypatch, tmp_path, fault):
+    monkeypatch.delenv(workflow.RELAUNCH_PATH_ENV, raising=False)
+    calls = []
+    def run(command, **kwargs):
+        calls.append(command)
+        if fault == "spawn":
+            raise FileNotFoundError("python")
+        if fault != "missing":
+            payload = {"head": "a" * 40, "environment": {progress.RUN_ID_ENV: "run",
+                progress.RUN_STARTED_AT_ENV: "origin", progress.RUN_STARTED_MONOTONIC_ENV: "1"}}
+            if fault == "invalid":
+                payload["environment"]["PATH"] = "injected"
+            Path(kwargs["env"][workflow.RELAUNCH_PATH_ENV]).write_text(json.dumps(payload))
+        return subprocess.CompletedProcess(command, 75)
+    monkeypatch.setattr(workflow.subprocess, "run", run)
+    result = tmp_path / "result.json"
+    assert workflow.supervised_main(["--result-path", str(result)]) == 1
+    assert len(calls) == (2 if fault == "second" else 1)
+    assert json.loads(result.read_text())["reason"].startswith("PRODUCER_CODE_RELAUNCH_FAILED:")
+
+
+def test_cold_admission_imports_exclude_publication_analytics(tmp_path):
+    script = (f"import sys;sys.path.insert(0,{str(ROOT)!r});from tools import run_owner_daily;run_owner_daily._resolve_intended_session();"
+              "assert not ({'pandas','numpy','export_ai_bundle','canonical_trusted_subset_release',"
+              "'canonical_dashboard_runtime_release'} & set(sys.modules))")
+    done = subprocess.run([sys.executable, "-B", "-c", script], capture_output=True, text=True, timeout=60)
+    assert done.returncode == 0, done.stderr
+
+
+def test_lightweight_intended_session_uses_the_identical_calendar_leaf():
+    from datetime import datetime, timedelta, timezone
+    from daily_session_level2_package import resolve_level2_session
+    for day in range(14):
+        for hour, minute in ((0, 0), (14, 59), (15, 0), (23, 59)):
+            naive = datetime(2026, 10, 19, hour, minute) + timedelta(days=day)
+            for observed in (naive, naive.replace(tzinfo=timezone.utc),
+                             naive.replace(tzinfo=timezone(timedelta(hours=7)))):
+                assert workflow._resolve_intended_session(observed) == resolve_level2_session(None, now=observed)["session"]
 
 
 # --- Cold-start phase-6 import chain from the production entry context ---
