@@ -319,6 +319,7 @@ jobs:
     name: Windows sequential launcher handoff
     runs-on: windows-latest
     steps:
+      - run: git config --system core.longpaths true
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
