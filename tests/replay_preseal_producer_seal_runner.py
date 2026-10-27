@@ -433,6 +433,16 @@ def child(experiment: Path) -> int:
 
 def main() -> None:
     experiment = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r7")
+    if "--child" not in sys.argv:
+        from tools.check_owner_daily_host_preflight import check, producer_seal_measurement_admission
+        host = check(ROOT, PRODUCTION_RETAINED)
+        admission = producer_seal_measurement_admission(host)
+        report = experiment.with_name(experiment.name + "-admission.json")
+        report.write_text(json.dumps({"admission": admission, "classification": host.get("classification")}, indent=2),
+                          encoding="utf-8")
+        print(json.dumps(admission), flush=True)
+        if not admission["admitted"]:
+            raise SystemExit(3)
     resolved = experiment.resolve()
     for protected in PROTECTED:
         if resolved == protected.resolve() or resolved.is_relative_to(protected.resolve()):

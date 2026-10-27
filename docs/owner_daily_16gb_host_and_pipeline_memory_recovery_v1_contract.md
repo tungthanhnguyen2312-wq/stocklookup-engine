@@ -338,3 +338,31 @@ builds only the primary bundle. Producer materialization writes that companion
 once to its stage file and publishes it by size and digest, so the byte string
 is not held beside the resident decision product. Primary bundle bytes and the
 companion line contract are unchanged.
+
+## Current-scale measurement admission (not a new qualification)
+
+The retained 2026-10-26 IID is 2,394,768,092 bytes, 12,672,350 bytes above
+`iid_max_bytes` 2,382,095,742. Both retained copies are that size. Ordinary
+`evaluate()` therefore keeps the legacy factor, about 1.609: physical READY
+10,365,924,740 bytes (9.654 GiB) and commit READY 20,731,849,481 bytes
+(19.308 GiB). `qualified_current_scale` stays false. r6 is not a qualification.
+It reached integrated-decision completion and stopped on the 1 GiB physical
+reserve before `PRODUCER_SEALED`, at 6,395,334,656 process-committed bytes and
+6,396,149,760 job-committed bytes.
+
+Applying the legacy 5.05 multiplier only to the 12,672,350-byte overrun
+produces 63,995,367 modeled bytes. The slack between the qualified measured
+private peak, 7,464,976,384, and the unchanged 7 GiB process ceiling is
+51,216,384 bytes. The modeled delta exceeds that slack, so `iid_max_bytes` is
+not raised by arithmetic and the 9.25 GiB ordinary physical cap is not
+inherited by the larger file.
+
+Ordinary Daily admission is unchanged. One Producer-seal measurement may start
+only when the host covers the existing kernel budget: available physical at
+least 9.25 GiB (8 GiB tree + 0.25 GiB owner + 1 GiB reserve) and available
+commit at least 10 GiB (8 GiB tree + 2 GiB commit reserve), with source receipt
+match, an observable writer-free host, and the same 7/8 GiB ceilings. That
+admission does not mark the IID qualified. A completed guarded seal is still
+required before `iid_max_bytes` can move. The legacy 19.308 GiB commit figure
+remains the ordinary Daily gate; it is not a prerequisite for the capped
+measurement, and the measurement does not lower it.

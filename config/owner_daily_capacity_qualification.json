@@ -1069,7 +1069,7 @@
     "tools/check_architecture.py": "0e0b611e64244dbbd60cd2bfd5a1225901a544448af9dc4916e8c89785709e8b",
     "tools/check_daily_launchers.py": "4623a3a79e1d9c094876c85524c7408376fa57e19fc3214626f92fd694a412d5",
     "tools/check_eodhd_access.py": "c96114cfc713a909e3567da84643ae5bb74d6ccaaa20c14daaf24a711c2d14c2",
-    "tools/check_owner_daily_host_preflight.py": "7850d494337f6660d3f212d0377453660e3fcd7ba8e11ca2327ab4b68d9dafb5",
+    "tools/check_owner_daily_host_preflight.py": "bf0b8195f806659e807a1ee4b9a4c4f16d28aa31ad7038aceff495efecb2670e",
     "tools/check_tactical_reversal_monday_readiness.py": "109c73f64937c9e49d521abf7099d4a1384f5ed711f16df4d1577db848b5d2a4",
     "tools/collect_dnse_prospective_pit_shadow.py": "6c28199e19de272ed9aba6b81c7263aff0df36dc36ffcc0ff689e31963170137",
     "tools/collect_market_evidence.py": "49c99c17daa7cead6ff328b97c66442d7ba61956905f5d32e875a03ba8dd2d74",
