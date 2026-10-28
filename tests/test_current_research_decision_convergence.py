@@ -565,7 +565,13 @@ def _patch_daily_enrichment(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *, 
         return {"artifact_identity": "valuation:fixture", "records": {}}
 
     monkeypatch.setattr(cpc, "_load", lambda path: deepcopy(loads.get(Path(path).name)))
-    monkeypatch.setattr(cpc, "_write_json", lambda path, value: captured["writes"].__setitem__(Path(path).name, value))
+    real_write = cpc._write_json
+
+    def capture_write(path, value, **kwargs):
+        captured["writes"][Path(path).name] = value
+        return real_write(path, value, **kwargs)
+
+    monkeypatch.setattr(cpc, "_write_json", capture_write)
     monkeypatch.setattr(level2, "resolve_technical_recovery_artifact", lambda *a, **k: {"selected_path": tmp_path / "recovery.json"})
     monkeypatch.setattr(tsc, "build_artifact", lambda **k: {"artifact_identity": "tsc:fixture", "records": {}})
     monkeypatch.setattr(msb, "build_artifact", lambda **k: {"artifact_identity": "msb:fixture", "records": {t: {"ticker": t} for t in tickers}})

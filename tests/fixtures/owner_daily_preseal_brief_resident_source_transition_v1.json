@@ -1,0 +1,13 @@
+{
+  "contract_version": "owner_daily_preseal_brief_resident_source_transition/v1",
+  "base_commit": "e60901774a01cb36e702dd08f760348b96f52960",
+  "scope": "EXACT_PRESEAL_BRIEF_RESIDENT_IID_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "stocklookup_core/decision/daily_integrated_decision_brief.py": {
+      "archive": "tests/fixtures/owner_daily_preseal_brief_resident_v1_sources/stocklookup_core/decision/daily_integrated_decision_brief.py.txt",
+      "prior_sha256_lf": "e39c49ee1e20958617d92aaef51b530f27da18003cab59c592670090fc98c5a1",
+      "active_sha256_lf": "3badc2ae45005d08dfb983996eb0097b778339278a669fee9c4d6ba0cad6b5f0"
+    }
+  }
+}

@@ -123,6 +123,34 @@ def publish_bytes(target, content, *, protect=False, on_stage=None):
         _discard_private(stage)
 
 
+def publish_staged(stage, target, *, expected_sha, expected_size, protect=False, on_stage=None):
+    """Publish one finished stage by hash and size. The stage bytes are not loaded again."""
+    stage = Path(stage)
+    target = Path(target)
+    _namespace(target)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if stage.stat().st_size != expected_size or sha(stage) != expected_sha:
+        raise AtomicWriteError("DELIVERY_STAGE_HASH_MISMATCH")
+    if target.exists():
+        if target.is_symlink() or target.stat().st_size != expected_size or sha(target) != expected_sha:
+            raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
+        _discard_private(stage)
+        return "REUSED"
+    if protect:
+        stage.chmod(stat.S_IREAD | (stat.S_IRGRP | stat.S_IROTH if os.name != "nt" else 0))
+    if on_stage:
+        on_stage(stage)
+    try:
+        _publish(stage, target)
+    except FileExistsError:
+        if target.is_symlink() or target.stat().st_size != expected_size or sha(target) != expected_sha:
+            raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
+        _discard_private(stage)
+        return "REUSED"
+    _discard_private(stage)
+    return "PUBLISHED_IMMUTABLE"
+
+
 def retain_alias(source, target, *, expected_sha, expected_size, volume=None):
     """Reuse a protected delivery on one device; otherwise retain an independent copy.
 

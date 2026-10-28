@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import sqlite3
 from typing import Any, Callable, Mapping
@@ -264,4 +265,9 @@ def write_snapshot(snapshot: Mapping[str, Any], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
         raise FileExistsError("IMMUTABLE_SNAPSHOT_PATH_ALREADY_EXISTS")
-    path.write_text(json.dumps(snapshot, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    from stocklookup_core.acquisition.artifact_io import retain_immutable_bytes
+    body = json.dumps(snapshot, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    # Preserve the former text writer's platform newline bytes, publishing only
+    # a complete fsynced sibling file. Never expose a partial snapshot on kill.
+    if retain_immutable_bytes(path, body.replace("\n", os.linesep).encode("utf-8")):
+        raise FileExistsError("IMMUTABLE_SNAPSHOT_PATH_ALREADY_EXISTS")

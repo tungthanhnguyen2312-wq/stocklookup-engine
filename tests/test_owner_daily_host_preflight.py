@@ -311,3 +311,93 @@ def test_bounded_ready_requires_strict_runner_and_propagates_failure(tmp_path, m
     monkeypatch.setattr(guard, "run_capacity_guarded", refused)
     with pytest.raises(owner.OwnerDailyError, match="OWNER_DAILY_CAPACITY_GUARD"):
         owner._run_daily(tmp_path, tmp_path)
+
+
+CURRENT_IID_BYTES = 2394768092
+
+
+def current_scale_host(**updates):
+    observation = qualified_observation()
+    observation["retained"]["iid"]["file_bytes"] = CURRENT_IID_BYTES
+    observation["available_physical_bytes"] = preflight.MEASUREMENT_PHYSICAL_BYTES
+    observation["available_commit_bytes"] = preflight.MEASUREMENT_COMMIT_BYTES
+    observation.update(updates)
+    return preflight.evaluate(observation)
+
+
+def test_kernel_budget_matches_existing_ceilings_and_reserves():
+    tree = 6 * GIB + (3 * GIB) // 4
+    assert preflight.MEASUREMENT_TREE_BYTES == tree == 7247757312
+    assert preflight.MEASUREMENT_PROCESS_BYTES == 7 * GIB
+    assert preflight.MEASUREMENT_PHYSICAL_BYTES == tree + GIB // 4 + GIB == 8 * GIB
+    assert preflight.MEASUREMENT_COMMIT_BYTES == tree + 2 * GIB
+    assert preflight.QUALIFIED_PHYSICAL_BYTES == int(9.25 * GIB)
+    assert preflight.QUALIFIED_IID_BYTES == 2382095742
+    host = current_scale_host()
+    admission = preflight.producer_seal_measurement_admission(host)
+    assert admission["tree_ceiling_bytes"] == tree
+    assert admission["process_ceiling_bytes"] == 7 * GIB
+    assert admission["physical_reserve_bytes"] == GIB
+    assert admission["commit_reserve_bytes"] == 2 * GIB
+    assert admission["owner_allowance_bytes"] == GIB // 4
+    assert admission["qualified_current_scale"] is False
+    assert host["capacity_admission"]["child_tree_commit_ceiling_bytes"] == 8 * GIB
+    assert host["capacity_admission"]["child_process_commit_ceiling_bytes"] == 7 * GIB
+    assert host["dimensions"]["physical"]["green_min_bytes"] == 10365924740
+
+
+def test_current_iid_keeps_legacy_ordinary_gate_and_refuses_arithmetic_extension():
+    result = current_scale_host(available_physical_bytes=20 * GIB, available_commit_bytes=30 * GIB)
+    assert result["classification"] == "READY"
+    assert result["capacity_admission"]["qualified_current_scale"] is False
+    assert result["runtime_capacity_guard_required"] is False
+    assert result["dimensions"]["physical"]["capacity_basis"] == "LEGACY_IID_MODEL"
+    assert result["dimensions"]["physical"]["green_min_bytes"] == 10365924740
+    assert result["dimensions"]["commit"]["green_min_bytes"] == 20731849481
+    admission = preflight.producer_seal_measurement_admission(result)
+    assert admission["admitted"] is True
+    assert admission["tree_ceiling_bytes"] == preflight.MEASUREMENT_TREE_BYTES
+    assert admission["process_ceiling_bytes"] == 7 * GIB
+    assert admission["qualified_current_scale"] is False
+    assert admission["iid_max_extended"] is False
+    assert admission["legacy_delta_bytes"] == 63995367
+    assert admission["process_slack_above_measured_peak_bytes"] == 51216384
+    assert admission["arithmetic_extension_refused"] is True
+
+
+def test_measurement_admission_uses_kernel_budget_without_replacing_ordinary_gates():
+    short_physical = current_scale_host(available_physical_bytes=preflight.MEASUREMENT_PHYSICAL_BYTES - 1)
+    refused = preflight.producer_seal_measurement_admission(short_physical)
+    assert refused["admitted"] is False
+    assert refused["reasons"] == ["MEASUREMENT_PHYSICAL_BUDGET_LOW"]
+    assert short_physical["dimensions"]["physical"]["green_min_bytes"] == 10365924740
+    short_commit = current_scale_host(available_commit_bytes=preflight.MEASUREMENT_COMMIT_BYTES - 1)
+    assert preflight.producer_seal_measurement_admission(short_commit)["reasons"] == ["MEASUREMENT_COMMIT_BUDGET_LOW"]
+
+
+@pytest.mark.parametrize("cause", ["source", "writer", "unknown", "provenance"])
+def test_measurement_admission_keeps_writer_and_receipt_guards(cause):
+    updates = {}
+    if cause == "provenance":
+        updates["repository"] = {"head_sha": "feature", "main_sha": "main", "writer_state_observed": True,
+                                 "worktrees": [{"index_lock_present": False}]}
+    host = current_scale_host(**updates)
+    if cause == "source":
+        host["observations"]["capacity_qualification"]["source_matches"] = False
+    elif cause == "writer":
+        host["observations"]["active_writers"] = [{"pid": 17}]
+    elif cause == "unknown":
+        host["observations"]["writer_observation"] = "UNKNOWN"
+    admission = preflight.producer_seal_measurement_admission(host)
+    if cause == "provenance":
+        # Feature-branch provenance and the legacy commit floor do not gate the measurement.
+        assert host["classification"] == "BLOCKED"
+        assert "CURRENT_MAIN_PROVENANCE_UNQUALIFIED" in host["reasons"]
+        assert admission["admitted"] is True
+        assert admission["qualified_current_scale"] is False
+        return
+    assert admission["admitted"] is False
+    assert admission["qualified_current_scale"] is False
+    expected = {"source": "SOURCE_RECEIPT_MISMATCH", "writer": "CONCURRENT_WRITER_PRESENT",
+                "unknown": "WRITER_STATE_UNKNOWN"}[cause]
+    assert expected in admission["reasons"]

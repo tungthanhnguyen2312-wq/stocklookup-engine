@@ -706,27 +706,59 @@ def build_forward_driver_context(record: Mapping[str, Any] | None, *,
     return payload
 
 
+class ForwardDriverCoverage:
+    """One-pass form of ``forward_driver_coverage``. Drivers are counted, not retained."""
+
+    def __init__(self):
+        self.count = 0
+        self.qualified_tickers = 0
+        self.total_drivers = 0
+        self.qualified_drivers = 0
+        self.fields = {field: Counter() for _label, field in _FORWARD_DRIVER_FIELDS}
+        self.blockers: Counter[str] = Counter()
+
+    def observe(self, context: Mapping[str, Any]) -> None:
+        self.count += 1
+        drivers = context.get("drivers") or []
+        self.qualified_tickers += bool(context.get("qualified_driver_count"))
+        self.total_drivers += len(drivers)
+        self.qualified_drivers += sum(driver["qualified"] for driver in drivers)
+        for driver in drivers:
+            for _label, field in _FORWARD_DRIVER_FIELDS:
+                self.fields[field][driver.get(field) or "UNKNOWN"] += 1
+        for reason in set(context.get("blocker_reason_codes") or []):
+            self.blockers[reason] += 1
+
+    def finish(self) -> dict[str, Any]:
+        coverage = dict(denominator=self.count, tickers_with_qualified_driver=self.qualified_tickers,
+                        no_qualified_driver_count=self.count - self.qualified_tickers,
+                        total_retained_drivers=self.total_drivers,
+                        qualified_driver_count=self.qualified_drivers)
+        for label, field in _FORWARD_DRIVER_FIELDS:
+            counts = self.fields[field]
+            if label == "direction":
+                for value in ("SUPPORTIVE", "ADVERSE", "MIXED", "INFORMATIONAL", "UNKNOWN"):
+                    counts.setdefault(value, 0)
+            coverage[label + "_distribution"] = dict(sorted(counts.items()))
+        coverage["blocker_prevalence"] = dict(sorted(self.blockers.items()))
+        return coverage
+
+
+_FORWARD_DRIVER_FIELDS = (
+    ("driver_type", "event_type"), ("driver_category", "driver_category"), ("canonical_status", "status"),
+    ("freshness", "freshness"), ("fitness", "fitness"),
+    ("temporal_fitness", "temporal_fitness"), ("materiality", "materiality"),
+    ("direction", "direction"),
+)
+
+
 def forward_driver_coverage(contexts: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """One context per canonical decision ticker; distributions count retained drivers.
 
     Blocker prevalence counts tickers, not repeated events. Qualification is separately
     distributed, so historical/unresolved observations never inflate forward coverage.
     """
-    drivers = [d for context in contexts for d in context.get("drivers") or []]
-    qualified = sum(bool(context.get("qualified_driver_count")) for context in contexts)
-    coverage = dict(denominator=len(contexts), tickers_with_qualified_driver=qualified,
-                    no_qualified_driver_count=len(contexts) - qualified,
-                    total_retained_drivers=len(drivers),
-                    qualified_driver_count=sum(d["qualified"] for d in drivers))
-    for label, field in (("driver_type", "event_type"), ("driver_category", "driver_category"), ("canonical_status", "status"),
-                         ("freshness", "freshness"), ("fitness", "fitness"),
-                         ("temporal_fitness", "temporal_fitness"), ("materiality", "materiality"),
-                         ("direction", "direction")):
-        counts = Counter(d.get(field) or "UNKNOWN" for d in drivers)
-        if label == "direction":
-            for value in ("SUPPORTIVE", "ADVERSE", "MIXED", "INFORMATIONAL", "UNKNOWN"):
-                counts.setdefault(value, 0)
-        coverage[label + "_distribution"] = dict(sorted(counts.items()))
-    coverage["blocker_prevalence"] = dict(sorted(Counter(
-        reason for context in contexts for reason in set(context.get("blocker_reason_codes") or [])).items()))
-    return coverage
+    observed = ForwardDriverCoverage()
+    for context in contexts:
+        observed.observe(context)
+    return observed.finish()

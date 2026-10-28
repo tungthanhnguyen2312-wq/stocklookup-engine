@@ -1,0 +1,30 @@
+{
+  "contract_version": "owner_daily_streamed_final_source_transition/v1",
+  "base_commit": "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb",
+  "scope": "EXACT_FOUR_STREAMED_IID_T0_SUCCESSORS_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "d3a019eba7e40381b72e1f2f7bf3eb28f76756d239b13c0e91b2e853243bfe1b",
+  "active_e4_v2_digest": "f8201da6fcf8ed64ed4808525725ad44347fb2a0781206a4189e36c9779e0f58",
+  "sources": {
+    "prospective_decision_retention.py": {
+      "archive": "tests/fixtures/owner_daily_streamed_final_v1_sources/prospective_decision_retention.py.txt",
+      "prior_sha256_lf": "3e21a7e4456316e9890f43850eead4dd8429842aeaa02d24b93e9f2d26d9ab38",
+      "active_sha256_lf": "aa6ddc19089f97d6a87a76d4c461e2815557dbc8c0ca2408d13a39d03bc0f85a"
+    },
+    "canonical_post_close_pipeline.py": {
+      "archive": "tests/fixtures/owner_daily_streamed_final_v1_sources/canonical_post_close_pipeline.py.txt",
+      "prior_sha256_lf": "d5bd706e785bc33990641b57452a48e937a0fbe047d563e73575bb0d5412cbe4",
+      "active_sha256_lf": "3e384f7a9dc12a4c358cb5d890e330bbb6614cb4160ef469a2bda198f9488666"
+    },
+    "stocklookup_core/decision/integrated_investment_decision_product.py": {
+      "archive": "tests/fixtures/owner_daily_streamed_final_v1_sources/stocklookup_core/decision/integrated_investment_decision_product.py.txt",
+      "prior_sha256_lf": "48b2d51d2cd261981f328a6fa17636f022ee10e208de1cd89f2af8ec73225299",
+      "active_sha256_lf": "c05d2a9b00be97c4346a5c25e773de548554d38adb15add289e98518659ed2b5"
+    },
+    "stocklookup_core/financial/fundamental_signal_consumption_contract.py": {
+      "archive": "tests/fixtures/owner_daily_streamed_final_v1_sources/stocklookup_core/financial/fundamental_signal_consumption_contract.py.txt",
+      "prior_sha256_lf": "c7a46b5a80c01437b73a93eddda7df72e6f89b67c1e6d595e98122c55b6eb041",
+      "active_sha256_lf": "443450bdead0ea6f0ff59c4284c25144ee5750a8690b4f2450d780e74da519b9"
+    }
+  }
+}

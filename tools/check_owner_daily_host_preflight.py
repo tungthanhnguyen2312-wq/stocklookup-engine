@@ -315,6 +315,88 @@ def check(root: Path, retained_root: Path | None = None) -> dict:
     return evaluate(observe(Path(root).resolve(), retained_root))
 
 
+# Isolated Producer-seal measurement budget. The tree figure is the Windows job
+# maximum that measurement asks the kernel to enforce. It is not the ordinary Daily
+# ceiling and it does not qualify the 2026-10-26 IID or the historical 8 GiB envelope.
+# Physical admission is that enforced maximum plus the 0.25 GiB owner allowance and
+# the 1 GiB physical reserve. Commit admission is the same maximum plus the 2 GiB
+# commit reserve.
+MEASUREMENT_TREE_BYTES = 6 * GIB + (3 * GIB) // 4
+MEASUREMENT_PROCESS_BYTES = 7 * GIB
+MEASUREMENT_OWNER_ALLOWANCE_BYTES = GIB // 4
+MEASUREMENT_PHYSICAL_RESERVE_BYTES = GIB
+MEASUREMENT_COMMIT_RESERVE_BYTES = 2 * GIB
+MEASUREMENT_PHYSICAL_BYTES = (
+    MEASUREMENT_TREE_BYTES + MEASUREMENT_OWNER_ALLOWANCE_BYTES + MEASUREMENT_PHYSICAL_RESERVE_BYTES)
+MEASUREMENT_COMMIT_BYTES = MEASUREMENT_TREE_BYTES + MEASUREMENT_COMMIT_RESERVE_BYTES
+MEASURED_MAX_PRIVATE_BYTES = 7464976384
+
+
+def producer_seal_measurement_admission(host: dict) -> dict:
+    """Admit one contained Producer-seal measurement. This is not a qualification.
+
+    ``evaluate`` keeps the legacy factor whenever the IID exceeds the measured
+    envelope, and that factor is not a prerequisite for the measurement that would
+    replace it. The measurement tree ceiling is the kernel job maximum for this
+    isolated run. The process ceiling, both reserves, and the ordinary 8 GiB Daily
+    tree stay unchanged. A larger IID is not declared qualified, and ``iid_max_bytes``
+    is not raised here. Feature-branch provenance is recorded by ordinary
+    classification and does not block this measurement: the measurement has to run
+    before that branch is main.
+    """
+    observation = host.get("observations") or {}
+    qualification = observation.get("capacity_qualification") or {}
+    physical = observation.get("available_physical_bytes")
+    commit = observation.get("available_commit_bytes")
+    writers = observation.get("active_writers") or []
+    repository = observation.get("repository") or {}
+    locks = any(row.get("index_lock_present") for row in repository.get("worktrees") or [])
+    writer_known = (observation.get("writer_observation") == "OBSERVED"
+                    and repository.get("writer_state_observed") is True)
+    iid = ((observation.get("retained") or {}).get("iid") or {}).get("file_bytes")
+    reasons = []
+    if qualification.get("source_matches") is not True:
+        reasons.append("SOURCE_RECEIPT_MISMATCH")
+    if not isinstance(physical, int) or physical < MEASUREMENT_PHYSICAL_BYTES:
+        reasons.append("MEASUREMENT_PHYSICAL_BUDGET_LOW")
+    if not isinstance(commit, int) or commit < MEASUREMENT_COMMIT_BYTES:
+        reasons.append("MEASUREMENT_COMMIT_BUDGET_LOW")
+    if writers or locks:
+        reasons.append("CONCURRENT_WRITER_PRESENT")
+    elif not writer_known:
+        reasons.append("WRITER_STATE_UNKNOWN")
+    delta = iid - QUALIFIED_IID_BYTES if isinstance(iid, int) else None
+    modeled_delta = int(delta * 5.05) if isinstance(delta, int) and delta > 0 else 0
+    process_slack = 7 * GIB - MEASURED_MAX_PRIVATE_BYTES
+    dimensions = host.get("dimensions") or {}
+    return {
+        "contract": "producer_seal_measurement_admission/v1",
+        "admitted": not reasons,
+        "reasons": reasons,
+        "qualified_current_scale": False,
+        "basis": "KERNEL_BUDGET_NOT_A_COMPLETED_QUALIFICATION",
+        "physical_budget_bytes": MEASUREMENT_PHYSICAL_BYTES,
+        "commit_budget_bytes": MEASUREMENT_COMMIT_BYTES,
+        "process_ceiling_bytes": MEASUREMENT_PROCESS_BYTES,
+        "tree_ceiling_bytes": MEASUREMENT_TREE_BYTES,
+        "physical_reserve_bytes": MEASUREMENT_PHYSICAL_RESERVE_BYTES,
+        "commit_reserve_bytes": MEASUREMENT_COMMIT_RESERVE_BYTES,
+        "owner_allowance_bytes": MEASUREMENT_OWNER_ALLOWANCE_BYTES,
+        "observed_physical_bytes": physical,
+        "observed_commit_bytes": commit,
+        "iid_bytes": iid,
+        "qualified_iid_max_bytes": QUALIFIED_IID_BYTES,
+        "iid_max_extended": False,
+        "legacy_delta_bytes": modeled_delta,
+        "process_slack_above_measured_peak_bytes": process_slack,
+        "arithmetic_extension_refused": modeled_delta > process_slack,
+        "ordinary_classification": host.get("classification"),
+        "ordinary_physical_green_bytes": (dimensions.get("physical") or {}).get("green_min_bytes"),
+        "ordinary_commit_green_bytes": (dimensions.get("commit") or {}).get("green_min_bytes"),
+        "authority_effect": "NONE / MEASUREMENT_ADMISSION_ONLY",
+    }
+
+
 def failure_guidance(result: dict) -> list[str]:
     """Explain the already observed gate; never take another measurement or override it."""
     lines = []

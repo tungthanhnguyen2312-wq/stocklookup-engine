@@ -62,6 +62,79 @@ IID_RUNTIME_SOURCES = (
     "canonical_post_close_pipeline.py",
     "stocklookup_core/decision/integrated_investment_decision_product.py",
 )
+PRESEAL_CONSUMER_MANIFEST = "tests/fixtures/owner_daily_preseal_consumer_memory_source_transition_v1.json"
+PRESEAL_CONSUMER_BASE = "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb"
+PRESEAL_CONSUMER_SCOPE = "EXACT_PRESEAL_CONSUMER_MEMORY_CORRECTIVE_ONLY"
+PRESEAL_CONSUMER_SOURCE = "canonical_daily_operation.py"
+BRIEF_RESIDENT_MANIFEST = "tests/fixtures/owner_daily_preseal_brief_resident_source_transition_v1.json"
+BRIEF_RESIDENT_BASE = "e60901774a01cb36e702dd08f760348b96f52960"
+BRIEF_RESIDENT_SCOPE = "EXACT_PRESEAL_BRIEF_RESIDENT_IID_ONLY"
+BRIEF_RESIDENT_SOURCE = "stocklookup_core/decision/daily_integrated_decision_brief.py"
+
+
+def _brief_resident_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the resident-IID brief successor before every older source pin.
+
+    The archived bytes are the exact pre-corrective Daily Integrated Decision Brief.
+    A missing manifest keeps older checkouts valid.
+    """
+    manifest = root / BRIEF_RESIDENT_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources"}
+            or spec.get("contract_version") != "owner_daily_preseal_brief_resident_source_transition/v1"
+            or spec.get("base_commit") != BRIEF_RESIDENT_BASE
+            or spec.get("scope") != BRIEF_RESIDENT_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (BRIEF_RESIDENT_SOURCE,)):
+        raise ValueError("PRESEAL_BRIEF_RESIDENT_SOURCE_TRANSITION_SCOPE_INVALID")
+    if relative != BRIEF_RESIDENT_SOURCE:
+        return active
+    row = sources[relative]
+    archive = "tests/fixtures/owner_daily_preseal_brief_resident_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("PRESEAL_BRIEF_RESIDENT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("PRESEAL_BRIEF_RESIDENT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
+def _preseal_consumer_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the preseal-consumer successor before every older source pin.
+
+    The archived bytes are the exact pre-corrective canonical daily operation.
+    Older manifests stay unchanged. A missing manifest keeps older checkouts valid.
+    """
+    active = _brief_resident_prior_bytes(root, relative, active)
+    manifest = root / PRESEAL_CONSUMER_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources"}
+            or spec.get("contract_version") != "owner_daily_preseal_consumer_memory_source_transition/v1"
+            or spec.get("base_commit") != PRESEAL_CONSUMER_BASE
+            or spec.get("scope") != PRESEAL_CONSUMER_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (PRESEAL_CONSUMER_SOURCE,)):
+        raise ValueError("PRESEAL_CONSUMER_MEMORY_SOURCE_TRANSITION_SCOPE_INVALID")
+    if relative != PRESEAL_CONSUMER_SOURCE:
+        return active
+    row = sources[relative]
+    archive = "tests/fixtures/owner_daily_preseal_consumer_memory_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("PRESEAL_CONSUMER_MEMORY_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("PRESEAL_CONSUMER_MEMORY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
@@ -70,6 +143,7 @@ def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     The archived bytes are the exact pre-corrective sources. Older manifests stay
     unchanged and still bind those bytes. A missing manifest keeps older checkouts valid.
     """
+    active = _preseal_consumer_prior_bytes(root, relative, active)
     manifest = root / IID_RUNTIME_MANIFEST
     if not manifest.is_file():
         return active
@@ -98,9 +172,30 @@ def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _capture_only_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    manifest = root / "tests/fixtures/owner_daily_capture_only_source_transition_v1.json"
+    if relative != "tools/run_owner_daily.py" or not manifest.exists():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/owner_daily_capture_only_v1_sources/tools/run_owner_daily.py.txt"
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "archive", "prior_sha256_lf", "active_sha256_lf"}
+            or spec["contract_version"] != "owner_daily_capture_only_source_transition/v1"
+            or spec["base_commit"] != "a46bc5606cdbeb083f251c7418168e500205142a"
+            or spec["scope"] != "SHARED_CAPTURE_WRITER_LEASE_ONLY" or spec["release_authority"] != "NOT_GRANTED"
+            or spec["archive"] != archive):
+        raise ValueError("CAPTURE_WRITER_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    addition = b"from tools.capture_writer_lease import exclusive_writer\n\n\n@exclusive_writer\n"
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or active.count(addition) != 1 or active.replace(addition, b"") != prior):
+        raise ValueError("CAPTURE_WRITER_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
-    active = _iid_runtime_prior_bytes(root, relative, active)
+    active = _iid_runtime_prior_bytes(root, relative, _capture_only_prior_bytes(root, relative, active))
     if relative not in LAUNCHER_SOURCES or not (root / LAUNCHER_MANIFEST).exists():
         return active
     spec = json.loads((root / LAUNCHER_MANIFEST).read_bytes())
@@ -123,13 +218,43 @@ def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _restoration_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Conserve exactly four pre-streaming source bodies; execution hashes stay live."""
+    manifest = root / "tests/fixtures/owner_daily_streamed_final_source_transition_v1.json"
+    sources = ("prospective_decision_retention.py", "canonical_post_close_pipeline.py",
+               "stocklookup_core/decision/integrated_investment_decision_product.py",
+               "stocklookup_core/financial/fundamental_signal_consumption_contract.py")
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources", "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec["contract_version"] != "owner_daily_streamed_final_source_transition/v1"
+            or spec["base_commit"] != "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb"
+            or spec["scope"] != "EXACT_FOUR_STREAMED_IID_T0_SUCCESSORS_ONLY"
+            or spec["previous_e4_v2_digest"] != "d3a019eba7e40381b72e1f2f7bf3eb28f76756d239b13c0e91b2e853243bfe1b"
+            or spec["release_authority"] != "NOT_GRANTED" or tuple(spec["sources"]) != sources):
+        raise ValueError("STREAMED_FINAL_SOURCE_TRANSITION_SCOPE_INVALID")
+    if relative not in sources:
+        return active
+    row = spec["sources"][relative]
+    archive = "tests/fixtures/owner_daily_streamed_final_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row["archive"] != archive:
+        raise ValueError("STREAMED_FINAL_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("STREAMED_FINAL_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _capacity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Verify the one-file capacity successor while conserving all earlier pins.
 
     Only historical verification consumes the archive. Execution receipts still
     require the actual live bytes, never the pre-capacity launcher digest.
     """
-    active = _launcher_prior_bytes(root, relative, active)
+    active = _launcher_prior_bytes(root, relative, _restoration_prior_bytes(root, relative, active))
     if relative != CAPACITY_SOURCE or not (root / CAPACITY_MANIFEST).exists():
         return active
     spec = json.loads((root / CAPACITY_MANIFEST).read_bytes())
@@ -228,7 +353,7 @@ def _valuation_orchestration_prior_bytes(root: Path, relative: str) -> bytes:
     if row.get("base_commit") != VALUATION_BASE:
         raise ValueError("VALUATION_SOURCE_TRANSITION_BASE_INVALID")
     active = _iid_runtime_prior_bytes(
-        root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n"))
+        root, relative, _restoration_prior_bytes(root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n")))
     prior = (root / expected_archive).read_bytes().replace(b"\r\n", b"\n")
     pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
     prior_sha = hashlib.sha256(prior).hexdigest()
@@ -318,12 +443,12 @@ def active_valuation_orchestration_identity(root: Path) -> dict:
     rows = {}
     for relative in VALUATION_SOURCES:
         historical = historical_bytes(root, relative)
-        active = _iid_runtime_prior_bytes(
-            root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n"))
+        active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+        prior_bound = _iid_runtime_prior_bytes(root, relative, _restoration_prior_bytes(root, relative, active))
         historical_sha = hashlib.sha256(historical).hexdigest()
         active_sha = hashlib.sha256(active).hexdigest()
         declared = spec["sources"][relative]
-        if (historical_sha != declared["prior_sha256_lf"] or active_sha != declared["active_sha256_lf"]
+        if (historical_sha != declared["prior_sha256_lf"] or hashlib.sha256(prior_bound).hexdigest() != declared["active_sha256_lf"]
                 or active_sha == historical_sha):
             raise ValueError("VALUATION_SOURCE_TRANSITION_BINDING_INVALID")
         rows[relative] = {"historical_sha256_lf": historical_sha, "active_sha256_lf": active_sha}
@@ -355,7 +480,14 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         raise ValueError("THESIS_SOURCE_EXECUTION_DOMAIN_INVALID")
     if historical["code_digest"] != spec["historical_e4_v2_digest"]:
         raise ValueError("THESIS_SOURCE_HISTORICAL_DIGEST_MISMATCH")
-    if execution["code_digest"] != spec["active_e4_v2_digest"] or execution["code_digest"] == historical["code_digest"]:
+    expected_execution = spec["active_e4_v2_digest"]
+    final_boundary = root / "tests/fixtures/owner_daily_streamed_final_source_transition_v1.json"
+    if final_boundary.is_file():
+        final = json.loads(final_boundary.read_bytes())
+        if final["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = final["active_e4_v2_digest"]
+    if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:
         raise ValueError("THESIS_SOURCE_MIXED_DIGEST_REJECTED")

@@ -1362,6 +1362,10 @@ def _verify_action_center_ready(session: str, *, root: Path | None = None) -> di
            "json_path": str(json_path), "view_path": str(markdown_path), "identity": payload.get("artifact_identity")}
 
 
+from tools.capture_writer_lease import exclusive_writer
+
+
+@exclusive_writer
 def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
                  handoff_repo: Path = DEFAULT_HANDOFF_REPO, dashboard_web_dir: Path = DEFAULT_WEB_DIR,
                  publish_dashboard: bool = True, dashboard_complete_publication: bool = True,

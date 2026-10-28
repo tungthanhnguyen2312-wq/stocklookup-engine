@@ -120,10 +120,33 @@ def test_actual_historical_verifier_rejects_new_receipt_and_reverse(reuse):
     assert metrics["t0_receipt_misses"] == 1
 
 
-def test_snapshot_validator_writer_and_identity_algorithms_are_verbatim():
+def test_snapshot_validator_and_identity_envelope_are_verbatim():
     old = ast.parse(historical_bytes(ROOT, "prospective_decision_retention.py"))
     new = ast.parse((ROOT / "prospective_decision_retention.py").read_text(encoding="utf-8"))
     functions = lambda tree: {node.name: ast.dump(node, include_attributes=False) for node in tree.body if isinstance(node, ast.FunctionDef)}
     before, after = functions(old), functions(new)
-    for name in ("validate_snapshot", "build_snapshot", "write_immutable_snapshot", "_identity", "_hash"):
+    # Streamed build/hash/publication have a separately hash-bound source successor;
+    # their exact legacy payload/file parity is checked on real resident/store fixtures.
+    for name in ("validate_snapshot", "_identity"):
         assert before[name] == after[name], name
+
+
+@pytest.mark.parametrize("target",["live","archive","scope"])
+def test_final_streamed_boundary_rejects_tampering(tmp_path,target):
+    from tools.verify_retention_reader_transition import _restoration_prior_bytes
+    relative="prospective_decision_retention.py"
+    manifest="tests/fixtures/owner_daily_streamed_final_source_transition_v1.json"
+    spec=json.loads((ROOT/manifest).read_bytes())
+    archive=spec["sources"][relative]["archive"]
+    for name in (relative,manifest,archive):
+        path=tmp_path/name;path.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(ROOT/name,path)
+    live=(tmp_path/relative).read_bytes().replace(b"\r\n",b"\n")
+    assert _restoration_prior_bytes(tmp_path,relative,live)==(tmp_path/archive).read_bytes()
+    if target=="scope":
+        spec["sources"]["unrelated.py"]=spec["sources"][relative]
+        (tmp_path/manifest).write_text(json.dumps(spec),encoding="utf-8")
+    elif target=="archive":
+        (tmp_path/archive).write_bytes((tmp_path/archive).read_bytes()+b"\n# tamper\n")
+    else:live+=b"\n# tamper\n"
+    with pytest.raises(ValueError,match="STREAMED_FINAL_SOURCE_TRANSITION_(SCOPE|BINDING)_INVALID"):
+        _restoration_prior_bytes(tmp_path,relative,live)

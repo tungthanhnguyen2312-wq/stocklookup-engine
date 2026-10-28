@@ -314,3 +314,67 @@ Deployment: the Owner's Desktop `Stock Lookup Daily.cmd` must invoke
 instead of `powershell.exe ... run_owner_daily.ps1`; until then the legacy route
 still keeps PowerShell resident. Pull the Producer before switching the shortcut;
 an already-running old launcher cannot adopt the new host.
+
+## Preseal consumer memory (same incident)
+
+The 2026-10-27 14:16:29 run for session 2026-10-26 built the same-session
+integrated investment decision product, then failed during Producer sealing
+while the preseal Daily Brief re-parsed that multi-gigabyte artifact, and would
+have re-parsed the previous session's artifact, to read posture fields.
+`canonical_daily_operation._build_preseal_daily_integrated_brief` now passes the
+resident same-session product. `next_session_decision_brief` binds that object
+to the on-disk identity from a head/tail window and projects the previous
+session one record at a time. Transition policy, epochs, ticker union, counts,
+lineage and content identity stay the same. A sorted artifact whose digest does
+not match is refused. An unverified large-file binding is refused. The 7 GiB
+process ceiling and 8 GiB tree ceiling are unchanged. This does not complete
+the 2026-10-26 Daily, fabricate T0, or authorize another production retry.
+
+The guarded replay that reached integrated-decision completion committed
+6,395,334,656 bytes, leaving 1,120,858,112 bytes under the 7,516,192,768-byte
+process ceiling. The retained 2026-10-23 full-universe companion is
+1,033,647,612 bytes and is not an input of the preseal brief. Preseal therefore
+builds only the primary bundle. Producer materialization writes that companion
+once to its stage file and publishes it by size and digest, so the byte string
+is not held beside the resident decision product. Primary bundle bytes and the
+companion line contract are unchanged.
+
+## Current-scale measurement admission (not a new qualification)
+
+Store-backed IID scenario binding computes each requested bound row on demand,
+without caching a second universe of copied evidence axes. Its content identity
+still visits every requested row with the unchanged serializer before returning;
+subsequent reads inherit the IID store's byte-integrity checks. Delivery discovery
+and Workspace consume those rows sequentially. Workspace retains only its original
+compact scenario projection and reads each bound row once. Resident-artifact callers
+retain the existing eager binding representation. No process boundary, intermediate
+evidence, policy or authority is introduced. Representative subset memory measurements
+do not qualify a full-scale Producer or a smaller admission reservation.
+
+The retained 2026-10-26 IID is 2,394,768,092 bytes, 12,672,350 bytes above
+`iid_max_bytes` 2,382,095,742. Both retained copies are that size. Ordinary
+`evaluate()` therefore keeps the legacy factor, about 1.609: physical READY
+10,365,924,740 bytes (9.654 GiB) and commit READY 20,731,849,481 bytes
+(19.308 GiB). `qualified_current_scale` stays false. r6 is not a qualification.
+It reached integrated-decision completion and stopped on the 1 GiB physical
+reserve before `PRODUCER_SEALED`, at 6,395,334,656 process-committed bytes and
+6,396,149,760 job-committed bytes.
+
+Applying the legacy 5.05 multiplier only to the 12,672,350-byte overrun
+produces 63,995,367 modeled bytes. The slack between the qualified measured
+private peak, 7,464,976,384, and the unchanged 7 GiB process ceiling is
+51,216,384 bytes. The modeled delta exceeds that slack, so `iid_max_bytes` is
+not raised by arithmetic and the 9.25 GiB ordinary physical cap is not
+inherited by the larger file.
+
+Ordinary Daily admission is unchanged. One Producer-seal measurement may start
+only when the host covers its enforced measurement kernel budget: available
+physical at least 8 GiB (6.75 GiB measurement Job + 0.25 GiB owner + 1 GiB
+reserve) and available commit at least 8.75 GiB (6.75 GiB measurement Job +
+2 GiB commit reserve), with source receipt match and an observable writer-free
+host. The process ceiling remains 7 GiB; ordinary Daily keeps its 8 GiB Job
+ceiling. The measurement admission and runner must agree on that exact budget. That
+admission does not mark the IID qualified. A completed guarded seal is still
+required before `iid_max_bytes` can move. The legacy 19.308 GiB commit figure
+remains the ordinary Daily gate; it is not a prerequisite for the capped
+measurement, and the measurement does not lower it.

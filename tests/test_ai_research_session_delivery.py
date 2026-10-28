@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 from copy import deepcopy
 
@@ -135,6 +136,17 @@ def test_delivery_is_deterministic_and_preserves_boundaries():
     assert primary["ticker_research_contexts"]["AAA"]["market_flow_positioning"]["traded_value"] == 0.0
     assert json.loads(one["manifest"])["files"]["ai_research_full_universe.ndjson"]["record_count"] == 1
     assert len(one["full_universe"].splitlines()) == 1
+    primary_only = build_delivery(operation, inputs, retain_delivery_companions=False)
+    assert primary_only == {"primary": one["primary"]}
+    spilled = io.BytesIO()
+    streamed = build_delivery(operation, inputs, companion_stream=spilled)
+    assert spilled.getvalue() == one["full_universe"]
+    assert streamed["full_universe"] is None
+    assert streamed["full_universe_bytes"] == len(one["full_universe"])
+    assert streamed["full_universe_sha256"] == hashlib.sha256(one["full_universe"]).hexdigest()
+    assert streamed["primary"] == one["primary"]
+    assert streamed["manifest"] == one["manifest"]
+    assert streamed["projection"] == one["projection"]
 
 
 def test_integrated_delivery_overlay_preserves_native_values_and_cockpit_card():

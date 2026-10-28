@@ -1349,37 +1349,59 @@ def build_enrichment_components(
         else:
             priority_resolution = {"status": "SUPPLIED_BY_CALLER", "artifact_identity": queue.get("artifact_identity")}
         results["opportunity_priority_queue"] = priority_resolution
-        res = build(
-            session=session,
-            # The additive bar context needs the actual retained acquisition cutoff.
-            # Existing feature builders above keep their standing calculation inputs.
-            requested_at=product_requested_at,
-            technical_structure_artifact=tactical_projection,
-            financial_analysis_artifact=financial_session_artifact["financial_analysis_product"],
-            financial_peer_materialization_artifact=financial_session_artifact,
-            historical_context_artifact=results.get("historical_context", {}).get("artifact"),
-            current_valuation_artifact=evaluated_valuation,
-            relative_volume_artifact=relative_volume,
-            market_sector_artifact=mkt,
-            legacy_decision_artifact=opp,
-            priority_queue_artifact=queue,
-            technical_coverage_disposition_artifact=technical_coverage_disposition,
-            momentum_artifact=momentum,
-            tactical_confirmation_artifact=confirmation,
-            tactical_boundaries_artifact=tactical_boundaries,
-            corporate_intelligence_artifact=corporate_intelligence_artifact,
-            operational_fundamental_integration_artifact=operational_integration,
-            liquidity_research_artifact=liquidity_research,
-            official_liquidity_artifact=official_liquidity,
-            entity_applicability_artifact=entity_applicability,
-        )
-        if res.get("session") != session:
-            raise CanonicalPostCloseError(f"INTEGRATED_DECISION_SESSION_MISMATCH:expected={session}:observed={res.get('session')}")
-        if (res.get("contract_version") != integrated_contract.CONTRACT_VERSION
-                or not isinstance(res.get("artifact_sha256"), str) or not res["artifact_sha256"]
-                or res.get("artifact_identity") != integrated_contract.CONTRACT_VERSION + ":" + res["artifact_sha256"]):
-            raise CanonicalPostCloseError("INTEGRATED_DECISION_BUILDER_IDENTITY_OR_CONTRACT_MISMATCH")
-        iid_write_receipt = _write_json(paths["integrated_investment_decision_product"], res, capture_iid_receipt=True)
+        target = paths["integrated_investment_decision_product"]
+        from stocklookup_core.evidence.record_artifact_loading import SortedRecordArtifactWriter
+        writer = SortedRecordArtifactWriter(target, newline="\n")
+        try:
+            res = build(
+                session=session,
+                # The additive bar context needs the actual retained acquisition cutoff.
+                # Existing feature builders above keep their standing calculation inputs.
+                requested_at=product_requested_at,
+                technical_structure_artifact=tactical_projection,
+                financial_analysis_artifact=financial_session_artifact["financial_analysis_product"],
+                financial_peer_materialization_artifact=financial_session_artifact,
+                historical_context_artifact=results.get("historical_context", {}).get("artifact"),
+                current_valuation_artifact=evaluated_valuation,
+                relative_volume_artifact=relative_volume,
+                market_sector_artifact=mkt,
+                legacy_decision_artifact=opp,
+                priority_queue_artifact=queue,
+                technical_coverage_disposition_artifact=technical_coverage_disposition,
+                momentum_artifact=momentum,
+                tactical_confirmation_artifact=confirmation,
+                tactical_boundaries_artifact=tactical_boundaries,
+                corporate_intelligence_artifact=corporate_intelligence_artifact,
+                operational_fundamental_integration_artifact=operational_integration,
+                liquidity_research_artifact=liquidity_research,
+                official_liquidity_artifact=official_liquidity,
+                entity_applicability_artifact=entity_applicability,
+                record_writer=writer,
+            )
+            if res.get("session") != session:
+                raise CanonicalPostCloseError(f"INTEGRATED_DECISION_SESSION_MISMATCH:expected={session}:observed={res.get('session')}")
+            if (res.get("contract_version") != integrated_contract.CONTRACT_VERSION
+                    or not isinstance(res.get("artifact_sha256"), str) or not res["artifact_sha256"]
+                    or res.get("artifact_identity") != integrated_contract.CONTRACT_VERSION + ":" + res["artifact_sha256"]):
+                raise CanonicalPostCloseError("INTEGRATED_DECISION_BUILDER_IDENTITY_OR_CONTRACT_MISMATCH")
+        except Exception:
+            writer.abort()
+            if writer.committed:
+                target.unlink(missing_ok=True)
+            raise
+        # The streamed file already holds each issuer. Drop the stage graphs
+        # before any later consumer reads the store.
+        del tactical_projection, relative_volume, momentum, confirmation, tactical_boundaries
+        del financial_session_artifact, evaluated_valuation, entity_applicability, operational_integration
+        del liquidity_research, official_liquidity, corporate_intelligence_artifact
+        del technical_coverage_disposition, mkt, opp, queue
+        import gc
+        gc.collect()
+        written = writer.receipt
+        iid_write_receipt = _IIDWriteReceipt(
+            target.resolve(), res.get("session"), res.get("contract_version"),
+            res.get("artifact_identity"), res.get("artifact_sha256"),
+            written.size, written.mtime_ns, written.serialized_sha256)
         from prospective_decision_outcome_feedback import retain_iid_classification_summary
         retain_iid_classification_summary(output_root, paths["integrated_investment_decision_product"], res)
         return res
@@ -1415,7 +1437,7 @@ def retain_prospective_decision_snapshot(
     genuinely changed decision a distinct snapshot; no session-shaped working
     artifact can silently rewrite the original T0 decision.
     """
-    from prospective_decision_retention import build_snapshot, write_immutable_snapshot
+    from prospective_decision_retention import build_snapshot, streaming_scratch_dir, write_immutable_snapshot
     from stocklookup_core.tactical.contextual_technical_dispatch import PRODUCTION_V2_START_SESSION
 
     if session >= PRODUCTION_V2_START_SESSION:
@@ -1435,6 +1457,7 @@ def retain_prospective_decision_snapshot(
             session=session, operation_identity=operation_identity,
             producer_run_identity=producer_result.get("run_identity"), integrated_artifact=integrated,
             exact_session_snapshot=exact_session_snapshot,
+            scratch_dir=streaming_scratch_dir(output_root or root),
             **({"progress_callback": progress_callback} if progress_callback is not None else {}),
         )
         seal_index = None
@@ -1450,7 +1473,23 @@ def retain_prospective_decision_snapshot(
         path = write_immutable_snapshot(output_root or root, snapshot,
             **({"on_written": index_written} if session >= PRODUCTION_V2_START_SESSION else {}))
     except Exception as exc:
-        return {"status": "UNAVAILABLE", "reason": f"PROSPECTIVE_SNAPSHOT_RETENTION_FAILED:{type(exc).__name__}:{exc}"}
+        # Validation gaps stay visible and non-retained. A publication failure
+        # (cross-volume replace, scratch refusal, an OS write error, or a staged
+        # byte/size integrity mismatch) is not a completed Daily: the exact
+        # reason is raised, not returned as RETAINED. Other ValueError results,
+        # including a missing operation identity, stay UNAVAILABLE.
+        reason = f"PROSPECTIVE_SNAPSHOT_RETENTION_FAILED:{type(exc).__name__}:{exc}"
+        text = str(exc)
+        publication_failure = (
+            isinstance(exc, OSError)
+            or "STREAMED_SNAPSHOT_CROSS_VOLUME" in text
+            or "STREAMED_SNAPSHOT_SCRATCH_REQUIRED" in text
+            or "STREAMED_SNAPSHOT_BYTES_MISMATCH" in text
+            or "RECORD_ARTIFACT_SIZE_MISMATCH" in text
+        )
+        if publication_failure:
+            raise CanonicalPostCloseError("REFUSE_CANONICAL_POST_CLOSE:T0_PUBLICATION_FAILED:" + reason) from exc
+        return {"status": "UNAVAILABLE", "reason": reason}
     return {"status": "RETAINED", "artifact": snapshot, "path": path, "seal_index": seal_index}
 
 

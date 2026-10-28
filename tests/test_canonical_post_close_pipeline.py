@@ -540,6 +540,22 @@ def test_corporate_intelligence_axis_wired_into_integrated_decision_with_local_i
     assert 'research_session=official_event_context_ci.get("research_session")' in body
 
 
+def test_integrated_decision_releases_stage_graphs_before_canonical_write():
+    """Stage graphs are released after the streamed IID write and before the receipt is used."""
+    source = (ROOT / "canonical_post_close_pipeline.py").read_text(encoding="utf-8")
+    start = source.index("def _integrated_investment_decision_product")
+    end = source.index("\n    _attempt(", start)
+    body = source[start:end]
+    built = body.index("res = build(")
+    release = body.index("del tactical_projection, relative_volume, momentum, confirmation, tactical_boundaries")
+    receipt = body.index("iid_write_receipt = _IIDWriteReceipt(")
+    assert "record_writer=writer" in body
+    assert 'iid_write_receipt = _write_json(paths["integrated_investment_decision_product"]' not in body
+    assert built < release < receipt
+    assert "del financial_session_artifact, evaluated_valuation, entity_applicability, operational_integration" in body
+    assert "gc.collect()" in body[release:receipt]
+
+
 @pytest.mark.retained_evidence(
     "operations-review/market-wide-current-descriptive-research-v1-20260825/market_wide_current_descriptive_research_artifact.json",
     "operations-review/p3f9b-market-wide-exact-session-scaleout-20260825/p3f9b_mva_exact_session_snapshot.json",

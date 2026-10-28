@@ -11,7 +11,7 @@ from datetime import date
 import hashlib
 import io
 import json
-from typing import Any, Mapping
+from typing import Any, BinaryIO, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
 from stocklookup_core.decision.current_daily_decision_research_product import (
@@ -267,9 +267,9 @@ def project_integrated_decision_delivery_overlay(session: str, integrated: Mappi
     return {
         **_integrated_overlay_header(session, integrated, daily_brief),
         "records": {
-            ticker: project_integrated_decision_for_ai_delivery(record, integrated_identity=integrated["artifact_identity"],
+            ticker: project_integrated_decision_for_ai_delivery(records[ticker], integrated_identity=integrated["artifact_identity"],
                                                               source_session=integrated.get("session"))
-            for ticker, record in sorted(records.items())
+            for ticker in sorted(records)
         },
     }
 
@@ -694,11 +694,12 @@ def build_dashboard_projection(
         gaps = projection["risk_data_gaps"]
         if isinstance(gaps, dict) and isinstance(gaps.get("valuation_peer_context_unavailable"), int):
             gaps["valuation_peer_context_unavailable"] = max(0, gaps["valuation_peer_context_unavailable"] - verdicts)
+        watchlist_scope = set(watchlist_tickers)
         projection["decision_card_v1"] = {
-            ticker: _decision_card(ticker, record, daily_integrated_brief,
+            ticker: _decision_card(ticker, records[ticker], daily_integrated_brief,
                                   source_session=integrated_decision.get("session"))
-            for ticker, record in sorted((integrated_decision.get("records") or {}).items())
-            if ticker in watchlist_tickers
+            for ticker in sorted(records)
+            if ticker in watchlist_scope
         }
         for ticker, decision_card in projection["decision_card_v1"].items():
             source_card = projection["ticker_cards"].get(ticker) or {}
@@ -750,9 +751,33 @@ class _DeliveryRecordProjections(Mapping):
             self.records[ticker], integrated_identity=self.identity, source_session=self.session)
 
 
+def _write_universe_companion(stream: BinaryIO, universe: list[str], operation: Mapping[str, Any],
+                              inputs: Mapping[str, Any], financial_context: Mapping[str, Any] | None,
+                              integrated_overlay: Mapping[str, Any] | None) -> tuple[int, int, str]:
+    """Write the companion once. The returned digest is the bytes a caller retains or spills."""
+    digest = hashlib.sha256()
+    count = 0
+    size = 0
+    for ticker in universe:
+        line = _canon(_compact_context(ticker, operation, inputs, financial_context, integrated_overlay)).encode("utf-8") + b"\n"
+        stream.write(line)
+        digest.update(line)
+        count += 1
+        size += len(line)
+    return count, size, digest.hexdigest()
+
+
 def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, opportunity_comparison_request=None,
-                   include_thesis_discovery: bool = False) -> dict[str, Any]:
-    """Return primary JSON, NDJSON companion, manifest, brief, and cockpit projection bytes."""
+                   include_thesis_discovery: bool = False, retain_delivery_companions: bool = True,
+                   companion_stream: BinaryIO | None = None) -> dict[str, Any]:
+    """Return primary JSON, NDJSON companion, manifest, brief, and cockpit projection bytes.
+
+    Preseal passes retain_delivery_companions=False because it keeps only the primary
+    bundle. Producer materialization passes companion_stream so the universe file is
+    spilled once instead of retained beside the resident integrated decision.
+    """
+    if companion_stream is not None and not retain_delivery_companions:
+        raise ValueError("COMPANION_STREAM_REQUIRES_RETAINED_COMPANION")
     product, manifest = operation["product"], operation["manifest"]
     session = manifest["market_session"]
     cards = product["detailed_research_cards"]
@@ -839,16 +864,28 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
         primary["thesis_opportunity_discovery"] = verified_thesis_discovery(
             build_thesis_discovery(integrated_decision=integrated_decision, bind_scenarios=bind_integrated_scenarios))
     primary_bytes = (_canon(primary) + "\n").encode("utf-8")
+    # The primary object is not an input of the companion. Drop it before the
+    # universe write so those two graphs are not committed together.
+    del primary
+    if not retain_delivery_companions:
+        del integrated_overlay
+        return {"primary": primary_bytes}
     # Keep the bytes-returning contract, without a universe-sized Unicode row
     # list, joined string, newline copy and UTF-8 copy alive at the same time.
-    with io.BytesIO() as companion:
-        for ticker in universe:
-            companion.write(_canon(_compact_context(ticker, operation, inputs, financial_context, integrated_overlay)).encode("utf-8"))
-            companion.write(b"\n")
-        full_bytes = companion.getvalue()
+    # A caller-owned stream is the production path: the finished companion is
+    # one file, not a second byte copy beside the resident decision product.
+    if companion_stream is None:
+        with io.BytesIO() as companion:
+            record_count, companion_size, companion_sha256 = _write_universe_companion(
+                companion, universe, operation, inputs, financial_context, integrated_overlay)
+            full_bytes = companion.getvalue()
+    else:
+        record_count, companion_size, companion_sha256 = _write_universe_companion(
+            companion_stream, universe, operation, inputs, financial_context, integrated_overlay)
+        full_bytes = None
     # Their last consumer is the companion; the cockpit needs only the overlay
     # header and its existing watchlist cards, not another full-universe graph.
-    del integrated_overlay, primary
+    del integrated_overlay
     projection = build_dashboard_projection(
         operation,
         integrated_decision=integrated_decision,
@@ -876,9 +913,9 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
         "files": {
             PRIMARY_HUMAN_REVIEW_FILENAME: {"bytes": len(primary_bytes), "sha256": _hash_bytes(primary_bytes), "role": PRIMARY_HUMAN_REVIEW_ROLE},
             FULL_UNIVERSE_LOOKUP_FILENAME: {
-                "bytes": len(full_bytes),
-                "sha256": _hash_bytes(full_bytes),
-                "record_count": len(universe),
+                "bytes": companion_size,
+                "sha256": companion_sha256,
+                "record_count": record_count,
                 "role": FULL_UNIVERSE_COMPANION_ROLE,
                 "not_primary_human_review_input": True,
                 "ordering": "TICKER_ASCENDING_DETERMINISTIC_LOOKUP_NOT_SAMPLING",
@@ -902,4 +939,8 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
     }
     manifest_bytes = (_canon(manifest_payload) + "\n").encode("utf-8")
     brief = _session_brief(session, manifest["operation_identity"], product["artifact_identity"], list(manifest["warnings"]), scope)
-    return {"primary": primary_bytes, "full_universe": full_bytes, "manifest": manifest_bytes, "brief": brief.encode("utf-8"), "projection": projection_bytes}
+    delivered = {"primary": primary_bytes, "full_universe": full_bytes, "manifest": manifest_bytes, "brief": brief.encode("utf-8"), "projection": projection_bytes}
+    if companion_stream is not None:
+        delivered["full_universe_sha256"] = companion_sha256
+        delivered["full_universe_bytes"] = companion_size
+    return delivered

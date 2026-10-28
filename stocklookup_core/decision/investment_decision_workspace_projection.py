@@ -919,6 +919,7 @@ def build_artifacts(
     cards: dict[str, Any] = {}
     for ticker in tickers:
         sector = _sector_label(leadership_records, ticker)
+        scenario_record = scenario_records.get(ticker) if isinstance(scenario_records, Mapping) else None
         card = build_ticker_card(
             ticker=ticker,
             opportunity_record=opportunity_records[ticker],
@@ -934,8 +935,8 @@ def build_artifacts(
             technical_history_recovery_records=technical_recovery_records,
             integrated_record=integrated_records[ticker],
             conditional_scenario=(
-                conditional_scenario_view(scenario_records[ticker])
-                if isinstance(scenario_records, Mapping) and isinstance(scenario_records.get(ticker), Mapping)
+                conditional_scenario_view(scenario_record)
+                if isinstance(scenario_record, Mapping)
                 else None
             ),
         )

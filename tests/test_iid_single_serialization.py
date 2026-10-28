@@ -150,7 +150,15 @@ def _pipeline_fixture(tmp_path, monkeypatch, artifact):
     monkeypatch.setattr(importlib.import_module("entity_classification_contract"), "resolve_current_research_entity_applicability", lambda *a: {})
     monkeypatch.setattr(importlib.import_module("canonical_current_product_projections"), "materialize_current_fundamental_feature_store_context", lambda **k: {"status": "UNAVAILABLE"})
     monkeypatch.setattr(pipeline, "resolve_current_session_priority_queue", lambda *a, **k: (None, {"status": "UNAVAILABLE"}))
-    monkeypatch.setattr(iid, "build_artifact", lambda **k: copy.deepcopy(artifact))
+    def streamed_fixture(**kwargs):
+        writer = kwargs["record_writer"]
+        for ticker, record in sorted(artifact["records"].items()):
+            writer.add(ticker, record)
+        identity = {key: artifact[key] for key in ("artifact_identity", "artifact_sha256")}
+        header = {key: value for key, value in artifact.items() if key not in {*identity, "records"}}
+        writer.finish(header, lambda digest: identity)
+        return copy.deepcopy(artifact)
+    monkeypatch.setattr(iid, "build_artifact", streamed_fixture)
     return paths
 
 
@@ -169,14 +177,14 @@ def test_actual_enrichment_serializes_once_and_retains_both_p2a_summaries(tmp_pa
     manifest = tmp_path / "run_manifest.json"
     manifest.write_text(json.dumps({"market_session": SESSION, "outputs": {"integrated_investment_decision_product": expected["artifact_identity"]}}))
     manifest_bytes = manifest.read_bytes()
-    original_write, original_copy = pipeline._write_json, pipeline._copy_iid_working_view
+    from stocklookup_core.evidence.record_artifact_loading import SortedRecordArtifactWriter
+    original_finish, original_copy = SortedRecordArtifactWriter.finish, pipeline._copy_iid_working_view
     serializations, copies = [], []
-    def write(path, value, **kwargs):
-        if value.get("contract_version") == iid.CONTRACT_VERSION:
-            serializations.append(path)
-            if failure == "canonical-write":
-                raise OSError("canonical write failure")
-        return original_write(path, value, **kwargs)
+    def finish(writer, *args, **kwargs):
+        serializations.append(writer.target)
+        if failure == "canonical-write":
+            raise OSError("canonical write failure")
+        return original_finish(writer, *args, **kwargs)
     def promote(source, target, **kwargs):
         copies.append((source, target))
         if failure == "copy":
@@ -186,7 +194,7 @@ def test_actual_enrichment_serializes_once_and_retains_both_p2a_summaries(tmp_pa
     def no_iid_parse(path):
         assert path not in (canonical, destination)
         return original_load(path)
-    monkeypatch.setattr(pipeline, "_write_json", write)
+    monkeypatch.setattr(SortedRecordArtifactWriter, "finish", finish)
     monkeypatch.setattr(pipeline, "_copy_iid_working_view", promote)
     monkeypatch.setattr(feedback, "_load_json", no_iid_parse)
     result = pipeline.build_enrichment_components(tmp_path, SESSION, artifact_root=tmp_path,

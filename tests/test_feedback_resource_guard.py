@@ -23,10 +23,36 @@ SMALL = guard.ResourcePolicy(deadline_seconds=30, memory_limit_bytes=None, min_a
                              min_available_commit_bytes=0, min_free_disk_bytes=0)
 
 
-def _script(tmp_path: Path, body: str) -> list[str]:
+def _script(tmp_path: Path, body: str, *, executable: str | None = None) -> list[str]:
     path = tmp_path / "child.py"
     path.write_text(body, encoding="utf-8")
-    return [sys.executable, str(path)]
+    return [executable or sys.executable, str(path)]
+
+
+def _base_executable() -> str:
+    return getattr(sys, "_base_executable", None) or sys.executable
+
+
+def _job_process_ids(job) -> list[int]:
+    """Process IDs currently assigned to this Job Object. Test-only query."""
+    import ctypes
+    from ctypes import wintypes
+
+    class ProcessList(ctypes.Structure):
+        _fields_ = [
+            ("NumberOfAssignedProcesses", wintypes.DWORD),
+            ("NumberOfProcessIdsInList", wintypes.DWORD),
+            ("ProcessIdList", ctypes.c_size_t * 64),
+        ]
+
+    info = ProcessList()
+    returned = wintypes.DWORD()
+    if not job.kernel.QueryInformationJobObject(
+            job.handle, 3, ctypes.byref(info), ctypes.sizeof(info), ctypes.byref(returned)):
+        raise OSError(ctypes.get_last_error(), "QueryInformationJobObject process list failed")
+    if int(info.NumberOfAssignedProcesses) > 64:
+        raise OSError("job process list exceeded the test buffer")
+    return [int(info.ProcessIdList[index]) for index in range(int(info.NumberOfProcessIdsInList))]
 
 
 def _policy(**changes):
@@ -61,7 +87,8 @@ def test_total_deadline_terminates_and_reaps_the_whole_process_tree(tmp_path):
     outcome = guard.run_bounded(_script(tmp_path, body), cwd=tmp_path, policy=_policy(deadline_seconds=3), result_path=tmp_path / "s.json")
     elapsed = time.perf_counter() - started
     assert outcome["outcome"] == "TIMEOUT" and outcome["reason_code"] == guard.RESOURCE_TIMEOUT
-    assert 3 <= elapsed < 20 and outcome["reaped"] is True
+    # Windows wait timers can report completion up to one 15.6 ms tick early.
+    assert 3 - 0.02 <= elapsed < 20 and outcome["reaped"] is True
     deadline = time.time() + 10
     grandchild = int(pid_file.read_text()) if pid_file.exists() else None
     if grandchild is not None and os.name == "nt":  # job object kills the tree; POSIX uses a process group
@@ -362,7 +389,10 @@ def test_aggregate_job_limit_is_kernel_enforced_across_two_children(tmp_path):
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows process Job ceiling")
 def test_process_limit_diagnostics_survive_child_exit_and_denied_allocation(tmp_path):
-    command = _script(tmp_path, "x=bytearray(256*1024**2)\n")
+    # The venv Scripts\python.exe launcher re-execs the base interpreter. The
+    # kernel records that descendant. This equality uses the base interpreter,
+    # whose Popen PID is the allocating process.
+    command = _script(tmp_path, "x=bytearray(256*1024**2)\n", executable=_base_executable())
     job = guard._Job(128 * 1024**2, job_memory_limit_bytes=512 * 1024**2)
     process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
@@ -376,6 +406,206 @@ def test_process_limit_diagnostics_survive_child_exit_and_denied_allocation(tmp_
         assert 0 < diagnostics["peak_process_committed_bytes"] < diagnostics["process_memory_limit_bytes"]
         assert diagnostics["process_memory_limit_bytes"] == 128 * 1024**2
         assert diagnostics["job_memory_limit_bytes"] == 512 * 1024**2
+        assert diagnostics["breakaway_ok"] is False
+        assert diagnostics["silent_breakaway_ok"] is False
+        assert diagnostics["kill_on_job_close"] is True
     finally:
         guard._terminate(process, job)
+        job.close()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows process Job ceiling")
+def test_venv_launcher_limit_event_pid_is_the_constrained_job_descendant(tmp_path):
+    """The venv launcher PID is not the kernel limit-event PID.
+
+    The event PID is the process that ran the allocation, and that process is
+    a member of the same Job Object. The production guard is unchanged.
+    """
+    pid_file = tmp_path / "allocating.pid"
+    ready = tmp_path / "go"
+    body = (
+        "import os, time\n"
+        "from pathlib import Path\n"
+        f"Path({str(pid_file)!r}).write_text(str(os.getpid()))\n"
+        f"while not Path({str(ready)!r}).exists():\n"
+        "    time.sleep(0.05)\n"
+        "x=bytearray(256*1024**2)\n"
+    )
+    command = _script(tmp_path, body, executable=sys.executable)
+    job = guard._Job(128 * 1024**2, job_memory_limit_bytes=512 * 1024**2)
+    process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        job.assign(int(process._handle))
+        guard._resume_suspended(process)
+        deadline = time.time() + 15
+        while not pid_file.exists():
+            if time.time() >= deadline or process.poll() is not None:
+                raise AssertionError("allocating descendant did not report its pid")
+            time.sleep(0.05)
+        script_pid = int(pid_file.read_text(encoding="utf-8"))
+        members = _job_process_ids(job)
+        assert script_pid in members
+        if os.path.normcase(sys.executable) != os.path.normcase(_base_executable()):
+            assert script_pid != process.pid
+        ready.write_text("1", encoding="utf-8")
+        assert process.wait(timeout=15) != 0
+        assert job.wait_empty(5)
+        diagnostics = job.memory_diagnostics()
+        assert diagnostics["limit_scope"] == "PROCESS"
+        assert diagnostics["limit_events"] == [{"scope": "PROCESS", "process_id": script_pid}]
+        assert diagnostics["breakaway_ok"] is False
+    finally:
+        guard._terminate(process, job)
+        job.close()
+
+
+def test_tree_ceiling_cannot_rise_or_change_the_process_ceiling(tmp_path, monkeypatch):
+    monkeypatch.setattr(guard.subprocess, "Popen", lambda *a, **k: pytest.fail("must not spawn"))
+    for ceiling in (8 * guard.GIB + 1, 0, -1, True, False):
+        with pytest.raises(OSError, match="DAILY_CAPACITY_TREE_CEILING_INVALID"):
+            guard.run_capacity_guarded(["synthetic"], cwd=tmp_path, env={}, memory_probe=lambda: {},
+                                        tree_ceiling_bytes=ceiling)
+
+
+def test_measurement_tree_ceiling_is_explicit_and_reserves_still_fail_closed(tmp_path, monkeypatch):
+    seen = {}
+
+    class Job:
+        def __init__(self, limit, *, job_memory_limit_bytes):
+            seen["process"] = limit
+            seen["tree"] = job_memory_limit_bytes
+        def close(self):
+            seen["closed"] = True
+
+    monkeypatch.setattr(guard, "os", SimpleNamespace(name="nt"))
+    monkeypatch.setattr(guard, "peak_memory_bytes", lambda: 1024)
+    monkeypatch.setattr(guard, "_Job", Job)
+    monkeypatch.setattr(guard.subprocess, "Popen", lambda *a, **k: pytest.fail("reserve must refuse before spawn"))
+    tree = 6 * guard.GIB + (3 * guard.GIB) // 4
+    with pytest.raises(OSError, match="DAILY_CAPACITY_RESERVE_LOW:available_physical_bytes"):
+        guard.run_capacity_guarded(
+            ["synthetic"], cwd=tmp_path, env={}, tree_ceiling_bytes=tree,
+            memory_probe=lambda: {"available_physical_bytes": guard.GIB - 1,
+                                  "available_commit_bytes": 3 * guard.GIB})
+    assert seen["process"] == 7 * guard.GIB
+    assert seen["tree"] == tree
+    assert seen["closed"] is True
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows measurement job ceiling")
+def test_measurement_ceiling_is_queried_from_the_kernel(tmp_path, monkeypatch):
+    from tools.check_owner_daily_host_preflight import MEASUREMENT_TREE_BYTES
+    monkeypatch.setattr(guard, "peak_memory_bytes", lambda: 1024)
+    seen = {}
+    returncode = guard.run_capacity_guarded(
+        [sys.executable, "-B", "-c", "print('ok')"], cwd=tmp_path,
+        env={"PYTHONDONTWRITEBYTECODE": "1"}, on_diagnostics=seen.update,
+        tree_ceiling_bytes=MEASUREMENT_TREE_BYTES,
+        memory_probe=lambda: {"available_physical_bytes": 2 * guard.GIB,
+                              "available_commit_bytes": 3 * guard.GIB})
+    assert returncode == 0
+    assert seen["process_memory_limit_bytes"] == 7 * guard.GIB
+    assert seen["job_memory_limit_bytes"] == MEASUREMENT_TREE_BYTES == 7247757312
+    assert seen["breakaway_ok"] is False
+    assert seen["silent_breakaway_ok"] is False
+    assert seen["kill_on_job_close"] is True
+    assert seen["tree_termination_confirmed"] is True
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows tighter job ceiling")
+def test_tighter_job_ceiling_fails_closed_before_the_process_ceiling(tmp_path):
+    # The allocation plus the interpreter fits under the process ceiling and over the job ceiling.
+    command = _script(tmp_path, "x=bytearray(80*1024**2)\n")
+    job = guard._Job(256 * 1024**2, job_memory_limit_bytes=64 * 1024**2)
+    process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        job.assign(int(process._handle))
+        guard._resume_suspended(process)
+        assert process.wait(timeout=15) != 0
+        assert job.wait_empty(5)
+        diagnostics = job.memory_diagnostics()
+        assert diagnostics["limit_scope"] == "JOB"
+        assert diagnostics["limit_events"][0]["scope"] == "JOB"
+        assert diagnostics["job_memory_limit_bytes"] == 64 * 1024**2
+        assert diagnostics["process_memory_limit_bytes"] == 256 * 1024**2
+        assert diagnostics["breakaway_ok"] is False
+        assert diagnostics["peak_process_committed_bytes"] > 0
+        assert diagnostics["peak_job_committed_bytes"] >= diagnostics["peak_process_committed_bytes"]
+    finally:
+        guard._terminate(process, job)
+        job.close()
+
+
+def _job_pids(job) -> list[int]:
+    capacity = 32
+    buffer = job.ctypes.create_string_buffer(8 + job.ctypes.sizeof(job.ctypes.c_size_t) * capacity)
+    assert job.kernel.QueryInformationJobObject(job.handle, 3, buffer, len(buffer), None)
+    listed = job.ctypes.c_uint32.from_buffer(buffer, 4).value
+    ids = (job.ctypes.c_size_t * capacity).from_buffer(buffer, 8)
+    return [int(ids[index]) for index in range(listed)]
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows whole-tree job membership")
+def test_job_contains_reexec_grandchild_and_refused_breakaway(tmp_path):
+    grandchild = tmp_path / "grandchild.py"
+    identity = tmp_path / "identity.json"
+    report = tmp_path / "report.json"
+    grandchild.write_text(
+        "import json, os, time\n"
+        "from pathlib import Path\n"
+        "Path(sys_identity).write_text(json.dumps({'pid': os.getpid()}), encoding='utf-8')\n"
+        "time.sleep(30)\n".replace("sys_identity", repr(str(identity))),
+        encoding="utf-8")
+    child = tmp_path / "child.py"
+    child.write_text(
+        "import json, subprocess, sys, time\n"
+        "from pathlib import Path\n"
+        "report = {'grandchild': None, 'breakaway_started': None, 'breakaway_winerror': None}\n"
+        "try:\n"
+        "    report['grandchild'] = subprocess.Popen([sys.executable, '-B', sys.argv[1]]).pid\n"
+        "except OSError as exc:\n"
+        "    report['grandchild_error'] = getattr(exc, 'winerror', None)\n"
+        "deadline = time.time() + 10\n"
+        "while time.time() < deadline and not Path(sys.argv[3]).exists():\n"
+        "    time.sleep(0.05)\n"
+        "try:\n"
+        "    report['breakaway'] = subprocess.Popen([sys.executable, '-B', '-c', 'import time; time.sleep(30)'],\n"
+        "        creationflags=0x01000000).pid\n"
+        "    report['breakaway_started'] = True\n"
+        "except OSError as exc:\n"
+        "    report['breakaway_started'] = False\n"
+        "    report['breakaway_winerror'] = getattr(exc, 'winerror', None)\n"
+        "Path(sys.argv[2]).write_text(json.dumps(report), encoding='utf-8')\n"
+        "time.sleep(20)\n",
+        encoding="utf-8")
+    tree = 6 * guard.GIB + (3 * guard.GIB) // 4
+    job = guard._Job(7 * guard.GIB, job_memory_limit_bytes=tree)
+    process = subprocess.Popen(
+        [sys.executable, "-B", str(child), str(grandchild), str(report), str(identity)], creationflags=4)
+    try:
+        job.assign(int(process._handle))
+        guard._resume_suspended(process)
+        deadline = time.time() + 15
+        while time.time() < deadline and not report.exists():
+            time.sleep(0.05)
+        assert report.exists()
+        time.sleep(0.5)
+        body = json.loads(report.read_text(encoding="utf-8"))
+        pids = _job_pids(job)
+        assert process.pid in pids
+        assert body["grandchild"] in pids
+        assert json.loads(identity.read_text(encoding="utf-8"))["pid"] in pids
+        if body["breakaway_started"]:
+            assert body["breakaway"] in pids
+        else:
+            assert body["breakaway_winerror"]
+        assert job.active_processes() >= 2
+        diagnostics = job.memory_diagnostics()
+        assert diagnostics["job_memory_limit_bytes"] == tree
+        assert diagnostics["process_memory_limit_bytes"] == 7 * guard.GIB
+        assert diagnostics["breakaway_ok"] is False
+        assert diagnostics["silent_breakaway_ok"] is False
+    finally:
+        guard._terminate(process, job)
+        assert job.wait_empty(5)
         job.close()

@@ -265,7 +265,7 @@ def _fundamental(record: Mapping[str, Any], financial: Mapping[str, Any] | None,
         "freshness": freshness,
         "metrics": {"qualified": qualified if available else [], "proxy": proxy if available else [],
                     "non_applicable": non_applicable, "blocked": blocked},
-        **({"financial_peer_context": copy.deepcopy(record["financial_peer_context"])} if "financial_peer_context" in record else {}),
+        **({"financial_peer_context": record["financial_peer_context"]} if "financial_peer_context" in record else {}),
         "reason_codes": reasons,
     }
 
@@ -349,9 +349,9 @@ def _valuation(record: Mapping[str, Any], valuation_record: Mapping[str, Any] | 
         "not_meaningful_methods": not_meaningful,
         "non_applicable_methods": non_applicable,
         "blocked_methods": blocked,
-        **({"intrinsic_scenario_valuation": copy.deepcopy(record["intrinsic_scenario_valuation"])} if "intrinsic_scenario_valuation" in record else {}),
+        **({"intrinsic_scenario_valuation": record["intrinsic_scenario_valuation"]} if "intrinsic_scenario_valuation" in record else {}),
         "peer_relative_state": peer_state,
-        **({"balance_sheet_divergence": copy.deepcopy(record["valuation_balance_sheet_divergence"])}
+        **({"balance_sheet_divergence": record["valuation_balance_sheet_divergence"]}
            if "valuation_balance_sheet_divergence" in record else {}),
         "share_basis": summary.get("share_basis") or valuation_record.get("share_basis"),
         "size_context": {"state": AVAILABLE if size_available else "UNAVAILABLE",
@@ -611,59 +611,94 @@ def build_ticker_decision_input(
     }
 
 
+class DecisionInputCoverage:
+    """One-pass form of ``coverage``. Counts the decision-input projection and drops it."""
+
+    def __init__(self):
+        self.count = 0
+        self.freshness: Counter[str] = Counter()
+        self.availability: Counter[str] = Counter()
+        self.evidence = {name: 0 for name in EVIDENCE_CLASSES}
+        self.dimension_state = {name: {state: 0 for state in DIMENSION_STATES} for name in DIMENSIONS}
+        self.valuation_class: Counter[Any] = Counter()
+        self.bridge: Counter[Any] = Counter()
+        self.gated = 0
+        self.official = 0
+        self.current_session = 0
+        self.adtv = 0
+        self.adv = 0
+        self.execution_state: Counter[str] = Counter()
+        self.policy_unbound = 0
+
+    def observe(self, item: Mapping[str, Any]) -> None:
+        self.count += 1
+        dimensions = item.get("dimensions") or {}
+        fundamental = dimensions.get("FUNDAMENTAL") or {}
+        self.freshness[str(((fundamental.get("freshness") or {}).get("freshness_status")))] += 1
+        self.availability[str(fundamental.get("fundamental_evidence_availability"))] += 1
+        evidence_class = item.get("evidence_class")
+        if evidence_class in self.evidence:
+            self.evidence[evidence_class] += 1
+        for name in DIMENSIONS:
+            state = (dimensions.get(name) or {}).get("state")
+            if state in DIMENSION_STATES:
+                self.dimension_state[name][state] += 1
+        self.valuation_class[((dimensions.get("VALUATION") or {}).get("evidence_class"))] += 1
+        self.bridge[((fundamental.get("operational_bridge") or {}).get("state"))] += 1
+        self.gated += (item.get("synthesis") or {}).get("action_posture_gated_by_current_evidence") is True
+        qualified = ((dimensions.get("LIQUIDITY") or {}).get("qualified_research"))
+        if not isinstance(qualified, Mapping):
+            return
+        self.official += 1
+        fitness = qualified.get("fitness") or {}
+        self.current_session += fitness.get("CURRENT_SESSION_LIQUIDITY_RESEARCH") == "ELIGIBLE"
+        self.adtv += fitness.get("ADTV_RESEARCH") == "ELIGIBLE"
+        self.adv += fitness.get("ADV_VOLUME_RESEARCH") in ("ELIGIBLE", "PARTIAL")
+        envelope = qualified.get("execution_capacity_research") or {}
+        self.execution_state[str(envelope.get("state"))] += 1
+        self.policy_unbound += "POLICY_UNBOUND" in (envelope.get("reason_codes") or [])
+
+    def finish(self) -> dict[str, Any]:
+        return {
+            "contract_version": CONTRACT_VERSION,
+            "denominator": COVERAGE_DENOMINATOR,
+            "denominator_count": self.count,
+            "fundamental_freshness_distribution": dict(sorted(self.freshness.items())),
+            "fundamental_evidence_availability_distribution": dict(sorted(self.availability.items())),
+            "evidence_class_distribution": dict(self.evidence),
+            "dimension_state_distribution": {name: dict(states) for name, states in self.dimension_state.items()},
+            "valuation_evidence_class_distribution": dict(sorted(self.valuation_class.items())),
+            "fundamental_bridge_distribution": dict(sorted(self.bridge.items())),
+            "action_posture_gated_by_current_evidence": self.gated,
+            "qualified_liquidity": {
+                "official_supplied": self.official,
+                "current_session_liquidity_research_eligible": self.current_session,
+                "adtv_research_eligible": self.adtv,
+                "adv_volume_research_partial": self.adv,
+                "execution_capacity_state_distribution": dict(sorted(self.execution_state.items())),
+                "policy_unbound": self.policy_unbound,
+                "live_position_sizing": BLOCKED,
+                "pit_backtest": BLOCKED,
+                "execution_replay": BLOCKED,
+                "raw_as_traded": "NOT_PROMOTED",
+                "adv_volume_basis": "AS_TRADED_NOT_CA_NORMALIZED",
+                "per_record_fitness_is_authoritative": True,
+            },
+        }
+
+
 def coverage(records: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
-    inputs = [record.get("current_research_decision_input") or {} for record in records.values()]
-    return {
-        "contract_version": CONTRACT_VERSION,
-        "denominator": COVERAGE_DENOMINATOR,
-        "denominator_count": len(inputs),
-        "fundamental_freshness_distribution": dict(sorted(Counter(
-            str((((item.get("dimensions") or {}).get("FUNDAMENTAL") or {}).get("freshness") or {}).get("freshness_status"))
-            for item in inputs).items())),
-        "fundamental_evidence_availability_distribution": dict(sorted(Counter(
-            str(((item.get("dimensions") or {}).get("FUNDAMENTAL") or {}).get("fundamental_evidence_availability"))
-            for item in inputs).items())),
-        "evidence_class_distribution": {name: sum(item.get("evidence_class") == name for item in inputs)
-                                        for name in EVIDENCE_CLASSES},
-        "dimension_state_distribution": {
-            name: {state: sum(((item.get("dimensions") or {}).get(name) or {}).get("state") == state for item in inputs)
-                   for state in DIMENSION_STATES}
-            for name in DIMENSIONS
-        },
-        "valuation_evidence_class_distribution": dict(sorted(Counter(
-            ((item.get("dimensions") or {}).get("VALUATION") or {}).get("evidence_class") for item in inputs).items())),
-        "fundamental_bridge_distribution": dict(sorted(Counter(
-            (((item.get("dimensions") or {}).get("FUNDAMENTAL") or {}).get("operational_bridge") or {}).get("state")
-            for item in inputs).items())),
-        "action_posture_gated_by_current_evidence": sum(
-            (item.get("synthesis") or {}).get("action_posture_gated_by_current_evidence") is True for item in inputs),
-        "qualified_liquidity": _qualified_liquidity_coverage(inputs),
-    }
+    observed = DecisionInputCoverage()
+    for record in records.values():
+        observed.observe(record.get("current_research_decision_input") or {})
+    return observed.finish()
 
 
 def _qualified_liquidity_coverage(inputs: list[Mapping[str, Any]]) -> dict[str, Any]:
-    qualified = [((item.get("dimensions") or {}).get("LIQUIDITY") or {}).get("qualified_research") for item in inputs]
-    supplied = [item for item in qualified if isinstance(item, Mapping)]
-    envelopes = [item.get("execution_capacity_research") or {} for item in supplied]
-    return {
-        "official_supplied": len(supplied),
-        "current_session_liquidity_research_eligible": sum(
-            (item.get("fitness") or {}).get("CURRENT_SESSION_LIQUIDITY_RESEARCH") == "ELIGIBLE" for item in supplied
-        ),
-        "adtv_research_eligible": sum((item.get("fitness") or {}).get("ADTV_RESEARCH") == "ELIGIBLE" for item in supplied),
-        "adv_volume_research_partial": sum(
-            (item.get("fitness") or {}).get("ADV_VOLUME_RESEARCH") in ("ELIGIBLE", "PARTIAL") for item in supplied
-        ),
-        "execution_capacity_state_distribution": dict(sorted(Counter(
-            str(envelope.get("state")) for envelope in envelopes).items())),
-        "policy_unbound": sum("POLICY_UNBOUND" in (envelope.get("reason_codes") or []) for envelope in envelopes),
-        "live_position_sizing": BLOCKED,
-        "pit_backtest": BLOCKED,
-        "execution_replay": BLOCKED,
-        "raw_as_traded": "NOT_PROMOTED",
-        "adv_volume_basis": "AS_TRADED_NOT_CA_NORMALIZED",
-        "per_record_fitness_is_authoritative": True,
-    }
+    observed = DecisionInputCoverage()
+    for item in inputs:
+        observed.observe(item)
+    return observed.finish()["qualified_liquidity"]
 
 
 # ── Current Research coverage / decision-fitness read model ──────────────────

@@ -1131,3 +1131,75 @@ class TestCorporateIntelligenceWiring:
         assert art["records"]["AAA"]["corporate_intelligence_context"]["state"] == "NOT_PROVIDED"
         assert art["coverage"]["corporate_intelligence_context_evaluated"] == 0
         assert art["records"]["AAA"]["financial_composite_context"]["financial_composite_state"] in iidp.FINANCIAL_COMPOSITE_STATES
+
+
+class TestSharedValuationSnapshots:
+    """The canonical JSON still emits each valuation site. The live record keeps one object."""
+
+    def _decision(self, *, valuation, divergence, peer, disposition=True):
+        return iidp.build_ticker_integrated_decision(
+            ticker="AAA",
+            as_of_session="2026-08-28",
+            tactical_record=_sample_tactical_record(),
+            financial_record=_sample_financial_record(),
+            valuation_record=valuation,
+            relative_volume_record=None,
+            market_sector_record=None,
+            technical_coverage_disposition_record=_current_disposition("2026-08-28") if disposition else None,
+            financial_peer_context=peer,
+            valuation_balance_sheet_divergence=divergence,
+        )
+
+    def test_one_snapshot_serves_every_serialized_site_without_aliasing_inputs(self) -> None:
+        import copy
+        import tracemalloc
+        valuation = _sample_valuation_record()
+        valuation["intrinsic_scenario_valuation"] = {
+            "contract_version": "not-a-bound-projection",
+            "rows": [{"n": index, "cells": {str(column): column for column in range(8)}} for index in range(400)],
+        }
+        divergence = {
+            "assessment": "BALANCE_SHEET_DIVERGENCE",
+            "rows": [{"n": index, "cells": {str(column): column for column in range(8)}} for index in range(400)],
+        }
+        peer = {
+            "source_materialization_identity": "peer-materialization-1",
+            "rows": [{"n": index, "metric": "cash_to_assets"} for index in range(200)],
+        }
+        source_intrinsic = valuation["intrinsic_scenario_valuation"]
+        first = self._decision(valuation=valuation, divergence=divergence, peer=peer)
+        second = self._decision(valuation=valuation, divergence=divergence, peer=peer)
+        intrinsic = first["intrinsic_scenario_valuation"]
+        valuation_axis = first["evidence_axes"]["VALUATION"]["context"]
+        valuation_dimension = first["current_research_decision_input"]["dimensions"]["VALUATION"]
+        assert intrinsic is valuation_axis["intrinsic_scenario_valuation"]
+        assert intrinsic is valuation_dimension["intrinsic_scenario_valuation"]
+        assert intrinsic is not source_intrinsic
+        assert first["valuation_balance_sheet_divergence"] is valuation_axis["balance_sheet_divergence"]
+        assert first["valuation_balance_sheet_divergence"] is valuation_dimension["balance_sheet_divergence"]
+        assert first["valuation_balance_sheet_divergence"] is not divergence
+        fundamental_dimension = first["current_research_decision_input"]["dimensions"]["FUNDAMENTAL"]
+        assert first["financial_peer_context"] is first["evidence_axes"]["FUNDAMENTAL"]["context"]["financial_peer_context"]
+        assert first["financial_peer_context"] is fundamental_dimension["financial_peer_context"]
+        assert first["financial_peer_context"] is not peer
+        assert divergence["rows"][0]["cells"]["0"] == 0
+        assert peer["source_materialization_identity"] == "peer-materialization-1"
+        assert first["decision_identity"] == second["decision_identity"]
+        assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+        assert first["ticker"] == "AAA"
+        assert "BALANCE_SHEET_DIVERGENCE" in json.dumps(first["valuation_balance_sheet_divergence"])
+        tracemalloc.start()
+        duplicate = [copy.deepcopy(first["valuation_balance_sheet_divergence"]) for _ in range(2)]
+        _, avoided_peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        del duplicate
+        assert avoided_peak > 100_000
+
+    def test_missing_valuation_and_disposition_stay_fail_closed(self) -> None:
+        decision = self._decision(valuation=None, divergence=None, peer=None, disposition=False)
+        assert "intrinsic_scenario_valuation" not in decision
+        assert "valuation_balance_sheet_divergence" not in decision
+        assert "financial_peer_context" not in decision
+        assert decision["evidence_currency"] == iidp.EVIDENCE_CURRENCY_NO_CURRENT_EVIDENCE
+        assert decision["research_action_posture"] == iidp.POSTURE_INSUFFICIENT
+        assert decision["evidence_currency_gate"]["applied"] is True

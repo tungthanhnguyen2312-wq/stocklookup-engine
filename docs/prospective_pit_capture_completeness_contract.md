@@ -142,6 +142,43 @@ proofs that permit sparse maturation.
 
 ## Normal Daily boundary and readiness
 
+### Capture-only operator (Owner-approved implementation; deployment separately gated)
+
+`tools/run_capture_only.py --session YYYY-MM-DD` describes the source-only operation
+without acquiring data. `--execute --receipt-dir <external-directory>` requires the
+deployed active workspace, approved interpreter and exact source receipt. It composes
+the existing working-date probe, Phase A, qualified exact-session snapshot acquisition,
+Phase B, selected official listing observations, immutable market/binding retention,
+and `complete_capture_session`, with `t0_snapshot_identity=None`. It does not invoke
+Level-2 product materialization, IID, Producer, runtime publication or T0 construction.
+Capture completeness and decision T0 remain independent; ordinary Daily keeps its
+existing entrypoint and requirements.
+
+The operator and Owner Daily share a nonblocking kernel writer lease. A capture child
+must prove membership in its named, non-breakaway Windows Job. Capture uses a stricter
+3-GiB aggregate Job cap, the unchanged 7-GiB process cap, a 1,800-second deadline,
+and unchanged 1-GiB physical / 2-GiB system commit / 0.25-GiB Owner reserves.
+Admission therefore requires 4.25 GiB available physical and 5 GiB available commit,
+observable writer state, no concurrent writer and exact source bytes. This bounds a
+source operation; it is not a measured complete-capture demand or a revised Daily
+capacity qualification. Unknown probes, allocation-limit events and unconfirmed tree
+reaping refuse success. No operation retry or historical input substitution is added.
+
+The external receipt directory is fresh per invocation. Existing current source
+families are copied with raw-hash verification before acquisition. Immutable receipts,
+snapshot files and complete-session publication use same-volume atomic publication.
+On failure preserve authentic partial raw data; do not delete/re-date it or undo a valid
+complete session. Mutable working views may be restored only from a verified matching
+backup under exclusive ownership, never over newly qualified immutable originals.
+No database or Daily registry write is part of this operator. The runtime candidate
+database is queried using its existing read-only connection.
+
+The ordinary capture window and all calendar/source gates remain binding. Listing
+knowledge must itself belong to the requested session: after midnight, only verified
+retained listing acquisition from that original session may be used. A later listing
+fetch is not backdated. This operator adds no source, PIT, decision or execution
+authority and cannot reconstruct an October-26/27 T0 or reset historical cohorts.
+
 The Owner-approved [versioned retention reader transition](retention_reader_versioned_transition_contract.md)
 adds independent origination/handoff proof for original T0 reuse. It preserves
 historical source verification and does not alter capture completion or this writer.
