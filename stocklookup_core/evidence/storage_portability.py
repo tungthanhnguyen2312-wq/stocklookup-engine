@@ -93,8 +93,12 @@ def _read_proof(reference, *, backend):
 
 
 def verify_location(reference, *, backend, original_path, artifact_identity, session,
-                    observer=None):
-    """Verify the pinned registration and current bytes, never infer a new identity."""
+                    observer=None, content_memo=None):
+    """Verify the pinned registration and current bytes, never infer a new identity.
+
+    ``content_memo`` (reader processes only) skips re-hashing bytes this process already
+    hashed against the same proof, and only while the full native fingerprint is unchanged.
+    """
     vault = backend
     proof = _read_proof(reference, backend=vault)
     vault.require(proof["original_path"] == str(original_path)
@@ -104,10 +108,14 @@ def verify_location(reference, *, backend, original_path, artifact_identity, ses
     qualify_volume(target, proof["volume"], backend=vault, observer=observer)
     with vault.locked_file(target):
         before = vault.fingerprint(target)
+        key = (str(target), proof["sha256"])
+        hashed = content_memo is not None and content_memo.get(key) == before
         vault.require(before == proof["location_fingerprint"] and target.stat().st_size == proof["bytes"]
-                      and vault.sha(target) == proof["sha256"]
+                      and (hashed or vault.sha(target) == proof["sha256"])
                       and vault.fingerprint(target) == before, "STORAGE_CONTENT_OR_FINGERPRINT_CHANGED")
         qualify_volume(target, proof["volume"], backend=vault, observer=observer)
+        if content_memo is not None:
+            content_memo[key] = before
     return target, proof
 
 
