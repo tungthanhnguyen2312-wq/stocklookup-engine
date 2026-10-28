@@ -536,7 +536,117 @@ def _sandbox_streamed_t0(experiment, iid_path, manifest, session):
     recovered = recover(path, created_at="2026-10-28T00:00:00+07:00", diagnostic=True)
     return {"status": "VERIFIED", "path": str(path), "bytes": path.stat().st_size, "reads": store.reads,
             "commit_before": before, "commit_after": _private_commit(),
-            "index_identity": recovered.get("artifact_identity")}
+            "index_identity": recovered.get("artifact_identity"),
+            "production_t0_equivalent": False,
+            "qualification": "RECOVERED_STREAMING_MECHANICS_ONLY",
+            "missing_production_inputs": ["exact_session_snapshot"]}
+
+
+LOG_TAIL_BYTES = 4096
+
+
+def bounded_log_tail(path: Path, limit: int = LOG_TAIL_BYTES) -> str:
+    """Read only the last ``limit`` bytes. The full log stays on disk."""
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - limit))
+            return handle.read(limit).decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def last_completed_stage(path: Path) -> str | None:
+    tail = bounded_log_tail(path, 8192).strip()
+    if not tail:
+        return None
+    line = tail.splitlines()[-1]
+    try:
+        row = json.loads(line)
+    except ValueError:
+        return None
+    if not isinstance(row, dict):
+        return None
+    return row.get("subtask") or row.get("status")
+
+
+def write_child_exception_receipt(experiment: Path, exc: BaseException) -> None:
+    payload = {
+        "status": "CHILD_EXCEPTION",
+        "seal_boundary": "FAILED",
+        "stage": "CHILD_UNCAUGHT",
+        "error": type(exc).__name__ + ":" + str(exc),
+        "traceback": traceback.format_exc(),
+    }
+    (experiment / "child-result.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def observe_child_outcome(experiment: Path, *, returncode, guard_reason, guard_diagnostics) -> dict:
+    """Classify a finished child without inventing a successful child receipt."""
+    child_path = experiment / "child-result.json"
+    stdout_log = experiment / "child-stdout.log"
+    stderr_log = experiment / "child-stderr.log"
+    child_present = child_path.is_file()
+    child_payload = None
+    if child_present:
+        try:
+            loaded = json.loads(child_path.read_text(encoding="utf-8"))
+            child_payload = loaded if isinstance(loaded, dict) else None
+        except (OSError, ValueError, UnicodeError):
+            child_payload = None
+    reason = None if guard_reason is None else str(guard_reason)
+    stderr_tail = bounded_log_tail(stderr_log)
+    if reason and "DAILY_CAPACITY_MEMORY_LIMIT" in reason:
+        kind = "MEMORY_LIMIT"
+    elif reason:
+        kind = "GUARD_FAILURE"
+    elif child_payload and child_payload.get("status") == "CHILD_EXCEPTION":
+        kind = "CHILD_EXCEPTION"
+    elif child_present:
+        kind = "CHILD_RESULT"
+    elif "ImportError" in stderr_tail or "ModuleNotFoundError" in stderr_tail:
+        kind = "IMPORT_FAILURE"
+    else:
+        kind = "CHILD_EXIT_WITHOUT_RESULT"
+    stage = None
+    if child_payload:
+        stage = child_payload.get("stage") or child_payload.get("seal_boundary")
+    if stage is None:
+        stage = last_completed_stage(experiment / "stages.jsonl")
+    parent_path = experiment / "parent-observed-failure.json"
+    parent_written = False
+    if not child_present:
+        parent = {
+            "status": "PARENT_OBSERVED_FAILURE",
+            "kind": kind,
+            "returncode": returncode,
+            "reason": reason,
+            "guard_diagnostics": guard_diagnostics if isinstance(guard_diagnostics, dict) else {},
+            "last_completed_stage": stage,
+            "stdout_log": str(stdout_log),
+            "stderr_log": str(stderr_log),
+            "child_result_present": False,
+        }
+        parent_path.write_text(json.dumps(parent, indent=2), encoding="utf-8")
+        parent_written = True
+    return {
+        "returncode": returncode,
+        "outcome_kind": kind,
+        "last_completed_stage": stage,
+        "guard_reason": reason,
+        "guard_diagnostics": guard_diagnostics if isinstance(guard_diagnostics, dict) else {},
+        "stdout_tail": bounded_log_tail(stdout_log),
+        "stderr_tail": stderr_tail,
+        "evidence": {
+            "stdout_log": str(stdout_log),
+            "stderr_log": str(stderr_log),
+            "child_result": str(child_path) if child_present else None,
+            "parent_observed_failure": str(parent_path) if parent_written else None,
+            "guard_result": str(experiment / "guard-result.json"),
+            "stages": str(experiment / "stages.jsonl"),
+        },
+    }
 
 
 def main() -> None:
@@ -579,14 +689,24 @@ def main() -> None:
             return windows_memory()
 
         command = [sys.executable, "-B", "-u", str(Path(__file__).resolve()), "--child", str(experiment)]
+        stdout_log = experiment / "child-stdout.log"
+        stderr_log = experiment / "child-stderr.log"
+        returncode = None
+        guard_reason = None
         try:
             returncode = guard.run_capacity_guarded(
                 command, cwd=ROOT, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
                 memory_probe=probe, on_diagnostics=diagnostics.update,
-                tree_ceiling_bytes=enforced_tree)
+                tree_ceiling_bytes=enforced_tree,
+                stdout_path=stdout_log, stderr_path=stderr_log)
             diagnostics.update(returncode=returncode)
         except OSError as exc:
-            diagnostics.update(reason=str(exc), returncode=1, guard_diagnostics=getattr(exc, "diagnostics", {}))
+            guard_reason = str(exc)
+            diagnostics.update(reason=guard_reason, returncode=1, guard_diagnostics=getattr(exc, "diagnostics", {}))
+            returncode = 1
+        diagnostics.update(observe_child_outcome(
+            experiment, returncode=returncode, guard_reason=guard_reason,
+            guard_diagnostics=diagnostics.get("guard_diagnostics") or {}))
         if diagnostics.get("job_memory_limit_bytes") != enforced_tree:
             diagnostics["ceiling_mismatch"] = {
                 "enforced_tree_bytes": enforced_tree,
@@ -610,7 +730,44 @@ def main() -> None:
     raise SystemExit(diagnostics.get("returncode", 1))
 
 
+def _diagnostic_fixture(mode: str, experiment: Path) -> int:
+    """Small child fixtures for the diagnostic contract. Not a Producer seal."""
+    experiment.mkdir(parents=True, exist_ok=True)
+    if mode == "raise":
+        print("child-stdout-marker", flush=True)
+        print("child-stderr-marker", file=sys.stderr, flush=True)
+        raise RuntimeError("fixture-child-exception")
+    if mode == "silent-exit":
+        print("silent-stdout", flush=True)
+        print("silent-stderr", file=sys.stderr, flush=True)
+        return 7
+    raise SystemExit("UNKNOWN_DIAGNOSTIC_FIXTURE")
+
+
 if __name__ == "__main__":
+    if "--diagnostic-fixture" in sys.argv:
+        fixture = sys.argv[sys.argv.index("--diagnostic-fixture") + 1]
+        target = Path(sys.argv[-1])
+        try:
+            code = _diagnostic_fixture(fixture, target)
+        except BaseException as exc:
+            if not isinstance(exc, SystemExit):
+                write_child_exception_receipt(target, exc)
+                code = 1
+            else:
+                raise
+        raise SystemExit(code)
     if "--child" in sys.argv:
-        raise SystemExit(child(Path(sys.argv[-1])))
+        target = Path(sys.argv[-1])
+        try:
+            code = child(target)
+        except BaseException as exc:
+            if isinstance(exc, SystemExit):
+                raise
+            try:
+                write_child_exception_receipt(target, exc)
+            except OSError:
+                pass
+            raise SystemExit(1) from exc
+        raise SystemExit(code)
     main()

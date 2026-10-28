@@ -389,7 +389,8 @@ ORDINARY_TREE_CEILING_BYTES = 8 * GIB
 
 def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str, str],
                          memory_probe, on_start=None, on_diagnostics=None,
-                         tree_ceiling_bytes: int | None = None) -> int:
+                         tree_ceiling_bytes: int | None = None,
+                         stdout_path: Path | None = None, stderr_path: Path | None = None) -> int:
     """Qualified Owner child only: strict Windows Job, inherited logs, no degraded launch.
 
     Reuse the existing containment/reap primitives. System probes use GetPerformanceInfo,
@@ -418,10 +419,20 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
     process = None
     assigned = False
     failure = None
+    stdout_handle = None
+    stderr_handle = None
     try:
         require_reserves()
-        process = subprocess.Popen(list(command), cwd=cwd, env=dict(env),
-                                   creationflags=0x00000004)  # contain before any user code
+        popen_kwargs: dict[str, Any] = {"cwd": cwd, "env": dict(env), "creationflags": 0x00000004}
+        if stdout_path is not None:
+            Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
+            stdout_handle = open(stdout_path, "wb", buffering=0)
+            popen_kwargs["stdout"] = stdout_handle
+        if stderr_path is not None:
+            Path(stderr_path).parent.mkdir(parents=True, exist_ok=True)
+            stderr_handle = open(stderr_path, "wb", buffering=0)
+            popen_kwargs["stderr"] = stderr_handle
+        process = subprocess.Popen(list(command), **popen_kwargs)  # contain before any user code
         job.assign(int(process._handle))
         assigned = True
         if on_start is not None:
@@ -464,6 +475,12 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
                            "limit_scope": "UNKNOWN", "peak_process_committed_bytes": None,
                            "peak_job_committed_bytes": None}
         finally:
+            if stdout_handle is not None:
+                stdout_handle.close()
+                stdout_handle = None
+            if stderr_handle is not None:
+                stderr_handle.close()
+                stderr_handle = None
             job.close()
         diagnostics.update(immediate_child_reaped=reaped, tree_termination_confirmed=empty)
         if failure is not None:

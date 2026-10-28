@@ -1437,7 +1437,7 @@ def retain_prospective_decision_snapshot(
     genuinely changed decision a distinct snapshot; no session-shaped working
     artifact can silently rewrite the original T0 decision.
     """
-    from prospective_decision_retention import build_snapshot, write_immutable_snapshot
+    from prospective_decision_retention import build_snapshot, streaming_scratch_dir, write_immutable_snapshot
     from stocklookup_core.tactical.contextual_technical_dispatch import PRODUCTION_V2_START_SESSION
 
     if session >= PRODUCTION_V2_START_SESSION:
@@ -1457,6 +1457,7 @@ def retain_prospective_decision_snapshot(
             session=session, operation_identity=operation_identity,
             producer_run_identity=producer_result.get("run_identity"), integrated_artifact=integrated,
             exact_session_snapshot=exact_session_snapshot,
+            scratch_dir=streaming_scratch_dir(output_root or root),
             **({"progress_callback": progress_callback} if progress_callback is not None else {}),
         )
         seal_index = None
@@ -1472,7 +1473,14 @@ def retain_prospective_decision_snapshot(
         path = write_immutable_snapshot(output_root or root, snapshot,
             **({"on_written": index_written} if session >= PRODUCTION_V2_START_SESSION else {}))
     except Exception as exc:
-        return {"status": "UNAVAILABLE", "reason": f"PROSPECTIVE_SNAPSHOT_RETENTION_FAILED:{type(exc).__name__}:{exc}"}
+        # Validation gaps stay visible and non-retained. A publication failure
+        # (cross-volume replace, scratch refusal, or an OS write error) is not
+        # a completed Daily: the exact reason is raised, not returned as RETAINED.
+        reason = f"PROSPECTIVE_SNAPSHOT_RETENTION_FAILED:{type(exc).__name__}:{exc}"
+        text = str(exc)
+        if isinstance(exc, OSError) or "STREAMED_SNAPSHOT_CROSS_VOLUME" in text or "STREAMED_SNAPSHOT_SCRATCH_REQUIRED" in text:
+            raise CanonicalPostCloseError("REFUSE_CANONICAL_POST_CLOSE:T0_PUBLICATION_FAILED:" + reason) from exc
+        return {"status": "UNAVAILABLE", "reason": reason}
     return {"status": "RETAINED", "artifact": snapshot, "path": path, "seal_index": seal_index}
 
 

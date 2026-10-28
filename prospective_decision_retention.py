@@ -364,15 +364,48 @@ def build_snapshot(
     return result
 
 
+def streaming_scratch_dir(root: str | Path) -> Path:
+    """Staging directory for a streamed T0. It is on the destination volume.
+
+    The system temporary directory is not used. On this host that directory is
+    another drive, and Windows rejects ``os.replace`` across drives.
+    """
+    return Path(root) / "operations-review" / "prospective-decision-retention-v1" / ".streaming"
+
+
+def _volume_key(path: Path) -> str:
+    return os.path.splitdrive(str(Path(path).resolve()))[0].casefold()
+
+
+def _same_volume(left: Path, right: Path) -> bool:
+    return _volume_key(left) == _volume_key(right)
+
+
+def _remove_owned_staging(directory, published: Path) -> None:
+    """Remove one staging directory this writer created. Never a sealed snapshot."""
+    import shutil
+    if directory is None:
+        return
+    directory = Path(directory)
+    try:
+        if published.exists() and published.resolve().is_relative_to(directory.resolve()):
+            return
+        if directory.exists() and directory.is_dir():
+            shutil.rmtree(directory)
+    except OSError:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
 def _build_streamed_snapshot(*, session, operation_identity, producer_run_identity, integrated_artifact, records,
                             artifact_identity, price_records, exact_session_snapshot, progress_callback, scratch_dir):
     """Write one T0 row at a time. The returned records mapping reads that file."""
     import shutil
     from owner_daily_progress import safe_callback
     from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping, SortedRecordArtifactWriter
-    parent = Path(scratch_dir) if scratch_dir is not None else None
-    if parent is not None:
-        parent.mkdir(parents=True, exist_ok=True)
+    if scratch_dir is None:
+        raise ProspectiveDecisionRetentionError("STREAMED_SNAPSHOT_SCRATCH_REQUIRED")
+    parent = Path(scratch_dir)
+    parent.mkdir(parents=True, exist_ok=True)
     directory = Path(tempfile.mkdtemp(prefix="prospective-t0-", dir=parent))
     target = directory / "prospective_decision_snapshot.json"
     writer = SortedRecordArtifactWriter(target, newline=os.linesep)
@@ -449,29 +482,32 @@ def _file_sha(path: Path) -> tuple[str, int]:
 
 
 def _publish_streamed_snapshot(root, snapshot, store, *, on_written):
-    import shutil
     from stocklookup_core.evidence.record_artifact_loading import RecordWriteReceipt
     path = snapshot_path(root, snapshot)
     path.parent.mkdir(parents=True, exist_ok=True)
     source = Path(store.path)
-    source_sha, source_size = _file_sha(source)
-    if source_size != store.receipt.size or source_sha != store.receipt.serialized_sha256:
-        raise ProspectiveDecisionRetentionError("STREAMED_SNAPSHOT_BYTES_MISMATCH")
-    if not path.exists() and source.resolve() != path.resolve():
-        os.replace(source, path)
-    elif path.exists():
-        existing_sha, existing_size = _file_sha(path)
-        if existing_sha != source_sha or existing_size != source_size:
-            raise ProspectiveDecisionRetentionError("IMMUTABLE_PROSPECTIVE_SNAPSHOT_CONFLICT:" + str(path))
-    stat = path.stat()
-    store.rebind(path, RecordWriteReceipt(path.resolve(), stat.st_size, stat.st_mtime_ns, source_sha))
-    temporary = store.temporary_directory
-    store.temporary_directory = None
-    if temporary is not None:
-        shutil.rmtree(temporary, ignore_errors=True)
-    if on_written:
-        on_written(path, source_sha)
-    return path
+    temporary = getattr(store, "temporary_directory", None)
+    try:
+        source_sha, source_size = _file_sha(source)
+        if source_size != store.receipt.size or source_sha != store.receipt.serialized_sha256:
+            raise ProspectiveDecisionRetentionError("STREAMED_SNAPSHOT_BYTES_MISMATCH")
+        if not _same_volume(source, path):
+            raise ProspectiveDecisionRetentionError(
+                "STREAMED_SNAPSHOT_CROSS_VOLUME:" + _volume_key(source) + "->" + _volume_key(path))
+        if not path.exists() and source.resolve() != path.resolve():
+            os.replace(source, path)
+        elif path.exists():
+            existing_sha, existing_size = _file_sha(path)
+            if existing_sha != source_sha or existing_size != source_size:
+                raise ProspectiveDecisionRetentionError("IMMUTABLE_PROSPECTIVE_SNAPSHOT_CONFLICT:" + str(path))
+        stat = path.stat()
+        store.rebind(path, RecordWriteReceipt(path.resolve(), stat.st_size, stat.st_mtime_ns, source_sha))
+        if on_written:
+            on_written(path, source_sha)
+        return path
+    finally:
+        store.temporary_directory = None
+        _remove_owned_staging(temporary, path)
 
 
 def snapshot_path(root: str | Path, snapshot: Mapping[str, Any]) -> Path:
