@@ -1349,45 +1349,59 @@ def build_enrichment_components(
         else:
             priority_resolution = {"status": "SUPPLIED_BY_CALLER", "artifact_identity": queue.get("artifact_identity")}
         results["opportunity_priority_queue"] = priority_resolution
-        res = build(
-            session=session,
-            # The additive bar context needs the actual retained acquisition cutoff.
-            # Existing feature builders above keep their standing calculation inputs.
-            requested_at=product_requested_at,
-            technical_structure_artifact=tactical_projection,
-            financial_analysis_artifact=financial_session_artifact["financial_analysis_product"],
-            financial_peer_materialization_artifact=financial_session_artifact,
-            historical_context_artifact=results.get("historical_context", {}).get("artifact"),
-            current_valuation_artifact=evaluated_valuation,
-            relative_volume_artifact=relative_volume,
-            market_sector_artifact=mkt,
-            legacy_decision_artifact=opp,
-            priority_queue_artifact=queue,
-            technical_coverage_disposition_artifact=technical_coverage_disposition,
-            momentum_artifact=momentum,
-            tactical_confirmation_artifact=confirmation,
-            tactical_boundaries_artifact=tactical_boundaries,
-            corporate_intelligence_artifact=corporate_intelligence_artifact,
-            operational_fundamental_integration_artifact=operational_integration,
-            liquidity_research_artifact=liquidity_research,
-            official_liquidity_artifact=official_liquidity,
-            entity_applicability_artifact=entity_applicability,
-        )
-        if res.get("session") != session:
-            raise CanonicalPostCloseError(f"INTEGRATED_DECISION_SESSION_MISMATCH:expected={session}:observed={res.get('session')}")
-        if (res.get("contract_version") != integrated_contract.CONTRACT_VERSION
-                or not isinstance(res.get("artifact_sha256"), str) or not res["artifact_sha256"]
-                or res.get("artifact_identity") != integrated_contract.CONTRACT_VERSION + ":" + res["artifact_sha256"]):
-            raise CanonicalPostCloseError("INTEGRATED_DECISION_BUILDER_IDENTITY_OR_CONTRACT_MISMATCH")
-        # The product now owns the research objects it retained. Drop the stage
-        # graphs before the canonical walk so they are not live beside it.
+        target = paths["integrated_investment_decision_product"]
+        from stocklookup_core.evidence.record_artifact_loading import SortedRecordArtifactWriter
+        writer = SortedRecordArtifactWriter(target, newline="\n")
+        try:
+            res = build(
+                session=session,
+                # The additive bar context needs the actual retained acquisition cutoff.
+                # Existing feature builders above keep their standing calculation inputs.
+                requested_at=product_requested_at,
+                technical_structure_artifact=tactical_projection,
+                financial_analysis_artifact=financial_session_artifact["financial_analysis_product"],
+                financial_peer_materialization_artifact=financial_session_artifact,
+                historical_context_artifact=results.get("historical_context", {}).get("artifact"),
+                current_valuation_artifact=evaluated_valuation,
+                relative_volume_artifact=relative_volume,
+                market_sector_artifact=mkt,
+                legacy_decision_artifact=opp,
+                priority_queue_artifact=queue,
+                technical_coverage_disposition_artifact=technical_coverage_disposition,
+                momentum_artifact=momentum,
+                tactical_confirmation_artifact=confirmation,
+                tactical_boundaries_artifact=tactical_boundaries,
+                corporate_intelligence_artifact=corporate_intelligence_artifact,
+                operational_fundamental_integration_artifact=operational_integration,
+                liquidity_research_artifact=liquidity_research,
+                official_liquidity_artifact=official_liquidity,
+                entity_applicability_artifact=entity_applicability,
+                record_writer=writer,
+            )
+            if res.get("session") != session:
+                raise CanonicalPostCloseError(f"INTEGRATED_DECISION_SESSION_MISMATCH:expected={session}:observed={res.get('session')}")
+            if (res.get("contract_version") != integrated_contract.CONTRACT_VERSION
+                    or not isinstance(res.get("artifact_sha256"), str) or not res["artifact_sha256"]
+                    or res.get("artifact_identity") != integrated_contract.CONTRACT_VERSION + ":" + res["artifact_sha256"]):
+                raise CanonicalPostCloseError("INTEGRATED_DECISION_BUILDER_IDENTITY_OR_CONTRACT_MISMATCH")
+        except Exception:
+            writer.abort()
+            if writer.committed:
+                target.unlink(missing_ok=True)
+            raise
+        # The streamed file already holds each issuer. Drop the stage graphs
+        # before any later consumer reads the store.
         del tactical_projection, relative_volume, momentum, confirmation, tactical_boundaries
         del financial_session_artifact, evaluated_valuation, entity_applicability, operational_integration
         del liquidity_research, official_liquidity, corporate_intelligence_artifact
         del technical_coverage_disposition, mkt, opp, queue
         import gc
         gc.collect()
-        iid_write_receipt = _write_json(paths["integrated_investment_decision_product"], res, capture_iid_receipt=True)
+        written = writer.receipt
+        iid_write_receipt = _IIDWriteReceipt(
+            target.resolve(), res.get("session"), res.get("contract_version"),
+            res.get("artifact_identity"), res.get("artifact_sha256"),
+            written.size, written.mtime_ns, written.serialized_sha256)
         from prospective_decision_outcome_feedback import retain_iid_classification_summary
         retain_iid_classification_summary(output_root, paths["integrated_investment_decision_product"], res)
         return res

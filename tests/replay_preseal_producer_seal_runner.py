@@ -456,12 +456,13 @@ def child(experiment: Path) -> int:
     manifests = sorted((sandbox / "operations-review" / "daily-producer-runs-v1").glob("*/run_manifest.json"))
     # A junctioned historical manifest is not this run. Keep manifests whose path does not resolve into production.
     fresh = [path for path in manifests if not path.resolve().is_relative_to(PRODUCTION_RETAINED.resolve())]
+    producer_manifest = None
     if fresh:
-        manifest = json.loads(fresh[-1].read_text(encoding="utf-8"))
+        producer_manifest = json.loads(fresh[-1].read_text(encoding="utf-8"))
         outcome["producer_manifest"] = {
             "path": str(fresh[-1]),
-            "status": manifest.get("status"),
-            "session": manifest.get("session") or manifest.get("market_session"),
+            "status": producer_manifest.get("status"),
+            "session": producer_manifest.get("session") or producer_manifest.get("market_session"),
         }
     current_iid = (sandbox / "operations-review" / "integrated-investment-decision-product-v1-20261026"
                    / "integrated_investment_decision_product_artifact.json")
@@ -471,6 +472,11 @@ def child(experiment: Path) -> int:
             "bytes": current_iid.stat().st_size,
             "window": brief._window_header(current_iid),
         }
+        if outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER":
+            try:
+                outcome["sandbox_t0"] = _sandbox_streamed_t0(experiment, current_iid, producer_manifest, SESSION)
+            except Exception as exc:
+                outcome["sandbox_t0"] = {"status": "FAILED", "error": type(exc).__name__ + ":" + str(exc)}
     previous = (sandbox / "operations-review" / "integrated-investment-decision-product-v1-20261023"
                 / "integrated_investment_decision_product_artifact.json")
     outcome["previous_iid_bytes"] = previous.stat().st_size if previous.is_file() else None
@@ -480,7 +486,57 @@ def child(experiment: Path) -> int:
     outcome["violations"] = violations
     (experiment / "child-result.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
     sealed = outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER" and (outcome.get("producer_manifest") or {}).get("status") == "COMPLETED"
-    return 0 if sealed and outcome["production_unchanged"] and not violations else 1
+    t0_verified = outcome.get("sandbox_t0", {}).get("status") == "VERIFIED"
+    return 0 if sealed and t0_verified and outcome["production_unchanged"] and not violations else 1
+
+
+def _private_commit():
+    if os.name != "nt":
+        return None
+    import ctypes
+    from ctypes import wintypes
+
+    class Counters(ctypes.Structure):
+        _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+                    ("PeakWorkingSetSize", ctypes.c_size_t), ("WorkingSetSize", ctypes.c_size_t),
+                    ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                    ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t), ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                    ("PagefileUsage", ctypes.c_size_t), ("PeakPagefileUsage", ctypes.c_size_t),
+                    ("PrivateUsage", ctypes.c_size_t)]
+    counters = Counters(cb=ctypes.sizeof(Counters))
+    try:
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        psapi = ctypes.WinDLL("psapi", use_last_error=True)
+        kernel32.GetCurrentProcess.restype = wintypes.HANDLE
+        psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
+        psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
+        process = kernel32.GetCurrentProcess()
+        if not psapi.GetProcessMemoryInfo(process, ctypes.byref(counters), counters.cb):
+            return None
+    except (OSError, AttributeError, ValueError):
+        return None
+    return {"private_bytes": int(counters.PrivateUsage), "peak_pagefile_bytes": int(counters.PeakPagefileUsage)}
+
+
+def _sandbox_streamed_t0(experiment, iid_path, manifest, session):
+    """One streamed T0 under the experiment directory. It is not retained evidence."""
+    from prospective_decision_retention import build_snapshot, write_immutable_snapshot
+    from prospective_t0_seal_index import recover
+    from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+    if not isinstance(manifest, dict):
+        raise RuntimeError("SANDBOX_T0_PRODUCER_MANIFEST_MISSING")
+    operation_identity = ((manifest.get("daily_session_operation") or {}).get("identity"))
+    before = _private_commit()
+    store, header = IndexedRecordMapping.from_file(iid_path)
+    snapshot = build_snapshot(
+        session=session, operation_identity=operation_identity,
+        producer_run_identity=manifest.get("run_identity"),
+        integrated_artifact={**header, "records": store}, scratch_dir=experiment / "t0-scratch")
+    path = write_immutable_snapshot(experiment / "sandbox-t0", snapshot)
+    recovered = recover(path, created_at="2026-10-28T00:00:00+07:00", diagnostic=True)
+    return {"status": "VERIFIED", "path": str(path), "bytes": path.stat().st_size, "reads": store.reads,
+            "commit_before": before, "commit_after": _private_commit(),
+            "index_identity": recovered.get("artifact_identity")}
 
 
 def main() -> None:

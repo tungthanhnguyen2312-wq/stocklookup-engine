@@ -197,7 +197,8 @@ def validate_integrated_source(*, session: str, integrated_decision: Mapping[str
     except (TypeError, ValueError, KeyError) as exc:
         raise IntegratedScenarioBindingError("INTEGRATED_CONTENT_INVALID") from exc
     _require_binding(all(integrated_decision.get(k) == v for k, v in identity.items()), "INTEGRATED_CONTENT_IDENTITY_MISMATCH")
-    for ticker, record in records.items():
+    for ticker in records:
+        record = records[ticker]
         _require_binding(isinstance(record, Mapping) and record.get("ticker") == ticker, "INTEGRATED_TICKER_MISMATCH")
         _require_binding(record.get("as_of_session") == session, "INTEGRATED_RECORD_SESSION_MISMATCH")
         _require_binding(record.get("research_action_policy_version") == "v2", "INTEGRATED_RECORD_POLICY_EPOCH_MISMATCH")
@@ -218,7 +219,7 @@ def validate_integrated_source(*, session: str, integrated_decision: Mapping[str
             fitness = ((record.get("evidence_axes") or {}).get("TACTICAL_STRUCTURE") or {}).get("fitness")
             _require_binding(fitness == "AVAILABLE", "INTEGRATED_TACTICAL_ELIGIBILITY_CONFLICT")
     _require_binding(set(requested) <= set(records), "REQUESTED_TICKER_MISSING")
-    return {t: records[t] for t in sorted(requested)}
+    return sorted(requested)
 
 
 def _qualified_condition(record: Mapping[str, Any], role: str, session: str) -> bool:
@@ -367,12 +368,16 @@ def _bound_record(record: Mapping[str, Any], source: str, session: str, context)
 def bind_integrated_scenarios(*, session: str, integrated_decision: Mapping[str, Any], tickers, optional_context: Mapping[str, Any] | None = None) -> dict[str, Any]:
     _require_binding(optional_context is None or isinstance(optional_context, Mapping), "OPTIONAL_CONTEXT_INVALID")
     _require_binding(all(isinstance(name, str) for name in (optional_context or {})), "OPTIONAL_CONTEXT_INVALID")
-    records = validate_integrated_source(session=session, integrated_decision=integrated_decision, tickers=tickers)
+    requested = validate_integrated_source(session=session, integrated_decision=integrated_decision, tickers=tickers)
     context_sources = _context_sources(optional_context, session)
+    source_records = integrated_decision["records"]
+    bound = {}
+    for ticker in requested:
+        bound[ticker] = _bound_record(source_records[ticker], integrated_decision["artifact_identity"], session, context_sources)
     artifact = {"contract_version": INTEGRATED_BINDING_CONTRACT, "session": session, "research_action_policy_version": "v2",
                 "integrated_artifact_identity": integrated_decision["artifact_identity"],
                 "source_context_artifacts": context_sources,
-                "records": {t: _bound_record(r, integrated_decision["artifact_identity"], session, context_sources) for t, r in records.items()},
+                "records": bound,
                 "probability_status": "UNKNOWN_UNCALIBRATED", "is_actionable": False}
     artifact.update(binding_content_identity(artifact))
     return artifact
@@ -388,14 +393,15 @@ def validate_binding_context(binding: Mapping[str, Any], *, session: str) -> dic
 
 
 def validate_integrated_binding(binding: Mapping[str, Any], *, session: str, integrated_decision: Mapping[str, Any], tickers) -> None:
-    records = validate_integrated_source(session=session, integrated_decision=integrated_decision, tickers=tickers)
+    requested = validate_integrated_source(session=session, integrated_decision=integrated_decision, tickers=tickers)
     _require_binding(isinstance(binding, Mapping) and binding.get("contract_version") == INTEGRATED_BINDING_CONTRACT, "SCENARIO_BINDING_CONTRACT_MISMATCH")
     _require_binding(binding.get("session") == session and binding.get("research_action_policy_version") == "v2", "SCENARIO_BINDING_SESSION_OR_POLICY_MISMATCH")
     _require_binding(binding.get("integrated_artifact_identity") == integrated_decision["artifact_identity"], "SCENARIO_INTEGRATED_IDENTITY_MISMATCH")
     _require_binding(all(binding.get(k) == v for k, v in binding_content_identity(binding).items()), "SCENARIO_BINDING_IDENTITY_MISMATCH")
-    _require_binding(set(binding.get("records") or {}) == set(records), "SCENARIO_BINDING_TICKER_SET_MISMATCH")
+    _require_binding(set(binding.get("records") or {}) == set(requested), "SCENARIO_BINDING_TICKER_SET_MISMATCH")
     context_sources = validate_binding_context(binding, session=session)
-    for ticker, source_record in records.items():
+    source_records = integrated_decision["records"]
+    for ticker in requested:
         bound = binding["records"][ticker]
-        expected = _bound_record(source_record, integrated_decision["artifact_identity"], session, context_sources)
+        expected = _bound_record(source_records[ticker], integrated_decision["artifact_identity"], session, context_sources)
         _require_binding(bound == expected, "SCENARIO_BINDING_RECORD_CONFLICT")

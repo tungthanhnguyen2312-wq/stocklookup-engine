@@ -86,6 +86,10 @@ def _json_bytes(value: Any, *, pretty: bool = False):
 
 def _hash(value: Any) -> str:
     if isinstance(value, dict):
+        records = value.get("records")
+        from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+        if isinstance(records, IndexedRecordMapping):
+            return records.canonical_digest({key: item for key, item in value.items() if key != "records"})
         from bounded_artifact_stream import record_mapping_digest
         return record_mapping_digest(value)
     digest = hashlib.sha256()
@@ -256,10 +260,44 @@ def _axis_completeness(record: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _retained_record(*, ticker: str, decision: Mapping[str, Any], session: str, operation_identity: str,
+                     artifact_identity: str, integrated_artifact: Mapping[str, Any], price_records: Mapping[str, Any]) -> dict[str, Any]:
+    if not isinstance(decision, Mapping) or decision.get("ticker") != ticker or decision.get("as_of_session") != session:
+        raise ProspectiveDecisionRetentionError("INTEGRATED_DECISION_RECORD_SESSION_OR_TICKER_MISMATCH:" + str(ticker))
+    decision_identity = decision.get("decision_identity")
+    if not isinstance(decision_identity, str) or not decision_identity:
+        raise ProspectiveDecisionRetentionError("INTEGRATED_DECISION_RECORD_IDENTITY_MISSING:" + str(ticker))
+    record: dict[str, Any] = {
+        "ticker": ticker,
+        "decision_session": session,
+        "integrated_decision_identity": decision_identity,
+        "canonical_operation_identity": operation_identity,
+        "source_decision_artifact_identity": artifact_identity,
+        "prospective_snapshot_contract_version": CONTRACT_VERSION,
+        "t0_contract_versions": {
+            "integrated_decision_contract": integrated_artifact.get("contract_version", FIELD_NOT_RETAINED),
+            "research_action_policy_version": integrated_artifact.get("research_action_policy_version", FIELD_NOT_RETAINED),
+            "fundamental_policy_version": decision.get("fundamental_decision_policy_version", FIELD_NOT_RETAINED),
+        },
+        "known_at": decision.get("known_at", FIELD_NOT_RETAINED),
+        "evidence_axis_snapshot": _axis_completeness(decision),
+        "trigger_condition": dict((decision.get("trigger") or {}).get("condition") or {
+            "status": FIELD_NOT_RETAINED, "reason_codes": [FIELD_NOT_RETAINED],
+        }),
+        "invalidation_condition": dict((decision.get("invalidation") or {}).get("condition") or {
+            "status": FIELD_NOT_RETAINED, "reason_codes": [FIELD_NOT_RETAINED],
+        }),
+        "t0_close_observation": next((dict(row) for row in ((price_records.get(ticker) or {}).get("observations") or [])
+                                        if isinstance(row, Mapping) and row.get("session") == session), None),
+        "integrated_decision_at_t0": dict(decision),
+    }
+    return _identity(record, RECORD_PREFIX, "prospective_snapshot_record_identity")
+
+
 def build_snapshot(
     *, session: str, operation_identity: str, producer_run_identity: str | None,
     integrated_artifact: Mapping[str, Any], exact_session_snapshot: Mapping[str, Any] | None = None,
-    progress_callback=None,
+    progress_callback=None, scratch_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     """Create the immutable T0 payload from the current canonical decision artifact."""
     if integrated_artifact.get("contract_version") != "integrated_investment_decision_product/v1":
@@ -279,43 +317,20 @@ def build_snapshot(
         safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "t0_records",
             "task_label": "Tạo bản ghi T0", "progress_kind": "RECORDS",
             "completed": len(retained), "total": len(records), "status": status})
+    from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+    price_records = (exact_session_snapshot or {}).get("records") or {}
+    if isinstance(records, IndexedRecordMapping):
+        return _build_streamed_snapshot(
+            session=session, operation_identity=operation_identity, producer_run_identity=producer_run_identity,
+            integrated_artifact=integrated_artifact, records=records, artifact_identity=artifact_identity,
+            price_records=price_records, exact_session_snapshot=exact_session_snapshot,
+            progress_callback=progress_callback, scratch_dir=scratch_dir)
     retained: dict[str, Any] = {}
     report("BEGIN")
-    price_records = (exact_session_snapshot or {}).get("records") or {}
     for ticker, decision in sorted(records.items()):
-        if not isinstance(decision, Mapping) or decision.get("ticker") != ticker or decision.get("as_of_session") != session:
-            raise ProspectiveDecisionRetentionError("INTEGRATED_DECISION_RECORD_SESSION_OR_TICKER_MISMATCH:" + str(ticker))
-        decision_identity = decision.get("decision_identity")
-        if not isinstance(decision_identity, str) or not decision_identity:
-            raise ProspectiveDecisionRetentionError("INTEGRATED_DECISION_RECORD_IDENTITY_MISSING:" + str(ticker))
-        record: dict[str, Any] = {
-            "ticker": ticker,
-            "decision_session": session,
-            "integrated_decision_identity": decision_identity,
-            "canonical_operation_identity": operation_identity,
-            "source_decision_artifact_identity": artifact_identity,
-            "prospective_snapshot_contract_version": CONTRACT_VERSION,
-            "t0_contract_versions": {
-                "integrated_decision_contract": integrated_artifact.get("contract_version", FIELD_NOT_RETAINED),
-                "research_action_policy_version": integrated_artifact.get("research_action_policy_version", FIELD_NOT_RETAINED),
-                "fundamental_policy_version": decision.get("fundamental_decision_policy_version", FIELD_NOT_RETAINED),
-            },
-            "known_at": decision.get("known_at", FIELD_NOT_RETAINED),
-            "evidence_axis_snapshot": _axis_completeness(decision),
-            "trigger_condition": dict((decision.get("trigger") or {}).get("condition") or {
-                "status": FIELD_NOT_RETAINED, "reason_codes": [FIELD_NOT_RETAINED],
-            }),
-            "invalidation_condition": dict((decision.get("invalidation") or {}).get("condition") or {
-                "status": FIELD_NOT_RETAINED, "reason_codes": [FIELD_NOT_RETAINED],
-            }),
-            "t0_close_observation": next((dict(row) for row in ((price_records.get(ticker) or {}).get("observations") or [])
-                                            if isinstance(row, Mapping) and row.get("session") == session), None),
-            # This is the complete known-at-T0 Integrated Decision record.  It
-            # includes posture, priority, why-now, coherence, all axes and the
-            # source lineage; nothing is reconstructed by a later evaluator.
-            "integrated_decision_at_t0": dict(decision),
-        }
-        retained[ticker] = _identity(record, RECORD_PREFIX, "prospective_snapshot_record_identity")
+        retained[ticker] = _retained_record(
+            ticker=ticker, decision=decision, session=session, operation_identity=operation_identity,
+            artifact_identity=artifact_identity, integrated_artifact=integrated_artifact, price_records=price_records)
         if len(retained) % 64 == 0 or len(retained) == len(records):
             report("RUNNING")
     payload: dict[str, Any] = {
@@ -349,6 +364,116 @@ def build_snapshot(
     return result
 
 
+def _build_streamed_snapshot(*, session, operation_identity, producer_run_identity, integrated_artifact, records,
+                            artifact_identity, price_records, exact_session_snapshot, progress_callback, scratch_dir):
+    """Write one T0 row at a time. The returned records mapping reads that file."""
+    import shutil
+    from owner_daily_progress import safe_callback
+    from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping, SortedRecordArtifactWriter
+    parent = Path(scratch_dir) if scratch_dir is not None else None
+    if parent is not None:
+        parent.mkdir(parents=True, exist_ok=True)
+    directory = Path(tempfile.mkdtemp(prefix="prospective-t0-", dir=parent))
+    target = directory / "prospective_decision_snapshot.json"
+    writer = SortedRecordArtifactWriter(target, newline=os.linesep)
+    completed = 0
+    try:
+        safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "t0_records",
+            "task_label": "Tạo bản ghi T0", "progress_kind": "RECORDS",
+            "completed": 0, "total": len(records), "status": "BEGIN"})
+        for ticker in records:
+            decision = records[ticker]
+            writer.add(ticker, _retained_record(
+                ticker=ticker, decision=decision, session=session, operation_identity=operation_identity,
+                artifact_identity=artifact_identity, integrated_artifact=integrated_artifact, price_records=price_records))
+            completed += 1
+            del decision
+            if completed % 64 == 0 or completed == len(records):
+                safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "t0_records",
+                    "task_label": "Tạo bản ghi T0", "progress_kind": "RECORDS",
+                    "completed": completed, "total": len(records), "status": "RUNNING"})
+        if completed != len(records):
+            raise ProspectiveDecisionRetentionError("STREAMED_SNAPSHOT_RECORD_COUNT_MISMATCH")
+        header = {
+            "schema_version": "1.0.0",
+            "contract_version": CONTRACT_VERSION,
+            "session": session,
+            "daily_session_operation_identity": operation_identity,
+            "daily_producer_run_identity": producer_run_identity,
+            "source_integrated_decision_artifact": {
+                "contract_version": integrated_artifact.get("contract_version"),
+                "artifact_identity": artifact_identity,
+                "artifact_sha256": integrated_artifact.get("artifact_sha256"),
+                "session": session,
+            },
+            "t0_price_snapshot": {
+                "snapshot_identity": (exact_session_snapshot or {}).get("snapshot_identity"),
+                "resolved_completed_session": (exact_session_snapshot or {}).get("resolved_completed_session"),
+            },
+            "decision_count": completed,
+            "authority_boundary": {
+                "immutable_t0_only": True,
+                "future_market_observations_not_embedded": True,
+                "no_policy_mutation": True,
+                "no_recommendation_reconstruction": True,
+                "no_execution_or_stop_loss": True,
+            },
+        }
+        identity, _receipt, index = writer.finish(
+            header, lambda digest: {"snapshot_identity": SNAPSHOT_PREFIX + digest})
+    except Exception:
+        writer.abort()
+        shutil.rmtree(directory, ignore_errors=True)
+        raise
+    store = IndexedRecordMapping(target, writer.receipt, index)
+    store.temporary_directory = directory
+    payload = {**header, **identity, "records": store}
+    check = {key: value for key, value in payload.items() if key != "snapshot_identity"}
+    if payload["snapshot_identity"] != SNAPSHOT_PREFIX + _hash(check):
+        target.unlink(missing_ok=True)
+        shutil.rmtree(directory, ignore_errors=True)
+        raise ProspectiveDecisionRetentionError("STREAMED_SNAPSHOT_IDENTITY_MISMATCH")
+    safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "t0_records",
+        "task_label": "Tạo bản ghi T0", "progress_kind": "RECORDS",
+        "completed": completed, "total": len(records), "status": "END"})
+    return payload
+
+
+def _file_sha(path: Path) -> tuple[str, int]:
+    digest, size = hashlib.sha256(), 0
+    with Path(path).open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+            size += len(block)
+    return digest.hexdigest(), size
+
+
+def _publish_streamed_snapshot(root, snapshot, store, *, on_written):
+    import shutil
+    from stocklookup_core.evidence.record_artifact_loading import RecordWriteReceipt
+    path = snapshot_path(root, snapshot)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    source = Path(store.path)
+    source_sha, source_size = _file_sha(source)
+    if source_size != store.receipt.size or source_sha != store.receipt.serialized_sha256:
+        raise ProspectiveDecisionRetentionError("STREAMED_SNAPSHOT_BYTES_MISMATCH")
+    if not path.exists() and source.resolve() != path.resolve():
+        os.replace(source, path)
+    elif path.exists():
+        existing_sha, existing_size = _file_sha(path)
+        if existing_sha != source_sha or existing_size != source_size:
+            raise ProspectiveDecisionRetentionError("IMMUTABLE_PROSPECTIVE_SNAPSHOT_CONFLICT:" + str(path))
+    stat = path.stat()
+    store.rebind(path, RecordWriteReceipt(path.resolve(), stat.st_size, stat.st_mtime_ns, source_sha))
+    temporary = store.temporary_directory
+    store.temporary_directory = None
+    if temporary is not None:
+        shutil.rmtree(temporary, ignore_errors=True)
+    if on_written:
+        on_written(path, source_sha)
+    return path
+
+
 def snapshot_path(root: str | Path, snapshot: Mapping[str, Any]) -> Path:
     identity = str(snapshot.get("snapshot_identity") or "")
     digest = identity.removeprefix(SNAPSHOT_PREFIX)
@@ -358,6 +483,10 @@ def snapshot_path(root: str | Path, snapshot: Mapping[str, Any]) -> Path:
 
 
 def write_immutable_snapshot(root: str | Path, snapshot: Mapping[str, Any], *, on_written=None) -> Path:
+    from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+    records = snapshot.get("records")
+    if isinstance(records, IndexedRecordMapping):
+        return _publish_streamed_snapshot(root, snapshot, records, on_written=on_written)
     path = snapshot_path(root, snapshot)
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():

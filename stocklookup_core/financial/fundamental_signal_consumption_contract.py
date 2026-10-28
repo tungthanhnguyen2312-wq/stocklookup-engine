@@ -1520,62 +1520,87 @@ def research_evidence(synthesis: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+class SynthesisCoverage:
+    """One-pass form of ``coverage``. The same counters, without a second list."""
+
+    def __init__(self):
+        self.count = 0
+        self.present: Counter[str] = Counter()
+        self.eligible: Counter[str] = Counter()
+        self.exclusions: dict[str, Counter[str]] = {}
+        self.freshness: Counter[str] = Counter()
+        self.voting: Counter[str] = Counter()
+        self.classes: dict[str, Counter[str]] = {}
+        self.votes: Counter[str] = Counter()
+        self.evidence: Counter[str] = Counter()
+        self.non_vote: dict[str, Counter[str]] = {}
+        self.grouping: Counter[str] = Counter()
+        self.source_dialect: Counter[str] = Counter()
+        self.policy: Counter[str] = Counter()
+        self.availability: Counter[str] = Counter()
+        self.risk: Counter[str] = Counter()
+        self.entity: Counter[str] = Counter()
+        self.turnaround = 0
+        self.stale = 0
+
+    def observe(self, synthesis: Mapping[str, Any]) -> None:
+        self.count += 1
+        for signal in synthesis.get("signals") or []:
+            self.present[signal["signal_id"]] += 1
+            self.classes.setdefault(signal["signal_id"], Counter())[signal.get("consumption_class")] += 1
+            if signal["decision_eligible"]:
+                self.eligible[signal["signal_id"]] += 1
+                self.freshness[signal["fitness"]["freshness"]] += 1
+            elif signal.get("exclusion"):
+                self.exclusions.setdefault(signal["signal_id"], Counter())[signal["exclusion"]] += 1
+            if signal.get("non_vote_reason"):
+                self.non_vote.setdefault(signal["signal_id"], Counter())[signal["non_vote_reason"]] += 1
+        self.voting.update(synthesis.get("signal_freshness_voting") or {})
+        derivation = synthesis.get("derivation") or {}
+        self.votes.update(f"{label}:{FAVORABLE}" for label in derivation.get("favorable_votes") or [])
+        self.votes.update(f"{label}:{ADVERSE}" for label in derivation.get("adverse_votes") or [])
+        self.grouping.update(group.get("outcome") for group in (derivation.get("vote_grouping") or {}).get("groups") or [])
+        availability = (synthesis.get("evidence_availability") or {})
+        self.evidence[f"{availability.get('state')}:{availability.get('directional_sufficiency')}"] += 1
+        self.source_dialect[str(synthesis.get("source_dialect"))] += 1
+        self.policy[str(synthesis.get("fundamental_decision_policy_version"))] += 1
+        self.availability[str(synthesis.get("fundamental_evidence_availability"))] += 1
+        self.risk[str((synthesis.get("fundamental_risk_level") or {}).get("state"))] += 1
+        self.entity[str(synthesis.get("entity_decision_applicability"))] += 1
+        self.turnaround += bool(((synthesis.get("derivation") or {}).get("turnaround") or {}).get("triggered"))
+        self.stale += bool(synthesis.get("stale_research_evidence"))
+
+    def finish(self) -> dict[str, Any]:
+        return {
+            "contract_version": CONTRACT_VERSION,
+            "signal_policy": SIGNAL_POLICY,
+            "denominator": self.count,
+            "source_dialect_distribution": dict(sorted(self.source_dialect.items())),
+            "fundamental_decision_policy_version": dict(sorted(self.policy.items())),
+            "fundamental_evidence_availability": dict(sorted(self.availability.items())),
+            "fundamental_risk_level": dict(sorted(self.risk.items())),
+            "entity_decision_applicability": dict(sorted(self.entity.items())),
+            "signal_present": dict(sorted(self.present.items())),
+            "signal_decision_eligible": dict(sorted(self.eligible.items())),
+            "signal_consumption_classes": {key: dict(sorted(value.items())) for key, value in sorted(self.classes.items())},
+            "signal_exclusions": {key: dict(sorted(value.items())) for key, value in sorted(self.exclusions.items())},
+            "signal_non_vote_reasons": {key: dict(sorted(value.items())) for key, value in sorted(self.non_vote.items())},
+            "decision_signal_freshness": dict(sorted(self.freshness.items())),
+            "signal_freshness_voting": dict(sorted(self.voting.items())),
+            "dimension_votes": dict(sorted(self.votes.items())),
+            "vote_grouping_outcomes": dict(sorted(self.grouping.items())),
+            "evidence_availability": dict(sorted(self.evidence.items())),
+            "turnaround_triggered": self.turnaround,
+            "records_with_stale_research_evidence": self.stale,
+        }
+
+
 def coverage(syntheses: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """Market-wide consumption counts over one set of syntheses (no scoring)."""
-    present: Counter[str] = Counter()
-    eligible: Counter[str] = Counter()
-    exclusions: dict[str, Counter[str]] = {}
-    freshness: Counter[str] = Counter()
-    voting: Counter[str] = Counter()
-    classes: dict[str, Counter[str]] = {}
-    votes: Counter[str] = Counter()
-    evidence: Counter[str] = Counter()
-    non_vote: dict[str, Counter[str]] = {}
-    grouping: Counter[str] = Counter()
+    observed = SynthesisCoverage()
     for synthesis in syntheses:
-        for signal in synthesis.get("signals") or []:
-            present[signal["signal_id"]] += 1
-            classes.setdefault(signal["signal_id"], Counter())[signal.get("consumption_class")] += 1
-            if signal["decision_eligible"]:
-                eligible[signal["signal_id"]] += 1
-                freshness[signal["fitness"]["freshness"]] += 1
-            elif signal.get("exclusion"):
-                exclusions.setdefault(signal["signal_id"], Counter())[signal["exclusion"]] += 1
-            if signal.get("non_vote_reason"):
-                non_vote.setdefault(signal["signal_id"], Counter())[signal["non_vote_reason"]] += 1
-        voting.update(synthesis.get("signal_freshness_voting") or {})
-        derivation = synthesis.get("derivation") or {}
-        votes.update(f"{label}:{FAVORABLE}" for label in derivation.get("favorable_votes") or [])
-        votes.update(f"{label}:{ADVERSE}" for label in derivation.get("adverse_votes") or [])
-        grouping.update(group.get("outcome") for group in (derivation.get("vote_grouping") or {}).get("groups") or [])
-        availability = (synthesis.get("evidence_availability") or {})
-        evidence[f"{availability.get('state')}:{availability.get('directional_sufficiency')}"] += 1
-
-    def distribution(key: Any) -> dict[str, int]:
-        return dict(sorted(Counter(str(key(s)) for s in syntheses).items()))
-
-    return {
-        "contract_version": CONTRACT_VERSION,
-        "signal_policy": SIGNAL_POLICY,
-        "denominator": len(syntheses),
-        "source_dialect_distribution": distribution(lambda s: s.get("source_dialect")),
-        "fundamental_decision_policy_version": distribution(lambda s: s.get("fundamental_decision_policy_version")),
-        "fundamental_evidence_availability": distribution(lambda s: s.get("fundamental_evidence_availability")),
-        "fundamental_risk_level": distribution(lambda s: (s.get("fundamental_risk_level") or {}).get("state")),
-        "entity_decision_applicability": distribution(lambda s: s.get("entity_decision_applicability")),
-        "signal_present": dict(sorted(present.items())),
-        "signal_decision_eligible": dict(sorted(eligible.items())),
-        "signal_consumption_classes": {key: dict(sorted(value.items())) for key, value in sorted(classes.items())},
-        "signal_exclusions": {key: dict(sorted(value.items())) for key, value in sorted(exclusions.items())},
-        "signal_non_vote_reasons": {key: dict(sorted(value.items())) for key, value in sorted(non_vote.items())},
-        "decision_signal_freshness": dict(sorted(freshness.items())),
-        "signal_freshness_voting": dict(sorted(voting.items())),
-        "dimension_votes": dict(sorted(votes.items())),
-        "vote_grouping_outcomes": dict(sorted(grouping.items())),
-        "evidence_availability": dict(sorted(evidence.items())),
-        "turnaround_triggered": sum(bool(((s.get("derivation") or {}).get("turnaround") or {}).get("triggered")) for s in syntheses),
-        "records_with_stale_research_evidence": sum(bool(s.get("stale_research_evidence")) for s in syntheses),
-    }
+        observed.observe(synthesis)
+    return observed.finish()
 
 
 def compact_components(synthesis: Mapping[str, Any]) -> dict[str, Any]:

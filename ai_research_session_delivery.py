@@ -267,9 +267,9 @@ def project_integrated_decision_delivery_overlay(session: str, integrated: Mappi
     return {
         **_integrated_overlay_header(session, integrated, daily_brief),
         "records": {
-            ticker: project_integrated_decision_for_ai_delivery(record, integrated_identity=integrated["artifact_identity"],
+            ticker: project_integrated_decision_for_ai_delivery(records[ticker], integrated_identity=integrated["artifact_identity"],
                                                               source_session=integrated.get("session"))
-            for ticker, record in sorted(records.items())
+            for ticker in sorted(records)
         },
     }
 
@@ -694,11 +694,12 @@ def build_dashboard_projection(
         gaps = projection["risk_data_gaps"]
         if isinstance(gaps, dict) and isinstance(gaps.get("valuation_peer_context_unavailable"), int):
             gaps["valuation_peer_context_unavailable"] = max(0, gaps["valuation_peer_context_unavailable"] - verdicts)
+        watchlist_scope = set(watchlist_tickers)
         projection["decision_card_v1"] = {
-            ticker: _decision_card(ticker, record, daily_integrated_brief,
+            ticker: _decision_card(ticker, records[ticker], daily_integrated_brief,
                                   source_session=integrated_decision.get("session"))
-            for ticker, record in sorted((integrated_decision.get("records") or {}).items())
-            if ticker in watchlist_tickers
+            for ticker in sorted(records)
+            if ticker in watchlist_scope
         }
         for ticker, decision_card in projection["decision_card_v1"].items():
             source_card = projection["ticker_cards"].get(ticker) or {}

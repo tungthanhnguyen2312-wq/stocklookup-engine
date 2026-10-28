@@ -355,8 +355,15 @@ _IDENTITY_EXCLUDED = {"artifact_sha256", "artifact_identity", "requested_at"}
 
 def content_identity(artifact: Mapping[str, Any]) -> dict[str, str]:
     from stocklookup_core.evidence.bounded_json import record_mapping_digest
-    payload = {k: v for k, v in artifact.items() if k not in _IDENTITY_EXCLUDED}
-    digest = record_mapping_digest(payload)
+    from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+    records = artifact.get("records")
+    payload = {k: v for k, v in artifact.items() if k not in _IDENTITY_EXCLUDED and k != "records"}
+    if isinstance(records, IndexedRecordMapping):
+        digest = records.canonical_digest(payload)
+    else:
+        if "records" in artifact:
+            payload["records"] = records
+        digest = record_mapping_digest(payload)
     return {"artifact_sha256": digest, "artifact_identity": f"{CONTRACT_VERSION}:{digest}"}
 
 
@@ -2002,6 +2009,7 @@ def build_artifact(
     official_liquidity_artifact: Mapping[str, Any] | None = None,
     financial_peer_materialization_artifact: Mapping[str, Any] | None = None,
     historical_context_artifact: Mapping[str, Any] | None = None,
+    record_writer=None,
 ) -> dict[str, Any]:
     """Build the market-wide integrated investment decision product artifact.
 
@@ -2161,6 +2169,19 @@ def build_artifact(
     currency_gate_applied = 0
     priority_available = 0
     position_counts: Counter[str] = Counter()
+    import current_corporate_intelligence_axis as forward_axis
+    import stocklookup_core.valuation.intrinsic_valuation as intrinsic
+    posture_class_counts: Counter[str] = Counter()
+    no_current_evidence_wait = 0
+    operational_usable = 0
+    fundamental_availability_counts: Counter[str] = Counter()
+    fundamental_risk_counts: Counter[str] = Counter()
+    divergence_counts: Counter[str] = Counter()
+    forward_coverage = forward_axis.ForwardDriverCoverage()
+    scenario_coverage = intrinsic.ScenarioCoverage()
+    synthesis_coverage = fundamental_signals.SynthesisCoverage()
+    decision_coverage = decision_input.DecisionInputCoverage()
+    produced = 0
 
     for ticker in all_tickers:
         tac_rec = tac_records.get(ticker)
@@ -2217,7 +2238,27 @@ def build_artifact(
             # Existing Technical/Tactical axis gets an additive, verified reference
             # after decision/condition identities are finalized. No extra vote.
             attach_contextual_technical(dec, contextual_records[ticker])
-        records[ticker] = dec
+        produced += 1
+        posture_class_counts[dec["posture_condition_class"]] += 1
+        if (dec["evidence_currency"] == EVIDENCE_CURRENCY_NO_CURRENT_EVIDENCE
+                and dec["research_action_posture"] == POSTURE_WAIT_FOR_CONFIRMATION):
+            no_current_evidence_wait += 1
+        if operational_fundamental_integration_artifact is not None and (
+                (dec.get("evidence_axes") or {}).get("FUNDAMENTAL", {}).get("method")
+                == operational_fundamental.CONTRACT_VERSION):
+            operational_usable += 1
+        fundamental_availability_counts[str(dec.get("fundamental_evidence_availability"))] += 1
+        fundamental_risk_counts[str((dec.get("fundamental_risk_level") or {}).get("state"))] += 1
+        divergence_counts[(dec.get("valuation_balance_sheet_divergence") or {}).get("assessment", "UNKNOWN")] += 1
+        forward_coverage.observe(dec["corporate_intelligence_context"]["forward_driver_context"])
+        if "intrinsic_scenario_valuation" in dec:
+            scenario_coverage.observe(dec["intrinsic_scenario_valuation"])
+        synthesis_coverage.observe(dec.get("fundamental_synthesis") or {})
+        decision_coverage.observe((dec.get("current_research_decision_input") or {}))
+        if record_writer is None:
+            records[ticker] = dec
+        else:
+            record_writer.add(ticker, dec)
         currency_counts[evidence_currency_class(dec["evidence_currency"])] += 1
         if dec["evidence_currency_gate"].get("applied"):
             currency_gate_applied += 1
@@ -2288,9 +2329,9 @@ def build_artifact(
 
     coverage = {
         "universe_denominator": len(all_tickers),
-        "integrated_context_available": len(records),
+        "integrated_context_available": produced,
         "research_action_posture_distribution": dict(sorted(posture_counts.items())),
-        "posture_condition_class_distribution": dict(sorted(Counter(r["posture_condition_class"] for r in records.values()).items())),
+        "posture_condition_class_distribution": dict(sorted(posture_class_counts.items())),
         "fundamental_state_distribution": dict(sorted(fund_counts.items())),
         "tactical_phase_distribution": dict(sorted(tac_counts.items())),
         "tactical_confirmation_state_distribution": dict(sorted((k, v) for k, v in tactical_confirmation_counts.items() if k is not None)),
@@ -2317,41 +2358,27 @@ def build_artifact(
         "corporate_intelligence_material_event_count": ci_material,
         "evidence_currency_distribution": dict(sorted(currency_counts.items())),
         "evidence_currency_gate_applied_count": currency_gate_applied,
-        "no_current_evidence_wait_count": sum(
-            1 for rec in records.values()
-            if rec["evidence_currency"] == EVIDENCE_CURRENCY_NO_CURRENT_EVIDENCE
-            and rec["research_action_posture"] == POSTURE_WAIT_FOR_CONFIRMATION
-        ),
+        "no_current_evidence_wait_count": no_current_evidence_wait,
         "opportunity_priority_available_count": priority_available,
         "position_context_distribution": dict(sorted(position_counts.items())),
     }
-    from current_corporate_intelligence_axis import forward_driver_coverage
-    coverage["forward_driver_context"] = forward_driver_coverage([
-        rec["corporate_intelligence_context"]["forward_driver_context"] for rec in records.values()
-    ])
-    if any("intrinsic_scenario_valuation" in rec for rec in records.values()):
-        import stocklookup_core.valuation.intrinsic_valuation as intrinsic
-        coverage["intrinsic_scenario_valuation"] = intrinsic.current_scenario_coverage(
-            [rec["intrinsic_scenario_valuation"] for rec in records.values() if "intrinsic_scenario_valuation" in rec])
+    coverage["forward_driver_context"] = forward_coverage.finish()
+    if scenario_coverage.count:
+        coverage["intrinsic_scenario_valuation"] = scenario_coverage.finish()
     if coverage["no_current_evidence_wait_count"]:
+        if record_writer is not None:
+            record_writer.abort()
         raise IntegratedDecisionProductError("INVARIANT_VIOLATION:NO_CURRENT_EVIDENCE_WAIT_FOR_CONFIRMATION")
     if operational_fundamental_integration_artifact is not None:
         coverage["operational_fundamental_integration_cohort"] = len(operational_records)
-        coverage["operational_fundamental_integration_usable"] = sum(
-            (record.get("evidence_axes") or {}).get("FUNDAMENTAL", {}).get("method") == operational_fundamental.CONTRACT_VERSION
-            for record in records.values()
-        )
-    coverage["fundamental_signal_consumption"] = fundamental_signals.coverage(
-        [record.get("fundamental_synthesis") or {} for record in records.values()])
+        coverage["operational_fundamental_integration_usable"] = operational_usable
+    coverage["fundamental_signal_consumption"] = synthesis_coverage.finish()
     coverage["fundamental_decision_policy_version"] = fundamental_signals.DECISION_POLICY_VERSION
-    coverage["fundamental_evidence_availability"] = dict(sorted(Counter(
-        str(record.get("fundamental_evidence_availability")) for record in records.values()).items()))
-    coverage["fundamental_risk_level"] = dict(sorted(Counter(
-        str((record.get("fundamental_risk_level") or {}).get("state")) for record in records.values()).items()))
-    coverage["current_research_decision_input"] = decision_input.coverage(records)
+    coverage["fundamental_evidence_availability"] = dict(sorted(fundamental_availability_counts.items()))
+    coverage["fundamental_risk_level"] = dict(sorted(fundamental_risk_counts.items()))
+    coverage["current_research_decision_input"] = decision_coverage.finish()
     if divergence_records:
-        coverage["valuation_balance_sheet_divergence"] = dict(Counter(
-            (r.get("valuation_balance_sheet_divergence") or {}).get("assessment", "UNKNOWN") for r in records.values()))
+        coverage["valuation_balance_sheet_divergence"] = dict(divergence_counts)
 
     payload: dict[str, Any] = {
         "schema_version": "integrated_investment_decision_product/1.0.0",
@@ -2398,7 +2425,24 @@ def build_artifact(
             "research_support_not_execution_instruction": True,
             "unknown_is_local": True,
         },
-        "records": records,
     }
-    payload.update(content_identity(payload))
-    return payload
+    if record_writer is None:
+        payload["records"] = records
+        payload.update(content_identity(payload))
+        return payload
+    try:
+        identity, _receipt, index = record_writer.finish(
+            payload, lambda digest: {"artifact_sha256": digest, "artifact_identity": f"{CONTRACT_VERSION}:{digest}"},
+            excluded=_IDENTITY_EXCLUDED)
+        from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+        payload["records"] = IndexedRecordMapping(record_writer.target, record_writer.receipt, index)
+        payload.update(identity)
+        if content_identity(payload) != identity:
+            raise IntegratedDecisionProductError("STREAMED_RECORD_IDENTITY_MISMATCH")
+        return payload
+    except Exception:
+        if record_writer.committed:
+            record_writer.target.unlink(missing_ok=True)
+            record_writer.committed = False
+        record_writer.abort()
+        raise

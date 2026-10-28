@@ -602,22 +602,30 @@ def load_governed_assumption_config(path):
 
 
 
-def current_scenario_coverage(projections):
-    projections = list(projections)
-    methods = {method: Counter() for method in METHODS}
-    by_family, blockers = {}, {method: Counter() for method in METHODS}
-    source_classes = Counter()
-    with_values = reverse_only = sensitivity = price_comparison = 0
-    case_available = Counter({case: 0 for case in CASES})
-    for projection in projections:
+class ScenarioCoverage:
+    """One-pass form of ``current_scenario_coverage``. Same fields, no retained list."""
+
+    def __init__(self):
+        self.count = 0
+        self.methods = {method: Counter() for method in METHODS}
+        self.by_family = {}
+        self.blockers = {method: Counter() for method in METHODS}
+        self.source_classes = Counter()
+        self.families = Counter()
+        self.with_values = self.reverse_only = self.sensitivity = self.price_comparison = 0
+        self.case_available = Counter({case: 0 for case in CASES})
+
+    def observe(self, projection):
+        self.count += 1
         family = projection["entity_family"]
-        by_family.setdefault(family, {method: Counter() for method in METHODS})
+        self.families[family] += 1
+        self.by_family.setdefault(family, {method: Counter() for method in METHODS})
         has_value = has_reverse = has_sensitivity = has_comparison = False
         available_cases = set()
         for method, row in projection["methods"].items():
-            methods[method][row["readiness"]] += 1
-            by_family[family][method][row["readiness"]] += 1
-            blockers[method].update({reason for case in row["cases"].values() for reason in case["reason_codes"]})
+            self.methods[method][row["readiness"]] += 1
+            self.by_family[family][method][row["readiness"]] += 1
+            self.blockers[method].update({reason for case in row["cases"].values() for reason in case["reason_codes"]})
             has_sensitivity |= row["sensitivity"]["state"] == "READY"
             for case, case_row in row["cases"].items():
                 value = case_row["readiness"] == "READY" and case_row["per_share_model_value"] is not None
@@ -626,19 +634,28 @@ def current_scenario_coverage(projections):
                     available_cases.add(case)
                 has_reverse |= case_row["readiness"] == "READY" and case_row["implied_terminal_growth"] is not None
                 has_comparison |= (case_row.get("current_price_comparison") or {}).get("state") == "READY"
-                source_classes.update(r["source_class"] for r in case_row["assumptions"] if isinstance(r.get("source_class"), str))
-        with_values += has_value
-        reverse_only += has_reverse and not has_value
-        sensitivity += has_sensitivity
-        price_comparison += has_comparison
-        case_available.update(available_cases)
-    return dict(denominator=len(projections),
-                entity_family_counts=dict(sorted(Counter(p["entity_family"] for p in projections).items())),
-                method_readiness={m: dict(sorted(c.items())) for m, c in methods.items()},
-                method_by_entity_family={f: {m: dict(sorted(c.items())) for m, c in ms.items()} for f, ms in sorted(by_family.items())},
-                blocker_prevalence={m: dict(sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))) for m, c in blockers.items()},
-                tickers_with_at_least_one_scenario_valued_method=with_values,
-                reverse_implied_only_tickers=reverse_only, tickers_with_no_intrinsic_method=len(projections)-with_values,
-                assumption_source_distribution=dict(sorted(source_classes.items())),
-                bear_base_bull_availability=dict(sorted(case_available.items())),
-                sensitivity_available=sensitivity, current_price_comparison_available=price_comparison)
+                self.source_classes.update(r["source_class"] for r in case_row["assumptions"] if isinstance(r.get("source_class"), str))
+        self.with_values += has_value
+        self.reverse_only += has_reverse and not has_value
+        self.sensitivity += has_sensitivity
+        self.price_comparison += has_comparison
+        self.case_available.update(available_cases)
+
+    def finish(self):
+        return dict(denominator=self.count,
+                    entity_family_counts=dict(sorted(self.families.items())),
+                    method_readiness={m: dict(sorted(c.items())) for m, c in self.methods.items()},
+                    method_by_entity_family={f: {m: dict(sorted(c.items())) for m, c in ms.items()} for f, ms in sorted(self.by_family.items())},
+                    blocker_prevalence={m: dict(sorted(c.items(), key=lambda kv: (-kv[1], kv[0]))) for m, c in self.blockers.items()},
+                    tickers_with_at_least_one_scenario_valued_method=self.with_values,
+                    reverse_implied_only_tickers=self.reverse_only, tickers_with_no_intrinsic_method=self.count - self.with_values,
+                    assumption_source_distribution=dict(sorted(self.source_classes.items())),
+                    bear_base_bull_availability=dict(sorted(self.case_available.items())),
+                    sensitivity_available=self.sensitivity, current_price_comparison_available=self.price_comparison)
+
+
+def current_scenario_coverage(projections):
+    observed = ScenarioCoverage()
+    for projection in projections:
+        observed.observe(projection)
+    return observed.finish()
