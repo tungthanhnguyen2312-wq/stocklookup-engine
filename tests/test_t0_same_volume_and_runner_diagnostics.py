@@ -138,12 +138,127 @@ def test_child_exception_receipt_is_retained(tmp_path):
     assert receipt["status"] == "CHILD_EXCEPTION"
     assert "fixture-child-exception" in receipt["traceback"]
     assert "child-stdout-marker" in (experiment / "child-stdout.log").read_text(encoding="utf-8")
-    assert "child-stderr-marker" in (experiment / "child-stderr.log").read_text(encoding="utf-8")
+    stderr = (experiment / "child-stderr.log").read_text(encoding="utf-8")
+    assert "child-stderr-marker" in stderr
+    assert "Traceback" in stderr and "fixture-child-exception" in stderr
     observed = observe_child_outcome(experiment, returncode=1, guard_reason=None, guard_diagnostics={})
     assert observed["outcome_kind"] == "CHILD_EXCEPTION"
     assert observed["evidence"]["child_result"]
     assert observed["evidence"]["parent_observed_failure"] is None
     assert not (experiment / "parent-observed-failure.json").exists()
+
+
+def test_child_traceback_survives_when_receipt_write_fails(tmp_path):
+    experiment = tmp_path / "receipt-fails"
+    experiment.mkdir()
+    (experiment / "child-result.json").mkdir()
+    stdout = open(experiment / "child-stdout.log", "wb")
+    stderr = open(experiment / "child-stderr.log", "wb")
+    try:
+        completed = subprocess.run(
+            [sys.executable, "-B", "-u", str(RUNNER), "--diagnostic-fixture", "raise", str(experiment)],
+            stdout=stdout, stderr=stderr, check=False)
+    finally:
+        stdout.close()
+        stderr.close()
+    assert completed.returncode == 1
+    assert (experiment / "child-result.json").is_dir()
+    assert not (experiment / "child-result.json").is_file()
+    stderr_text = (experiment / "child-stderr.log").read_text(encoding="utf-8")
+    assert "Traceback" in stderr_text and "fixture-child-exception" in stderr_text
+    observed = observe_child_outcome(experiment, returncode=1, guard_reason=None, guard_diagnostics={})
+    assert observed["evidence"]["child_result"] is None
+    parent = json.loads((experiment / "parent-observed-failure.json").read_text(encoding="utf-8"))
+    assert parent["status"] == "PARENT_OBSERVED_FAILURE"
+    assert parent["child_result_present"] is False
+    assert "fixture-child-exception" in stderr_text
+
+
+def test_staged_snapshot_stays_out_of_inventory_after_interruption(tmp_path):
+    artifact = _streamed_artifact(tmp_path)
+    qualified = (tmp_path / "operations-review" / "prospective-decision-retention-v1"
+                 / "2026-08-27" / ("b" * 64) / "prospective_decision_snapshot.json")
+    qualified.parent.mkdir(parents=True)
+    qualified_bytes = b'{"schema_version":"fixture","records":{}}\n'
+    qualified.write_bytes(qualified_bytes)
+    scratch = retention.streaming_scratch_dir(tmp_path)
+    snapshot = retention.build_snapshot(
+        session="2026-08-28", operation_identity="operation:fixture", producer_run_identity="run:fixture",
+        integrated_artifact=artifact, scratch_dir=scratch)
+    staged = Path(snapshot["records"].path)
+    assert staged.name == "staged_prospective_decision_snapshot.json"
+    assert staged.is_file()
+    assert ".streaming" in staged.parts
+    base = tmp_path / "operations-review" / "prospective-decision-retention-v1"
+    # The store is still unpublished. That is the state after a hard stop
+    # between writer.finish and os.replace.
+    discovered = list(base.glob("*/*/prospective_decision_snapshot.json"))
+    assert discovered == [qualified]
+    from retained_evidence_catalog import historical_paths
+    assert historical_paths(
+        tmp_path, "operations-review/prospective-decision-retention-v1",
+        "*/*/prospective_decision_snapshot.json") == [qualified]
+    loaded = []
+
+    def loader(path):
+        loaded.append(Path(path))
+        return None
+
+    retention.discover_snapshots(tmp_path, snapshot_loader=loader)
+    assert loaded == [qualified]
+    sessions = sorted(
+        d.name for d in base.iterdir()
+        if d.is_dir() and any(f.stat().st_size > 0 for f in d.rglob("prospective_decision_snapshot.json")))
+    assert sessions == ["2026-08-27"]
+    assert ".streaming" not in sessions
+    from tools.run_owner_daily_feedback_rehearsal import modern_incremental_session
+    assert modern_incremental_session(tmp_path) == "2026-08-27"
+    assert qualified.read_bytes() == qualified_bytes
+    assert staged.is_file()
+    assert not any(path.name == "prospective_decision_snapshot.json" for path in scratch.rglob("*.json"))
+
+
+def test_byte_mismatch_is_a_required_publication_failure(tmp_path, monkeypatch):
+    artifact = _streamed_artifact(tmp_path)
+    monkeypatch.setattr(retention, "_file_sha", lambda _path: ("0" * 64, 1))
+    with pytest.raises(CanonicalPostCloseError, match="STREAMED_SNAPSHOT_BYTES_MISMATCH") as caught:
+        _retain(tmp_path, artifact)
+    assert str(caught.value).startswith("REFUSE_CANONICAL_POST_CLOSE:T0_PUBLICATION_FAILED:")
+    assert list(retention.streaming_scratch_dir(tmp_path).glob("prospective-t0-*")) == []
+    assert not list((tmp_path / "operations-review" / "prospective-decision-retention-v1").glob(
+        "*/*/prospective_decision_snapshot.json"))
+
+
+def test_record_size_mismatch_is_a_required_publication_failure(tmp_path, monkeypatch):
+    artifact = _streamed_artifact(tmp_path)
+    from stocklookup_core.evidence.record_artifact_loading import RecordArtifactError, SortedRecordArtifactWriter
+
+    def fail(self, header, identity_fn, excluded=()):
+        raise RecordArtifactError("RECORD_ARTIFACT_SIZE_MISMATCH")
+
+    monkeypatch.setattr(SortedRecordArtifactWriter, "finish", fail)
+    with pytest.raises(CanonicalPostCloseError, match="RECORD_ARTIFACT_SIZE_MISMATCH") as caught:
+        _retain(tmp_path, artifact)
+    assert str(caught.value).startswith("REFUSE_CANONICAL_POST_CLOSE:T0_PUBLICATION_FAILED:")
+    assert "RETAINED" not in str(caught.value).split("T0_PUBLICATION_FAILED", 1)[0]
+    assert list(retention.streaming_scratch_dir(tmp_path).glob("prospective-t0-*")) == []
+
+
+def test_missing_evidence_stays_unavailable(tmp_path):
+    missing = retain_prospective_decision_snapshot(
+        tmp_path, "2026-08-28",
+        producer_result={"operation": {"manifest": {"operation_identity": "operation:fixture"}},
+                         "run_identity": "run:fixture"},
+        enrichment={})
+    assert missing == {"status": "UNAVAILABLE", "reason": "INTEGRATED_DECISION_ARTIFACT_UNAVAILABLE"}
+    artifact = _streamed_artifact(tmp_path)
+    identity = retain_prospective_decision_snapshot(
+        tmp_path, "2026-08-28",
+        producer_result={"operation": {"manifest": {}}, "run_identity": "run:fixture"},
+        enrichment={"integrated_investment_decision_product": {"artifact": artifact}})
+    assert identity["status"] == "UNAVAILABLE"
+    assert "DAILY_OPERATION_IDENTITY_MISSING" in identity["reason"]
+    assert "T0_PUBLICATION_FAILED" not in identity["reason"]
 
 
 def test_child_exit_without_result_is_a_parent_failure(tmp_path):

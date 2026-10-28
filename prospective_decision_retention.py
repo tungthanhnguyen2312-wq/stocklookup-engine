@@ -407,7 +407,10 @@ def _build_streamed_snapshot(*, session, operation_identity, producer_run_identi
     parent = Path(scratch_dir)
     parent.mkdir(parents=True, exist_ok=True)
     directory = Path(tempfile.mkdtemp(prefix="prospective-t0-", dir=parent))
-    target = directory / "prospective_decision_snapshot.json"
+    # Inventory globs `*/*/prospective_decision_snapshot.json`, and pathlib matches
+    # the dot-directory `.streaming`. A staged or abandoned file must not use the
+    # published name. Publication still replaces this file onto snapshot_path.
+    target = directory / "staged_prospective_decision_snapshot.json"
     writer = SortedRecordArtifactWriter(target, newline=os.linesep)
     completed = 0
     try:

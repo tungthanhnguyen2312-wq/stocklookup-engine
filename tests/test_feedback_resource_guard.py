@@ -23,10 +23,36 @@ SMALL = guard.ResourcePolicy(deadline_seconds=30, memory_limit_bytes=None, min_a
                              min_available_commit_bytes=0, min_free_disk_bytes=0)
 
 
-def _script(tmp_path: Path, body: str) -> list[str]:
+def _script(tmp_path: Path, body: str, *, executable: str | None = None) -> list[str]:
     path = tmp_path / "child.py"
     path.write_text(body, encoding="utf-8")
-    return [sys.executable, str(path)]
+    return [executable or sys.executable, str(path)]
+
+
+def _base_executable() -> str:
+    return getattr(sys, "_base_executable", None) or sys.executable
+
+
+def _job_process_ids(job) -> list[int]:
+    """Process IDs currently assigned to this Job Object. Test-only query."""
+    import ctypes
+    from ctypes import wintypes
+
+    class ProcessList(ctypes.Structure):
+        _fields_ = [
+            ("NumberOfAssignedProcesses", wintypes.DWORD),
+            ("NumberOfProcessIdsInList", wintypes.DWORD),
+            ("ProcessIdList", ctypes.c_size_t * 64),
+        ]
+
+    info = ProcessList()
+    returned = wintypes.DWORD()
+    if not job.kernel.QueryInformationJobObject(
+            job.handle, 3, ctypes.byref(info), ctypes.sizeof(info), ctypes.byref(returned)):
+        raise OSError(ctypes.get_last_error(), "QueryInformationJobObject process list failed")
+    if int(info.NumberOfAssignedProcesses) > 64:
+        raise OSError("job process list exceeded the test buffer")
+    return [int(info.ProcessIdList[index]) for index in range(int(info.NumberOfProcessIdsInList))]
 
 
 def _policy(**changes):
@@ -61,7 +87,8 @@ def test_total_deadline_terminates_and_reaps_the_whole_process_tree(tmp_path):
     outcome = guard.run_bounded(_script(tmp_path, body), cwd=tmp_path, policy=_policy(deadline_seconds=3), result_path=tmp_path / "s.json")
     elapsed = time.perf_counter() - started
     assert outcome["outcome"] == "TIMEOUT" and outcome["reason_code"] == guard.RESOURCE_TIMEOUT
-    assert 3 <= elapsed < 20 and outcome["reaped"] is True
+    # Windows wait timers can report completion up to one 15.6 ms tick early.
+    assert 3 - 0.02 <= elapsed < 20 and outcome["reaped"] is True
     deadline = time.time() + 10
     grandchild = int(pid_file.read_text()) if pid_file.exists() else None
     if grandchild is not None and os.name == "nt":  # job object kills the tree; POSIX uses a process group
@@ -362,7 +389,10 @@ def test_aggregate_job_limit_is_kernel_enforced_across_two_children(tmp_path):
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows process Job ceiling")
 def test_process_limit_diagnostics_survive_child_exit_and_denied_allocation(tmp_path):
-    command = _script(tmp_path, "x=bytearray(256*1024**2)\n")
+    # The venv Scripts\python.exe launcher re-execs the base interpreter. The
+    # kernel records that descendant. This equality uses the base interpreter,
+    # whose Popen PID is the allocating process.
+    command = _script(tmp_path, "x=bytearray(256*1024**2)\n", executable=_base_executable())
     job = guard._Job(128 * 1024**2, job_memory_limit_bytes=512 * 1024**2)
     process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
@@ -379,6 +409,51 @@ def test_process_limit_diagnostics_survive_child_exit_and_denied_allocation(tmp_
         assert diagnostics["breakaway_ok"] is False
         assert diagnostics["silent_breakaway_ok"] is False
         assert diagnostics["kill_on_job_close"] is True
+    finally:
+        guard._terminate(process, job)
+        job.close()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows process Job ceiling")
+def test_venv_launcher_limit_event_pid_is_the_constrained_job_descendant(tmp_path):
+    """The venv launcher PID is not the kernel limit-event PID.
+
+    The event PID is the process that ran the allocation, and that process is
+    a member of the same Job Object. The production guard is unchanged.
+    """
+    pid_file = tmp_path / "allocating.pid"
+    ready = tmp_path / "go"
+    body = (
+        "import os, time\n"
+        "from pathlib import Path\n"
+        f"Path({str(pid_file)!r}).write_text(str(os.getpid()))\n"
+        f"while not Path({str(ready)!r}).exists():\n"
+        "    time.sleep(0.05)\n"
+        "x=bytearray(256*1024**2)\n"
+    )
+    command = _script(tmp_path, body, executable=sys.executable)
+    job = guard._Job(128 * 1024**2, job_memory_limit_bytes=512 * 1024**2)
+    process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        job.assign(int(process._handle))
+        guard._resume_suspended(process)
+        deadline = time.time() + 15
+        while not pid_file.exists():
+            if time.time() >= deadline or process.poll() is not None:
+                raise AssertionError("allocating descendant did not report its pid")
+            time.sleep(0.05)
+        script_pid = int(pid_file.read_text(encoding="utf-8"))
+        members = _job_process_ids(job)
+        assert script_pid in members
+        if os.path.normcase(sys.executable) != os.path.normcase(_base_executable()):
+            assert script_pid != process.pid
+        ready.write_text("1", encoding="utf-8")
+        assert process.wait(timeout=15) != 0
+        assert job.wait_empty(5)
+        diagnostics = job.memory_diagnostics()
+        assert diagnostics["limit_scope"] == "PROCESS"
+        assert diagnostics["limit_events"] == [{"scope": "PROCESS", "process_id": script_pid}]
+        assert diagnostics["breakaway_ok"] is False
     finally:
         guard._terminate(process, job)
         job.close()

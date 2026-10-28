@@ -582,6 +582,24 @@ def write_child_exception_receipt(experiment: Path, exc: BaseException) -> None:
     (experiment / "child-result.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
+def persist_uncaught_child(experiment: Path, exc: BaseException) -> None:
+    """Write the traceback to the retained stderr stream before the receipt.
+
+    ``traceback.print_exc`` writes to the stderr handle the parent already
+    opened. It does not accumulate the log in RAM. If the receipt write fails,
+    that stderr traceback remains and no child receipt is invented.
+    """
+    traceback.print_exc()
+    try:
+        sys.stderr.flush()
+    except Exception:
+        pass
+    try:
+        write_child_exception_receipt(experiment, exc)
+    except OSError:
+        pass
+
+
 def observe_child_outcome(experiment: Path, *, returncode, guard_reason, guard_diagnostics) -> dict:
     """Classify a finished child without inventing a successful child receipt."""
     child_path = experiment / "child-result.json"
@@ -752,7 +770,7 @@ if __name__ == "__main__":
             code = _diagnostic_fixture(fixture, target)
         except BaseException as exc:
             if not isinstance(exc, SystemExit):
-                write_child_exception_receipt(target, exc)
+                persist_uncaught_child(target, exc)
                 code = 1
             else:
                 raise
@@ -764,10 +782,7 @@ if __name__ == "__main__":
         except BaseException as exc:
             if isinstance(exc, SystemExit):
                 raise
-            try:
-                write_child_exception_receipt(target, exc)
-            except OSError:
-                pass
+            persist_uncaught_child(target, exc)
             raise SystemExit(1) from exc
         raise SystemExit(code)
     main()

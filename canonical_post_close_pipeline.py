@@ -1474,11 +1474,20 @@ def retain_prospective_decision_snapshot(
             **({"on_written": index_written} if session >= PRODUCTION_V2_START_SESSION else {}))
     except Exception as exc:
         # Validation gaps stay visible and non-retained. A publication failure
-        # (cross-volume replace, scratch refusal, or an OS write error) is not
-        # a completed Daily: the exact reason is raised, not returned as RETAINED.
+        # (cross-volume replace, scratch refusal, an OS write error, or a staged
+        # byte/size integrity mismatch) is not a completed Daily: the exact
+        # reason is raised, not returned as RETAINED. Other ValueError results,
+        # including a missing operation identity, stay UNAVAILABLE.
         reason = f"PROSPECTIVE_SNAPSHOT_RETENTION_FAILED:{type(exc).__name__}:{exc}"
         text = str(exc)
-        if isinstance(exc, OSError) or "STREAMED_SNAPSHOT_CROSS_VOLUME" in text or "STREAMED_SNAPSHOT_SCRATCH_REQUIRED" in text:
+        publication_failure = (
+            isinstance(exc, OSError)
+            or "STREAMED_SNAPSHOT_CROSS_VOLUME" in text
+            or "STREAMED_SNAPSHOT_SCRATCH_REQUIRED" in text
+            or "STREAMED_SNAPSHOT_BYTES_MISMATCH" in text
+            or "RECORD_ARTIFACT_SIZE_MISMATCH" in text
+        )
+        if publication_failure:
             raise CanonicalPostCloseError("REFUSE_CANONICAL_POST_CLOSE:T0_PUBLICATION_FAILED:" + reason) from exc
         return {"status": "UNAVAILABLE", "reason": reason}
     return {"status": "RETAINED", "artifact": snapshot, "path": path, "seal_index": seal_index}
