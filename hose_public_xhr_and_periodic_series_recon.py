@@ -76,17 +76,30 @@ def _atomic(path: Path, data: bytes) -> None:
 def fetch(url: str, *, _budget: AcquisitionBudget | None = None) -> dict[str, Any]:
     if _budget is None:
         return AcquisitionBudget().request(fetch, url, surface="hose_direct")
-    retrieved_at = _now()
+    requested_at = _now()
+    phase = "OPEN_OR_WAIT_HTTP_HEADERS"
+    http_status = None
+    content_type = None
+    official_url = url
     try:
         request = Request(url, headers={"Accept": "application/json,application/rss+xml", "User-Agent": "StockLookup-HOSE-Public-XHR/1.0"})
         with _budget.open(request) as response:
-            return {"requested_url": url, "official_url": response.geturl(), "retrieved_at": retrieved_at,
-                    "http_status": response.status, "content_type": response.headers.get_content_type(), "data": _budget.read(response)}
+            official_url, http_status = response.geturl(), response.status
+            content_type = response.headers.get_content_type()
+            phase = "READ_BODY"
+            data = _budget.read(response)
+            return {"requested_url": url, "official_url": official_url, "requested_at": requested_at,
+                    "retrieved_at": _now(), "http_status": http_status, "content_type": content_type, "data": data}
     except AcquisitionBudgetExceeded:
         raise
     except Exception as exc:
-        return {"requested_url": url, "official_url": url, "retrieved_at": retrieved_at, "http_status": None,
-                "content_type": None, "data": b"", "error": type(exc).__name__}
+        reason = getattr(exc, "reason", None)
+        return {"requested_url": url, "official_url": official_url, "requested_at": requested_at,
+                "retrieved_at": _now(), "http_status": getattr(exc, "code", None) or http_status,
+                "content_type": content_type, "data": b"", "error": type(exc).__name__,
+                "error_message": str(exc), "error_phase": phase,
+                "error_reason_type": type(reason).__name__ if reason is not None else None,
+                "error_reason": str(reason) if reason is not None else None}
 
 
 fetch.bounded_transport = True
@@ -101,7 +114,8 @@ def retain(*, response: Mapping[str, Any], destination: Path, surface: str) -> d
     return {"surface": surface, "requested_url": response["requested_url"], "official_url": response["official_url"],
             "retrieved_at": response["retrieved_at"], "http_status": response["http_status"],
             "content_type": response["content_type"], "sha256": digest,
-            "relative_path": str(relative).replace("\\", "/"), "error": response.get("error")}
+            "relative_path": str(relative).replace("\\", "/"), "error": response.get("error"),
+            **({"requested_at": response["requested_at"]} if "requested_at" in response else {})}
 
 
 def _json(capture: Mapping[str, Any], destination: Path) -> Any:

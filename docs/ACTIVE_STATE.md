@@ -1,6 +1,6 @@
 # Stock Lookup — Active State
 
-October-28 capture-only corrective: bounded source acquisition and capture retention are implemented independently of Producer/T0; isolated qualification passes on a narrow Production-base candidate. Deployment and one live capture require explicit Owner approval. No actual-session capture or new T0 is claimed. See the [capture contract](prospective_pit_capture_completeness_contract.md).
+October-28 capture-only deployment passed; the single Production attempt retained 857 exact-session symbols but stopped before completion on HOSE `market_disclosures` source failure. One authorized diagnostic subsequently returned the identical public request successfully; the original transport exception was not retained, so its precise cause remains unknown. A local corrective preserves transport outcomes and actual response-completion clocks without changing routes, parameters, timeouts or qualification. No corrective deployment or second Production capture is authorized yet. See the [capture contract](prospective_pit_capture_completeness_contract.md).
 
 [Memory admission](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): sequential-launch candidate; 9.25 GiB guard unchanged; residual host gap, live pending.
 
