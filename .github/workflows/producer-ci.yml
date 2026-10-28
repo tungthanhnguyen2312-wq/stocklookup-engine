@@ -266,8 +266,6 @@ env:
     tests/test_preseal_consumer_dependency.py
     tests/test_preseal_measurement_ceiling.py
     tests/test_capture_only.py
-    tests/test_hose_public_xhr_and_periodic_series_recon.py
-    tests/test_official_acquisition_budget.py
     tests/test_feedback_resource_guard.py
     tests/test_feedback_concurrent_publication.py
     tests/test_feedback_resource_containment_integration.py

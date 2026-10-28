@@ -1,5 +1,6 @@
 """Cheap Producer-seal Consumer binding. No acquisition, IID, or Producer."""
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -9,6 +10,7 @@ import tests.preseal_consumer_dependency as dependency
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.skipif(os.name != "nt" or not dependency.PROFILE.exists(), reason="Owner-host genuine Consumer acceptance; fixture refusal remains hermetic")
 def test_production_seal_path_keeps_the_sibling_expression():
     dependency.seal_sources_present(ROOT)
     qualified = dependency.qualify_consumer()
@@ -18,6 +20,7 @@ def test_production_seal_path_keeps_the_sibling_expression():
     assert (ROOT.parent / "ai-core-private").exists() is False
 
 
+@pytest.mark.skipif(os.name != "nt" or not dependency.PROFILE.exists(), reason="Owner-host genuine Consumer acceptance")
 def test_relocated_worktree_resolves_the_real_consumer():
     report = dependency.preflight_producer_seal_consumer(ROOT)
     probe = report["probe"]
@@ -36,6 +39,7 @@ def test_relocated_worktree_resolves_the_real_consumer():
     assert not (ROOT.parent / "ai-core-private").exists()
 
 
+@pytest.mark.skipif(os.name != "nt" or not dependency.PROFILE.exists(), reason="Owner-host same-volume junction acceptance")
 def test_occupied_sibling_fails_closed(tmp_path):
     # Junctions cannot cross volumes. Keep the fixture on the Consumer volume.
     parent = Path(r"T:\StockLookup\scratch") / ("preseal-occupied-" + tmp_path.name)
@@ -68,6 +72,7 @@ def test_unqualified_profile_fails_closed(tmp_path):
         dependency.qualify_consumer(profile)
 
 
+@pytest.mark.skipif(os.name != "nt" or not dependency.PROFILE.exists(), reason="Owner-host genuine Consumer acceptance")
 def test_unbind_refuses_a_real_consumer_directory():
     genuine = Path(dependency.qualify_consumer()["consumer"])
     with pytest.raises(dependency.ConsumerDependencyError, match="REFUSE_UNBIND_NOT_GENUINE_JUNCTION"):

@@ -1,8 +1,6 @@
 # Stock Lookup — Active State
 
-October-28 restoration incident: capture-only and HOSE diagnostic/response-clock corrective are deployed; 857 exact-session records remain retained. A completion invocation was NOT_ADMITTED before provider work at 3.565 GiB physical versus 4.25 GiB required. No T0/completion is claimed; capture remains first priority before the native deadlines. The Owner authorizes incident-scoped integration and qualified recovery with all gates unchanged.
-
-[Memory admission](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): low-memory source and deployed capture/HOSE changes are composed locally. Prior core Producer reached seal at 5.153-GiB Job peak; complete-output acceptance and Production Daily remain unqualified pending admission, focused checks and protected integration.
+October-28 capture/HOSE deployed; 857 retained; no T0. [Daily](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): acceptance pending.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

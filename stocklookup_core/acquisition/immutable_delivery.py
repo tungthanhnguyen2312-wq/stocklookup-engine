@@ -147,6 +147,7 @@ def publish_staged(stage, target, *, expected_sha, expected_size, protect=False,
             raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
         _discard_private(stage)
         return "REUSED"
+    _discard_private(stage)
     return "PUBLISHED_IMMUTABLE"
 
 

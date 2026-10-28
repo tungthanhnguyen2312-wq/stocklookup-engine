@@ -1,5 +1,6 @@
 """Measurement-only 6.75 GiB ceiling, production identity, and experiment cleanup."""
 import json
+import os
 from pathlib import Path
 import subprocess
 
@@ -27,7 +28,8 @@ def _admission(**updates):
 
 def test_measurement_launch_uses_the_admission_ceiling_only():
     assert runner.measurement_tree_ceiling(_admission()) == preflight.MEASUREMENT_TREE_BYTES
-    assert runner.EXPERIMENT.name == "preseal-producer-seal-20261026-r10"
+    from pathlib import PureWindowsPath
+    assert PureWindowsPath(str(runner.EXPERIMENT)).name == "preseal-producer-seal-20261026-r10"
     for changed in (
         {"tree_ceiling_bytes": 8 * preflight.GIB},
         {"process_ceiling_bytes": 6 * preflight.GIB},
@@ -152,6 +154,7 @@ def test_experiment_directory_refuses_protected_and_existing_paths(tmp_path):
     runner.experiment_directory_allowed(tmp_path / "unused-r10")
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Native Windows junction cleanup")
 def test_producer_link_cleanup_removes_the_junction_only(tmp_path):
     target = tmp_path / "target"
     target.mkdir()

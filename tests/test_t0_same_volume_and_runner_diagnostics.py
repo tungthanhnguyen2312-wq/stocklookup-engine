@@ -41,6 +41,7 @@ def _retain(tmp_path, artifact):
         enrichment={"integrated_investment_decision_product": {"artifact": artifact}})
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows drive-letter staging contract")
 def test_production_scratch_and_destination_share_a_volume():
     root = Path("T:/StockLookup/not-created-retained-root")
     scratch = retention.streaming_scratch_dir(root)
