@@ -1,6 +1,6 @@
 # Stock Lookup — Active State
 
-[Memory admission](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): sequential-launch candidate; 9.25 GiB guard unchanged; residual host gap, live pending.
+[Memory admission](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): streaming-IID candidate and T0/diagnostic corrections pass focused local checks; isolated seal refused host admission. No completed seal peak or live acceptance; ordinary Daily limits and qualification remain unchanged.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

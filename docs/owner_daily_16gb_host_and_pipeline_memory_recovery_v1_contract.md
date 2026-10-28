@@ -358,10 +358,12 @@ not raised by arithmetic and the 9.25 GiB ordinary physical cap is not
 inherited by the larger file.
 
 Ordinary Daily admission is unchanged. One Producer-seal measurement may start
-only when the host covers the existing kernel budget: available physical at
-least 9.25 GiB (8 GiB tree + 0.25 GiB owner + 1 GiB reserve) and available
-commit at least 10 GiB (8 GiB tree + 2 GiB commit reserve), with source receipt
-match, an observable writer-free host, and the same 7/8 GiB ceilings. That
+only when the host covers its enforced measurement kernel budget: available
+physical at least 8 GiB (6.75 GiB measurement Job + 0.25 GiB owner + 1 GiB
+reserve) and available commit at least 8.75 GiB (6.75 GiB measurement Job +
+2 GiB commit reserve), with source receipt match and an observable writer-free
+host. The process ceiling remains 7 GiB; ordinary Daily keeps its 8 GiB Job
+ceiling. The measurement admission and runner must agree on that exact budget. That
 admission does not mark the IID qualified. A completed guarded seal is still
 required before `iid_max_bytes` can move. The legacy 19.308 GiB commit figure
 remains the ordinary Daily gate; it is not a prerequisite for the capped
