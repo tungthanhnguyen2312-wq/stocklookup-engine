@@ -145,7 +145,7 @@ def _require_binding(condition: bool, reason: str) -> None:
 def binding_content_identity(artifact: Mapping[str, Any]) -> dict[str, str]:
     payload = {k: v for k, v in artifact.items() if k not in {"artifact_identity", "artifact_sha256"}}
     records = payload.get("records")
-    if (not isinstance(records, dict) or any(not isinstance(key, str) for key in payload)
+    if (not isinstance(records, Mapping) or any(not isinstance(key, str) for key in payload)
             or any(not isinstance(key, str) for key in records)):
         digest = stable_id(payload)
     else:
@@ -365,15 +365,45 @@ def _bound_record(record: Mapping[str, Any], source: str, session: str, context)
                           "observed_adverse": adverse, "invalidation": copy.deepcopy(record["invalidation"]) if downside_invalidation else None}}
 
 
+class _BoundScenarioRecords(Mapping):
+    """Non-caching projection over verified disk records; never retain issuer graphs.
+
+    Reads inherit the IID store's stat/slice checksum verification. The binding
+    identity still visits every requested row before returning to its consumer.
+    No intermediate file, process, or evidence publication is introduced.
+    """
+
+    def __init__(self, records, requested, identity, session, context):
+        self._records = records
+        self._requested = tuple(requested)
+        self._keys = frozenset(requested)
+        self._identity, self._session, self._context = identity, session, context
+
+    def __len__(self):
+        return len(self._requested)
+
+    def __iter__(self):
+        return iter(self._requested)
+
+    def __getitem__(self, ticker):
+        if ticker not in self._keys:
+            raise KeyError(ticker)
+        return _bound_record(self._records[ticker], self._identity, self._session, self._context)
+
+
 def bind_integrated_scenarios(*, session: str, integrated_decision: Mapping[str, Any], tickers, optional_context: Mapping[str, Any] | None = None) -> dict[str, Any]:
     _require_binding(optional_context is None or isinstance(optional_context, Mapping), "OPTIONAL_CONTEXT_INVALID")
     _require_binding(all(isinstance(name, str) for name in (optional_context or {})), "OPTIONAL_CONTEXT_INVALID")
     requested = validate_integrated_source(session=session, integrated_decision=integrated_decision, tickers=tickers)
     context_sources = _context_sources(optional_context, session)
     source_records = integrated_decision["records"]
-    bound = {}
-    for ticker in requested:
-        bound[ticker] = _bound_record(source_records[ticker], integrated_decision["artifact_identity"], session, context_sources)
+    from stocklookup_core.evidence.record_artifact_loading import IndexedRecordMapping
+    if isinstance(source_records, IndexedRecordMapping):
+        bound = _BoundScenarioRecords(source_records, requested, integrated_decision["artifact_identity"], session, context_sources)
+    else:
+        bound = {}
+        for ticker in requested:
+            bound[ticker] = _bound_record(source_records[ticker], integrated_decision["artifact_identity"], session, context_sources)
     artifact = {"contract_version": INTEGRATED_BINDING_CONTRACT, "session": session, "research_action_policy_version": "v2",
                 "integrated_artifact_identity": integrated_decision["artifact_identity"],
                 "source_context_artifacts": context_sources,

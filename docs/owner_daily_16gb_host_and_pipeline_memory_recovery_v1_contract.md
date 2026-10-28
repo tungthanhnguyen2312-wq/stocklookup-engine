@@ -341,6 +341,16 @@ companion line contract are unchanged.
 
 ## Current-scale measurement admission (not a new qualification)
 
+Store-backed IID scenario binding computes each requested bound row on demand,
+without caching a second universe of copied evidence axes. Its content identity
+still visits every requested row with the unchanged serializer before returning;
+subsequent reads inherit the IID store's byte-integrity checks. Delivery discovery
+and Workspace consume those rows sequentially. Workspace retains only its original
+compact scenario projection and reads each bound row once. Resident-artifact callers
+retain the existing eager binding representation. No process boundary, intermediate
+evidence, policy or authority is introduced. Representative subset memory measurements
+do not qualify a full-scale Producer or a smaller admission reservation.
+
 The retained 2026-10-26 IID is 2,394,768,092 bytes, 12,672,350 bytes above
 `iid_max_bytes` 2,382,095,742. Both retained copies are that size. Ordinary
 `evaluate()` therefore keeps the legacy factor, about 1.609: physical READY

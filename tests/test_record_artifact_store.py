@@ -148,9 +148,19 @@ def test_delivery_brief_scenario_and_t0_match_on_the_store(tmp_path):
     streamed_overlay = delivery.project_integrated_decision_delivery_overlay("2026-08-28", streamed, None)
     assert json.dumps(streamed_overlay, sort_keys=True) == json.dumps(resident_overlay, sort_keys=True)
     assert build_opportunity_sets(streamed["records"], None) == build_opportunity_sets(resident["records"], None)
-    binding = bind_integrated_scenarios(session="2026-08-28", integrated_decision=streamed, tickers=["AAA"])
-    resident_binding = bind_integrated_scenarios(session="2026-08-28", integrated_decision=resident, tickers=["AAA"])
+    binding = bind_integrated_scenarios(session="2026-08-28", integrated_decision=streamed, tickers=["BBB", "AAA"])
+    resident_binding = bind_integrated_scenarios(session="2026-08-28", integrated_decision=resident, tickers=["BBB", "AAA"])
     assert binding is not None and binding["artifact_identity"] == resident_binding["artifact_identity"]
+    from current_evidence_bound_scenario import validate_integrated_binding
+    from stocklookup_core.decision.investment_decision_workspace_projection import conditional_scenario_view
+    assert not isinstance(binding["records"], dict)
+    assert list(binding["records"]) == ["AAA", "BBB"]
+    assert {**binding, "records": dict(binding["records"])} == resident_binding
+    validate_integrated_binding(binding, session="2026-08-28", integrated_decision=streamed, tickers=["AAA", "BBB"])
+    for ticker in binding["records"]:
+        assert conditional_scenario_view(binding["records"][ticker]) == conditional_scenario_view(resident_binding["records"][ticker])
+    from stocklookup_core.research.evidence_aware_candidate_comparison import build_thesis_discovery
+    assert build_thesis_discovery(integrated_decision=streamed, bind_scenarios=bind_integrated_scenarios) == build_thesis_discovery(integrated_decision=resident, bind_scenarios=bind_integrated_scenarios)
     common = dict(session="2026-08-28", operation_identity="operation:fixture", producer_run_identity="run:fixture")
     resident_t0 = build_snapshot(integrated_artifact=resident, **common)
     streamed_t0 = build_snapshot(integrated_artifact=streamed, scratch_dir=tmp_path / "scratch", **common)
@@ -160,3 +170,24 @@ def test_delivery_brief_scenario_and_t0_match_on_the_store(tmp_path):
     assert validate_snapshot(resident_t0) is True
     recovered = recover(published, created_at="2026-10-28T00:00:00+07:00", diagnostic=True)
     assert recovered["artifact_identity"]
+    path.write_bytes(path.read_bytes() + b" ")
+    with pytest.raises(ValueError):
+        binding["records"]["AAA"]
+
+
+def test_bound_scenario_rows_are_not_cached(monkeypatch):
+    import weakref
+    import current_evidence_bound_scenario as scenario
+
+    class Row(dict):
+        pass
+
+    monkeypatch.setattr(scenario, "_bound_record", lambda *args: Row(ticker=args[0]["ticker"]))
+    rows = scenario._BoundScenarioRecords({"AAA": {"ticker": "AAA"}}, ["AAA"], "identity", "session", {})
+    first = rows["AAA"]
+    reference = weakref.ref(first)
+    assert rows["AAA"] is not first
+    del first
+    assert reference() is None
+    with pytest.raises(KeyError):
+        rows["BBB"]
