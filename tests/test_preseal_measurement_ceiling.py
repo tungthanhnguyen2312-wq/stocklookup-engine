@@ -64,6 +64,46 @@ def test_sandbox_git_provenance_is_captured_before_subprocess_refusal(tmp_path):
     assert calls == [tmp_path]
 
 
+def test_listing_namespace_has_real_writable_directories_without_source_mutation(tmp_path):
+    source = tmp_path / "source"
+    (source / "listing-sources").mkdir(parents=True)
+    (source / "digest").mkdir()
+    original = source / "digest" / "proof.json"
+    original.write_bytes(b"original")
+    destination = tmp_path / "copy"
+    runner.copy_listing_namespace(source, destination)
+    for relative in ("listing-sources", "digest"):
+        target = destination / relative
+        assert target.resolve().is_relative_to(destination.resolve())
+        assert not target.is_junction()
+        target.mkdir(parents=True, exist_ok=True)
+    (destination / "digest" / "proof.json").write_bytes(b"sandbox")
+    assert original.read_bytes() == b"original"
+
+
+def test_manifest_discovery_uses_session_and_digest_and_validates_bindings(tmp_path):
+    session = "2026-10-26"
+    digest = "a" * 64
+    identity = "daily_producer_run:" + digest
+    base = tmp_path / "operations-review" / "daily-producer-runs-v1"
+    path = base / session / digest / "run_manifest.json"
+    path.parent.mkdir(parents=True)
+    manifest = {"run_identity": identity, "target_market_session": session,
+                "daily_session_operation": {"identity": "operation:fixture"},
+                "self_verification": {"status": "PASS"}, "ai_dashboard_parity": {"status": "PASS"}}
+    pointer = {"run_identity": identity, "session": session, "daily_session_operation_identity": "operation:fixture"}
+    path.write_text(json.dumps(manifest))
+    pointer_path = base / "LATEST_COMPLETED_RUN.json"
+    pointer_path.write_text(json.dumps(pointer))
+    assert runner.completed_producer_manifest(tmp_path, session) == (path, manifest)
+    pointer["daily_session_operation_identity"] = "wrong"
+    pointer_path.write_text(json.dumps(pointer))
+    with pytest.raises(RuntimeError, match="BINDING_FAILED"):
+        runner.completed_producer_manifest(tmp_path, session)
+    with pytest.raises(RuntimeError, match="MANIFEST_COUNT"):
+        runner.completed_producer_manifest(tmp_path, "2026-10-27")
+
+
 def test_experiment_directory_refuses_protected_and_existing_paths(tmp_path):
     with pytest.raises(SystemExit, match="EXPERIMENT_INSIDE_PROTECTED_ROOT"):
         runner.experiment_directory_allowed(runner.PRODUCTION_RETAINED / "new-experiment")

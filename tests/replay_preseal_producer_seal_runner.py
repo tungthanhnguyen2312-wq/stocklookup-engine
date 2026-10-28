@@ -162,6 +162,23 @@ def _place_directory(source: Path, destination: Path, copied: list[str]) -> None
         junction(destination, source)
 
 
+def copy_listing_namespace(source: Path, destination: Path) -> None:
+    """Real isolated directories for listing retention's mkdir/write calls."""
+    if _reparse(source):
+        raise RuntimeError("LISTING_SOURCE_IS_REPARSE:" + str(source))
+    destination.mkdir()
+    for item in source.iterdir():
+        if _reparse(item):
+            raise RuntimeError("LISTING_SOURCE_IS_REPARSE:" + str(item))
+        target = destination / item.name
+        if item.is_dir():
+            copy_listing_namespace(item, target)
+        elif item.is_file():
+            shutil.copy2(item, target)
+        else:
+            raise RuntimeError("LISTING_SOURCE_NOT_REGULAR:" + str(item))
+
+
 def place_tree(source: Path, destination: Path, relative: str, required: set[str], copied: list[str]) -> None:
     """Copy catalog files through real directories. Junction only non-ancestor siblings."""
     if source.is_dir():
@@ -225,6 +242,9 @@ def build_sandbox(sandbox: Path) -> list[str]:
     for child in (PRODUCTION_RETAINED / "operations-review").iterdir():
         destination = ops / child.name
         relative = "operations-review/" + child.name
+        if child.name == "prospective-universe-evidence-v1" and child.is_dir():
+            copy_listing_namespace(child, destination)
+            continue
         if child.is_dir() and _covers(relative, required):
             place_tree(child, destination, relative, required, copied)
             continue
@@ -353,6 +373,26 @@ def frozen_git_head_reader(paths, reader):
     return lambda path: heads.get(Path(path).resolve())
 
 
+def completed_producer_manifest(sandbox: Path, session: str):
+    base = sandbox / "operations-review" / "daily-producer-runs-v1"
+    fresh = [path for path in base.glob(session + "/*/run_manifest.json")
+             if path.resolve().is_relative_to(sandbox.resolve())]
+    if len(fresh) != 1:
+        raise RuntimeError("SANDBOX_PRODUCER_MANIFEST_COUNT:" + str(len(fresh)))
+    path = fresh[0]
+    manifest = json.loads(path.read_bytes())
+    pointer = json.loads((base / "LATEST_COMPLETED_RUN.json").read_bytes())
+    identity = "daily_producer_run:" + path.parent.name
+    operation = (manifest.get("daily_session_operation") or {}).get("identity")
+    if (manifest.get("run_identity") != identity or manifest.get("target_market_session") != session
+            or not operation or pointer.get("run_identity") != identity or pointer.get("session") != session
+            or pointer.get("daily_session_operation_identity") != operation
+            or (manifest.get("self_verification") or {}).get("status") != "PASS"
+            or (manifest.get("ai_dashboard_parity") or {}).get("status") != "PASS"):
+        raise RuntimeError("SANDBOX_PRODUCER_MANIFEST_BINDING_FAILED")
+    return path, manifest
+
+
 def child(experiment: Path) -> int:
     import canonical_daily_operation as daily
     from datetime import datetime, timedelta, timezone
@@ -462,19 +502,19 @@ def child(experiment: Path) -> int:
         outcome["seal_boundary"] = "FAILED"
     finally:
         trace.close()
-    manifests = sorted((sandbox / "operations-review" / "daily-producer-runs-v1").glob("*/run_manifest.json"))
-    # A junctioned historical manifest is not this run. Keep manifests whose path does not resolve into production.
-    fresh = [path for path in manifests if not path.resolve().is_relative_to(PRODUCTION_RETAINED.resolve())]
     producer_manifest = None
-    if fresh:
-        producer_manifest = json.loads(fresh[-1].read_text(encoding="utf-8"))
+    try:
+        manifest_path, producer_manifest = completed_producer_manifest(sandbox, SESSION)
         outcome["producer_manifest"] = {
-            "path": str(fresh[-1]),
-            "status": producer_manifest.get("status"),
-            "session": producer_manifest.get("session") or producer_manifest.get("market_session"),
+            "path": str(manifest_path),
+            "self_verification": producer_manifest["self_verification"],
+            "session": producer_manifest["target_market_session"],
             "run_identity": producer_manifest.get("run_identity"),
             "daily_session_operation": producer_manifest.get("daily_session_operation"),
+            "current_product_projections": producer_manifest.get("current_product_projections"),
         }
+    except (RuntimeError, OSError, ValueError) as exc:
+        outcome["producer_manifest_error"] = str(exc)
     current_iid = (sandbox / "operations-review" / "integrated-investment-decision-product-v1-20261026"
                    / "integrated_investment_decision_product_artifact.json")
     if current_iid.is_file() and not current_iid.resolve().is_relative_to(PRODUCTION_RETAINED.resolve()):
@@ -499,7 +539,7 @@ def child(experiment: Path) -> int:
     outcome["production_before"] = before
     outcome["violations"] = violations
     (experiment / "child-result.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
-    sealed = outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER" and (outcome.get("producer_manifest") or {}).get("status") == "COMPLETED"
+    sealed = outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER" and producer_manifest is not None
     t0_verified = outcome.get("sandbox_t0", {}).get("status") == "VERIFIED"
     return 0 if sealed and t0_verified and outcome.get("iid_reference_parity") is True and outcome["production_unchanged"] and not violations else 1
 
