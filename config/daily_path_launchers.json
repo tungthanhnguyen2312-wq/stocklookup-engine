@@ -92,8 +92,8 @@
       ]
     },
     "tools/run_owner_daily.py": {
-      "ast_sha256": "3b27404e54d8af2989bbef79bb2f84df80264198766d0437295a63efea489b66",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only. IID runtime-memory corrective: same canonical argv; capacity diagnostics only.",
+      "ast_sha256": "addc9dc400c47b2d7e31426be0eedcf63fd35386213a5a68c8ce511f072643bf",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only. IID runtime-memory corrective: same canonical argv; capacity diagnostics only. Capture-only corrective: shared exclusive writer lease only; existing Daily argv and workflow body unchanged.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/release_orchestrator.py",

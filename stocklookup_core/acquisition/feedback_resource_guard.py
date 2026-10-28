@@ -204,7 +204,7 @@ def admit(policy: ResourcePolicy, *, output_dir: Path, expected_output_bytes: in
 class _Job:
     """One job per child: kill-on-close, optional per-process commit ceiling, peak accounting."""
 
-    def __init__(self, memory_limit_bytes: int | None, *, job_memory_limit_bytes: int | None = None):
+    def __init__(self, memory_limit_bytes: int | None, *, job_memory_limit_bytes: int | None = None, name: str | None = None):
         import ctypes
         from ctypes import wintypes
         self.ctypes, self.wintypes = ctypes, wintypes
@@ -246,9 +246,16 @@ class _Job:
         self.port = None
         self.memory_limit_exceeded = False
         self.memory_limit_events = []
-        self.handle = kernel.CreateJobObjectW(None, None)
+        if name is not None:
+            kernel.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+            ctypes.set_last_error(0)
+        self.handle = kernel.CreateJobObjectW(None, name)
         if not self.handle:
             raise OSError(ctypes.get_last_error(), "CreateJobObjectW failed")
+        if name is not None and ctypes.get_last_error() == 183:
+            kernel.CloseHandle(self.handle)
+            self.handle = None
+            raise OSError("CAPACITY_JOB_NAME_ALREADY_EXISTS")
         info = EXTENDED()
         flags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         if memory_limit_bytes:
@@ -390,6 +397,7 @@ ORDINARY_TREE_CEILING_BYTES = 8 * GIB
 def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str, str],
                          memory_probe, on_start=None, on_diagnostics=None,
                          tree_ceiling_bytes: int | None = None,
+                         job_name: str | None = None,
                          stdout_path: Path | None = None, stderr_path: Path | None = None) -> int:
     """Qualified Owner child only: strict Windows Job, inherited logs, no degraded launch.
 
@@ -415,7 +423,8 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
             if value is None or value < floor:
                 raise OSError("DAILY_CAPACITY_RESERVE_LOW:" + key)
 
-    job = _Job(ORDINARY_PROCESS_CEILING_BYTES, job_memory_limit_bytes=tree_ceiling)
+    job = (_Job(ORDINARY_PROCESS_CEILING_BYTES, job_memory_limit_bytes=tree_ceiling, name=job_name)
+           if job_name is not None else _Job(ORDINARY_PROCESS_CEILING_BYTES, job_memory_limit_bytes=tree_ceiling))
     process = None
     assigned = False
     failure = None

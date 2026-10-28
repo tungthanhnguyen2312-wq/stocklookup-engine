@@ -1,5 +1,7 @@
 # Stock Lookup — Active State
 
+October-28 capture-only corrective: bounded source acquisition and capture retention are implemented independently of Producer/T0; isolated qualification passes on a narrow Production-base candidate. Deployment and one live capture require explicit Owner approval. No actual-session capture or new T0 is claimed. See the [capture contract](prospective_pit_capture_completeness_contract.md).
+
 [Memory admission](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): isolated core Producer reached seal with 5.152-GiB process / 5.153-GiB Job peaks; overall acceptance failed on sandbox layout/discovery defects, corrected locally. Sandbox T0 and complete current-product publication remain unqualified; ordinary Daily limits and qualification remain unchanged.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
