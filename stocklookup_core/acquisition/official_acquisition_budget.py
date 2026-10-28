@@ -125,8 +125,14 @@ class AcquisitionBudget:
             if not receipt.get('transport_accounted'):
                 self._account(receipt, len(response['data']))
             self.check_time()
+            # Preserve the provider's real transport outcome in the session receipt.
+            # A failed read can follow HTTP 200; that is not a returned usable body.
+            for key in ('http_status', 'official_url', 'requested_at', 'retrieved_at', 'error',
+                        'error_message', 'error_phase', 'error_reason_type', 'error_reason'):
+                if key in response:
+                    receipt[key] = response[key]
             receipt['response_sha256'] = hashlib.sha256(response['data']).hexdigest()
-            receipt['status'] = 'RETURNED' if response.get('http_status') == 200 else 'SOURCE_FAILURE'
+            receipt['status'] = 'RETURNED' if response.get('http_status') == 200 and not response.get('error') else 'SOURCE_FAILURE'
             return response
         except Exception as exc:
             receipt['status'] = 'BUDGET_TERMINATED' if isinstance(exc, AcquisitionBudgetExceeded) else 'FETCH_EXCEPTION'

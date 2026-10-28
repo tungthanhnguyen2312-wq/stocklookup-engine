@@ -218,13 +218,43 @@ def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _restoration_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Conserve exactly four pre-streaming source bodies; execution hashes stay live."""
+    manifest = root / "tests/fixtures/owner_daily_streamed_final_source_transition_v1.json"
+    sources = ("prospective_decision_retention.py", "canonical_post_close_pipeline.py",
+               "stocklookup_core/decision/integrated_investment_decision_product.py",
+               "stocklookup_core/financial/fundamental_signal_consumption_contract.py")
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources", "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec["contract_version"] != "owner_daily_streamed_final_source_transition/v1"
+            or spec["base_commit"] != "30849e03f64a4c4bc61a80f72330b17cd1c3c6eb"
+            or spec["scope"] != "EXACT_FOUR_STREAMED_IID_T0_SUCCESSORS_ONLY"
+            or spec["previous_e4_v2_digest"] != "d3a019eba7e40381b72e1f2f7bf3eb28f76756d239b13c0e91b2e853243bfe1b"
+            or spec["release_authority"] != "NOT_GRANTED" or tuple(spec["sources"]) != sources):
+        raise ValueError("STREAMED_FINAL_SOURCE_TRANSITION_SCOPE_INVALID")
+    if relative not in sources:
+        return active
+    row = spec["sources"][relative]
+    archive = "tests/fixtures/owner_daily_streamed_final_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row["archive"] != archive:
+        raise ValueError("STREAMED_FINAL_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("STREAMED_FINAL_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _capacity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Verify the one-file capacity successor while conserving all earlier pins.
 
     Only historical verification consumes the archive. Execution receipts still
     require the actual live bytes, never the pre-capacity launcher digest.
     """
-    active = _launcher_prior_bytes(root, relative, active)
+    active = _launcher_prior_bytes(root, relative, _restoration_prior_bytes(root, relative, active))
     if relative != CAPACITY_SOURCE or not (root / CAPACITY_MANIFEST).exists():
         return active
     spec = json.loads((root / CAPACITY_MANIFEST).read_bytes())
@@ -323,7 +353,7 @@ def _valuation_orchestration_prior_bytes(root: Path, relative: str) -> bytes:
     if row.get("base_commit") != VALUATION_BASE:
         raise ValueError("VALUATION_SOURCE_TRANSITION_BASE_INVALID")
     active = _iid_runtime_prior_bytes(
-        root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n"))
+        root, relative, _restoration_prior_bytes(root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n")))
     prior = (root / expected_archive).read_bytes().replace(b"\r\n", b"\n")
     pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
     prior_sha = hashlib.sha256(prior).hexdigest()
@@ -413,12 +443,12 @@ def active_valuation_orchestration_identity(root: Path) -> dict:
     rows = {}
     for relative in VALUATION_SOURCES:
         historical = historical_bytes(root, relative)
-        active = _iid_runtime_prior_bytes(
-            root, relative, (root / relative).read_bytes().replace(b"\r\n", b"\n"))
+        active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+        prior_bound = _iid_runtime_prior_bytes(root, relative, _restoration_prior_bytes(root, relative, active))
         historical_sha = hashlib.sha256(historical).hexdigest()
         active_sha = hashlib.sha256(active).hexdigest()
         declared = spec["sources"][relative]
-        if (historical_sha != declared["prior_sha256_lf"] or active_sha != declared["active_sha256_lf"]
+        if (historical_sha != declared["prior_sha256_lf"] or hashlib.sha256(prior_bound).hexdigest() != declared["active_sha256_lf"]
                 or active_sha == historical_sha):
             raise ValueError("VALUATION_SOURCE_TRANSITION_BINDING_INVALID")
         rows[relative] = {"historical_sha256_lf": historical_sha, "active_sha256_lf": active_sha}
@@ -450,7 +480,14 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         raise ValueError("THESIS_SOURCE_EXECUTION_DOMAIN_INVALID")
     if historical["code_digest"] != spec["historical_e4_v2_digest"]:
         raise ValueError("THESIS_SOURCE_HISTORICAL_DIGEST_MISMATCH")
-    if execution["code_digest"] != spec["active_e4_v2_digest"] or execution["code_digest"] == historical["code_digest"]:
+    expected_execution = spec["active_e4_v2_digest"]
+    final_boundary = root / "tests/fixtures/owner_daily_streamed_final_source_transition_v1.json"
+    if final_boundary.is_file():
+        final = json.loads(final_boundary.read_bytes())
+        if final["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = final["active_e4_v2_digest"]
+    if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:
         raise ValueError("THESIS_SOURCE_MIXED_DIGEST_REJECTED")

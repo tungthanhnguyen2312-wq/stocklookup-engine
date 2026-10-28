@@ -1,5 +1,6 @@
 """Disk-resident sorted record artifact: bytes, digest, and one-record lifetime."""
 import hashlib
+from pathlib import Path
 import json
 import os
 
@@ -163,9 +164,19 @@ def test_delivery_brief_scenario_and_t0_match_on_the_store(tmp_path):
     assert build_thesis_discovery(integrated_decision=streamed, bind_scenarios=bind_integrated_scenarios) == build_thesis_discovery(integrated_decision=resident, bind_scenarios=bind_integrated_scenarios)
     common = dict(session="2026-08-28", operation_identity="operation:fixture", producer_run_identity="run:fixture")
     resident_t0 = build_snapshot(integrated_artifact=resident, **common)
+    import types
+    from tools.verify_retention_reader_transition import historical_bytes
+    legacy = types.ModuleType("legacy_retention_for_store_parity")
+    legacy.__file__ = str(Path(__file__).resolve().parents[1] / "prospective_decision_retention.py")
+    exec(compile(historical_bytes(Path(__file__).resolve().parents[1], "prospective_decision_retention.py"), legacy.__file__, "exec"), legacy.__dict__)
+    legacy_t0 = legacy.build_snapshot(integrated_artifact=resident, **common)
+    assert legacy_t0 == resident_t0
+    assert legacy._hash(legacy_t0) == __import__("prospective_decision_retention")._hash(resident_t0)
     streamed_t0 = build_snapshot(integrated_artifact=streamed, scratch_dir=tmp_path / "scratch", **common)
     published = write_immutable_snapshot(tmp_path / "t0", streamed_t0)
     assert published.read_bytes() == b"".join(_json_bytes(resident_t0, pretty=True))
+    legacy_published = legacy.write_immutable_snapshot(tmp_path / "legacy-t0", legacy_t0)
+    assert published.read_bytes() == legacy_published.read_bytes()
     assert validate_snapshot(streamed_t0) is True
     assert validate_snapshot(resident_t0) is True
     recovered = recover(published, created_at="2026-10-28T00:00:00+07:00", diagnostic=True)

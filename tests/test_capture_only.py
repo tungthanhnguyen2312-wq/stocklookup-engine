@@ -212,10 +212,13 @@ def test_native_acquisition_uses_the_qualified_snapshot_boundary_only(tmp_path,m
     assert calls==['qualified-acquisition','post-close-and-quality-check']
 
 
-def test_describe_does_not_execute_or_require_live_credentials():
-    result=subprocess.run([sys.executable,'-B','-m','tools.run_capture_only','--session',DAY],capture_output=True,text=True)
-    assert result.returncode==0
-    assert json.loads(result.stdout)['status']=='DEPLOYMENT_AND_EXECUTION_APPROVAL_REQUIRED'
+def test_describe_does_not_execute_or_require_live_credentials(monkeypatch,capsys):
+    import tools.run_capture_only as operator
+    monkeypatch.setattr(operator.NativeCapture,'clock',staticmethod(lambda:NOW))
+    monkeypatch.setattr(operator,'binding',lambda:(_ for _ in ()).throw(AssertionError('describe must not bind or acquire')))
+    monkeypatch.setattr(sys,'argv',['run_capture_only.py','--session',DAY])
+    assert operator.main()==0
+    assert json.loads(capsys.readouterr().out)['status']=='DEPLOYMENT_AND_EXECUTION_APPROVAL_REQUIRED'
 
 
 def test_overnight_listing_requires_original_session_receipts(tmp_path,monkeypatch):

@@ -123,7 +123,9 @@ def test_default_disclosures_absent_and_reports_deterministic(tmp_path, monkeypa
     a = incremental.acquire(tmp_path, session='2026-09-05', hose_fetcher=_hose_response, budget=budget())
     b = incremental.acquire(tmp_path, session='2026-09-06', hose_fetcher=_hose_response, budget=budget())
     for receipt in b['budget_usage']['requests']:
-        receipt['requested_url'] = receipt['requested_url'].replace('2026-09-06', '2026-09-05')
+        for field in ('requested_url', 'official_url'):
+            if field in receipt:
+                receipt[field] = receipt[field].replace('2026-09-06', '2026-09-05')
     assert a['budget_usage'] == b['budget_usage']
     assert a['budget_usage']['request_count'] == 19
     assert not any(url.endswith(('NextPageTinCPNY','NextPageTinUpCoM')) for url in urls)

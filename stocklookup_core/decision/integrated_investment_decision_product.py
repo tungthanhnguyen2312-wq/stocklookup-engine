@@ -2169,7 +2169,7 @@ def build_artifact(
     currency_gate_applied = 0
     priority_available = 0
     position_counts: Counter[str] = Counter()
-    import current_corporate_intelligence_axis as forward_axis
+    from current_corporate_intelligence_axis import ForwardDriverCoverage
     import stocklookup_core.valuation.intrinsic_valuation as intrinsic
     posture_class_counts: Counter[str] = Counter()
     no_current_evidence_wait = 0
@@ -2177,7 +2177,7 @@ def build_artifact(
     fundamental_availability_counts: Counter[str] = Counter()
     fundamental_risk_counts: Counter[str] = Counter()
     divergence_counts: Counter[str] = Counter()
-    forward_coverage = forward_axis.ForwardDriverCoverage()
+    forward_coverage = ForwardDriverCoverage()
     scenario_coverage = intrinsic.ScenarioCoverage()
     synthesis_coverage = fundamental_signals.SynthesisCoverage()
     decision_coverage = decision_input.DecisionInputCoverage()
