@@ -1,9 +1,10 @@
 """Isolated Canonical Daily through Producer sealing for session 2026-10-26.
 
-This is a retained-evidence regression under the unchanged 7 GiB process and 8 GiB
-tree ceilings. It is not a production Daily, not a publication, and not a T0 capture.
-The production registry, the retained 2026-10-26 integrated decision artifact, and
-every production path outside the experiment are write-refused.
+This is a retained-evidence regression under the unchanged 7 GiB process ceiling and
+a measurement-only 6.75 GiB Windows job ceiling. Ordinary Daily keeps its 8 GiB tree.
+It is not a production Daily, not a publication, and not a T0 capture. The production
+registry, the retained 2026-10-26 integrated decision artifact, and every production
+path outside the experiment are write-refused.
 """
 from __future__ import annotations
 
@@ -42,6 +43,50 @@ PROTECTED = (
     Path(r"T:\StockLookup\production-v1\dashboard-runtime"),
     ROOT,
 )
+EXPERIMENT = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r10")
+
+
+def production_identity_of(iid: Path, registry: Path) -> dict:
+    return {
+        "production_iid_sha256": file_digest(iid),
+        "production_iid_bytes": iid.stat().st_size,
+        "production_registry_sha256": file_digest(registry),
+        "production_registry_bytes": registry.stat().st_size,
+    }
+
+
+def same_production_identity(before: dict, after: dict) -> bool:
+    return (before["production_iid_sha256"] == after["production_iid_sha256"]
+            and before["production_registry_sha256"] == after["production_registry_sha256"])
+
+
+def experiment_directory_allowed(experiment: Path) -> None:
+    resolved = experiment.resolve()
+    for protected in PROTECTED:
+        protected_resolved = protected.resolve()
+        if resolved == protected_resolved or resolved.is_relative_to(protected_resolved):
+            raise SystemExit("EXPERIMENT_INSIDE_PROTECTED_ROOT")
+    if experiment.exists():
+        raise SystemExit("EXPERIMENT_ALREADY_EXISTS")
+
+
+def measurement_tree_ceiling(admission: dict) -> int:
+    """Return the tree maximum only when admission was computed from it."""
+    from tools.check_owner_daily_host_preflight import (
+        MEASUREMENT_COMMIT_BYTES, MEASUREMENT_COMMIT_RESERVE_BYTES, MEASUREMENT_OWNER_ALLOWANCE_BYTES,
+        MEASUREMENT_PHYSICAL_BYTES, MEASUREMENT_PHYSICAL_RESERVE_BYTES, MEASUREMENT_PROCESS_BYTES,
+        MEASUREMENT_TREE_BYTES)
+    if (admission.get("tree_ceiling_bytes") != MEASUREMENT_TREE_BYTES
+            or admission.get("process_ceiling_bytes") != MEASUREMENT_PROCESS_BYTES
+            or admission.get("physical_reserve_bytes") != MEASUREMENT_PHYSICAL_RESERVE_BYTES
+            or admission.get("commit_reserve_bytes") != MEASUREMENT_COMMIT_RESERVE_BYTES
+            or admission.get("owner_allowance_bytes") != MEASUREMENT_OWNER_ALLOWANCE_BYTES
+            or admission.get("physical_budget_bytes") != MEASUREMENT_PHYSICAL_BYTES
+            or admission.get("commit_budget_bytes") != MEASUREMENT_COMMIT_BYTES
+            or admission.get("qualified_current_scale") is not False
+            or admission.get("iid_max_extended") is not False):
+        raise OSError("MEASUREMENT_CEILING_NOT_THE_ENFORCED_BUDGET")
+    return MEASUREMENT_TREE_BYTES
 
 
 def file_digest(path: Path) -> str:
@@ -323,12 +368,7 @@ def child(experiment: Path) -> int:
     link_producer_static(experiment)
     link_frozen_registry_inputs(experiment)
     prepare_registry(experiment)
-    before = {
-        "production_iid_sha256": file_digest(PRODUCTION_IID),
-        "production_iid_bytes": PRODUCTION_IID.stat().st_size,
-        "production_registry_sha256": file_digest(PRODUCTION_REGISTRY),
-        "production_registry_bytes": PRODUCTION_REGISTRY.stat().st_size,
-    }
+    before = production_identity_of(PRODUCTION_IID, PRODUCTION_REGISTRY)
     (experiment / "production-before.json").write_text(json.dumps(before, indent=2), encoding="utf-8")
     violations: list[str] = []
     auditing = False
@@ -434,11 +474,8 @@ def child(experiment: Path) -> int:
     previous = (sandbox / "operations-review" / "integrated-investment-decision-product-v1-20261023"
                 / "integrated_investment_decision_product_artifact.json")
     outcome["previous_iid_bytes"] = previous.stat().st_size if previous.is_file() else None
-    after = {
-        "production_iid_sha256": file_digest(PRODUCTION_IID),
-        "production_registry_sha256": file_digest(PRODUCTION_REGISTRY),
-    }
-    outcome["production_unchanged"] = before["production_iid_sha256"] == after["production_iid_sha256"] and before["production_registry_sha256"] == after["production_registry_sha256"]
+    after = production_identity_of(PRODUCTION_IID, PRODUCTION_REGISTRY)
+    outcome["production_unchanged"] = same_production_identity(before, after)
     outcome["production_before"] = before
     outcome["violations"] = violations
     (experiment / "child-result.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
@@ -447,7 +484,7 @@ def child(experiment: Path) -> int:
 
 
 def main() -> None:
-    experiment = Path(r"T:\StockLookup\scratch\preseal-producer-seal-20261026-r9")
+    experiment = EXPERIMENT
     import tests.preseal_consumer_dependency as consumer_dependency
     if "--child" not in sys.argv:
         try:
@@ -469,12 +506,8 @@ def main() -> None:
         print(json.dumps(admission), flush=True)
         if not admission["admitted"]:
             raise SystemExit(3)
-    resolved = experiment.resolve()
-    for protected in PROTECTED:
-        if resolved == protected.resolve() or resolved.is_relative_to(protected.resolve()):
-            raise SystemExit("EXPERIMENT_INSIDE_PROTECTED_ROOT")
-    if experiment.exists():
-        raise SystemExit("EXPERIMENT_ALREADY_EXISTS")
+        enforced_tree = measurement_tree_ceiling(admission)
+    experiment_directory_allowed(experiment)
     qualified_consumer = Path(consumer_dependency.qualify_consumer()["consumer"])
     consumer_dependency.bind_relocated_consumer(ROOT, qualified_consumer)
     diagnostics: dict = {}
@@ -493,10 +526,17 @@ def main() -> None:
         try:
             returncode = guard.run_capacity_guarded(
                 command, cwd=ROOT, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
-                memory_probe=probe, on_diagnostics=diagnostics.update)
+                memory_probe=probe, on_diagnostics=diagnostics.update,
+                tree_ceiling_bytes=enforced_tree)
             diagnostics.update(returncode=returncode)
         except OSError as exc:
             diagnostics.update(reason=str(exc), returncode=1, guard_diagnostics=getattr(exc, "diagnostics", {}))
+        if diagnostics.get("job_memory_limit_bytes") != enforced_tree:
+            diagnostics["ceiling_mismatch"] = {
+                "enforced_tree_bytes": enforced_tree,
+                "observed_tree_bytes": diagnostics.get("job_memory_limit_bytes"),
+            }
+            diagnostics["returncode"] = 1
     finally:
         diagnostics["wall_seconds"] = round(time.perf_counter() - started, 3)
         try:

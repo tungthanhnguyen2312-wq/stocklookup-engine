@@ -315,11 +315,20 @@ def check(root: Path, retained_root: Path | None = None) -> dict:
     return evaluate(observe(Path(root).resolve(), retained_root))
 
 
-# Producer-seal measurement budget. Same kernel arithmetic as the qualified physical
-# envelope (8 GiB tree + 0.25 GiB owner + 1 GiB reserve). Commit is the tree ceiling
-# plus the continuous 2 GiB reserve, not the uncontained 5.05 x IID model.
-MEASUREMENT_PHYSICAL_BYTES = QUALIFIED_PHYSICAL_BYTES
-MEASUREMENT_COMMIT_BYTES = 8 * GIB + 2 * GIB
+# Isolated Producer-seal measurement budget. The tree figure is the Windows job
+# maximum that measurement asks the kernel to enforce. It is not the ordinary Daily
+# ceiling and it does not qualify the 2026-10-26 IID or the historical 8 GiB envelope.
+# Physical admission is that enforced maximum plus the 0.25 GiB owner allowance and
+# the 1 GiB physical reserve. Commit admission is the same maximum plus the 2 GiB
+# commit reserve.
+MEASUREMENT_TREE_BYTES = 6 * GIB + (3 * GIB) // 4
+MEASUREMENT_PROCESS_BYTES = 7 * GIB
+MEASUREMENT_OWNER_ALLOWANCE_BYTES = GIB // 4
+MEASUREMENT_PHYSICAL_RESERVE_BYTES = GIB
+MEASUREMENT_COMMIT_RESERVE_BYTES = 2 * GIB
+MEASUREMENT_PHYSICAL_BYTES = (
+    MEASUREMENT_TREE_BYTES + MEASUREMENT_OWNER_ALLOWANCE_BYTES + MEASUREMENT_PHYSICAL_RESERVE_BYTES)
+MEASUREMENT_COMMIT_BYTES = MEASUREMENT_TREE_BYTES + MEASUREMENT_COMMIT_RESERVE_BYTES
 MEASURED_MAX_PRIVATE_BYTES = 7464976384
 
 
@@ -328,10 +337,12 @@ def producer_seal_measurement_admission(host: dict) -> dict:
 
     ``evaluate`` keeps the legacy factor whenever the IID exceeds the measured
     envelope, and that factor is not a prerequisite for the measurement that would
-    replace it. The job ceilings and reserves stay exactly as they are. A larger
-    IID is not declared qualified, and ``iid_max_bytes`` is not raised here.
-    Feature-branch provenance is recorded by ordinary classification and does not
-    block this measurement: the measurement has to run before that branch is main.
+    replace it. The measurement tree ceiling is the kernel job maximum for this
+    isolated run. The process ceiling, both reserves, and the ordinary 8 GiB Daily
+    tree stay unchanged. A larger IID is not declared qualified, and ``iid_max_bytes``
+    is not raised here. Feature-branch provenance is recorded by ordinary
+    classification and does not block this measurement: the measurement has to run
+    before that branch is main.
     """
     observation = host.get("observations") or {}
     qualification = observation.get("capacity_qualification") or {}
@@ -366,11 +377,11 @@ def producer_seal_measurement_admission(host: dict) -> dict:
         "basis": "KERNEL_BUDGET_NOT_A_COMPLETED_QUALIFICATION",
         "physical_budget_bytes": MEASUREMENT_PHYSICAL_BYTES,
         "commit_budget_bytes": MEASUREMENT_COMMIT_BYTES,
-        "process_ceiling_bytes": 7 * GIB,
-        "tree_ceiling_bytes": 8 * GIB,
-        "physical_reserve_bytes": GIB,
-        "commit_reserve_bytes": 2 * GIB,
-        "owner_allowance_bytes": GIB // 4,
+        "process_ceiling_bytes": MEASUREMENT_PROCESS_BYTES,
+        "tree_ceiling_bytes": MEASUREMENT_TREE_BYTES,
+        "physical_reserve_bytes": MEASUREMENT_PHYSICAL_RESERVE_BYTES,
+        "commit_reserve_bytes": MEASUREMENT_COMMIT_RESERVE_BYTES,
+        "owner_allowance_bytes": MEASUREMENT_OWNER_ALLOWANCE_BYTES,
         "observed_physical_bytes": physical,
         "observed_commit_bytes": commit,
         "iid_bytes": iid,

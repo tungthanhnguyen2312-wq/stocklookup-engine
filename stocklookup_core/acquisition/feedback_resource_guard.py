@@ -295,6 +295,7 @@ class _Job:
         returned = self.wintypes.DWORD()
         available = bool(self.kernel.QueryInformationJobObject(
             self.handle, 9, self.ctypes.byref(info), self.ctypes.sizeof(info), self.ctypes.byref(returned)))
+        flags = int(info.BasicLimitInformation.LimitFlags) if available else None
         events = list(self.memory_limit_events)
         scopes = sorted({event["scope"] for event in events})
         return {
@@ -307,6 +308,10 @@ class _Job:
             "job_memory_limit_bytes": int(info.JobMemoryLimit) if available else None,
             "peak_process_committed_bytes": int(info.PeakProcessMemoryUsed) if available else None,
             "peak_job_committed_bytes": int(info.PeakJobMemoryUsed) if available else None,
+            "limit_flags": flags,
+            "kill_on_job_close": bool(flags & 0x2000) if flags is not None else None,
+            "breakaway_ok": bool(flags & 0x800) if flags is not None else None,
+            "silent_breakaway_ok": bool(flags & 0x1000) if flags is not None else None,
         }
 
     def active_processes(self) -> int | None:
@@ -376,15 +381,27 @@ class DailyCapacityError(OSError):
         self.diagnostics = diagnostics if diagnostics is not None else {}
 
 
+# Ordinary Daily stays at these ceilings. A caller may enforce a lower tree ceiling.
+# It cannot raise the tree ceiling or change the per-process ceiling.
+ORDINARY_PROCESS_CEILING_BYTES = 7 * GIB
+ORDINARY_TREE_CEILING_BYTES = 8 * GIB
+
+
 def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str, str],
-                         memory_probe, on_start=None, on_diagnostics=None) -> int:
+                         memory_probe, on_start=None, on_diagnostics=None,
+                         tree_ceiling_bytes: int | None = None) -> int:
     """Qualified Owner child only: strict Windows Job, inherited logs, no degraded launch.
 
     Reuse the existing containment/reap primitives. System probes use GetPerformanceInfo,
     never GlobalMemoryStatusEx's process-limited available-pagefile value. A half-second
     reserve check compensates for other applications growing after point-in-time admission.
     The kernel aggregate ceiling also covers nested feedback children and grandchildren.
+    ``tree_ceiling_bytes`` defaults to the ordinary 8 GiB tree. A measurement may pass a
+    lower kernel job maximum. Values above 8 GiB are refused.
     """
+    tree_ceiling = ORDINARY_TREE_CEILING_BYTES if tree_ceiling_bytes is None else tree_ceiling_bytes
+    if type(tree_ceiling) is not int or not 0 < tree_ceiling <= ORDINARY_TREE_CEILING_BYTES:
+        raise OSError("DAILY_CAPACITY_TREE_CEILING_INVALID")
     if os.name != "nt":
         raise OSError("DAILY_CAPACITY_CONTAINMENT_UNAVAILABLE")
     owner_peak = peak_memory_bytes()
@@ -397,7 +414,7 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
             if value is None or value < floor:
                 raise OSError("DAILY_CAPACITY_RESERVE_LOW:" + key)
 
-    job = _Job(7 * GIB, job_memory_limit_bytes=8 * GIB)
+    job = _Job(ORDINARY_PROCESS_CEILING_BYTES, job_memory_limit_bytes=tree_ceiling)
     process = None
     assigned = False
     failure = None

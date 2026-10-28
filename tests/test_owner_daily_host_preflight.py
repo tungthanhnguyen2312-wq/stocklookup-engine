@@ -326,9 +326,24 @@ def current_scale_host(**updates):
 
 
 def test_kernel_budget_matches_existing_ceilings_and_reserves():
-    assert preflight.MEASUREMENT_PHYSICAL_BYTES == 8 * GIB + GIB // 4 + GIB == int(9.25 * GIB)
-    assert preflight.MEASUREMENT_COMMIT_BYTES == 10 * GIB
+    tree = 6 * GIB + (3 * GIB) // 4
+    assert preflight.MEASUREMENT_TREE_BYTES == tree == 7247757312
+    assert preflight.MEASUREMENT_PROCESS_BYTES == 7 * GIB
+    assert preflight.MEASUREMENT_PHYSICAL_BYTES == tree + GIB // 4 + GIB == 8 * GIB
+    assert preflight.MEASUREMENT_COMMIT_BYTES == tree + 2 * GIB
+    assert preflight.QUALIFIED_PHYSICAL_BYTES == int(9.25 * GIB)
     assert preflight.QUALIFIED_IID_BYTES == 2382095742
+    host = current_scale_host()
+    admission = preflight.producer_seal_measurement_admission(host)
+    assert admission["tree_ceiling_bytes"] == tree
+    assert admission["process_ceiling_bytes"] == 7 * GIB
+    assert admission["physical_reserve_bytes"] == GIB
+    assert admission["commit_reserve_bytes"] == 2 * GIB
+    assert admission["owner_allowance_bytes"] == GIB // 4
+    assert admission["qualified_current_scale"] is False
+    assert host["capacity_admission"]["child_tree_commit_ceiling_bytes"] == 8 * GIB
+    assert host["capacity_admission"]["child_process_commit_ceiling_bytes"] == 7 * GIB
+    assert host["dimensions"]["physical"]["green_min_bytes"] == 10365924740
 
 
 def test_current_iid_keeps_legacy_ordinary_gate_and_refuses_arithmetic_extension():
@@ -341,6 +356,8 @@ def test_current_iid_keeps_legacy_ordinary_gate_and_refuses_arithmetic_extension
     assert result["dimensions"]["commit"]["green_min_bytes"] == 20731849481
     admission = preflight.producer_seal_measurement_admission(result)
     assert admission["admitted"] is True
+    assert admission["tree_ceiling_bytes"] == preflight.MEASUREMENT_TREE_BYTES
+    assert admission["process_ceiling_bytes"] == 7 * GIB
     assert admission["qualified_current_scale"] is False
     assert admission["iid_max_extended"] is False
     assert admission["legacy_delta_bytes"] == 63995367
