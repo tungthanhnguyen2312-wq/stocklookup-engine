@@ -53,6 +53,17 @@ def test_production_identity_detects_a_byte_change(tmp_path):
     assert runner.same_production_identity(before, runner.production_identity_of(iid, registry)) is False
 
 
+def test_sandbox_git_provenance_is_captured_before_subprocess_refusal(tmp_path):
+    calls = []
+    def reader(path):
+        calls.append(path)
+        return "a" * 40
+    frozen = runner.frozen_git_head_reader([tmp_path], reader)
+    assert frozen(tmp_path) == "a" * 40
+    assert frozen(tmp_path / "unqualified") is None
+    assert calls == [tmp_path]
+
+
 def test_experiment_directory_refuses_protected_and_existing_paths(tmp_path):
     with pytest.raises(SystemExit, match="EXPERIMENT_INSIDE_PROTECTED_ROOT"):
         runner.experiment_directory_allowed(runner.PRODUCTION_RETAINED / "new-experiment")

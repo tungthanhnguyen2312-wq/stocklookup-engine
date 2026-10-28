@@ -347,6 +347,12 @@ def restore_registry() -> None:
         stdout=subprocess.DEVNULL)
 
 
+def frozen_git_head_reader(paths, reader):
+    """Capture genuine provenance before the sandbox forbids subprocesses."""
+    heads = {Path(path).resolve(): reader(Path(path)) for path in paths}
+    return lambda path: heads.get(Path(path).resolve())
+
+
 def child(experiment: Path) -> int:
     import canonical_daily_operation as daily
     from datetime import datetime, timedelta, timezone
@@ -407,6 +413,9 @@ def child(experiment: Path) -> int:
                     if not path.is_relative_to(experiment.resolve()) and path != registry_path:
                         refuse("SANDBOX_MUTATION_OUTSIDE_EXPERIMENT:" + str(path))
 
+    import canonical_post_close_pipeline as pipeline
+    head_reader = frozen_git_head_reader([ROOT, ROOT.parent / "ai-core-private"], daily._git_head)
+    daily._git_head = pipeline._git_head = head_reader
     sys.addaudithook(audit)
     snapshot_path = sandbox / "operations-review" / "p3f9b-market-wide-exact-session-scaleout-20261026" / "p3f9b_mva_exact_session_snapshot.json"
     envelope = json.loads(snapshot_path.read_text(encoding="utf-8"))
@@ -463,6 +472,8 @@ def child(experiment: Path) -> int:
             "path": str(fresh[-1]),
             "status": producer_manifest.get("status"),
             "session": producer_manifest.get("session") or producer_manifest.get("market_session"),
+            "run_identity": producer_manifest.get("run_identity"),
+            "daily_session_operation": producer_manifest.get("daily_session_operation"),
         }
     current_iid = (sandbox / "operations-review" / "integrated-investment-decision-product-v1-20261026"
                    / "integrated_investment_decision_product_artifact.json")
@@ -473,6 +484,9 @@ def child(experiment: Path) -> int:
             "window": brief._window_header(current_iid),
         }
         if outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER":
+            outcome["iid_reference_parity"] = (
+                current_iid.stat().st_size == 2216287780
+                and file_digest(current_iid) == "35ae5417ded19dc4e98428ef3e0b4a237e2e2d34f20a55fa8cced042d7916ea5")
             try:
                 outcome["sandbox_t0"] = _sandbox_streamed_t0(experiment, current_iid, producer_manifest, SESSION)
             except Exception as exc:
@@ -487,7 +501,7 @@ def child(experiment: Path) -> int:
     (experiment / "child-result.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
     sealed = outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER" and (outcome.get("producer_manifest") or {}).get("status") == "COMPLETED"
     t0_verified = outcome.get("sandbox_t0", {}).get("status") == "VERIFIED"
-    return 0 if sealed and t0_verified and outcome["production_unchanged"] and not violations else 1
+    return 0 if sealed and t0_verified and outcome.get("iid_reference_parity") is True and outcome["production_unchanged"] and not violations else 1
 
 
 def _private_commit():
@@ -528,6 +542,10 @@ def _sandbox_streamed_t0(experiment, iid_path, manifest, session):
     operation_identity = ((manifest.get("daily_session_operation") or {}).get("identity"))
     before = _private_commit()
     store, header = IndexedRecordMapping.from_file(iid_path)
+    from stocklookup_core.decision.integrated_investment_decision_product import content_identity
+    if (len(store) != 1683 or header.get("artifact_sha256") != "e923601f547400ff9cc262653ba60416f20209371e58547bad5e2dcce1ce6ce2"
+            or content_identity({**header, "records": store})["artifact_sha256"] != header["artifact_sha256"]):
+        raise RuntimeError("SANDBOX_IID_COVERAGE_OR_CANONICAL_PARITY_FAILED")
     snapshot = build_snapshot(
         session=session, operation_identity=operation_identity,
         producer_run_identity=manifest.get("run_identity"),
@@ -685,6 +703,7 @@ def main() -> None:
         admission = producer_seal_measurement_admission(host)
         report = experiment.with_name(experiment.name + "-admission.json")
         report.write_text(json.dumps({"admission": admission, "classification": host.get("classification"),
+                                      "host": host,
                                       "dependency_preflight": dependency["status"]}, indent=2),
                           encoding="utf-8")
         print(json.dumps(admission), flush=True)
@@ -704,7 +723,13 @@ def main() -> None:
         def probe():
             if time.perf_counter() - started > 7200:
                 raise OSError("PRESEAL_SEAL_REGRESSION_DEADLINE_7200_SECONDS")
-            return windows_memory()
+            memory = windows_memory()
+            minima = diagnostics.setdefault("host_headroom_minima", {})
+            for key in ("available_physical_bytes", "available_commit_bytes"):
+                value = memory.get(key)
+                if isinstance(value, int):
+                    minima[key] = min(minima.get(key, value), value)
+            return memory
 
         command = [sys.executable, "-B", "-u", str(Path(__file__).resolve()), "--child", str(experiment)]
         stdout_log = experiment / "child-stdout.log"
