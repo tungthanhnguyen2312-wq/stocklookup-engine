@@ -24,13 +24,13 @@
       "milestone_id": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
       "state": "ACTIVE",
       "starting_checkpoint": "102bc7fcda40f04636f935f3fad47981dd5c067a",
-      "candidate_branch": "fix/owner-daily-16gb-memory-recovery-v1",
+      "candidate_branch": "fix/owner-daily-preseal-consumer-memory-v1",
       "dependencies": [
         "OFFICIAL_SSI_POW_CORPORATE_ACTION_EVIDENCE_QUALIFICATION_V1"
       ],
       "unlocks": [],
       "owner_authorized": true,
-      "owner_override": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor.",
+      "owner_override": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor. Latest explicit Owner directive (2026-10-28): incident-scoped end-to-end implementation, verified HOSE deployment, qualified capture completion, protected repository integration, eligible historical products and T+ recovery are authorized; all native safety, integrity, temporal and resource gates remain binding; no forced Git operations, source promotion, fake T0 or new provider.",
       "authority_effect": "NONE",
       "source_doc": "docs/owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md",
       "state_history": [
@@ -39,7 +39,7 @@
       ],
       "checkpoint": null,
       "terminal_disposition": null,
-      "notes": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor."
+      "notes": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor. Incident checkpoint 01940b93e249b26aaaa13babc62a12e7703746ad composes memory and capture/HOSE changes; prior candidate branch fix/owner-daily-16gb-memory-recovery-v1 preserved. Production de40f25a6f647b907bc58dff513eb4f7b1bbba0c verified. Oct28 completion source-blocked: market_disclosures TimeoutError while opening/waiting for HTTP headers (21:55:26-21:55:56 +07); 857 records and original36 hashes retained, three old mutable metadata views preserved in backup; no complete capture/T0. Full-output acceptance not admitted (8-GiB physical floor); ordinary storage reserve and IID envelope remain binding; core seal alone is insufficient. PR199 draft, mandatory exact-head CI required. Oct26 historical pack retained; isolated Workspace recovery hit 2-GiB Job cap with clean tree reaping; no new publication. Oct27 lacks qualified exact-session input set. Oct28 descriptive export retains original values and missing-input states only. T+ observer stopped fail-closed on pinned storage fingerprint change-time mismatch; no new feedback or cohort reset. Milestone remains ACTIVE/unqualified; original scope/history preserved."
     },
     {
       "milestone_id": "OFFICIAL_SSI_POW_CORPORATE_ACTION_EVIDENCE_QUALIFICATION_V1",
