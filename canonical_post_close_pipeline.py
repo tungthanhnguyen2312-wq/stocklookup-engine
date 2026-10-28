@@ -1379,6 +1379,14 @@ def build_enrichment_components(
                 or not isinstance(res.get("artifact_sha256"), str) or not res["artifact_sha256"]
                 or res.get("artifact_identity") != integrated_contract.CONTRACT_VERSION + ":" + res["artifact_sha256"]):
             raise CanonicalPostCloseError("INTEGRATED_DECISION_BUILDER_IDENTITY_OR_CONTRACT_MISMATCH")
+        # The product now owns the research objects it retained. Drop the stage
+        # graphs before the canonical walk so they are not live beside it.
+        del tactical_projection, relative_volume, momentum, confirmation, tactical_boundaries
+        del financial_session_artifact, evaluated_valuation, entity_applicability, operational_integration
+        del liquidity_research, official_liquidity, corporate_intelligence_artifact
+        del technical_coverage_disposition, mkt, opp, queue
+        import gc
+        gc.collect()
         iid_write_receipt = _write_json(paths["integrated_investment_decision_product"], res, capture_iid_receipt=True)
         from prospective_decision_outcome_feedback import retain_iid_classification_summary
         retain_iid_classification_summary(output_root, paths["integrated_investment_decision_product"], res)

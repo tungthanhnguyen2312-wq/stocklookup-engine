@@ -265,7 +265,7 @@ def _fundamental(record: Mapping[str, Any], financial: Mapping[str, Any] | None,
         "freshness": freshness,
         "metrics": {"qualified": qualified if available else [], "proxy": proxy if available else [],
                     "non_applicable": non_applicable, "blocked": blocked},
-        **({"financial_peer_context": copy.deepcopy(record["financial_peer_context"])} if "financial_peer_context" in record else {}),
+        **({"financial_peer_context": record["financial_peer_context"]} if "financial_peer_context" in record else {}),
         "reason_codes": reasons,
     }
 
@@ -349,9 +349,9 @@ def _valuation(record: Mapping[str, Any], valuation_record: Mapping[str, Any] | 
         "not_meaningful_methods": not_meaningful,
         "non_applicable_methods": non_applicable,
         "blocked_methods": blocked,
-        **({"intrinsic_scenario_valuation": copy.deepcopy(record["intrinsic_scenario_valuation"])} if "intrinsic_scenario_valuation" in record else {}),
+        **({"intrinsic_scenario_valuation": record["intrinsic_scenario_valuation"]} if "intrinsic_scenario_valuation" in record else {}),
         "peer_relative_state": peer_state,
-        **({"balance_sheet_divergence": copy.deepcopy(record["valuation_balance_sheet_divergence"])}
+        **({"balance_sheet_divergence": record["valuation_balance_sheet_divergence"]}
            if "valuation_balance_sheet_divergence" in record else {}),
         "share_basis": summary.get("share_basis") or valuation_record.get("share_basis"),
         "size_context": {"state": AVAILABLE if size_available else "UNAVAILABLE",

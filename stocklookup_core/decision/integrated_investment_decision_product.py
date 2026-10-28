@@ -717,7 +717,7 @@ def build_evidence_axes(
             method="current_research_valuation_context/v1",
             lineage={"source_artifact_identity": identities.get("current_valuation") or valuation.get("artifact_identity")},
             context={
-                **({"intrinsic_scenario_valuation": copy.deepcopy(valuation["intrinsic_scenario_valuation"])} if "intrinsic_scenario_valuation" in valuation else {}),
+                **({"intrinsic_scenario_valuation": valuation["intrinsic_scenario_valuation"]} if "intrinsic_scenario_valuation" in valuation else {}),
                 "peer_relative_state": val_summary.get("peer_relative_state"),
                 "own_history_state": val_summary.get("own_history_state"),
                 "size_context_status": (val_summary.get("size_context") or {}).get("status"),
@@ -1789,10 +1789,15 @@ def build_ticker_integrated_decision(
     evidence_axis_coherence = evaluate_evidence_axis_coherence(evidence_axes)
     financial_composite_context["evidence_basis"] = fundamental_signals.research_evidence_basis(
         evidence_axes["FUNDAMENTAL"].get("context"))
-    if financial_peer_context is not None:
-        evidence_axes["FUNDAMENTAL"].setdefault("context", {})["financial_peer_context"] = copy.deepcopy(dict(financial_peer_context))
-    if valuation_balance_sheet_divergence is not None:
-        evidence_axes["VALUATION"].setdefault("context", {})["balance_sheet_divergence"] = copy.deepcopy(dict(valuation_balance_sheet_divergence))
+    # These three sites serialize the same research object. One private snapshot
+    # is enough: the final readiness copy preserves that sharing, and JSON writes
+    # each site. A second and third deepcopy kept full copies alive together.
+    peer_snapshot = copy.deepcopy(dict(financial_peer_context)) if financial_peer_context is not None else None
+    divergence_snapshot = copy.deepcopy(dict(valuation_balance_sheet_divergence)) if valuation_balance_sheet_divergence is not None else None
+    if peer_snapshot is not None:
+        evidence_axes["FUNDAMENTAL"].setdefault("context", {})["financial_peer_context"] = peer_snapshot
+    if divergence_snapshot is not None:
+        evidence_axes["VALUATION"].setdefault("context", {})["balance_sheet_divergence"] = divergence_snapshot
 
     # Legacy stance comparison
     legacy_stance = None
@@ -1834,7 +1839,7 @@ def build_ticker_integrated_decision(
         "priority_posture_reconciliation": priority_posture,
         "fundamental_support": fund_supp,
         "technical_support": tac_supp,
-        **({"intrinsic_scenario_valuation": copy.deepcopy(valuation["intrinsic_scenario_valuation"])} if "intrinsic_scenario_valuation" in valuation else {}),
+        **({"intrinsic_scenario_valuation": valuation["intrinsic_scenario_valuation"]} if "intrinsic_scenario_valuation" in valuation else {}),
         "valuation_context_summary": val_summary,
         "financial_composite_context": financial_composite_context,
         "valuation_methods": valuation.get("methods") or {},
@@ -1883,11 +1888,11 @@ def build_ticker_integrated_decision(
             "unknown_is_local_does_not_force_global_wait": True,
         },
     }
-    if financial_peer_context is not None:
-        record["financial_peer_context"] = copy.deepcopy(dict(financial_peer_context))
+    if peer_snapshot is not None:
+        record["financial_peer_context"] = peer_snapshot
         record["source_identities"]["financial_peer_materialization_identity"] = financial_peer_context.get("source_materialization_identity")
-    if valuation_balance_sheet_divergence is not None:
-        record["valuation_balance_sheet_divergence"] = copy.deepcopy(dict(valuation_balance_sheet_divergence))
+    if divergence_snapshot is not None:
+        record["valuation_balance_sheet_divergence"] = divergence_snapshot
     validate_posture_policy(record)
     record["decision_identity"] = decision_identity(record)
     if bridge_consulted:
