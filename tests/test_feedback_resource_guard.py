@@ -363,6 +363,8 @@ def test_aggregate_job_limit_is_kernel_enforced_across_two_children(tmp_path):
 @pytest.mark.skipif(os.name != "nt", reason="Windows process Job ceiling")
 def test_process_limit_diagnostics_survive_child_exit_and_denied_allocation(tmp_path):
     command = _script(tmp_path, "x=bytearray(256*1024**2)\n")
+    # The venv launcher re-execs a descendant; compare the allocating base PID.
+    command[0] = getattr(sys, "_base_executable", None) or sys.executable
     job = guard._Job(128 * 1024**2, job_memory_limit_bytes=512 * 1024**2)
     process = subprocess.Popen(command, creationflags=4, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:

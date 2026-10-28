@@ -98,9 +98,30 @@ def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _capture_only_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    manifest = root / "tests/fixtures/owner_daily_capture_only_source_transition_v1.json"
+    if relative != "tools/run_owner_daily.py" or not manifest.exists():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/owner_daily_capture_only_v1_sources/tools/run_owner_daily.py.txt"
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "archive", "prior_sha256_lf", "active_sha256_lf"}
+            or spec["contract_version"] != "owner_daily_capture_only_source_transition/v1"
+            or spec["base_commit"] != "a46bc5606cdbeb083f251c7418168e500205142a"
+            or spec["scope"] != "SHARED_CAPTURE_WRITER_LEASE_ONLY" or spec["release_authority"] != "NOT_GRANTED"
+            or spec["archive"] != archive):
+        raise ValueError("CAPTURE_WRITER_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    addition = b"from tools.capture_writer_lease import exclusive_writer\n\n\n@exclusive_writer\n"
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or active.count(addition) != 1 or active.replace(addition, b"") != prior):
+        raise ValueError("CAPTURE_WRITER_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
-    active = _iid_runtime_prior_bytes(root, relative, active)
+    active = _iid_runtime_prior_bytes(root, relative, _capture_only_prior_bytes(root, relative, active))
     if relative not in LAUNCHER_SOURCES or not (root / LAUNCHER_MANIFEST).exists():
         return active
     spec = json.loads((root / LAUNCHER_MANIFEST).read_bytes())
