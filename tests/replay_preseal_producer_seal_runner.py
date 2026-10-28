@@ -373,6 +373,31 @@ def frozen_git_head_reader(paths, reader):
     return lambda path: heads.get(Path(path).resolve())
 
 
+def prepare_screen_fixture(sandbox: Path, *, evidence_root: Path | None = None):
+    """Replay-only CSV from the existing qualified canonical row projector.
+
+    No runtime release, database write, acquisition, T0 or authority promotion.
+    Source/session qualification is the same as canonical runtime materialization.
+    """
+    import canonical_dashboard_runtime_release as runtime
+    sources, _registry = runtime._source_paths(ROOT, SESSION)
+    snapshot = runtime._p3_snapshot(evidence_root or sandbox, SESSION, sources)
+    rows, _live = runtime.screen_snapshot_rows(SESSION, sources, snapshot)
+    target = sandbox / "runtime" / "screen_snapshot.csv"
+    if target.exists():
+        raise RuntimeError("SCREEN_FIXTURE_ALREADY_EXISTS")
+    temporary = target.with_name(target.name + ".tmp")
+    try:
+        runtime._write_csv(temporary, runtime.SNAPSHOT_FIELDS, rows)
+        os.replace(temporary, target)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return {"path": str(target), "sha256": file_digest(target), "session": SESSION,
+            "snapshot_identity": snapshot.get("snapshot_identity"),
+            "rows": len(rows), "source_identities": {key: value[1].get("artifact_identity") for key, value in sources.items()},
+            "classification": "SCRATCH_REPLAY_ONLY_NO_AUTHORITY"}
+
+
 def completed_producer_manifest(sandbox: Path, session: str):
     base = sandbox / "operations-review" / "daily-producer-runs-v1"
     fresh = [path for path in base.glob(session + "/*/run_manifest.json")
@@ -391,6 +416,17 @@ def completed_producer_manifest(sandbox: Path, session: str):
             or (manifest.get("ai_dashboard_parity") or {}).get("status") != "PASS"):
         raise RuntimeError("SANDBOX_PRODUCER_MANIFEST_BINDING_FAILED")
     return path, manifest
+
+
+def full_scale_acceptance_ready(outcome, manifest):
+    """Core seal alone is insufficient for complete-output qualification."""
+    return bool(manifest is not None
+                and outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER"
+                and (manifest.get("current_product_projections") or {}).get("status") == "MATERIALIZED"
+                and outcome.get("iid_reference_parity") is True
+                and (outcome.get("sandbox_t0") or {}).get("status") == "VERIFIED"
+                and outcome.get("production_unchanged") is True
+                and not outcome.get("violations"))
 
 
 def child(experiment: Path) -> int:
@@ -414,6 +450,8 @@ def child(experiment: Path) -> int:
     link_producer_static(experiment)
     link_frozen_registry_inputs(experiment)
     prepare_registry(experiment)
+    fixture = prepare_screen_fixture(sandbox)
+    (experiment / "screen-fixture.json").write_text(json.dumps(fixture, indent=2), encoding="utf-8")
     before = production_identity_of(PRODUCTION_IID, PRODUCTION_REGISTRY)
     (experiment / "production-before.json").write_text(json.dumps(before, indent=2), encoding="utf-8")
     violations: list[str] = []
@@ -466,7 +504,9 @@ def child(experiment: Path) -> int:
     trace = (experiment / "stages.jsonl").open("w", encoding="utf-8", buffering=1)
 
     def progress(value):
-        trace.write(json.dumps({"at": time.time(), "subtask": value.get("subtask"), "status": value.get("status")}) + "\n")
+        fields = ("subtask", "status", "checkpoint_id", "checkpoint_index", "checkpoint_completed",
+                  "checkpoint_total", "checkpoint_label", "completed", "total")
+        trace.write(json.dumps({"at": time.time(), **{key: value[key] for key in fields if key in value}}) + "\n")
 
     def stop_after_seal(*_args, **_kwargs):
         raise daily.CanonicalRuntimeReleaseError("SANDBOX_STOP_AFTER_PRODUCER_SEAL")
@@ -539,9 +579,7 @@ def child(experiment: Path) -> int:
     outcome["production_before"] = before
     outcome["violations"] = violations
     (experiment / "child-result.json").write_text(json.dumps(outcome, indent=2), encoding="utf-8")
-    sealed = outcome.get("seal_boundary") == "STOPPED_AFTER_PRODUCER" and producer_manifest is not None
-    t0_verified = outcome.get("sandbox_t0", {}).get("status") == "VERIFIED"
-    return 0 if sealed and t0_verified and outcome.get("iid_reference_parity") is True and outcome["production_unchanged"] and not violations else 1
+    return 0 if full_scale_acceptance_ready(outcome, producer_manifest) else 1
 
 
 def _private_commit():

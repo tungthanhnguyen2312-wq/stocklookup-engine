@@ -433,15 +433,8 @@ def _stage_current_decision_cockpit(
             "operation_identity": operation_identity, "producer_run_identity": run_manifest.get("run_identity")}
 
 
-def _build_release(root: Path, session: str, staging: Path, *, producer_run_identity: str | None = None) -> dict[str, Any]:
-    sources, _registry = _source_paths(root, session)
-    run_path, run_manifest, bundle_path, producer_bundle = _producer_run(root, session, sources, run_identity=producer_run_identity)
-    workspace_lineage = _stage_workspace(root, session, staging, run_manifest)
-    screener_lineage = _stage_screener_master_projection(root, session, staging, run_manifest)
-    home_summary_lineage = _stage_dashboard_home_summary(root, session, staging, run_manifest)
-    cockpit_lineage = _stage_current_decision_cockpit(root, session, staging, run_path, run_manifest)
-    tier_lineage = _verify_retained_tier_lineage(root, session, run_manifest)
-    snapshot = _p3_snapshot(root, session, sources)
+def screen_snapshot_rows(session, sources, snapshot):
+    """Project qualified frozen inputs using the canonical runtime CSV semantics."""
     descriptive = sources["descriptive"][1]
     tactical_records = sources["tactical"][1].get("records") or {}
     official_records = sources["official_universe"][1].get("records") or {}
@@ -483,10 +476,23 @@ def _build_release(root: Path, session: str, staging: Path, *, producer_run_iden
         rows.append(row)
     if not live_rows:
         raise CanonicalRuntimeReleaseError("NO_EXACT_SESSION_RUNTIME_ROWS")
+    return rows, live_rows
+
+
+def _build_release(root: Path, session: str, staging: Path, *, producer_run_identity: str | None = None) -> dict[str, Any]:
+    sources, _registry = _source_paths(root, session)
+    run_path, run_manifest, bundle_path, producer_bundle = _producer_run(root, session, sources, run_identity=producer_run_identity)
+    workspace_lineage = _stage_workspace(root, session, staging, run_manifest)
+    screener_lineage = _stage_screener_master_projection(root, session, staging, run_manifest)
+    home_summary_lineage = _stage_dashboard_home_summary(root, session, staging, run_manifest)
+    cockpit_lineage = _stage_current_decision_cockpit(root, session, staging, run_path, run_manifest)
+    tier_lineage = _verify_retained_tier_lineage(root, session, run_manifest)
+    snapshot = _p3_snapshot(root, session, sources)
+    rows, live_rows = screen_snapshot_rows(session, sources, snapshot)
     _write_csv(staging / "screen_snapshot.csv", SNAPSHOT_FIELDS, rows)
     _write_csv(staging / "screen_snapshot_live.csv", SNAPSHOT_FIELDS, live_rows)
 
-    breadth = descriptive.get("market_breadth") or {}
+    breadth = sources["descriptive"][1].get("market_breadth") or {}
     required_breadth = ("advancing", "declining", "unchanged")
     if breadth.get("session") != session or any(not isinstance(breadth.get(k), int) for k in required_breadth):
         raise CanonicalRuntimeReleaseError("CANONICAL_BREADTH_UNAVAILABLE_OR_SESSION_MISMATCH")

@@ -81,6 +81,31 @@ def test_listing_namespace_has_real_writable_directories_without_source_mutation
     assert original.read_bytes() == b"original"
 
 
+def test_screen_fixture_uses_canonical_projection_and_preserves_missing_observations(tmp_path, monkeypatch):
+    import canonical_dashboard_runtime_release as runtime
+    session = runner.SESSION
+    sources = {"descriptive": (tmp_path, {"artifact_identity": "descriptive:fixture", "records": {"AAA": {}, "BBB": {}}}),
+               "tactical": (tmp_path, {"records": {}}), "official_universe": (tmp_path, {"records": {}})}
+    snapshot = {"snapshot_identity": "snapshot:fixture", "records": {"AAA": {"observations": [{"session": session, "close": 42}]}}}
+    monkeypatch.setattr(runtime, "_source_paths", lambda *args: (sources, {}))
+    monkeypatch.setattr(runtime, "_p3_snapshot", lambda *args: snapshot)
+    (tmp_path / "runtime").mkdir()
+    result = runner.prepare_screen_fixture(tmp_path)
+    import csv
+    with Path(result["path"]).open(newline="", encoding="utf-8") as file:
+        rows = list(csv.DictReader(file))
+    assert [row["ticker"] for row in rows] == ["AAA", "BBB"]
+    assert rows[0]["close"] == "42" and rows[0]["date"] == session
+    assert rows[1]["close"] == "" and rows[1]["canonical_observation_status"] == "UNAVAILABLE_NO_EXACT_SESSION_OBSERVATION"
+    assert result["snapshot_identity"] == "snapshot:fixture"
+    assert not list((tmp_path / "runtime").glob("*.tmp"))
+    with pytest.raises(RuntimeError, match="ALREADY_EXISTS"):
+        runner.prepare_screen_fixture(tmp_path)
+    snapshot["records"]["AAA"]["observations"].append({"session": session, "close": 43})
+    with pytest.raises(runtime.CanonicalRuntimeReleaseError, match="MULTIPLE_EXACT_OBSERVATIONS"):
+        runtime.screen_snapshot_rows(session, sources, snapshot)
+
+
 def test_manifest_discovery_uses_session_and_digest_and_validates_bindings(tmp_path):
     session = "2026-10-26"
     digest = "a" * 64
@@ -102,6 +127,17 @@ def test_manifest_discovery_uses_session_and_digest_and_validates_bindings(tmp_p
         runner.completed_producer_manifest(tmp_path, session)
     with pytest.raises(RuntimeError, match="MANIFEST_COUNT"):
         runner.completed_producer_manifest(tmp_path, "2026-10-27")
+
+
+def test_acceptance_refuses_core_only_or_unverified_sandbox_output():
+    manifest = {"current_product_projections": {"status": "MATERIALIZED"}}
+    outcome = {"seal_boundary": "STOPPED_AFTER_PRODUCER", "iid_reference_parity": True,
+               "sandbox_t0": {"status": "VERIFIED"}, "production_unchanged": True, "violations": []}
+    assert runner.full_scale_acceptance_ready(outcome, manifest)
+    assert not runner.full_scale_acceptance_ready(outcome, {"current_product_projections": {"status": "SKIPPED"}})
+    assert not runner.full_scale_acceptance_ready({**outcome, "sandbox_t0": {"status": "FAILED"}}, manifest)
+    assert not runner.full_scale_acceptance_ready({**outcome, "violations": ["blocked write"]}, manifest)
+    assert not runner.full_scale_acceptance_ready(outcome, None)
 
 
 def test_experiment_directory_refuses_protected_and_existing_paths(tmp_path):
