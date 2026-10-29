@@ -1,0 +1,9 @@
+{
+  "contract_version": "owner_daily_capture_only_source_transition/v1",
+  "base_commit": "a46bc5606cdbeb083f251c7418168e500205142a",
+  "scope": "SHARED_CAPTURE_WRITER_LEASE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "archive": "tests/fixtures/owner_daily_capture_only_v1_sources/tools/run_owner_daily.py.txt",
+  "prior_sha256_lf": "b12dd4ca7ad4efd38dcce262e99177e254c4df05934e2c1f78959a17f3e963a9",
+  "active_sha256_lf": "8a9b9bd130fa6e932ace91b1c2787e9434498298480e1d4be8a9244b0170ac09"
+}

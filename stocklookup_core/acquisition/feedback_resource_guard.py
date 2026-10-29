@@ -204,7 +204,7 @@ def admit(policy: ResourcePolicy, *, output_dir: Path, expected_output_bytes: in
 class _Job:
     """One job per child: kill-on-close, optional per-process commit ceiling, peak accounting."""
 
-    def __init__(self, memory_limit_bytes: int | None, *, job_memory_limit_bytes: int | None = None):
+    def __init__(self, memory_limit_bytes: int | None, *, job_memory_limit_bytes: int | None = None, name: str | None = None):
         import ctypes
         from ctypes import wintypes
         self.ctypes, self.wintypes = ctypes, wintypes
@@ -246,9 +246,16 @@ class _Job:
         self.port = None
         self.memory_limit_exceeded = False
         self.memory_limit_events = []
-        self.handle = kernel.CreateJobObjectW(None, None)
+        if name is not None:
+            kernel.CreateJobObjectW.argtypes = [ctypes.c_void_p, wintypes.LPCWSTR]
+            ctypes.set_last_error(0)
+        self.handle = kernel.CreateJobObjectW(None, name)
         if not self.handle:
             raise OSError(ctypes.get_last_error(), "CreateJobObjectW failed")
+        if name is not None and ctypes.get_last_error() == 183:
+            kernel.CloseHandle(self.handle)
+            self.handle = None
+            raise OSError("CAPACITY_JOB_NAME_ALREADY_EXISTS")
         info = EXTENDED()
         flags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
         if memory_limit_bytes:
@@ -295,6 +302,7 @@ class _Job:
         returned = self.wintypes.DWORD()
         available = bool(self.kernel.QueryInformationJobObject(
             self.handle, 9, self.ctypes.byref(info), self.ctypes.sizeof(info), self.ctypes.byref(returned)))
+        flags = int(info.BasicLimitInformation.LimitFlags) if available else None
         events = list(self.memory_limit_events)
         scopes = sorted({event["scope"] for event in events})
         return {
@@ -307,6 +315,10 @@ class _Job:
             "job_memory_limit_bytes": int(info.JobMemoryLimit) if available else None,
             "peak_process_committed_bytes": int(info.PeakProcessMemoryUsed) if available else None,
             "peak_job_committed_bytes": int(info.PeakJobMemoryUsed) if available else None,
+            "limit_flags": flags,
+            "kill_on_job_close": bool(flags & 0x2000) if flags is not None else None,
+            "breakaway_ok": bool(flags & 0x800) if flags is not None else None,
+            "silent_breakaway_ok": bool(flags & 0x1000) if flags is not None else None,
         }
 
     def active_processes(self) -> int | None:
@@ -376,15 +388,29 @@ class DailyCapacityError(OSError):
         self.diagnostics = diagnostics if diagnostics is not None else {}
 
 
+# Ordinary Daily stays at these ceilings. A caller may enforce a lower tree ceiling.
+# It cannot raise the tree ceiling or change the per-process ceiling.
+ORDINARY_PROCESS_CEILING_BYTES = 7 * GIB
+ORDINARY_TREE_CEILING_BYTES = 8 * GIB
+
+
 def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str, str],
-                         memory_probe, on_start=None, on_diagnostics=None) -> int:
+                         memory_probe, on_start=None, on_diagnostics=None,
+                         tree_ceiling_bytes: int | None = None,
+                         job_name: str | None = None,
+                         stdout_path: Path | None = None, stderr_path: Path | None = None) -> int:
     """Qualified Owner child only: strict Windows Job, inherited logs, no degraded launch.
 
     Reuse the existing containment/reap primitives. System probes use GetPerformanceInfo,
     never GlobalMemoryStatusEx's process-limited available-pagefile value. A half-second
     reserve check compensates for other applications growing after point-in-time admission.
     The kernel aggregate ceiling also covers nested feedback children and grandchildren.
+    ``tree_ceiling_bytes`` defaults to the ordinary 8 GiB tree. A measurement may pass a
+    lower kernel job maximum. Values above 8 GiB are refused.
     """
+    tree_ceiling = ORDINARY_TREE_CEILING_BYTES if tree_ceiling_bytes is None else tree_ceiling_bytes
+    if type(tree_ceiling) is not int or not 0 < tree_ceiling <= ORDINARY_TREE_CEILING_BYTES:
+        raise OSError("DAILY_CAPACITY_TREE_CEILING_INVALID")
     if os.name != "nt":
         raise OSError("DAILY_CAPACITY_CONTAINMENT_UNAVAILABLE")
     owner_peak = peak_memory_bytes()
@@ -397,14 +423,25 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
             if value is None or value < floor:
                 raise OSError("DAILY_CAPACITY_RESERVE_LOW:" + key)
 
-    job = _Job(7 * GIB, job_memory_limit_bytes=8 * GIB)
+    job = (_Job(ORDINARY_PROCESS_CEILING_BYTES, job_memory_limit_bytes=tree_ceiling, name=job_name)
+           if job_name is not None else _Job(ORDINARY_PROCESS_CEILING_BYTES, job_memory_limit_bytes=tree_ceiling))
     process = None
     assigned = False
     failure = None
+    stdout_handle = None
+    stderr_handle = None
     try:
         require_reserves()
-        process = subprocess.Popen(list(command), cwd=cwd, env=dict(env),
-                                   creationflags=0x00000004)  # contain before any user code
+        popen_kwargs: dict[str, Any] = {"cwd": cwd, "env": dict(env), "creationflags": 0x00000004}
+        if stdout_path is not None:
+            Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
+            stdout_handle = open(stdout_path, "wb", buffering=0)
+            popen_kwargs["stdout"] = stdout_handle
+        if stderr_path is not None:
+            Path(stderr_path).parent.mkdir(parents=True, exist_ok=True)
+            stderr_handle = open(stderr_path, "wb", buffering=0)
+            popen_kwargs["stderr"] = stderr_handle
+        process = subprocess.Popen(list(command), **popen_kwargs)  # contain before any user code
         job.assign(int(process._handle))
         assigned = True
         if on_start is not None:
@@ -447,6 +484,12 @@ def run_capacity_guarded(command: Sequence[str], *, cwd: Path, env: Mapping[str,
                            "limit_scope": "UNKNOWN", "peak_process_committed_bytes": None,
                            "peak_job_committed_bytes": None}
         finally:
+            if stdout_handle is not None:
+                stdout_handle.close()
+                stdout_handle = None
+            if stderr_handle is not None:
+                stderr_handle.close()
+                stderr_handle = None
             job.close()
         diagnostics.update(immediate_child_reaped=reaped, tree_termination_confirmed=empty)
         if failure is not None:

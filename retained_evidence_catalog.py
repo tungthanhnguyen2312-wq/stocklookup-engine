@@ -1,8 +1,10 @@
 """Location metadata for retained identities; never an evidence authority or downloader."""
 from __future__ import annotations
 
+import copy
 import json
 import os
+import time
 from pathlib import Path
 
 from tools.vault_snapshot import Refused, safe_path, sha, require
@@ -11,6 +13,13 @@ from stocklookup_core.evidence import storage_portability as location_core
 
 SCHEMA = "retained_evidence_cold_catalog/v1"
 STATES = {"PRESENT_ON_C", "PRESENT_QUALIFIED", "ARCHIVED_COLD", "NEVER_RETAINED", "UNKNOWN_OR_CONFLICTED"}
+VOLUME_REUSE_SECONDS = 60.0
+# Process-local reader caches: catalog bytes -> validated entries, drive -> volume
+# attestation, and (location, proof sha) -> fingerprint whose bytes this process hashed.
+_LOADED: dict[str, tuple[bytes, list]] = {}
+_VOLUMES: dict[str, tuple[float, dict]] = {}
+_VERIFIED_CONTENT: dict[tuple[str, str], dict] = {}
+_NATIVE_VOLUME = vault.native_volume
 
 
 class EvidenceIntegrityError(Refused):
@@ -29,7 +38,12 @@ def load(root: Path) -> list[dict]:
     if not path.exists():
         return []  # Legacy/test roots have no activated catalog.
     try:
-        value = json.loads(path.read_bytes())
+        raw = path.read_bytes()
+        cached = _LOADED.get(str(path))
+        if cached is not None and cached[0] == raw:
+            # Identical bytes passed the checks below; callers still safe_path every path they use.
+            return copy.deepcopy(cached[1])
+        value = json.loads(raw)
         if not isinstance(value, dict) or value.get("schema") != SCHEMA or not isinstance(value.get("entries"), list):
             raise ValueError("schema")
         seen = set()
@@ -60,6 +74,7 @@ def load(root: Path) -> list[dict]:
                         or vault["object_sha256"] != entry["sha256"]
                         or not entry.get("restore_procedure") or not entry.get("restore_preconditions")):
                     raise ValueError("qualified restore locator required")
+        _LOADED[str(path)] = (raw, copy.deepcopy(value["entries"]))
         return value["entries"]
     except (ValueError, KeyError, TypeError, OSError) as exc:
         raise EvidenceIntegrityError("UNKNOWN_OR_CONFLICTED:catalog invalid") from exc
@@ -192,7 +207,27 @@ def capacity_admission(*args, **kwargs):
     return location_core.capacity_admission(*args, backend=vault, **kwargs)
 
 
+def _reader_volume(path):
+    """Native volume attestation, reused per drive for at most VOLUME_REUSE_SECONDS.
+
+    Each read still re-checks the file fingerprint (including the volume serial) under lock.
+    Only the genuine drive-letter attestation is reused; a substituted observer is called every time.
+    """
+    if vault.native_volume is not _NATIVE_VOLUME:
+        return vault.native_volume(path)
+    drive = Path(path).absolute().drive.upper()
+    now = time.monotonic()
+    hit = _VOLUMES.get(drive)
+    if hit is not None and now - hit[0] < VOLUME_REUSE_SECONDS:
+        return dict(hit[1])
+    value = vault.native_volume(path)
+    _VOLUMES[drive] = (now, value)
+    return dict(value)
+
+
 def verify_location(*args, **kwargs):
+    kwargs.setdefault("observer", _reader_volume)
+    kwargs.setdefault("content_memo", _VERIFIED_CONTENT)
     return location_core.verify_location(*args, backend=vault, **kwargs)
 
 

@@ -62,6 +62,48 @@ IID_RUNTIME_SOURCES = (
     "canonical_post_close_pipeline.py",
     "stocklookup_core/decision/integrated_investment_decision_product.py",
 )
+TPLUS_RESUME_MANIFEST = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
+TPLUS_RESUME_BASE = "de40f25a6f647b907bc58dff513eb4f7b1bbba0c"
+TPLUS_RESUME_SCOPE = "EXACT_TPLUS_RESUMABLE_FEEDBACK_ONLY"
+TPLUS_RESUME_SOURCE = "prospective_feedback_streaming.py"
+
+
+def _tplus_resume_spec(root: Path) -> dict | None:
+    manifest = root / TPLUS_RESUME_MANIFEST
+    if not manifest.is_file():
+        return None
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_resumable_feedback_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_RESUME_BASE
+            or spec.get("scope") != TPLUS_RESUME_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (TPLUS_RESUME_SOURCE,)):
+        raise ValueError("TPLUS_RESUME_SOURCE_TRANSITION_SCOPE_INVALID")
+    return spec
+
+
+def _tplus_resume_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the resumable T+ feedback successor before every older source pin.
+
+    The archived bytes are the exact pre-corrective streaming builder. Older manifests
+    stay unchanged and still bind those bytes. A missing manifest keeps older checkouts valid.
+    """
+    spec = _tplus_resume_spec(root)
+    if spec is None or relative != TPLUS_RESUME_SOURCE:
+        return active
+    row = spec["sources"][relative]
+    archive = "tests/fixtures/tplus_resumable_feedback_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("TPLUS_RESUME_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TPLUS_RESUME_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
@@ -98,9 +140,30 @@ def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _capture_only_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    manifest = root / "tests/fixtures/owner_daily_capture_only_source_transition_v1.json"
+    if relative != "tools/run_owner_daily.py" or not manifest.exists():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/owner_daily_capture_only_v1_sources/tools/run_owner_daily.py.txt"
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "archive", "prior_sha256_lf", "active_sha256_lf"}
+            or spec["contract_version"] != "owner_daily_capture_only_source_transition/v1"
+            or spec["base_commit"] != "a46bc5606cdbeb083f251c7418168e500205142a"
+            or spec["scope"] != "SHARED_CAPTURE_WRITER_LEASE_ONLY" or spec["release_authority"] != "NOT_GRANTED"
+            or spec["archive"] != archive):
+        raise ValueError("CAPTURE_WRITER_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    addition = b"from tools.capture_writer_lease import exclusive_writer\n\n\n@exclusive_writer\n"
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or active.count(addition) != 1 or active.replace(addition, b"") != prior):
+        raise ValueError("CAPTURE_WRITER_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
-    active = _iid_runtime_prior_bytes(root, relative, active)
+    active = _iid_runtime_prior_bytes(root, relative, _capture_only_prior_bytes(root, relative, active))
     if relative not in LAUNCHER_SOURCES or not (root / LAUNCHER_MANIFEST).exists():
         return active
     spec = json.loads((root / LAUNCHER_MANIFEST).read_bytes())
@@ -178,6 +241,7 @@ def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) ->
 
 def _storage_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve exact pre-storage sources without repinning either historical domain."""
+    active = _tplus_resume_prior_bytes(root, relative, active)
     manifest = root / STORAGE_MANIFEST
     if not manifest.exists():
         return active  # Released pre-storage checkout compatibility.
@@ -355,7 +419,13 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         raise ValueError("THESIS_SOURCE_EXECUTION_DOMAIN_INVALID")
     if historical["code_digest"] != spec["historical_e4_v2_digest"]:
         raise ValueError("THESIS_SOURCE_HISTORICAL_DIGEST_MISMATCH")
-    if execution["code_digest"] != spec["active_e4_v2_digest"] or execution["code_digest"] == historical["code_digest"]:
+    expected_execution = spec["active_e4_v2_digest"]
+    successor = _tplus_resume_spec(root)
+    if successor is not None:
+        if successor["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = successor["active_e4_v2_digest"]
+    if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:
         raise ValueError("THESIS_SOURCE_MIXED_DIGEST_REJECTED")

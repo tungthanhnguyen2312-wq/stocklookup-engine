@@ -99,6 +99,11 @@ def _copy_boundary(tmp_path: Path) -> None:
             governing = json.loads((ROOT / manifest).read_bytes())
             if relative in governing["sources"]:
                 paths.add(governing["sources"][relative]["archive"])
+    capture = "tests/fixtures/owner_daily_capture_only_source_transition_v1.json"
+    paths.update({capture, json.loads((ROOT / capture).read_bytes())["archive"]})
+    tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
+    paths.add(tplus)
+    paths.update(row["archive"] for row in json.loads((ROOT / tplus).read_bytes())["sources"].values())
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -196,5 +201,5 @@ def test_launcher_successor_rejects_tampering(tmp_path, tamper):
         spec = json.loads(manifest.read_bytes())
         spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
         manifest.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY)_SOURCE_TRANSITION"):
+    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER)_SOURCE_TRANSITION"):
         _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))

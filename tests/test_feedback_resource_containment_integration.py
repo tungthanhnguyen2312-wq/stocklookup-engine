@@ -120,24 +120,27 @@ def test_timeout_mid_stream_leaves_only_recognisable_incomplete_data_and_a_retry
     before = _fingerprint(root)
     slow = """
         import time
-        _original = streaming._iter_rows
+        _original = streaming._iter_session_rows
         def slow_rows(*a, **k):
             for n, row in enumerate(_original(*a, **k)):
                 yield row
-                if n == 5:
+                if n == 2:
                     time.sleep(120)
-        streaming._iter_rows = slow_rows
+        streaming._iter_session_rows = slow_rows
     """
     target = out / "feedback.json"
     run = _patched_child(tmp_path, slow, root, state, target, guard.ResourcePolicy(**{**FAST.as_dict(), "deadline_seconds": 8}))
     assert run["outcome"] == "TIMEOUT" and run["reason_code"] == guard.RESOURCE_TIMEOUT and run["reaped"] is True
     assert not target.exists() and streaming.read_completion(target) is None
-    leftovers = [p.name for p in out.iterdir() if p.name.startswith(streaming.TEMP_PREFIX)]
+    def temporaries():
+        places = [out, *(state / streaming.PARTITION_DIR).glob("*")]
+        return [p.name for place in places if place.is_dir() for p in place.iterdir() if p.name.startswith(streaming.TEMP_PREFIX)]
+    leftovers = temporaries()
     assert leftovers and all(name.endswith((".spool", ".incomplete")) for name in leftovers)  # recognisable, never a result
     assert _fingerprint(root) == before
     rebuilt = _run(root, state, out)
     assert rebuilt["status"] == "COLLECTED" and rebuilt["outcome"] == "BUILT"
-    assert [p.name for p in out.iterdir() if p.name.startswith(streaming.TEMP_PREFIX)] == []  # dead writer's temporaries removed automatically
+    assert temporaries() == []  # dead writer's temporaries removed automatically
     assert json.loads(target.read_text(encoding="utf-8"))["artifact_identity"] == _legacy_artifact(root)["artifact_identity"]
 
 
@@ -145,13 +148,13 @@ def test_timeout_mid_stream_leaves_only_recognisable_incomplete_data_and_a_retry
 def test_memory_error_inside_the_ceiling_is_a_resource_state_not_a_feedback_state(world, tmp_path):
     root, state, out = world
     hog = """
-        _original = streaming._iter_rows
+        _original = streaming._iter_session_rows
+        held = []
         def hog_rows(*a, **k):
-            held = []
             for row in _original(*a, **k):
                 held.append(bytearray(256 * 1024 * 1024))
                 yield row
-        streaming._iter_rows = hog_rows
+        streaming._iter_session_rows = hog_rows
     """
     run = _patched_child(tmp_path, hog, root, state, out / "feedback.json",
                          guard.ResourcePolicy(**{**FAST.as_dict(), "memory_limit_bytes": 640 * 1024 * 1024, "deadline_seconds": 120}))
@@ -166,7 +169,7 @@ def test_child_defect_is_reported_as_a_defect_with_a_distinct_reason(world, tmp_
         def boom(*a, **k):
             raise RuntimeError("injected defect")
             yield
-        streaming._iter_rows = boom
+        streaming._iter_session_rows = boom
     """
     run = _patched_child(tmp_path, boom, root, state, out / "feedback.json", FAST)
     assert run["outcome"] == "EXIT_NONZERO" and run["reason_code"] == guard.COMPUTATION_ERROR

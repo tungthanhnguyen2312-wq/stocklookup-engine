@@ -12,6 +12,10 @@ every classification, horizon, maturity, ordering and identity rule is still own
   incrementally, and the artifact is atomically published only after a raw-byte re-verification.
 * The artifact content and ``artifact_identity`` are identical to ``build_feedback_artifact``'s; only the
   on-disk whitespace differs (canonical compact JSON instead of ``indent=2``).
+* Rows are checkpointed per decision session. A partition becomes visible only after its fsynced data and
+  then its manifest are atomically renamed, and it is reusable only under the same input and code identity,
+  so a run stopped at its deadline resumes from completed sessions. Publication still happens once, after
+  every partition is re-hashed.
 """
 from __future__ import annotations
 
@@ -22,6 +26,7 @@ import io
 from importlib import import_module
 import json
 import os
+import shutil
 import tempfile
 import time
 from collections import Counter, defaultdict
@@ -37,6 +42,10 @@ STREAM_CONTRACT_VERSION = "prospective_feedback_stream/v1"
 COMPLETION_CONTRACT_VERSION = "prospective_feedback_completion/v1"
 RESULT_CONTRACT_VERSION = "prospective_feedback_result/v1"
 STATE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_stream")
+PARTITION_CONTRACT_VERSION = "prospective_feedback_partition/v1"
+PARTITION_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_partitions")
+PARTITION_MAX_BYTES = 256 * 1024 * 1024  # one session's rows are decoded resident at assembly
+SETTLED_STORE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_settled_store")
 RECEIPT_MAX_BYTES = 64 * 1024 * 1024
 ARTIFACT_IDENTITY_PREFIX = "prospective_decision_outcome_feedback:"
 TEMP_PREFIX = ".feedback-"
@@ -500,15 +509,163 @@ class PriceIndex:
         return digest
 
 
+class _DiskSettledStore:
+    """Disk-backed settled contributions, one content-keyed file per entry; nothing accumulates in memory.
+
+    Every entry is still validated by ``SettledFeedbackCache.evaluate`` (binding, prefix proof,
+    contribution identity, terminal session), so an unreadable or torn file is only a miss.
+    The legacy single-file cache is read as a seed and never rewritten here.
+    """
+
+    def __init__(self, directory: Path, seed: Mapping[str, Any]):
+        self.directory, self.seed = directory, seed
+
+    def _path(self, key: str) -> Path:
+        return self.directory / key[:2] / (key + ".json")
+
+    def get(self, key, default=None):
+        if key in self.seed:
+            return self.seed[key]
+        try:
+            value = json.loads(self._path(key).read_bytes())
+        except (OSError, ValueError, UnicodeError):
+            return default
+        return value if isinstance(value, dict) else default
+
+    def __setitem__(self, key, value) -> None:
+        path = self._path(key)
+        if key in self.seed or path.exists():
+            return
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_name(TEMP_PREFIX + key + f"-{os.getpid()}.tmp")
+        try:
+            temporary.write_bytes(_canon_bytes(value))
+            os.replace(temporary, path)
+        except OSError:
+            pass  # a cache write failure only costs a later recomputation
+        finally:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
 class _StreamSettledCache(fb.SettledFeedbackCache):
     """Existing terminal-only cache; only the snapshot content proof is sourced from the file, not a resident object."""
 
     def __init__(self, *args, content_hash: Callable[[str, Any], str], **kwargs):
         self._external_content_hash = content_hash
         super().__init__(*args, **kwargs)
+        # Write-through to disk instead of the 8,192-entry in-memory working set.
+        self.entries = self.retained = _DiskSettledStore(self.root / SETTLED_STORE_DIR, self.entries)
 
     def _snapshot_content_hash(self, session, snapshot):
         return self._external_content_hash(session, snapshot)
+
+    def finish(self):
+        return  # every contribution was persisted when it settled
+
+
+class _Partitions:
+    """Per-session row checkpoints bound to one exact input and code identity."""
+
+    def __init__(self, state_root: Path, input_digest: str, code: str, metrics: dict[str, Any] | None = None):
+        self.run_key = _sha256_bytes(_canon_bytes({"contract_version": PARTITION_CONTRACT_VERSION,
+                                                   "input_digest": input_digest, "code_digest": code}))
+        self.base = state_root / PARTITION_DIR
+        self.directory = self.base / self.run_key
+        self.metrics = metrics
+        self.directory.mkdir(parents=True, exist_ok=True)
+
+    def prune_other_runs(self) -> None:
+        """Checkpoints of any other input/code identity can never be reused; they are this module's own state."""
+        for entry in self.base.iterdir():
+            if entry.is_dir() and entry.name != self.run_key and len(entry.name) == 64:
+                shutil.rmtree(entry, ignore_errors=True)
+        for entry in self.directory.iterdir():
+            if entry.name.startswith(TEMP_PREFIX):
+                stem_pid = entry.stem.rsplit("-", 1)[-1]
+                if stem_pid.isdigit() and int(stem_pid) != os.getpid() and not _pid_alive(int(stem_pid)):
+                    entry.unlink(missing_ok=True)
+
+    def _stem(self, position: int, session: str) -> str:
+        return f"{position:05d}-" + _sha256_bytes(session.encode("utf-8"))[:16]
+
+    def manifest(self, position: int, session: str) -> dict[str, Any] | None:
+        stem = self._stem(position, session)
+        value = _read_state_json(self.directory / (stem + ".partition.json"))
+        if (not value or value.get("contract_version") != PARTITION_CONTRACT_VERSION or value.get("run_key") != self.run_key
+                or value.get("session") != session or value.get("position") != position):
+            return None
+        for kind in ("rows", "trigger"):
+            try:
+                if (self.directory / (stem + "." + kind)).stat().st_size != value[kind]["bytes"]:
+                    return None
+            except (OSError, KeyError, TypeError):
+                return None
+        return value
+
+    def build(self, position: int, session: str, rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
+        stem = self._stem(position, session)
+        spools = {kind: _Spool(self.directory, f"{stem}-{kind}-{os.getpid()}") for kind in ("rows", "trigger")}
+        try:
+            for row in rows:
+                spools["rows"].append(row)
+                spools["trigger"].append(row["trigger_invalidation_outcome"] | {"feedback_identity": row["feedback_identity"], "ticker": row["ticker"]})
+                _metric(self.metrics, "rows")
+            entry = {"contract_version": PARTITION_CONTRACT_VERSION, "run_key": self.run_key, "session": session,
+                     "position": position, "row_count": spools["rows"].count}
+            for kind, spool in spools.items():
+                spool.file.flush()
+                os.fsync(spool.file.fileno())
+                spool.close()
+                if spool.path.stat().st_size > PARTITION_MAX_BYTES:
+                    raise FeedbackStreamError("FEEDBACK_PARTITION_SIZE_LIMIT:" + session)
+                entry[kind] = {"bytes": spool.path.stat().st_size, "sha256": bas.source_hash(spool.path)}
+                os.replace(spool.path, self.directory / (stem + "." + kind))
+            # The manifest is written last: data without a manifest is never reused.
+            _atomic_write_json(self.directory / (stem + ".partition.json"), entry, allow_nan=False)
+        finally:
+            for spool in spools.values():
+                spool.remove()
+        _metric(self.metrics, "partitions_built")
+        return entry
+
+    def segment(self, position: int, session: str, kind: str) -> Path:
+        return self.directory / (self._stem(position, session) + "." + kind)
+
+    def rows(self, position: int, session: str, manifest: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
+        """Re-hash the exact partition bytes, then decode its comma-joined rows one at a time."""
+        path = self.segment(position, session, "rows")
+        raw = path.read_bytes()
+        if (len(raw) != manifest["rows"]["bytes"] or _sha256_bytes(raw) != manifest["rows"]["sha256"]
+                or bas.source_hash(self.segment(position, session, "trigger")) != manifest["trigger"]["sha256"]):
+            self.invalidate(position, session)
+            raise FeedbackStreamError("FEEDBACK_PARTITION_INTEGRITY:" + session)
+        text, decoder, index, count = raw.decode("utf-8"), json.JSONDecoder(), 0, 0
+        del raw
+        while index < len(text):
+            value, index = decoder.raw_decode(text, index)
+            count += 1
+            yield value
+            if index < len(text):
+                if text[index] != ",":
+                    raise FeedbackStreamError("FEEDBACK_PARTITION_INTEGRITY:" + session)
+                index += 1
+        if count != manifest["row_count"]:
+            self.invalidate(position, session)
+            raise FeedbackStreamError("FEEDBACK_PARTITION_INTEGRITY:" + session)
+
+    def invalidate(self, position: int, session: str) -> None:
+        """A partition whose bytes no longer match its manifest is rebuilt by the next run, never reused."""
+        (self.directory / (self._stem(position, session) + ".partition.json")).unlink(missing_ok=True)
+
+
+class _Segments:
+    """The concatenation of non-empty partition spools in session order is the original single spool."""
+
+    def __init__(self, paths: list[Path], count: int):
+        self.paths, self.count = paths, count
 
 
 # --------------------------------------------------------------------------------------------------
@@ -855,31 +1012,40 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     # -- Phase 2: stream rows -> spools, aggregate, then assemble ------------------------------------
     t = clock()
     sources_by_session = _sources_by_session(modern_genuine, corpus["genuine_artifacts"])
-    spool_rows = _Spool(output.parent, f"{output.name}-rows-{os.getpid()}")
-    spool_trigger = _Spool(output.parent, f"{output.name}-trigger-{os.getpid()}")
+    sessions = sorted(sources_by_session)
+    partitions = _Partitions(state_root, input_digest, code, metrics)
+    partitions.prune_other_runs()
     final_tmp = output.parent / (TEMP_PREFIX + output.name + f"-{os.getpid()}.incomplete")
-    aggregate = _Aggregator()
     try:
-        for row in _iter_rows(sources_by_session, settled, future_settled, marker):
-            spool_rows.append(row)
-            spool_trigger.append(row["trigger_invalidation_outcome"] | {"feedback_identity": row["feedback_identity"], "ticker": row["ticker"]})
-            aggregate.add(row)
-            _metric(metrics, "rows")
-        spool_rows.close()
-        spool_trigger.close()
-        _metric(metrics, "spool_bytes", spool_rows.path.stat().st_size + spool_trigger.path.stat().st_size)
+        manifests = []
+        for position, session in enumerate(sessions):
+            manifest = partitions.manifest(position, session)
+            if manifest is not None:
+                _metric(metrics, "partitions_reused")
+                _metric(metrics, "rows_reused", manifest["row_count"])
+            else:
+                manifest = partitions.build(position, session, _iter_session_rows(
+                    sources_by_session[session], settled, future_settled, marker))
+            manifests.append(manifest)
+        _metric(metrics, "spool_bytes", sum(m["rows"]["bytes"] + m["trigger"]["bytes"] for m in manifests))
         phases["evaluate_s"] = clock() - t
         settled.finish()
+        t = clock()
+        aggregate = _Aggregator()
+        for position, (session, manifest) in enumerate(zip(sessions, manifests)):
+            for row in partitions.rows(position, session, manifest):
+                aggregate.add(row)
+        phases["aggregate_s"] = clock() - t
         t = clock()
         sections = _sections(corpus, modern_discovery, modern_genuine, legacy_chain, modern_chain, chain,
                              snapshots_sessions=sorted(set(k for k in snapshots if k in legacy_chain) | set(modern_prices)),
                              aggregate=aggregate)
-        identity, size, raw_sha, record_count = _assemble(final_tmp, sections, spool_rows, spool_trigger, metrics)
+        segments = {kind: _Segments([partitions.segment(p, s, kind) for p, s in enumerate(sessions)],
+                                    sum(m["row_count"] for m in manifests)) for kind in ("rows", "trigger")}
+        identity, size, raw_sha, record_count = _assemble(final_tmp, sections, segments["rows"], segments["trigger"], metrics)
         phases["assemble_s"] = clock() - t
         outcome = _publish(final_tmp, output, identity, size, raw_sha, aggregate.count, input_digest, code, inputs_summary)
     finally:
-        spool_rows.remove()
-        spool_trigger.remove()
         try:
             final_tmp.unlink(missing_ok=True)
         except OSError:
@@ -919,11 +1085,15 @@ def _sources_by_session(modern_genuine, legacy_genuine) -> dict[str, list[dict[s
 
 def _iter_rows(sources_by_session, settled, future_settled, marker) -> Iterator[dict[str, Any]]:
     for session in sorted(sources_by_session):
-        streams = [_source_stream(index, source) for index, source in enumerate(sources_by_session[session])]
-        for _ticker, _identity, _index, work in heapq.merge(*streams, key=lambda item: (item[0], item[1])):
-            evaluator_choice, kwargs = work
-            evaluator = future_settled if evaluator_choice(marker) else settled
-            yield evaluator.evaluate(**kwargs)
+        yield from _iter_session_rows(sources_by_session[session], settled, future_settled, marker)
+
+
+def _iter_session_rows(sources, settled, future_settled, marker) -> Iterator[dict[str, Any]]:
+    streams = [_source_stream(index, source) for index, source in enumerate(sources)]
+    for _ticker, _identity, _index, work in heapq.merge(*streams, key=lambda item: (item[0], item[1])):
+        evaluator_choice, kwargs = work
+        evaluator = future_settled if evaluator_choice(marker) else settled
+        yield evaluator.evaluate(**kwargs)
 
 
 def _source_stream(index: int, source: Mapping[str, Any]) -> Iterator[tuple[str, str, int, Any]]:
@@ -1024,7 +1194,14 @@ def _assemble(final_tmp: Path, sections: Mapping[str, Any], rows: _Spool, trigge
             emit(json.dumps(key, ensure_ascii=False).encode("utf-8") + b":")
             if key in streamed:
                 emit(b"[")
-                _copy_hashing(streamed[key].path, [emit])
+                written = False
+                for path in getattr(streamed[key], "paths", None) or [streamed[key].path]:
+                    if path.stat().st_size == 0:
+                        continue
+                    if written:
+                        emit(b",")
+                    _copy_hashing(path, [emit])
+                    written = True
                 emit(b"]")
             else:
                 emit(_canon_bytes(sections[key]))
