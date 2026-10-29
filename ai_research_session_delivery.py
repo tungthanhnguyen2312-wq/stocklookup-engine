@@ -751,7 +751,7 @@ class _DeliveryRecordProjections(Mapping):
 
 
 def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, opportunity_comparison_request=None,
-                   include_thesis_discovery: bool = False) -> dict[str, Any]:
+                   include_thesis_discovery: bool = False, retain_delivery_companions: bool = True) -> dict[str, Any]:
     """Return primary JSON, NDJSON companion, manifest, brief, and cockpit projection bytes."""
     product, manifest = operation["product"], operation["manifest"]
     session = manifest["market_session"]
@@ -839,6 +839,10 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
         primary["thesis_opportunity_discovery"] = verified_thesis_discovery(
             build_thesis_discovery(integrated_decision=integrated_decision, bind_scenarios=bind_integrated_scenarios))
     primary_bytes = (_canon(primary) + "\n").encode("utf-8")
+    # Preseal consumes only this bundle. Do not construct and discard its full-universe
+    # companion or Dashboard projection beside the caller-owned IID.
+    if not retain_delivery_companions:
+        return {"primary": primary_bytes}
     # Keep the bytes-returning contract, without a universe-sized Unicode row
     # list, joined string, newline copy and UTF-8 copy alive at the same time.
     with io.BytesIO() as companion:

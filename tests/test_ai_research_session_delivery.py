@@ -135,6 +135,8 @@ def test_delivery_is_deterministic_and_preserves_boundaries():
     assert primary["ticker_research_contexts"]["AAA"]["market_flow_positioning"]["traded_value"] == 0.0
     assert json.loads(one["manifest"])["files"]["ai_research_full_universe.ndjson"]["record_count"] == 1
     assert len(one["full_universe"].splitlines()) == 1
+    primary_only = build_delivery(operation, inputs, retain_delivery_companions=False)
+    assert primary_only == {"primary": one["primary"]}
 
 
 def test_integrated_delivery_overlay_preserves_native_values_and_cockpit_card():

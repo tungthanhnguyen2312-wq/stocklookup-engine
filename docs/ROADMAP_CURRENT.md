@@ -5,10 +5,10 @@ Verified analytical baseline 2026-10-14 `a9c799397a74641a0e16c8ea84454d2dc4d0745
 Nothing below auto-starts; native standing admission required (AI_RULES 11).
 Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
-## NOW — SSI/POW OFFICIAL CA EVIDENCE (LOCAL COMPLETE / REVIEW CANDIDATE)
+## NOW — OWNER DAILY 16-GIB MEMORY RECOVERY (ACTIVE)
 
-[Facts/limits](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md): eight originals;
-receipt-forward, offline only. Open review PR; no merge, promotion or successor. Base PR193 `89eec3e0`.
+[Scope](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): resident-IID corrective local;
+larger-IID measurement, integration and genuine Daily/publication acceptance pending. No successor.
 
 ## PRIOR — STOCKLOOKUP_PRODUCER_DEEP_SIMPLIFICATION (RELEASED PR146)
 

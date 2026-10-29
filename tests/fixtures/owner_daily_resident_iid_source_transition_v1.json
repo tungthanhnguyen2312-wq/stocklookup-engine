@@ -1,0 +1,20 @@
+{
+  "contract_version": "owner_daily_resident_iid_source_transition/v1",
+  "base_commit": "b9c4ff102f74bc41f4cb863f43a875a93e07cd9d",
+  "scope": "EXACT_PRESEAL_RESIDENT_IID_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "fe053a2098300425851e4184f99552884d251b18acbc0b50511c6948cc64fa45",
+  "active_e4_v2_digest": "1e169a11fec8d571c84595b506f3fa6a5712d0b0a1cc4b6279a44b3d9fd8eb8a",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "archive": "tests/fixtures/owner_daily_resident_iid_v1_sources/canonical_daily_operation.py.txt",
+      "prior_sha256_lf": "16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
+      "active_sha256_lf": "d828e9710d559192dbd4bfd19743fba414851942e0c4ae8bc99a38b1fb0622b8"
+    },
+    "stocklookup_core/decision/daily_integrated_decision_brief.py": {
+      "archive": "tests/fixtures/owner_daily_resident_iid_v1_sources/stocklookup_core/decision/daily_integrated_decision_brief.py.txt",
+      "prior_sha256_lf": "e39c49ee1e20958617d92aaef51b530f27da18003cab59c592670090fc98c5a1",
+      "active_sha256_lf": "3badc2ae45005d08dfb983996eb0097b778339278a669fee9c4d6ba0cad6b5f0"
+    }
+  }
+}

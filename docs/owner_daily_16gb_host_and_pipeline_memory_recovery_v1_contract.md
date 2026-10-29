@@ -6,6 +6,23 @@ It introduces no provider, analytical policy, production entrypoint or evidence 
 
 ## IID runtime corrective — October 27
 
+October-29 bounded continuation: preseal borrows the operation-owned current IID for
+the Daily Integrated Brief and projects only posture-comparison fields from the
+previous IID, one record at a time. The draft delivery constructs only its primary
+bundle and releases its bytes after decoding. Ordinary delivery still returns all
+five original byte interfaces. Content, session and identity refusal remain binding.
+The exact two-file historical successor is rooted at merged `b9c4ff10`; earlier
+manifests and archives remain unchanged. Feedback evaluator, retention, financial
+policy, catalog and storage-verification bytes are unchanged, preserving the deployed
+T+ reuse domain. E4 V2 advances separately because it includes the Brief source.
+
+This local corrective is not a completed capacity qualification. The original IID
+envelope remains 2,382,095,742 bytes until guarded measurement of the actual
+2,394,768,092-byte October-26 artifact completes. The r10 2,216,287,780-byte reference
+cannot establish that extension. No limit, timeout or admission threshold changes.
+Keep code validation, larger-IID qualification, clean-host READY, retained-only
+rehearsal, genuine Daily and each actual publication result separate.
+
 The October-26 Daily invocation at production `eaaf7c946d54b2f6b0ef41137b8dfa294e3dc77d`
 passed host admission but failed with `DAILY_CAPACITY_MEMORY_LIMIT` while building IID.
 This continues the same milestone; the earlier stage qualifications below do not
