@@ -23,6 +23,42 @@ cannot establish that extension. No limit, timeout or admission threshold change
 Keep code validation, larger-IID qualification, clean-host READY, retained-only
 rehearsal, genuine Daily and each actual publication result separate.
 
+October-29 exact-input loader continuation: the Owner's admitted consumer-seal
+experiment failed with `ACCEPTANCE_JSON_MEMBER_LIMIT` while loading evaluated
+valuation, after holding the original IID and caller graphs. Its 5,493,121,024-byte
+process / 5,493,911,552-byte Job peaks had no allocation-limit event. This was a
+loading failure, not memory exhaustion or completed IID qualification.
+
+The same exception and traceback were reproduced with the original source
+fingerprint against the original 521,967,045-byte evaluated valuation artifact.
+Its `valuation_balance_sheet_divergence_context` is an independent envelope of
+1,683 records spanning 231,091,853 decoded characters. The allocation adapter
+incorrectly submitted that whole envelope to the single-member parser. The
+correction recognizes this envelope and the existing optional
+`metric_research_context` alongside the Financial V2 wrapper, then decodes their
+records separately. Arbitrary metadata and individual records still use the
+unchanged 16-Mi-character member limit. Frozen parser, evaluator, identity and
+PIT sources are unchanged; no source-transition archive or capacity cap changes.
+
+Guarded verification decoded both original 1,683-record universes and independently
+reproduced both canonical identities with the strict stdlib incremental encoder.
+The largest decoded value was 244,186 characters; the largest parser buffer was
+465,632 characters. This verification peaked at 1,155,923,968 process /
+1,156,763,648 Job committed bytes, with no limit event and unchanged source/input
+hashes. These are loader/identity measurements, not a full consumer-seal peak.
+Focused regression coverage includes wrappers larger than the real member limit,
+record mappings/lists, short reads, refill boundaries, Unicode/escapes/numbers,
+type preservation, duplicate/truncated/malformed/trailing JSON refusal, and
+continued refusal of oversized records and metadata.
+
+The larger-IID envelope and source capacity receipt remain unqualified. Continue
+the same retained consumer-seal measurement with pinned original inputs in a new
+experiment only when its unchanged admission budget is available; do not retry
+refused launches or replace the Production launcher. Enrichment construction and
+the remaining downstream stage envelopes require measured qualification or
+explicitly supported reuse of their original measurements before any receipt
+extension. Earlier T+ source/input qualifications remain preserved.
+
 The October-26 Daily invocation at production `eaaf7c946d54b2f6b0ef41137b8dfa294e3dc77d`
 passed host admission but failed with `DAILY_CAPACITY_MEMORY_LIMIT` while building IID.
 This continues the same milestone; the earlier stage qualifications below do not
