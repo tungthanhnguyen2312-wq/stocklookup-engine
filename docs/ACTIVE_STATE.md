@@ -1,6 +1,6 @@
 # Stock Lookup — Active State
 
-October-28 capture COMPLETE; no T0. T+ [Daily input-change reuse qualified](internal/TPLUS_DAILY_INCREMENTAL_ACCEPTANCE_20261029.json): 1,171.528 s / 1.28 GiB, 57,222 rows, exact historical parity; Production publication awaits a genuine Daily handoff. [Daily](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): acceptance pending (disk reserve and IID envelope).
+October-28 capture COMPLETE; no T0. [T+ qualified](internal/TPLUS_DAILY_INCREMENTAL_ACCEPTANCE_20261029.json); publication pending. Daily blocked by disk/IID.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.
