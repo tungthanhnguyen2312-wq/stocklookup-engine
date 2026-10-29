@@ -1,0 +1,15 @@
+{
+  "contract_version": "tplus_resumable_feedback_source_transition/v1",
+  "base_commit": "de40f25a6f647b907bc58dff513eb4f7b1bbba0c",
+  "scope": "EXACT_TPLUS_RESUMABLE_FEEDBACK_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "20e68ede0e489af6408ee8f6aa93037e7167a4b11ed308dca899d373bbfd1d78",
+  "active_e4_v2_digest": "9c6cbd5def1b496b94304bb8751d5f64dae108cf1e3b30634c50f6cdff71c062",
+  "sources": {
+    "prospective_feedback_streaming.py": {
+      "archive": "tests/fixtures/tplus_resumable_feedback_v1_sources/prospective_feedback_streaming.py.txt",
+      "prior_sha256_lf": "8640d9ac1d794d1d63303c1b72ba716167f428c9af08555ef67d931a4989d8b0",
+      "active_sha256_lf": "b86747b82f12112c6da125a6cfac46830ba9f0eb98f15aab750f0374ab5356a6"
+    }
+  }
+}

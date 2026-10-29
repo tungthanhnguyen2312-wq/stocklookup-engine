@@ -16,7 +16,7 @@
     "prospective_feedback_streaming.py": {
       "archive": "tests/fixtures/storage_portability_v1_sources/prospective_feedback_streaming.py.txt",
       "prior_sha256_lf": "c6a299c4201baeaf43d9192a27ae505c199f20b7d17cda4fb60f0bd3fcdb995e",
-      "active_sha256_lf": "b86747b82f12112c6da125a6cfac46830ba9f0eb98f15aab750f0374ab5356a6"
+      "active_sha256_lf": "8640d9ac1d794d1d63303c1b72ba716167f428c9af08555ef67d931a4989d8b0"
     },
     "prospective_pit_capture_retention.py": {
       "archive": "tests/fixtures/storage_portability_v1_sources/prospective_pit_capture_retention.py.txt",

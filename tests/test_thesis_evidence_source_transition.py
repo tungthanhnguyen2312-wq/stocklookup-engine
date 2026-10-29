@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 PRIOR = "10aea634a50e83d5e8db4951155c5a7b6f753e3f091305bf7bee1ecadc463367"
 ACTIVE = "9f384915d23661497e9132091a2aaac0030e5d54bc5060caeda89094b33901c7"
 HISTORICAL_V2 = "07c2a363df0e91a1dee230f0316a081249b247f7aa74bd67e04e45b1d1886567"
-ACTIVE_V2 = "20e68ede0e489af6408ee8f6aa93037e7167a4b11ed308dca899d373bbfd1d78"
+ACTIVE_V2 = "20e68ede0e489af6408ee8f6aa93037e7167a4b11ed308dca899d373bbfd1d78"  # thesis manifest; T+ successor follows
+TPLUS_ACTIVE_V2 = "9c6cbd5def1b496b94304bb8751d5f64dae108cf1e3b30634c50f6cdff71c062"
 MIXED_V2 = "c705b386c927a49adaf97be0a711cda5b27b2432cae2aaaa098a087a58b88698"
 HISTORICAL_V1 = "fa79baadcca197493b9ca70067fbd153f5e8bb7f50dfb6dbc6da53f253483d46"
 EMPTY = hashlib.sha256(b"").hexdigest()
@@ -58,6 +59,9 @@ def _copy_domain(tmp_path: Path) -> None:
     iid = "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json"
     relatives.append(iid)
     relatives.extend(row["archive"] for row in json.loads((ROOT / iid).read_bytes())["sources"].values())
+    tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
+    relatives.append(tplus)
+    relatives.extend(row["archive"] for row in json.loads((ROOT / tplus).read_bytes())["sources"].values())
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -80,7 +84,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert identity["historical_sha256_lf"] == PRIOR
     assert identity["active_sha256_lf"] == ACTIVE
     assert identity["historical_e4_v2_digest"] == HISTORICAL_V2 == legacy_source_identity(ROOT, version="v2")["code_digest"]
-    assert identity["active_e4_v2_digest"] == ACTIVE_V2 == e4.source_identity(ROOT, version="v2")["code_digest"]
+    successor = json.loads((ROOT / "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json").read_bytes())
+    assert successor["previous_e4_v2_digest"] == ACTIVE_V2 == json.loads((ROOT / THESIS_MANIFEST).read_bytes())["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == TPLUS_ACTIVE_V2 == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

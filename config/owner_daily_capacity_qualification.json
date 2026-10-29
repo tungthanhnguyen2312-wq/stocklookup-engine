@@ -1476,7 +1476,7 @@
     "tools/vault_retention.py": "8b01db1034795711db5e2921d8d3183a472b8d37524ff916c03a02e758dde9a6",
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "fd365642746eecf90ce899a6f77c3263789d1ebc61a5665048e6cc1e4cd3fe0a",
+    "tools/verify_retention_reader_transition.py": "9df9000588bac55fbc3c098d11ca790bd1fbb86da7c6fb2baa77d69ecf2e2ef2",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",

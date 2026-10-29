@@ -1,8 +1,6 @@
 # Stock Lookup — Active State
 
-October-28 capture-only deployment passed; the single Production attempt retained 857 exact-session symbols but stopped before completion on HOSE `market_disclosures` source failure. One authorized diagnostic subsequently returned the identical public request successfully; the original transport exception was not retained, so its precise cause remains unknown. A local corrective preserves transport outcomes and actual response-completion clocks without changing routes, parameters, timeouts or qualification. No corrective deployment or second Production capture is authorized yet. See the [capture contract](prospective_pit_capture_completeness_contract.md).
-
-[Memory admission](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): sequential-launch candidate; 9.25 GiB guard unchanged; residual host gap, live pending.
+October-28 capture COMPLETE; no T0. T+ resumable (PR #200). [Daily](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): acceptance pending.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.
