@@ -66,6 +66,41 @@ TPLUS_RESUME_MANIFEST = "tests/fixtures/tplus_resumable_feedback_source_transiti
 TPLUS_RESUME_BASE = "de40f25a6f647b907bc58dff513eb4f7b1bbba0c"
 TPLUS_RESUME_SCOPE = "EXACT_TPLUS_RESUMABLE_FEEDBACK_ONLY"
 TPLUS_RESUME_SOURCE = "prospective_feedback_streaming.py"
+TPLUS_DAILY_MANIFEST = "tests/fixtures/tplus_daily_incremental_source_transition_v1.json"
+TPLUS_DAILY_ARCHIVE = "tests/fixtures/tplus_daily_incremental_v1_sources/prospective_feedback_streaming.py.txt"
+TPLUS_DAILY_BASE = "53c7d8e8300283e8d6c8386e7281175d3f0f5aba"
+
+
+def _tplus_daily_spec(root: Path) -> dict | None:
+    manifest = root / TPLUS_DAILY_MANIFEST
+    if not manifest.is_file():
+        return None
+    spec = json.loads(manifest.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_daily_incremental_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_DAILY_BASE
+            or spec.get("scope") != "EXACT_TPLUS_DAILY_INCREMENTAL_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(spec.get("sources"), dict) or tuple(spec["sources"]) != (TPLUS_RESUME_SOURCE,)):
+        raise ValueError("TPLUS_DAILY_SOURCE_TRANSITION_SCOPE_INVALID")
+    return spec
+
+
+def _tplus_daily_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    spec = _tplus_daily_spec(root)
+    if spec is None or relative != TPLUS_RESUME_SOURCE:
+        return active
+    row = spec["sources"][relative]
+    if (set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != TPLUS_DAILY_ARCHIVE):
+        raise ValueError("TPLUS_DAILY_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / TPLUS_DAILY_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TPLUS_DAILY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _tplus_resume_spec(root: Path) -> dict | None:
@@ -241,6 +276,7 @@ def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) ->
 
 def _storage_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve exact pre-storage sources without repinning either historical domain."""
+    active = _tplus_daily_prior_bytes(root, relative, active)
     active = _tplus_resume_prior_bytes(root, relative, active)
     manifest = root / STORAGE_MANIFEST
     if not manifest.exists():
@@ -425,6 +461,11 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if successor["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = successor["active_e4_v2_digest"]
+    daily = _tplus_daily_spec(root)
+    if daily is not None:
+        if daily["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = daily["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

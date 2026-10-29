@@ -99,7 +99,7 @@ def test_crash_between_partition_data_and_manifest_rebuilds_that_session(corpus,
     assert result["artifact_identity"] == _legacy_artifact(root)["artifact_identity"]
 
 
-def test_tampered_partition_fails_closed_then_is_rebuilt(corpus, monkeypatch):
+def test_tampered_partition_is_rebuilt_in_the_same_job(corpus, monkeypatch):
     root, _sessions, state, output = corpus
     original = _stop_in_session(monkeypatch, stop_at=4)
     with pytest.raises(KeyboardInterrupt):
@@ -109,10 +109,10 @@ def test_tampered_partition_fails_closed_then_is_rebuilt(corpus, monkeypatch):
     data = bytearray(rows.read_bytes())
     data[data.index(b'"ticker":"') + 10] ^= 1  # same size, different bytes
     rows.write_bytes(bytes(data))
-    with pytest.raises(streaming.FeedbackStreamError, match="FEEDBACK_PARTITION_INTEGRITY"):
-        _build(root, output, state)
-    assert not output.exists()
-    assert _build(root, output, state)["artifact_identity"] == _legacy_artifact(root)["artifact_identity"]
+    result = _build(root, output, state)
+    assert result["metrics"]["partitions_corrupt"] == 1
+    assert result["metrics"]["partitions_reused"] == 3
+    assert result["artifact_identity"] == _legacy_artifact(root)["artifact_identity"]
 
 
 def test_changed_source_or_code_never_reuses_checkpoints(corpus, monkeypatch):
@@ -126,7 +126,7 @@ def test_changed_source_or_code_never_reuses_checkpoints(corpus, monkeypatch):
     monkeypatch.setattr(streaming, "code_digest", lambda: "0" * 64)
     changed_code = _build(root, output, state)
     assert changed_code["metrics"].get("partitions_reused", 0) == 0
-    assert not stale_runs & {p.name for p in (state / streaming.PARTITION_DIR).iterdir()}  # incompatible runs pruned
+    assert stale_runs <= {p.name for p in (state / streaming.PARTITION_DIR).iterdir()}  # preserve compatible historical work
 
     _add_modern(root, "2026-01-20", 18)
     new_output = output.with_name("feedback-2.json")
@@ -144,7 +144,7 @@ def test_settled_contributions_persist_per_entry_and_are_reused_across_run_ident
     assert persisted and not (state / "operations-review/prospective-decision-outcome-feedback-v1/_settled_cache.json").exists()
     monkeypatch.setattr(streaming, "code_digest", lambda: "1" * 64)  # forces a new run identity; rows are re-evaluated
     second = _build(root, output.with_name("again.json"), state)
-    assert second["metrics"]["settled_hits"] == len(persisted)
+    assert second["metrics"].get("settled_hits", 0) == 0  # evaluator bytes invalidate contributions too
     assert second["artifact_identity"] == first["artifact_identity"]
     persisted[0].write_bytes(b"{torn")  # an unreadable entry is only a miss
     third = _build(root, output.with_name("third.json"), state, )

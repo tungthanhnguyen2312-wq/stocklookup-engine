@@ -63,7 +63,7 @@ def run(*, root: str | Path = ROOT, output: str | Path | None = None, evidence_d
 
 def run_streaming(*, root: str | Path, output: str | Path, result: str | Path | None = None,
                   status: str | Path | None = None, **kwargs) -> dict:
-    from feedback_publication_lock import publication_locks
+    from feedback_publication_lock import publication_locks, publication_lock
     if status is None:
         # Legacy direct callers used --result as the shared status. Coordinate
         # that pointer too; production explicitly supplies separate attempt IPC.
@@ -71,7 +71,15 @@ def run_streaming(*, root: str | Path, output: str | Path, result: str | Path | 
     # The attempt-local IPC file is not a shared pointer. Hold both target and
     # shared status leases through COMPLETE and status publication.
     with publication_locks(output, status):
-        return _run_streaming(root=root, output=output, result=result, status=status, **kwargs)
+        import prospective_feedback_streaming as streaming
+        state = Path(kwargs.get("state_root") or root) / streaming.PARTITION_DIR
+        # Native pre/post calls share nested variants. Sweep only dead-writer temporaries under
+        # the same state lease the builder holds; completed manifests/data remain untouched.
+        with publication_lock(state):
+            if state.is_dir():
+                for directory in [state, *(p for p in state.rglob("*") if p.is_dir())]:
+                    streaming.cleanup_incomplete(directory, older_than_seconds=6 * 3600)
+            return _run_streaming(root=root, output=output, result=result, status=status, **kwargs)
 
 
 def _run_streaming(*, root: str | Path, output: str | Path, result: str | Path | None = None,

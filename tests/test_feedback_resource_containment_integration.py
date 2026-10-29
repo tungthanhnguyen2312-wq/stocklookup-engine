@@ -133,8 +133,8 @@ def test_timeout_mid_stream_leaves_only_recognisable_incomplete_data_and_a_retry
     assert run["outcome"] == "TIMEOUT" and run["reason_code"] == guard.RESOURCE_TIMEOUT and run["reaped"] is True
     assert not target.exists() and streaming.read_completion(target) is None
     def temporaries():
-        places = [out, *(state / streaming.PARTITION_DIR).glob("*")]
-        return [p.name for place in places if place.is_dir() for p in place.iterdir() if p.name.startswith(streaming.TEMP_PREFIX)]
+        return [p.name for place in (out, state / streaming.PARTITION_DIR) if place.is_dir()
+                for p in place.rglob("*") if p.is_file() and p.name.startswith(streaming.TEMP_PREFIX)]
     leftovers = temporaries()
     assert leftovers and all(name.endswith((".spool", ".incomplete")) for name in leftovers)  # recognisable, never a result
     assert _fingerprint(root) == before
