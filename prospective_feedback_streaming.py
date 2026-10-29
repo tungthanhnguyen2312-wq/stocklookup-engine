@@ -12,10 +12,9 @@ every classification, horizon, maturity, ordering and identity rule is still own
   incrementally, and the artifact is atomically published only after a raw-byte re-verification.
 * The artifact content and ``artifact_identity`` are identical to ``build_feedback_artifact``'s; only the
   on-disk whitespace differs (canonical compact JSON instead of ``indent=2``).
-* Rows are checkpointed per decision session. A partition becomes visible only after its fsynced data and
-  then its manifest are atomically renamed, and it is reusable only under the same input and code identity,
-  so a run stopped at its deadline resumes from completed sessions. Publication still happens once, after
-  every partition is re-hashed.
+* Rows are checkpointed per qualified decision source and evaluation context. Settled legacy sessions
+  additionally carry a bounded dependency proof, so an appended Daily does not discard their work.
+  Data is fsynced before the atomic manifest; every reused partition is re-hashed before publication.
 """
 from __future__ import annotations
 
@@ -42,9 +41,14 @@ STREAM_CONTRACT_VERSION = "prospective_feedback_stream/v1"
 COMPLETION_CONTRACT_VERSION = "prospective_feedback_completion/v1"
 RESULT_CONTRACT_VERSION = "prospective_feedback_result/v1"
 STATE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_stream")
-PARTITION_CONTRACT_VERSION = "prospective_feedback_partition/v1"
+PARTITION_CONTRACT_VERSION = "prospective_feedback_partition/v2"
 PARTITION_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_partitions")
 PARTITION_MAX_BYTES = 256 * 1024 * 1024  # one session's rows are decoded resident at assembly
+PARTITION_STORE_MAX_BYTES = 8 * 1024**3
+PARTITION_STORE_MAX_ENTRIES = 4096
+PARTITION_VARIANTS = 3
+SETTLED_STORE_MAX_BYTES = 2 * 1024**3
+SETTLED_STORE_MAX_ENTRIES = 131072
 SETTLED_STORE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_settled_store")
 RECEIPT_MAX_BYTES = 64 * 1024 * 1024
 ARTIFACT_IDENTITY_PREFIX = "prospective_decision_outcome_feedback:"
@@ -527,27 +531,22 @@ class _DiskSettledStore:
         if key in self.seed:
             return self.seed[key]
         try:
-            value = json.loads(self._path(key).read_bytes())
+            path = self._path(key)
+            if path.stat().st_size > 16 * 1024**2:
+                return default
+            value = json.loads(path.read_bytes())
         except (OSError, ValueError, UnicodeError):
             return default
         return value if isinstance(value, dict) else default
 
     def __setitem__(self, key, value) -> None:
         path = self._path(key)
-        if key in self.seed or path.exists():
+        if self.get(key) == value:
             return
-        path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = path.with_name(TEMP_PREFIX + key + f"-{os.getpid()}.tmp")
         try:
-            temporary.write_bytes(_canon_bytes(value))
-            os.replace(temporary, path)
+            _atomic_write_json(path, value, allow_nan=False)
         except OSError:
             pass  # a cache write failure only costs a later recomputation
-        finally:
-            try:
-                temporary.unlink(missing_ok=True)
-            except OSError:
-                pass
 
 
 class _StreamSettledCache(fb.SettledFeedbackCache):
@@ -557,7 +556,8 @@ class _StreamSettledCache(fb.SettledFeedbackCache):
         self._external_content_hash = content_hash
         super().__init__(*args, **kwargs)
         # Write-through to disk instead of the 8,192-entry in-memory working set.
-        self.entries = self.retained = _DiskSettledStore(self.root / SETTLED_STORE_DIR, self.entries)
+        # Older contributions did not bind evaluator bytes. Never seed a new evaluator from them.
+        self.entries = self.retained = _DiskSettledStore(self.root / SETTLED_STORE_DIR / code_digest(), {})
 
     def _snapshot_content_hash(self, session, snapshot):
         return self._external_content_hash(session, snapshot)
@@ -566,55 +566,187 @@ class _StreamSettledCache(fb.SettledFeedbackCache):
         return  # every contribution was persisted when it settled
 
 
-class _Partitions:
-    """Per-session row checkpoints bound to one exact input and code identity."""
+class _PartitionDependencies:
+    """Sufficient input identities after native discovery/qualification, never session labels alone.
 
-    def __init__(self, state_root: Path, input_digest: str, code: str, metrics: dict[str, Any] | None = None):
-        self.run_key = _sha256_bytes(_canon_bytes({"contract_version": PARTITION_CONTRACT_VERSION,
-                                                   "input_digest": input_digest, "code_digest": code}))
+    Legacy feedback reads bounded returns/diagnostics plus potentially unbounded conditions. Only
+    the standing terminal predicate proves extension cannot change any of these fields. Strict
+    prospective chains fail closed to their full capture/calendar context (no sparse-prefix reuse).
+    """
+
+    def __init__(self, sources, settled, marker, future_inputs, code, contracts):
+        self.sources, self.settled, self.marker = sources, settled, marker
+        self.price_hashes = {s: fb._settled_hash(v) for s, v in settled.snapshots.items()}
+        self.context = {"chain": list(settled.chain), "prices": self.price_hashes}
+        self.future_inputs, self.code, self.contracts = future_inputs, code, contracts
+
+    def future(self, session):
+        return bool(self.marker) and session >= self.marker["session"]
+
+    def source_key(self, session):
+        bound = []
+        for source in self.sources[session]:
+            candidate = source["candidate"]
+            handle = candidate["snapshot" if source["kind"] == "modern" else "artifact"]
+            bound.append({"kind": source["kind"], "header": {k: v for k, v in handle.items() if k != "records"},
+                          "sha256": handle.raw_sha256, "bytes": handle.size,
+                          "qualification": candidate.get("inventory", candidate.get("temporal")),
+                          "path": candidate.get("artifact_path")})
+        return fb._settled_hash({"contract": PARTITION_CONTRACT_VERSION, "code": self.code,
+                                "contracts": self.contracts, "sources": bound,
+                                "route": "STRICT_PROSPECTIVE" if self.future(session) else "LEGACY"})
+
+    def context_key(self, session):
+        return fb._settled_hash({"legacy": self.context,
+                                "future": self.future_inputs if self.future(session) else None})
+
+    def proof(self, through):
+        if through not in self.settled.chain:
+            return None
+        prefix = self.settled.chain[:self.settled.chain.index(through) + 1]
+        return {"through": through, "chain": prefix, "prices": {s: self.price_hashes.get(s) for s in prefix}}
+
+    def extension_valid(self, proof):
+        """Returns/diagnostics stop at T20; open condition queries must still produce equal events.
+
+        A serialized condition can remain open forever. It is never called settled: re-evaluating
+        its exact small query against current observations proves whether the old row can survive.
+        """
+        if (not isinstance(proof, dict) or not isinstance(proof.get("window"), dict)
+                or not isinstance(proof.get("conditions"), list)
+                or proof["window"] != self.proof(proof["window"].get("through"))):
+            return False
+        try:
+            return all(fb._trigger_invalidation(item["record"], snapshots=self.settled.snapshots,
+                                               chain=self.settled.chain) == item["outcome"]
+                       for item in proof["conditions"])
+        except (KeyError, TypeError, ValueError):
+            return False
+
+
+def _prune_derived(directory, *, max_bytes, max_entries, protected=()):
+    """Bound only rebuildable module-owned state; active files are pinned through final assembly."""
+    files = sorted((p for p in directory.rglob("*") if p.is_file()), key=lambda p: p.stat().st_mtime_ns, reverse=True)
+    pinned = set(protected)
+    total, count = 0, 0
+    for path in sorted(files, key=lambda p: p not in pinned):
+        size = path.stat().st_size
+        if path not in pinned and (total + size > max_bytes or count >= max_entries):
+            path.unlink(missing_ok=True)
+        else:
+            total += size
+            count += 1
+    if total > max_bytes or count > max_entries:
+        raise FeedbackStreamError("FEEDBACK_CHECKPOINT_STORAGE_LIMIT")
+
+
+class _Partitions:
+    """Content-keyed session variants shared across runs; selected segments are never recopied."""
+
+    def __init__(self, state_root: Path, dependencies, metrics=None):
         self.base = state_root / PARTITION_DIR
-        self.directory = self.base / self.run_key
-        self.metrics = metrics
+        self.directory = self.base / "v2"
+        self.dependencies, self.metrics, self.selected = dependencies, metrics, {}
         self.directory.mkdir(parents=True, exist_ok=True)
 
-    def prune_other_runs(self) -> None:
-        """Checkpoints of any other input/code identity can never be reused; they are this module's own state."""
-        for entry in self.base.iterdir():
-            if entry.is_dir() and entry.name != self.run_key and len(entry.name) == 64:
-                shutil.rmtree(entry, ignore_errors=True)
-        for entry in self.directory.iterdir():
-            if entry.name.startswith(TEMP_PREFIX):
-                stem_pid = entry.stem.rsplit("-", 1)[-1]
-                if stem_pid.isdigit() and int(stem_pid) != os.getpid() and not _pid_alive(int(stem_pid)):
-                    entry.unlink(missing_ok=True)
+    def prune_other_runs(self):
+        # Preserve recent V1 progress, without treating its corpus identity as a V2 proof.
+        legacy = sorted((p for p in self.base.iterdir() if p.is_dir() and len(p.name) == 64),
+                        key=lambda p: p.stat().st_mtime_ns, reverse=True)
+        for path in legacy[3:]:
+            shutil.rmtree(path)
+        _prune_derived(self.directory, max_bytes=PARTITION_STORE_MAX_BYTES,
+                       max_entries=PARTITION_STORE_MAX_ENTRIES * 3)
 
-    def _stem(self, position: int, session: str) -> str:
-        return f"{position:05d}-" + _sha256_bytes(session.encode("utf-8"))[:16]
+    def _candidates(self, session):
+        source = self.dependencies.source_key(session)
+        directory = self.directory / source
+        return directory, sorted(directory.glob("*.partition.json"), key=lambda p: p.stat().st_mtime_ns, reverse=True)
 
-    def manifest(self, position: int, session: str) -> dict[str, Any] | None:
-        stem = self._stem(position, session)
-        value = _read_state_json(self.directory / (stem + ".partition.json"))
-        if (not value or value.get("contract_version") != PARTITION_CONTRACT_VERSION or value.get("run_key") != self.run_key
-                or value.get("session") != session or value.get("position") != position):
-            return None
-        for kind in ("rows", "trigger"):
-            try:
-                if (self.directory / (stem + "." + kind)).stat().st_size != value[kind]["bytes"]:
-                    return None
-            except (OSError, KeyError, TypeError):
-                return None
-        return value
+    def _valid_bytes(self, stem, value):
+        try:
+            for kind in ("rows", "trigger"):
+                path = Path(str(stem) + "." + kind)
+                size = path.stat().st_size
+                if size > PARTITION_MAX_BYTES or size != value[kind]["bytes"] or bas.source_hash(path) != value[kind]["sha256"]:
+                    return False
+            return isinstance(value["row_count"], int) and value["row_count"] >= 0
+        except (OSError, KeyError, TypeError):
+            return False
 
-    def build(self, position: int, session: str, rows: Iterator[dict[str, Any]]) -> dict[str, Any]:
-        stem = self._stem(position, session)
-        spools = {kind: _Spool(self.directory, f"{stem}-{kind}-{os.getpid()}") for kind in ("rows", "trigger")}
+    def manifest(self, position, session):
+        directory, candidates = self._candidates(session)
+        for path in candidates:
+            value = _read_state_json(path)
+            if not value:
+                path.unlink(missing_ok=True)
+                continue
+            body = {k: v for k, v in value.items() if k != "manifest_sha256"}
+            if (value.get("manifest_sha256") != fb._settled_hash(body)
+                    or value.get("contract_version") != PARTITION_CONTRACT_VERSION
+                    or value.get("source_key") != directory.name or value.get("session") != session):
+                path.unlink(missing_ok=True)
+                _metric(self.metrics, "partitions_corrupt")
+                continue
+            exact = value.get("context_key") == self.dependencies.context_key(session)
+            proof = value.get("terminal_proof")
+            terminal = (not self.dependencies.future(session) and isinstance(proof, dict)
+                        and proof == self.dependencies.proof(proof.get("through")))
+            extension = (not exact and not terminal and not self.dependencies.future(session)
+                         and self.dependencies.extension_valid(value.get("extension_proof")))
+            if not (exact or terminal or extension):
+                _metric(self.metrics, "partition_variants_invalidated")
+                continue
+            stem = Path(str(path)[:-len(".partition.json")])
+            if not self._valid_bytes(stem, value):
+                path.unlink(missing_ok=True)
+                _metric(self.metrics, "partitions_corrupt")
+                continue  # recover within this invocation; never publish bad bytes
+            self.selected[session] = stem
+            os.utime(path, None)
+            _metric(self.metrics, "partitions_reused_exact" if exact else
+                    "partitions_reused_terminal" if terminal else "partitions_reused_extension")
+            return value
+        if candidates:
+            _metric(self.metrics, "partitions_invalidated")
+        return None
+
+    def build(self, position, session, rows):
+        directory, _ = self._candidates(session)
+        directory.mkdir(parents=True, exist_ok=True)
+        context = self.dependencies.context_key(session)
+        stem = directory / context
+        spools = {kind: _Spool(directory, f"{context}-{kind}-{os.getpid()}") for kind in ("rows", "trigger")}
+        through, terminal = None, not self.dependencies.future(session)
+        window_through, bounded, conditions = None, not self.dependencies.future(session), []
         try:
             for row in rows:
                 spools["rows"].append(row)
                 spools["trigger"].append(row["trigger_invalidation_outcome"] | {"feedback_identity": row["feedback_identity"], "ticker": row["ticker"]})
+                if terminal:
+                    last = self.dependencies.settled._terminal(row)
+                    terminal = last is not None
+                    through = max(through or last, last) if last else None
+                if bounded:
+                    start = row["forward_outcomes"]["as_of_session"]
+                    chain = self.dependencies.settled.chain
+                    last_index = chain.index(start) + max(forward_bridge.FORWARD_HORIZONS.values()) if start in chain else len(chain)
+                    bounded = last_index < len(chain)
+                    if bounded:
+                        window_through = max(window_through or chain[last_index], chain[last_index])
+                        if any(isinstance((row.get(role) or {}).get("condition"), Mapping) for role in ("trigger", "invalidation")):
+                            conditions.append({"record": {"ticker": row["ticker"], "as_of_session": start,
+                                                           "trigger": row["trigger"], "invalidation": row["invalidation"]},
+                                               "outcome": row["trigger_invalidation_outcome"]})
                 _metric(self.metrics, "rows")
-            entry = {"contract_version": PARTITION_CONTRACT_VERSION, "run_key": self.run_key, "session": session,
-                     "position": position, "row_count": spools["rows"].count}
+            entry = {"contract_version": PARTITION_CONTRACT_VERSION, "source_key": directory.name,
+                     "context_key": context, "session": session, "row_count": spools["rows"].count,
+                     "terminal_proof": self.dependencies.proof(through) if terminal and through else None,
+                     "extension_proof": {"window": self.dependencies.proof(window_through), "conditions": conditions}
+                                        if bounded and window_through and not terminal else None}
+            # A stale manifest must not survive replacement of either data file after a crash.
+            manifest_path = Path(str(stem) + ".partition.json")
+            manifest_path.unlink(missing_ok=True)
             for kind, spool in spools.items():
                 spool.file.flush()
                 os.fsync(spool.file.fileno())
@@ -622,17 +754,31 @@ class _Partitions:
                 if spool.path.stat().st_size > PARTITION_MAX_BYTES:
                     raise FeedbackStreamError("FEEDBACK_PARTITION_SIZE_LIMIT:" + session)
                 entry[kind] = {"bytes": spool.path.stat().st_size, "sha256": bas.source_hash(spool.path)}
-                os.replace(spool.path, self.directory / (stem + "." + kind))
-            # The manifest is written last: data without a manifest is never reused.
-            _atomic_write_json(self.directory / (stem + ".partition.json"), entry, allow_nan=False)
+                os.replace(spool.path, Path(str(stem) + "." + kind))
+            entry["manifest_sha256"] = fb._settled_hash(entry)
+            _atomic_write_json(manifest_path, entry, allow_nan=False)
+            self.selected[session] = stem
         finally:
             for spool in spools.values():
                 spool.remove()
         _metric(self.metrics, "partitions_built")
         return entry
 
-    def segment(self, position: int, session: str, kind: str) -> Path:
-        return self.directory / (self._stem(position, session) + "." + kind)
+    def finish(self):
+        for directory in (p for p in self.directory.iterdir() if p.is_dir()):
+            variants = sorted(directory.glob("*.partition.json"), key=lambda p: p.stat().st_mtime_ns, reverse=True)
+            for path in variants[PARTITION_VARIANTS:]:
+                stem = Path(str(path)[:-len(".partition.json")])
+                if stem not in self.selected.values():
+                    for suffix in (".partition.json", ".rows", ".trigger"):
+                        Path(str(stem) + suffix).unlink(missing_ok=True)
+        protected = [Path(str(stem) + suffix) for stem in self.selected.values()
+                     for suffix in (".partition.json", ".rows", ".trigger")]
+        _prune_derived(self.directory, max_bytes=PARTITION_STORE_MAX_BYTES,
+                       max_entries=PARTITION_STORE_MAX_ENTRIES * 3, protected=protected)
+
+    def segment(self, position, session, kind):
+        return Path(str(self.selected[session]) + "." + kind)
 
     def rows(self, position: int, session: str, manifest: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
         """Re-hash the exact partition bytes, then decode its comma-joined rows one at a time."""
@@ -658,7 +804,7 @@ class _Partitions:
 
     def invalidate(self, position: int, session: str) -> None:
         """A partition whose bytes no longer match its manifest is rebuilt by the next run, never reused."""
-        (self.directory / (self._stem(position, session) + ".partition.json")).unlink(missing_ok=True)
+        Path(str(self.selected[session]) + ".partition.json").unlink(missing_ok=True)
 
 
 class _Segments:
@@ -899,7 +1045,8 @@ def _future_chain_inputs(repository: Path, marker: Mapping[str, Any] | None, as_
 def build_streaming_feedback(root: str | Path, output: str | Path, **kwargs) -> dict[str, Any]:
     """Serialize the complete build/reuse transaction, including crash recovery."""
     from feedback_publication_lock import publication_lock
-    with publication_lock(output):
+    # Different output paths share derived checkpoints. Hold their own lease through pruning/assembly.
+    with publication_lock(output), publication_lock(Path(kwargs.get("state_root") or root) / PARTITION_DIR):
         return _build_streaming_feedback(root, output, **kwargs)
 
 
@@ -1013,8 +1160,12 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     t = clock()
     sources_by_session = _sources_by_session(modern_genuine, corpus["genuine_artifacts"])
     sessions = sorted(sources_by_session)
-    partitions = _Partitions(state_root, input_digest, code, metrics)
+    dependencies = _PartitionDependencies(sources_by_session, settled, marker, input_manifest["future_chain"],
+                                          code, input_manifest["contracts"])
+    partitions = _Partitions(state_root, dependencies, metrics)
     partitions.prune_other_runs()
+    _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
+                   max_entries=SETTLED_STORE_MAX_ENTRIES)
     final_tmp = output.parent / (TEMP_PREFIX + output.name + f"-{os.getpid()}.incomplete")
     try:
         manifests = []
@@ -1028,6 +1179,9 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
                     sources_by_session[session], settled, future_settled, marker))
             manifests.append(manifest)
         _metric(metrics, "spool_bytes", sum(m["rows"]["bytes"] + m["trigger"]["bytes"] for m in manifests))
+        partitions.finish()
+        _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
+                       max_entries=SETTLED_STORE_MAX_ENTRIES)
         phases["evaluate_s"] = clock() - t
         settled.finish()
         t = clock()

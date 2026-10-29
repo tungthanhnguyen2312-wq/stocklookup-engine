@@ -258,6 +258,10 @@ env:
     tests/test_prospective_decision_outcome_measurement.py
     tests/test_prospective_decision_outcome_feedback.py
     tests/test_prospective_feedback_streaming.py
+    tests/test_prospective_feedback_resume.py
+    tests/test_prospective_feedback_incremental.py
+    tests/test_tplus_resume_source_transition.py
+    tests/test_tplus_daily_source_transition.py
     tests/test_retention_reader_transition.py
     tests/test_feedback_resource_guard.py
     tests/test_feedback_concurrent_publication.py

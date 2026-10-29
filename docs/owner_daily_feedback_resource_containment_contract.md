@@ -142,6 +142,54 @@ Deeper reduction (a single rolling feedback artifact, pointer-based rows) is a p
 `feedback_pre_handoff`, `feedback_post_handoff`, `feedback_resource_admission`, `feedback_terminal_cache_reuse`,
 `feedback_resource_reason` rows with `gates_capture = false`.
 
+## Daily checkpoint corrective (2026-10-29)
+
+V2 session partitions bind the exact qualified decision/T0 source bytes, source headers, temporal
+qualification and provenance, evaluator bytes, policy/contracts, and legacy versus strict prospective
+routing. Discovery and storage/temporal qualification run before every lookup. A session identifier alone
+never permits reuse. Changing a source or its authority changes that session's key; evaluator/contract
+changes invalidate the applicable partitions and evaluator-bound settled contributions.
+
+An identical evaluation context reuses its verified spools. Across changed input sets, legacy sessions
+can reuse a terminal partition only with an unchanged session/price prefix through every dependent
+observation. T20-complete sessions with open conditions can instead reuse a bounded return/diagnostic
+window plus re-evaluation of every retained serialized condition against the current complete chain.
+All condition outcomes must remain equal. These open conditions are never classified as settled.
+Incomplete forward windows rebuild when the chain changes, including when a newly qualified Daily
+observation makes an earlier decision mature. Changed prices within a bound prefix invalidate it.
+Strict prospective routing binds the full capture/calendar/as-of context and rebuilds on changes;
+the sparse legacy prefix proof grants no strict-chain authority.
+
+Pre-handoff and post-handoff calls share derived state. A newly retained snapshot without native
+session qualification cannot join the chain; after qualification, changed forward windows and the
+new session are evaluated under their actual dependencies. The complete output still contains every
+qualified row in its existing deterministic order, with the same content identity contract. Final
+assembly streams verified old segments directly and writes the required complete JSON once.
+
+Data spools are fsynced and renamed before a checksummed atomic manifest is published. Missing,
+torn or corrupt checkpoints are cache misses and rebuild within the invocation. Final read-back
+still fails closed on later corruption. No incomplete artifact is published. A shared kernel state
+lease serializes lookup, pruning and assembly across different output targets, inside the existing
+total deadline. Session variants are retained across run identities, limited to three recent
+variants per source and an 8-GiB/4,096-partition derived store; active segments stay pinned through
+assembly. Settled contributions use evaluator-specific namespaces with a 2-GiB/131,072-entry budget.
+Three existing V1 run directories may be retained for recovery; they never qualify V2 reuse.
+All of this storage is derived and rebuildable. Sealed evidence, T0, cohorts, storage receipts,
+publication contracts, the 1,200-second deadline and 2-GiB Job limit are unchanged.
+
+The [retained-input acceptance](internal/TPLUS_DAILY_INCREMENTAL_ACCEPTANCE_20261029.json)
+selects the qualified October-22 corpus and then adds the real retained October-23 session.
+The new 2,533,037,248-byte T0 source is verified cold within the incremental call. Nine partitions
+are reused; 24 affected historical partitions rebuild and one new partition is added. The call
+finishes in 1,171.528 seconds (28.472 seconds of measured deadline headroom), with a
+1,374,945,280-byte Job peak. Its 57,222-row artifact has the exact input digest, raw bytes and
+content identity of the independently verified full rebuild. Cold baseline preparation needed
+three bounded calls; that setup is distinct from the qualified single-call incremental transition.
+This is retained-input execution qualification, not a genuine Daily publication or full Daily
+host/size acceptance. Changed evidence, T0/source authority, code/contracts, newly mature windows,
+strict capture/calendar changes and pre/post-handoff qualification also have deterministic fixture
+coverage. No retained observation, T0, cohort or sealed publication was rewritten.
+
 ## Final release corrective (2026-10-04)
 
 Claude Code implemented the streaming/resource corrective. Codex independently found and repaired the check-then-replace publication race, took over the same worktree as sole writer, and qualified real concurrent/crashing writers. `FEEDBACK_RESOURCE_CONTAINMENT_READY` is separate from `MONDAY_HOST_PREFLIGHT_PENDING`: the historical 9,853,145,088-byte (~9.18 GiB) enrichment/T0 peak remains untouched. Feedback admission floors are not a host launch gate. Live memory-headroom preflight is required before Monday launch; calendar registration remains unexecuted. Authority effect is `NONE / OWNER_DAILY_RESOURCE_CONTAINMENT_ONLY`.

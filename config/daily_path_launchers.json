@@ -118,8 +118,8 @@
   "non_python_callers": {
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
-      "reason": "Exact reviewed shell/CI command contract, normalized line endings. Windows-only real launcher handoff regressions; production commands unchanged.",
-      "sha256": "4d8391e6847b5109b755301ad150cc8f79a075990c110dc464238ee7c972c556",
+      "reason": "Focused selection adds T+ Daily incremental/resume/source tests only; launcher commands, CI environments and required checks unchanged.",
+      "sha256": "5009b881be0056b43a22fccf123386c75bcc2ef77ad7026aa0675978efba23c3",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",

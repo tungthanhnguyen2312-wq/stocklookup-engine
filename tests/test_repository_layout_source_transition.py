@@ -104,6 +104,9 @@ def _copy_boundary(tmp_path: Path) -> None:
     tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
     paths.add(tplus)
     paths.update(row["archive"] for row in json.loads((ROOT / tplus).read_bytes())["sources"].values())
+    daily = "tests/fixtures/tplus_daily_incremental_source_transition_v1.json"
+    paths.add(daily)
+    paths.update(row["archive"] for row in json.loads((ROOT / daily).read_bytes())["sources"].values())
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)

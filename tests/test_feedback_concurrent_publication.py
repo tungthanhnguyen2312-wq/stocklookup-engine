@@ -59,10 +59,10 @@ def world(tmp_path):
     assert before == {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file()}
 
 
-def command(world, name, mode='normal', *, root=None, output=None, status=None):
+def command(world, name, mode='normal', *, root=None, output=None, status=None, state=None):
     evidence, base, worker = world
     return [sys.executable, str(worker), str(REPO), str(root or evidence), str(output or base / 'out' / 'feedback.json'),
-            str(base / ('state-' + name)), str(base / (name + '.result.json')),
+            str(state or base / ('state-' + name)), str(base / (name + '.result.json')),
             str(status or base / 'shared.status.json'), mode]
 
 
@@ -87,6 +87,20 @@ def test_same_input_simultaneous_writers_one_built_and_one_reuse(world):
     assert len({r['artifact_identity'] for r in results}) == 1
     pointer = json.loads((world[1] / 'shared.status.json').read_text())
     assert pointer['artifact_identity'] == streaming.read_completion(Path(pointer['path']))['artifact_identity']
+
+
+def test_distinct_outputs_share_verified_checkpoints_under_one_state_lease(world):
+    base = world[1]
+    processes = [start(world, name, 'start', output=base / f'{name}.json',
+                       status=base / f'{name}.status.json', state=base / 'shared-state') for name in ('a', 'b')]
+    assert all(p.stdout.readline().strip() == 'READY' for p in processes)
+    for p in processes:
+        p.stdin.write('\n'); p.stdin.flush()
+    results = [finish(p)['payload'] for p in processes]
+    assert all(r['outcome'] == 'BUILT' for r in results)
+    assert len({r['artifact_identity'] for r in results}) == 1
+    assert sorted(r['metrics'].get('partitions_reused', 0) for r in results) == [0, 4]
+    assert sum(r['metrics'].get('partitions_built', 0) for r in results) == 4
 
 
 def test_winner_completes_before_loser_and_existing_complete_retry(world):

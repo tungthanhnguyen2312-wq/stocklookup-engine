@@ -1,0 +1,231 @@
+{
+  "schema": "tplus_daily_incremental_acceptance/v1",
+  "milestone": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
+  "job": "TPLUS_DAILY_CADENCE_INCREMENTAL_REUSE_CORRECTIVE",
+  "qualified_at": "2026-10-29T11:09:15.763674+07:00",
+  "source_base_commit": "53c7d8e8300283e8d6c8386e7281175d3f0f5aba",
+  "source_sha256_lf": {
+    "prospective_feedback_streaming.py": "f45dbec0651019c2dd17864d4f1f2c500785837d48d52870ebf33618c81cdfc9",
+    "tools/run_prospective_decision_outcome_feedback.py": "09547b300e419282b22649a632fc397a1ccec55308d09be98d2f360f7b8e2745",
+    "tools/verify_retention_reader_transition.py": "117d11b3795f7b155c7f924ba3e636ccb9eb52d369f872f90a581b3aa960726f",
+    "config/daily_path_launchers.json": "1c496ae2911548c9d0e07e8b86b74ce1fcdd37fa5d45607c55aa85499208c79a",
+    "config/owner_daily_capacity_qualification.json": "9c2bfa82f87daa9251b044cc46300e2e46872ad98a3862863cce221c34726660"
+  },
+  "active_e4_v2_digest": "fe053a2098300425851e4184f99552884d251b18acbc0b50511c6948cc64fa45",
+  "replay_scope": "Native-qualified retained source subset through October 22, then real October 23 input addition; actual invocation clock retained. No fabricated session, observation or T0.",
+  "resource_policy": {
+    "deadline_seconds": 1200.0,
+    "memory_limit_bytes": 2147483648,
+    "min_available_physical_bytes": 805306368,
+    "min_available_commit_bytes": 1073741824,
+    "min_free_disk_bytes": 4294967296
+  },
+  "baseline": {
+    "record_count": 55539,
+    "artifact_identity": "prospective_decision_outcome_feedback:d05f8d63fcc52fd90237a5c95fe31c4f30ce9df1cb030114b6afadf139f6a1e5",
+    "input_digest": "dd36348e278e3ad52a86761e179c3d9f6348e619ab29b64eb7bd6825bbfc5592",
+    "cold_setup_calls": [
+      {
+        "outcome": "UNAVAILABLE",
+        "reason": "FEEDBACK_RESOURCE_TIMEOUT",
+        "native_seconds": 1200.021,
+        "outer_seconds": 1203.481,
+        "peak_job_bytes": 880381952,
+        "tree_reaped": true,
+        "protected_equal": true
+      },
+      {
+        "outcome": "UNAVAILABLE",
+        "reason": "FEEDBACK_RESOURCE_TIMEOUT",
+        "native_seconds": 1200.016,
+        "outer_seconds": 1201.215,
+        "peak_job_bytes": 929124352,
+        "tree_reaped": true,
+        "protected_equal": true
+      },
+      {
+        "outcome": "COLLECTED",
+        "reason": null,
+        "native_seconds": 337.311,
+        "outer_seconds": 338.49,
+        "peak_job_bytes": 1330114560,
+        "tree_reaped": true,
+        "protected_equal": true
+      }
+    ]
+  },
+  "incremental": {
+    "status": "COLLECTED",
+    "native_seconds": 1171.528,
+    "outer_seconds": 1173.167,
+    "peak_job_bytes": 1374945280,
+    "record_count": 57222,
+    "metrics": {
+      "avoided_iid_bytes": 31401476808,
+      "full_iid_bytes_parsed": 0,
+      "full_iid_parses": 0,
+      "legacy_receipt_hits": 4,
+      "output_bytes": 1273879639,
+      "partition_variants_invalidated": 24,
+      "partitions_built": 25,
+      "partitions_invalidated": 24,
+      "partitions_reused": 9,
+      "partitions_reused_extension": 8,
+      "partitions_reused_terminal": 1,
+      "price_index_hits": 4,
+      "rows": 42075,
+      "rows_reused": 15147,
+      "settled_hits": 6553,
+      "settled_misses": 10277,
+      "spool_bytes": 1266914115,
+      "stream_sha256_bytes": 29328513132,
+      "stream_verified_bytes": 2533037248,
+      "summary_hits": 39,
+      "t0_receipt_hits": 32,
+      "t0_receipt_misses": 1
+    },
+    "phases_seconds": {
+      "aggregate_s": 20.314,
+      "assemble_s": 14.256,
+      "discovery_s": 302.982,
+      "evaluate_s": 825.276,
+      "price_index_s": 2.515,
+      "total_s": 1166.635
+    },
+    "reused_sessions": [
+      "2026-09-03",
+      "2026-09-08",
+      "2026-09-10",
+      "2026-09-11",
+      "2026-09-14",
+      "2026-09-15",
+      "2026-09-18",
+      "2026-09-21",
+      "2026-09-23"
+    ],
+    "invalidated_sessions": [
+      "2026-09-09",
+      "2026-09-16",
+      "2026-09-17",
+      "2026-09-22",
+      "2026-09-24",
+      "2026-09-28",
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01",
+      "2026-10-02",
+      "2026-10-05",
+      "2026-10-06",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-09",
+      "2026-10-12",
+      "2026-10-13",
+      "2026-10-14",
+      "2026-10-15",
+      "2026-10-16",
+      "2026-10-19",
+      "2026-10-20",
+      "2026-10-21",
+      "2026-10-22"
+    ],
+    "new_sessions": [
+      "2026-10-23"
+    ],
+    "new_source_verification": {
+      "purpose": "COLD_NEW_DAILY_SOURCE_VERIFICATION",
+      "moved": [
+        {
+          "file": "23d893acdfedfedd003e6549a9cc9e381b3e4650208739ae17068f9b24ab6a4f.json",
+          "source_sha256": "23d893acdfedfedd003e6549a9cc9e381b3e4650208739ae17068f9b24ab6a4f",
+          "source_bytes": 2533037248
+        }
+      ]
+    },
+    "tree_reaped": true
+  },
+  "correctness": {
+    "status": "COMPLETED",
+    "verified": true,
+    "reference_code": "53c7d8e8300283e8d6c8386e7281175d3f0f5aba",
+    "reference_method": "existing independently verified clean full-corpus rebuild plus deployed-code reproduction",
+    "baseline_rows": 55539,
+    "incremental_rows": 57222,
+    "new_rows": 1683,
+    "shared_rows_changed": 4585,
+    "shared_rows_identical": 50954,
+    "newly_mature_horizons": 731,
+    "duplicates": 0,
+    "missing_rows": 0,
+    "condition_changes_after_previously_mature_t20": 5,
+    "outside_chain": 0,
+    "unknown_t0": 0,
+    "trigger_outcomes": 57222,
+    "artifact_identity": "prospective_decision_outcome_feedback:b89abca3e54b4a55b101322357f07c1c93539cc23b5ac829152eaea85207fe33",
+    "raw_sha256": "bba3ec9eef8e96b4ad16c956f61aed56120758f17267e5745f754e418b470239",
+    "input_digest": "c9db5f67d977be48a8fe7d1c7dfc260046b182c8f426a85434fd2b80528921bd",
+    "byte_and_identity_parity": true,
+    "rows_by_session": {
+      "2026-09-03": 1683,
+      "2026-09-08": 1683,
+      "2026-09-09": 1683,
+      "2026-09-10": 1683,
+      "2026-09-11": 1683,
+      "2026-09-14": 1683,
+      "2026-09-15": 1683,
+      "2026-09-16": 1683,
+      "2026-09-17": 1683,
+      "2026-09-18": 1683,
+      "2026-09-21": 1683,
+      "2026-09-22": 1683,
+      "2026-09-23": 1683,
+      "2026-09-24": 1683,
+      "2026-09-28": 1683,
+      "2026-09-29": 1683,
+      "2026-09-30": 1683,
+      "2026-10-01": 1683,
+      "2026-10-02": 1683,
+      "2026-10-05": 1683,
+      "2026-10-06": 1683,
+      "2026-10-07": 1683,
+      "2026-10-08": 1683,
+      "2026-10-09": 1683,
+      "2026-10-12": 1683,
+      "2026-10-13": 1683,
+      "2026-10-14": 1683,
+      "2026-10-15": 1683,
+      "2026-10-16": 1683,
+      "2026-10-19": 1683,
+      "2026-10-20": 1683,
+      "2026-10-21": 1683,
+      "2026-10-22": 1683,
+      "2026-10-23": 1683
+    }
+  },
+  "protected": {
+    "equal": true,
+    "registry_sha256": "486af750b7f4958903f5e7be0dbc845dd94fd7f07e0c51c975e967a1c3a1ce42",
+    "catalog_sha256": "021980fee0ec091808073588c24a45b0bde41cbb6b1caf9173a9c33060d49f1a",
+    "capture_20261028_sha256": "6ca126a07105993ea281d304b790f1e73d52bfa11c051c942412259c4f0271c6"
+  },
+  "tests": {
+    "feedback_fixtures_passed": 44,
+    "source_transition_selection_passed": 26,
+    "repository_roadmap_selection_passed": 187,
+    "broader_selection_passed": 304,
+    "broader_selection_failure_corrected": "CI test-selection workflow binding; failed check revalidated PASS",
+    "final_process_storage_retention_capacity_passed": 109,
+    "platform_skipped": 2,
+    "host_bound_failure": "test_native_powershell_profile_router: unchanged isolated-checkout active-Production-writer refusal",
+    "counts_overlap": true
+  },
+  "production_feedback_published": false,
+  "full_daily_operational": false,
+  "remaining_daily_gates": {
+    "disk_reserve_gib": 140,
+    "iid_bytes": 2394768092,
+    "qualified_iid_max_bytes": 2382095742
+  },
+  "authority_effect": "NONE",
+  "publication_opportunity": "Await a genuine qualified Daily handoff; do not relabel sealed completed slots."
+}
