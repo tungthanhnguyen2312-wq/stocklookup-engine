@@ -240,7 +240,7 @@ def test_relation_distinct_when_prior_is_not_a_subset():
 
 def test_interrupted_build_leaves_only_recognisable_incomplete_data_and_retry_rebuilds(corpus, monkeypatch):
     root, _s, state, output = corpus
-    original = streaming._iter_rows
+    original = streaming._iter_session_rows
     calls = {"n": 0}
 
     def exploding(*args, **kwargs):
@@ -250,12 +250,12 @@ def test_interrupted_build_leaves_only_recognisable_incomplete_data_and_retry_re
                 raise RuntimeError("injected mid-stream failure")
             yield row
 
-    monkeypatch.setattr(streaming, "_iter_rows", exploding)
+    monkeypatch.setattr(streaming, "_iter_session_rows", exploding)
     with pytest.raises(RuntimeError):
         _build(root, output, state)
     assert not output.exists() and streaming.read_completion(output) is None
     assert [p for p in output.parent.iterdir() if not p.name.startswith(streaming.TEMP_PREFIX)] == []  # only own temporaries, and removed
-    monkeypatch.setattr(streaming, "_iter_rows", original)
+    monkeypatch.setattr(streaming, "_iter_session_rows", original)
     result = _build(root, output, state)
     assert result["outcome"] == streaming.OUTCOME_BUILT
     assert json.loads(output.read_text(encoding="utf-8")) == _legacy_artifact(root)
