@@ -68,6 +68,9 @@ def _copy_domain(tmp_path: Path) -> None:
     resident = "tests/fixtures/owner_daily_resident_iid_source_transition_v1.json"
     relatives.append(resident)
     relatives.extend(row["archive"] for row in json.loads((ROOT / resident).read_bytes())["sources"].values())
+    brief_inputs = "tests/fixtures/owner_daily_brief_inputs_source_transition_v1.json"
+    relatives.append(brief_inputs)
+    relatives.extend(row["archive"] for row in json.loads((ROOT / brief_inputs).read_bytes())["sources"].values())
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -96,7 +99,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert daily["previous_e4_v2_digest"] == TPLUS_ACTIVE_V2 == successor["active_e4_v2_digest"]
     resident = json.loads((ROOT / "tests/fixtures/owner_daily_resident_iid_source_transition_v1.json").read_bytes())
     assert resident["previous_e4_v2_digest"] == daily["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == resident["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    brief_inputs = json.loads((ROOT / "tests/fixtures/owner_daily_brief_inputs_source_transition_v1.json").read_bytes())
+    assert brief_inputs["previous_e4_v2_digest"] == resident["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == brief_inputs["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

@@ -1,0 +1,15 @@
+{
+  "contract_version": "owner_daily_brief_inputs_source_transition/v1",
+  "base_commit": "dc9977141863729a849a2f1fb85be9a27e2b2332",
+  "scope": "EXACT_BRIEF_SUPPLEMENTARY_INPUT_ALLOCATION_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "1e169a11fec8d571c84595b506f3fa6a5712d0b0a1cc4b6279a44b3d9fd8eb8a",
+  "active_e4_v2_digest": "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576",
+  "sources": {
+    "stocklookup_core/decision/daily_integrated_decision_brief.py": {
+      "archive": "tests/fixtures/owner_daily_brief_inputs_v1_sources/daily_integrated_decision_brief.py.txt",
+      "prior_sha256_lf": "3badc2ae45005d08dfb983996eb0097b778339278a669fee9c4d6ba0cad6b5f0",
+      "active_sha256_lf": "928a8098c3884bc52e1e7db9403f19475fab9823964c71bee2dc7f26dfa86492"
+    }
+  }
+}

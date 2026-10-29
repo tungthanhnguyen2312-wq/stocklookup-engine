@@ -640,8 +640,13 @@ def build_artifact(
 _IID_CONTRACT = "integrated_investment_decision_product/v1"
 
 
-def _load_json(path: Path) -> Mapping[str, Any] | None:
-    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+def _load_json(path: Path, *, record_tickers=None) -> Mapping[str, Any] | None:
+    if not path.is_file():
+        return None
+    if record_tickers is not None or path.stat().st_size > 8 * 1024 * 1024:
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+        return load_record_artifact(path, record_tickers=record_tickers)
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _resident_integrated(path: Path, artifact: Mapping[str, Any], session: str) -> Mapping[str, Any] | None:
@@ -690,10 +695,13 @@ def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[
     sector_leadership_current = _load_json(paths["sector_leadership"])
     tactical_current = _load_json(paths["market_structure_breakout_v3_projection"])
     opportunity_prioritization_current = _load_json(paths["opportunity_prioritization"])
-    financial_analysis_product_current = _load_json(paths["financial_analysis_product"])
-    p3f9b_snapshot = _load_json(paths["exact_session_snapshot"])
-    governed_chain = feedback_bridge.governed_session_chain(root, cohort_session=session)
     watchlist_tickers = list(owner_research_focus.broader_watchlist())
+    # These two consumers only join the governed watchlist. Decode all records
+    # for syntax refusal, retaining only consumed rows beside the resident IID.
+    financial_analysis_product_current = _load_json(
+        paths["financial_analysis_product"], record_tickers=watchlist_tickers)
+    p3f9b_snapshot = _load_json(paths["exact_session_snapshot"], record_tickers=watchlist_tickers)
+    governed_chain = feedback_bridge.governed_session_chain(root, cohort_session=session)
     feedback_status = feedback_bridge.build_prospective_feedback_status(
         current_records=integrated_current.get("records") or {}, p3f9b_snapshot=p3f9b_snapshot,
         governed_chain=governed_chain, evaluate_watchlist_only=watchlist_tickers,

@@ -1,6 +1,6 @@
 # Stock Lookup — Active State
 
-October-28 capture COMPLETE; no T0. [T+ qualified](internal/TPLUS_DAILY_INCREMENTAL_ACCEPTANCE_20261029.json). Nested-record loader corrected locally; larger IID unqualified.
+October-28 capture COMPLETE; no T0. [T+ qualified](internal/TPLUS_DAILY_INCREMENTAL_ACCEPTANCE_20261029.json). Brief input allocation corrected locally; larger IID unqualified.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

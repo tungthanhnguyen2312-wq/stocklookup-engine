@@ -6,6 +6,36 @@ It introduces no provider, analytical policy, production entrypoint or evidence 
 
 ## IID runtime corrective — October 27
 
+October-29 admitted consumer/seal run on the nested-record candidate reached
+`PRESEAL_BRIEF_BEGIN`, then a Windows process allocation-limit event. Kernel peaks
+were 7,227,588,608 process / 7,228,379,136 Job committed bytes in 173.2407257 seconds.
+The 7-GiB process ceiling can deny a new allocation before recorded committed bytes
+reach it; the lower recorded peak does not contradict the positive kernel event.
+The child was reaped without a result; protected inputs and source stayed unchanged.
+This is a failed measurement, not a host-admission refusal.
+
+The Brief still decoded supplementary files through whole-file Unicode and retained
+full financial and acquisition universes. Its existing consumers use watchlist rows
+from those two inputs. The bounded loader now optionally retains only requested
+keyed records, still parsing every discarded record and preserving all metadata,
+types, member limits and malformed/duplicate/trailing-data refusal. The Brief uses
+that projection only for these two watchlist consumers; other large Brief inputs
+use the existing full-graph bounded loader. Ordinary loader callers keep full graphs.
+No projection digest substitutes for full canonical IID verification.
+
+A separate bounded comparison on the real October-26 financial (183,923,759 bytes)
+and acquisition (298,848,160 bytes) inputs kept both graphs alive. Process peaks
+were 1,255,411,712 bytes before and 119,562,240 after; Job peaks were 1,256,259,584
+and 120,414,208 bytes. Runtimes were 4.455 and 4.248 seconds. Both projected-content
+digests matched, with unchanged original file hashes and no limit event. The
+diagnostic used a lower 2.5-GiB Job bound with real admission and runtime reserves.
+It held no IID or Producer graph and **does not qualify their combined peak** or
+pinpoint the original failed allocation. Final held-IID consumer/seal qualification
+and other larger-input stages remain required under unchanged 7/8-GiB limits.
+The original resident-IID source manifest/archive remain intact; an exact Brief-only
+successor preserves historical verification and advances the active E4 V2 identity.
+Capacity cap and receipt remain unchanged pending the complete stage evidence.
+
 October-29 bounded continuation: preseal borrows the operation-owned current IID for
 the Daily Integrated Brief and projects only posture-comparison fields from the
 previous IID, one record at a time. The draft delivery constructs only its primary

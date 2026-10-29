@@ -100,3 +100,37 @@ def test_non_object_envelopes_keep_their_original_types(tmp_path, value):
     path = tmp_path / "types.json"
     path.write_text(json.dumps(graph), encoding="utf-8")
     assert loader.load_record_artifact(path) == graph
+
+
+def test_selected_records_preserve_metadata_and_all_requested_rows(tmp_path):
+    graph = {"records": {"A": {"x": "Việt"}, "B": None}, "cards": {"B": {}},
+             "financial_analysis_product": {"artifact_identity": "original", "records": {
+                 "A": {"income": [1, None, True]}, "B": {"income": 2}}},
+             "coverage": {"count": 2}, "other": {"records": {"B": "metadata"}}}
+    path = tmp_path / "selected.json"
+    path.write_text(json.dumps(graph, ensure_ascii=False), encoding="utf-8")
+    expected = {**graph, "records": {"A": graph["records"]["A"]},
+                "financial_analysis_product": {**graph["financial_analysis_product"],
+                    "records": {"A": graph["financial_analysis_product"]["records"]["A"]}}}
+    assert loader.load_record_artifact(path, record_tickers=["A", "MISSING"]) == expected
+    assert loader.load_record_artifact(path) == graph
+
+
+@pytest.mark.parametrize("text", [
+    '{"records":{"A":{},"DROP":{bad}}}',
+    '{"records":{"DROP":{},"DROP":{}}}',
+    '{"records":{"DROP":{}}} {}',
+    '{"financial_analysis_product":{"records":{"DROP":{bad}}}}',
+])
+def test_discarded_records_are_still_validated(tmp_path, text):
+    path = tmp_path / "discarded.json"
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(ValueError):
+        loader.load_record_artifact(path, record_tickers=["A"])
+
+
+def test_discarded_oversized_record_still_refuses(tmp_path):
+    path = tmp_path / "oversized-discarded.json"
+    path.write_text('{"records":{"DROP":"' + 'x' * (16*1024**2 + 1) + '"}}', encoding="utf-8")
+    with pytest.raises(ValueError, match="ACCEPTANCE_JSON_MEMBER_LIMIT"):
+        loader.load_record_artifact(path, record_tickers=[])

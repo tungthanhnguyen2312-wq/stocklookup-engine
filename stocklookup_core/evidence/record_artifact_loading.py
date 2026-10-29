@@ -16,15 +16,24 @@ _RECORD_ENVELOPES = {
 }
 
 
-def load_record_artifact(path):
-    """Decode a graph without a whole-file Unicode string; preserve JSON types."""
+def load_record_artifact(path, *, record_tickers=None):
+    """Decode without whole-file text, optionally retaining selected keyed records.
+
+    Selection is a read projection, never identity verification. Every record is
+    still decoded and checked by the same parser, including discarded records.
+    Metadata and list-valued collections retain their original JSON types.
+    """
+    selected = None if record_tickers is None else frozenset(record_tickers)
     def object_value(parser):
         result = {}
         for key in parser.members():
             if key in {"records", "cards"} and parser.peek() == "{":
                 records = {}
                 for ticker in parser.members():
-                    records[ticker] = parser.value()
+                    row = parser.value()
+                    if selected is None or key != "records" or ticker in selected:
+                        records[ticker] = row
+                    del row
                 result[key] = records
             elif key in {"records", "cards"} and parser.peek() == "[":
                 records = []

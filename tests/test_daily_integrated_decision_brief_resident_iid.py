@@ -261,3 +261,32 @@ def test_invalid_small_iid_is_not_swallowed(tmp_path: Path):
         brief.build_from_session(root=tmp_path, session=SESSION, next_session_brief=_next_brief())
     with pytest.raises(ValueError):
         next_brief._bind_resident_file(current, _product())
+
+
+def test_watchlist_input_projection_preserves_the_complete_brief(tmp_path, monkeypatch):
+    paths = fixed_session_artifact_paths(tmp_path, SESSION)
+    product = _product()
+    _write(paths["integrated_investment_decision_product"], product)
+    financial = {
+        "artifact_identity": "financial:source", "decision_session": SESSION,
+        "financial_v2_engine_identity": "engine:source", "coverage": {"records": 2},
+        "financial_evidence_as_of_period": "2026H1",
+        "financial_analysis_product": {
+            "artifact_identity": "financial:product", "coverage": {"records": 2},
+            "records": {"FPT": {"status": "AVAILABLE", "evidence": ["Việt", None]},
+                        "UNCONSUMED": {"status": "AVAILABLE", "evidence": "large unused graph"}}}}
+    snapshot = {"resolved_completed_session": SESSION, "snapshot_identity": "snapshot:source",
+                "records": {"FPT": {"ticker": "FPT", "daily_bars": []},
+                            "UNCONSUMED": {"ticker": "UNCONSUMED", "daily_bars": []}}}
+    _write(paths["financial_analysis_product"], financial)
+    _write(paths["exact_session_snapshot"], snapshot)
+    before = {path: path.read_bytes() for path in paths.values() if path.is_file()}
+    args = dict(root=tmp_path, session=SESSION, next_session_brief=_next_brief(),
+                integrated_decision_current=product)
+    candidate = brief.build_from_session(**args)
+    monkeypatch.setattr(brief, "_load_json", lambda path, **kwargs:
+        json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None)
+    baseline = brief.build_from_session(**args)
+    assert candidate == baseline
+    assert candidate["artifact_identity"] == baseline["artifact_identity"]
+    assert {path: path.read_bytes() for path in before} == before
