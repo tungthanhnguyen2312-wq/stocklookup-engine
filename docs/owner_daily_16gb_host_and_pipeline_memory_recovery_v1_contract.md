@@ -8,7 +8,9 @@ October-30 continuation corrects genuine evaluated-valuation allocations in the
 Daily ingress, Financial V2 identity hash, full product copy, streamed companion
 publication and post-seal metadata verification. The canonical caller releases its
 finished argument container before retention/feedback; returned and borrowed graphs
-retain their existing ownership. Existing JSON
+retain their existing ownership. Bounded per-reader sharing of immutable schema
+keys and scalar strings reduces graph residency for record JSON and periodic JSONL,
+without sharing mutable containers or caching artifact verification. Existing JSON
 bytes, identities, fields, atomic promotion and failure semantics are preserved.
 The [investigation](internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md)
 keeps admission, allocation-limit and physical-reserve failures separate, with

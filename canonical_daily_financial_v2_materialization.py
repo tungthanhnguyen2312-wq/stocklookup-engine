@@ -81,8 +81,11 @@ def load_semantic_rows(authority: input_authority.FinancialV2InputAuthority) -> 
         label="semantics", observed=artifact.get("artifact_identity"),
         expected=authority.expected_semantics_identity,
     )
+    from stocklookup_core.evidence.record_artifact_loading import shared_string_decoder
+    decoder = shared_string_decoder()
     with gzip.open(authority.semantics_facts_path, "rt", encoding="utf-8") as handle:
-        rows = [json.loads(line) for line in handle if line.strip()]
+        rows = [decoder.decode(line) for line in handle if line.strip()]
+    del decoder
     # KBS_QUARTERLY_INCOME_PERIOD_ALIGNMENT_CORRECTIVE_V1: retained facts stay unchanged;
     # consumers never treat a misaligned KBS payload's flow labels as standalone quarters.
     rows, _summary = scaleout.qualified_flow.gate_kbs_period_alignment(rows)

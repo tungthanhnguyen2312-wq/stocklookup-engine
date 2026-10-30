@@ -16,6 +16,55 @@ ENVELOPES = (
 )
 
 
+def test_repeated_schema_and_lineage_strings_share_storage_without_sharing_mutable_rows(tmp_path):
+    key = 'schema_field_' * 12
+    label = 'unchanged retained source and research status ' * 7
+    graph = {'records': {str(n): {key: {'label': label, 'list': [label, [label]], 'n': -0.0}}
+                         for n in range(1500)}, 'metadata': [None, False, 1e-9]}
+    path = tmp_path/'repeated.json'
+    with path.open('w', encoding='utf-8') as target:
+        json.dump(graph, target, ensure_ascii=False)
+    loaded = loader.load_record_artifact(path)
+    assert loaded == graph
+    rows = list(loaded['records'].values())
+    assert len({id(next(iter(row))) for row in rows}) == 1
+    assert len({id(row[key]['label']) for row in rows}) == 1
+    assert rows[0][key]['list'][1][0] is rows[1][key]['label']
+    rows[0][key]['list'].append('local mutation')
+    rows[0][key]['n'] = 100
+    assert rows[1][key] == graph['records']['1'][key]
+    # High cardinality and keys outside the sharing bound remain native/exact.
+    other = {'records': {'A': {'x'*260+str(n): ['unique'+str(n), n] for n in range(9000)}}}
+    with path.open('w', encoding='utf-8') as target:
+        json.dump(other, target)
+    assert loader.load_record_artifact(path) == other
+
+
+def test_periodic_semantic_jsonl_uses_the_same_bounded_sharing_without_changing_flow_gate(tmp_path):
+    import gzip
+    from types import SimpleNamespace
+    import canonical_daily_financial_v2_materialization as materialization
+    rows = [{'ticker': 'AAA', 'source_lineage': {'provider': 'VCI'},
+             'period_semantic_state': 'POINT_IN_TIME_BALANCE_SHEET',
+             'unknown': ['retained native lineage '+str(1), [None, False, -0.0, 1e-9]]}
+            for _ in range(50)]
+    artifact = tmp_path/'semantics.json'
+    artifact.write_text('{"artifact_identity":"native-semantic:1"}', encoding='utf-8')
+    facts = tmp_path/'facts.jsonl.gz'
+    with gzip.open(facts, 'wt', encoding='utf-8') as stream:
+        stream.write('\n')
+        for row in rows:
+            stream.write(json.dumps(row)+'\n')
+    authority = SimpleNamespace(semantics_artifact_path=artifact,
+        expected_semantics_identity='native-semantic:1', semantics_facts_path=facts)
+    actual, header = materialization.load_semantic_rows(authority)
+    expected, _ = materialization.scaleout.qualified_flow.gate_kbs_period_alignment(rows)
+    assert actual == expected and header == {'artifact_identity': 'native-semantic:1'}
+    assert actual[0]['unknown'][0] is actual[1]['unknown'][0]
+    actual[0]['unknown'][1].append('local change')
+    assert actual[1] == expected[1]
+
+
 @pytest.mark.parametrize("envelope", ENVELOPES)
 @pytest.mark.parametrize("record_list", [False, True])
 def test_nested_universe_exceeding_real_member_limit_is_record_bounded(tmp_path, monkeypatch, envelope, record_list):

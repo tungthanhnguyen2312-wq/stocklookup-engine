@@ -164,3 +164,56 @@ product checks passed (two retained cases excluded); 107 orchestration/historica
 source-boundary checks passed (two retained cases excluded). The complete larger-IID
 five-stage qualification is still pending; no receipt, IID cap or admission band
 has been refreshed and Production remains unchanged.
+
+
+The v12 attempt on the corrected post-seal source stopped earlier, while loading
+original caller graphs, with no process/Job limit event: 5,546,819,584 peak private,
+940,933,120 minimum available physical, 4,656,828,416 minimum available commit,
+341.9791 seconds; whole tree reaped. Post-stop Chrome RSS was 4,687,581,184 and
+Zalo RSS 1,073,434,624; the earlier v11 snapshot had Chrome RSS 1,556,688,896.
+The working-set cap alone therefore cannot be presented as a total physical-memory
+reservation: system compression/paging and competing load remain material.
+
+The record loader also retained independent copies of repeated schema keys and
+scalar lineage/status strings. Its native decoder now shares only immutable
+strings within one reader. Keys are bounded to 4,096 entries/256 characters;
+scalar strings use an 8,192-entry LRU with an 8-MiB accounted size budget and a
+2,048-character token bound. Dict/list ownership, values/types, member limits and
+all parsing/identity checks remain unchanged. Memos are not global intern tables
+or artifact/result caches and are released with the decoder. Periodic semantic
+JSONL uses the identical per-reader decoder before its unchanged KBS flow gate.
+
+Original 2,394,768,092-byte IID comparison under identical 5-GiB diagnostic Job,
+7-GiB process and 1-GiB resident bounds:
+
+| Metric | Prior loader | Shared-string loader |
+| --- | ---: | ---: |
+| Peak process/Job private bytes | 3,688,693,760 | 1,807,831,040 |
+| Private bytes after full graph load | 3,677,696,000 | 1,795,776,512 |
+| Private bytes after full identity | 3,678,396,416 | 1,797,742,592 |
+| Minimum available physical bytes | 1,999,466,496 | 2,055,274,496 |
+| Minimum available commit bytes | 7,986,667,520 | 8,833,843,200 |
+| Full guarded lifetime seconds | 182.8276 | 139.8402 |
+
+Both retain all 1,683 records, reproduce canonical digest
+`783d3391cf277745282c20a55d262b8e552c4e97f483e9df6eee43ad71d60d45`,
+preserve the original raw SHA and finish/reap without a limit event. The private
+peak reduction is 1,880,862,720 bytes (about 1.75 GiB); differing host conditions
+mean the physical/commit minima and timing are not controlled host-recovery
+comparisons. These are IID-loader components, not complete stage qualifications.
+Exact measured candidate/prior source bytes and source fingerprints are retained
+in shared-string-loader-v13. The shared decoder was subsequently extracted without
+changing its memo body for reuse by semantic JSONL. 106 loader, memory, IID and
+Financial V2 regression checks passed, including the real 1,492-ticker Financial
+engine regression and unchanged period-alignment gate.
+
+A single finite preparation pass trimmed working sets of 57 SID-verified same-user
+GUI processes, terminating none and changing no ceilings/configuration. Available
+physical bytes changed from 4,393,545,728 to 6,769,668,096 five seconds later;
+commit remained independently measured. This is reversible paging preparation for
+qualification, not a persistent capacity guarantee, evidence authority or READY
+permit. No retry loop or Owner reboot was requested. Its exact before/after receipt
+is separate from all workload measurements. The next complete experiment enforces
+a stricter 5-GiB Job ceiling while preserving the 7-GiB process maximum, original
+1/2-GiB reserves and all stage deadlines. Ordinary admission/receipts remain unchanged
+until that workload envelope is validated.
