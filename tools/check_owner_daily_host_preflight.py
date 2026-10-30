@@ -17,8 +17,9 @@ ROOT = Path(__file__).resolve().parents[1]
 GIB = 1024 ** 3
 CONTRACT_VERSION = "owner_daily_host_preflight/v1"
 MODEL_MAIN = "2c6c79224ae2a3a57b50dae7b96666bd2ec09715"
-QUALIFIED_IID_BYTES = 2382095742
+QUALIFIED_IID_BYTES = 2394768092
 QUALIFIED_PHYSICAL_BYTES = int(9.25 * GIB)
+QUALIFIED_COMMIT_BYTES = 8 * GIB + GIB // 4 + 2 * GIB
 GUIDANCE = ["Re-run host preflight; launch Daily alone only when READY."]
 
 
@@ -236,7 +237,16 @@ def evaluate(observation: dict) -> dict:
                  and observation.get("capacity_qualification", {}).get("profile") == "PR195_CURRENT_SCALE_BOUNDED_V1"
                  and isinstance(size, int) and 0 < size <= QUALIFIED_IID_BYTES)
     legacy_physical = int(6 * GIB * factor)
-    physical_green = min(legacy_physical, QUALIFIED_PHYSICAL_BYTES) if qualified else legacy_physical
+    legacy_commit_green = 12.0 * GIB * factor
+    legacy_commit_floor = 9.2 * GIB * factor
+    if qualified:
+        physical_green = min(legacy_physical, QUALIFIED_PHYSICAL_BYTES)
+        commit_green = min(legacy_commit_green, QUALIFIED_COMMIT_BYTES)
+        commit_floor = min(legacy_commit_floor, commit_green * 9.2 / 12.0)
+    else:
+        physical_green = legacy_physical
+        commit_green = legacy_commit_green
+        commit_floor = legacy_commit_floor
     bounded_physical = physical_green < legacy_physical
     dimensions = {}
     if observation.get("storage") is not None:
@@ -251,7 +261,8 @@ def evaluate(observation: dict) -> dict:
                             "green_min_bytes": int(green), "blocked_below_bytes": int(floor), "reason": reason}
         reasons.append(reason)
 
-    dimension("commit", observation.get("available_commit_bytes"), 12.0 * GIB * factor, 9.2 * GIB * factor, "COMMIT_HEADROOM")
+    dimension("commit", observation.get("available_commit_bytes"), commit_green, commit_floor, "COMMIT_HEADROOM")
+    dimensions["commit"]["legacy_green_min_bytes"] = int(legacy_commit_green)
     dimension("physical", observation.get("available_physical_bytes"), physical_green, 2.5 * GIB * factor, "PHYSICAL_HEADROOM")
     dimensions["physical"]["legacy_green_min_bytes"] = legacy_physical
     dimensions["physical"]["capacity_basis"] = "QUALIFIED_BOUNDED_PIPELINE" if bounded_physical else "LEGACY_IID_MODEL"
@@ -284,7 +295,9 @@ def evaluate(observation: dict) -> dict:
             "capacity_admission": {"qualified_current_scale": qualified,
                 "basis": "MEASURED_STAGES_PLUS_MODELED_RESERVES_NOT_LIVE_DAILY",
                 "qualified_iid_max_bytes": QUALIFIED_IID_BYTES,
+                "qualified_commit_green_bytes": QUALIFIED_COMMIT_BYTES,
                 "measured_max_private_bytes": 7464976384, "measured_max_rss_bytes": 7217766400,
+                "october30_max_stage_private_bytes": 5268992000,
                 "child_tree_commit_ceiling_bytes": 8 * GIB,
                 "child_process_commit_ceiling_bytes": 7 * GIB,
                 "owner_allowance_bytes": GIB // 4, "physical_reserve_bytes": GIB,

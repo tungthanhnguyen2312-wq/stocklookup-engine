@@ -70,7 +70,8 @@ def test_only_import_lines_change_and_every_bound_name_is_preserved():
         live = _lf((ROOT / relative).read_bytes())
         # Preserve this historical import-only proof at its exact boundary.
         # The capacity successor is separately constrained to _run_daily below.
-        layout_live = _capacity_prior_bytes(ROOT, relative, live)
+        from tools.verify_retention_reader_transition import _resident_prior_bytes
+        layout_live = _capacity_prior_bytes(ROOT, relative, _resident_prior_bytes(ROOT, relative, live))
         live_body, live_names = _without_imports(layout_live)
         assert base_body == live_body, relative
         assert base_names == live_names, relative
@@ -107,6 +108,18 @@ def _copy_boundary(tmp_path: Path) -> None:
     daily = "tests/fixtures/tplus_daily_incremental_source_transition_v1.json"
     paths.add(daily)
     paths.update(row["archive"] for row in json.loads((ROOT / daily).read_bytes())["sources"].values())
+    resident = "tests/fixtures/owner_daily_resident_iid_source_transition_v1.json"
+    paths.add(resident)
+    paths.update(row["archive"] for row in json.loads((ROOT / resident).read_bytes())["sources"].values())
+    brief_inputs = "tests/fixtures/owner_daily_brief_inputs_source_transition_v1.json"
+    paths.add(brief_inputs)
+    paths.update(row["archive"] for row in json.loads((ROOT / brief_inputs).read_bytes())["sources"].values())
+    evaluated = "tests/fixtures/owner_daily_evaluated_input_source_transition_v1.json"
+    paths.add(evaluated)
+    paths.update(row["archive"] for row in json.loads((ROOT / evaluated).read_bytes())["sources"].values())
+    post_producer = "tests/fixtures/owner_daily_post_producer_source_transition_v1.json"
+    paths.add(post_producer)
+    paths.update(row["archive"] for row in json.loads((ROOT / post_producer).read_bytes())["sources"].values())
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)

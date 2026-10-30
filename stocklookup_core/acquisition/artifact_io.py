@@ -279,6 +279,60 @@ def atomic_copy_file(
     atomic_write_file(target_path, content, validator=validator)
 
 
+def atomic_copy_file_bounded(source_path: Path, target_path: Path,
+                             validator: Callable[[Path], None] | None = None) -> None:
+    """Opt-in bounded copy with the existing validation/promotion event contract.
+
+    Historical callers and their bytes-based writer are unchanged. The private
+    sibling is fully flushed and validated before the same atomic replacement.
+    """
+    source_path, target_path = Path(source_path).resolve(), Path(target_path).resolve()
+    before = source_path.stat()
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(dir=target_path.parent, prefix=f".tmp-{target_path.name}-", suffix=".tmp")
+    temporary = Path(name)
+    try:
+        with os.fdopen(fd, "wb") as destination, source_path.open("rb") as origin:
+            pending = 0
+            for block in iter(lambda: origin.read(1024 * 1024), b""):
+                if destination.write(block) != len(block):
+                    raise OSError("ATOMIC_COPY_SHORT_WRITE")
+                pending += len(block)
+                if pending >= 64 * 1024 * 1024:
+                    destination.flush()
+                    os.fsync(destination.fileno())
+                    pending = 0
+            destination.flush()
+            os.fsync(destination.fileno())
+        after = source_path.stat()
+        if ((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+                != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
+                or temporary.stat().st_size != before.st_size):
+            raise AtomicWriteError("ATOMIC_COPY_SOURCE_CHANGED")
+        if validator is not None:
+            try:
+                validator(temporary)
+                _emit_event("pre_promotion_validation", "success", target_path)
+            except Exception as exc:
+                _emit_event("pre_promotion_validation", "failed", target_path,
+                            reason=str(exc), error_type=type(exc).__name__)
+                raise
+        os.replace(temporary, target_path)
+        _emit_event("atomic_promotion", "success", target_path)
+    except Exception as exc:
+        if not isinstance(exc, ValueError):
+            _emit_event("atomic_promotion", "failed", target_path,
+                        reason=str(exc), error_type=type(exc).__name__)
+        if temporary.exists():
+            try:
+                temporary.unlink()
+            except OSError:
+                pass
+        if isinstance(exc, (ValueError, AtomicWriteError)):
+            raise
+        raise AtomicWriteError(f"Failed atomic copy to {target_path}: {exc}") from exc
+
+
 # These public objects have historical import/pickle names. Re-exporting the
 # same objects retains those identities without a second implementation.
 for _name in ("EventStage", "EventOutcome", "build_observability_event", "emit_observability_event"):

@@ -203,12 +203,13 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _write_workspace_json(path: Path, workspace: Mapping[str, Any]) -> None:
+def _write_workspace_json(path: Path, workspace: Mapping[str, Any], *, validation_record_tickers=None) -> None:
     """Native JSON bytes without the full pretty Unicode string; atomic promotion.
 
-    Keep the frozen atomic writer and its validation/events. Its existing copy
-    API holds UTF-8 bytes, while bounded validation avoids another full Unicode
-    decode alongside the resident Daily graphs.
+    Use the opt-in bounded atomic copy with the original validation/events,
+    avoiding whole-file Unicode and UTF-8 buffers alongside resident graphs.
+    An evaluated copy can discard parsed validation records: every row is still
+    checked, and the emitted bytes always contain the full original graph.
     """
     from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
     encoder = json.JSONEncoder(ensure_ascii=False, indent=2, allow_nan=False)
@@ -217,7 +218,10 @@ def _write_workspace_json(path: Path, workspace: Mapping[str, Any]) -> None:
         with prepared.open("w", encoding="utf-8", newline="\n") as handle:
             handle.writelines(encoder.iterencode(workspace))
             handle.write("\n")
-        atomic_copy_file(prepared, path, validator=load_record_artifact)
+        validator = load_record_artifact if validation_record_tickers is None else (
+            lambda candidate: load_record_artifact(candidate, record_tickers=validation_record_tickers))
+        from stocklookup_core.acquisition.artifact_io import atomic_copy_file_bounded
+        atomic_copy_file_bounded(prepared, path, validator=validator)
 
 
 def resolve_supplementary_inputs(root: Path, session: str) -> dict[str, dict[str, Any] | None]:
@@ -786,9 +790,10 @@ def materialize_and_write_current_product_projections(
     del supplementary, workspace_bundle
     operation_dir.mkdir(parents=True, exist_ok=True)
     if evaluated_valuation is not None:
-        atomic_write_json(
+        _write_workspace_json(
             operation_dir / current_valuation_opportunity_integration.EVALUATED_VALUATION_PRODUCT_COPY,
             evaluated_valuation,
+            validation_record_tickers=(),
         )
     workspace_path = operation_dir / WORKSPACE_ARTIFACT_FILENAME
     screener_json_path = operation_dir / SCREENER_MASTER_JSON_FILENAME

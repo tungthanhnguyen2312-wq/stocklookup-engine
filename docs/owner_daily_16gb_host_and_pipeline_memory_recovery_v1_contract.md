@@ -4,7 +4,106 @@ Owner-authorized `OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1` is a bo
 operational corrective. Authority effect: **NONE / MEMORY_AND_FAILURE_DIAGNOSTICS_ONLY**.
 It introduces no provider, analytical policy, production entrypoint or evidence authority.
 
+October-30 continuation corrects genuine evaluated-valuation allocations in the
+Daily ingress, Financial V2 identity hash, full product copy, streamed companion
+publication and post-seal metadata verification. The canonical caller releases its
+finished argument container before retention/feedback; returned and borrowed graphs
+retain their existing ownership. Bounded per-reader sharing of immutable schema
+keys and scalar strings reduces graph residency for record JSON and periodic JSONL,
+without sharing mutable containers or caching artifact verification. Existing JSON
+bytes, identities, fields, atomic promotion and failure semantics are preserved.
+The [investigation](internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md)
+keeps admission, allocation-limit and physical-reserve failures separate, with
+targeted original-input measurements. These local corrections do not refresh a
+capacity receipt, enlarge the IID envelope or authorize ordinary launch. Neither
+recovery nor an unavoidable 16-GiB hardware limit has yet been established.
+
 ## IID runtime corrective — October 27
+
+October-29 admitted consumer/seal run on the nested-record candidate reached
+`PRESEAL_BRIEF_BEGIN`, then a Windows process allocation-limit event. Kernel peaks
+were 7,227,588,608 process / 7,228,379,136 Job committed bytes in 173.2407257 seconds.
+The 7-GiB process ceiling can deny a new allocation before recorded committed bytes
+reach it; the lower recorded peak does not contradict the positive kernel event.
+The child was reaped without a result; protected inputs and source stayed unchanged.
+This is a failed measurement, not a host-admission refusal.
+
+The Brief still decoded supplementary files through whole-file Unicode and retained
+full financial and acquisition universes. Its existing consumers use watchlist rows
+from those two inputs. The bounded loader now optionally retains only requested
+keyed records, still parsing every discarded record and preserving all metadata,
+types, member limits and malformed/duplicate/trailing-data refusal. The Brief uses
+that projection only for these two watchlist consumers; other large Brief inputs
+use the existing full-graph bounded loader. Ordinary loader callers keep full graphs.
+No projection digest substitutes for full canonical IID verification.
+
+A separate bounded comparison on the real October-26 financial (183,923,759 bytes)
+and acquisition (298,848,160 bytes) inputs kept both graphs alive. Process peaks
+were 1,255,411,712 bytes before and 119,562,240 after; Job peaks were 1,256,259,584
+and 120,414,208 bytes. Runtimes were 4.455 and 4.248 seconds. Both projected-content
+digests matched, with unchanged original file hashes and no limit event. The
+diagnostic used a lower 2.5-GiB Job bound with real admission and runtime reserves.
+It held no IID or Producer graph and **does not qualify their combined peak** or
+pinpoint the original failed allocation. Final held-IID consumer/seal qualification
+and other larger-input stages remain required under unchanged 7/8-GiB limits.
+The original resident-IID source manifest/archive remain intact; an exact Brief-only
+successor preserves historical verification and advances the active E4 V2 identity.
+Capacity cap and receipt remain unchanged pending the complete stage evidence.
+
+October-29 bounded continuation: preseal borrows the operation-owned current IID for
+the Daily Integrated Brief and projects only posture-comparison fields from the
+previous IID, one record at a time. The draft delivery constructs only its primary
+bundle and releases its bytes after decoding. Ordinary delivery still returns all
+five original byte interfaces. Content, session and identity refusal remain binding.
+The exact two-file historical successor is rooted at merged `b9c4ff10`; earlier
+manifests and archives remain unchanged. Feedback evaluator, retention, financial
+policy, catalog and storage-verification bytes are unchanged, preserving the deployed
+T+ reuse domain. E4 V2 advances separately because it includes the Brief source.
+
+This local corrective is not a completed capacity qualification. The original IID
+envelope remains 2,382,095,742 bytes until guarded measurement of the actual
+2,394,768,092-byte October-26 artifact completes. The r10 2,216,287,780-byte reference
+cannot establish that extension. No limit, timeout or admission threshold changes.
+Keep code validation, larger-IID qualification, clean-host READY, retained-only
+rehearsal, genuine Daily and each actual publication result separate.
+
+October-29 exact-input loader continuation: the Owner's admitted consumer-seal
+experiment failed with `ACCEPTANCE_JSON_MEMBER_LIMIT` while loading evaluated
+valuation, after holding the original IID and caller graphs. Its 5,493,121,024-byte
+process / 5,493,911,552-byte Job peaks had no allocation-limit event. This was a
+loading failure, not memory exhaustion or completed IID qualification.
+
+The same exception and traceback were reproduced with the original source
+fingerprint against the original 521,967,045-byte evaluated valuation artifact.
+Its `valuation_balance_sheet_divergence_context` is an independent envelope of
+1,683 records spanning 231,091,853 decoded characters. The allocation adapter
+incorrectly submitted that whole envelope to the single-member parser. The
+correction recognizes this envelope and the existing optional
+`metric_research_context` alongside the Financial V2 wrapper, then decodes their
+records separately. Arbitrary metadata and individual records still use the
+unchanged 16-Mi-character member limit. Frozen parser, evaluator, identity and
+PIT sources are unchanged; no source-transition archive or capacity cap changes.
+
+Guarded verification decoded both original 1,683-record universes and independently
+reproduced both canonical identities with the strict stdlib incremental encoder.
+The largest decoded value was 244,186 characters; the largest parser buffer was
+465,632 characters. This verification peaked at 1,155,923,968 process /
+1,156,763,648 Job committed bytes, with no limit event and unchanged source/input
+hashes. These are loader/identity measurements, not a full consumer-seal peak.
+Focused regression coverage includes wrappers larger than the real member limit,
+record mappings/lists, short reads, refill boundaries, Unicode/escapes/numbers,
+type preservation, duplicate/truncated/malformed/trailing JSON refusal, and
+continued refusal of oversized records and metadata.
+
+At this point in the recovery the larger-IID envelope and source capacity
+receipt were still unqualified. The October 30 section below is the later
+qualification; do not rerun those completed stages for this receipt. Continue
+the same retained consumer-seal measurement with pinned original inputs in a new
+experiment only when its unchanged admission budget is available; do not retry
+refused launches or replace the Production launcher. Enrichment construction and
+the remaining downstream stage envelopes require measured qualification or
+explicitly supported reuse of their original measurements before any receipt
+extension. Earlier T+ source/input qualifications remain preserved.
 
 The October-26 Daily invocation at production `eaaf7c946d54b2f6b0ef41137b8dfa294e3dc77d`
 passed host admission but failed with `DAILY_CAPACITY_MEMORY_LIMIT` while building IID.
@@ -72,7 +171,9 @@ only the physical READY band for its exact qualified source/input envelope.
 - Workspace pretty JSON is streamed to a temporary file with its exact original
   insertion-order/indent/newline bytes, then promoted through the unchanged atomic-copy
   API with bounded JSON validation. Validation failure preserves the previous target.
-  The copy API still holds the UTF-8 file bytes; the larger Unicode buffer is avoided.
+  Workspace and evaluated-product copies use the opt-in bounded atomic-copy API,
+  preserving validation, fsync, replacement and observability events. The historical
+  bytes-writer and legacy copy APIs are unchanged.
 - Delivery self-verification hashes files in bounded blocks instead of a companion-sized buffer.
 - The full-graph retained IID resolver uses the existing core bounded parser for large files.
   Owner M1 verification still hashes the complete loaded IID and verifies every delivery
@@ -314,3 +415,26 @@ Deployment: the Owner's Desktop `Stock Lookup Daily.cmd` must invoke
 instead of `powershell.exe ... run_owner_daily.ps1`; until then the legacy route
 still keeps PowerShell resident. Pull the Producer before switching the shortcut;
 an already-running old launcher cannot adopt the new host.
+
+## October 30 measured stage envelope
+
+Five sequential offline stages now have retained measurements under a 5 GiB
+aggregate Job and the unchanged 7 GiB process ceiling. The source pin is
+`a184bd9e`. Its only capacity-source difference from the four-stage pin
+`cb25e341` is the snapshot warm-read in `multi_session_signal_velocity.py`.
+Consumer-seal, enrichment, M1 and Action Center do not use that path and were
+not rerun. Observer native projection completed in 772.43 s, inside the
+unchanged 1,200 s deadline. Its 48,807 qualified records match the sealed
+2026-10-23 velocity artifact. The rebuilt inventory adds only excluded
+2026-10-26, whose snapshot is absent. Both existing downstream readers then
+verified that sealed artifact. The recorded detail is in
+`docs/internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md`.
+
+The capacity receipt now binds this source fingerprint and sets `iid_max_bytes`
+to the measured artifact size, 2,394,768,092. One byte more falls back to the
+legacy scaled bands. Physical READY stays the smaller of the legacy value and
+9.25 GiB. Qualified commit READY is the smaller of the legacy value and
+10.25 GiB, which is the unchanged 8 GiB Production Job plus the 0.25 GiB Owner
+allowance and the existing 2 GiB runtime reserve. The 7 GiB process ceiling is
+unchanged. This is still not a live Daily acceptance, an October 26–30 session,
+or a T0 declaration.

@@ -637,11 +637,40 @@ def build_artifact(
     return artifact
 
 
-def _load_json(path: Path) -> Mapping[str, Any] | None:
-    return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+_IID_CONTRACT = "integrated_investment_decision_product/v1"
 
 
-def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[str, Any]) -> dict[str, Any] | None:
+def _load_json(path: Path, *, record_tickers=None) -> Mapping[str, Any] | None:
+    if not path.is_file():
+        return None
+    if record_tickers is not None or path.stat().st_size > 8 * 1024 * 1024:
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+        return load_record_artifact(path, record_tickers=record_tickers)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _resident_integrated(path: Path, artifact: Mapping[str, Any], session: str) -> Mapping[str, Any] | None:
+    """Use the caller-owned same-session product. Do not parse the multi-gigabyte file again.
+
+    The caller proves the on-disk artifact is this session and this identity before
+    passing it in. A missing file stays the not-materialized result. The records
+    mapping is the caller's object: this does not parse the multi-gigabyte file.
+    """
+    if not path.is_file():
+        return None
+    if artifact.get("session") != session:
+        raise ValueError(
+            f"INTEGRATED_DECISION_SESSION_MISMATCH:expected={session}:observed={artifact.get('session')}")
+    if artifact.get("contract_version") != _IID_CONTRACT:
+        raise ValueError("INTEGRATED_DECISION_DELIVERY_CONTRACT_MISMATCH")
+    if not isinstance(artifact.get("artifact_identity"), str) or not artifact["artifact_identity"]:
+        raise ValueError("INTEGRATED_DECISION_DELIVERY_IDENTITY_MISSING")
+    if not isinstance(artifact.get("records"), Mapping):
+        raise ValueError("INTEGRATED_DECISION_DELIVERY_RECORDS_MISSING")
+    return artifact
+
+
+def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[str, Any], integrated_decision_current: Mapping[str, Any] | None = None) -> dict[str, Any] | None:
     """CLI-level convenience mirroring next_session_decision_brief.build_from_previous_bundle_path:
     resolve every input from the canonical session-scoped path registry and build one artifact.
 
@@ -650,19 +679,29 @@ def build_from_session(*, root: Path, session: str, next_session_brief: Mapping[
     already auto-builds it; if it is genuinely missing this session should not silently fall back to
     a stale prior-session product per Section 15). Every other input degrades gracefully inside the
     section builders themselves.
+
+    Canonical Daily already holds that current-session product. Passing it avoids a second
+    full-file decode. The file is still the session and identity authority.
     """
     paths = fixed_session_artifact_paths(root, session)
-    integrated_current = _load_json(paths["integrated_investment_decision_product"])
+    iid_path = paths["integrated_investment_decision_product"]
+    if integrated_decision_current is None:
+        integrated_current = _load_json(iid_path)
+    else:
+        integrated_current = _resident_integrated(iid_path, integrated_decision_current, session)
     if integrated_current is None:
         return None
     descriptive_current = _load_json(paths["descriptive_research"])
     sector_leadership_current = _load_json(paths["sector_leadership"])
     tactical_current = _load_json(paths["market_structure_breakout_v3_projection"])
     opportunity_prioritization_current = _load_json(paths["opportunity_prioritization"])
-    financial_analysis_product_current = _load_json(paths["financial_analysis_product"])
-    p3f9b_snapshot = _load_json(paths["exact_session_snapshot"])
-    governed_chain = feedback_bridge.governed_session_chain(root, cohort_session=session)
     watchlist_tickers = list(owner_research_focus.broader_watchlist())
+    # These two consumers only join the governed watchlist. Decode all records
+    # for syntax refusal, retaining only consumed rows beside the resident IID.
+    financial_analysis_product_current = _load_json(
+        paths["financial_analysis_product"], record_tickers=watchlist_tickers)
+    p3f9b_snapshot = _load_json(paths["exact_session_snapshot"], record_tickers=watchlist_tickers)
+    governed_chain = feedback_bridge.governed_session_chain(root, cohort_session=session)
     feedback_status = feedback_bridge.build_prospective_feedback_status(
         current_records=integrated_current.get("records") or {}, p3f9b_snapshot=p3f9b_snapshot,
         governed_chain=governed_chain, evaluate_watchlist_only=watchlist_tickers,

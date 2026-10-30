@@ -85,6 +85,37 @@ def test_lazy_delivery_keeps_all_five_eager_output_bytes_and_source_ownership(mo
     assert integrated == before
 
 
+@pytest.mark.parametrize('integrated', [False, True])
+def test_spooled_companion_preserves_all_five_native_payloads(tmp_path, monkeypatch, integrated):
+    import ai_research_session_delivery as delivery
+    operation = _operation()
+    inputs = {'descriptive': {'records': {'ZZZ': {}, 'AAA': {}, 'BBB': {}}},
+              'tactical': {'records': {}}, 'fundamental': {'records': {}}, 'valuation': {'records': {}}}
+    if integrated:
+        iid = _integrated_delivery_fixture()
+        inputs.update(integrated_investment_decision_product=iid,
+                      daily_integrated_decision_brief=_daily_brief_fixture(iid))
+    saved = deepcopy((operation, inputs))
+    expected = delivery.build_delivery(operation, inputs)
+    monkeypatch.setattr(delivery.io, 'BytesIO', lambda *a, **k: pytest.fail('universe-sized companion buffer'))
+    path = tmp_path/'companion.ndjson'
+    with path.open('wb') as stream:
+        actual = delivery.build_delivery(operation, inputs, full_universe_stream=stream)
+    assert actual['full_universe'] is None
+    actual['full_universe'] = path.read_bytes()
+    assert actual == expected
+    assert (operation, inputs) == saved
+    assert len(path.read_bytes().splitlines()) == 3
+
+
+def test_spooled_companion_refuses_short_writes():
+    class Short:
+        def write(self, data):
+            return len(data)-1
+    with pytest.raises(OSError, match='DELIVERY_COMPANION_SHORT_WRITE'):
+        build_delivery(_operation(), {'descriptive': {'records': {'AAA': {}}}}, full_universe_stream=Short())
+
+
 def test_valuation_handoff_preserves_research_proxy_versus_authoritative_unavailable():
     from ai_research_session_delivery import _valuation_handoff
     row = {
@@ -135,6 +166,8 @@ def test_delivery_is_deterministic_and_preserves_boundaries():
     assert primary["ticker_research_contexts"]["AAA"]["market_flow_positioning"]["traded_value"] == 0.0
     assert json.loads(one["manifest"])["files"]["ai_research_full_universe.ndjson"]["record_count"] == 1
     assert len(one["full_universe"].splitlines()) == 1
+    primary_only = build_delivery(operation, inputs, retain_delivery_companions=False)
+    assert primary_only == {"primary": one["primary"]}
 
 
 def test_integrated_delivery_overlay_preserves_native_values_and_cockpit_card():

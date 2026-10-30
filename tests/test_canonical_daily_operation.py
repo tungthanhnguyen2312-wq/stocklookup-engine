@@ -326,6 +326,87 @@ def test_production_call_shape_resolves_load_registry_without_nameerror(monkeypa
     assert callable(captured["daily_integrated_decision_brief_builder"])
 
 
+def test_production_evaluated_valuation_avoids_whole_file_unicode(monkeypatch, tmp_path):
+    from daily_session_level2_package import session_artifact_paths
+    from stocklookup_core.valuation import current_valuation_opportunity_integration as valuation
+    _patch_downstream(monkeypatch, tmp_path)
+    runtime = tmp_path / "runtime"
+    _write_runtime(runtime, SESSION)
+    registry = tmp_path / "config/daily_research_session_input_registry.json"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text(json.dumps({"contract_version": "daily_research_session_input_registry/v1",
+                                    "completed_sessions": {}}), encoding="utf-8")
+    path = session_artifact_paths(tmp_path, SESSION)["current_valuation_evaluated"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    expected = {"records": {str(i): {"opaque": "x" * 1024**2} for i in range(18)},
+                "metadata": {"unknown": None, "flag": False, "text": "Việt Nam"}}
+    path.write_text(json.dumps(expected, ensure_ascii=False), encoding="utf-8")
+    original_read = Path.read_text
+    def read(self, *args, **kwargs):
+        if self == path:
+            pytest.fail("production evaluated valuation created a whole-file Unicode buffer")
+        return original_read(self, *args, **kwargs)
+    monkeypatch.setattr(Path, "read_text", read)
+    monkeypatch.setattr(valuation, "accept_evaluated_valuation", lambda value: value)
+    class ReachedProducer(Exception):
+        pass
+    def producer(*args, **kwargs):
+        assert kwargs["evaluated_valuation"] == expected
+        raise ReachedProducer
+    monkeypatch.setattr(cdo, "run_daily_producer", producer)
+    with pytest.raises(ReachedProducer):
+        cdo.run_canonical_daily_operation(
+            tmp_path, runtime, SESSION, now=POST_CLOSE, complete_publication=False,
+            working_dates_evidence=_working_dates(SESSION, "2026-08-27"),
+            acquire_fn=lambda *a, **k: _acquired(tmp_path, SESSION), producer_fn=None,
+            out_dir=tmp_path / "operations-review")
+
+
+@pytest.mark.parametrize("producer_retains", [False, True])
+def test_evaluated_arguments_end_at_producer_without_changing_returned_graph_ownership(monkeypatch, tmp_path, producer_retains):
+    import weakref
+    from daily_session_level2_package import session_artifact_paths
+    from stocklookup_core.valuation import current_valuation_opportunity_integration as valuation
+    _patch_downstream(monkeypatch, tmp_path)
+    runtime = tmp_path / "runtime"
+    _write_runtime(runtime, SESSION)
+    registry = tmp_path / "config/daily_research_session_input_registry.json"
+    registry.parent.mkdir(parents=True, exist_ok=True)
+    registry.write_text(json.dumps({"contract_version": "daily_research_session_input_registry/v1",
+                                    "completed_sessions": {}}), encoding="utf-8")
+    path = session_artifact_paths(tmp_path, SESSION)["current_valuation_evaluated"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text('{"records":{"AAA":{"opaque":"preserved"}}}', encoding="utf-8")
+    references = []
+    class Graph(dict):
+        pass
+    def accept(value):
+        graph = Graph(value)
+        references.append(weakref.ref(graph))
+        return graph
+    monkeypatch.setattr(valuation, "accept_evaluated_valuation", accept)
+    def producer(*args, **kwargs):
+        assert kwargs["evaluated_valuation"]["records"]["AAA"]["opaque"] == "preserved"
+        result = _producer(tmp_path)
+        if producer_retains:
+            result["operation"]["borrowed_evaluated"] = kwargs["evaluated_valuation"]
+        return result
+    monkeypatch.setattr(cdo, "run_daily_producer", producer)
+    observed = []
+    def materialize(*args, **kwargs):
+        observed.append(True)
+        assert (references[0]() is not None) == producer_retains
+        return {"session": SESSION, "live_count": 889}
+    cdo.run_canonical_daily_operation(
+        tmp_path, runtime, SESSION, now=POST_CLOSE, complete_publication=False,
+        working_dates_evidence=_working_dates(SESSION, "2026-08-27"),
+        acquire_fn=lambda *a, **k: _acquired(tmp_path, SESSION), producer_fn=None,
+        runtime_fn=materialize,
+        trusted_fn=lambda *a, **k: {"session": SESSION, "trusted_subset_ready": True, "records_fingerprint": "fp"},
+        out_dir=tmp_path / "operations-review")
+    assert observed == [True]
+
+
 def test_production_call_shape_reads_registry_for_comparator_only_after_freeze(monkeypatch, tmp_path):
     """SESSION_REGISTRY_PROMOTION_AND_COMPARISON_SEMANTICS_CORRECTIVE_V1 production-call-shape
     regression: the exact same producer_fn=None branch that constructs

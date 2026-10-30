@@ -26,6 +26,29 @@ def file_digest(path):
         return hashlib.file_digest(source, "sha256").hexdigest()
 
 
+def _process_memory_info():
+    """Windows telemetry without an optional psutil installation in core-313."""
+    import ctypes
+    from ctypes import wintypes
+    from types import SimpleNamespace
+    class Counters(ctypes.Structure):
+        _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+                    *((name, ctypes.c_size_t) for name in (
+                        "PeakWorkingSetSize", "WorkingSetSize", "QuotaPeakPagedPoolUsage",
+                        "QuotaPagedPoolUsage", "QuotaPeakNonPagedPoolUsage", "QuotaNonPagedPoolUsage",
+                        "PagefileUsage", "PeakPagefileUsage", "PrivateUsage"))]
+    counters = Counters()
+    counters.cb = ctypes.sizeof(counters)
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.GetCurrentProcess.restype = wintypes.HANDLE
+    psapi = ctypes.WinDLL("psapi", use_last_error=True)
+    psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.c_void_p, wintypes.DWORD]
+    if not psapi.GetProcessMemoryInfo(kernel.GetCurrentProcess(), ctypes.byref(counters), counters.cb):
+        raise ctypes.WinError(ctypes.get_last_error())
+    return SimpleNamespace(rss=int(counters.WorkingSetSize), private=int(counters.PrivateUsage),
+                           peak_wset=int(counters.PeakWorkingSetSize), peak_pagefile=int(counters.PeakPagefileUsage))
+
+
 def reference_iid(args, pipeline, level2, sandbox):
     """Run the unchanged baseline builder over its persisted, verified inputs.
 
@@ -74,7 +97,6 @@ def reference_iid(args, pipeline, level2, sandbox):
 def child(args):
     if args.code_root is not None:
         sys.path.insert(0, str(args.code_root.resolve()))
-    import psutil
     import canonical_post_close_pipeline as pipeline
     import daily_session_level2_package as level2
 
@@ -164,11 +186,10 @@ def child(args):
     held_acquisition = None
     if args.hold_acquisition:
         held_acquisition = pipeline._load(level2.session_artifact_paths(sandbox, args.session)["exact_session_snapshot"])
-    process = psutil.Process()
     started = time.perf_counter()
     trace_file = (out / "stages.jsonl").open("w", encoding="utf-8", buffering=1)
     def report(stage, **extra):
-        memory = process.memory_info()
+        memory = _process_memory_info()
         trace_file.write(json.dumps({"stage": stage, "elapsed_seconds": round(time.perf_counter()-started, 3),
             "rss_bytes": memory.rss, "private_bytes": memory.private,
             "peak_rss_bytes": memory.peak_wset, "peak_committed_bytes": memory.peak_pagefile, **extra}) + "\n")
@@ -218,7 +239,7 @@ def child(args):
         raise RuntimeError("IID_NOT_BUILT:" + str(iid.get("reason")))
     artifact = iid["artifact"]
     summary = {"artifact_identity": artifact["artifact_identity"], "records": len(artifact["records"]),
-               "status": "COMPLETED", "peak_committed_bytes": process.memory_info().peak_pagefile,
+               "status": "COMPLETED", "peak_committed_bytes": _process_memory_info().peak_pagefile,
                "mode": "IID_REFERENCE_ONLY" if args.reference_root is not None else "FULL_ENRICHMENT",
                "held_acquisition": args.hold_acquisition,
                "code_root": str(args.code_root or ROOT)}

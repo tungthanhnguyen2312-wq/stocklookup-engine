@@ -4,6 +4,7 @@ real-replay class, which stays skipped outside the primary checkout)."""
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import next_session_decision_brief as nsdb
 
@@ -115,3 +116,107 @@ class TestPostureTransitionSection:
         assert section["availability"] == "AVAILABLE"
         assert section["records"]["HPG"]["transition"] == "EARLY_WATCH_TO_INITIATE"
         assert section["transition_counts"] == {"EARLY_WATCH_TO_INITIATE": 1}
+
+
+def _write_artifact(root, session, artifact, *, pretty=False):
+    import daily_session_level2_package as level2
+    path = level2.session_artifact_paths(root, session)["integrated_investment_decision_product"]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if pretty:
+        path.write_text(json.dumps(artifact, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    else:
+        path.write_text(json.dumps(artifact), encoding="utf-8")
+    return path
+
+
+class TestCompactPostureProjection:
+    def test_sorted_digest_matches_and_unsorted_digest_is_not_required(self, tmp_path):
+        from stocklookup_core.decision.integrated_investment_decision_product import content_identity
+        artifact = {
+            "session": "2026-08-28",
+            "contract_version": "integrated_investment_decision_product/v1",
+            "requested_at": "2026-08-28T15:00:00+07:00",
+            "research_action_policy_version": "v2",
+            "records": {"HPG": {"research_action_posture": "HOLD", "tactical_phase": "TREND_CONTINUATION",
+                                "fundamental_state": "STABLE", "fundamental_synthesis": {"signal_policy": "fundamental_signal_consumption/v1", "unused": "x"},
+                                "decision_identity": "decision:HPG"}},
+        }
+        artifact.update(content_identity(artifact))
+        path = _write_artifact(tmp_path, "2026-08-28", artifact, pretty=True)
+        loaded = nsdb._stream_compact_integrated(path, session="2026-08-28")
+        assert loaded["artifact_identity"] == artifact["artifact_identity"]
+        assert loaded["records"]["HPG"]["fundamental_synthesis"] == {"signal_policy": "fundamental_signal_consumption/v1"}
+        assert "unused" not in loaded["records"]["HPG"]["fundamental_synthesis"]
+        artifact["artifact_sha256"] = "0" * 64
+        artifact["artifact_identity"] = "integrated_investment_decision_product/v1:" + artifact["artifact_sha256"]
+        path.write_text(json.dumps(artifact), encoding="utf-8")
+        unsorted = nsdb._stream_compact_integrated(path, session="2026-08-28")
+        assert unsorted["records"]["HPG"]["research_action_posture"] == "HOLD"
+        path.write_text(json.dumps(artifact, sort_keys=True), encoding="utf-8")
+        try:
+            nsdb._stream_compact_integrated(path, session="2026-08-28")
+            assert False, "sorted digest mismatch must fail closed"
+        except nsdb.NextSessionDecisionBriefError as exc:
+            assert "IDENTITY_MISMATCH" in str(exc)
+
+    def test_resident_current_skips_full_read_and_streams_previous(self, tmp_path, monkeypatch):
+        import daily_session_level2_package as level2
+        previous = {"session": "2026-08-27", "artifact_identity": "prev:x", "records": {"HPG": _rec("EARLY_WATCH"), "AAA": _rec("HOLD")}}
+        current = {"session": "2026-08-28", "contract_version": "integrated_investment_decision_product/v1",
+                   "artifact_identity": "curr:x", "artifact_sha256": "abc",
+                   "records": {"HPG": {**_rec("INITIATE_ON_BREAKOUT"), "narrative": "not-compared"}}}
+        _write_artifact(tmp_path, "2026-08-27", previous)
+        current_path = _write_artifact(tmp_path, "2026-08-28", current, pretty=True)
+        current_path.write_bytes(current_path.read_bytes() + b" " * (8 * 1024 * 1024))
+        original = Path.read_text
+        def refuse_large(self, *args, **kwargs):
+            if self == current_path:
+                raise AssertionError("resident current artifact was fully read")
+            return original(self, *args, **kwargs)
+        monkeypatch.setattr(Path, "read_text", refuse_large)
+        section = nsdb._posture_transition(root=tmp_path, current_session="2026-08-28", previous_session="2026-08-27", current_integrated=current)
+        assert section["availability"] == "AVAILABLE"
+        assert section["records"]["HPG"]["transition"] == "EARLY_WATCH_TO_INITIATE"
+        assert section["records"]["AAA"]["transition"] == "NO_LONGER_AVAILABLE"
+        assert section["source_lineage"] == {
+            "previous_integrated_decision_identity": "prev:x",
+            "current_integrated_decision_identity": "curr:x",
+        }
+        assert "narrative" not in section["records"]["HPG"]
+
+    def test_large_file_without_window_session_fails_closed(self, tmp_path):
+        current = {"session": "2026-08-28", "contract_version": "integrated_investment_decision_product/v1",
+                   "artifact_identity": "curr:x", "records": {"HPG": _rec("HOLD")}}
+        path = _write_artifact(tmp_path, "2026-08-28", current, pretty=True)
+        text = path.read_text(encoding="utf-8")
+        stripped = "\n".join(line for line in text.splitlines() if '"session"' not in line)
+        path.write_text(stripped + ("x" * (8 * 1024 * 1024)), encoding="utf-8")
+        try:
+            nsdb._posture_transition(root=tmp_path, current_session="2026-08-28", previous_session=None, current_integrated=current)
+            assert False, "missing window session must not fall back to a full parse"
+        except nsdb.NextSessionDecisionBriefError as exc:
+            assert "BINDING_UNVERIFIED" in str(exc)
+
+    def test_absent_policy_keys_keep_artifact_fallback(self, tmp_path):
+        previous = {"session": "2026-08-27", "artifact_identity": "prev:x", "records": {"HPG": {"research_action_posture": "HOLD", "tactical_phase": "BASE_BUILDING"}}}
+        current = {"session": "2026-08-28", "artifact_identity": "curr:x", "research_action_policy_version": "v2",
+                   "records": {"HPG": {"research_action_posture": "HOLD", "tactical_phase": "BASE_BUILDING", "research_action_policy_version": "v2"}}}
+        _write_artifact(tmp_path, "2026-08-27", previous)
+        _write_artifact(tmp_path, "2026-08-28", current)
+        section = nsdb._posture_transition(root=tmp_path, current_session="2026-08-28", previous_session="2026-08-27")
+        assert section["records"]["HPG"]["transition"] == "NOT_COMPARABLE_POLICY_CHANGE"
+        assert section["records"]["HPG"]["previous_research_policy_epoch"] == "v1"
+        assert section["records"]["HPG"]["current_research_policy_epoch"] == "v2"
+
+    def test_large_previous_is_streamed_and_not_refused(self, tmp_path):
+        previous = {"session": "2026-08-27", "artifact_identity": "prev:x", "records": {"HPG": _rec("EARLY_WATCH")}}
+        current = {"session": "2026-08-28", "contract_version": "integrated_investment_decision_product/v1",
+                   "artifact_identity": "curr:x", "records": {"HPG": _rec("INITIATE_ON_BREAKOUT")}}
+        previous_path = _write_artifact(tmp_path, "2026-08-27", previous)
+        previous_path.write_bytes(previous_path.read_bytes() + b" " * (8 * 1024 * 1024))
+        _write_artifact(tmp_path, "2026-08-28", current)
+        section = nsdb._posture_transition(root=tmp_path, current_session="2026-08-28", previous_session="2026-08-27")
+        assert section["availability"] == "AVAILABLE"
+        assert section["records"]["HPG"]["transition"] == "EARLY_WATCH_TO_INITIATE"
+        assert section["previous_universe_count"] == 1
+        assert section["source_lineage"]["previous_integrated_decision_identity"] == "prev:x"

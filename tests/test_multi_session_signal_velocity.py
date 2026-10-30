@@ -42,6 +42,33 @@ def test_projected_reader_rejects_invalid_immutable_content(tmp_path, defect):
     assert not valid
 
 
+def test_snapshot_warmup_is_refused_when_the_file_exceeds_available_memory():
+    assert velocity._should_warm_snapshot(32 * 1024 * 1024, 32 * 1024 * 1024 + 512 * 1024 * 1024)
+    assert not velocity._should_warm_snapshot(32 * 1024 * 1024 - 1, 2 * 1024 ** 3)
+    assert not velocity._should_warm_snapshot(2 * 1024 ** 3, 2 * 1024 ** 3)
+    assert not velocity._should_warm_snapshot(64 * 1024 * 1024, None)
+
+
+def test_snapshot_warmup_reads_sequentially_and_preserves_projection(tmp_path, monkeypatch):
+    snapshot = _snapshot('2026-01-02', _decision('2026-01-02'))
+    path = tmp_path / 'snapshot.json'
+    _write(path, snapshot)
+    baseline, valid = velocity._project_snapshot(path)
+    assert valid
+    binary = []
+    original = Path.open
+
+    def tracking(self, mode='r', buffering=-1, encoding=None, errors=None, newline=None):
+        if encoding is None and 'b' in str(mode) and self == path:
+            binary.append(mode)
+        return original(self, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, 'open', tracking)
+    monkeypatch.setattr(velocity, '_should_warm_snapshot', lambda size, available: True)
+    again, again_valid = velocity._project_snapshot(path)
+    assert again_valid and again == baseline and binary == ['rb']
+
+
 @pytest.mark.parametrize('content', ['{"records":{"B":{},"A":{}}}',
                                     '{"records":{"A":{},"A":{}}}',
                                     '{"records":{}} trailing', '{"records":'])

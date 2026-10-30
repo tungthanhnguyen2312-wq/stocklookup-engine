@@ -20,10 +20,12 @@ is provided. Current machine readings are observations, not durable launch permi
 
 These are evidence-backed Windows V1 operator bands, not universal requirements.
 The [October-27 final corrective](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md#final-admission-corrective--october-27)
-caps physical READY at 9.25 GiB only for the fingerprinted optimized pipeline
-and qualified IID scale, with mandatory kernel/runtime containment. Commit
-scaling and every other admission dimension remain strict. Missing qualification
-or larger inputs retain the legacy bands below.
+caps physical READY at 9.25 GiB for the fingerprinted optimized pipeline when
+the retained IID is no larger than the measured 2,394,768,092-byte artifact.
+Qualified commit READY is at most 10.25 GiB: the 8 GiB aggregate Job, the
+0.25 GiB Owner allowance, and the 2 GiB runtime reserve. Its floor keeps the
+9.2/12 ratio beneath that cap. The 7 GiB process ceiling is unchanged. Missing
+qualification or a larger IID retains the legacy scaled bands below.
 The unspecified 2.5–3.5 GiB physical band conservatively requires operator action.
 Unknown pagefile state, missing IID model input, or unqualified current-main
 provenance produces at least AMBER. Missing T0 is optional metadata and does not

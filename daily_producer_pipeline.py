@@ -170,7 +170,7 @@ def _write_immutable(path: Path, value: bytes) -> None:
 
 def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery: bool = False) -> dict:
     """The real Producer owner-file publication path, with unchanged manifest records."""
-    from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, retain_alias
+    from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, retain_alias, publish_file
     from atomic_io import AtomicWriteError
     native_manifest = json.loads((operation_dir / "ai_research_bundle_manifest.json").read_bytes())
     copied = {}
@@ -183,6 +183,15 @@ def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery
             except AtomicWriteError as exc:
                 raise DailyProducerError(str(exc)) from exc
             copied[filename] = {"sha256": proof["sha256"], "bytes": proof["bytes"]}
+        elif filename == "ai_research_full_universe.ndjson" and isinstance(native_manifest.get("files"), dict):
+            proof = native_manifest["files"].get(filename)
+            if not isinstance(proof, dict) or not isinstance(proof.get("sha256"), str) or not isinstance(proof.get("bytes"), int):
+                raise DailyProducerError("FULL_UNIVERSE_DELIVERY_PROOF_MISSING")
+            try:
+                publish_file(target, source, expected_sha=proof["sha256"], expected_size=proof["bytes"])
+            except AtomicWriteError as exc:
+                raise DailyProducerError(str(exc)) from exc
+            copied[filename] = {"sha256": proof["sha256"], "bytes": proof["bytes"]}
         else:
             data = source.read_bytes()
             _write_immutable(target, data)
@@ -190,9 +199,47 @@ def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery
     return copied
 
 
+def _delivery_metadata(path: Path) -> dict[str, Any]:
+    """Parse the entire delivery, retaining only metadata used by self-verification.
+
+    Ticker contexts and owner-focus rows are independently decoded, including
+    discarded rows. Neither a second research universe nor whole-file Unicode
+    is needed to compare the existing identity/session/lineage headers.
+    """
+    from stocklookup_core.evidence.artifact_stream import ObjectStream
+    retained = {"session", "operation_identity", "product_identity", "lineage",
+                "integrated_decision_overlay_v1", "source"}
+    result = {}
+    with path.open(encoding="utf-8") as source:
+        parser = ObjectStream(source, sorted_required=False)
+        for key in parser.members():
+            if key == "ticker_research_contexts" and parser.peek() == "{":
+                for _ticker in parser.members():
+                    row = parser.value()
+                    del row
+            elif key == "owner_focus_research_contexts" and parser.peek() == "[":
+                parser.take("[")
+                first = True
+                while parser.peek() != "]":
+                    if not first:
+                        parser.take(",")
+                    row = parser.value()
+                    del row
+                    first = False
+                parser.take("]")
+            else:
+                value = parser.value()
+                if key in retained:
+                    result[key] = value
+                del value
+        if parser.peek():
+            raise ValueError("ACCEPTANCE_TRAILING_JSON")
+    return result
+
+
 def _verify_delivery(operation: Mapping[str, Any], operation_dir: Path) -> dict[str, Any]:
-    bundle = json.loads((operation_dir / "ai_research_session_bundle.json").read_text(encoding="utf-8"))
-    projection = json.loads((operation_dir / "current_decision_cockpit_projection.json").read_text(encoding="utf-8"))
+    bundle = _delivery_metadata(operation_dir / "ai_research_session_bundle.json")
+    projection = _delivery_metadata(operation_dir / "current_decision_cockpit_projection.json")
     manifest = json.loads((operation_dir / "ai_research_bundle_manifest.json").read_text(encoding="utf-8"))
     expected_operation = operation["manifest"]["operation_identity"]
     expected_product = operation["product"]["artifact_identity"]

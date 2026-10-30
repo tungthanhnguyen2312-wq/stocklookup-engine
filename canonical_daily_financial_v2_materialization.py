@@ -67,7 +67,11 @@ def _canonical(value: Any) -> str:
 
 def _identity(payload: Mapping[str, Any]) -> dict[str, str]:
     excluded = {"artifact_sha256", "artifact_identity", "requested_at"}
-    digest = hashlib.sha256(_canonical({k: v for k, v in payload.items() if k not in excluded}).encode("utf-8")).hexdigest()
+    hasher = hashlib.sha256()
+    encoder = json.JSONEncoder(ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    for chunk in encoder.iterencode({k: v for k, v in payload.items() if k not in excluded}):
+        hasher.update(chunk.encode("utf-8"))
+    digest = hasher.hexdigest()
     return {"artifact_sha256": digest, "artifact_identity": f"{CONTRACT_VERSION}:{digest}"}
 
 
@@ -77,8 +81,11 @@ def load_semantic_rows(authority: input_authority.FinancialV2InputAuthority) -> 
         label="semantics", observed=artifact.get("artifact_identity"),
         expected=authority.expected_semantics_identity,
     )
+    from stocklookup_core.evidence.record_artifact_loading import shared_string_decoder
+    decoder = shared_string_decoder()
     with gzip.open(authority.semantics_facts_path, "rt", encoding="utf-8") as handle:
-        rows = [json.loads(line) for line in handle if line.strip()]
+        rows = [decoder.decode(line) for line in handle if line.strip()]
+    del decoder
     # KBS_QUARTERLY_INCOME_PERIOD_ALIGNMENT_CORRECTIVE_V1: retained facts stay unchanged;
     # consumers never treat a misaligned KBS payload's flow labels as standalone quarters.
     rows, _summary = scaleout.qualified_flow.gate_kbs_period_alignment(rows)
