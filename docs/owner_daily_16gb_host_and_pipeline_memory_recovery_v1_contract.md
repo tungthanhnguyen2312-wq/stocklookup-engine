@@ -413,3 +413,23 @@ Deployment: the Owner's Desktop `Stock Lookup Daily.cmd` must invoke
 instead of `powershell.exe ... run_owner_daily.ps1`; until then the legacy route
 still keeps PowerShell resident. Pull the Producer before switching the shortcut;
 an already-running old launcher cannot adopt the new host.
+
+## October 30 measured stage envelope
+
+Five sequential offline stages now have retained measurements under a 5 GiB
+aggregate Job and the unchanged 7 GiB process ceiling. The source pin is
+`a184bd9e`. Its only capacity-source difference from the four-stage pin
+`cb25e341` is the snapshot warm-read in `multi_session_signal_velocity.py`.
+Consumer-seal, enrichment, M1 and Action Center do not use that path and were
+not rerun. Observer native projection completed in 772.43 s, inside the
+unchanged 1,200 s deadline. Its 48,807 qualified records match the sealed
+2026-10-23 velocity artifact. The rebuilt inventory adds only excluded
+2026-10-26, whose snapshot is absent. Both existing downstream readers then
+verified that sealed artifact. The recorded detail is in
+`docs/internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md`.
+
+This section does not refresh the capacity receipt, enlarge `iid_max_bytes`,
+raise the 7 GiB process or 8 GiB Production Job ceilings, or change ordinary
+admission bands. It does not accept an Owner Daily, create an October 26–30
+live session, or declare T0. Integration, receipt regeneration and a genuine
+Daily launch remain separate Owner gates.

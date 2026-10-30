@@ -217,3 +217,52 @@ is separate from all workload measurements. The next complete experiment enforce
 a stricter 5-GiB Job ceiling while preserving the 7-GiB process maximum, original
 1/2-GiB reserves and all stage deadlines. Ordinary admission/receipts remain unchanged
 until that workload envelope is validated.
+
+## Measured five-stage envelope, same day
+
+The four earlier stages remain the v16/v18 measurements at source `cb25e341`.
+The only later capacity-source change is `multi_session_signal_velocity.py` at
+`a184bd9e`: a sequential read of a snapshot of at least 32 MiB, and only when
+available physical memory covers that file plus 512 MiB, before the unchanged
+canonical projection. Consumer-seal, enrichment, M1 and Action Center do not
+call that path. Their other 1,479 capacity-source fingerprints are unchanged,
+so those stages were not rerun.
+
+| Stage | Commit peak bytes | Job ceiling | Process ceiling | Wall | Result |
+| --- | ---: | ---: | ---: | ---: | --- |
+| consumer-seal | 5,268,992,000 | 5,368,709,120 | 7,516,192,768 | retained v16 | PASS |
+| enrichment | 3,090,362,368 | 5,368,709,120 | 7,516,192,768 | 1,475.19 s | PASS, original IID identity |
+| M1 | 3,560,488,960 | 5,368,709,120 | 7,516,192,768 | 289.23 s | PASS |
+| Action Center | 3,099,942,912 | 5,368,709,120 | 7,516,192,768 | 142.29 s | PASS |
+| observer native | 591,036,416 | 5,368,709,120 | 7,516,192,768 | 772.43 s | built inside 1,200 s |
+| observer readers | 715,309,056 | 5,368,709,120 | 7,516,192,768 | 56.10 s | PASS, two full reads |
+
+M1 and Action Center were measured with a 1 GiB working-set trim. Their commit
+peaks above are the qualification figures. No allocation-limit event was recorded
+and each tree was reaped. Evidence:
+`stocklookup-capacity-v16/run-20261030T081500Z-91eb5258` and
+`continuation-checkpoint-v21-native-cost.json`.
+
+The native observer bottleneck was interleaved USB reads of the retained
+snapshots, not the 7 GiB process ceiling or the 5 GiB Job. A cold 1.5 GB
+snapshot took about 91 s; a discarded 8 MB sequential read immediately before
+projection reduced the same shape to about 36 s. The full native build then
+finished in 772.43 s with peak working set 598,024,192 bytes and 120,677,283
+page faults. It wrote `signal_velocity.json` (525,711,232 bytes, raw SHA-256
+`ab19cdb2bd4d9f61ded8b3a3f13cd231b1fb79bd3378e934579092571618bc83`).
+
+The first parity assertion compared that file with the sealed 2026-10-23
+artifact as a whole. Both files self-hash. Their canonical records match
+(48,807 records, the same 29 qualified sessions). The rebuilt inventory only
+appends excluded session 2026-10-26, reason
+`EXACT_HANDOFF_SNAPSHOT_NOT_RETAINED_OR_UNREADABLE`. The two downstream readers
+then loaded the sealed artifact under the same 5 GiB Job and 7 GiB process
+ceiling: peak commit 715,309,056, peak working set 503,762,944, 613,214 page
+faults, no limit event. Reader evidence:
+`stocklookup-capacity-v23-readers/observer-readers-20261030T143658Z`.
+
+These measurements do not refresh the capacity receipt, the IID cap, the 8 GiB
+Production Job, or the ordinary physical/commit admission bands. They do not
+accept a Daily session, publish T0, or authorize a merge. Production remains
+`b9c4ff102f74bc41f4cb863f43a875a93e07cd9d`, with its protected registry dirty
+and uncommitted.
