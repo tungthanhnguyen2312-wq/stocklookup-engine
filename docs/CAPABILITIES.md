@@ -277,7 +277,7 @@ cold guard/plan/adapter offline. Authority NONE; no production activation or rec
 - Contract: [owner_daily_host_preflight_contract.md](owner_daily_host_preflight_contract.md)
 - Runtime: `ACTIVE` · Authority: `SCOPED` (`NONE / OWNER_DAILY_HOST_PREFLIGHT_ONLY`; observation, not a lease) · Production: `OWNER_LAUNCHER`
 - Input: Windows commit/physical/pagefile, C: disk, writers, latest IID size × 5.05 · Predecessor: none
-- Blocker: larger IID unqualified · Next trigger: guarded measurement, fresh READY and real Daily acceptance
+- Blocker: fresh READY preflight and real Daily acceptance · Next trigger: ordinary launcher on production main
 
 ### 22. Market bars and liquidity context
 - Contract: [market_bar_basis_multitimeframe_contract.md](market_bar_basis_multitimeframe_contract.md), [liquidity_authority_contract.md](liquidity_authority_contract.md)

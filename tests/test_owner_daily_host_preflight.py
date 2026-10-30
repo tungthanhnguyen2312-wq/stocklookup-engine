@@ -244,7 +244,8 @@ def test_observed_oct27_condition_admits_only_with_compensating_guard():
     physical = result["dimensions"]["physical"]
     assert physical["green_min_bytes"] == int(9.25 * GIB)
     assert physical["legacy_green_min_bytes"] == 10311071568
-    assert result["dimensions"]["commit"]["green_min_bytes"] == 20622143137
+    assert result["dimensions"]["commit"]["green_min_bytes"] == preflight.QUALIFIED_COMMIT_BYTES
+    assert result["dimensions"]["commit"]["blocked_below_bytes"] < preflight.QUALIFIED_COMMIT_BYTES
     assert result["peak_model"]["monday_measured_peak_bytes"] is None
     observation["available_physical_bytes"] = physical["green_min_bytes"] - 1
     assert preflight.evaluate(observation)["classification"] == "AMBER"
@@ -258,9 +259,9 @@ def test_bounded_admission_never_bypasses_other_guards(cause):
     if cause == "source":
         observation["capacity_qualification"]["source_matches"] = False
     elif cause == "larger":
-        observation["retained"]["iid"]["file_bytes"] += 1
+        observation["retained"]["iid"]["file_bytes"] = preflight.QUALIFIED_IID_BYTES + 1
     elif cause == "commit":
-        observation["available_commit_bytes"] = 20622143136
+        observation["available_commit_bytes"] = preflight.evaluate(observation)["dimensions"]["commit"]["green_min_bytes"] - 1
     elif cause == "writer":
         observation["active_writers"] = [{"pid": 17}]
     elif cause == "provenance":
@@ -277,6 +278,8 @@ def test_bounded_admission_never_bypasses_other_guards(cause):
 
 
 def test_source_receipt_matches_candidate_and_refuses_tampering(tmp_path, monkeypatch):
+    receipt = json.loads((preflight.ROOT / "config/owner_daily_capacity_qualification.json").read_text(encoding="utf-8"))
+    assert receipt["iid_max_bytes"] == preflight.QUALIFIED_IID_BYTES
     assert preflight.capacity_qualification(preflight.ROOT)["source_matches"]
     (tmp_path / "config").mkdir()
     source = tmp_path / "runtime.py"

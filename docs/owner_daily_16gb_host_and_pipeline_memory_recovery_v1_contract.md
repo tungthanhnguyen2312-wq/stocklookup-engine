@@ -95,7 +95,9 @@ record mappings/lists, short reads, refill boundaries, Unicode/escapes/numbers,
 type preservation, duplicate/truncated/malformed/trailing JSON refusal, and
 continued refusal of oversized records and metadata.
 
-The larger-IID envelope and source capacity receipt remain unqualified. Continue
+At this point in the recovery the larger-IID envelope and source capacity
+receipt were still unqualified. The October 30 section below is the later
+qualification; do not rerun those completed stages for this receipt. Continue
 the same retained consumer-seal measurement with pinned original inputs in a new
 experiment only when its unchanged admission budget is available; do not retry
 refused launches or replace the Production launcher. Enrichment construction and
@@ -428,8 +430,11 @@ unchanged 1,200 s deadline. Its 48,807 qualified records match the sealed
 verified that sealed artifact. The recorded detail is in
 `docs/internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md`.
 
-This section does not refresh the capacity receipt, enlarge `iid_max_bytes`,
-raise the 7 GiB process or 8 GiB Production Job ceilings, or change ordinary
-admission bands. It does not accept an Owner Daily, create an October 26–30
-live session, or declare T0. Integration, receipt regeneration and a genuine
-Daily launch remain separate Owner gates.
+The capacity receipt now binds this source fingerprint and sets `iid_max_bytes`
+to the measured artifact size, 2,394,768,092. One byte more falls back to the
+legacy scaled bands. Physical READY stays the smaller of the legacy value and
+9.25 GiB. Qualified commit READY is the smaller of the legacy value and
+10.25 GiB, which is the unchanged 8 GiB Production Job plus the 0.25 GiB Owner
+allowance and the existing 2 GiB runtime reserve. The 7 GiB process ceiling is
+unchanged. This is still not a live Daily acceptance, an October 26–30 session,
+or a T0 declaration.

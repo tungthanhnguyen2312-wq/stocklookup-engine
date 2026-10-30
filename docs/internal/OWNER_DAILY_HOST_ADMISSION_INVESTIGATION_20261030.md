@@ -261,8 +261,11 @@ ceiling: peak commit 715,309,056, peak working set 503,762,944, 613,214 page
 faults, no limit event. Reader evidence:
 `stocklookup-capacity-v23-readers/observer-readers-20261030T143658Z`.
 
-These measurements do not refresh the capacity receipt, the IID cap, the 8 GiB
-Production Job, or the ordinary physical/commit admission bands. They do not
-accept a Daily session, publish T0, or authorize a merge. Production remains
+The capacity receipt now binds this measured source fingerprint and sets
+`iid_max_bytes` to 2,394,768,092. Physical READY stays at most 9.25 GiB.
+Qualified commit READY is at most 10.25 GiB: the unchanged 8 GiB Production
+Job, the 0.25 GiB Owner allowance, and the 2 GiB runtime reserve. The 7 GiB
+process ceiling is unchanged. These measurements still do not accept a Daily
+session or publish T0. At measurement time Production remained
 `b9c4ff102f74bc41f4cb863f43a875a93e07cd9d`, with its protected registry dirty
 and uncommitted.

@@ -7,8 +7,7 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — OWNER DAILY 16-GIB MEMORY RECOVERY (ACTIVE)
 
-[Scope](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): resident-IID, nested-record, Brief, valuation, companion and post-seal allocation correctives local;
-larger-IID measurement, integration and genuine Daily/publication acceptance pending. No successor.
+[Scope](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): exact-IID receipt local; genuine Daily acceptance pending. No successor.
 
 ## PRIOR — STOCKLOOKUP_PRODUCER_DEEP_SIMPLIFICATION (RELEASED PR146)
 
