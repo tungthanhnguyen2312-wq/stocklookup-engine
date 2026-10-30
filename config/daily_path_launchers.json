@@ -10,8 +10,8 @@
       ]
     },
     "canonical_daily_operation.py": {
-      "ast_sha256": "e80a57d162da9fd03331459c3faad50f6e432520459ba4f3b70777813564b527",
-      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID preseal projection only; subprocess argv unchanged.",
+      "ast_sha256": "3dd781753de371b4db217fa030dd158e82f9bb2cfd0087b15ba9601145ce45a5",
+      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID and post-seal allocation bounds only; subprocess argv remains macro_sync.py.",
       "targets": [
         "macro_sync.py",
         "tools/release_orchestrator.py"

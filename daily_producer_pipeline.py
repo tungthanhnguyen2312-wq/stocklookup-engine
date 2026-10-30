@@ -183,8 +183,10 @@ def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery
             except AtomicWriteError as exc:
                 raise DailyProducerError(str(exc)) from exc
             copied[filename] = {"sha256": proof["sha256"], "bytes": proof["bytes"]}
-        elif filename == "ai_research_full_universe.ndjson":
-            proof = native_manifest["files"][filename]
+        elif filename == "ai_research_full_universe.ndjson" and isinstance(native_manifest.get("files"), dict):
+            proof = native_manifest["files"].get(filename)
+            if not isinstance(proof, dict) or not isinstance(proof.get("sha256"), str) or not isinstance(proof.get("bytes"), int):
+                raise DailyProducerError("FULL_UNIVERSE_DELIVERY_PROOF_MISSING")
             try:
                 publish_file(target, source, expected_sha=proof["sha256"], expected_size=proof["bytes"])
             except AtomicWriteError as exc:
