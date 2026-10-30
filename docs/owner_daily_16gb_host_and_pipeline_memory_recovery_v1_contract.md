@@ -4,6 +4,15 @@ Owner-authorized `OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1` is a bo
 operational corrective. Authority effect: **NONE / MEMORY_AND_FAILURE_DIAGNOSTICS_ONLY**.
 It introduces no provider, analytical policy, production entrypoint or evidence authority.
 
+October-30 continuation corrects genuine evaluated-valuation allocations in the
+Daily ingress, Financial V2 identity hash and full product copy. Existing JSON
+bytes, identities, fields, atomic promotion and failure semantics are preserved.
+The [investigation](internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md)
+keeps admission, allocation-limit and physical-reserve failures separate, with
+targeted original-input measurements. These local corrections do not refresh a
+capacity receipt, enlarge the IID envelope or authorize ordinary launch. Neither
+recovery nor an unavoidable 16-GiB hardware limit has yet been established.
+
 ## IID runtime corrective — October 27
 
 October-29 admitted consumer/seal run on the nested-record candidate reached

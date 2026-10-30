@@ -60,3 +60,42 @@ or grant an ordinary launch permit. A one-time working-set trim may reclaim
 idle user-application pages without killing processes or changing application
 state; actual admission and runtime reserve checks remain mandatory. No retry
 loop or repeated Owner reboot/command is authorized or requested.
+
+## Further actual allocation defects and targeted proof
+
+The evaluated-valuation product copy also used the full-Unicode atomic JSON writer
+and full-graph validation. It now reuses the existing streamed native-byte writer;
+validation parses every record but discards its record universes instead of
+retaining a duplicate graph. Original metadata, all output fields, atomic
+promotion and failed-validation preservation remain unchanged.
+
+Separately, Financial V2 `_identity` built a whole-universe Unicode string and
+UTF-8 buffer. It now feeds the same strict standard-library sorted JSON encoder's
+chunks into SHA-256. Identity exclusions, nonfinite refusal, float/Unicode bytes
+and all analytical calculations remain unchanged. This file is outside the
+feedback/E4 domain; its original code remains in the preceding Git checkpoint.
+
+The original 521,967,045-byte input reproduced its exact retained identity
+`canonical_daily_financial_v2_materialization/v1:b3e29e70bbd2ba07eb713ca7f1c926bc4f54ec04a7fb2c09b13777734c216fb3`.
+The original identity buffer hit a positive **diagnostic 4-GiB Job** allocation
+limit before serialization. This lower diagnostic ceiling is not the historical
+7-GiB process event. After the streaming identity correction, the old copy writer
+separately reached its `COPY_BEGIN` and hit that same diagnostic Job limit:
+4,297,633,792 process / 4,298,539,008 Job peak committed bytes, 45.2202 seconds.
+These refused results never qualify capacity.
+
+The candidate copy completed at 1,684,942,848 process / 1,685,843,968 Job private
+bytes in 67.1945 seconds including load, independent identity/native-byte audits
+and raw-input checks. Serialization itself took 29.1990 seconds. Output SHA-256
+`4375df0c451c50892ccdb1c4130e304a49675357c98139caaf0d8e6a564add90`
+matches an independent standard-library incremental encoder; the original input
+hash is unchanged. This comparison holds no IID or caller graphs and is not
+whole-stage qualification. Failed diagnostic setups and their original scripts
+are retained separately, including the initial incorrect identity-prefix check.
+
+131 affected memory, IID, current-product and Workspace checks passed, with three
+retained-evidence cases deselected. These are additional to the prior 99 focused
+operation/source-boundary passes. The one-time user-application working-set trim
+terminated no process, changed no limits and recovered approximately 2.1 GB after
+Windows paging; the observed baseline still did not satisfy an 8.25-GiB physical
+budget. Working-set trimming is not a durable capacity guarantee.

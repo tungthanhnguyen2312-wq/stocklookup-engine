@@ -6,6 +6,22 @@ from types import SimpleNamespace
 import pytest
 
 
+def test_financial_materialization_identity_streams_exact_stdlib_bytes(monkeypatch):
+    import canonical_daily_financial_v2_materialization as materialization
+    payload = {'records': {'Z': {'text': 'Việt Nam', 'values': [None, False, -0.0, 1e-9]}, 'A': {}},
+               'valuation_balance_sheet_divergence_context': {'records': {'Z': {'value': 123}}},
+               'metadata': {'z': 1, 'a': 2}}
+    expected = hashlib.sha256(json.dumps(payload, ensure_ascii=False, sort_keys=True,
+        separators=(',', ':'), allow_nan=False).encode('utf-8')).hexdigest()
+    monkeypatch.setattr(materialization, '_canonical', lambda *a: pytest.fail('whole-universe Unicode identity buffer'))
+    assert materialization._identity({**payload, 'artifact_identity': 'ignored',
+        'artifact_sha256': 'ignored', 'requested_at': 'excluded'}) == {
+            'artifact_sha256': expected,
+            'artifact_identity': materialization.CONTRACT_VERSION + ':' + expected}
+    with pytest.raises(ValueError):
+        materialization._identity({'records': {'A': {'value': float('nan')}}})
+
+
 @pytest.mark.parametrize("records", [{}, {"Z": {"text": "Việt Nam", "n": -0.0}, "A": [None, False, 1e-9]}])
 def test_history_identity_preserves_original_bytes_and_exclusions(records):
     import market_wide_historical_research_context as history

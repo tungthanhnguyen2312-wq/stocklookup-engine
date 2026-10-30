@@ -67,7 +67,11 @@ def _canonical(value: Any) -> str:
 
 def _identity(payload: Mapping[str, Any]) -> dict[str, str]:
     excluded = {"artifact_sha256", "artifact_identity", "requested_at"}
-    digest = hashlib.sha256(_canonical({k: v for k, v in payload.items() if k not in excluded}).encode("utf-8")).hexdigest()
+    hasher = hashlib.sha256()
+    encoder = json.JSONEncoder(ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    for chunk in encoder.iterencode({k: v for k, v in payload.items() if k not in excluded}):
+        hasher.update(chunk.encode("utf-8"))
+    digest = hasher.hexdigest()
     return {"artifact_sha256": digest, "artifact_identity": f"{CONTRACT_VERSION}:{digest}"}
 
 

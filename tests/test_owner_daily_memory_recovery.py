@@ -208,3 +208,28 @@ def test_workspace_stream_writer_validation_failure_preserves_previous_output(tm
         _write_workspace_json(path, {'cards': {'AAA': {'value': 1}}})
     assert path.read_bytes() == b'previous'
     assert not list(tmp_path.glob('.workspace-json-*'))
+
+
+def test_evaluated_copy_streams_native_bytes_and_validates_every_discarded_record(tmp_path, monkeypatch):
+    from canonical_current_product_projections import _write_workspace_json
+    from stocklookup_core.evidence import record_artifact_loading as loader
+    payload = {'records': {'Z': {'text': 'Việt Nam'}, 'A': {'number': -0.0}},
+               'valuation_balance_sheet_divergence_context': {'records': {'A': {'value': None}}},
+               'metadata': {'flag': False}}
+    native = (json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode('utf-8')
+    path = tmp_path/'evaluated.json'
+    original_load = loader.load_record_artifact
+    seen = []
+    def validate(candidate, *, record_tickers=None):
+        assert candidate.read_bytes() == native
+        seen.append(original_load(candidate, record_tickers=record_tickers))
+        return seen[-1]
+    monkeypatch.setattr(loader, 'load_record_artifact', validate)
+    _write_workspace_json(path, payload, validation_record_tickers=())
+    assert path.read_bytes() == native
+    assert seen == [{'records': {}, 'valuation_balance_sheet_divergence_context': {'records': {}},
+                     'metadata': {'flag': False}}]
+    # Projection still parses unretained rows; malformed data cannot pass validation.
+    path.write_bytes(b'{"records":{"A":{"broken": }}}')
+    with pytest.raises(ValueError):
+        original_load(path, record_tickers=())
