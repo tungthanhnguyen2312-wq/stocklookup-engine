@@ -99,3 +99,24 @@ operation/source-boundary passes. The one-time user-application working-set trim
 terminated no process, changed no limits and recovered approximately 2.1 GB after
 Windows paging; the observed baseline still did not satisfy an 8.25-GiB physical
 budget. Working-set trimming is not a durable capacity guarantee.
+
+The staged v10 run admitted the original retained graphs with a 1-GiB worker
+working-set bound and unchanged 7-GiB process ceiling. It completed the native
+preseal Brief, then encountered a positive PROCESS allocation-limit event while
+building the full-universe NDJSON companion (1,073 of 1,683 rows completed).
+Recorded peak process/Job private bytes were 7,472,635,904; minimum available
+physical memory was 2,258,690,048 and minimum available commit 6,854,242,304.
+The run was reaped after 863.1302368 seconds. This is a genuine allocation
+inefficiency with host reserves still available, distinct from admission refusal.
+
+The internal materializer now spools companion rows and incrementally attests
+size/hash. Its public bytes-returning interface remains available and unchanged.
+Independent immutable publication and Owner retention use bounded copies with
+source/stage proofs, conflict refusal, private staging and fsync; no hard-link
+reuse is enabled. 126 focused delivery, ownership, capacity and writer-lifecycle
+checks passed (two platform skips). Read-only retained integration checks passed
+21 cases; six failures reproduce on the previous f6b34dd6 source with identical
+missing historical fixture or stale event-binding errors. The baseline comparison
+and original logs are retained in streamed-companion-v11-tests. Full-stage
+qualification remains pending; no IID cap, receipt, Production or release state
+has been changed by these corrections.

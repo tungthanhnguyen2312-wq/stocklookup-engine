@@ -8,6 +8,126 @@ from stocklookup_core.portfolio import portfolio_aware_decision as portfolio
 from tools import check_owner_daily_host_preflight as preflight
 
 
+def test_materialization_and_owner_retention_never_buffer_the_complete_companion(tmp_path, monkeypatch):
+    import ai_research_session_delivery as delivery
+    import daily_research_session_operations as operations
+    import daily_producer_pipeline as producer
+    from tests.test_ai_research_session_delivery import _operation
+    operation = _operation()
+    inputs = {'descriptive': {'records': {'ZZZ': {}, 'AAA': {}, 'BBB': {}}}}
+    expected = delivery.build_delivery(operation, inputs)
+    operation.update(inputs=inputs, snapshot={}, corporate_snapshot={}, strategy_snapshot={})
+    monkeypatch.setattr(operations, 'markdown', lambda product: '# Synthetic operation\n')
+    monkeypatch.setattr(delivery.io, 'BytesIO', lambda *a, **k: pytest.fail('companion universe buffer'))
+    original_read = Path.read_bytes
+    def read(self, *args, **kwargs):
+        if self.suffix == '.ndjson':
+            pytest.fail('whole-companion byte buffer')
+        return original_read(self, *args, **kwargs)
+    monkeypatch.setattr(Path, 'read_bytes', read)
+    target = tmp_path/'operation'
+    operations.materialize(target, operation)
+    producer._retain_owner_delivery(target, tmp_path/'owner')
+    for filename, key in (('ai_research_session_bundle.json', 'primary'),
+                          ('ai_research_full_universe.ndjson', 'full_universe'),
+                          ('ai_research_bundle_manifest.json', 'manifest'),
+                          ('ai_research_session_brief.md', 'brief'),
+                          ('current_decision_cockpit_projection.json', 'projection')):
+        assert original_read(target/filename) == expected[key]
+    assert original_read(tmp_path/'owner/ai_research_full_universe.ndjson') == expected['full_universe']
+    assert not list(tmp_path.glob('.delivery-companion-*'))
+
+
+def test_failed_delivery_projection_does_not_publish_the_spooled_companion(tmp_path, monkeypatch):
+    import ai_research_session_delivery as delivery
+    import daily_research_session_operations as operations
+    from tests.test_ai_research_session_delivery import _operation
+    operation = _operation()
+    operation.update(inputs={'descriptive': {'records': {'AAA': {}}}}, snapshot={},
+                     corporate_snapshot={}, strategy_snapshot={})
+    monkeypatch.setattr(operations, 'markdown', lambda product: '# Synthetic operation\n')
+    def refuse(*args, **kwargs):
+        raise ValueError('projection refused')
+    monkeypatch.setattr(delivery, 'build_dashboard_projection', refuse)
+    target = tmp_path/'operation'
+    target.mkdir()
+    (target/'ai_research_session_bundle.json').write_bytes(b'previous')
+    with pytest.raises(ValueError, match='projection refused'):
+        operations.materialize(target, operation)
+    assert (target/'ai_research_session_bundle.json').read_bytes() == b'previous'
+    assert not (target/'ai_research_full_universe.ndjson').exists()
+    assert not (target/'run_manifest.json').exists()
+    assert not list(tmp_path.glob('.delivery-companion-*'))
+
+
+def test_file_delivery_publication_is_bounded_independent_and_write_once(tmp_path, monkeypatch):
+    import hashlib
+    from stocklookup_core.acquisition.immutable_delivery import publish_file, protected
+    from atomic_io import AtomicWriteError
+    source, target = tmp_path/'prepared', tmp_path/'ai_research_full_universe.ndjson'
+    payload = b'row\n'*(1024**2)+b'end\n'
+    source.write_bytes(payload)
+    digest = hashlib.sha256(payload).hexdigest()
+    monkeypatch.setattr(Path, 'read_bytes', lambda *a, **k: pytest.fail('whole-file publication buffer'))
+    assert publish_file(target, source, expected_sha=digest, expected_size=len(payload), protect=True) == 'PUBLISHED_IMMUTABLE'
+    assert publish_file(target, source, expected_sha=digest, expected_size=len(payload), protect=True) == 'REUSED'
+    assert not source.samefile(target)
+    assert protected(target) and not protected(source)
+    with target.open('rb') as result:
+        assert result.read() == payload
+    with pytest.raises(AtomicWriteError, match='DELIVERY_SOURCE_PROOF_MISMATCH'):
+        publish_file(target, source, expected_sha='0'*64, expected_size=len(payload))
+    assert not list(tmp_path.glob('.delivery-staging-*'))
+
+
+@pytest.mark.parametrize('race', ['equal', 'different', 'source_changed'])
+def test_file_delivery_publication_refuses_races_and_changed_sources(tmp_path, race):
+    import hashlib
+    from stocklookup_core.acquisition.immutable_delivery import publish_file
+    from atomic_io import AtomicWriteError
+    source, target = tmp_path/'prepared', tmp_path/'ai_research_full_universe.ndjson'
+    source.write_bytes(b'original')
+    def intervene(stage):
+        if race == 'source_changed':
+            source.write_bytes(b'changed')
+        else:
+            target.write_bytes(b'original' if race == 'equal' else b'other')
+    arguments = dict(expected_sha=hashlib.sha256(b'original').hexdigest(), expected_size=8,
+                     protect=True, on_stage=intervene)
+    if race == 'equal':
+        assert publish_file(target, source, **arguments) == 'REUSED'
+        assert target.read_bytes() == b'original'
+    else:
+        with pytest.raises(AtomicWriteError, match='CONTENT_CONFLICT|SOURCE_PROOF_MISMATCH'):
+            publish_file(target, source, **arguments)
+        if race == 'different':
+            assert target.read_bytes() == b'other'
+        else:
+            assert not target.exists()
+    assert not list(tmp_path.glob('.delivery-staging-*'))
+
+
+def test_file_delivery_bounds_pending_writeback_without_changing_bytes(tmp_path, monkeypatch):
+    import hashlib
+    import os
+    from stocklookup_core.acquisition import immutable_delivery as publication
+    source, target = tmp_path/'prepared', tmp_path/'delivery'
+    payload = b'a'*9305
+    source.write_bytes(payload)
+    monkeypatch.setattr(publication, 'CHUNK', 1024)
+    monkeypatch.setattr(publication, '_COPY_FLUSH_BYTES', 2048)
+    sync = os.fsync
+    positions = []
+    def observed(fd):
+        positions.append(os.lseek(fd, 0, os.SEEK_CUR))
+        return sync(fd)
+    monkeypatch.setattr(os, 'fsync', observed)
+    publication.publish_file(target, source, expected_sha=hashlib.sha256(payload).hexdigest(), expected_size=len(payload))
+    assert target.read_bytes() == payload
+    assert positions[-1] == len(payload)
+    assert all(right-left <= 2048 for left, right in zip([0]+positions, positions))
+
+
 @pytest.mark.parametrize('value', [
     {'z': 'Việt Nam', 'records': {'ZZZ': {'nested': [None, False, -0.0, 1e-9]}, 'AAA': {}}, 'a': 1},
     {'records': [], 'metadata': {'preserved': True}},

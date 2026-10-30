@@ -170,7 +170,7 @@ def _write_immutable(path: Path, value: bytes) -> None:
 
 def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery: bool = False) -> dict:
     """The real Producer owner-file publication path, with unchanged manifest records."""
-    from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, retain_alias
+    from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, retain_alias, publish_file
     from atomic_io import AtomicWriteError
     native_manifest = json.loads((operation_dir / "ai_research_bundle_manifest.json").read_bytes())
     copied = {}
@@ -180,6 +180,13 @@ def _retain_owner_delivery(operation_dir: Path, run_dir: Path, *, reuse_delivery
             proof = native_manifest["files"][filename]
             try:
                 retain_alias(source, target, expected_sha=proof["sha256"], expected_size=proof["bytes"])
+            except AtomicWriteError as exc:
+                raise DailyProducerError(str(exc)) from exc
+            copied[filename] = {"sha256": proof["sha256"], "bytes": proof["bytes"]}
+        elif filename == "ai_research_full_universe.ndjson":
+            proof = native_manifest["files"][filename]
+            try:
+                publish_file(target, source, expected_sha=proof["sha256"], expected_size=proof["bytes"])
             except AtomicWriteError as exc:
                 raise DailyProducerError(str(exc)) from exc
             copied[filename] = {"sha256": proof["sha256"], "bytes": proof["bytes"]}

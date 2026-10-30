@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -474,12 +476,24 @@ def materialize(output_dir: Path, operation: Mapping[str, Any], *, protect_deliv
         delivery_inputs["integrated_investment_decision_product"] = integrated_delivery["integrated_investment_decision_product"]
         if integrated_delivery.get("daily_integrated_decision_brief") is not None:
             delivery_inputs["daily_integrated_decision_brief"] = integrated_delivery["daily_integrated_decision_brief"]
-    delivery = build_delivery(operation, delivery_inputs)
-    for filename, value in (("ai_research_session_bundle.json", delivery["primary"]), ("ai_research_full_universe.ndjson", delivery["full_universe"]), ("ai_research_bundle_manifest.json", delivery["manifest"]), ("ai_research_session_brief.md", delivery["brief"]), ("current_decision_cockpit_projection.json", delivery["projection"])):
-        path = output_dir / filename
-        if path.exists() and path.read_bytes() != value: raise ValueError("IMMUTABLE_SESSION_OPERATION_DELIVERY_CONFLICT:" + filename)
-        from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, publish_bytes
-        publish_bytes(path, value, protect=protect_delivery and filename in DELIVERIES)
+    with tempfile.TemporaryDirectory(prefix=".delivery-companion-", dir=output_dir.parent) as staging:
+        prepared = Path(staging) / "ai_research_full_universe.ndjson"
+        with prepared.open("wb") as companion:
+            delivery = build_delivery(operation, delivery_inputs, full_universe_stream=companion)
+            companion.flush()
+            os.fsync(companion.fileno())
+        from stocklookup_core.acquisition.immutable_delivery import DELIVERIES, publish_bytes, publish_file, sha
+        proof = json.loads(delivery["manifest"])["files"]["ai_research_full_universe.ndjson"]
+        for filename, value in (("ai_research_session_bundle.json", delivery["primary"]), ("ai_research_full_universe.ndjson", None), ("ai_research_bundle_manifest.json", delivery["manifest"]), ("ai_research_session_brief.md", delivery["brief"]), ("current_decision_cockpit_projection.json", delivery["projection"])):
+            path = output_dir / filename
+            protect = protect_delivery and filename in DELIVERIES
+            if filename == "ai_research_full_universe.ndjson":
+                if path.exists() and (path.stat().st_size != proof["bytes"] or sha(path) != proof["sha256"]):
+                    raise ValueError("IMMUTABLE_SESSION_OPERATION_DELIVERY_CONFLICT:" + filename)
+                publish_file(path, prepared, expected_sha=proof["sha256"], expected_size=proof["bytes"], protect=protect)
+            else:
+                if path.exists() and path.read_bytes() != value: raise ValueError("IMMUTABLE_SESSION_OPERATION_DELIVERY_CONFLICT:" + filename)
+                publish_bytes(path, value, protect=protect)
     retained_brief = _integrated_brief_retention_artifact(operation)
     if retained_brief is not None:
         write_immutable(output_dir / "daily_integrated_decision_brief_artifact.json", retained_brief)

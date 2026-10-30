@@ -16,6 +16,7 @@ from stocklookup_core.acquisition.artifact_io import AtomicWriteError
 
 DELIVERIES = {"ai_research_session_bundle.json", "ai_research_full_universe.ndjson"}
 CHUNK = 1024 * 1024
+_COPY_FLUSH_BYTES = 64 * CHUNK
 
 
 def _namespace(path):
@@ -116,6 +117,64 @@ def publish_bytes(target, content, *, protect=False, on_stage=None):
             _publish(stage, target)
         except FileExistsError:
             if target.is_symlink() or target.read_bytes() != content:
+                raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
+            return "REUSED"
+        return "PUBLISHED_IMMUTABLE"
+    finally:
+        _discard_private(stage)
+
+
+def publish_file(target, source, *, expected_sha, expected_size, protect=False, on_stage=None):
+    """Independent bounded copy through the same private, fsynced publication gate.
+
+    No existing target is overwritten or retroactively protected. The prepared
+    source remains independent, including when source and target share a volume.
+    """
+    source, target = Path(source), Path(target)
+    _namespace(source)
+    _namespace(target)
+    before = source.stat()
+    if not source.is_file() or before.st_size != expected_size or sha(source) != expected_sha:
+        raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    def target_equal():
+        return (not target.is_symlink() and target.is_file()
+                and target.stat().st_size == expected_size and sha(target) == expected_sha)
+    if target.exists():
+        if not target_equal():
+            raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
+        return "REUSED"
+    fd, name = tempfile.mkstemp(prefix=".delivery-staging-", dir=target.parent)
+    stage = Path(name)
+    try:
+        with os.fdopen(fd, "wb") as destination, source.open("rb") as origin:
+            unsynced = 0
+            for block in iter(lambda: origin.read(CHUNK), b""):
+                destination.write(block)
+                unsynced += len(block)
+                if unsynced >= _COPY_FLUSH_BYTES:
+                    # Back-pressure the private copy's dirty file-cache pages too.
+                    destination.flush()
+                    os.fsync(destination.fileno())
+                    unsynced = 0
+            destination.flush()
+            os.fsync(destination.fileno())
+        if stage.stat().st_size != expected_size or sha(stage) != expected_sha:
+            raise AtomicWriteError("DELIVERY_STAGE_HASH_MISMATCH")
+        if protect:
+            stage.chmod(stat.S_IREAD | (stat.S_IRGRP | stat.S_IROTH if os.name != "nt" else 0))
+        if on_stage:
+            on_stage(stage)
+            if stage.stat().st_size != expected_size or sha(stage) != expected_sha:
+                raise AtomicWriteError("DELIVERY_STAGE_HASH_MISMATCH")
+        after = source.stat()
+        if (source.is_symlink() or (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
+                != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)):
+            raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
+        try:
+            _publish(stage, target)
+        except FileExistsError:
+            if not target_equal():
                 raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
             return "REUSED"
         return "PUBLISHED_IMMUTABLE"

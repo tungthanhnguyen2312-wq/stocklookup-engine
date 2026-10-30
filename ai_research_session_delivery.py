@@ -751,8 +751,13 @@ class _DeliveryRecordProjections(Mapping):
 
 
 def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, opportunity_comparison_request=None,
-                   include_thesis_discovery: bool = False, retain_delivery_companions: bool = True) -> dict[str, Any]:
-    """Return primary JSON, NDJSON companion, manifest, brief, and cockpit projection bytes."""
+                   include_thesis_discovery: bool = False, retain_delivery_companions: bool = True,
+                   full_universe_stream=None) -> dict[str, Any]:
+    """Return all five byte interfaces; internal materialization may spool NDJSON.
+
+    With an explicit binary stream, ``full_universe`` is None and the manifest
+    still attests every emitted byte and row. Ordinary callers retain all bytes.
+    """
     product, manifest = operation["product"], operation["manifest"]
     session = manifest["market_session"]
     cards = product["detailed_research_cards"]
@@ -845,11 +850,22 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
         return {"primary": primary_bytes}
     # Keep the bytes-returning contract, without a universe-sized Unicode row
     # list, joined string, newline copy and UTF-8 copy alive at the same time.
-    with io.BytesIO() as companion:
+    full_hash, full_size = hashlib.sha256(), 0
+    def write_companion(companion):
+        nonlocal full_size
         for ticker in universe:
-            companion.write(_canon(_compact_context(ticker, operation, inputs, financial_context, integrated_overlay)).encode("utf-8"))
-            companion.write(b"\n")
-        full_bytes = companion.getvalue()
+            row = (_canon(_compact_context(ticker, operation, inputs, financial_context, integrated_overlay)) + "\n").encode("utf-8")
+            if companion.write(row) != len(row):
+                raise OSError("DELIVERY_COMPANION_SHORT_WRITE")
+            full_hash.update(row)
+            full_size += len(row)
+    if full_universe_stream is None:
+        with io.BytesIO() as companion:
+            write_companion(companion)
+            full_bytes = companion.getvalue()
+    else:
+        write_companion(full_universe_stream)
+        full_bytes = None
     # Their last consumer is the companion; the cockpit needs only the overlay
     # header and its existing watchlist cards, not another full-universe graph.
     del integrated_overlay, primary
@@ -880,8 +896,8 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
         "files": {
             PRIMARY_HUMAN_REVIEW_FILENAME: {"bytes": len(primary_bytes), "sha256": _hash_bytes(primary_bytes), "role": PRIMARY_HUMAN_REVIEW_ROLE},
             FULL_UNIVERSE_LOOKUP_FILENAME: {
-                "bytes": len(full_bytes),
-                "sha256": _hash_bytes(full_bytes),
+                "bytes": full_size,
+                "sha256": full_hash.hexdigest(),
                 "record_count": len(universe),
                 "role": FULL_UNIVERSE_COMPANION_ROLE,
                 "not_primary_human_review_input": True,
