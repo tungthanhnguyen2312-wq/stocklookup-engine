@@ -18,6 +18,56 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE = "b9c4ff102f74bc41f4cb863f43a875a93e07cd9d"
 
 
+def test_post_producer_boundary_only_releases_the_finished_argument_container():
+    import ast
+    from tools.verify_retention_reader_transition import (
+        POST_PRODUCER_MANIFEST, POST_PRODUCER_ARCHIVE, _post_producer_prior_bytes,
+    )
+    spec = json.loads((ROOT / POST_PRODUCER_MANIFEST).read_bytes())
+    relative = "canonical_daily_operation.py"
+    prior = subprocess.check_output(["git", "show", spec["base_commit"]+":"+relative], cwd=ROOT).replace(b"\r\n", b"\n")
+    active = (ROOT/relative).read_bytes().replace(b"\r\n", b"\n")
+    assert (ROOT/POST_PRODUCER_ARCHIVE).read_bytes().replace(b"\r\n", b"\n") == prior
+    assert _post_producer_prior_bytes(ROOT, relative, active) == prior != active
+    before, after = ast.parse(prior), ast.parse(active)
+    removals = []
+    for node in ast.walk(after):
+        if isinstance(node, ast.Try):
+            for item in list(node.body):
+                if isinstance(item, ast.Delete) and ast.dump(item) == "Delete(targets=[Name(id='producer_kwargs', ctx=Del())])":
+                    node.body.remove(item)
+                    removals.append(item)
+    assert len(removals) == 1
+    assert ast.dump(before) == ast.dump(after)
+
+
+@pytest.mark.parametrize("tamper", ["live", "archive", "scope", "forged_prior", "extra_source"])
+def test_post_producer_boundary_refuses_tampering(tmp_path, tamper):
+    from tools.verify_retention_reader_transition import (
+        POST_PRODUCER_MANIFEST, POST_PRODUCER_ARCHIVE, _post_producer_prior_bytes,
+    )
+    relative = "canonical_daily_operation.py"
+    for path in (POST_PRODUCER_MANIFEST, POST_PRODUCER_ARCHIVE, relative):
+        target = tmp_path/path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT/path, target)
+    assert _post_producer_prior_bytes(tmp_path, relative, (tmp_path/relative).read_bytes().replace(b"\r\n", b"\n"))
+    spec = json.loads((tmp_path/POST_PRODUCER_MANIFEST).read_bytes())
+    if tamper == "live":
+        (tmp_path/relative).write_bytes(b"tampered")
+    elif tamper in {"archive", "forged_prior"}:
+        (tmp_path/POST_PRODUCER_ARCHIVE).write_bytes(b"tampered")
+        if tamper == "forged_prior":
+            spec["sources"][relative]["prior_sha256_lf"] = hashlib.sha256(b"tampered").hexdigest()
+    elif tamper == "extra_source":
+        spec["sources"]["unrelated.py"] = spec["sources"][relative]
+    else:
+        spec["scope"] = "UNBOUNDED"
+    (tmp_path/POST_PRODUCER_MANIFEST).write_text(json.dumps(spec), encoding="utf-8")
+    with pytest.raises(ValueError, match="POST_PRODUCER_SOURCE_TRANSITION_"):
+        _post_producer_prior_bytes(tmp_path, relative, (tmp_path/relative).read_bytes().replace(b"\r\n", b"\n"))
+
+
 def test_evaluated_input_allocation_preserves_exact_predecessor_and_e4_domain():
     from tools.verify_retention_reader_transition import (
         EVALUATED_INPUT_MANIFEST, EVALUATED_INPUT_SOURCE, _evaluated_input_prior_bytes,
@@ -44,6 +94,12 @@ def test_evaluated_input_boundary_refuses_tampering(tmp_path, tamper):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
+    # Exercise this historical boundary with its own active bytes; the newest
+    # lifetime boundary has independent live/archive/scope tamper checks above.
+    from tools.verify_retention_reader_transition import POST_PRODUCER_ARCHIVE
+    shutil.copyfile(ROOT / POST_PRODUCER_ARCHIVE, tmp_path / EVALUATED_INPUT_SOURCE)
+    assert _evaluated_input_prior_bytes(tmp_path, EVALUATED_INPUT_SOURCE,
+                                       (tmp_path / EVALUATED_INPUT_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
     if tamper == "live":
         (tmp_path / EVALUATED_INPUT_SOURCE).write_bytes(b"tampered")
     elif tamper in {"archive", "forged_prior"}:

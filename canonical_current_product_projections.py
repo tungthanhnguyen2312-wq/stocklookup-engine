@@ -206,9 +206,8 @@ def _load_json(path: Path) -> dict[str, Any]:
 def _write_workspace_json(path: Path, workspace: Mapping[str, Any], *, validation_record_tickers=None) -> None:
     """Native JSON bytes without the full pretty Unicode string; atomic promotion.
 
-    Keep the frozen atomic writer and its validation/events. Its existing copy
-    API holds UTF-8 bytes, while bounded validation avoids another full Unicode
-    decode alongside the resident Daily graphs.
+    Use the opt-in bounded atomic copy with the original validation/events,
+    avoiding whole-file Unicode and UTF-8 buffers alongside resident graphs.
     An evaluated copy can discard parsed validation records: every row is still
     checked, and the emitted bytes always contain the full original graph.
     """
@@ -221,7 +220,8 @@ def _write_workspace_json(path: Path, workspace: Mapping[str, Any], *, validatio
             handle.write("\n")
         validator = load_record_artifact if validation_record_tickers is None else (
             lambda candidate: load_record_artifact(candidate, record_tickers=validation_record_tickers))
-        atomic_copy_file(prepared, path, validator=validator)
+        from stocklookup_core.acquisition.artifact_io import atomic_copy_file_bounded
+        atomic_copy_file_bounded(prepared, path, validator=validator)
 
 
 def resolve_supplementary_inputs(root: Path, session: str) -> dict[str, dict[str, Any] | None]:

@@ -51,6 +51,10 @@ def test_two_file_transition_checks_archive_and_active_bytes():
         if relative in evaluated:
             assert evaluated[relative]["prior_sha256_lf"] == expected_live
             expected_live = evaluated[relative]["active_sha256_lf"]
+        post = json.loads((ROOT / "tests/fixtures/owner_daily_post_producer_source_transition_v1.json").read_bytes())["sources"]
+        if relative in post:
+            assert post[relative]["prior_sha256_lf"] == expected_live
+            expected_live = post[relative]["active_sha256_lf"]
         assert hashlib.sha256(active).hexdigest() == expected_live
         assert hashlib.sha256(active).hexdigest() != hashlib.sha256(historical).hexdigest()
     identity = active_valuation_orchestration_identity(ROOT)

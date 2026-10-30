@@ -5,7 +5,10 @@ operational corrective. Authority effect: **NONE / MEMORY_AND_FAILURE_DIAGNOSTIC
 It introduces no provider, analytical policy, production entrypoint or evidence authority.
 
 October-30 continuation corrects genuine evaluated-valuation allocations in the
-Daily ingress, Financial V2 identity hash and full product copy. Existing JSON
+Daily ingress, Financial V2 identity hash, full product copy, streamed companion
+publication and post-seal metadata verification. The canonical caller releases its
+finished argument container before retention/feedback; returned and borrowed graphs
+retain their existing ownership. Existing JSON
 bytes, identities, fields, atomic promotion and failure semantics are preserved.
 The [investigation](internal/OWNER_DAILY_HOST_ADMISSION_INVESTIGATION_20261030.md)
 keeps admission, allocation-limit and physical-reserve failures separate, with
@@ -164,7 +167,9 @@ only the physical READY band for its exact qualified source/input envelope.
 - Workspace pretty JSON is streamed to a temporary file with its exact original
   insertion-order/indent/newline bytes, then promoted through the unchanged atomic-copy
   API with bounded JSON validation. Validation failure preserves the previous target.
-  The copy API still holds the UTF-8 file bytes; the larger Unicode buffer is avoided.
+  Workspace and evaluated-product copies use the opt-in bounded atomic-copy API,
+  preserving validation, fsync, replacement and observability events. The historical
+  bytes-writer and legacy copy APIs are unchanged.
 - Delivery self-verification hashes files in bounded blocks instead of a companion-sized buffer.
 - The full-graph retained IID resolver uses the existing core bounded parser for large files.
   Owner M1 verification still hashes the complete loaded IID and verifies every delivery

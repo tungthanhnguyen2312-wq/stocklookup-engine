@@ -1,0 +1,15 @@
+{
+  "contract_version": "owner_daily_post_producer_source_transition/v1",
+  "base_commit": "bcca504efacd70c1cd2a4b4cf107ad867cb05474",
+  "scope": "EXACT_POST_PRODUCER_ARGUMENT_LIFETIME_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576",
+  "active_e4_v2_digest": "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "archive": "tests/fixtures/owner_daily_post_producer_v1_sources/canonical_daily_operation.py.txt",
+      "prior_sha256_lf": "65da460e211b8222b76a73066a92efade27cf6d2d689d7f0239f913292d7533a",
+      "active_sha256_lf": "fb42465d5160ca1234213196dc2977dc4581a0b60c53bd3b553fbda4fed3c755"
+    }
+  }
+}

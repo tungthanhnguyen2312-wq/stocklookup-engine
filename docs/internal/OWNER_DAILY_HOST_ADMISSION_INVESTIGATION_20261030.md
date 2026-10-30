@@ -120,3 +120,47 @@ missing historical fixture or stale event-binding errors. The baseline compariso
 and original logs are retained in streamed-companion-v11-tests. Full-stage
 qualification remains pending; no IID cap, receipt, Production or release state
 has been changed by these corrections.
+
+
+The v11 companion completed at 1,048,919,265 bytes and its operation manifest was
+written. The later post-seal path stopped at the physical reserve, not an allocation
+limit: minimum physical 1,003,896,832; minimum commit 7,116,144,640; process/Job
+peak private 7,090,937,856; resident peak 1,072,705,536; runtime 971.1285796 seconds.
+Both 7-GiB ceilings remained enforced, no limit event was reported, and the whole
+tree was reaped. The run is unqualified. A post-stop host snapshot recorded
+6,848,229,376 available physical bytes; it is not substituted for the failure-time
+observation or treated as a launch permit.
+
+Post-seal original-artifact comparisons now retain the native output and source
+hashes before/after. The original self-verifier decoded the complete 59,809,861-byte
+primary bundle although only metadata was consumed. The projected reader still
+parses every ticker/owner-focus row and all metadata, preserving all existing
+session, identity, lineage and file-hash checks. Standalone native verification
+results match: process peaks 591,491,072 baseline / 334,974,976 candidate; aggregate
+Job peaks 592,412,672 / 470,863,872, runtimes 9.3173 / 6.5751 seconds. The 1-GiB
+diagnostic Job is lower than Production. These hold no IID/caller graph and do not
+qualify a combined stage.
+
+The old atomic copy also retained the complete evaluated-product UTF-8 buffer.
+An opt-in bounded copy now uses the same private sibling, fsync, pre-promotion
+validator, atomic replacement and observability events. Existing atomic-copy and
+bytes-writer functions are unchanged. Exact original identity/output checks pass
+under a 2.5-GiB diagnostic Job: process peaks 1,685,078,016 / 1,163,051,008; Job
+peaks 1,685,975,040 / 1,163,952,128; runtimes 57.1909 / 62.2582 seconds. Both outputs
+match the independently qualified SHA-256
+`4375df0c451c50892ccdb1c4130e304a49675357c98139caaf0d8e6a564add90`.
+Original evaluated input and all v11 operation outputs are unchanged. Exact scripts,
+old source-function archives and receipts are retained in post-seal-allocation-v12.
+
+The canonical caller now drops only its finished Producer argument container after
+return, releasing an otherwise unnecessary evaluated-valuation reference before
+retention/feedback. Returned operations and borrowed caller evidence remain owned
+by their existing consumers. Weak-reference checks prove both release and explicit
+Producer-retained ownership. An exact one-file successor archives the bcca504e
+source without editing older manifests/archives; an AST check permits only this
+single deletion. Feedback/E4 domains remain unchanged. 146 focused memory,
+delivery, atomic-write and lifecycle checks passed (two platform skips); 38 current
+product checks passed (two retained cases excluded); 107 orchestration/historical
+source-boundary checks passed (two retained cases excluded). The complete larger-IID
+five-stage qualification is still pending; no receipt, IID cap or admission band
+has been refreshed and Production remains unchanged.

@@ -8,6 +8,75 @@ from stocklookup_core.portfolio import portfolio_aware_decision as portfolio
 from tools import check_owner_daily_host_preflight as preflight
 
 
+def test_delivery_self_verification_metadata_parses_all_rows_without_universe_buffers(tmp_path, monkeypatch):
+    from daily_producer_pipeline import _delivery_metadata
+    path = tmp_path/'delivery.json'
+    metadata = {'session': '2026-10-26', 'operation_identity': 'op',
+                'product_identity': 'product', 'lineage': {'native': True}}
+    with path.open('w', encoding='utf-8') as handle:
+        handle.write(json.dumps(metadata)[:-1]+',"ticker_research_contexts":{')
+        for n in range(24):
+            if n:
+                handle.write(',')
+            handle.write(json.dumps(str(n))+':'+json.dumps({'text': 'Việt Nam '*131072}, ensure_ascii=False))
+        handle.write('},"owner_focus_research_contexts":[{"checked":true}],"unused":null}')
+    monkeypatch.setattr(Path, 'read_text', lambda *a, **k: pytest.fail('whole delivery Unicode'))
+    monkeypatch.setattr(Path, 'read_bytes', lambda *a, **k: pytest.fail('whole delivery bytes'))
+    assert _delivery_metadata(path) == metadata
+    with path.open('a', encoding='utf-8') as handle:
+        handle.write(' {}')
+    with pytest.raises(ValueError, match='TRAILING_JSON'):
+        _delivery_metadata(path)
+
+
+@pytest.mark.parametrize('text', [
+    '{"ticker_research_contexts":{"A":{},"B":{"bad":]}}}',
+    '{"owner_focus_research_contexts":[{}, {"bad":]}]}',
+    '{"ticker_research_contexts":{"A":{},"A":{}}}',
+])
+def test_delivery_metadata_does_not_skip_invalid_discarded_rows(tmp_path, text):
+    from daily_producer_pipeline import _delivery_metadata
+    path = tmp_path/'delivery.json'
+    path.write_text(text, encoding='utf-8')
+    with pytest.raises(ValueError):
+        _delivery_metadata(path)
+
+
+@pytest.mark.parametrize('failure', [None, 'validation', 'fsync', 'promotion'])
+def test_bounded_atomic_copy_preserves_existing_validation_promotion_contract(tmp_path, monkeypatch, failure):
+    from stocklookup_core.acquisition import artifact_io as writes
+    source, target = tmp_path/'source', tmp_path/'target'
+    payload = b'new contents\n'*200000
+    source.write_bytes(payload)
+    target.write_bytes(b'previous')
+    read = Path.read_bytes
+    monkeypatch.setattr(Path, 'read_bytes', lambda *a, **k: pytest.fail('whole-file atomic-copy buffer'))
+    events = []
+    monkeypatch.setattr(writes, '_emit_event', lambda stage, outcome, *a, **k: events.append((stage, outcome)))
+    def validator(path):
+        with path.open('rb') as handle:
+            assert handle.read(13) == payload[:13]
+        if failure == 'validation':
+            raise ValueError('validation refused')
+    def refuse(*args):
+        raise OSError('injected failure')
+    if failure == 'fsync':
+        monkeypatch.setattr(writes.os, 'fsync', refuse)
+    if failure == 'promotion':
+        monkeypatch.setattr(writes.os, 'replace', refuse)
+    if failure:
+        with pytest.raises(ValueError if failure == 'validation' else writes.AtomicWriteError):
+            writes.atomic_copy_file_bounded(source, target, validator=validator)
+        assert read(target) == b'previous'
+        assert ('atomic_promotion', 'success') not in events
+    else:
+        writes.atomic_copy_file_bounded(source, target, validator=validator)
+        assert read(target) == payload
+        assert events == [('pre_promotion_validation', 'success'), ('atomic_promotion', 'success')]
+    assert read(source) == payload
+    assert not list(tmp_path.glob('.tmp-*'))
+
+
 def test_materialization_and_owner_retention_never_buffer_the_complete_companion(tmp_path, monkeypatch):
     import ai_research_session_delivery as delivery
     import daily_research_session_operations as operations

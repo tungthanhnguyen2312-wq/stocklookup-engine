@@ -74,6 +74,9 @@ def _copy_domain(tmp_path: Path) -> None:
     evaluated = "tests/fixtures/owner_daily_evaluated_input_source_transition_v1.json"
     relatives.append(evaluated)
     relatives.extend(row["archive"] for row in json.loads((ROOT / evaluated).read_bytes())["sources"].values())
+    post_producer = "tests/fixtures/owner_daily_post_producer_source_transition_v1.json"
+    relatives.append(post_producer)
+    relatives.extend(row["archive"] for row in json.loads((ROOT / post_producer).read_bytes())["sources"].values())
     for relative in relatives:
         _copy_file(tmp_path, relative)
 

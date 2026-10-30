@@ -1017,6 +1017,10 @@ def run_canonical_daily_operation(
                 shadow_artifact_output_root=operation_output_root / "operations-review" / "daily-session-shadow-recommendation-v1",
             )
         producer_result = produce(root, **producer_kwargs)
+        # Producer/current-product consumers have finished with these arguments.
+        # Keep the returned operation and caller-owned evidence, but do not hold
+        # a separate evaluated-valuation universe through retention/feedback.
+        del producer_kwargs
     except DailyProducerError as exc:
         raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, str(exc)) from exc
     except CanonicalPostCloseError as exc:
