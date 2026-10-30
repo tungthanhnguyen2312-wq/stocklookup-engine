@@ -76,6 +76,45 @@ RESIDENT_PRIOR_PINS = ("16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe
 BRIEF_INPUT_MANIFEST = "tests/fixtures/owner_daily_brief_inputs_source_transition_v1.json"
 BRIEF_INPUT_SOURCE = "stocklookup_core/decision/daily_integrated_decision_brief.py"
 BRIEF_INPUT_ARCHIVE = "tests/fixtures/owner_daily_brief_inputs_v1_sources/daily_integrated_decision_brief.py.txt"
+EVALUATED_INPUT_MANIFEST = "tests/fixtures/owner_daily_evaluated_input_source_transition_v1.json"
+EVALUATED_INPUT_SOURCE = "canonical_daily_operation.py"
+EVALUATED_INPUT_ARCHIVE = "tests/fixtures/owner_daily_evaluated_input_v1_sources/canonical_daily_operation.py.txt"
+
+
+def _evaluated_input_spec(root: Path) -> dict | None:
+    path = root / EVALUATED_INPUT_MANIFEST
+    if not path.is_file():
+        return None
+    spec = json.loads(path.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "owner_daily_evaluated_input_source_transition/v1"
+            or spec.get("base_commit") != "ce188125582fb6fb2cd6c9bb064f83bf0e7ec1a7"
+            or spec.get("scope") != "EXACT_DAILY_EVALUATED_VALUATION_ALLOCATION_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("previous_e4_v2_digest") != "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
+            or not isinstance(spec.get("sources"), dict) or tuple(spec["sources"]) != (EVALUATED_INPUT_SOURCE,)):
+        raise ValueError("EVALUATED_INPUT_SOURCE_TRANSITION_SCOPE_INVALID")
+    return spec
+
+
+def _evaluated_input_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    if relative != EVALUATED_INPUT_SOURCE:
+        return active
+    spec = _evaluated_input_spec(root)
+    if spec is None:
+        return active
+    row = spec["sources"][relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != EVALUATED_INPUT_ARCHIVE):
+        raise ValueError("EVALUATED_INPUT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / EVALUATED_INPUT_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (row["prior_sha256_lf"] != "d828e9710d559192dbd4bfd19743fba414851942e0c4ae8bc99a38b1fb0622b8"
+            or hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("EVALUATED_INPUT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
 
 
 def _brief_input_spec(root: Path) -> dict | None:
@@ -132,6 +171,7 @@ def _resident_spec(root: Path) -> dict | None:
 
 
 def _resident_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    active = _evaluated_input_prior_bytes(root, relative, active)
     active = _brief_input_prior_bytes(root, relative, active)
     if relative not in RESIDENT_SOURCES:
         return active
@@ -558,6 +598,11 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if brief_inputs["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = brief_inputs["active_e4_v2_digest"]
+    evaluated_input = _evaluated_input_spec(root)
+    if evaluated_input is not None:
+        if evaluated_input["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = evaluated_input["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

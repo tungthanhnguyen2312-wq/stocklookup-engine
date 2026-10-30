@@ -114,6 +114,9 @@ def _copy_boundary(tmp_path: Path) -> None:
     brief_inputs = "tests/fixtures/owner_daily_brief_inputs_source_transition_v1.json"
     paths.add(brief_inputs)
     paths.update(row["archive"] for row in json.loads((ROOT / brief_inputs).read_bytes())["sources"].values())
+    evaluated = "tests/fixtures/owner_daily_evaluated_input_source_transition_v1.json"
+    paths.add(evaluated)
+    paths.update(row["archive"] for row in json.loads((ROOT / evaluated).read_bytes())["sources"].values())
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)

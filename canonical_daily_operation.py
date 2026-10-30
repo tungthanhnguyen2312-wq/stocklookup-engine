@@ -1005,8 +1005,9 @@ def run_canonical_daily_operation(
             evaluated_path = session_artifact_paths(artifact_root, resolved_session)["current_valuation_evaluated"]
             if evaluated_path.is_file():
                 try:
+                    from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
                     producer_kwargs["evaluated_valuation"] = accept_evaluated_valuation(
-                        json.loads(evaluated_path.read_text(encoding="utf-8")))
+                        load_record_artifact(evaluated_path))
                 except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
                     producer_kwargs["evaluated_valuation"] = None
         if operation_output_root != root:
