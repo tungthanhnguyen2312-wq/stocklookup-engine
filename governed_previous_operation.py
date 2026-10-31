@@ -139,17 +139,53 @@ def _pointer_selected_operation(root: Path, session: str) -> tuple[str | None, s
     return operation_identity, str(manifest["daily_product_identity"]), None
 
 
+def _has_retained_operation_directory(root: Path, session: str) -> bool:
+    session_dir = Path(root) / _OPERATIONS / session
+    return session_dir.is_dir() and any(path.is_dir() for path in session_dir.iterdir())
+
+
+def _unsealed_pending_input_freeze_session(
+    producer_root: Path | None,
+    retained_evidence_root: Path,
+    current_session: str,
+) -> str | None:
+    """Return a pending input-freeze session that is not a governed previous operation.
+
+    ``COMPLETED_RETAINED_EVIDENCE`` on an admitted freeze is an input lock for a
+    Daily that has not been sealed. It must not hide the last sealed operation.
+    A freeze that already has a retained operation directory is left to the
+    normal lineage rules. A committed completion with no operation stays
+    fail-closed, because that diff is no longer an admitted freeze.
+    """
+    if producer_root is None:
+        return None
+    from pending_session_input_freeze import classify_pending_input_freeze
+
+    freeze = classify_pending_input_freeze(Path(producer_root))
+    session = freeze.session if freeze.admitted else None
+    if not isinstance(session, str) or not session or session >= current_session:
+        return None
+    if _has_retained_operation_directory(retained_evidence_root, session):
+        return None
+    return session
+
+
 def resolve_governed_previous_operation(
     current_session: str,
     registry: Mapping[str, Any],
     retained_evidence_root: Path,
+    *,
+    producer_root: Path | None = None,
 ) -> dict[str, Any]:
     """Resolve the exact prior Daily operation or return an explicit failure state."""
+    excluded_freeze = _unsealed_pending_input_freeze_session(
+        producer_root, retained_evidence_root, current_session,
+    )
     completed = registry.get("completed_sessions") or {}
     prior_sessions: list[tuple[str, dict[str, str]]] = []
     for candidate in completed:
         candidate_session = str(candidate)
-        if candidate_session >= current_session:
+        if candidate_session >= current_session or candidate_session == excluded_freeze:
             continue
         try:
             frozen = frozen_input_identities(registry, candidate_session)
@@ -158,8 +194,11 @@ def resolve_governed_previous_operation(
         if frozen is not None:
             prior_sessions.append((candidate_session, frozen))
     if not prior_sessions:
-        return {"status": NO_PRIOR_GOVERNED_SESSION, "previous_session": None,
-                "candidate_count": 0, "qualified_candidate_count": 0, "candidates": []}
+        empty = {"status": NO_PRIOR_GOVERNED_SESSION, "previous_session": None,
+                 "candidate_count": 0, "qualified_candidate_count": 0, "candidates": []}
+        if excluded_freeze is not None:
+            empty["excluded_pending_input_freeze_session"] = excluded_freeze
+        return empty
 
     previous_session, frozen = max(prior_sessions, key=lambda item: item[0])
     session_dir = Path(retained_evidence_root) / _OPERATIONS / previous_session
@@ -174,6 +213,8 @@ def resolve_governed_previous_operation(
         "candidates": candidates,
         "selection_basis": None,
     }
+    if excluded_freeze is not None:
+        result["excluded_pending_input_freeze_session"] = excluded_freeze
     if not candidates:
         result["status"] = MISSING_GOVERNED_PREVIOUS_OPERATION
         return result
