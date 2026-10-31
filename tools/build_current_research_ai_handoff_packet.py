@@ -93,9 +93,7 @@ def build(*, root: Path, session: str, requested_at: str, operation_dir: str | N
     values, _ = dso.resolve_inputs(root, session, registry)
     descriptive_current = values.get("descriptive")
 
-    previous = gpo.resolve_governed_previous_operation(
-        session, registry, root, producer_root=root,
-    )
+    previous = gpo.resolve_governed_previous_operation(session, registry, root)
     descriptive_previous = None
     previous_session = previous.get("previous_session")
     if previous.get("status") == gpo.AVAILABLE and previous_session:

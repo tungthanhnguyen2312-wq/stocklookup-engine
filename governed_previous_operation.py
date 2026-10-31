@@ -144,6 +144,20 @@ def _has_retained_operation_directory(root: Path, session: str) -> bool:
     return session_dir.is_dir() and any(path.is_dir() for path in session_dir.iterdir())
 
 
+def _bound_producer_root(explicit: Path | None) -> Path | None:
+    """Use the caller root, or the active workspace producer when one is bound."""
+    if explicit is not None:
+        return Path(explicit)
+    try:
+        from runtime_paths import workspace_profile
+        profile = workspace_profile()
+    except Exception:
+        return None
+    paths = profile.get("paths") if isinstance(profile, Mapping) else None
+    producer = paths.get("producer") if isinstance(paths, Mapping) else None
+    return Path(producer) if producer is not None else None
+
+
 def _unsealed_pending_input_freeze_session(
     producer_root: Path | None,
     retained_evidence_root: Path,
@@ -179,7 +193,7 @@ def resolve_governed_previous_operation(
 ) -> dict[str, Any]:
     """Resolve the exact prior Daily operation or return an explicit failure state."""
     excluded_freeze = _unsealed_pending_input_freeze_session(
-        producer_root, retained_evidence_root, current_session,
+        _bound_producer_root(producer_root), retained_evidence_root, current_session,
     )
     completed = registry.get("completed_sessions") or {}
     prior_sessions: list[tuple[str, dict[str, str]]] = []

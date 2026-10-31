@@ -295,10 +295,22 @@ def test_admitted_unsealed_input_freeze_does_not_hide_the_sealed_operation(tmp_p
     assert bundle["status"] == "AVAILABLE"
     assert bundle["previous_session"] == SEALED
     assert bundle["reason_code"] is None
-    assert cdo._previous_qualified_operation_source(
-        tmp_path, session=LATER, registry=registry, producer_root=tmp_path,
-    ) == (SEALED, sealed)
-    assert stocklookup._previous(LATER, tmp_path) == sealed / "ai_research_session_bundle.json"
+
+
+def test_bound_workspace_producer_excludes_the_unsealed_freeze(tmp_path, monkeypatch):
+    _commit_sealed_registry(tmp_path)
+    registry = _admit_unsealed_freeze(tmp_path)
+    sealed, identity = _operation(tmp_path, "sealed", session=SEALED)
+    monkeypatch.setattr(
+        "runtime_paths.workspace_profile",
+        lambda observer=None: {"paths": {"producer": tmp_path}},
+    )
+    resolved = selector.resolve_governed_previous_operation(LATER, registry, tmp_path)
+    assert resolved["status"] == selector.AVAILABLE
+    assert resolved["previous_session"] == SEALED
+    assert resolved["operation_identity"] == identity
+    assert Path(resolved["operation_directory"]) == sealed
+    assert resolved["excluded_pending_input_freeze_session"] == UNSEALED_FREEZE
 
 
 def test_pending_freeze_with_a_retained_operation_stays_on_lineage_rules(tmp_path):

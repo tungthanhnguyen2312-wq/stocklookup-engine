@@ -50,9 +50,7 @@ def _previous(session: str, root: Path, *, operation_root: Path | None = None) -
 
     registry = load_registry(root)
     operation_root = operation_root or root
-    previous = resolve_governed_previous_operation(
-        session, registry, operation_root, producer_root=root,
-    )
+    previous = resolve_governed_previous_operation(session, registry, operation_root)
     if previous["status"] == AVAILABLE:
         return Path(str(previous["bundle_path"]))
     if previous["status"] == NO_PRIOR_GOVERNED_SESSION:

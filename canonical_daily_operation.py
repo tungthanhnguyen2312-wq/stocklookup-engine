@@ -608,12 +608,9 @@ def _integrated_delivery_for_session(enrichment: Mapping[str, Any], session: str
 
 def _previous_qualified_operation_source(
     root: Path, *, session: str, registry: Mapping[str, Any],
-    producer_root: Path | None = None,
 ) -> tuple[str, Path] | None:
     """Resolve pre-seal transition context through the shared governed selector."""
-    previous = resolve_governed_previous_operation(
-        session, registry, root, producer_root=producer_root,
-    )
+    previous = resolve_governed_previous_operation(session, registry, root)
     if previous["status"] == PREVIOUS_OPERATION_AVAILABLE:
         return str(previous["previous_session"]), Path(str(previous["operation_directory"]))
     if previous["status"] == "NO_PRIOR_GOVERNED_SESSION":
@@ -626,7 +623,6 @@ def _previous_qualified_operation_source(
 
 def _build_preseal_daily_integrated_brief(
     root: Path, *, session: str, operation: Mapping[str, Any], registry: Mapping[str, Any],
-    producer_root: Path | None = None,
 ) -> Mapping[str, Any]:
     """Build the canonical Daily Brief from exact in-memory pre-seal inputs.
 
@@ -655,9 +651,7 @@ def _build_preseal_daily_integrated_brief(
     draft_bundle = json.loads(draft_bundle_bytes)
     del draft_bundle_bytes
     gc.collect()
-    previous = _previous_qualified_operation_source(
-        root, session=session, registry=registry, producer_root=producer_root,
-    )
+    previous = _previous_qualified_operation_source(root, session=session, registry=registry)
     next_brief = build_from_current_delivery_payload(
         root=root,
         current_session=session,
@@ -993,8 +987,7 @@ def run_canonical_daily_operation(
     if preseal_brief_builder is None and producer_fn is None:
         registry_for_brief = load_registry(root)
         preseal_brief_builder = lambda operation: _build_preseal_daily_integrated_brief(
-            retained_evidence_root, session=resolved_session, operation=operation,
-            registry=registry_for_brief, producer_root=root,
+            retained_evidence_root, session=resolved_session, operation=operation, registry=registry_for_brief,
         )
     try:
         producer_kwargs: dict[str, Any] = dict(
