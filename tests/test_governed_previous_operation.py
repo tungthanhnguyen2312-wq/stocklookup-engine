@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import canonical_daily_operation as cdo
 import daily_execution_environment as environment
 import governed_previous_operation as selector
+import pending_session_input_freeze as freeze
 import stocklookup
 
 
@@ -190,3 +192,136 @@ def test_all_three_consumers_resolve_the_exact_same_bundle(tmp_path):
     assert preseal == (PRIOR, chosen)
     assert public_bundle == chosen / "ai_research_session_bundle.json"
     assert public_bundle == Path(resolved["bundle_path"])
+
+
+SEALED = "2026-10-23"
+UNSEALED_FREEZE = "2026-10-26"
+LATER = "2026-10-30"
+
+
+def _git(path: Path, *args: str) -> None:
+    subprocess.run(["git", "-C", str(path), *args], check=True, capture_output=True, text=True)
+
+
+def _commit_sealed_registry(root: Path) -> None:
+    _git(root, "init", "-q")
+    _git(root, "config", "user.email", "test@example.com")
+    _git(root, "config", "user.name", "Test")
+    registry = {
+        "contract_version": "daily_research_session_input_registry/v1",
+        "schema_version": "1.0.0",
+        "sessions": {
+            SEALED: {
+                "descriptive": {
+                    "path": "operations-review/sealed-descriptive.json",
+                    "artifact_identity": "descriptive:locked",
+                },
+            },
+        },
+        "completed_sessions": {
+            SEALED: {
+                "status": "COMPLETED_RETAINED_EVIDENCE",
+                "trading_day_valid": True,
+                "frozen_input_identities": {"descriptive": "descriptive:locked"},
+            },
+        },
+    }
+    (root / "config").mkdir(parents=True)
+    (root / freeze.REGISTRY_RELATIVE).write_text(json.dumps(registry), encoding="utf-8")
+    (root / "operations-review").mkdir()
+    (root / "operations-review" / "sealed-descriptive.json").write_text(
+        json.dumps({"artifact_identity": "descriptive:locked"}), encoding="utf-8",
+    )
+    _git(root, "add", freeze.REGISTRY_RELATIVE, "operations-review/sealed-descriptive.json")
+    _git(root, "commit", "-qm", "sealed previous session")
+
+
+def _admit_unsealed_freeze(root: Path) -> dict:
+    identities = {key: key + ":frozen" for key in (*freeze.REQUIRED_INPUT_KEYS, *freeze.OPTIONAL_INPUT_KEYS)}
+    selection = {}
+    for key, identity in identities.items():
+        relative = f"operations-review/freeze/{key}.json"
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"artifact_identity": identity}), encoding="utf-8")
+        selection[key] = {"path": relative, "artifact_identity": identity}
+    registry = json.loads((root / freeze.REGISTRY_RELATIVE).read_text(encoding="utf-8"))
+    registry["sessions"][UNSEALED_FREEZE] = selection
+    registry["completed_sessions"][UNSEALED_FREEZE] = {
+        "status": "COMPLETED_RETAINED_EVIDENCE",
+        "trading_day_valid": True,
+        "frozen_input_identities": identities,
+        "completion_evidence": {"basis": "EXACT_SESSION_UPSTREAM_ARTIFACT_REGISTRY"},
+    }
+    (root / freeze.REGISTRY_RELATIVE).write_text(json.dumps(registry), encoding="utf-8")
+    return registry
+
+
+def test_missing_operation_without_an_admitted_freeze_stays_closed(tmp_path):
+    registry = _registry(tmp_path, sessions=(SEALED, UNSEALED_FREEZE))
+    _operation(tmp_path, "sealed", session=SEALED)
+    resolved = selector.resolve_governed_previous_operation(
+        LATER, registry, tmp_path, producer_root=tmp_path,
+    )
+    assert resolved["status"] == selector.MISSING_GOVERNED_PREVIOUS_OPERATION
+    assert resolved["previous_session"] == UNSEALED_FREEZE
+    assert resolved["candidate_count"] == 0
+    assert "excluded_pending_input_freeze_session" not in resolved
+
+
+def test_admitted_unsealed_input_freeze_does_not_hide_the_sealed_operation(tmp_path):
+    _commit_sealed_registry(tmp_path)
+    registry = _admit_unsealed_freeze(tmp_path)
+    sealed, identity = _operation(tmp_path, "sealed", session=SEALED)
+    assert freeze.classify_pending_input_freeze(tmp_path).admitted is True
+
+    hidden = selector.resolve_governed_previous_operation(LATER, registry, tmp_path)
+    assert hidden["status"] == selector.MISSING_GOVERNED_PREVIOUS_OPERATION
+    assert hidden["previous_session"] == UNSEALED_FREEZE
+
+    resolved = selector.resolve_governed_previous_operation(
+        LATER, registry, tmp_path, producer_root=tmp_path,
+    )
+    assert resolved["status"] == selector.AVAILABLE
+    assert resolved["previous_session"] == SEALED
+    assert resolved["operation_identity"] == identity
+    assert resolved["excluded_pending_input_freeze_session"] == UNSEALED_FREEZE
+    assert Path(resolved["operation_directory"]) == sealed
+
+    bundle = next(
+        row for row in environment.required_retained_inputs(tmp_path, LATER)
+        if row["contract"] == "governed_previous_session_bundle"
+    )
+    assert bundle["status"] == "AVAILABLE"
+    assert bundle["previous_session"] == SEALED
+    assert bundle["reason_code"] is None
+
+
+def test_bound_workspace_producer_excludes_the_unsealed_freeze(tmp_path, monkeypatch):
+    _commit_sealed_registry(tmp_path)
+    registry = _admit_unsealed_freeze(tmp_path)
+    sealed, identity = _operation(tmp_path, "sealed", session=SEALED)
+    monkeypatch.setattr(
+        "runtime_paths.workspace_profile",
+        lambda observer=None: {"paths": {"producer": tmp_path}},
+    )
+    resolved = selector.resolve_governed_previous_operation(LATER, registry, tmp_path)
+    assert resolved["status"] == selector.AVAILABLE
+    assert resolved["previous_session"] == SEALED
+    assert resolved["operation_identity"] == identity
+    assert Path(resolved["operation_directory"]) == sealed
+    assert resolved["excluded_pending_input_freeze_session"] == UNSEALED_FREEZE
+
+
+def test_pending_freeze_with_a_retained_operation_stays_on_lineage_rules(tmp_path):
+    _commit_sealed_registry(tmp_path)
+    registry = _admit_unsealed_freeze(tmp_path)
+    _operation(tmp_path, "sealed", session=SEALED)
+    identities = registry["completed_sessions"][UNSEALED_FREEZE]["frozen_input_identities"]
+    _operation(tmp_path, "freeze-op", session=UNSEALED_FREEZE, frozen=identities)
+    resolved = selector.resolve_governed_previous_operation(
+        LATER, registry, tmp_path, producer_root=tmp_path,
+    )
+    assert resolved["status"] == selector.AVAILABLE
+    assert resolved["previous_session"] == UNSEALED_FREEZE
+    assert "excluded_pending_input_freeze_session" not in resolved

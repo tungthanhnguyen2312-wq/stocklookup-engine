@@ -266,7 +266,9 @@ def required_retained_inputs(
     if registry is not None:
         from governed_previous_operation import AVAILABLE, NO_PRIOR_GOVERNED_SESSION, resolve_governed_previous_operation
 
-        previous = resolve_governed_previous_operation(session, registry, root)
+        previous = resolve_governed_previous_operation(
+            session, registry, root, producer_root=registry_root,
+        )
         no_prior = previous["status"] == NO_PRIOR_GOVERNED_SESSION
         result.append({
             "contract": "governed_previous_session_bundle",
