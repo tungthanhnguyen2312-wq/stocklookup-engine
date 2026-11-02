@@ -1,0 +1,20 @@
+{
+  "contract_version": "tplus_real_t0_corpus_source_transition/v1",
+  "base_commit": "f56cab5e7c2bd821898cd8bee5a5a90f2ffa3551",
+  "scope": "EXACT_TPLUS_EVIDENCE_ROOT_AND_EMPTY_CORPUS_REFUSAL_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576",
+  "active_e4_v2_digest": "0826e949057e4a06b088431e72445e5ae71ba46c85af3e38dc704243705fb850",
+  "sources": {
+    "prospective_feedback_streaming.py": {
+      "archive": "tests/fixtures/tplus_real_t0_corpus_v1_sources/prospective_feedback_streaming.py.txt",
+      "prior_sha256_lf": "f45dbec0651019c2dd17864d4f1f2c500785837d48d52870ebf33618c81cdfc9",
+      "active_sha256_lf": "7fa8b1b615eee96e22a65039bbb2fb249ddcaacbfa4e3e3fa533535ca31c1dd8"
+    },
+    "canonical_post_close_pipeline.py": {
+      "archive": "tests/fixtures/tplus_real_t0_corpus_v1_sources/canonical_post_close_pipeline.py.txt",
+      "prior_sha256_lf": "d5bd706e785bc33990641b57452a48e937a0fbe047d563e73575bb0d5412cbe4",
+      "active_sha256_lf": "3366fa17ef5d382b8fb2e9372ee44d6c5f46377617a4039f9720cd3c54ac1aa6"
+    }
+  }
+}

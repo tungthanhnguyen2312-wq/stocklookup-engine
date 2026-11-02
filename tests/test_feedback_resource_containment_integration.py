@@ -69,6 +69,19 @@ def test_success_is_compact_and_the_parent_never_receives_the_artifact(world):
     assert again["relation"] == "NO_PRIOR"  # no earlier status was supplied, so no relation is claimed
 
 
+
+def test_misrouted_root_is_an_explicit_unavailable_state_never_a_completed_empty_artifact(world, tmp_path):
+    root, state, out = world
+    code = tmp_path / "code"
+    (code / "operations-review" / "unrelated-research-v1").mkdir(parents=True)
+    result = _run(code, state, out)
+    assert result["status"] == "UNAVAILABLE" and result["reason_code"] == "FEEDBACK_T0_CORPUS_EMPTY"
+    assert not (out / "feedback.json").exists()
+    status = json.loads((out / "feedback.json.status.json").read_text(encoding="utf-8"))
+    assert status["status"] == "FAILED" and status["reason_code"] == "FEEDBACK_T0_CORPUS_EMPTY"
+    # The evidence root builds real feedback into the same path afterwards.
+    assert _run(root, state, out)["status"] == "COLLECTED"
+
 def test_timeout_before_first_output_publishes_nothing_and_changes_no_evidence(world, tmp_path, monkeypatch):
     root, state, out = world
     before = _fingerprint(root)

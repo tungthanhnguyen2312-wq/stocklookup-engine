@@ -488,3 +488,46 @@ def test_equal_content_under_new_code_refreshes_the_manifest_so_the_next_call_re
     assert second["outcome"] == streaming.OUTCOME_ALREADY_RETAINED_EQUAL and second["artifact_identity"] == first["artifact_identity"]
     assert streaming.read_completion(output)["code_digest"] == "different-code-digest"
     assert _build(root, output, state)["outcome"] == streaming.OUTCOME_ALREADY_COMPLETE  # reuse resumes
+
+
+# -- evidence root and empty corpus (DAILY_TPLUS_REAL_T0_CORPUS_INTEGRATION_AND_RECOVERY) ------------------
+
+def _code_like_root(tmp_path: Path) -> Path:
+    """A Producer code checkout: it has operations-review research folders but no sealed T0, operation or handoff."""
+    code = tmp_path / "code"
+    (code / "operations-review" / "unrelated-research-v1").mkdir(parents=True)
+    (code / "config").mkdir()
+    return code
+
+
+def test_empty_or_misrouted_root_is_refused_never_published_as_zero_feedback(corpus, tmp_path):
+    root, _sessions, state, output = corpus
+    for wrong in (_code_like_root(tmp_path), tmp_path / "absent-root"):
+        with pytest.raises(streaming.T0CorpusEmpty) as raised:
+            _build(wrong, output, state)
+        assert raised.value.code == streaming.REASON_T0_CORPUS_EMPTY == "FEEDBACK_T0_CORPUS_EMPTY"
+        assert not output.exists() and streaming.read_completion(output) is None
+    # The same call against the evidence root that holds the sealed T0 corpus builds real rows.
+    result = _build(root, output, state)
+    assert result["outcome"] == streaming.OUTCOME_BUILT and result["record_count"] == 8 * len(TICKERS)
+
+
+def test_evidence_root_reports_mature_and_pending_horizons_per_session(corpus):
+    root, sessions, state, output = corpus
+    result = _build(root, output, state)
+    artifact = json.loads(output.read_text(encoding="utf-8"))
+    by_session: dict[str, int] = {}
+    statuses = set()
+    for row in artifact["feedback_records"]:
+        by_session[row["decision_session"]] = by_session.get(row["decision_session"], 0) + 1
+        statuses.add(row["forward_outcomes"]["horizons"]["forward_close_return_5"]["status"])
+    assert sorted(by_session) == sorted(sessions) and set(by_session.values()) == {len(TICKERS)}
+    assert "MATURE" in statuses and statuses - {"MATURE"}, statuses  # the latest sessions are not mature yet
+    assert sorted(result["inputs_summary"]["chain_sessions"]) == sorted(sessions)
+
+
+def test_assemble_refuses_missing_segments_instead_of_falling_back(tmp_path):
+    sections = {"summary": {}}
+    for rows in (streaming._Segments([], 0), object()):
+        with pytest.raises(streaming.FeedbackStreamError, match="FEEDBACK_STREAM_SEGMENTS_MISSING"):
+            streaming._assemble(tmp_path / "out.json", sections, rows, streaming._Segments([], 0), {})

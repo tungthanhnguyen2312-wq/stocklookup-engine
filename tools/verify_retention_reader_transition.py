@@ -69,6 +69,10 @@ TPLUS_RESUME_SOURCE = "prospective_feedback_streaming.py"
 TPLUS_DAILY_MANIFEST = "tests/fixtures/tplus_daily_incremental_source_transition_v1.json"
 TPLUS_DAILY_ARCHIVE = "tests/fixtures/tplus_daily_incremental_v1_sources/prospective_feedback_streaming.py.txt"
 TPLUS_DAILY_BASE = "53c7d8e8300283e8d6c8386e7281175d3f0f5aba"
+TPLUS_REAL_CORPUS_MANIFEST = "tests/fixtures/tplus_real_t0_corpus_source_transition_v1.json"
+TPLUS_REAL_CORPUS_BASE = "f56cab5e7c2bd821898cd8bee5a5a90f2ffa3551"
+TPLUS_REAL_CORPUS_SCOPE = "EXACT_TPLUS_EVIDENCE_ROOT_AND_EMPTY_CORPUS_REFUSAL_ONLY"
+TPLUS_REAL_CORPUS_SOURCES = (TPLUS_RESUME_SOURCE, "canonical_post_close_pipeline.py")
 RESIDENT_MANIFEST = "tests/fixtures/owner_daily_resident_iid_source_transition_v1.json"
 RESIDENT_SOURCES = ("canonical_daily_operation.py", "stocklookup_core/decision/daily_integrated_decision_brief.py")
 RESIDENT_PRIOR_PINS = ("16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
@@ -232,6 +236,37 @@ def _resident_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _tplus_real_corpus_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-03 T+ evidence-root successor before every older pin of the same source.
+
+    Only the feedback child's ``--root`` (operation evidence root) and the explicit empty-corpus
+    refusal changed. Older manifests stay unchanged; a missing manifest keeps older checkouts valid.
+    """
+    manifest = root / TPLUS_REAL_CORPUS_MANIFEST
+    if relative not in TPLUS_REAL_CORPUS_SOURCES or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_real_t0_corpus_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_REAL_CORPUS_BASE
+            or spec.get("scope") != TPLUS_REAL_CORPUS_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != TPLUS_REAL_CORPUS_SOURCES):
+        raise ValueError("TPLUS_REAL_CORPUS_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    archive = "tests/fixtures/tplus_real_t0_corpus_v1_sources/" + relative + ".txt"
+    if not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("TPLUS_REAL_CORPUS_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TPLUS_REAL_CORPUS_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _tplus_daily_spec(root: Path) -> dict | None:
     manifest = root / TPLUS_DAILY_MANIFEST
     if not manifest.is_file():
@@ -308,6 +343,8 @@ def _iid_runtime_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     The archived bytes are the exact pre-corrective sources. Older manifests stay
     unchanged and still bind those bytes. A missing manifest keeps older checkouts valid.
     """
+    if relative == "canonical_post_close_pipeline.py":
+        active = _tplus_real_corpus_prior_bytes(root, relative, active)
     manifest = root / IID_RUNTIME_MANIFEST
     if not manifest.is_file():
         return active
@@ -459,6 +496,8 @@ def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) ->
 
 def _storage_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve exact pre-storage sources without repinning either historical domain."""
+    if relative == TPLUS_RESUME_SOURCE:
+        active = _tplus_real_corpus_prior_bytes(root, relative, active)
     active = _tplus_daily_prior_bytes(root, relative, active)
     active = _tplus_resume_prior_bytes(root, relative, active)
     manifest = root / STORAGE_MANIFEST
@@ -670,6 +709,12 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if post_producer["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = post_producer["active_e4_v2_digest"]
+    if (root / TPLUS_REAL_CORPUS_MANIFEST).is_file():
+        real_corpus = json.loads((root / TPLUS_REAL_CORPUS_MANIFEST).read_bytes())
+        _tplus_real_corpus_prior_bytes(root, TPLUS_RESUME_SOURCE, (root / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
+        if real_corpus["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = real_corpus["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

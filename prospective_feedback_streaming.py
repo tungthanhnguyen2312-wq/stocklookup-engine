@@ -65,10 +65,16 @@ REASON_COMPUTATION_ERROR = "FEEDBACK_COMPUTATION_ERROR"
 REASON_RESOURCE_MEMORY = "FEEDBACK_RESOURCE_MEMORY_LIMIT"
 REASON_RESOURCE_DISK = "FEEDBACK_RESOURCE_DISK_UNAVAILABLE"
 REASON_INCOMPLETE_INPUT_CHANGED = "FEEDBACK_SOURCE_CHANGED_DURING_RUN"
+REASON_T0_CORPUS_EMPTY = "FEEDBACK_T0_CORPUS_EMPTY"
 
 
 class FeedbackStreamError(Exception):
     code = REASON_COMPUTATION_ERROR
+
+
+class T0CorpusEmpty(FeedbackStreamError):
+    """No genuine T0 source under ``root``: a wrong evidence root or a missing corpus, never zero feedback."""
+    code = REASON_T0_CORPUS_EMPTY
 
 
 class SourceIntegrityError(FeedbackStreamError):
@@ -1089,6 +1095,11 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     completed_chain = _completed_chain(root)
     chain = sorted(set(completed_chain) | set(legacy_chain) | set(modern_chain))
     phases["discovery_s"] = clock() - t
+    if not modern_genuine and not corpus["genuine_artifacts"]:
+        # Refuse before any identity, reuse or publication: an empty artifact would be indistinguishable
+        # from "no outcome evidence" and would hide a misrouted root (2026-10-22..11-02 Daily runs).
+        raise T0CorpusEmpty(f"{REASON_T0_CORPUS_EMPTY}:root={root}:t0_inventory={len(modern_discovery['inventory'])}"
+                            f":legacy_inventory={len(corpus['inventory'])}:completed_chain={len(completed_chain)}")
 
     t = clock()
     prices = PriceIndex(state_root, metrics)
@@ -1327,7 +1338,7 @@ def _sections(corpus, modern_discovery, modern_genuine, legacy_chain, modern_cha
     }
 
 
-def _assemble(final_tmp: Path, sections: Mapping[str, Any], rows: _Spool, triggers: _Spool, metrics) -> tuple[str, int, str, int]:
+def _assemble(final_tmp: Path, sections: Mapping[str, Any], rows: _Segments, triggers: _Segments, metrics) -> tuple[str, int, str, int]:
     """Write ``{"artifact_identity":…,<canonical members>}`` and hash the canonical members as they are written."""
     placeholder = ARTIFACT_IDENTITY_PREFIX + "0" * 64
     head = b'{"artifact_identity":"' + placeholder.encode() + b'",'
@@ -1349,7 +1360,11 @@ def _assemble(final_tmp: Path, sections: Mapping[str, Any], rows: _Spool, trigge
             if key in streamed:
                 emit(b"[")
                 written = False
-                for path in getattr(streamed[key], "paths", None) or [streamed[key].path]:
+                segments = streamed[key]
+                if not isinstance(segments, _Segments) or not segments.paths:
+                    # One partition per genuine session; an empty corpus is refused at discovery.
+                    raise FeedbackStreamError("FEEDBACK_STREAM_SEGMENTS_MISSING:" + key)
+                for path in segments.paths:
                     if path.stat().st_size == 0:
                         continue
                     if written:
