@@ -1,0 +1,112 @@
+{
+ "schema": "tplus_real_t0_corpus_recovery_receipt/v1",
+ "milestone": "DAILY_TPLUS_REAL_T0_CORPUS_INTEGRATION_AND_RECOVERY",
+ "authority_effect": "NONE",
+ "boundary": "RETAINED_ONLY_POST_HANDOFF_MATURITY_REFRESH_NOT_A_CURRENT_DECISION_INPUT",
+ "code": {
+  "production_head": "c4fa8ae69fbfe0641e89ca27f8cbbdf98c17bcbc",
+  "pr": "https://github.com/tungthanhnguyen2312-wq/stocklookup-engine/pull/207",
+  "e4_v2_digest": "0826e949057e4a06b088431e72445e5ae71ba46c85af3e38dc704243705fb850"
+ },
+ "root_cause": "Daily feedback child received --root <code checkout>; sealed T0/operations/handoffs live under retained-evidence. 10-22 and 10-23 published COMPLETED artifacts with 0 records and 0 T0 inputs (empty corpus, not evidence of zero outcomes); 11-02 crashed FEEDBACK_COMPUTATION_ERROR.",
+ "historical_artifacts_unchanged": [
+  "prospective-decision-outcome-feedback-v1/2026-10-22",
+  "prospective-decision-outcome-feedback-v1/2026-10-23",
+  "post-handoff-v1/2026-10-22",
+  "post-handoff-v1/2026-10-23",
+  "prospective-decision-outcome-feedback-v1/2026-11-02 (FAILED status)"
+ ],
+ "recompute": {
+  "command": "tools/run_prospective_decision_outcome_feedback.py --root retained-evidence --output <post-handoff-v1/2026-11-02> (no deadline; retained-only; no DNSE, no Daily rerun)",
+  "started_at": "2026-11-03T00:40:53+07:00",
+  "finished_at": "2026-11-03T01:14:35+07:00",
+  "outcome": "BUILT",
+  "artifact_identity": "prospective_decision_outcome_feedback:bede36ebde087f6986932aca6c4f18e39dadb7966907d52622c0ad0cd71293aa",
+  "artifact_size": 1328544384,
+  "record_count": 58905,
+  "input_digest": "9575b0f17ebb1c7f0b043e8d07993ce66c2aeb5a40500543e4cbda4b20416961",
+  "peak_memory_bytes": 1130205184,
+  "phases_seconds": {
+   "aggregate_s": 17.783,
+   "assemble_s": 12.891,
+   "discovery_s": 1000.527,
+   "evaluate_s": 978.543,
+   "price_index_s": 2.547,
+   "total_s": 2013.77
+  },
+  "chain_sessions": 36,
+  "t0_snapshot_identities": 32,
+  "legacy_artifacts": 3
+ },
+ "idempotent_warm_rerun": {
+  "outcome": "ALREADY_COMPLETE",
+  "artifact_identity": "prospective_decision_outcome_feedback:bede36ebde087f6986932aca6c4f18e39dadb7966907d52622c0ad0cd71293aa",
+  "phases_seconds": {
+   "discovery_s": 248.864,
+   "price_index_s": 2.483,
+   "total_s": 255.554
+  }
+ },
+ "corpus": {
+  "candidate_artifact_count": 44,
+  "classification_counts": {
+   "CURRENT_VIEW_OF_OLD_SESSION": 38,
+   "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED": 1,
+   "GENUINE_PROSPECTIVE_DECISION": 3,
+   "UNKNOWN_TEMPORAL_STATUS": 2
+  },
+  "genuine_artifact_count": 3,
+  "genuine_decision_count": 58905,
+  "genuine_immutable_snapshot_count": 32,
+  "immutable_snapshot_count": 34,
+  "snapshot_classification_counts": {
+   "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED": 2,
+   "GENUINE_PROSPECTIVE_DECISION": 32
+  }
+ },
+ "forward_outcome_coverage": {
+  "forward_close_return_1": {
+   "CLOSE_PRICE_NOT_RETAINED": 27574,
+   "MATURE": 17096,
+   "MISSED_CAPTURE": 1745,
+   "PENDING_NOT_ENOUGH_FUTURE_SESSIONS": 865,
+   "PRICE_BASIS_INCOMPATIBLE": 1527,
+   "T0_SESSION_NOT_IN_GOVERNED_CHAIN": 10098
+  },
+  "forward_close_return_10": {
+   "CLOSE_PRICE_NOT_RETAINED": 27092,
+   "MATURE": 12393,
+   "MISSED_CAPTURE": 7705,
+   "PENDING_NOT_ENOUGH_FUTURE_SESSIONS": 865,
+   "PRICE_BASIS_INCOMPATIBLE": 752,
+   "T0_SESSION_NOT_IN_GOVERNED_CHAIN": 10098
+  },
+  "forward_close_return_20": {
+   "CLOSE_PRICE_NOT_RETAINED": 26568,
+   "MATURE": 9442,
+   "MISSED_CAPTURE": 7705,
+   "PENDING_NOT_ENOUGH_FUTURE_SESSIONS": 4351,
+   "PRICE_BASIS_INCOMPATIBLE": 741,
+   "T0_SESSION_NOT_IN_GOVERNED_CHAIN": 10098
+  },
+  "forward_close_return_3": {
+   "CLOSE_PRICE_NOT_RETAINED": 27334,
+   "MATURE": 13952,
+   "MISSED_CAPTURE": 5141,
+   "PENDING_NOT_ENOUGH_FUTURE_SESSIONS": 865,
+   "PRICE_BASIS_INCOMPATIBLE": 1515,
+   "T0_SESSION_NOT_IN_GOVERNED_CHAIN": 10098
+  },
+  "forward_close_return_5": {
+   "CLOSE_PRICE_NOT_RETAINED": 26915,
+   "MATURE": 12571,
+   "MISSED_CAPTURE": 7705,
+   "PENDING_NOT_ENOUGH_FUTURE_SESSIONS": 865,
+   "PRICE_BASIS_INCOMPATIBLE": 751,
+   "T0_SESSION_NOT_IN_GOVERNED_CHAIN": 10098
+  }
+ },
+ "per_session_maturity_file": "per_session_maturity.txt",
+ "governed_capture_chain_gaps": "No complete PIT capture for 2026-10-09, 10-19..10-23, 10-26, 10-27, 10-29, 10-30: their T0 is T0_SESSION_NOT_IN_GOVERNED_CHAIN and horizons crossing them are INSUFFICIENT_FUTURE_DEPTH/MISSED_CAPTURE. Not reconstructed.",
+ "storage_observation": "After the 11-02 Daily (~13 GB) and this recompute (~3.3 GB) T: free is about 159.07 GB against the 171.80 GB workload reserve: host preflight storage is BLOCKED for the next Daily."
+}
