@@ -1914,7 +1914,7 @@ def run_post_handoff_prospective_outcome_feedback(
     )
     prior_status = (output_root / "operations-review" / "prospective-decision-outcome-feedback-v1" / session
                     / "prospective_decision_feedback_artifact.json.status.json")
-    bounded = run_bounded_prospective_feedback(root, session, output=output, stage=FEEDBACK_STAGE_POST_HANDOFF, prior_status_path=prior_status)
+    bounded = run_bounded_prospective_feedback(output_root, session, output=output, stage=FEEDBACK_STAGE_POST_HANDOFF, prior_status_path=prior_status)
     boundary = "RETAINED_ONLY_POST_HANDOFF_MATURITY_REFRESH_NOT_A_CURRENT_DECISION_INPUT"
     if bounded["status"] != "COLLECTED":
         return {"status": "UNAVAILABLE", "session": session, "reason_code": bounded.get("reason_code"), "reason": bounded.get("reason"),
@@ -2189,10 +2189,14 @@ FEEDBACK_STAGE_POST_HANDOFF = "POST_HANDOFF"
 
 
 def run_bounded_prospective_feedback(
-    root: Path, session: str, *, output: Path, stage: str, prior_status_path: Path | None = None,
+    evidence_root: Path, session: str, *, output: Path, stage: str, prior_status_path: Path | None = None,
     policy: Any = None, state_root: Path | None = None,
 ) -> dict[str, Any]:
     """Run one optional outcome-feedback child under admission, a TOTAL deadline and a memory ceiling.
+
+    ``evidence_root`` is the operation's evidence tree that holds the sealed T0 snapshots, Daily
+    operation manifests and handoffs (Production: ``retained-evidence``), never the code checkout:
+    reading the code checkout found no T0 and produced empty feedback from 2026-10-22 to 11-02.
 
     OWNER_DAILY_FEEDBACK_RESOURCE_CONTAINMENT_V1. Fail-soft: every non-success is a bounded UNAVAILABLE
     result carrying a *resource or defect* reason code, never an investment/feedback state. The parent
@@ -2233,7 +2237,7 @@ def run_bounded_prospective_feedback(
     import tempfile
     import uuid
     attempt_path = Path(tempfile.gettempdir()) / ("feedback-attempt-" + uuid.uuid4().hex + ".json")
-    command = [sys.executable, str(code_dir / "tools" / "run_prospective_decision_outcome_feedback.py"), "--root", str(root),
+    command = [sys.executable, str(code_dir / "tools" / "run_prospective_decision_outcome_feedback.py"), "--root", str(evidence_root),
                "--output", str(output), "--result", str(attempt_path), "--status", str(status_path)]
     if prior_status_path is not None and Path(prior_status_path).is_file():
         command += ["--prior-result", str(prior_status_path)]
@@ -2317,7 +2321,7 @@ def run_prospective_collection(
         / "prospective_decision_feedback_artifact.json"
     )
     # Bounded child: the parent keeps only a compact status (identity + path), never the multi-hundred-MB artifact.
-    feedback = run_bounded_prospective_feedback(root, session, output=feedback_output, stage=FEEDBACK_STAGE_PRE_HANDOFF)
+    feedback = run_bounded_prospective_feedback(output_root, session, output=feedback_output, stage=FEEDBACK_STAGE_PRE_HANDOFF)
     return {"status": "COLLECTED", "stdout": result.stdout, "snapshot": snapshot, "path": str(output), "decision_feedback": feedback}
 
 

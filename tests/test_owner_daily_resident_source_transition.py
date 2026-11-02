@@ -120,16 +120,20 @@ def test_exact_merged_archives_and_feedback_dependencies():
         prior = subprocess.check_output(["git", "show", BASE + ":" + relative], cwd=ROOT).replace(b"\r\n", b"\n")
         live = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
         assert _resident_prior_bytes(ROOT, relative, live) == prior != live
+    from tools.verify_retention_reader_transition import _tplus_real_corpus_prior_bytes
     for _, relative in V1_SOURCES:
         deployed = subprocess.check_output(["git", "show", BASE + ":" + relative], cwd=ROOT).replace(b"\r\n", b"\n")
-        assert (ROOT / relative).read_bytes().replace(b"\r\n", b"\n") == deployed
+        # Only the 2026-11-03 T+ evidence-root successor may change this domain, and it is peeled exactly.
+        assert _tplus_real_corpus_prior_bytes(ROOT, relative, (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")) == deployed
     for relative in ("retained_evidence_catalog.py", "stocklookup_core/evidence/storage_portability.py"):
         deployed = subprocess.check_output(["git", "show", BASE + ":" + relative], cwd=ROOT).replace(b"\r\n", b"\n")
         assert (ROOT / relative).read_bytes().replace(b"\r\n", b"\n") == deployed
     assert legacy_source_identity(ROOT, version="v1")["code_digest"] == "fa79baadcca197493b9ca70067fbd153f5e8bb7f50dfb6dbc6da53f253483d46"
     successor = json.loads((ROOT / "tests/fixtures/owner_daily_brief_inputs_source_transition_v1.json").read_bytes())
     assert successor["previous_e4_v2_digest"] == spec["active_e4_v2_digest"]
-    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == successor["active_e4_v2_digest"]
+    real_corpus = json.loads((ROOT / "tests/fixtures/tplus_real_t0_corpus_source_transition_v1.json").read_bytes())
+    assert real_corpus["previous_e4_v2_digest"] == successor["active_e4_v2_digest"]
+    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == real_corpus["active_e4_v2_digest"]
 
 
 @pytest.mark.parametrize("tamper", ["live", "archive", "scope", "forged_prior"])

@@ -1485,6 +1485,42 @@ def test_pre_handoff_collection_keeps_only_a_compact_feedback_status_in_the_pare
     assert len(json.dumps(feedback)) < 8000
 
 
+
+def test_both_feedback_stages_read_the_operation_evidence_root_not_the_code_checkout(tmp_path, monkeypatch):
+    # DAILY_TPLUS_REAL_T0_CORPUS_INTEGRATION_AND_RECOVERY: from 2026-10-22 to 11-02 the child got
+    # --root <code checkout>, found no sealed T0 and published empty feedback.
+    import stocklookup_core.acquisition.feedback_resource_guard as guard
+
+    code, evidence, session = tmp_path / "code", tmp_path / "retained-evidence", "2026-11-02"
+    roots = []
+
+    class Completed:
+        returncode, stdout, stderr = 0, "", ""
+
+    def fake_collection(cmd, **kwargs):
+        snapshot = Path(cmd[cmd.index("--output") + 1])
+        snapshot.parent.mkdir(parents=True, exist_ok=True)
+        snapshot.write_text(json.dumps({"snapshot_id": "cohort:1"}), encoding="utf-8")
+        return Completed()
+
+    runner = _completed_bounded()
+
+    def recording(command, **kwargs):
+        roots.append((Path(command[command.index("--root") + 1]), Path(command[command.index("--output") + 1])))
+        return runner(command, **kwargs)
+
+    monkeypatch.setattr(cpc, "run_observed_subprocess", lambda cmd, **kwargs: fake_collection(cmd))
+    _admit_everything(monkeypatch)
+    monkeypatch.setattr(guard, "run_bounded", recording)
+    cpc.run_prospective_collection(code, session, output_root=evidence)
+    cpc.run_post_handoff_prospective_outcome_feedback(code, session, output_root=evidence)
+    assert [root for root, _ in roots] == [evidence, evidence]
+    assert all(output.is_relative_to(evidence) for _, output in roots)
+    # Without a separate output root the single root still serves both roles.
+    roots.clear()
+    cpc.run_post_handoff_prospective_outcome_feedback(code, session)
+    assert roots[0][0] == code
+
 # ---- _sealed_workspace_lineage / run_post_handoff_presentation_projection
 # (CANONICAL_DAILY_OWNER_PUBLICATION_RESUME_AND_PRESENTATION_JOIN_V1): additive, presentation-
 # only re-join of Workspace/Screener now that post-handoff Signal Velocity/Flow-Price exist for
