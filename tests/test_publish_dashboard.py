@@ -667,6 +667,21 @@ class AnalysisLatestPublicationContractTests(_PublishDashboardTestBase):
         whitelist = pd.build_whitelist()
         self.assertNotIn("", whitelist)
 
+    def test_client_download_filename_is_never_a_required_or_published_file(self):
+        # 2026-11-02 Daily: portfolio.js's in-browser review export
+        # download("portfolio-research-review.json", ...) failed the whole Dashboard release
+        # as a "missing" whitelist file. A download literal is browser-built, never served.
+        (self.tmp / "portfolio.js").write_text(
+            'const d = () => download("portfolio-research-review.json", "{}", "application/json");\n'
+            'fetch("analysis_latest.json");\n',
+            encoding="utf-8",
+        )
+        whitelist = pd.build_whitelist()
+        self.assertNotIn("portfolio-research-review.json", whitelist)
+        self.assertIn("analysis_latest.json", whitelist)
+        (self.tmp / "portfolio-research-review.json").write_text("{}\n", encoding="utf-8")
+        self.assertNotIn("portfolio-research-review.json", pd.build_whitelist())
+
     def test_protected_staging_rejects_a_pre_staged_unexpected_file(self):
         """publish_live()'s own guard: something already staged outside the whitelist before
         it runs must refuse the whole publish -- proves analysis_latest.json's addition to

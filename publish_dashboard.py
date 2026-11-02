@@ -944,8 +944,16 @@ def build_whitelist() -> list[str]:
         text = (WEB_ROOT / relative).read_text(encoding="utf-8")
         paths.update(attr_re.findall(text))
         paths.update(data_re.findall(text))
+    # A download("name.json", ...) literal names a file the browser builds from local state
+    # (e.g. portfolio.js's private review export). It is never a served file, so it must not
+    # be required on disk, and it is never published.
+    download_re = re.compile(r'\bdownload\(\s*["\']([\w./-]+)["\']')
+    client_downloads: set[str] = set()
     for script in list(WEB_ROOT.glob("*.js")) + list((WEB_ROOT / "assets/js").glob("*.js")):
-        paths.update(data_re.findall(script.read_text(encoding="utf-8")))
+        text = script.read_text(encoding="utf-8")
+        client_downloads.update(download_re.findall(text))
+        paths.update(data_re.findall(text))
+    paths -= client_downloads - SAFE_WEB_ARTIFACTS
     cleaned: set[str] = set()
     for raw in paths:
         relative = raw.replace("\\", "/").split("?", 1)[0].split("#", 1)[0]
