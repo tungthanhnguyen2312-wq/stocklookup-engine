@@ -625,7 +625,7 @@
     "provider_runtime_state.py": "20727e87d0b1f12aaafa5f557c0b10405bf0dd2f933a8207aef672311969bde3",
     "provider_windows_os_backend.py": "64df9255c0e58c21549a00032e8e9886988a91e03c511d13268caec0c4895fe3",
     "provider_worker_containment.py": "b2229f37cef2dd0a66b8e99c72477330c5eb645ef50d326d30ca65afc6281a86",
-    "publish_dashboard.py": "b37c7d0ca71742a3ec49ddabe8e0cf8adac8fe4baf84a8dca06ea9ed0289ae6f",
+    "publish_dashboard.py": "4b207464cafef58ff49d7478ee0e665812a4abcfb8464fc69f2764656f666a0f",
     "qualified_research_snapshot_v2.py": "2c2ce2b5d53d726e71545683598f58e0012051729463f70008f74a0ce7263f41",
     "raw_pit_authority_matrix.py": "86d0e031babb2af81ad03804b6397e943515b77a11e537a76db72818d40b17c5",
     "recovery_replay.py": "d6974b76aeee553bde22ca4a6aa527eeb6290b73ae220da79bf5a2315dfb8370",
