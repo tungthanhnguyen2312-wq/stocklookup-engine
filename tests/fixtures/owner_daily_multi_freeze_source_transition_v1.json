@@ -1,0 +1,9 @@
+{
+  "contract_version": "owner_daily_multi_freeze_source_transition/v1",
+  "base_commit": "db496b390606b09eab3a9f9d5f6b977150d3ad00",
+  "scope": "SEALED_SESSION_REGISTRY_COMMIT_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "archive": "tests/fixtures/owner_daily_multi_freeze_v1_sources/tools/run_owner_daily.py.txt",
+  "prior_sha256_lf": "8a9b9bd130fa6e932ace91b1c2787e9434498298480e1d4be8a9244b0170ac09",
+  "active_sha256_lf": "61e81fd85c85ac2f79e9f2177968fbfa8f7413d3fe07ae39175c2bf0fdeac38b"
+}
