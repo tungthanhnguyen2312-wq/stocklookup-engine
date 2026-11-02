@@ -242,7 +242,7 @@ def test_observed_oct27_condition_admits_only_with_compensating_guard():
     assert result["classification"] == "READY"
     assert result["runtime_capacity_guard_required"] is True
     physical = result["dimensions"]["physical"]
-    assert physical["green_min_bytes"] == int(9.25 * GIB)
+    assert physical["green_min_bytes"] == preflight.QUALIFIED_PHYSICAL_BYTES
     assert physical["legacy_green_min_bytes"] == 10311071568
     assert result["dimensions"]["commit"]["green_min_bytes"] == preflight.QUALIFIED_COMMIT_BYTES
     assert result["dimensions"]["commit"]["blocked_below_bytes"] < preflight.QUALIFIED_COMMIT_BYTES
@@ -251,6 +251,30 @@ def test_observed_oct27_condition_admits_only_with_compensating_guard():
     assert preflight.evaluate(observation)["classification"] == "AMBER"
     observation["available_physical_bytes"] += 1
     assert preflight.evaluate(observation)["classification"] == "READY"
+
+
+def test_physical_green_is_measured_peak_not_job_ceiling():
+    # Measured qualified-stage private peak + Owner allowance + the reserve the runtime guard enforces.
+    assert preflight.QUALIFIED_PHYSICAL_BYTES == 7464976384 + GIB // 4 + GIB == 8807153664
+    assert preflight.QUALIFIED_PHYSICAL_BYTES < preflight.SUPERSEDED_CEILING_PHYSICAL_BYTES
+    assert preflight.MEASURED_MAX_RSS_BYTES <= preflight.MEASURED_MAX_PRIVATE_BYTES < 7 * GIB
+    guard = (preflight.ROOT / "stocklookup_core/acquisition/feedback_resource_guard.py").read_text(encoding="utf-8")
+    assert '("available_physical_bytes", GIB)' in guard  # runtime floor == PHYSICAL_RESERVE_BYTES
+    assert "ORDINARY_PROCESS_CEILING_BYTES = 7 * GIB" in guard and "ORDINARY_TREE_CEILING_BYTES = 8 * GIB" in guard
+    admission = preflight.evaluate(qualified_observation())["capacity_admission"]
+    assert admission["physical_green_basis"] == "MEASURED_MAX_PRIVATE_PLUS_OWNER_ALLOWANCE_PLUS_RUNTIME_ENFORCED_RESERVE"
+    assert admission["runtime_physical_floor_bytes"] == preflight.PHYSICAL_RESERVE_BYTES
+
+
+def test_observed_nov02_clean_desktop_admits_and_busy_desktop_does_not():
+    observation = qualified_observation()
+    observation["retained"]["iid"]["file_bytes"] = 2392834443
+    observation["available_physical_bytes"] = 9700884480  # 2026-11-02 19:46, 9.035 GiB
+    result = preflight.evaluate(observation)
+    assert result["classification"] == "READY"
+    assert result["runtime_capacity_guard_required"] is True
+    observation["available_physical_bytes"] = 8383889408  # 7.808 GiB with an agent desktop app open
+    assert preflight.evaluate(observation)["classification"] == "AMBER"
 
 
 @pytest.mark.parametrize("cause", ["source", "larger", "commit", "writer", "provenance", "disk", "pagefile"])

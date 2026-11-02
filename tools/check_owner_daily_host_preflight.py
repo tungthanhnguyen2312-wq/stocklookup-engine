@@ -18,7 +18,16 @@ GIB = 1024 ** 3
 CONTRACT_VERSION = "owner_daily_host_preflight/v1"
 MODEL_MAIN = "2c6c79224ae2a3a57b50dae7b96666bd2ec09715"
 QUALIFIED_IID_BYTES = 2394768092
-QUALIFIED_PHYSICAL_BYTES = int(9.25 * GIB)
+MEASURED_MAX_PRIVATE_BYTES = 7464976384
+MEASURED_MAX_RSS_BYTES = 7217766400
+OWNER_ALLOWANCE_BYTES = GIB // 4
+PHYSICAL_RESERVE_BYTES = GIB
+# Physical READY is the measured qualified-stage private peak (graphs held live), not the
+# 8-GiB Job commit ceiling: the ceiling is a kernel limit, and stacking its unmeasured slack
+# on the reserve double-counted. The 7/8-GiB Job ceilings and the 1-GiB runtime physical
+# floor still bound and stop the workload if it ever exceeds this measured envelope.
+QUALIFIED_PHYSICAL_BYTES = MEASURED_MAX_PRIVATE_BYTES + OWNER_ALLOWANCE_BYTES + PHYSICAL_RESERVE_BYTES
+SUPERSEDED_CEILING_PHYSICAL_BYTES = int(9.25 * GIB)
 QUALIFIED_COMMIT_BYTES = 8 * GIB + GIB // 4 + 2 * GIB
 GUIDANCE = ["Re-run host preflight; launch Daily alone only when READY."]
 
@@ -296,12 +305,16 @@ def evaluate(observation: dict) -> dict:
                 "basis": "MEASURED_STAGES_PLUS_MODELED_RESERVES_NOT_LIVE_DAILY",
                 "qualified_iid_max_bytes": QUALIFIED_IID_BYTES,
                 "qualified_commit_green_bytes": QUALIFIED_COMMIT_BYTES,
-                "measured_max_private_bytes": 7464976384, "measured_max_rss_bytes": 7217766400,
+                "measured_max_private_bytes": MEASURED_MAX_PRIVATE_BYTES,
+                "measured_max_rss_bytes": MEASURED_MAX_RSS_BYTES,
                 "october30_max_stage_private_bytes": 5268992000,
                 "child_tree_commit_ceiling_bytes": 8 * GIB,
                 "child_process_commit_ceiling_bytes": 7 * GIB,
-                "owner_allowance_bytes": GIB // 4, "physical_reserve_bytes": GIB,
-                "runtime_commit_reserve_bytes": 2 * GIB},
+                "owner_allowance_bytes": OWNER_ALLOWANCE_BYTES, "physical_reserve_bytes": PHYSICAL_RESERVE_BYTES,
+                "runtime_commit_reserve_bytes": 2 * GIB,
+                "physical_green_basis": "MEASURED_MAX_PRIVATE_PLUS_OWNER_ALLOWANCE_PLUS_RUNTIME_ENFORCED_RESERVE",
+                "superseded_ceiling_physical_green_bytes": SUPERSEDED_CEILING_PHYSICAL_BYTES,
+                "runtime_physical_floor_bytes": PHYSICAL_RESERVE_BYTES},
             "authority_effect": "NONE / OWNER_DAILY_HOST_PREFLIGHT_ONLY", "dimensions": dimensions,
             "reasons": reasons, "observations": observation,
             "peak_model": {"peak_basis": "MODELED_FROM_RETAINED_CURRENT_MAIN", "modeled_peak_bytes": peak,
