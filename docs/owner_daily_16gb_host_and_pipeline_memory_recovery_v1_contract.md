@@ -438,3 +438,28 @@ legacy scaled bands. Physical READY stays the smaller of the legacy value and
 allowance and the existing 2 GiB runtime reserve. The 7 GiB process ceiling is
 unchanged. This is still not a live Daily acceptance, an October 26–30 session,
 or a T0 declaration.
+
+## November 2 measured physical admission
+
+On 2026-11-02 19:46 host preflight refused Daily with 9.035 GiB available against
+9.25 GiB. The same host has never exceeded about 9.1 GiB available on a clean
+desktop (9.087 on 10-27, 9.035 on 11-02): Windows, its shell, Defender and
+kernel pools keep about 6.6 GiB resident, so the gate was structurally unreachable.
+
+The 9.25 GiB value added the 8 GiB aggregate Job commit **ceiling** to the
+1 GiB reserve. A ceiling is a kernel limit, not a resident demand: it stacked
+1.047 GiB of unmeasured slack on top of a reserve that the runtime guard already
+enforces every 0.5 s. Physical READY is now the measured qualified-stage private
+peak 7,464,976,384 bytes (graphs held live; RSS 7,217,766,400 is lower) + the
+0.25 GiB Owner allowance + the 1 GiB reserve = 8,807,153,664 bytes (8.202 GiB).
+
+Unchanged: 7 GiB process and 8 GiB tree Job ceilings, the 1 GiB physical and
+2 GiB commit runtime floors, commit READY 10.25 GiB, the IID-size fingerprint,
+and fail-closed stop before publication. If a live peak exceeds the measured
+envelope, those runtime guards stop the run; they do not corrupt sealed state.
+
+Live corroboration: run 9d68faee (11-02 16:47, code db496b39) built the IID at
+2.68 GiB peak RSS and reached 3.81 GiB peak in pre-seal draft delivery before its
+unrelated lineage stop. The child kept 2.43 GiB resident from IID into Producer;
+a K6/K8 process split would free only the ~0.85 GiB pre-IID residue while adding
+a 2.39 GB IID re-parse, so it is not adopted without a measured benefit.
