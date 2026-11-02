@@ -158,30 +158,39 @@ def _bound_producer_root(explicit: Path | None) -> Path | None:
     return Path(producer) if producer is not None else None
 
 
-def _unsealed_pending_input_freeze_session(
+def _unsealed_pending_input_freeze_sessions(
     producer_root: Path | None,
     retained_evidence_root: Path,
     current_session: str,
-) -> str | None:
-    """Return a pending input-freeze session that is not a governed previous operation.
+) -> tuple[str, ...]:
+    """Return the pending input-freeze sessions that are not governed previous operations.
 
     ``COMPLETED_RETAINED_EVIDENCE`` on an admitted freeze is an input lock for a
     Daily that has not been sealed. It must not hide the last sealed operation.
-    A freeze that already has a retained operation directory is left to the
-    normal lineage rules. A committed completion with no operation stays
-    fail-closed, because that diff is no longer an admitted freeze.
+    Several can be pending at once: the current Daily freezes its own session
+    while an earlier failed Daily's freeze is still uncommitted. A freeze that
+    already has a retained operation directory is left to the normal lineage
+    rules. A committed completion with no operation stays fail-closed, because
+    that row is no longer an admitted freeze.
     """
     if producer_root is None:
-        return None
+        return ()
     from pending_session_input_freeze import classify_pending_input_freeze
 
     freeze = classify_pending_input_freeze(Path(producer_root))
-    session = freeze.session if freeze.admitted else None
-    if not isinstance(session, str) or not session or session >= current_session:
-        return None
-    if _has_retained_operation_directory(retained_evidence_root, session):
-        return None
-    return session
+    if not freeze.admitted:
+        return ()
+    return tuple(
+        session for session in freeze.sessions
+        if session < current_session
+        and not _has_retained_operation_directory(retained_evidence_root, session)
+    )
+
+
+def _record_exclusions(result: dict[str, Any], excluded: tuple[str, ...]) -> None:
+    if excluded:
+        result["excluded_pending_input_freeze_session"] = excluded[-1]
+        result["excluded_pending_input_freeze_sessions"] = list(excluded)
 
 
 def resolve_governed_previous_operation(
@@ -192,14 +201,14 @@ def resolve_governed_previous_operation(
     producer_root: Path | None = None,
 ) -> dict[str, Any]:
     """Resolve the exact prior Daily operation or return an explicit failure state."""
-    excluded_freeze = _unsealed_pending_input_freeze_session(
+    excluded_freezes = _unsealed_pending_input_freeze_sessions(
         _bound_producer_root(producer_root), retained_evidence_root, current_session,
     )
     completed = registry.get("completed_sessions") or {}
     prior_sessions: list[tuple[str, dict[str, str]]] = []
     for candidate in completed:
         candidate_session = str(candidate)
-        if candidate_session >= current_session or candidate_session == excluded_freeze:
+        if candidate_session >= current_session or candidate_session in excluded_freezes:
             continue
         try:
             frozen = frozen_input_identities(registry, candidate_session)
@@ -210,8 +219,7 @@ def resolve_governed_previous_operation(
     if not prior_sessions:
         empty = {"status": NO_PRIOR_GOVERNED_SESSION, "previous_session": None,
                  "candidate_count": 0, "qualified_candidate_count": 0, "candidates": []}
-        if excluded_freeze is not None:
-            empty["excluded_pending_input_freeze_session"] = excluded_freeze
+        _record_exclusions(empty, excluded_freezes)
         return empty
 
     previous_session, frozen = max(prior_sessions, key=lambda item: item[0])
@@ -227,8 +235,7 @@ def resolve_governed_previous_operation(
         "candidates": candidates,
         "selection_basis": None,
     }
-    if excluded_freeze is not None:
-        result["excluded_pending_input_freeze_session"] = excluded_freeze
+    _record_exclusions(result, excluded_freezes)
     if not candidates:
         result["status"] = MISSING_GOVERNED_PREVIOUS_OPERATION
         return result

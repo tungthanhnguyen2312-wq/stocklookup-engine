@@ -1,10 +1,15 @@
-"""Admit one additive pre-Producer session-input freeze. Never mutates the checkout.
+"""Admit additive pre-Producer session-input freezes. Never mutates the checkout.
 
 Owner Daily and Canonical producer qualification both refuse any tracked change. A
 failed Producer can still leave ``config/daily_research_session_input_registry.json``
-with exactly one new ``COMPLETED_RETAINED_EVIDENCE`` row after input registration.
-That row is an input lock, not a completed Daily. Publication resume requires a
-``LOCAL_COMPLETE`` operation and must not be manufactured by relabeling this row.
+with a new ``COMPLETED_RETAINED_EVIDENCE`` row after input registration. That row is
+an input lock, not a completed Daily. Publication resume requires a ``LOCAL_COMPLETE``
+operation and must not be manufactured by relabeling this row.
+
+Freezes accumulate: when the next Daily freezes its own session before sealing, the
+uncommitted diff carries one row per unsealed session (2026-10-26 and 2026-11-02).
+Each row is admitted only on its own evidence. Only ``commit_daily_state`` commits a
+row, and only the row of the session it has just verified as sealed.
 
 This classifier is the only shared admission of that narrower state. It does not
 commit, stage, pull, reset, or rewrite frozen identities.
@@ -38,6 +43,8 @@ class PendingInputFreeze:
     admitted: bool
     session: str | None
     reason_code: str
+    # Every admitted unsealed session, oldest first. ``session`` is the newest.
+    sessions: tuple[str, ...] = ()
 
 
 def _reject(reason: str) -> PendingInputFreeze:
@@ -72,18 +79,17 @@ def _load_json_bytes(raw: str) -> dict | None:
     return value if isinstance(value, dict) else None
 
 
-def _additive_session(before: object, after: object) -> str | None:
+def _additive_sessions(before: object, after: object) -> tuple[str, ...] | None:
     if not isinstance(before, dict) or not isinstance(after, dict):
         return None
     added = set(after) - set(before)
     removed = set(before) - set(after)
     changed = [key for key in set(before) & set(after) if before[key] != after[key]]
-    if removed or changed or len(added) != 1:
+    if removed or changed or not added:
         return None
-    session = next(iter(added))
-    if not isinstance(session, str) or not _SESSION_RE.fullmatch(session):
+    if not all(isinstance(session, str) and _SESSION_RE.fullmatch(session) for session in added):
         return None
-    return session
+    return tuple(sorted(added))
 
 
 def _governed_retained_root(root: Path) -> Path | None:
@@ -157,52 +163,103 @@ def _sealed_operation(root: Path, session: str) -> str | None:
     return None
 
 
-def classify_pending_input_freeze(root: Path) -> PendingInputFreeze:
-    """Return whether ``root`` contains exactly one faithful pre-Producer input freeze.
-
-    Admitted only when the sole tracked change is an in-place registry modification,
-    JSON versus ``HEAD`` adds one session to both ledgers and changes nothing else,
-    the new row is ``COMPLETED_RETAINED_EVIDENCE`` with ``trading_day_valid`` true,
-    every frozen identity matches the selection and the on-disk artifact, and that
-    session has no ``LOCAL_COMPLETE`` or ``PUBLISHED`` operation record.
-    """
-    root = Path(root)
-    if not _sole_registry_modification(root):
-        return _reject("NOT_SOLE_REGISTRY_DIFF")
-    code, head_raw = _git(root, "show", f"HEAD:{REGISTRY_RELATIVE}")
-    if code:
-        return _reject("REGISTRY_UNREADABLE")
-    try:
-        work_raw = (root / REGISTRY_RELATIVE).read_text(encoding="utf-8")
-    except OSError:
-        return _reject("REGISTRY_UNREADABLE")
-    head = _load_json_bytes(head_raw)
-    work = _load_json_bytes(work_raw)
-    if head is None or work is None or set(head) != set(work):
-        return _reject("NOT_ADDITIVE")
-    for key in head:
-        if key in ("sessions", "completed_sessions"):
-            continue
-        if head[key] != work[key]:
-            return _reject("NOT_ADDITIVE")
-    session = _additive_session(head.get("sessions"), work.get("sessions"))
-    completed_session = _additive_session(head.get("completed_sessions"), work.get("completed_sessions"))
-    if session is None or session != completed_session:
-        return _reject("NOT_ADDITIVE")
+def _row_rejection(root: Path, work: dict, session: str) -> str | None:
     row = (work.get("completed_sessions") or {}).get(session)
     selection = (work.get("sessions") or {}).get(session)
     if (not isinstance(row, dict) or not isinstance(selection, dict)
             or row.get("status") != "COMPLETED_RETAINED_EVIDENCE"
             or row.get("trading_day_valid") is not True):
-        return _reject("FREEZE_ROW_INVALID")
+        return "FREEZE_ROW_INVALID"
     lock = row.get("frozen_input_identities")
     if not isinstance(lock, dict) or set(selection) != set(lock):
-        return _reject("FREEZE_ROW_INVALID")
+        return "FREEZE_ROW_INVALID"
     if not set(REQUIRED_INPUT_KEYS) <= set(selection) or not set(selection) <= _ALLOWED_INPUT_KEYS:
-        return _reject("FREEZE_ROW_INVALID")
+        return "FREEZE_ROW_INVALID"
     if any(not _artifact_matches(root, selection[key], lock.get(key)) for key in selection):
-        return _reject("ARTIFACT_IDENTITY_MISMATCH")
-    sealed = _sealed_operation(root, session)
-    if sealed:
-        return _reject(sealed)
-    return PendingInputFreeze(True, session, "PENDING_INPUT_FREEZE")
+        return "ARTIFACT_IDENTITY_MISMATCH"
+    return _sealed_operation(root, session)
+
+
+def _head_and_work(root: Path) -> tuple[str, dict, dict] | str:
+    code, head_raw = _git(root, "show", f"HEAD:{REGISTRY_RELATIVE}")
+    if code:
+        return "REGISTRY_UNREADABLE"
+    try:
+        work_raw = (root / REGISTRY_RELATIVE).read_text(encoding="utf-8")
+    except OSError:
+        return "REGISTRY_UNREADABLE"
+    head = _load_json_bytes(head_raw)
+    work = _load_json_bytes(work_raw)
+    if head is None or work is None:
+        return "NOT_ADDITIVE"
+    return head_raw, head, work
+
+
+def _pending_sessions(head: dict, work: dict) -> tuple[str, ...] | None:
+    if set(head) != set(work):
+        return None
+    for key in head:
+        if key not in ("sessions", "completed_sessions") and head[key] != work[key]:
+            return None
+    sessions = _additive_sessions(head.get("sessions"), work.get("sessions"))
+    completed = _additive_sessions(head.get("completed_sessions"), work.get("completed_sessions"))
+    return sessions if sessions is not None and sessions == completed else None
+
+
+def classify_pending_input_freeze(root: Path) -> PendingInputFreeze:
+    """Return whether ``root`` contains only faithful pre-Producer input freezes.
+
+    Admitted only when the sole tracked change is an in-place registry modification,
+    JSON versus ``HEAD`` adds one or more sessions to both ledgers and changes nothing
+    else, every new row is ``COMPLETED_RETAINED_EVIDENCE`` with ``trading_day_valid``
+    true, every frozen identity matches the selection and the on-disk artifact, and
+    no new session has a ``LOCAL_COMPLETE`` or ``PUBLISHED`` operation record. One bad
+    row rejects the whole diff; nothing is admitted partially.
+    """
+    root = Path(root)
+    if not _sole_registry_modification(root):
+        return _reject("NOT_SOLE_REGISTRY_DIFF")
+    loaded = _head_and_work(root)
+    if isinstance(loaded, str):
+        return _reject(loaded)
+    _head_raw, head, work = loaded
+    sessions = _pending_sessions(head, work)
+    if sessions is None:
+        return _reject("NOT_ADDITIVE")
+    for session in sessions:
+        reason = _row_rejection(root, work, session)
+        if reason:
+            return _reject(reason)
+    return PendingInputFreeze(True, sessions[-1], "PENDING_INPUT_FREEZE", sessions)
+
+
+def pending_registry_sessions(root: Path) -> tuple[str, ...] | None:
+    """Sessions the working registry adds to ``HEAD``, or ``None`` when the diff is not additive.
+
+    This reads the ledger shape only; it does not admit anything as a freeze.
+    """
+    loaded = _head_and_work(Path(root))
+    return None if isinstance(loaded, str) else _pending_sessions(loaded[1], loaded[2])
+
+
+def registry_text_committing_session(root: Path, session: str) -> str | None:
+    """Return the HEAD registry plus only ``session``'s rows, in the writer's format.
+
+    ``commit_daily_state`` commits this text once ``session`` is verified as sealed.
+    Other pending freezes stay in the working tree as uncommitted input locks, so the
+    committed ledger never records an unsealed session. ``None`` means the working
+    registry is not a set of additive rows that includes ``session``.
+    """
+    loaded = _head_and_work(Path(root))
+    if isinstance(loaded, str):
+        return None
+    head_raw, head, work = loaded
+    sessions = _pending_sessions(head, work)
+    if sessions is None or session not in sessions:
+        return None
+    # The registry writer emits indent=2 JSON; never reformat a HEAD file that differs.
+    if head_raw.replace("\r\n", "\n") != json.dumps(head, ensure_ascii=False, indent=2) + "\n":
+        return None
+    for ledger in ("sessions", "completed_sessions"):
+        head[ledger][session] = work[ledger][session]
+    return json.dumps(head, ensure_ascii=False, indent=2) + "\n"

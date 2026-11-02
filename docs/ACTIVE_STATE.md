@@ -162,8 +162,8 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
    Untracked-path allowances are **per checkout** and defined by `acquisition/checkout_cleanliness_contract.py` as applied
    there: the Consumer allows only `.worktrees/` (`CONSUMER_APPROVED_UNTRACKED_PREFIXES`); Producer and
    Dashboard checks use the default `APPROVED_RUNTIME_EVIDENCE_PREFIXES` (specific `data/<store>/` evidence
-   subdirectories, not all of `data/`). Tracked changes block, except one additive pre-Producer registry
-   freeze (`PENDING_INPUT_FREEZE_AT_ORIGIN_MAIN`, not completion). Any other tracked or untracked file blocks.
+   subdirectories, not all of `data/`). Tracked changes block, except additive pre-Producer registry freezes (`PENDING_INPUT_FREEZE_AT_ORIGIN_MAIN`,
+   not completion; several may pend; only a sealed row is committed). Any other tracked or untracked file blocks.
 3. No other Daily/Producer writer is running; launch the Daily alone, with ordinary browsers/IDEs/
    unrelated Python workloads closed.
 4. Existing evidence/runtime/session/window gates pass (they are not bypassed by a READY host).

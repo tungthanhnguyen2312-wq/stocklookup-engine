@@ -112,7 +112,9 @@ def __getattr__(name):
 from stocklookup_core.acquisition.checkout_cleanliness_contract import (  # noqa: E402
     CONSUMER_APPROVED_UNTRACKED_PREFIXES, classify_checkout_cleanliness,
 )
-from pending_session_input_freeze import classify_pending_input_freeze  # noqa: E402
+from pending_session_input_freeze import (  # noqa: E402
+    classify_pending_input_freeze, pending_registry_sessions, registry_text_committing_session,
+)
 from governed_publication_completion import (  # noqa: E402
     resolve_dashboard_origin_main_sha,
     verify_existing_publication_completion,
@@ -427,7 +429,24 @@ def commit_daily_state(root: Path, session: str) -> dict[str, str]:
     row = (registry.get("completed_sessions") or {}).get(session) or {}
     if row.get("status") != "COMPLETED_RETAINED_EVIDENCE":
         raise OwnerDailyError("Producer state publication", "REGISTRY_SESSION_NOT_COMPLETED")
-    _git(root, "add", "--", *DAILY_STATE_ALLOWLIST)
+    # Commit only this sealed session's rows. Another failed Daily's input freeze stays an
+    # uncommitted lock; committing it would record an unsealed session as completed.
+    pending = pending_registry_sessions(root) or ()
+    if not set(pending) - {session}:
+        _git(root, "add", "--", *DAILY_STATE_ALLOWLIST)
+    elif session not in pending:
+        if classify_pending_input_freeze(root).admitted:
+            return {"status": "NO_CHANGE", "sha": _git(root, "rev-parse", "HEAD")}
+        raise OwnerDailyError("Producer state publication", "REGISTRY_DIFF_NOT_PENDING_INPUT_FREEZES")
+    else:
+        text = registry_text_committing_session(root, session)
+        if text is None:
+            raise OwnerDailyError("Producer state publication", "REGISTRY_DIFF_NOT_ADDITIVE_SESSIONS")
+        blob = subprocess.run(
+            ["git", "-C", str(root), "hash-object", "-w", "--stdin", "--path", DAILY_STATE_ALLOWLIST[0]],
+            input=text.encode("utf-8"), capture_output=True, check=True,
+        ).stdout.decode("ascii").strip()
+        _git(root, "update-index", "--cacheinfo", f"100644,{blob},{DAILY_STATE_ALLOWLIST[0]}")
     _git(root, "commit", "-m", f"daily: retain {session} completed session")
     _git(root, "push", "origin", "main")
     return {"status": "COMMITTED", "sha": _git(root, "rev-parse", "HEAD")}
