@@ -1,6 +1,6 @@
 # Stock Lookup — Active State
 
-11-02 sealed, T0; [T+ 58,905 rows](internal/TPLUS_REAL_T0_CORPUS_RECOVERY_20261103.json). T: disk BLOCKED. Receipt binds the 2,394,768,092-byte IID. READY: 8.202 GiB physical, 10.25 GiB commit. Fresh preflight required.
+11-03 PASS, sealed; post-handoff T+ timed out → [TPLUS_INCREMENTAL_COST_V2](tplus_incremental_cost_v2_contract.md). T: runway ~13. READY: 8.202 GiB physical, 10.25 GiB commit. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

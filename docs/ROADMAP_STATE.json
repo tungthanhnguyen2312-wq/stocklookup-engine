@@ -15,14 +15,35 @@
     "config/daily_research_session_input_registry.json"
   ],
   "current": {
-    "milestone": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
+    "milestone": "TPLUS_INCREMENTAL_COST_V2",
     "state": "ACTIVE"
   },
   "queued_next": [],
   "milestones": [
     {
-      "milestone_id": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
+      "milestone_id": "TPLUS_INCREMENTAL_COST_V2",
       "state": "ACTIVE",
+      "starting_checkpoint": "f43471435403c0de8efc2e6fd800e2b83356b9b6",
+      "candidate_branch": "docs/sustainability-program-m0-20261103",
+      "dependencies": [
+        "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1"
+      ],
+      "unlocks": [],
+      "owner_authorized": true,
+      "owner_override": "Owner 2026-11-03 approved D1 (STOCKLOOKUP_SUSTAINABILITY_PROGRAM_V1; reconcile OWNER_DAILY_16GB recovery after genuine Daily 2026-11-02 and 2026-11-03 PASS) and D2 (fingerprint-anchored T0 receipts in Daily, full SHA scrub outside Daily). Bounded scope: T+ incremental cost only; executor Grok Build; contract docs/tplus_incremental_cost_v2_contract.md; no push/merge/deploy without Owner.",
+      "authority_effect": "NONE",
+      "source_doc": "docs/tplus_incremental_cost_v2_contract.md",
+      "state_history": [
+        "DEFERRED",
+        "ACTIVE"
+      ],
+      "checkpoint": null,
+      "terminal_disposition": null,
+      "notes": "Owner 2026-11-03 approved D1 (STOCKLOOKUP_SUSTAINABILITY_PROGRAM_V1; reconcile OWNER_DAILY_16GB recovery after genuine Daily 2026-11-02 and 2026-11-03 PASS) and D2 (fingerprint-anchored T0 receipts in Daily, full SHA scrub outside Daily). Bounded scope: T+ incremental cost only; executor Grok Build; contract docs/tplus_incremental_cost_v2_contract.md; no push/merge/deploy without Owner."
+    },
+    {
+      "milestone_id": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",
+      "state": "COMPLETE",
       "starting_checkpoint": "102bc7fcda40f04636f935f3fad47981dd5c067a",
       "candidate_branch": "fix/owner-daily-16gb-memory-recovery-v1",
       "dependencies": [
@@ -35,11 +56,12 @@
       "source_doc": "docs/owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md",
       "state_history": [
         "DEFERRED",
-        "ACTIVE"
+        "ACTIVE",
+        "COMPLETE"
       ],
-      "checkpoint": null,
-      "terminal_disposition": null,
-      "notes": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor."
+      "checkpoint": "f43471435403c0de8efc2e6fd800e2b83356b9b6",
+      "terminal_disposition": "IMPLEMENTATION_RELEASED_NO_PRODUCTION_ACTIVATION",
+      "notes": "Owner authorized existing-16-GiB Daily host and pipeline memory recovery; retained-only bounded validation, one local checkpoint; no production Daily, evidence mutation, merge, deployment or successor. Verified release f43471435403c0de8efc2e6fd800e2b83356b9b6; no production reclaim, activation or automatic successor."
     },
     {
       "milestone_id": "OFFICIAL_SSI_POW_CORPORATE_ACTION_EVIDENCE_QUALIFICATION_V1",

@@ -5,9 +5,11 @@ Verified analytical baseline 2026-10-14 `a9c799397a74641a0e16c8ea84454d2dc4d0745
 Nothing below auto-starts; native standing admission required (AI_RULES 11).
 Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
-## NOW — OWNER DAILY 16-GIB MEMORY RECOVERY (ACTIVE)
+## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
-[Scope](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md): exact-IID receipt local; genuine Daily acceptance pending. No successor.
+[Scope, program](tplus_incremental_cost_v2_contract.md); Owner D1/D2 11-03.
+
+## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`
 
 ## PRIOR — STOCKLOOKUP_PRODUCER_DEEP_SIMPLIFICATION (RELEASED PR146)
 
