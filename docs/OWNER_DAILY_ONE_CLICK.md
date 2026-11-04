@@ -92,3 +92,14 @@ change Daily PASS. The launcher still reaches `Nhấn Enter để đóng`.
 
 Telemetry has no analytical authority and enters no analytical, T0, capture, Producer,
 operation, Dashboard, AI handoff, or Action Center content identity.
+
+## Interrupted Producer push
+
+A completed-session replay can recognize one unpublished Daily state commit directly above
+freshly fetched `origin/main`. Admission requires the exact Daily commit message, only the
+registry path, additive rows for the same session in both ledgers, unchanged existing rows,
+and canonical completion evidence. Remaining registry changes must independently qualify
+as governed unsealed input freezes. Publication retries the existing commit with a normal
+push and reads back the remote SHA; it does not create a duplicate Daily commit or run
+analytical processing. Unrelated commits, modified existing registry rows and divergence
+still fail closed.
