@@ -52,3 +52,9 @@ AI handoff reused the same verified remote commit and build; no duplicate public
 Action Center READY and view open READY. Original canonical operation-record SHA256
 remains `8cefc8cabb8d7ef313e424c830582b3a0137d7112d8ae243dd9531e5ca9a2aae`.
 No acquisition, analytical rerun, T0 overwrite or Producer reseal occurred.
+
+Capacity receipt requalification is limited to the three admitted changed runtime/config
+paths. All other tracked executable/config bytes, analytical/resource function AST bodies
+and launcher targets match the qualified base. Existing measured limits are retained;
+no new capacity envelope or whole-Daily measurement is claimed. Exact source matching
+and tamper rejection remain mandatory. The active reading budget is unchanged.
