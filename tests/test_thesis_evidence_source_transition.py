@@ -83,6 +83,9 @@ def _copy_domain(tmp_path: Path) -> None:
     incremental = "tests/fixtures/tplus_incremental_cost_v2_source_transition_v1.json"
     relatives.append(incremental)
     relatives.extend(row["archive"] for row in json.loads((ROOT / incremental).read_bytes())["sources"].values())
+    m1b = "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json"
+    relatives.append(m1b)
+    relatives.extend(row["archive"] for row in json.loads((ROOT / m1b).read_bytes())["sources"].values())
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -117,7 +120,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert real_corpus["previous_e4_v2_digest"] == brief_inputs["active_e4_v2_digest"]
     incremental = json.loads((ROOT / "tests/fixtures/tplus_incremental_cost_v2_source_transition_v1.json").read_bytes())
     assert incremental["previous_e4_v2_digest"] == real_corpus["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == incremental["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    m1b = json.loads((ROOT / "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json").read_bytes())
+    assert m1b["previous_e4_v2_digest"] == incremental["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == m1b["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

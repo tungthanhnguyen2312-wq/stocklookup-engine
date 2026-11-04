@@ -1,0 +1,178 @@
+{
+  "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
+  "date": "2026-11-04",
+  "phase": "PHASE_1_FIXTURE_ONLY",
+  "real_corpus": "NOT_RUN",
+  "retained_evidence": "NOT_READ",
+  "baseline_commit": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+  "worktree": "T:\\StockLookup\\scratch\\wt-tplus-m1b-20261104",
+  "branch": "fix/tplus-incremental-cost-v2-m1b",
+  "fixture_state": "T:\\StockLookup\\scratch\\tplus-m1b-rehearsal-20261104\\state",
+  "design_input_not_remeasured": {
+    "source": "docs/internal/TPLUS_INCREMENTAL_COST_V2_REHEARSAL_20261104.json",
+    "oracle_identity": "prospective_decision_outcome_feedback:f8ceac1850d1d5a21d114e394c7252148e7ec5e8d3607382c00e57d679e5abbb",
+    "rows": 60588,
+    "sessions": 33,
+    "r2_wall_s": 750.904,
+    "discovery_s": 206.627,
+    "price_index_s": 2.546,
+    "evaluate_s": 508.755,
+    "aggregate_s": 11.905,
+    "assemble_s": 17.617,
+    "stage_s": 748.745,
+    "stream_sha256_bytes": 959906744,
+    "note": "Quoted from the published M1 round-2 rehearsal. This phase did not remeasure it."
+  },
+  "levers": {
+    "L1_minimal_projection": "TAKEN. Sidecar contract prospective_feedback_evaluator_input/v3. Fixture JSON-decode was 0.0037 s of 1.831 s evaluate (0.2 percent). This does not close the 508 s evaluate.",
+    "L2_row_reuse": "TAKEN. On the 23-session fixture, forcing every partition manifest to miss reused 1 row and re-evaluated 91. Rows inside the 20-session horizon are not final. A streaming edit changes source_key, so M1 partition bytes are not visible to this code.",
+    "L3_price_fingerprint": "TAKEN. Covered by tests/test_tplus_m1b_incremental.py::test_price_fingerprint_hit_does_not_hash. The all-modern fixture never calls PriceIndex, so price_index_s is 0 here.",
+    "L4_verifier_unit": "TAKEN. Digest covers source_file_fingerprint.py and source_verifier.py only. This deploy still needs one seed because that unit is new.",
+    "L5_spool_write": "NOT_TAKEN. Published aggregate plus assemble is 29.522 s of 748.745 s (3.9 percent), under the 15 percent bar."
+  },
+  "growth_projection": {
+    "status": "NOT_FIT",
+    "reason": "The fixture is 23 sessions and 92 rows. Seconds per session on that corpus do not predict the 60,588-row stage. Phase 2 must measure the real corpus and fit the 1,200 s crossing. The mid-December 1,130 s model is not confirmed."
+  },
+  "fixture_profile": {
+    "corpus": "22 modern T0 sessions, then one appended session. Four tickers. No legacy artifact, so price files stay off the PriceIndex path.",
+    "cold": {
+      "artifact_identity": "prospective_decision_outcome_feedback:c66bb05295f0905bd4ad37b3fcd2bda9d87a497ec4041c6b6d02413c4d51a41e",
+      "oracle_match": true,
+      "rows": 88,
+      "phases_seconds": {
+        "discovery_s": 0.986,
+        "discovery_legacy_s": 0.178,
+        "discovery_t0_s": 0.763,
+        "price_index_s": 0.0,
+        "evaluate_s": 1.831,
+        "aggregate_s": 0.026,
+        "assemble_s": 0.069,
+        "total_s": 2.927
+      },
+      "discovery_split_s": {
+        "t0_loader": 0.66,
+        "t0_other": 0.103,
+        "legacy_loader": 0.0,
+        "legacy_other": 0.178
+      },
+      "rows_reevaluated": 88,
+      "rows_reused_inside_partition": 0,
+      "rows_output_changed": 0,
+      "sidecar_decoded_bytes": 363704,
+      "sidecar_json_decode_s": 0.003706,
+      "json_decode_share_of_evaluate": 0.002,
+      "stream_sha256_bytes": 971964,
+      "settled_hits": 0,
+      "settled_misses": "not recorded on the cold print"
+    },
+    "one_new_session": {
+      "artifact_identity": "prospective_decision_outcome_feedback:254c5d450dd7083a266c01efdc70fe5f51ccb8b02a4c4515fd8f030543b08545",
+      "oracle_match": true,
+      "phases_seconds": {
+        "discovery_s": 0.833,
+        "discovery_legacy_s": 0.123,
+        "discovery_t0_s": 0.664,
+        "price_index_s": 0.0,
+        "evaluate_s": 1.36,
+        "aggregate_s": 0.028,
+        "assemble_s": 0.077,
+        "total_s": 2.311
+      },
+      "rows_reevaluated": 84,
+      "rows_reused_inside_partition": 0,
+      "rows_output_changed": 80,
+      "sidecar_decoded_bytes": 347172,
+      "sidecar_json_decode_s": 0.003548,
+      "stream_sha256_bytes": 44180,
+      "note": "rows_output_changed counts rows whose canonical bytes differ from the prior partition. The appended session matures earlier horizons. The artifact still matches the in-memory builder."
+    },
+    "all_partitions_invalidated": {
+      "artifact_identity": "prospective_decision_outcome_feedback:254c5d450dd7083a266c01efdc70fe5f51ccb8b02a4c4515fd8f030543b08545",
+      "oracle_match": true,
+      "repeated_after_stray_file_removed": true,
+      "phases_seconds": {
+        "discovery_s": 0.285,
+        "discovery_legacy_s": 0.096,
+        "discovery_t0_s": 0.142,
+        "price_index_s": 0.0,
+        "evaluate_s": 3.314,
+        "aggregate_s": 0.027,
+        "assemble_s": 0.065,
+        "total_s": 3.704
+      },
+      "rows_reevaluated": 91,
+      "rows_reused_inside_partition": 1,
+      "rows_output_changed": 0,
+      "settled_hits": 0,
+      "settled_misses": 91,
+      "sidecar_decoded_bytes": 380236,
+      "sidecar_json_decode_s": 0.003939,
+      "stream_sha256_bytes": 0,
+      "partition_evaluate_s": {
+        "2026-05-01": 0.035,
+        "2026-05-02": 0.042,
+        "2026-05-03": 0.049,
+        "2026-05-04": 0.05,
+        "2026-05-05": 0.06,
+        "2026-05-06": 0.054,
+        "2026-05-07": 0.054,
+        "2026-05-08": 2.061,
+        "2026-05-09": 0.063,
+        "2026-05-10": 0.056,
+        "2026-05-11": 0.068,
+        "2026-05-12": 0.054,
+        "2026-05-13": 0.058,
+        "2026-05-14": 0.059,
+        "2026-05-15": 0.057,
+        "2026-05-16": 0.053,
+        "2026-05-17": 0.055,
+        "2026-05-18": 0.063,
+        "2026-05-19": 0.061,
+        "2026-05-20": 0.059,
+        "2026-05-21": 0.045,
+        "2026-05-22": 0.056,
+        "2026-05-23": 0.052
+      },
+      "note": "2026-05-08 at 2.061 s is a one-off fixture spike, not a corpus rate. stream_sha256_bytes stayed 0 because T0 fingerprint receipts hit."
+    }
+  },
+  "fixture_store_bytes": {
+    "builder_state": 2909053,
+    "sidecars": 387964,
+    "note": "23 tiny sessions. Not a measurement of the 1.75 GB M1 store and not a plus-25 percent proof."
+  },
+  "fixture_scrub": {
+    "exit_code": 0,
+    "status": "SCRUBBED",
+    "scrub_sources": 23,
+    "scrub_clean": 23,
+    "scrub_mismatches": 0,
+    "scrub_out_of_scope": 1,
+    "published": false,
+    "out_of_scope_status": "scrub_out_of_scope",
+    "command_state_root": "T:\\StockLookup\\scratch\\tplus-m1b-rehearsal-20261104\\state\\builder"
+  },
+  "verifier": {
+    "units": [
+      "stocklookup_core.evidence.source_file_fingerprint",
+      "stocklookup_core.evidence.source_verifier"
+    ],
+    "streaming_sha256_lf": "66d123411b4b01c5709f4122ce39593e0fc9678fed3b5cb6058c35ef4934a18e",
+    "active_e4_v2_digest": "199a9cf20d2be935470d573a8a128036a73984929ca182bf4d1d8f5e847ae7c9",
+    "prior_streaming_sha256_lf": "0dcf7fe0687593bc05db9a0f487bd64b4309d6b6c80c47cb33081c45bdbe2dc1"
+  },
+  "targets": {
+    "warm_one_new_t0_le_600s": "NOT_MEASURED",
+    "r2_all_invalidated_le_600s": "NOT_MEASURED",
+    "pre_plus_post_le_900s": "NOT_MEASURED",
+    "warm_discovery_le_60s": "NOT_MET_BY_THIS_DIFF",
+    "child_peak_le_2GiB": "NOT_MEASURED",
+    "warm_discovery_block": "The published 186-206 s is discover_prospective_corpus and discover_snapshots, in modules this phase must not edit. Price fingerprinting removes the price-file SHA from price_index_s (published 2.5 s), not that discovery time."
+  },
+  "tests": {
+    "focused_suite": "164 passed, 1 failed",
+    "failure": "tests/test_roadmap_execution_state.py::test_real_bootstrap_roadmap_state_is_on_track",
+    "failure_reason": "ROADMAP_MULTIPLE_SOURCE_WRITERS. Active milestone TPLUS_INCREMENTAL_COST_V2 is matched by wt-tplus-incremental-v2-20261104 on fix/tplus-incremental-cost-v2 and by this required branch. The checker and the other worktree are outside the allowed edit set."
+  }
+}
