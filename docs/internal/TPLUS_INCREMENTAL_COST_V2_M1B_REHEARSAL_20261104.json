@@ -1049,6 +1049,557 @@
       "record_count": 62271,
       "wall_seconds": 236.50482660000125
     },
+    "candidate-scrub": {
+      "cpu_seconds": 146.90625,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 2.661360900005093,
+        "legacy._operation_manifests": 0.7735538999986602,
+        "legacy._read_summary_cache": 0.0015583999993395992,
+        "legacy._source_fingerprint": 102.7970679999562,
+        "t0._handoff_by_snapshot": 0.14110380000056466,
+        "t0._handoff_snapshot_inventory": 0.12780909999855794,
+        "t0._operation_manifests": 0.2715009999956237,
+        "t0._original_reuse_reasons": 45.674857600002724
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 295.300448199996,
+      "io_delta": {
+        "other_bytes": 5125804,
+        "other_operations": 146406,
+        "read_bytes": 93981965551,
+        "read_operations": 94425,
+        "write_bytes": 24988460,
+        "write_operations": 119
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 519491584,
+        "peak_process_committed_bytes": 401666048,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7422955520,
+        "free_before": 366317121536,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 362655744,
+        "faults": 29769504,
+        "nonpaged_pool": 39840,
+        "paged_pool": 351624,
+        "peak_commit": 401666048,
+        "peak_nonpaged_pool": 49488,
+        "peak_paged_pool": 362512,
+        "peak_working_set": 192241664,
+        "working_set": 154193920
+      },
+      "metrics": {
+        "scrub_bytes": 35753708197,
+        "scrub_clean": 37,
+        "scrub_mismatches": 0,
+        "scrub_out_of_scope": 80,
+        "scrub_sources": 37,
+        "scrub_verified_at": 37
+      },
+      "mismatches": [],
+      "out_of_scope": [
+        {
+          "kind": "t0",
+          "path": "operations-review/prospective-decision-retention-v1/2026-09-11/70d8cae93a0d3a23b9a9a4c3c7a8f76e7a2baa77e2775ad420b2765975fc9b94/prospective_decision_snapshot.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "t0",
+          "path": "operations-review/prospective-decision-retention-v1/2026-09-11/c11780cd798d0a27f6bf6ec7374fc1664549960ec56a2bd75c03602a19d924ee/prospective_decision_snapshot.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "t0",
+          "path": "operations-review/prospective-decision-retention-v1/2026-10-02/2a4594cad0e282cdcb83c61dc6f72d8d24bf2b874a86fec6158ad73364c91c91/prospective_decision_snapshot.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-08-25/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-03/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-04/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-08/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-09/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-10/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-11/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-14/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-15/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-16/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-17/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-18/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-21/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-22/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-23/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-24/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-28/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-29/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-30/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-01/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-02/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-05/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-06/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-07/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-08/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-09/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-12/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-13/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-14/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-15/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-16/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-19/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-20/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-21/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-22/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-23/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-26/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-11-02/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-11-03/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-11-04/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260825/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260904/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260909/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260910/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260911/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260914/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260915/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260916/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260917/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260918/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260921/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260922/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260923/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260924/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260928/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260929/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260930/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261001/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261005/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261006/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261007/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261008/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261009/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261012/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261013/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261014/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261015/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261016/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261019/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261020/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261021/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261022/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261023/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261026/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261102/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261104/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        }
+      ],
+      "partition_timings": [],
+      "peak_commit_bytes": 401666048,
+      "status": "SCRUBBED",
+      "wall_seconds": 293.6954210999975
+    },
+    "candidate-seed": {
+      "cpu_seconds": 107.0,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.41306609999446664,
+        "legacy._operation_manifests": 0.46923929999320535,
+        "legacy._read_summary_cache": 0.01550419999693986,
+        "legacy._source_fingerprint": 104.01265629996487,
+        "t0._handoff_by_snapshot": 0.145814600000449,
+        "t0._handoff_snapshot_inventory": 0.14588430000003427,
+        "t0._operation_manifests": 0.27390400000149384,
+        "t0._original_reuse_reasons": 45.028716200002236
+      },
+      "elapsed_s": 209.894,
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 215.8430315000005,
+      "io_delta": {
+        "other_bytes": 2590590,
+        "other_operations": 93908,
+        "read_bytes": 59711009256,
+        "read_operations": 246845,
+        "write_bytes": 10162,
+        "write_operations": 328
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 519041024,
+        "peak_process_committed_bytes": 402436096,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7284678656,
+        "free_before": 366317297664,
+        "memory_limit_bytes": 2147483648
+      },
+      "legacy_count": 3,
+      "memory_counters": {
+        "cb": 72,
+        "commit": 363241472,
+        "faults": 20838712,
+        "nonpaged_pool": 40112,
+        "paged_pool": 351624,
+        "peak_commit": 402436096,
+        "peak_nonpaged_pool": 49352,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 192397312,
+        "working_set": 152637440
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "sidecar_bytes": 768041015,
+        "sidecar_decoded_bytes": 768041015,
+        "sidecar_hits": 34,
+        "sidecar_json_decode_s": 2.970322901455802,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "partition_timings": [],
+      "peak_commit_bytes": 402436096,
+      "status": "SEEDED",
+      "t0_count": 34,
+      "wall_seconds": 209.91301250000106
+    },
     "oracle": {
       "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
       "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
@@ -1291,6 +1842,14 @@
       "record_count": 62271,
       "wall_seconds": 3273.0645430999975
     }
+  },
+  "realistic_preparation": {
+    "Bytes": 2905588681.0,
+    "Files": 78,
+    "Free": 369222692864,
+    "PlanSha": "D145DE475312C3780487AA7F6CC4455CEA7B0A1DED9C34F21D161C60001FDA63",
+    "full_partition_variants": "ALL_74_OLD_FULL_PAYLOADS_REMOVED; MINUS_VARIANTS_REMAIN_FOR_REALISTIC_ROW_REUSE",
+    "new_t0_caches": "NOV4_RECEIPT_AND_V3_SIDECAR_REMOVED_BEFORE_MINUS; ADD_MUST_VERIFY_SOURCE_AND_BUILD_NEW_SIDECAR"
   },
   "runs": {
     "baseline_all_invalidated_warm": {
@@ -1746,6 +2305,677 @@
     "reason": "340_GiB_FLOOR_PLUS_ASSEMBLY_RESERVE",
     "scope": "ONLY_INDIVIDUALLY_VERIFIED_DERIVED_SCRATCH_PAYLOADS",
     "source_mutations": false
+  },
+  "scrub_scope_proof": {
+    "all_expected_five_out_of_scope": true,
+    "exclusions": [
+      {
+        "classification": "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED",
+        "kind": "t0",
+        "path": "operations-review/prospective-decision-retention-v1/2026-09-11/70d8cae93a0d3a23b9a9a4c3c7a8f76e7a2baa77e2775ad420b2765975fc9b94/prospective_decision_snapshot.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_SNAPSHOT_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED",
+        "kind": "t0",
+        "path": "operations-review/prospective-decision-retention-v1/2026-09-11/c11780cd798d0a27f6bf6ec7374fc1664549960ec56a2bd75c03602a19d924ee/prospective_decision_snapshot.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_SNAPSHOT_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "INVALID_NON_GENUINE_SNAPSHOT_HEADER",
+        "kind": "t0",
+        "path": "operations-review/prospective-decision-retention-v1/2026-10-02/2a4594cad0e282cdcb83c61dc6f72d8d24bf2b874a86fec6158ad73364c91c91/prospective_decision_snapshot.json",
+        "reason_codes": [
+          "DISCOVERY_SNAPSHOT_LOADER_RETURNED_NONE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-08-25/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-03/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-04/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-08/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-09/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-10/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-11/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-14/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-15/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-16/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-17/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-18/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-21/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-22/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-23/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-24/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-28/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-29/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-30/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-01/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-02/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-05/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-06/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-07/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-08/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-09/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-12/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-13/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-14/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-15/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-16/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-19/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-20/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-21/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-22/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-23/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-26/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-11-02/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-11-03/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-11-04/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "UNKNOWN_TEMPORAL_STATUS",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260825/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "NO_CANONICAL_HANDOFF_BINDING"
+        ]
+      },
+      {
+        "classification": "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260904/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "HANDOFF_ARTIFACT_IDENTITY_MISMATCH"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260909/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260910/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260911/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260914/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260915/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260916/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260917/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260918/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260921/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260922/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260923/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260924/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260928/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260929/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260930/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261001/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261005/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261006/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261007/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261008/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261009/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261012/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261013/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261014/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261015/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261016/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261019/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261020/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261021/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261022/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261023/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "UNKNOWN_TEMPORAL_STATUS",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261026/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "NO_CANONICAL_HANDOFF_BINDING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261102/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261104/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      }
+    ],
+    "expected_original_five": [
+      "operations-review/prospective-decision-retention-v1/2026-10-02/2a4594cad0e282cdcb83c61dc6f72d8d24bf2b874a86fec6158ad73364c91c91/prospective_decision_snapshot.json",
+      "operations-review/canonical-post-close-v1/2026-11-02/enrichment/integrated_investment_decision_product.json",
+      "operations-review/canonical-post-close-v1/2026-11-03/enrichment/integrated_investment_decision_product.json",
+      "operations-review/integrated-investment-decision-product-v1-20261102/integrated_investment_decision_product_artifact.json",
+      "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json"
+    ],
+    "metrics": {
+      "scrub_bytes": 35753708197,
+      "scrub_clean": 37,
+      "scrub_mismatches": 0,
+      "scrub_out_of_scope": 80,
+      "scrub_sources": 37,
+      "scrub_verified_at": 37
+    },
+    "scope_rule": "Exactly sources admitted by unchanged discovery; modern IID working views, unbound copies and non-genuine T0 excluded with explicit reasons.",
+    "status": "PASS",
+    "unexplained": []
+  },
+  "seed_cost_estimate": {
+    "cold_non_partition_residual_seconds": 1738.8863739000021,
+    "completed_partition_build_seconds_sum": 1149.578,
+    "initial_cold_attempt_seconds": 2888.464373900002,
+    "limitation": "Some sidecar preparation is lazy inside partition builds, so the residual alone is not a complete cold-seed bound. The entire cold attempt is an observed conservative planning ceiling on this corpus, not a guaranteed deadline.",
+    "method": "Conservative deploy planning proxy from cold failed-assembly attempt residual; includes discovery, source verification, input-sidecar creation and non-partition overhead. Not a separately timed cold seed.",
+    "warm_seed_host_seconds": 215.8430315000005
   },
   "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
   "state_scope": "ISOLATED_SCRATCH_ONLY",
