@@ -1,178 +1,251 @@
 {
+  "acceptance": {
+    "L1": "NOT_YET_REAL_CORPUS_VALIDATED",
+    "L2": "NOT_YET_MEASURED",
+    "L3_L4": "EXISTING_PART_A_REUSED",
+    "L5": "NOT_TAKEN",
+    "promotion": "NOT_AUTHORIZED_BY_THIS_CHECKPOINT"
+  },
+  "baseline_checkpoint": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+  "continuation": "Baseline all-invalidated warm run in progress; then candidate cold and warm parity. Exact host paths, commands and active process are in the preserved local HANDOFF.md.",
   "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
   "date": "2026-11-04",
-  "phase": "PHASE_1_FIXTURE_ONLY",
-  "real_corpus": "NOT_RUN",
-  "retained_evidence": "NOT_READ",
-  "baseline_commit": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
-  "worktree": "T:\\StockLookup\\scratch\\wt-tplus-m1b-20261104",
-  "branch": "fix/tplus-incremental-cost-v2-m1b",
-  "fixture_state": "T:\\StockLookup\\scratch\\tplus-m1b-rehearsal-20261104\\state",
-  "design_input_not_remeasured": {
-    "source": "docs/internal/TPLUS_INCREMENTAL_COST_V2_REHEARSAL_20261104.json",
-    "oracle_identity": "prospective_decision_outcome_feedback:f8ceac1850d1d5a21d114e394c7252148e7ec5e8d3607382c00e57d679e5abbb",
-    "rows": 60588,
-    "sessions": 33,
-    "r2_wall_s": 750.904,
-    "discovery_s": 206.627,
-    "price_index_s": 2.546,
-    "evaluate_s": 508.755,
-    "aggregate_s": 11.905,
-    "assemble_s": 17.617,
-    "stage_s": 748.745,
-    "stream_sha256_bytes": 959906744,
-    "note": "Quoted from the published M1 round-2 rehearsal. This phase did not remeasure it."
+  "evidence_access": "READ_ONLY",
+  "evidence_role": "retained",
+  "oracle_job": {
+    "accounting_available": true,
+    "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+    "breakaway_ok": false,
+    "job_memory_limit_bytes": 2147483648,
+    "kill_on_job_close": true,
+    "limit_events": [],
+    "limit_flags": 8960,
+    "limit_scope": "UNKNOWN",
+    "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+    "peak_job_committed_bytes": 1193902080,
+    "peak_process_committed_bytes": 1193013248,
+    "process_memory_limit_bytes": 2147483648,
+    "silent_breakaway_ok": false
   },
-  "levers": {
-    "L1_minimal_projection": "TAKEN. Sidecar contract prospective_feedback_evaluator_input/v3. Fixture JSON-decode was 0.0037 s of 1.831 s evaluate (0.2 percent). This does not close the 508 s evaluate.",
-    "L2_row_reuse": "TAKEN. On the 23-session fixture, forcing every partition manifest to miss reused 1 row and re-evaluated 91. Rows inside the 20-session horizon are not final. A streaming edit changes source_key, so M1 partition bytes are not visible to this code.",
-    "L3_price_fingerprint": "TAKEN. Covered by tests/test_tplus_m1b_incremental.py::test_price_fingerprint_hit_does_not_hash. The all-modern fixture never calls PriceIndex, so price_index_s is 0 here.",
-    "L4_verifier_unit": "TAKEN. Digest covers source_file_fingerprint.py and source_verifier.py only. This deploy still needs one seed because that unit is new.",
-    "L5_spool_write": "NOT_TAKEN. Published aggregate plus assemble is 29.522 s of 748.745 s (3.9 percent), under the 15 percent bar."
-  },
-  "growth_projection": {
-    "status": "NOT_FIT",
-    "reason": "The fixture is 23 sessions and 92 rows. Seconds per session on that corpus do not predict the 60,588-row stage. Phase 2 must measure the real corpus and fit the 1,200 s crossing. The mid-December 1,130 s model is not confirmed."
-  },
-  "fixture_profile": {
-    "corpus": "22 modern T0 sessions, then one appended session. Four tickers. No legacy artifact, so price files stay off the PriceIndex path.",
-    "cold": {
-      "artifact_identity": "prospective_decision_outcome_feedback:c66bb05295f0905bd4ad37b3fcd2bda9d87a497ec4041c6b6d02413c4d51a41e",
-      "oracle_match": true,
-      "rows": 88,
+  "production_ci": "41832648657_SUCCESS_6_OF_6",
+  "production_daily": "PASS_JOURNAL_COMPLETE",
+  "production_release": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
+  "runs": {
+    "oracle_cold": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 2566.4375,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 368377438,
+        "other_operations": 3588152,
+        "read_bytes": 254442733817,
+        "read_operations": 921758,
+        "write_bytes": 5459381367,
+        "write_operations": 89103
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 528007168,
+        "faults": 459986194,
+        "nonpaged_pool": 61192,
+        "paged_pool": 351608,
+        "peak_commit": 1193013248,
+        "peak_nonpaged_pool": 134968,
+        "peak_paged_pool": 362496,
+        "peak_working_set": 980037632,
+        "working_set": 315719680
+      },
+      "metrics": {
+        "avoided_iid_bytes": 0,
+        "evaluator_input_store_bytes": 1831868061,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_misses": 46,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partitions_built": 37,
+        "price_index_misses": 4,
+        "rows": 62271,
+        "settled_misses": 31977,
+        "sidecar_bytes": 1831856433,
+        "sidecar_bytes_written": 1831856433,
+        "sidecar_misses": 34,
+        "spool_bytes": 1429903914,
+        "stream_header_scan_bytes": 36257975031,
+        "stream_parsed_bytes": 959906744,
+        "stream_sha256_bytes": 75550087718,
+        "stream_verified_bytes": 34516807762,
+        "summary_hits": 0,
+        "t0_fingerprint_misses": 37,
+        "t0_receipt_misses": 36
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 32.91825710000012,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 21.1862672999996,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 22.159097399999155,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 22.133234599999923,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 20.112236999999368,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 19.7588839,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 20.45881769999869,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 22.481627299999673,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 22.47234220000064,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 22.440789599999334,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 22.55612850000034,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 22.63177639999958,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 22.36630259999947,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 22.446419199999582,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 22.8401044000002,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 25.73780280000028,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 23.8046190999994,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 12.623348299999634,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.48016259999895,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 38.319943700000294,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 38.59180659999947,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 40.50469890000204,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 38.56117019999874,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 36.89063800000076,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 39.55581069999971,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 41.60155840000152,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 39.52755569999863,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 42.19000919999962,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 39.85640820000117,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 41.21627179999996,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 39.051607800000056,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 38.52611949999846,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 65.37582160000238,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 65.5148889000011,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 63.87307900000087,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 65.71148910000193,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 67.8400400999999,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1193013248,
       "phases_seconds": {
-        "discovery_s": 0.986,
-        "discovery_legacy_s": 0.178,
-        "discovery_t0_s": 0.763,
-        "price_index_s": 0.0,
-        "evaluate_s": 1.831,
-        "aggregate_s": 0.026,
-        "assemble_s": 0.069,
-        "total_s": 2.927
+        "aggregate_s": 19.814,
+        "assemble_s": 13.832,
+        "discovery_s": 1938.952,
+        "evaluate_s": 1280.947,
+        "price_index_s": 16.001,
+        "total_s": 3270.972
       },
-      "discovery_split_s": {
-        "t0_loader": 0.66,
-        "t0_other": 0.103,
-        "legacy_loader": 0.0,
-        "legacy_other": 0.178
-      },
-      "rows_reevaluated": 88,
-      "rows_reused_inside_partition": 0,
-      "rows_output_changed": 0,
-      "sidecar_decoded_bytes": 363704,
-      "sidecar_json_decode_s": 0.003706,
-      "json_decode_share_of_evaluate": 0.002,
-      "stream_sha256_bytes": 971964,
-      "settled_hits": 0,
-      "settled_misses": "not recorded on the cold print"
-    },
-    "one_new_session": {
-      "artifact_identity": "prospective_decision_outcome_feedback:254c5d450dd7083a266c01efdc70fe5f51ccb8b02a4c4515fd8f030543b08545",
-      "oracle_match": true,
-      "phases_seconds": {
-        "discovery_s": 0.833,
-        "discovery_legacy_s": 0.123,
-        "discovery_t0_s": 0.664,
-        "price_index_s": 0.0,
-        "evaluate_s": 1.36,
-        "aggregate_s": 0.028,
-        "assemble_s": 0.077,
-        "total_s": 2.311
-      },
-      "rows_reevaluated": 84,
-      "rows_reused_inside_partition": 0,
-      "rows_output_changed": 80,
-      "sidecar_decoded_bytes": 347172,
-      "sidecar_json_decode_s": 0.003548,
-      "stream_sha256_bytes": 44180,
-      "note": "rows_output_changed counts rows whose canonical bytes differ from the prior partition. The appended session matures earlier horizons. The artifact still matches the in-memory builder."
-    },
-    "all_partitions_invalidated": {
-      "artifact_identity": "prospective_decision_outcome_feedback:254c5d450dd7083a266c01efdc70fe5f51ccb8b02a4c4515fd8f030543b08545",
-      "oracle_match": true,
-      "repeated_after_stray_file_removed": true,
-      "phases_seconds": {
-        "discovery_s": 0.285,
-        "discovery_legacy_s": 0.096,
-        "discovery_t0_s": 0.142,
-        "price_index_s": 0.0,
-        "evaluate_s": 3.314,
-        "aggregate_s": 0.027,
-        "assemble_s": 0.065,
-        "total_s": 3.704
-      },
-      "rows_reevaluated": 91,
-      "rows_reused_inside_partition": 1,
-      "rows_output_changed": 0,
-      "settled_hits": 0,
-      "settled_misses": 91,
-      "sidecar_decoded_bytes": 380236,
-      "sidecar_json_decode_s": 0.003939,
-      "stream_sha256_bytes": 0,
-      "partition_evaluate_s": {
-        "2026-05-01": 0.035,
-        "2026-05-02": 0.042,
-        "2026-05-03": 0.049,
-        "2026-05-04": 0.05,
-        "2026-05-05": 0.06,
-        "2026-05-06": 0.054,
-        "2026-05-07": 0.054,
-        "2026-05-08": 2.061,
-        "2026-05-09": 0.063,
-        "2026-05-10": 0.056,
-        "2026-05-11": 0.068,
-        "2026-05-12": 0.054,
-        "2026-05-13": 0.058,
-        "2026-05-14": 0.059,
-        "2026-05-15": 0.057,
-        "2026-05-16": 0.053,
-        "2026-05-17": 0.055,
-        "2026-05-18": 0.063,
-        "2026-05-19": 0.061,
-        "2026-05-20": 0.059,
-        "2026-05-21": 0.045,
-        "2026-05-22": 0.056,
-        "2026-05-23": 0.052
-      },
-      "note": "2026-05-08 at 2.061 s is a one-off fixture spike, not a corpus rate. stream_sha256_bytes stayed 0 because T0 fingerprint receipts hit."
+      "record_count": 62271,
+      "wall_seconds": 3273.0645430999975
     }
   },
-  "fixture_store_bytes": {
-    "builder_state": 2909053,
-    "sidecars": 387964,
-    "note": "23 tiny sessions. Not a measurement of the 1.75 GB M1 store and not a plus-25 percent proof."
-  },
-  "fixture_scrub": {
-    "exit_code": 0,
-    "status": "SCRUBBED",
-    "scrub_sources": 23,
-    "scrub_clean": 23,
-    "scrub_mismatches": 0,
-    "scrub_out_of_scope": 1,
-    "published": false,
-    "out_of_scope_status": "scrub_out_of_scope",
-    "command_state_root": "T:\\StockLookup\\scratch\\tplus-m1b-rehearsal-20261104\\state\\builder"
-  },
-  "verifier": {
-    "units": [
-      "stocklookup_core.evidence.source_file_fingerprint",
-      "stocklookup_core.evidence.source_verifier"
-    ],
-    "streaming_sha256_lf": "66d123411b4b01c5709f4122ce39593e0fc9678fed3b5cb6058c35ef4934a18e",
-    "active_e4_v2_digest": "199a9cf20d2be935470d573a8a128036a73984929ca182bf4d1d8f5e847ae7c9",
-    "prior_streaming_sha256_lf": "0dcf7fe0687593bc05db9a0f487bd64b4309d6b6c80c47cb33081c45bdbe2dc1"
-  },
-  "targets": {
-    "warm_one_new_t0_le_600s": "NOT_MEASURED",
-    "r2_all_invalidated_le_600s": "NOT_MEASURED",
-    "pre_plus_post_le_900s": "NOT_MEASURED",
-    "warm_discovery_le_60s": "NOT_MET_BY_THIS_DIFF",
-    "child_peak_le_2GiB": "NOT_MEASURED",
-    "warm_discovery_block": "The published 186-206 s is discover_prospective_corpus and discover_snapshots, in modules this phase must not edit. Price fingerprinting removes the price-file SHA from price_index_s (published 2.5 s), not that discovery time."
-  },
-  "tests": {
-    "focused_suite": "164 passed, 1 failed",
-    "failure": "tests/test_roadmap_execution_state.py::test_real_bootstrap_roadmap_state_is_on_track",
-    "failure_reason": "ROADMAP_MULTIPLE_SOURCE_WRITERS. Active milestone TPLUS_INCREMENTAL_COST_V2 is matched by wt-tplus-incremental-v2-20261104 on fix/tplus-incremental-cost-v2 and by this required branch. The checker and the other worktree are outside the allowed edit set."
-  }
+  "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+  "state_scope": "ISOLATED_SCRATCH_ONLY",
+  "status": "IN_PROGRESS_ORACLE_COMPLETE"
 }
