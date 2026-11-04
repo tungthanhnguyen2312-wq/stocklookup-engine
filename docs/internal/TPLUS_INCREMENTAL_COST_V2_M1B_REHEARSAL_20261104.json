@@ -7,6 +7,7 @@
     "promotion": "NOT_AUTHORIZED_BY_THIS_CHECKPOINT"
   },
   "baseline_checkpoint": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+  "baseline_cold_warm_parity": "PASS_NATIVE_BYTE_SHA_SIZE_IDENTITY_ROWS_INPUT_DIGEST",
   "continuation": "Baseline all-invalidated warm run in progress; then candidate cold and warm parity. Exact host paths, commands and active process are in the preserved local HANDOFF.md.",
   "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
   "date": "2026-11-04",
@@ -213,6 +214,238 @@
   "production_daily": "PASS_JOURNAL_COMPLETE",
   "production_release": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
   "runs": {
+    "baseline_all_invalidated_warm": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 263.625,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.6988924999968731,
+        "legacy._operation_manifests": 0.8884999000001699,
+        "legacy._read_summary_cache": 0.008032499998080311,
+        "t0._handoff_by_snapshot": 0.14560379999966244,
+        "t0._handoff_snapshot_inventory": 0.1630394999992859,
+        "t0._operation_manifests": 0.29802550000022165
+      },
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 39612650,
+        "other_operations": 1057733,
+        "read_bytes": 74124131080,
+        "read_operations": 633524,
+        "write_bytes": 2960411725,
+        "write_operations": 3574
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 486817792,
+        "faults": 29486048,
+        "nonpaged_pool": 55888,
+        "paged_pool": 351624,
+        "peak_commit": 1184972800,
+        "peak_nonpaged_pool": 133880,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 974172160,
+        "working_set": 276914176
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "evaluator_input_store_bytes": 1831868061,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partitions_built": 37,
+        "price_index_hits": 4,
+        "rows": 62271,
+        "settled_hits": 27769,
+        "settled_misses": 4208,
+        "sidecar_bytes": 1831856433,
+        "sidecar_hits": 34,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 959906744,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 43.54482030000145,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 44.630148699998244,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 46.357900700000755,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 44.56884010000067,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 39.681516399999964,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 43.53208249999807,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 44.48388530000011,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 46.491231199997856,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 43.47494619999998,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 46.83496979999836,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 40.815954199999396,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 44.76064600000245,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 40.926147900001524,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 44.59365439999965,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 44.85556689999794,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 47.47715039999821,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 43.40597049999997,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 2.0459007999997993,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 35.624302699998225,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 2.4767333999989205,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 2.4731062999999267,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 4.560781500000303,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 4.469855800001824,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 2.13349350000135,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 5.063198899999406,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 5.067512500001612,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 4.914452799999708,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 5.184435499999381,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 5.003773399999773,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 4.747707499998796,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 2.4469064000004437,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 4.467107799999212,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 4.505213500000536,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 2.518769999998767,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 5.052483700001176,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 4.9308935000008205,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 4.887161099999503,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1184972800,
+      "phases_seconds": {
+        "aggregate_s": 11.244,
+        "assemble_s": 15.656,
+        "discovery_s": 197.158,
+        "evaluate_s": 867.867,
+        "price_index_s": 2.551,
+        "total_s": 1094.829
+      },
+      "record_count": 62271,
+      "report_repair": {
+        "independent_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+        "original_return_preserved": "baseline-r2-result.original-report.json",
+        "reason": "R2 bypass applied to final result reader as well as terminal shortcut; artifact bytes unaffected",
+        "source": "published completion metadata plus independent native-byte SHA256"
+      },
+      "state_bytes": 4019154815,
+      "store_bytes": {
+        "_evaluator_inputs": 1831868061,
+        "_partitions": 1522567757,
+        "_settled_store": 635148775,
+        "_stream": 29531707
+      },
+      "wall_seconds": 1097.2515483999996
+    },
     "oracle_cold": {
       "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
       "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
@@ -427,7 +660,13 @@
       "wall_seconds": 3273.0645430999975
     }
   },
+  "scratch_cleanup": {
+    "preserved": "ORACLE_ARTIFACT_RECEIPTS_MANIFESTS_DIRECTORIES_AND_ALL_MEASUREMENT_RECORDS",
+    "reason": "340_GiB_FLOOR",
+    "scope": "ONLY_VERIFIED_BASELINE_DERIVED_PAYLOAD_FILES",
+    "source_mutations": false
+  },
   "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
   "state_scope": "ISOLATED_SCRATCH_ONLY",
-  "status": "IN_PROGRESS_ORACLE_COMPLETE"
+  "status": "CANDIDATE_COLD_RUNNING"
 }
