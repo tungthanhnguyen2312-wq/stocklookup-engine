@@ -36,6 +36,7 @@ import bounded_artifact_stream as bas
 import integrated_decision_prospective_feedback as forward_bridge
 import prospective_decision_outcome_feedback as fb
 import prospective_decision_retention as retention
+from stocklookup_core.evidence.source_file_fingerprint import path_has_reparse_point, source_file_fingerprint
 
 STREAM_CONTRACT_VERSION = "prospective_feedback_stream/v1"
 COMPLETION_CONTRACT_VERSION = "prospective_feedback_completion/v1"
@@ -50,6 +51,10 @@ PARTITION_VARIANTS = 3
 SETTLED_STORE_MAX_BYTES = 2 * 1024**3
 SETTLED_STORE_MAX_ENTRIES = 131072
 SETTLED_STORE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_settled_store")
+EVALUATOR_INPUT_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_evaluator_inputs")
+EVALUATOR_INPUT_CONTRACT = "prospective_feedback_evaluator_input/v2"
+EVALUATOR_INPUT_MAX_BYTES = 12 * 1024**3  # ~60 sessions of the deduplicated sidecar, with headroom
+EVALUATOR_INPUT_MAX_ENTRIES = 4096
 RECEIPT_MAX_BYTES = 64 * 1024 * 1024
 ARTIFACT_IDENTITY_PREFIX = "prospective_decision_outcome_feedback:"
 TEMP_PREFIX = ".feedback-"
@@ -230,15 +235,83 @@ def _legacy_receipt_path(state_root: Path, raw_sha: str) -> Path:
     return state_root / STATE_DIR / "legacy_receipts" / (raw_sha + ".json")
 
 
+def _fingerprint_index_path(state_root: Path, kind: str, fingerprint: Mapping[str, Any]) -> Path:
+    return state_root / STATE_DIR / (kind + "_fingerprint") / (_sha256_bytes(_canon_bytes(_fingerprint_body(fingerprint))) + ".json")
+
+
+def _fingerprint_body(fingerprint: Mapping[str, Any]) -> dict[str, Any]:
+    return {key: fingerprint[key] for key in ("volume", "file_id", "size", "mtime_ns", "change")}
+
+
+def _now_utc() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _refuse_reparse(path: Path) -> None:
+    """Refuse to create, traverse or delete through a symlink, junction or reparse point."""
+    cursor = Path(path)
+    while True:
+        if path_has_reparse_point(cursor):
+            raise FeedbackStreamError("FEEDBACK_REPARSE_POINT_REFUSED:" + str(cursor))
+        parent = cursor.parent
+        if parent == cursor:
+            return
+        cursor = parent
+
+
+def _trusted_anchored_receipt(state_root: Path, kind: str, fingerprint: Mapping[str, Any] | None,
+                              receipt_path_for) -> dict[str, Any] | None:
+    """Receipt produced by a full SHA-256 under the current verifier, at this exact fingerprint."""
+    if not fingerprint:
+        return None
+    anchor = _read_state_json(_fingerprint_index_path(state_root, kind, fingerprint))
+    if (not anchor or anchor.get("content_verified") is not True or anchor.get("fingerprint") != _fingerprint_body(fingerprint)
+            or anchor.get("code_digest") != _verification_code_digest()):
+        return None
+    raw = anchor.get("source_sha256")
+    if not isinstance(raw, str):
+        return None
+    receipt = _read_state_json(receipt_path_for(state_root, raw))
+    if (not receipt or receipt.get("contract_version") != STREAM_CONTRACT_VERSION or receipt.get("source_sha256") != raw
+            or receipt.get("size") != fingerprint["size"]):
+        return None
+    if kind == "t0" and receipt.get("code_digest") != _verification_code_digest():
+        return None
+    return receipt
+
+
+def _bind_fingerprint(state_root: Path, kind: str, fingerprint: Mapping[str, Any] | None, raw_sha: str) -> None:
+    if not fingerprint:
+        return
+    _refuse_reparse(state_root)
+    _atomic_write_json(_fingerprint_index_path(state_root, kind, fingerprint), {
+        "contract_version": STREAM_CONTRACT_VERSION, "fingerprint": _fingerprint_body(fingerprint),
+        "source_sha256": raw_sha, "code_digest": _verification_code_digest(), "content_verified": True,
+        "verified_at": _now_utc(),
+    })
+
+
 def scan_legacy_artifact(path: Path, metrics: dict[str, Any] | None = None, state_root: Path | None = None) -> SourceHandle | None:
     """Header-only pass (``records`` are decoded and discarded). ``None`` mirrors ``_load_json`` failures.
 
     With ``state_root`` the header and record count are cached under the SHA-256 of the exact bytes, so an
     unchanged multi-hundred-MB legacy artifact is hashed (fast) but not decoded again for its header.
+    A fingerprint hit uses that receipt and does not read the file bytes.
     """
     header: dict[str, Any] = {}
     count = 0
     if state_root is not None:
+        fingerprint = source_file_fingerprint(path)
+        cached = _trusted_anchored_receipt(state_root, "legacy", fingerprint, _legacy_receipt_path)
+        if cached is not None:
+            raw = cached["source_sha256"]
+            handle = SourceHandle(cached["header"])
+            handle["records"] = StreamedRecords(path, cached["record_count"], "legacy")
+            handle.valid, handle.raw_sha256, handle.size, handle.path = True, raw, cached["size"], Path(path)
+            _metric(metrics, "legacy_fingerprint_hits")
+            _metric(metrics, "legacy_receipt_hits")
+            return handle
+        _metric(metrics, "legacy_fingerprint_misses")
         try:
             raw = bas.source_hash(path)
             size_now = path.stat().st_size
@@ -248,6 +321,10 @@ def scan_legacy_artifact(path: Path, metrics: dict[str, Any] | None = None, stat
         cached = _read_state_json(_legacy_receipt_path(state_root, raw))
         if (cached and cached.get("contract_version") == STREAM_CONTRACT_VERSION and cached.get("source_sha256") == raw
                 and cached.get("size") == size_now and isinstance(cached.get("header"), dict) and isinstance(cached.get("record_count"), int)):
+            try:
+                _bind_fingerprint(state_root, "legacy", fingerprint, raw)
+            except (OSError, FeedbackStreamError):
+                pass
             handle = SourceHandle(cached["header"])
             handle["records"] = StreamedRecords(path, cached["record_count"], "legacy")
             handle.valid, handle.raw_sha256, handle.size, handle.path = True, raw, size_now, Path(path)
@@ -275,8 +352,10 @@ def scan_legacy_artifact(path: Path, metrics: dict[str, Any] | None = None, stat
     if state_root is not None and digest == raw and size == size_now:
         try:
             _atomic_write_json(_legacy_receipt_path(state_root, digest), {
-                "contract_version": STREAM_CONTRACT_VERSION, "source_sha256": digest, "size": size, "header": header, "record_count": count})
-        except (OSError, ValueError):
+                "contract_version": STREAM_CONTRACT_VERSION, "source_sha256": digest, "size": size, "header": header,
+                "record_count": count, "content_verified": True, "verified_at": _now_utc()})
+            _bind_fingerprint(state_root, "legacy", fingerprint, digest)
+        except (OSError, ValueError, FeedbackStreamError):
             pass
     return handle
 
@@ -340,8 +419,28 @@ def _verify_snapshot_stream(path: Path) -> dict[str, Any]:
     return {"header": metadata, "record_count": count, "valid": state["valid"], "reason": state["reason"], "t0_prices": t0_prices}
 
 
+def _handle_from_t0_receipt(path: Path, receipt: Mapping[str, Any]) -> SourceHandle:
+    handle = SourceHandle(receipt["header"])
+    handle["records"] = StreamedRecords(path, receipt["record_count"], "t0")
+    handle.valid = bool(receipt["valid"])
+    handle.raw_sha256, handle.size, handle.path = receipt["source_sha256"], receipt["size"], Path(path)
+    handle.t0_prices = receipt["t0_prices"]
+    return handle
+
+
 def load_snapshot_handle(path: Path, state_root: Path, metrics: dict[str, Any] | None = None) -> SourceHandle | None:
-    """Loader seam for ``retention.discover_snapshots``; ``None`` mirrors an unreadable file."""
+    """Loader seam for ``retention.discover_snapshots``; ``None`` mirrors an unreadable file.
+
+    An exact fingerprint match on a receipt produced by a full SHA-256 under the current
+    verifier reuses ``raw_sha`` and does not read the file. Any other case hashes the bytes.
+    """
+    fingerprint = source_file_fingerprint(path)
+    anchored = _trusted_anchored_receipt(state_root, "t0", fingerprint, _receipt_path)
+    if anchored is not None:
+        _metric(metrics, "t0_fingerprint_hits")
+        _metric(metrics, "t0_receipt_hits")
+        return _handle_from_t0_receipt(path, anchored)
+    _metric(metrics, "t0_fingerprint_misses")
     try:
         raw_sha = bas.source_hash(path)
         size = path.stat().st_size
@@ -373,7 +472,7 @@ def load_snapshot_handle(path: Path, state_root: Path, metrics: dict[str, Any] |
                                    if isinstance(r, Mapping) and isinstance(r.get("t0_close_observation"), Mapping)
                                    and r["t0_close_observation"].get("session") == snapshot.get("session")}}
         receipt = {"contract_version": STREAM_CONTRACT_VERSION, "source_sha256": raw_sha, "size": size,
-                   "code_digest": _verification_code_digest(), **proof}
+                   "code_digest": _verification_code_digest(), "content_verified": True, "verified_at": _now_utc(), **proof}
         _metric(metrics, "stream_verified_bytes", size)
         _metric(metrics, "t0_receipt_misses")
         try:
@@ -382,11 +481,77 @@ def load_snapshot_handle(path: Path, state_root: Path, metrics: dict[str, Any] |
             pass
     else:
         _metric(metrics, "t0_receipt_hits")
-    handle = SourceHandle(receipt["header"])
-    handle["records"] = StreamedRecords(path, receipt["record_count"], "t0")
-    handle.valid, handle.raw_sha256, handle.size, handle.path = bool(receipt["valid"]), raw_sha, size, Path(path)
-    handle.t0_prices = receipt["t0_prices"]
-    return handle
+    try:
+        _bind_fingerprint(state_root, "t0", fingerprint, raw_sha)
+    except (OSError, FeedbackStreamError):
+        pass
+    return _handle_from_t0_receipt(path, receipt)
+
+
+def scrub_sources(root: str | Path, state_root: str | Path) -> dict[str, Any]:
+    """Re-hash every T0 and legacy source and compare it with its receipt. Never publishes feedback.
+
+    A match refreshes ``verified_at``. Any missing or disagreeing receipt raises ``SourceIntegrityError``.
+    """
+    root, state_root = Path(root), Path(state_root)
+    _refuse_reparse(state_root)
+    metrics: dict[str, Any] = {
+        "scrub_sources": 0, "scrub_clean": 0, "scrub_mismatches": 0, "scrub_bytes": 0, "scrub_verified_at": 0,
+    }
+    mismatches: list[str] = []
+
+    def note(path: Path, detail: str) -> None:
+        mismatches.append(str(path) + ":" + detail)
+        _metric(metrics, "scrub_mismatches")
+
+    def refresh(kind: str, path: Path, receipt_file: Path, receipt: dict[str, Any], raw: str, fingerprint) -> None:
+        receipt["verified_at"] = _now_utc()
+        receipt["content_verified"] = True
+        try:
+            _atomic_write_json(receipt_file, receipt)
+            _bind_fingerprint(state_root, kind, fingerprint, raw)
+        except (OSError, FeedbackStreamError) as exc:
+            note(path, "RECEIPT_REFRESH_FAILED:" + type(exc).__name__)
+            return
+        _metric(metrics, "scrub_clean")
+        _metric(metrics, "scrub_verified_at")
+
+    def check(kind: str, path: Path, receipt_for) -> None:
+        _metric(metrics, "scrub_sources")
+        if path_has_reparse_point(path):
+            note(path, "REPARSE_POINT")
+            return
+        fingerprint = source_file_fingerprint(path)
+        try:
+            raw = bas.source_hash(path)
+            size = path.stat().st_size
+        except OSError as exc:
+            note(path, "UNREADABLE:" + type(exc).__name__)
+            return
+        _metric(metrics, "scrub_bytes", size)
+        anchor = _read_state_json(_fingerprint_index_path(state_root, kind, fingerprint)) if fingerprint else None
+        if anchor and anchor.get("source_sha256") not in (None, raw):
+            note(path, "FINGERPRINT_SHA_MISMATCH:receipt=" + str(anchor.get("source_sha256")) + ":actual=" + raw)
+            return
+        receipt_file = receipt_for(state_root, raw)
+        receipt = _read_state_json(receipt_file)
+        if (not receipt or receipt.get("contract_version") != STREAM_CONTRACT_VERSION or receipt.get("source_sha256") != raw
+                or receipt.get("size") != size):
+            note(path, "RECEIPT_MISMATCH")
+            return
+        if kind == "t0" and receipt.get("code_digest") != _verification_code_digest():
+            note(path, "VERIFIER_DIGEST_MISMATCH")
+            return
+        refresh(kind, path, receipt_file, receipt, raw, fingerprint)
+
+    from retained_evidence_catalog import historical_paths
+    for path in historical_paths(root, "operations-review/prospective-decision-retention-v1", "*/*/prospective_decision_snapshot.json"):
+        check("t0", path, _receipt_path)
+    for path in fb._artifact_paths(root):
+        check("legacy", path, _legacy_receipt_path)
+    if mismatches:
+        raise SourceIntegrityError(REASON_SOURCE_INTEGRITY + ":" + ";".join(mismatches[:30]))
+    return {"metrics": metrics, "mismatches": []}
 
 
 _VERIFICATION_DIGEST: str | None = None
@@ -630,9 +795,35 @@ class _PartitionDependencies:
             return False
 
 
-def _prune_derived(directory, *, max_bytes, max_entries, protected=()):
-    """Bound only rebuildable module-owned state; active files are pinned through final assembly."""
-    files = sorted((p for p in directory.rglob("*") if p.is_file()), key=lambda p: p.stat().st_mtime_ns, reverse=True)
+def _owned_files(directory: Path) -> list[Path]:
+    """Files under ``directory``. A symlink, junction or reparse point refuses instead of being followed."""
+    directory = Path(directory)
+    if not directory.exists():
+        return []
+    _refuse_reparse(directory)
+    found: list[Path] = []
+    stack = [directory]
+    while stack:
+        current = stack.pop()
+        _refuse_reparse(current)
+        for child in current.iterdir():
+            if path_has_reparse_point(child):
+                raise FeedbackStreamError("FEEDBACK_REPARSE_POINT_REFUSED:" + str(child))
+            if child.is_dir():
+                stack.append(child)
+            elif child.is_file():
+                found.append(child)
+    return found
+
+
+def _prune_derived(directory, *, max_bytes, max_entries, protected=(), strict=True):
+    """Bound only rebuildable module-owned state; active files are pinned through final assembly.
+
+    ``strict`` is the settled-store and partition behaviour: a pinned set that itself exceeds the
+    budget fails the build. The evaluator-input cache passes ``strict=False`` and only evicts
+    unpinned files, because that store is rebuildable and must not fail feedback.
+    """
+    files = sorted(_owned_files(directory), key=lambda p: p.stat().st_mtime_ns, reverse=True)
     pinned = set(protected)
     total, count = 0, 0
     for path in sorted(files, key=lambda p: p not in pinned):
@@ -642,7 +833,7 @@ def _prune_derived(directory, *, max_bytes, max_entries, protected=()):
         else:
             total += size
             count += 1
-    if total > max_bytes or count > max_entries:
+    if strict and (total > max_bytes or count > max_entries):
         raise FeedbackStreamError("FEEDBACK_CHECKPOINT_STORAGE_LIMIT")
 
 
@@ -1048,6 +1239,39 @@ def _future_chain_inputs(repository: Path, marker: Mapping[str, Any] | None, as_
             "calendar_files": {str(p.relative_to(base)).replace("\\", "/"): _json_file_digest(p) for p in calendar_files}}
 
 
+def seed_feedback_state(root: str | Path, state_root: str | Path) -> dict[str, Any]:
+    """Build receipts, fingerprint anchors and evaluator-input sidecars. Publishes nothing.
+
+    This is the one-time out-of-Daily seed. It does not write a feedback artifact, a completion
+    manifest, or a publication lock on an output path. The caller supplies the state root.
+    """
+    root, state_root = Path(root), Path(state_root)
+    if path_has_reparse_point(root) or (state_root.exists() and path_has_reparse_point(state_root)):
+        raise FeedbackStreamError("FEEDBACK_REPARSE_POINT_REFUSED:" + str(state_root if state_root.exists() else root))
+    state_root.mkdir(parents=True, exist_ok=True)
+    metrics: dict[str, Any] = {}
+    started = time.perf_counter()
+    corpus = fb.discover_prospective_corpus(
+        root, payload_projection=lambda artifact: artifact, use_summary_cache=True, cache_metrics=metrics,
+        artifact_loader=lambda path, m: scan_legacy_artifact(path, m, state_root), cache_root=state_root)
+    modern_discovery = retention.discover_snapshots(
+        root, payload_projection=lambda snapshot: snapshot,
+        snapshot_loader=lambda path: load_snapshot_handle(path, state_root, metrics),
+        snapshot_validator=lambda snapshot: bool(snapshot.valid))
+    modern_genuine = modern_discovery["genuine_snapshots"]
+    if not modern_genuine and not corpus["genuine_artifacts"]:
+        raise T0CorpusEmpty(f"{REASON_T0_CORPUS_EMPTY}:root={root}:t0_inventory={len(modern_discovery['inventory'])}"
+                            f":legacy_inventory={len(corpus['inventory'])}")
+    protected: list[Path] = []
+    for candidate in modern_genuine:
+        for _item in _evaluator_inputs(candidate["snapshot"], candidate["inventory"], state_root, metrics, protected):
+            pass
+    _prune_evaluator_inputs(state_root, protected)
+    metrics["evaluator_input_store_bytes"] = _directory_bytes(state_root / EVALUATOR_INPUT_DIR)
+    return {"t0_count": len(modern_genuine), "legacy_count": len(corpus["genuine_artifacts"]),
+            "elapsed_s": round(time.perf_counter() - started, 3), "metrics": metrics}
+
+
 def build_streaming_feedback(root: str | Path, output: str | Path, **kwargs) -> dict[str, Any]:
     """Serialize the complete build/reuse transaction, including crash recovery."""
     from feedback_publication_lock import publication_lock
@@ -1177,6 +1401,7 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     partitions.prune_other_runs()
     _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
                    max_entries=SETTLED_STORE_MAX_ENTRIES)
+    protected_inputs: list[Path] = []
     final_tmp = output.parent / (TEMP_PREFIX + output.name + f"-{os.getpid()}.incomplete")
     try:
         manifests = []
@@ -1187,10 +1412,13 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
                 _metric(metrics, "rows_reused", manifest["row_count"])
             else:
                 manifest = partitions.build(position, session, _iter_session_rows(
-                    sources_by_session[session], settled, future_settled, marker))
+                    sources_by_session[session], settled, future_settled, marker, state_root=state_root,
+                    metrics=metrics, protected_inputs=protected_inputs))
             manifests.append(manifest)
         _metric(metrics, "spool_bytes", sum(m["rows"]["bytes"] + m["trigger"]["bytes"] for m in manifests))
         partitions.finish()
+        _prune_evaluator_inputs(state_root, protected_inputs)
+        _metric(metrics, "evaluator_input_store_bytes", _directory_bytes(state_root / EVALUATOR_INPUT_DIR))
         _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
                        max_entries=SETTLED_STORE_MAX_ENTRIES)
         phases["evaluate_s"] = clock() - t
@@ -1248,48 +1476,256 @@ def _sources_by_session(modern_genuine, legacy_genuine) -> dict[str, list[dict[s
     return grouped
 
 
-def _iter_rows(sources_by_session, settled, future_settled, marker) -> Iterator[dict[str, Any]]:
+def _iter_rows(sources_by_session, settled, future_settled, marker, state_root=None, metrics=None, protected_inputs=None) -> Iterator[dict[str, Any]]:
     for session in sorted(sources_by_session):
-        yield from _iter_session_rows(sources_by_session[session], settled, future_settled, marker)
+        yield from _iter_session_rows(sources_by_session[session], settled, future_settled, marker,
+                                      state_root=state_root, metrics=metrics, protected_inputs=protected_inputs)
 
 
-def _iter_session_rows(sources, settled, future_settled, marker) -> Iterator[dict[str, Any]]:
-    streams = [_source_stream(index, source) for index, source in enumerate(sources)]
+def _iter_session_rows(sources, settled, future_settled, marker, state_root=None, metrics=None, protected_inputs=None) -> Iterator[dict[str, Any]]:
+    streams = [_source_stream(index, source, state_root=state_root, metrics=metrics, protected_inputs=protected_inputs)
+               for index, source in enumerate(sources)]
     for _ticker, _identity, _index, work in heapq.merge(*streams, key=lambda item: (item[0], item[1])):
         evaluator_choice, kwargs = work
         evaluator = future_settled if evaluator_choice(marker) else settled
         yield evaluator.evaluate(**kwargs)
 
 
-def _source_stream(index: int, source: Mapping[str, Any]) -> Iterator[tuple[str, str, int, Any]]:
+_PROJECTION_DIGEST: str | None = None
+
+
+def _projection_code_digest() -> str:
+    """Digest of the modules that define the evaluator-input projection. A change rebuilds sidecars."""
+    global _PROJECTION_DIGEST
+    if _PROJECTION_DIGEST is None:
+        digest = hashlib.sha256()
+        for name in ("prospective_decision_outcome_feedback", "prospective_feedback_streaming"):
+            module = import_module(name)
+            digest.update(hashlib.sha256(Path(module.__file__).read_bytes().replace(b"\r\n", b"\n")).digest())
+        _PROJECTION_DIGEST = digest.hexdigest()
+    return _PROJECTION_DIGEST
+
+
+def _evaluator_input_paths(state_root: Path, raw_sha: str, projection: str) -> tuple[Path, Path]:
+    directory = state_root / EVALUATOR_INPUT_DIR / raw_sha
+    return directory / (projection + ".jsonl"), directory / (projection + ".index.json")
+
+
+def _modern_frame(handle: SourceHandle, inventory: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], Any]:
+    """Discovery fields and the T0 header. These are not stored in the sidecar."""
+    origin = handle.get("source_integrated_decision_artifact") or {}
+    artifact = {"session": handle.get("session"), "artifact_identity": origin.get("artifact_identity"),
+                "contract_version": origin.get("contract_version", fb.FIELD_NOT_RETAINED), "requested_at": None}
+    temporal = {
+        "contract_version": fb.TEMPORAL_CONTRACT_VERSION, "status": fb.GENUINE, "decision_session": handle.get("session"),
+        "decision_artifact_identity": origin.get("artifact_identity"),
+        "daily_session_operation_identity": handle.get("daily_session_operation_identity"),
+        "canonical_handoff_path": inventory.get("canonical_handoff_path"),
+        "operation_manifest_path": inventory.get("operation_manifest_path"),
+        "proof_reason_codes": inventory.get("proof_reason_codes"),
+    }
+    header = {k: v for k, v in handle.items() if k != "records"}
+    return artifact, temporal, header, inventory["snapshot_path"]
+
+
+def _modern_row(ticker: str, projected_record: Mapping[str, Any], artifact: Mapping[str, Any],
+                temporal: Mapping[str, Any], header: Mapping[str, Any], source_path: Any) -> dict[str, Any] | None:
+    """One evaluator input. ``record`` is the projected decision stored inside ``projected_record``."""
+    decision = projected_record.get("integrated_decision_at_t0")
+    if not isinstance(decision, Mapping) or decision.get("ticker") != ticker:
+        return None
+    return {"ticker": ticker, "decision_identity": str(decision.get("decision_identity")),
+            "kwargs": {"artifact": artifact, "source_path": source_path, "temporal": temporal,
+                       "record": decision, "t0_snapshot": header, "t0_snapshot_record": projected_record}}
+
+
+def _modern_input_rows(handle: SourceHandle, inventory: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
+    """The ordered ``(ticker, decision_identity, kwargs)`` stream ``_source_stream`` yields for one T0."""
+    artifact, temporal, header, source_path = _modern_frame(handle, inventory)
+    for ticker, retained in iter_snapshot_records(handle):
+        if not isinstance(retained, Mapping):
+            continue
+        projected_record = {**{k: v for k, v in retained.items() if k != "integrated_decision_at_t0"},
+                            "integrated_decision_at_t0": fb._project_decision_for_feedback(retained["integrated_decision_at_t0"])}
+        row = _modern_row(ticker, projected_record, artifact, temporal, header, source_path)
+        if row is not None:
+            yield row
+
+
+def _sidecar_is_valid(path: Path, index: Mapping[str, Any]) -> bool:
+    try:
+        if path_has_reparse_point(path) or path.stat().st_size != index["bytes"] or index["row_count"] < 0:
+            return False
+        digest = hashlib.sha256()
+        count = 0
+        with path.open("rb") as source:
+            for line in iter(lambda: source.readline(), b""):
+                if not line.endswith(b"\n"):
+                    return False
+                digest.update(line)
+                count += 1
+        return digest.hexdigest() == index["sha256"] and count == index["row_count"]
+    except (OSError, ValueError, UnicodeError, KeyError, TypeError):
+        return False
+
+
+def _stored_sidecar_row(item: Mapping[str, Any]) -> dict[str, Any]:
+    """Persist only T0-derived fields. ``record`` is inside the projected snapshot record."""
+    return {"ticker": item["ticker"], "decision_identity": item["decision_identity"],
+            "t0_snapshot_record": item["kwargs"]["t0_snapshot_record"]}
+
+
+def _iter_sidecar_rows(path: Path, handle: SourceHandle, inventory: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
+    artifact, temporal, header, source_path = _modern_frame(handle, inventory)
+    with path.open("rb") as source:
+        for line in source:
+            item = json.loads(line)
+            projected = item.get("t0_snapshot_record") if isinstance(item, dict) else None
+            if not isinstance(projected, dict):
+                raise FeedbackStreamError("FEEDBACK_EVALUATOR_INPUT_INTEGRITY")
+            row = _modern_row(item.get("ticker"), projected, artifact, temporal, header, source_path)
+            if row is None or row["decision_identity"] != item.get("decision_identity"):
+                raise FeedbackStreamError("FEEDBACK_EVALUATOR_INPUT_INTEGRITY")
+            yield row
+
+
+def _write_evaluator_sidecar(data_path: Path, index_path: Path, rows: Iterator[dict[str, Any]], raw: str,
+                             projection: str, *, budget_remaining: int) -> str:
+    """Write the sidecar from a T0 pass. ``over_budget`` installs nothing. Failure leaves no index."""
+    temporary = None
+    try:
+        _refuse_reparse(data_path.parent)
+        hasher = hashlib.sha256()
+        count = 0
+        with tempfile.NamedTemporaryFile(dir=data_path.parent, prefix=TEMP_PREFIX + "evaluator-", suffix=".tmp", delete=False) as out:
+            temporary = Path(out.name)
+            for item in rows:
+                line = _canon_bytes(_stored_sidecar_row(item)) + b"\n"
+                out.write(line)
+                hasher.update(line)
+                count += 1
+            out.flush()
+            os.fsync(out.fileno())
+        size = temporary.stat().st_size
+        index_value = {
+            "contract_version": EVALUATOR_INPUT_CONTRACT, "source_sha256": raw, "projection_digest": projection,
+            "sha256": hasher.hexdigest(), "bytes": size, "row_count": count,
+        }
+        index_payload = json.dumps(index_value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        if size + len(index_payload) > budget_remaining:
+            return "over_budget"
+        os.replace(temporary, data_path)
+        temporary = None
+        _atomic_write_json(index_path, index_value)
+        return "written"
+    except FeedbackStreamError:
+        raise
+    except (OSError, ValueError, TypeError):
+        return "failed"
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+def _evaluator_store_occupied(state_root: Path, *excluded: Path) -> int:
+    directory = Path(state_root) / EVALUATOR_INPUT_DIR
+    if not directory.exists():
+        return 0
+    skip = set()
+    for path in excluded:
+        try:
+            skip.add(path.resolve())
+        except OSError:
+            continue
+    total = 0
+    for path in _owned_files(directory):
+        try:
+            if path.resolve() in skip:
+                continue
+        except OSError:
+            continue
+        total += path.stat().st_size
+    return total
+
+
+def _evaluator_inputs(handle: SourceHandle, inventory: Mapping[str, Any], state_root: Path | None,
+                      metrics: dict[str, Any] | None, protected_inputs: list[Path] | None) -> Iterator[dict[str, Any]]:
+    raw = handle.raw_sha256
+    if state_root is None or not isinstance(raw, str):
+        yield from _modern_input_rows(handle, inventory)
+        return
+    projection = _projection_code_digest()
+    data_path, index_path = _evaluator_input_paths(Path(state_root), raw, projection)
+    index = _read_state_json(index_path)
+    valid = (index and index.get("contract_version") == EVALUATOR_INPUT_CONTRACT and index.get("source_sha256") == raw
+             and index.get("projection_digest") == projection and _sidecar_is_valid(data_path, index))
+    if not valid:
+        if index:
+            _metric(metrics, "sidecar_corrupt")
+            index_path.unlink(missing_ok=True)
+        _metric(metrics, "sidecar_misses")
+        try:
+            _refuse_reparse(state_root)
+            data_path.parent.mkdir(parents=True, exist_ok=True)
+        except (OSError, FeedbackStreamError):
+            yield from _modern_input_rows(handle, inventory)
+            return
+        occupied = _evaluator_store_occupied(Path(state_root), data_path, index_path)
+        if occupied >= EVALUATOR_INPUT_MAX_BYTES:
+            data_path.unlink(missing_ok=True)
+            _metric(metrics, "sidecar_skipped_budget")
+            yield from _modern_input_rows(handle, inventory)
+            return
+        status = _write_evaluator_sidecar(
+            data_path, index_path, _modern_input_rows(handle, inventory), raw, projection,
+            budget_remaining=EVALUATOR_INPUT_MAX_BYTES - occupied)
+        if status != "written":
+            data_path.unlink(missing_ok=True)
+            index_path.unlink(missing_ok=True)
+            if status == "over_budget":
+                _metric(metrics, "sidecar_skipped_budget")
+            yield from _modern_input_rows(handle, inventory)
+            return
+        index = _read_state_json(index_path)
+        if not index or not _sidecar_is_valid(data_path, index):
+            yield from _modern_input_rows(handle, inventory)
+            return
+        _metric(metrics, "sidecar_bytes_written", index["bytes"])
+    else:
+        _metric(metrics, "sidecar_hits")
+    _metric(metrics, "sidecar_bytes", index["bytes"])
+    if protected_inputs is not None:
+        protected_inputs.extend((data_path, index_path))
+    yield from _iter_sidecar_rows(data_path, handle, inventory)
+
+
+def _prune_evaluator_inputs(state_root: Path, protected: list[Path]) -> None:
+    directory = Path(state_root) / EVALUATOR_INPUT_DIR
+    if not directory.exists():
+        return
+    _prune_derived(directory, max_bytes=EVALUATOR_INPUT_MAX_BYTES, max_entries=EVALUATOR_INPUT_MAX_ENTRIES,
+                   protected=protected, strict=False)
+
+
+def _directory_bytes(directory: Path) -> int:
+    if not directory.exists():
+        return 0
+    return sum(path.stat().st_size for path in _owned_files(directory))
+
+
+def _source_stream(index: int, source: Mapping[str, Any], state_root: Path | None = None,
+                   metrics: dict[str, Any] | None = None, protected_inputs: list[Path] | None = None) -> Iterator[tuple[str, str, int, Any]]:
     candidate = source["candidate"]
     if source["kind"] == "modern":
         handle = candidate["snapshot"]
-        inventory = candidate["inventory"]
-        origin = handle.get("source_integrated_decision_artifact") or {}
-        artifact = {"session": handle.get("session"), "artifact_identity": origin.get("artifact_identity"),
-                    "contract_version": origin.get("contract_version", fb.FIELD_NOT_RETAINED), "requested_at": None}
-        temporal = {
-            "contract_version": fb.TEMPORAL_CONTRACT_VERSION, "status": fb.GENUINE, "decision_session": handle.get("session"),
-            "decision_artifact_identity": origin.get("artifact_identity"),
-            "daily_session_operation_identity": handle.get("daily_session_operation_identity"),
-            "canonical_handoff_path": inventory.get("canonical_handoff_path"),
-            "operation_manifest_path": inventory.get("operation_manifest_path"),
-            "proof_reason_codes": inventory.get("proof_reason_codes"),
-        }
-        header = {k: v for k, v in handle.items() if k != "records"}
-        for ticker, retained in iter_snapshot_records(handle):
-            if not isinstance(retained, Mapping):
-                continue
-            projected_record = {**{k: v for k, v in retained.items() if k != "integrated_decision_at_t0"},
-                                "integrated_decision_at_t0": fb._project_decision_for_feedback(retained["integrated_decision_at_t0"])}
-            decision = projected_record.get("integrated_decision_at_t0")
-            if not isinstance(decision, Mapping) or decision.get("ticker") != ticker:
-                continue
-            yield ticker, str(decision.get("decision_identity")), index, (
+        for item in _evaluator_inputs(handle, candidate["inventory"], state_root, metrics, protected_inputs):
+            artifact = item["kwargs"]["artifact"]
+            yield item["ticker"], item["decision_identity"], index, (
                 lambda marker, a=artifact: bool(marker) and a["session"] >= marker["session"],
-                {"artifact": artifact, "source_path": inventory["snapshot_path"], "temporal": temporal, "record": decision,
-                 "t0_snapshot": header, "t0_snapshot_record": projected_record})
+                item["kwargs"])
     else:
         handle = candidate["artifact"]
         header = {k: v for k, v in handle.items() if k != "records"}

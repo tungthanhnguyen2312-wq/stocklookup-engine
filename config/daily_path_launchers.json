@@ -118,8 +118,8 @@
   "non_python_callers": {
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
-      "reason": "Focused selection adds T+ Daily incremental/resume/source tests only; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "71415691ff189126577f2892f30c6f261a39bafd208eb3e7e3b01c91ad4e2deb",
+      "reason": "Focused selection adds the T+ incremental-cost tests; launcher commands, CI environments and required checks unchanged.",
+      "sha256": "a1dde8caf902c979ebcc03f00792dcfab9c82528f190baca38dc220093607e56",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",

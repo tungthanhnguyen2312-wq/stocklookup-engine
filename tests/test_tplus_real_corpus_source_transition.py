@@ -9,7 +9,8 @@ import pytest
 
 from tools.verify_retention_reader_transition import (
     TPLUS_DAILY_MANIFEST, TPLUS_REAL_CORPUS_BASE, TPLUS_REAL_CORPUS_MANIFEST, TPLUS_REAL_CORPUS_SOURCES,
-    TPLUS_RESUME_SOURCE, _iid_runtime_prior_bytes, _tplus_real_corpus_prior_bytes, historical_bytes,
+    TPLUS_RESUME_SOURCE, _iid_runtime_prior_bytes, _tplus_incremental_cost_prior_bytes,
+    _tplus_real_corpus_prior_bytes, historical_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,8 +26,10 @@ def test_successor_binds_the_merged_base_and_the_live_source(relative):
     prior = _lf((ROOT / row["archive"]).read_bytes())
     assert prior == _lf(subprocess.check_output(["git", "show", f"{TPLUS_REAL_CORPUS_BASE}:{relative}"], cwd=ROOT))
     live = _lf((ROOT / relative).read_bytes())
-    assert hashlib.sha256(live).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]
-    assert _tplus_real_corpus_prior_bytes(ROOT, relative, live) == prior
+    # The incremental-cost successor is peeled first. Its archived prior is this layer's active source.
+    bound = _tplus_incremental_cost_prior_bytes(ROOT, relative, live)
+    assert hashlib.sha256(bound).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]
+    assert _tplus_real_corpus_prior_bytes(ROOT, relative, bound) == prior
     historical_bytes(ROOT, relative)  # every older layer still verifies through the new peel
 
 
@@ -47,6 +50,10 @@ def test_successor_rejects_tamper(tmp_path, tamper):
         target = tmp_path / path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / path, target)
+    # Exercise this layer at its own boundary. The newer successor is not part of the isolated tree.
+    if relative == TPLUS_RESUME_SOURCE:
+        shutil.copyfile(ROOT / "tests/fixtures/tplus_incremental_cost_v2_sources/prospective_feedback_streaming.py.txt",
+                        tmp_path / relative)
     if tamper == "live":
         (tmp_path / relative).write_bytes(b"changed")
     elif tamper == "archive":

@@ -209,3 +209,68 @@ memory statuses; explicit sidecar/exit reasons and timeout precedence remain. Mi
 is inconclusive, so an otherwise unknown failure keeps the generic defect fallback. Tree
 accounting and the existing shared cleanup deadline still govern safe reaping. No schema,
 reason vocabulary, resource threshold, analytical evidence or production-stage change.
+
+## V2 incremental cost
+
+TPLUS_INCREMENTAL_COST_V2 removes two whole-corpus costs from the feedback child. Classification,
+horizon, maturity, ordering, partition invalidation, artifact identity and the 1,200-second / 2 GiB
+resource ceilings stay as they are.
+
+A T0 or legacy source is trusted from its receipt only when the volume id, file id, size, mtime and
+NTFS ChangeTime still match a receipt produced by a full SHA-256 under the current verifier. Any
+mismatch, a missing receipt, an unreadable fingerprint or a reparse point hashes the file exactly as
+before and refreshes the receipt. `stream_sha256_bytes` counts only that full-hash branch.
+`tools/vault_snapshot.py` already reads ChangeTime, and the root feedback module must not import
+`tools`. The five-field helper is `stocklookup_core/evidence/source_file_fingerprint.py`.
+
+`--scrub-sources --root <root> --state-root <state>` is an out-of-Daily check. It re-hashes every
+T0 and legacy source, refreshes `verified_at` when the receipt matches, and exits
+`EXIT_SOURCE_INTEGRITY` (31) on a mismatch. It does not publish a feedback artifact.
+
+An invalidated partition re-reads a rebuildable evaluator-input sidecar under
+`<state-root>/operations-review/prospective-decision-outcome-feedback-v1/_evaluator_inputs/`, keyed
+by the T0 SHA-256 and the projection digest (`prospective_feedback_evaluator_input/v2`). Each line
+stores `ticker`, `decision_identity`, and the projected retained record once. `record` is that
+record's `integrated_decision_at_t0`. `artifact`, `temporal`, `source_path` and `t0_snapshot` are
+rebuilt at read time from the live handle and inventory, the same helper the direct T0 parse uses.
+Its own SHA-256 is checked before use. A missing, truncated or corrupt sidecar is rebuilt from the
+T0. The store budget is 12 GiB and 4,096 files: about 60 sessions of the deduplicated sidecar, with
+headroom. A new sidecar that would exceed the budget is not written (`sidecar_skipped_budget`);
+that T0 is streamed from the file. Prune evicts only unpinned sidecar files and does not fail the
+build. The settled store keeps its own 2 GiB cap and still fails closed when its pinned bytes
+exceed that cap. The T0 file remains the only authority. The round-1 2026-11-03 sidecar, which
+stored `record` twice plus the discovery fields, was 154,774,713 bytes against a 2,545,919,441-byte
+T0 (6.08 percent). After storing the projected record once, that same T0's sidecar is 78,984,877
+bytes (1,683 rows, 3.10 percent). The 33-sidecar store on the current corpus is 1,751,745,573
+bytes, about 53.1 MB per session. The budget is 12 GiB. Legacy artifacts still use their
+summary caches. Price-index hashes are unchanged, so a warm discovery can still report a non-zero
+`stream_sha256_bytes` for price files.
+
+### One-time seed before the first Daily on this code
+
+`_verification_code_digest()` includes this module, so every Production T0 receipt is invalid on
+the first Daily after deploy. That Daily would re-hash the corpus (the round-1 cold discovery was
+1,493 s and hashed about 70 GB) and parse every T0 to build sidecars, and the pre-handoff child
+would hit the unchanged 1,200 s deadline.
+
+Seed once, outside Daily, then scrub. This writes Production state. It is Owner-gated. Do not run
+it from an agent session.
+
+Preconditions: no Daily is running, host available RAM is at least 4 GiB, and T: free space stays
+at or above the 340 GiB floor. The evidence root is read. The state root is the Production feedback
+state directory, not a scratch copy of the corpus.
+
+```
+python tools/run_prospective_decision_outcome_feedback.py --seed-state-only --root <retained-evidence> --state-root <production-feedback-state>
+python tools/run_prospective_decision_outcome_feedback.py --scrub-sources --root <retained-evidence> --state-root <production-feedback-state>
+```
+
+`--seed-state-only` builds receipts, fingerprint anchors and sidecars, publishes no feedback
+artifact, and exits 33. It accepts no `--output`. A failure exits 30, or 31 when the reason is
+source integrity. `--scrub-sources` then re-hashes every source and refreshes `verified_at`. The
+expected cost is one cold discovery plus one projection pass of every genuine T0, and it does not
+run the row evaluator. The round-2 cold build measured discovery 1,241.808 s and evaluate
+1,474.299 s. The warm-sidecar re-evaluation measured evaluate 508.755 s. The difference, about
+966 s, is the T0 parse and sidecar write the seed still has to do. Expected seed wall time is
+therefore about 2,210 s. It was not executed against Production. The full cold build, which also
+evaluated and published, was 2,761.949 s.
