@@ -209,3 +209,31 @@ memory statuses; explicit sidecar/exit reasons and timeout precedence remain. Mi
 is inconclusive, so an otherwise unknown failure keeps the generic defect fallback. Tree
 accounting and the existing shared cleanup deadline still govern safe reaping. No schema,
 reason vocabulary, resource threshold, analytical evidence or production-stage change.
+
+## V2 incremental cost
+
+TPLUS_INCREMENTAL_COST_V2 removes two whole-corpus costs from the feedback child. Classification,
+horizon, maturity, ordering, partition invalidation, artifact identity and the 1,200-second / 2 GiB
+resource ceilings stay as they are.
+
+A T0 or legacy source is trusted from its receipt only when the volume id, file id, size, mtime and
+NTFS ChangeTime still match a receipt produced by a full SHA-256 under the current verifier. Any
+mismatch, a missing receipt, an unreadable fingerprint or a reparse point hashes the file exactly as
+before and refreshes the receipt. `stream_sha256_bytes` counts only that full-hash branch.
+`tools/vault_snapshot.py` already reads ChangeTime, and the root feedback module must not import
+`tools`. The five-field helper is `stocklookup_core/evidence/source_file_fingerprint.py`.
+
+`--scrub-sources --root <root> --state-root <state>` is an out-of-Daily check. It re-hashes every
+T0 and legacy source, refreshes `verified_at` when the receipt matches, and exits
+`EXIT_SOURCE_INTEGRITY` (31) on a mismatch. It does not publish a feedback artifact.
+
+An invalidated partition re-reads a rebuildable evaluator-input sidecar under
+`<state-root>/operations-review/prospective-decision-outcome-feedback-v1/_evaluator_inputs/`, keyed
+by the T0 SHA-256 and the projection digest. The sidecar is the ordered `(ticker, decision_identity,
+kwargs)` stream. Its own SHA-256 is checked before use. A missing, truncated or corrupt sidecar is
+rebuilt from the T0. The store is capped at 4 GiB and 4,096 files. The T0 file remains the only
+authority. The measured 2026-11-03 sidecar was 154,774,713 bytes against a 2,545,919,441-byte T0
+(6.08 percent), so the sidecar was kept. Legacy artifacts still use their summary caches. Price-index
+hashes are unchanged, so a warm discovery can still report a non-zero `stream_sha256_bytes` for
+price files. The rehearsal receipt is
+`docs/internal/TPLUS_INCREMENTAL_COST_V2_REHEARSAL_20261104.json`.

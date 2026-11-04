@@ -73,6 +73,10 @@ TPLUS_REAL_CORPUS_MANIFEST = "tests/fixtures/tplus_real_t0_corpus_source_transit
 TPLUS_REAL_CORPUS_BASE = "f56cab5e7c2bd821898cd8bee5a5a90f2ffa3551"
 TPLUS_REAL_CORPUS_SCOPE = "EXACT_TPLUS_EVIDENCE_ROOT_AND_EMPTY_CORPUS_REFUSAL_ONLY"
 TPLUS_REAL_CORPUS_SOURCES = (TPLUS_RESUME_SOURCE, "canonical_post_close_pipeline.py")
+TPLUS_INCREMENTAL_MANIFEST = "tests/fixtures/tplus_incremental_cost_v2_source_transition_v1.json"
+TPLUS_INCREMENTAL_BASE = "f43471435403c0de8efc2e6fd800e2b83356b9b6"
+TPLUS_INCREMENTAL_SCOPE = "EXACT_TPLUS_INCREMENTAL_COST_ONLY"
+TPLUS_INCREMENTAL_ARCHIVE = "tests/fixtures/tplus_incremental_cost_v2_sources/prospective_feedback_streaming.py.txt"
 RESIDENT_MANIFEST = "tests/fixtures/owner_daily_resident_iid_source_transition_v1.json"
 RESIDENT_SOURCES = ("canonical_daily_operation.py", "stocklookup_core/decision/daily_integrated_decision_brief.py")
 RESIDENT_PRIOR_PINS = ("16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
@@ -264,6 +268,39 @@ def _tplus_real_corpus_prior_bytes(root: Path, relative: str, active: bytes) -> 
             or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
             or row["prior_sha256_lf"] == row["active_sha256_lf"]):
         raise ValueError("TPLUS_REAL_CORPUS_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
+def _tplus_incremental_cost_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the fingerprint and sidecar cost successor before the 2026-11-03 evidence-root pin.
+
+    Only ``prospective_feedback_streaming.py`` changed. The pipeline file is not in this layer,
+    so it stays on the real-corpus pin. A missing manifest keeps older checkouts valid.
+    """
+    if relative != TPLUS_RESUME_SOURCE:
+        return active
+    manifest = root / TPLUS_INCREMENTAL_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_incremental_cost_v2_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_INCREMENTAL_BASE
+            or spec.get("scope") != TPLUS_INCREMENTAL_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (TPLUS_RESUME_SOURCE,)):
+        raise ValueError("TPLUS_INCREMENTAL_COST_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != TPLUS_INCREMENTAL_ARCHIVE):
+        raise ValueError("TPLUS_INCREMENTAL_COST_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / TPLUS_INCREMENTAL_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TPLUS_INCREMENTAL_COST_SOURCE_TRANSITION_BINDING_INVALID")
     return prior
 
 
@@ -497,6 +534,7 @@ def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) ->
 def _storage_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve exact pre-storage sources without repinning either historical domain."""
     if relative == TPLUS_RESUME_SOURCE:
+        active = _tplus_incremental_cost_prior_bytes(root, relative, active)
         active = _tplus_real_corpus_prior_bytes(root, relative, active)
     active = _tplus_daily_prior_bytes(root, relative, active)
     active = _tplus_resume_prior_bytes(root, relative, active)
@@ -709,12 +747,20 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if post_producer["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = post_producer["active_e4_v2_digest"]
+    streaming_bytes = (root / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    if (root / TPLUS_INCREMENTAL_MANIFEST).is_file():
+        streaming_bytes = _tplus_incremental_cost_prior_bytes(root, TPLUS_RESUME_SOURCE, streaming_bytes)
     if (root / TPLUS_REAL_CORPUS_MANIFEST).is_file():
         real_corpus = json.loads((root / TPLUS_REAL_CORPUS_MANIFEST).read_bytes())
-        _tplus_real_corpus_prior_bytes(root, TPLUS_RESUME_SOURCE, (root / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
+        _tplus_real_corpus_prior_bytes(root, TPLUS_RESUME_SOURCE, streaming_bytes)
         if real_corpus["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = real_corpus["active_e4_v2_digest"]
+    if (root / TPLUS_INCREMENTAL_MANIFEST).is_file():
+        incremental = json.loads((root / TPLUS_INCREMENTAL_MANIFEST).read_bytes())
+        if incremental["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = incremental["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

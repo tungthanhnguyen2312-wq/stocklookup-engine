@@ -143,7 +143,21 @@ if __name__ == "__main__":
     parser.add_argument("--status", help="Shared status pointer, coordinated with immutable publication.")
     parser.add_argument("--state-root", help="Where derived caches/receipts live (default: --root).")
     parser.add_argument("--prior-result", help="Status sidecar of the earlier call, to report FEEDBACK_CALL_RELATION.")
+    parser.add_argument("--scrub-sources", action="store_true",
+                        help="Out of Daily: re-hash every T0/legacy source, refresh verified_at, never publish.")
     args = parser.parse_args()
+    if args.scrub_sources:
+        if not args.state_root:
+            parser.error("--scrub-sources requires --state-root")
+        import prospective_feedback_streaming as streaming
+        try:
+            report = streaming.scrub_sources(args.root, args.state_root)
+        except streaming.SourceIntegrityError as exc:
+            import stocklookup_core.acquisition.feedback_resource_guard as guard
+            print(json.dumps({"status": "FAILED", "reason_code": exc.code, "detail": str(exc)[:2000]}, sort_keys=True))
+            sys.exit(guard.EXIT_SOURCE_INTEGRITY)
+        print(json.dumps({"status": "SCRUBBED", **report}, sort_keys=True, default=str))
+        sys.exit(0)
     if args.output is not None and args.evidence_dir is None and not args.legacy_in_memory:
         outcome = run_streaming(root=args.root, output=args.output, result=args.result, status=args.status,
                                 state_root=args.state_root, prior_result=args.prior_result)
