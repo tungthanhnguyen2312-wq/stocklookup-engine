@@ -33,4 +33,11 @@ Validation: recovery/pending-registry/journal suite 148 PASS; additional preserv
 freeze, unrelated registry edit and missing-completion guards 3 PASS.
 Launcher, sequential-relaunch and structural/source-transition checks: all 106 cases
 pass after refreshing the exact UTF-8 AST pin and extending tamper-test error names.
-Publication and release verification are recorded after the live replay finishes.
+First replay: PARTIAL. AI handoff READY_FOR_AI at remote
+`f18a2d0abdddb9f6d17f8b2ac7de524ac1586597`, Action Center READY.
+Dashboard source `8a5084d3a7d3ee9a96a9eab9d18f62312fcf2aa1` was retained,
+but CI41826209659 failed: a test incorrectly disallowed TPB waiting and the
+workbench lacked the existing NARROW_LEADERSHIP label. Dashboard PR23 fixes
+those presentation/test defects without changing published analytical values.
+A progress END event means a stage finished, not that its result passed.
+Final publication and release verification follow the corrected replay.
