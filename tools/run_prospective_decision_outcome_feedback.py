@@ -145,7 +145,25 @@ if __name__ == "__main__":
     parser.add_argument("--prior-result", help="Status sidecar of the earlier call, to report FEEDBACK_CALL_RELATION.")
     parser.add_argument("--scrub-sources", action="store_true",
                         help="Out of Daily: re-hash every T0/legacy source, refresh verified_at, never publish.")
+    parser.add_argument("--seed-state-only", action="store_true",
+                        help="Out of Daily: write receipts, fingerprint anchors and sidecars. Publishes nothing.")
     args = parser.parse_args()
+    if args.seed_state_only and args.scrub_sources:
+        parser.error("choose one of --seed-state-only or --scrub-sources")
+    if args.seed_state_only:
+        if not args.state_root:
+            parser.error("--seed-state-only requires --state-root")
+        if args.output or args.evidence_dir or args.legacy_in_memory:
+            parser.error("--seed-state-only does not accept an output path")
+        import prospective_feedback_streaming as streaming
+        try:
+            report = streaming.seed_feedback_state(args.root, args.state_root)
+        except streaming.FeedbackStreamError as exc:
+            import stocklookup_core.acquisition.feedback_resource_guard as guard
+            print(json.dumps({"status": "FAILED", "reason_code": exc.code, "detail": str(exc)[:2000]}, sort_keys=True))
+            sys.exit(guard.EXIT_COMPUTATION_ERROR if exc.code != streaming.REASON_SOURCE_INTEGRITY else guard.EXIT_SOURCE_INTEGRITY)
+        print(json.dumps({"status": "SEEDED", **report}, sort_keys=True, default=str))
+        sys.exit(33)  # distinct from a published run (0) and from a scrub mismatch (31)
     if args.scrub_sources:
         if not args.state_root:
             parser.error("--scrub-sources requires --state-root")

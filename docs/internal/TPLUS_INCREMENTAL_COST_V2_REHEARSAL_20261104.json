@@ -108,5 +108,60 @@
       "t_free_after": 396357304320,
       "scratch_bytes_after": 10361424689
     }
-  ]
+  ],
+  "sidecar_measurement_v2": {
+    "t0_bytes": 2545919441,
+    "sidecar_bytes": 78984877,
+    "rows": 1683,
+    "ratio": 0.03102410694070347,
+    "contract_version": "prospective_feedback_evaluator_input/v2",
+    "source_sha256": "8f04db9c41461ac3c865a91287aca87587eba51e60024a08e3e6efa4e110c233",
+    "store_bytes_33_sidecars": 1751745573,
+    "budget_bytes": 12884901888
+  },
+  "seed_cost_estimate": {
+    "ran_against_production": false,
+    "cold_discovery_s": 1241.808,
+    "cold_evaluate_s": 1474.299,
+    "warm_sidecar_evaluate_s": 508.755,
+    "projection_pass_estimate_s": 965.544,
+    "expected_seed_wall_s": 2207.352,
+    "note": "Seed writes receipts, fingerprints and sidecars and does not evaluate. The projection pass is cold evaluate minus the warm-sidecar evaluate."
+  },
+  "r2": {
+    "target_total_s": 600,
+    "met": false,
+    "identity_matches_round_1": true,
+    "runs": [
+      {
+        "run": "r2_cold",
+        "outcome": "BUILT",
+        "wall_s": 2764.107,
+        "phases_seconds": {"discovery_s": 1241.808, "price_index_s": 2.544, "evaluate_s": 1474.299, "aggregate_s": 25.08, "assemble_s": 17.826, "total_s": 2761.949},
+        "peak_memory_bytes": 1158983680,
+        "metrics": {"stream_sha256_bytes": 34418907981, "t0_fingerprint_misses": 36, "t0_receipt_misses": 35, "sidecar_misses": 33, "sidecar_bytes_written": 1751745573, "rows": 60588},
+        "store_bytes": {"evaluator_inputs": 1751756859, "stream": 28771683, "partitions": 1462023073, "settled_store": 593334602},
+        "t_free_before": 401904889856,
+        "t_free_after": 396649193472
+      },
+      {
+        "run": "r2_reeval",
+        "outcome": "BUILT",
+        "wall_s": 750.904,
+        "phases_seconds": {"discovery_s": 206.627, "price_index_s": 2.546, "evaluate_s": 508.755, "aggregate_s": 11.905, "assemble_s": 17.617, "total_s": 748.745},
+        "peak_memory_bytes": 1124663296,
+        "metrics": {"stream_sha256_bytes": 959906744, "sidecar_hits": 33, "sidecar_misses": 0, "t0_fingerprint_hits": 35, "t0_fingerprint_misses": 1, "t0_receipt_hits": 35, "rows": 60588},
+        "store_bytes": {"evaluator_inputs": 1751756859, "stream": 28771683, "partitions": 1462023073, "settled_store": 593334602},
+        "t_free_before": 398770372608,
+        "t_free_after": 395266494464,
+        "scratch_bytes_after": 11451612598
+      }
+    ],
+    "profiles": {
+      "warm_discovery_s": 205.649,
+      "warm_discovery_top": "discover_prospective_corpus 104.7s via _source_fingerprint reads; discover_snapshots 101.0s via _original_reuse_reasons 54.5s and catalog verify_location / vault_snapshot.sha 45s. T0 content hash bytes were 0.",
+      "session_2026_11_03_s": 9.747,
+      "session_top": "evaluator _feedback_record 3.63s; spool write 2.67s plus flush 1.96s; sidecar JSON read 0.89s. Sidecar SHA-256 was not in the top 25."
+    }
+  }
 }

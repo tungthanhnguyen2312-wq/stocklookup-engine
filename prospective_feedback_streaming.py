@@ -52,8 +52,8 @@ SETTLED_STORE_MAX_BYTES = 2 * 1024**3
 SETTLED_STORE_MAX_ENTRIES = 131072
 SETTLED_STORE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_settled_store")
 EVALUATOR_INPUT_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_evaluator_inputs")
-EVALUATOR_INPUT_CONTRACT = "prospective_feedback_evaluator_input/v1"
-EVALUATOR_INPUT_MAX_BYTES = 4 * 1024**3
+EVALUATOR_INPUT_CONTRACT = "prospective_feedback_evaluator_input/v2"
+EVALUATOR_INPUT_MAX_BYTES = 12 * 1024**3  # ~60 sessions of the deduplicated sidecar, with headroom
 EVALUATOR_INPUT_MAX_ENTRIES = 4096
 RECEIPT_MAX_BYTES = 64 * 1024 * 1024
 ARTIFACT_IDENTITY_PREFIX = "prospective_decision_outcome_feedback:"
@@ -816,8 +816,13 @@ def _owned_files(directory: Path) -> list[Path]:
     return found
 
 
-def _prune_derived(directory, *, max_bytes, max_entries, protected=()):
-    """Bound only rebuildable module-owned state; active files are pinned through final assembly."""
+def _prune_derived(directory, *, max_bytes, max_entries, protected=(), strict=True):
+    """Bound only rebuildable module-owned state; active files are pinned through final assembly.
+
+    ``strict`` is the settled-store and partition behaviour: a pinned set that itself exceeds the
+    budget fails the build. The evaluator-input cache passes ``strict=False`` and only evicts
+    unpinned files, because that store is rebuildable and must not fail feedback.
+    """
     files = sorted(_owned_files(directory), key=lambda p: p.stat().st_mtime_ns, reverse=True)
     pinned = set(protected)
     total, count = 0, 0
@@ -828,7 +833,7 @@ def _prune_derived(directory, *, max_bytes, max_entries, protected=()):
         else:
             total += size
             count += 1
-    if total > max_bytes or count > max_entries:
+    if strict and (total > max_bytes or count > max_entries):
         raise FeedbackStreamError("FEEDBACK_CHECKPOINT_STORAGE_LIMIT")
 
 
@@ -1234,6 +1239,39 @@ def _future_chain_inputs(repository: Path, marker: Mapping[str, Any] | None, as_
             "calendar_files": {str(p.relative_to(base)).replace("\\", "/"): _json_file_digest(p) for p in calendar_files}}
 
 
+def seed_feedback_state(root: str | Path, state_root: str | Path) -> dict[str, Any]:
+    """Build receipts, fingerprint anchors and evaluator-input sidecars. Publishes nothing.
+
+    This is the one-time out-of-Daily seed. It does not write a feedback artifact, a completion
+    manifest, or a publication lock on an output path. The caller supplies the state root.
+    """
+    root, state_root = Path(root), Path(state_root)
+    if path_has_reparse_point(root) or (state_root.exists() and path_has_reparse_point(state_root)):
+        raise FeedbackStreamError("FEEDBACK_REPARSE_POINT_REFUSED:" + str(state_root if state_root.exists() else root))
+    state_root.mkdir(parents=True, exist_ok=True)
+    metrics: dict[str, Any] = {}
+    started = time.perf_counter()
+    corpus = fb.discover_prospective_corpus(
+        root, payload_projection=lambda artifact: artifact, use_summary_cache=True, cache_metrics=metrics,
+        artifact_loader=lambda path, m: scan_legacy_artifact(path, m, state_root), cache_root=state_root)
+    modern_discovery = retention.discover_snapshots(
+        root, payload_projection=lambda snapshot: snapshot,
+        snapshot_loader=lambda path: load_snapshot_handle(path, state_root, metrics),
+        snapshot_validator=lambda snapshot: bool(snapshot.valid))
+    modern_genuine = modern_discovery["genuine_snapshots"]
+    if not modern_genuine and not corpus["genuine_artifacts"]:
+        raise T0CorpusEmpty(f"{REASON_T0_CORPUS_EMPTY}:root={root}:t0_inventory={len(modern_discovery['inventory'])}"
+                            f":legacy_inventory={len(corpus['inventory'])}")
+    protected: list[Path] = []
+    for candidate in modern_genuine:
+        for _item in _evaluator_inputs(candidate["snapshot"], candidate["inventory"], state_root, metrics, protected):
+            pass
+    _prune_evaluator_inputs(state_root, protected)
+    metrics["evaluator_input_store_bytes"] = _directory_bytes(state_root / EVALUATOR_INPUT_DIR)
+    return {"t0_count": len(modern_genuine), "legacy_count": len(corpus["genuine_artifacts"]),
+            "elapsed_s": round(time.perf_counter() - started, 3), "metrics": metrics}
+
+
 def build_streaming_feedback(root: str | Path, output: str | Path, **kwargs) -> dict[str, Any]:
     """Serialize the complete build/reuse transaction, including crash recovery."""
     from feedback_publication_lock import publication_lock
@@ -1473,8 +1511,8 @@ def _evaluator_input_paths(state_root: Path, raw_sha: str, projection: str) -> t
     return directory / (projection + ".jsonl"), directory / (projection + ".index.json")
 
 
-def _modern_input_rows(handle: SourceHandle, inventory: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
-    """The ordered ``(ticker, decision_identity, kwargs)`` stream ``_source_stream`` yields for one T0."""
+def _modern_frame(handle: SourceHandle, inventory: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], Any]:
+    """Discovery fields and the T0 header. These are not stored in the sidecar."""
     origin = handle.get("source_integrated_decision_artifact") or {}
     artifact = {"session": handle.get("session"), "artifact_identity": origin.get("artifact_identity"),
                 "contract_version": origin.get("contract_version", fb.FIELD_NOT_RETAINED), "requested_at": None}
@@ -1487,17 +1525,31 @@ def _modern_input_rows(handle: SourceHandle, inventory: Mapping[str, Any]) -> It
         "proof_reason_codes": inventory.get("proof_reason_codes"),
     }
     header = {k: v for k, v in handle.items() if k != "records"}
+    return artifact, temporal, header, inventory["snapshot_path"]
+
+
+def _modern_row(ticker: str, projected_record: Mapping[str, Any], artifact: Mapping[str, Any],
+                temporal: Mapping[str, Any], header: Mapping[str, Any], source_path: Any) -> dict[str, Any] | None:
+    """One evaluator input. ``record`` is the projected decision stored inside ``projected_record``."""
+    decision = projected_record.get("integrated_decision_at_t0")
+    if not isinstance(decision, Mapping) or decision.get("ticker") != ticker:
+        return None
+    return {"ticker": ticker, "decision_identity": str(decision.get("decision_identity")),
+            "kwargs": {"artifact": artifact, "source_path": source_path, "temporal": temporal,
+                       "record": decision, "t0_snapshot": header, "t0_snapshot_record": projected_record}}
+
+
+def _modern_input_rows(handle: SourceHandle, inventory: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
+    """The ordered ``(ticker, decision_identity, kwargs)`` stream ``_source_stream`` yields for one T0."""
+    artifact, temporal, header, source_path = _modern_frame(handle, inventory)
     for ticker, retained in iter_snapshot_records(handle):
         if not isinstance(retained, Mapping):
             continue
         projected_record = {**{k: v for k, v in retained.items() if k != "integrated_decision_at_t0"},
                             "integrated_decision_at_t0": fb._project_decision_for_feedback(retained["integrated_decision_at_t0"])}
-        decision = projected_record.get("integrated_decision_at_t0")
-        if not isinstance(decision, Mapping) or decision.get("ticker") != ticker:
-            continue
-        yield {"ticker": ticker, "decision_identity": str(decision.get("decision_identity")),
-               "kwargs": {"artifact": artifact, "source_path": inventory["snapshot_path"], "temporal": temporal,
-                          "record": decision, "t0_snapshot": header, "t0_snapshot_record": projected_record}}
+        row = _modern_row(ticker, projected_record, artifact, temporal, header, source_path)
+        if row is not None:
+            yield row
 
 
 def _sidecar_is_valid(path: Path, index: Mapping[str, Any]) -> bool:
@@ -1517,17 +1569,29 @@ def _sidecar_is_valid(path: Path, index: Mapping[str, Any]) -> bool:
         return False
 
 
-def _iter_sidecar_rows(path: Path) -> Iterator[dict[str, Any]]:
+def _stored_sidecar_row(item: Mapping[str, Any]) -> dict[str, Any]:
+    """Persist only T0-derived fields. ``record`` is inside the projected snapshot record."""
+    return {"ticker": item["ticker"], "decision_identity": item["decision_identity"],
+            "t0_snapshot_record": item["kwargs"]["t0_snapshot_record"]}
+
+
+def _iter_sidecar_rows(path: Path, handle: SourceHandle, inventory: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
+    artifact, temporal, header, source_path = _modern_frame(handle, inventory)
     with path.open("rb") as source:
         for line in source:
             item = json.loads(line)
-            if not isinstance(item, dict) or not isinstance(item.get("kwargs"), dict):
+            projected = item.get("t0_snapshot_record") if isinstance(item, dict) else None
+            if not isinstance(projected, dict):
                 raise FeedbackStreamError("FEEDBACK_EVALUATOR_INPUT_INTEGRITY")
-            yield item
+            row = _modern_row(item.get("ticker"), projected, artifact, temporal, header, source_path)
+            if row is None or row["decision_identity"] != item.get("decision_identity"):
+                raise FeedbackStreamError("FEEDBACK_EVALUATOR_INPUT_INTEGRITY")
+            yield row
 
 
-def _write_evaluator_sidecar(data_path: Path, index_path: Path, rows: Iterator[dict[str, Any]], raw: str, projection: str) -> bool:
-    """Write the sidecar from a T0 pass. Failure leaves no index, so the next read rebuilds."""
+def _write_evaluator_sidecar(data_path: Path, index_path: Path, rows: Iterator[dict[str, Any]], raw: str,
+                             projection: str, *, budget_remaining: int) -> str:
+    """Write the sidecar from a T0 pass. ``over_budget`` installs nothing. Failure leaves no index."""
     temporary = None
     try:
         _refuse_reparse(data_path.parent)
@@ -1536,30 +1600,55 @@ def _write_evaluator_sidecar(data_path: Path, index_path: Path, rows: Iterator[d
         with tempfile.NamedTemporaryFile(dir=data_path.parent, prefix=TEMP_PREFIX + "evaluator-", suffix=".tmp", delete=False) as out:
             temporary = Path(out.name)
             for item in rows:
-                line = _canon_bytes({"ticker": item["ticker"], "decision_identity": item["decision_identity"], "kwargs": item["kwargs"]}) + b"\n"
+                line = _canon_bytes(_stored_sidecar_row(item)) + b"\n"
                 out.write(line)
                 hasher.update(line)
                 count += 1
             out.flush()
             os.fsync(out.fileno())
         size = temporary.stat().st_size
-        os.replace(temporary, data_path)
-        temporary = None
-        _atomic_write_json(index_path, {
+        index_value = {
             "contract_version": EVALUATOR_INPUT_CONTRACT, "source_sha256": raw, "projection_digest": projection,
             "sha256": hasher.hexdigest(), "bytes": size, "row_count": count,
-        })
-        return True
+        }
+        index_payload = json.dumps(index_value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        if size + len(index_payload) > budget_remaining:
+            return "over_budget"
+        os.replace(temporary, data_path)
+        temporary = None
+        _atomic_write_json(index_path, index_value)
+        return "written"
     except FeedbackStreamError:
         raise
     except (OSError, ValueError, TypeError):
-        return False
+        return "failed"
     finally:
         if temporary is not None:
             try:
                 temporary.unlink(missing_ok=True)
             except OSError:
                 pass
+
+
+def _evaluator_store_occupied(state_root: Path, *excluded: Path) -> int:
+    directory = Path(state_root) / EVALUATOR_INPUT_DIR
+    if not directory.exists():
+        return 0
+    skip = set()
+    for path in excluded:
+        try:
+            skip.add(path.resolve())
+        except OSError:
+            continue
+    total = 0
+    for path in _owned_files(directory):
+        try:
+            if path.resolve() in skip:
+                continue
+        except OSError:
+            continue
+        total += path.stat().st_size
+    return total
 
 
 def _evaluator_inputs(handle: SourceHandle, inventory: Mapping[str, Any], state_root: Path | None,
@@ -1584,8 +1673,23 @@ def _evaluator_inputs(handle: SourceHandle, inventory: Mapping[str, Any], state_
         except (OSError, FeedbackStreamError):
             yield from _modern_input_rows(handle, inventory)
             return
-        written = _write_evaluator_sidecar(data_path, index_path, _modern_input_rows(handle, inventory), raw, projection)
-        index = _read_state_json(index_path) if written else None
+        occupied = _evaluator_store_occupied(Path(state_root), data_path, index_path)
+        if occupied >= EVALUATOR_INPUT_MAX_BYTES:
+            data_path.unlink(missing_ok=True)
+            _metric(metrics, "sidecar_skipped_budget")
+            yield from _modern_input_rows(handle, inventory)
+            return
+        status = _write_evaluator_sidecar(
+            data_path, index_path, _modern_input_rows(handle, inventory), raw, projection,
+            budget_remaining=EVALUATOR_INPUT_MAX_BYTES - occupied)
+        if status != "written":
+            data_path.unlink(missing_ok=True)
+            index_path.unlink(missing_ok=True)
+            if status == "over_budget":
+                _metric(metrics, "sidecar_skipped_budget")
+            yield from _modern_input_rows(handle, inventory)
+            return
+        index = _read_state_json(index_path)
         if not index or not _sidecar_is_valid(data_path, index):
             yield from _modern_input_rows(handle, inventory)
             return
@@ -1595,14 +1699,15 @@ def _evaluator_inputs(handle: SourceHandle, inventory: Mapping[str, Any], state_
     _metric(metrics, "sidecar_bytes", index["bytes"])
     if protected_inputs is not None:
         protected_inputs.extend((data_path, index_path))
-    yield from _iter_sidecar_rows(data_path)
+    yield from _iter_sidecar_rows(data_path, handle, inventory)
 
 
 def _prune_evaluator_inputs(state_root: Path, protected: list[Path]) -> None:
     directory = Path(state_root) / EVALUATOR_INPUT_DIR
     if not directory.exists():
         return
-    _prune_derived(directory, max_bytes=EVALUATOR_INPUT_MAX_BYTES, max_entries=EVALUATOR_INPUT_MAX_ENTRIES, protected=protected)
+    _prune_derived(directory, max_bytes=EVALUATOR_INPUT_MAX_BYTES, max_entries=EVALUATOR_INPUT_MAX_ENTRIES,
+                   protected=protected, strict=False)
 
 
 def _directory_bytes(directory: Path) -> int:

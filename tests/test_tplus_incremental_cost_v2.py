@@ -367,3 +367,78 @@ def test_added_session_reuses_sidecars_and_keeps_artifact_identity(tmp_path, mon
     assert warm["outcome"] == streaming.OUTCOME_ALREADY_COMPLETE
     assert warm["artifact_identity"] == second["artifact_identity"]
     assert warm["metrics"].get("t0_fingerprint_hits", 0) >= 3
+
+
+def test_sidecar_read_uses_the_live_inventory_and_stores_the_record_once(tmp_path):
+    root, state = tmp_path / "evidence", tmp_path / "state"
+    _add_modern(root, "2026-02-09", 6)
+    path = _snapshot_path(root)
+    handle = streaming.load_snapshot_handle(path, state, {})
+    inventory = _inventory(root, path)
+    metrics: dict = {}
+    protected: list[Path] = []
+    written = list(streaming._evaluator_inputs(handle, inventory, state, metrics, protected))
+    assert metrics["sidecar_misses"] == 1 and written
+    data_path = protected[0]
+    stored = json.loads(data_path.read_text(encoding="utf-8").splitlines()[0])
+    assert set(stored) == {"ticker", "decision_identity", "t0_snapshot_record"}
+    assert "integrated_decision_at_t0" in stored["t0_snapshot_record"]
+    changed = dict(inventory)
+    changed["proof_reason_codes"] = ["CHANGED_PROOF"]
+    changed["snapshot_path"] = "operations-review/relocated/prospective_decision_snapshot.json"
+    direct = list(streaming._modern_input_rows(handle, changed))
+    again: dict = {}
+    via = list(streaming._evaluator_inputs(handle, changed, state, again, []))
+    assert again["sidecar_hits"] == 1
+    assert _canon_rows(via) == _canon_rows(direct)
+    assert via[0]["kwargs"]["temporal"]["proof_reason_codes"] == ["CHANGED_PROOF"]
+    assert via[0]["kwargs"]["source_path"] == changed["snapshot_path"]
+    assert via[0]["kwargs"]["record"] == via[0]["kwargs"]["t0_snapshot_record"]["integrated_decision_at_t0"]
+    assert b"CHANGED_PROOF" not in data_path.read_bytes()
+
+
+def test_pinned_sidecar_over_the_budget_still_builds(tmp_path, monkeypatch):
+    root = tmp_path / "evidence"
+    state = tmp_path / "state"
+    _corpus(root, legacy=0, modern=1)
+    first = _build(root, tmp_path / "out" / "first.json", state)
+    written = first["metrics"]["sidecar_bytes_written"]
+    assert written > 1
+    kept = list((state / streaming.EVALUATOR_INPUT_DIR).rglob("*.jsonl"))
+    assert kept
+    monkeypatch.setattr(streaming, "EVALUATOR_INPUT_MAX_BYTES", max(1, written // 2))
+    _add_modern(root, "2026-03-02", 11)
+    second = _build(root, tmp_path / "out" / "second.json", state)
+    assert second["outcome"] == streaming.OUTCOME_BUILT
+    assert second["metrics"]["sidecar_skipped_budget"] > 0
+    assert second["artifact_identity"] == _legacy_artifact(root)["artifact_identity"]
+    assert kept[0].is_file()
+    streaming._prune_evaluator_inputs(state, kept)
+    assert kept[0].is_file()
+
+
+def test_seed_state_only_writes_sidecars_and_publishes_nothing(tmp_path):
+    root, state = tmp_path / "evidence", tmp_path / "state"
+    _add_modern(root, "2026-02-10", 7)
+    destination = tmp_path / "published.json"
+    proc = subprocess.run(
+        [PYTHON, str(ROOT / "tools" / "run_prospective_decision_outcome_feedback.py"),
+         "--seed-state-only", "--root", str(root), "--state-root", str(state), "--output", str(destination)],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    )
+    assert proc.returncode != 33
+    assert not destination.exists()
+    proc = subprocess.run(
+        [PYTHON, str(ROOT / "tools" / "run_prospective_decision_outcome_feedback.py"),
+         "--seed-state-only", "--root", str(root), "--state-root", str(state)],
+        cwd=ROOT, capture_output=True, text=True, check=False,
+    )
+    assert proc.returncode == 33, proc.stderr
+    body = json.loads(proc.stdout)
+    assert body["status"] == "SEEDED"
+    assert body["t0_count"] == 1
+    assert body["metrics"]["sidecar_misses"] == 1
+    assert not destination.exists()
+    assert not list(tmp_path.glob("*.json"))
+    sidecars = list((state / streaming.EVALUATOR_INPUT_DIR).rglob("*.jsonl"))
+    assert len(sidecars) == 1
