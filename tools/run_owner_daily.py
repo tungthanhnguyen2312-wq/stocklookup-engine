@@ -232,6 +232,39 @@ def _is_sole_pending_daily_state_diff(root: Path) -> bool:
     )
 
 
+def _is_exact_pending_daily_commit(root: Path, session: str) -> bool:
+    """Recognize one unpublished, additive session commit; never general ahead work."""
+    if not SESSION_RE.fullmatch(session):
+        return False
+    if _git(root, "rev-list", "--parents", "-n", "1", "HEAD").split()[1:] != [
+            _git(root, "rev-parse", "origin/main")]:
+        return False
+    if _git(root, "log", "-1", "--format=%B") != f"daily: retain {session} completed session":
+        return False
+    if _git(root, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD").splitlines() != list(DAILY_STATE_ALLOWLIST):
+        return False
+    try:
+        before = json.loads(_git(root, "show", f"HEAD^:{DAILY_STATE_ALLOWLIST[0]}"))
+        after = json.loads(_git(root, "show", f"HEAD:{DAILY_STATE_ALLOWLIST[0]}"))
+        work = _load(root / DAILY_STATE_ALLOWLIST[0])
+        if set(before) != set(after):
+            return False
+        for ledger in ("sessions", "completed_sessions"):
+            if session in before[ledger] or session not in after[ledger]:
+                return False
+            if after[ledger][session] != work[ledger][session]:
+                return False
+            remaining = dict(after[ledger])
+            del remaining[session]
+            if remaining != before[ledger]:
+                return False
+        return (all(before[k] == after[k] for k in before if k not in ("sessions", "completed_sessions"))
+                and after["completed_sessions"][session].get("status") == "COMPLETED_RETAINED_EVIDENCE"
+                and after["completed_sessions"][session].get("trading_day_valid") is True)
+    except (ValueError, KeyError, TypeError):
+        return False
+
+
 def preflight_repository(root: Path, *, expected_name: str, expected_remote_fragment: str,
                          completed_session: str | None = None,
                          runtime_root: Path | None = None,
@@ -251,6 +284,12 @@ def preflight_repository(root: Path, *, expected_name: str, expected_remote_frag
     classified by ``pending_session_input_freeze``: status ``PENDING_INPUT_FREEZE_AT_ORIGIN_MAIN``.
     That freeze is not Daily completion, is not committed here, and is refused without pulling
     when HEAD is not already ``origin/main``.
+
+    A completed-session replay also admits one exact additive Daily commit whose sole parent
+    is freshly fetched origin/main. Its session rows must still match the working registry;
+    any remaining diff must independently qualify as unsealed input freezes. Completion is
+    verified before admission. Publication retries the existing commit's push without
+    creating another commit. All other ahead/diverged histories still fail closed.
     """
     root = root.resolve()
     if root.name != expected_name or not (root / ".git").exists():
@@ -288,6 +327,15 @@ def preflight_repository(root: Path, *, expected_name: str, expected_remote_frag
                               "Remove or govern the unexpected untracked file(s) before Daily; "
                               "only approved runtime/evidence paths may remain untracked.")
     head, remote_head = _git(root, "rev-parse", "HEAD"), _git(root, "rev-parse", "origin/main")
+    if (head != remote_head and expected_name == "stock-core-private" and completed_session
+            and _is_exact_pending_daily_commit(root, completed_session)):
+        # Other sessions' unsealed input locks may remain after this exact session was committed.
+        if cleanliness.tracked_dirty_paths and not classify_pending_input_freeze(root).admitted:
+            raise OwnerDailyError("Repository preflight", "PENDING_DAILY_COMMIT_UNRELATED_REGISTRY_DIFF")
+        if runtime_root is None:
+            raise OwnerDailyError("Repository preflight", "PENDING_DAILY_STATE_RUNTIME_ROOT_REQUIRED")
+        verify_daily_completion(root, runtime_root, session=completed_session)
+        return {"head": head, "status": "PENDING_DAILY_COMMIT"}
     if pending_input_freeze:
         if head != remote_head:
             raise OwnerDailyError("Repository preflight", "PENDING_INPUT_FREEZE_HEAD_NOT_ORIGIN_MAIN",
@@ -417,6 +465,18 @@ def verify_daily_completion(root: Path, runtime_root: Path, *, session: str | No
 
 
 def commit_daily_state(root: Path, session: str) -> dict[str, str]:
+    changed = _tracked_changes(root)
+    unexpected = sorted({line[3:].replace("\\", "/") for line in changed}.difference(DAILY_STATE_ALLOWLIST))
+    if unexpected:
+        raise OwnerDailyError("Producer state publication", "UNEXPECTED_POST_DAILY_DIFF:" + ",".join(unexpected))
+    if _is_exact_pending_daily_commit(root, session):
+        if _tracked_changes(root) and not classify_pending_input_freeze(root).admitted:
+            raise OwnerDailyError("Producer state publication", "PENDING_DAILY_COMMIT_UNRELATED_REGISTRY_DIFF")
+        _git(root, "push", "origin", "main")
+        sha = _git(root, "rev-parse", "HEAD")
+        if _git(root, "ls-remote", "origin", "refs/heads/main").split()[0] != sha:
+            raise OwnerDailyError("Producer state publication", "PRODUCER_REMOTE_SHA_MISMATCH")
+        return {"status": "PUSHED_EXISTING_COMMIT", "sha": sha}
     changed = _tracked_changes(root)
     if not changed:
         return {"status": "NO_CHANGE", "sha": _git(root, "rev-parse", "HEAD")}

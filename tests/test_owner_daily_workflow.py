@@ -1790,3 +1790,111 @@ def test_result_path_guard_leaves_governed_untracked_data_semantics_unchanged(tm
     assert cleanliness.classify_checkout_cleanliness(root).qualified is True
     assert workflow.preflight_repository(root, expected_name="stock-core-private",
                                          expected_remote_fragment="stock-core-private")["status"] == "UP_TO_DATE"
+
+
+def _pending_committed_daily(tmp_path):
+    root, origin, runtime = _clone_with_pending_registry(tmp_path)
+    # Real ledgers carry both maps. Seed an empty selection before adding the sealed row.
+    completed = json.loads((root / REGISTRY_PATH).read_text())
+    (root / REGISTRY_PATH).write_text(json.dumps({'completed_sessions': {}, 'sessions': {}}))
+    _git(root, 'add', REGISTRY_PATH); _git(root, 'commit', '-qm', 'seed selections'); _git(root, 'push')
+    completed['sessions'] = {SESSION: {'input': 'identity:test'}}
+    (root / REGISTRY_PATH).write_text(json.dumps(completed))
+    return root, origin, runtime
+
+
+@pytest.mark.parametrize('auto_resume', [False, True])
+def test_commit_success_push_failure_resumes_without_daily_or_duplicate_commit(tmp_path, monkeypatch, auto_resume):
+    root, origin, runtime = _pending_committed_daily(tmp_path)
+    base = _git_out(origin, 'rev-parse', 'main')
+    real_git = workflow._git
+    def fail_push(path, *args):
+        if args[:1] == ('push',):
+            raise workflow.OwnerDailyError('Producer state publication', 'GIT_PUSH:remote: Internal Server Error')
+        return real_git(path, *args)
+    monkeypatch.setattr(workflow, '_git', fail_push)
+    with pytest.raises(workflow.OwnerDailyError, match='GIT_PUSH'):
+        workflow.commit_daily_state(root, SESSION)
+    pending = _git_out(root, 'rev-parse', 'HEAD')
+    assert pending != base
+    assert _git_out(origin, 'rev-parse', 'main') == base
+    monkeypatch.setattr(workflow, '_git', real_git)
+    run = journal.start_run(root, intended_session=SESSION)
+    journal.advance(root, run['run_id'], journal.LOCAL_COMPLETE, resolved_session=SESSION)
+    _stub_downstream_publication(monkeypatch)
+    monkeypatch.setattr(workflow, '_resolve_intended_session', lambda: SESSION)
+    monkeypatch.setattr(workflow, '_run_daily', lambda *a, **k: pytest.fail('analytical run duplicated'))
+    result = workflow.run_workflow(root=root, runtime_root=runtime, handoff_repo=tmp_path / 'handoff',
+        publish_dashboard=False, replay_completed_session=None if auto_resume else SESSION)
+    assert result['status'] == 'PASS'
+    assert result['producer_preflight']['status'] == 'PENDING_DAILY_COMMIT'
+    assert result['producer_state']['status'] == 'PUSHED_EXISTING_COMMIT'
+    assert _git_out(origin, 'rev-parse', 'main') == pending == _git_out(root, 'rev-parse', 'HEAD')
+    assert workflow.commit_daily_state(root, SESSION)['status'] == 'NO_CHANGE'
+
+
+@pytest.mark.parametrize('fault', ['remote_advance', 'unrelated_commit', 'changed_old_row', 'wrong_session'])
+def test_pending_daily_commit_refuses_unrelated_history(tmp_path, fault):
+    root, origin, runtime = _pending_committed_daily(tmp_path)
+    if fault == 'changed_old_row':
+        payload = json.loads((root / REGISTRY_PATH).read_text())
+        payload['extra'] = 'unrelated'
+        (root / REGISTRY_PATH).write_text(json.dumps(payload))
+    _git(root, 'add', REGISTRY_PATH)
+    _git(root, 'commit', '-qm', f'daily: retain {SESSION} completed session')
+    if fault == 'remote_advance':
+        _push_from_other_clone(tmp_path, origin)
+    if fault == 'unrelated_commit':
+        _commit_local_only(root)
+    before = _git_out(origin, 'rev-parse', 'main')
+    with pytest.raises(workflow.OwnerDailyError, match='UNSAFE_GIT_DIVERGENCE'):
+        _replay_preflight(root, runtime, session='2026-09-17' if fault == 'wrong_session' else SESSION)
+    assert _git_out(origin, 'rev-parse', 'main') == before
+
+
+@pytest.mark.parametrize('valid_freeze', [True, False])
+def test_pending_commit_preserves_other_session_freeze_and_refuses_edited_registry(tmp_path, valid_freeze):
+    root, origin, runtime = _pending_committed_daily(tmp_path)
+    _git(root, 'add', REGISTRY_PATH)
+    _git(root, 'commit', '-qm', f'daily: retain {SESSION} completed session')
+    pending = _git_out(root, 'rev-parse', 'HEAD')
+    payload = json.loads((root / REGISTRY_PATH).read_text())
+    if valid_freeze:
+        from pending_session_input_freeze import REQUIRED_INPUT_KEYS
+        selection = {}
+        for key in REQUIRED_INPUT_KEYS:
+            relative = 'operations-review/freeze/' + key + '.json'
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps({'artifact_identity': key + ':frozen'}))
+            selection[key] = {'path': relative, 'artifact_identity': key + ':frozen'}
+        payload['sessions']['2026-09-15'] = selection
+        payload['completed_sessions']['2026-09-15'] = {
+            'status': 'COMPLETED_RETAINED_EVIDENCE', 'trading_day_valid': True,
+            'frozen_input_identities': {k: v['artifact_identity'] for k, v in selection.items()}}
+    else:
+        payload['extra'] = 'unrelated edit'
+    (root / REGISTRY_PATH).write_text(json.dumps(payload))
+    retained = (root / REGISTRY_PATH).read_bytes()
+    if not valid_freeze:
+        with pytest.raises(workflow.OwnerDailyError, match='PENDING_DAILY_COMMIT_UNRELATED_REGISTRY_DIFF'):
+            _replay_preflight(root, runtime)
+    else:
+        assert _replay_preflight(root, runtime)['status'] == 'PENDING_DAILY_COMMIT'
+        assert workflow.commit_daily_state(root, SESSION)['sha'] == pending
+        assert _git_out(origin, 'rev-parse', 'main') == pending
+        assert '2026-09-15' not in json.loads(_git_out(origin, 'show', 'main:' + REGISTRY_PATH))['sessions']
+    assert (root / REGISTRY_PATH).read_bytes() == retained
+
+
+def test_pending_daily_commit_requires_retained_completion_and_never_runs_fresh(tmp_path):
+    root, origin, runtime = _pending_committed_daily(tmp_path)
+    _git(root, 'add', REGISTRY_PATH)
+    _git(root, 'commit', '-qm', f'daily: retain {SESSION} completed session')
+    base = _git_out(origin, 'rev-parse', 'main')
+    (runtime / 'bundle_manifest.json').unlink()
+    with pytest.raises(workflow.OwnerDailyError, match='RUNTIME_RELEASE_MANIFEST_MISSING'):
+        _replay_preflight(root, runtime)
+    with pytest.raises(workflow.OwnerDailyError, match='UNSAFE_GIT_DIVERGENCE'):
+        _replay_preflight(root, runtime, session=None)
+    assert _git_out(origin, 'rev-parse', 'main') == base

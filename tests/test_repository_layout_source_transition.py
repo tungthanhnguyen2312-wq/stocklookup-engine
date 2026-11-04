@@ -104,6 +104,8 @@ def _copy_boundary(tmp_path: Path) -> None:
                 paths.add(governing["sources"][relative]["archive"])
     capture = "tests/fixtures/owner_daily_capture_only_source_transition_v1.json"
     paths.update({capture, json.loads((ROOT / capture).read_bytes())["archive"]})
+    pending_commit = "tests/fixtures/owner_daily_pending_commit_source_transition_v1.json"
+    paths.update({pending_commit, json.loads((ROOT / pending_commit).read_bytes())["archive"]})
     multi_freeze = "tests/fixtures/owner_daily_multi_freeze_source_transition_v1.json"
     paths.update({multi_freeze, json.loads((ROOT / multi_freeze).read_bytes())["archive"]})
     tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
@@ -221,5 +223,28 @@ def test_launcher_successor_rejects_tampering(tmp_path, tamper):
         spec = json.loads(manifest.read_bytes())
         spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
         manifest.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE)_SOURCE_TRANSITION"):
+    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT)_SOURCE_TRANSITION"):
         _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))
+
+
+@pytest.mark.parametrize('tamper', ['live', 'archive', 'scope'])
+def test_pending_daily_commit_successor_refuses_tampering(tmp_path, tamper):
+    from tools.verify_retention_reader_transition import _pending_commit_prior_bytes
+    manifest = 'tests/fixtures/owner_daily_pending_commit_source_transition_v1.json'
+    spec = json.loads((ROOT / manifest).read_bytes())
+    for relative in (manifest, 'tools/run_owner_daily.py', spec['archive']):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
+    source = tmp_path / 'tools/run_owner_daily.py'
+    live = source.read_bytes().replace(b'\r\n', b'\n')
+    assert _pending_commit_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live) == (ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n')
+    if tamper == 'live':
+        live += b'# tamper\n'
+    elif tamper == 'archive':
+        (tmp_path / spec['archive']).write_bytes(b'tamper')
+    else:
+        spec['scope'] = 'unbounded'
+        (tmp_path / manifest).write_text(json.dumps(spec))
+    with pytest.raises(ValueError, match='PENDING_COMMIT_SOURCE_TRANSITION_'):
+        _pending_commit_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)

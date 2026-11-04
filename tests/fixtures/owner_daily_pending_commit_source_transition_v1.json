@@ -1,0 +1,9 @@
+{
+  "contract_version": "owner_daily_pending_commit_source_transition/v1",
+  "base_commit": "d999d847ee3730931ea14909053950e4ac1cf5b6",
+  "scope": "EXACT_COMPLETED_SESSION_PENDING_COMMIT_RECOVERY_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "archive": "tests/fixtures/owner_daily_pending_commit_v1_sources/tools/run_owner_daily.py.txt",
+  "prior_sha256_lf": "61e81fd85c85ac2f79e9f2177968fbfa8f7413d3fe07ae39175c2bf0fdeac38b",
+  "active_sha256_lf": "ec8816e49d7e12e9015eeea201a67ad75dfa329d50fa9ab619da488d4b97af76"
+}

@@ -452,8 +452,30 @@ def _multi_freeze_prior_bytes(root: Path, relative: str, active: bytes) -> bytes
     return prior
 
 
+def _pending_commit_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-04 exact pending commit recovery successor before the capture-only pin."""
+    manifest = root / "tests/fixtures/owner_daily_pending_commit_source_transition_v1.json"
+    if relative != "tools/run_owner_daily.py" or not manifest.exists():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/owner_daily_pending_commit_v1_sources/tools/run_owner_daily.py.txt"
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "archive", "prior_sha256_lf", "active_sha256_lf"}
+            or spec["contract_version"] != "owner_daily_pending_commit_source_transition/v1"
+            or spec["base_commit"] != "d999d847ee3730931ea14909053950e4ac1cf5b6"
+            or spec["scope"] != "EXACT_COMPLETED_SESSION_PENDING_COMMIT_RECOVERY_ONLY" or spec["release_authority"] != "NOT_GRANTED"
+            or spec["archive"] != archive):
+        raise ValueError("PENDING_COMMIT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or spec["prior_sha256_lf"] == spec["active_sha256_lf"]):
+        raise ValueError("PENDING_COMMIT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
+    active = _pending_commit_prior_bytes(root, relative, active)
     active = _multi_freeze_prior_bytes(root, relative, active)
     active = _iid_runtime_prior_bytes(root, relative, _capture_only_prior_bytes(root, relative, active))
     if relative not in LAUNCHER_SOURCES or not (root / LAUNCHER_MANIFEST).exists():
