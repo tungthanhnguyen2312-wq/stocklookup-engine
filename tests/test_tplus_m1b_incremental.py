@@ -43,6 +43,105 @@ def test_verifier_digest_ignores_the_streaming_evaluator_and_rejects_a_verifier_
     assert changed["stream_sha256_bytes"] == path.stat().st_size
 
 
+def test_each_verifier_unit_invalidates_a_receipt_and_an_evaluator_edit_does_not(tmp_path, monkeypatch):
+    from importlib import import_module
+    root, state = tmp_path / "evidence", tmp_path / "state"
+    _add_modern(root, "2026-04-02", 1)
+    path = _snapshot_path(root)
+    streaming.load_snapshot_handle(path, state, {})
+    real_read = Path.read_bytes
+    real_hash = bas.source_hash
+
+    def _tamper(filename: str):
+        def read(self, *args, **kwargs):
+            data = real_read(self)
+            if Path(self).name == filename:
+                return data + b"\n# tamper\n"
+            return data
+        monkeypatch.setattr(Path, "read_bytes", read)
+        source_verifier.reset_verification_code_digest()
+
+    calls = {"n": 0}
+
+    def counted(target):
+        calls["n"] += 1
+        return real_hash(target)
+
+    monkeypatch.setattr(bas, "source_hash", counted)
+    for unit in source_verifier.verification_units():
+        calls["n"] = 0
+        _tamper(Path(import_module(unit).__file__).name)
+        metrics: dict = {}
+        streaming.load_snapshot_handle(path, state, metrics)
+        assert metrics.get("t0_fingerprint_misses") == 1, unit
+        assert calls["n"] == 1, unit
+        monkeypatch.setattr(Path, "read_bytes", real_read)
+        source_verifier.reset_verification_code_digest()
+        streaming.load_snapshot_handle(path, state, {})
+
+    calls["n"] = 0
+    _tamper("prospective_feedback_streaming.py")
+    warm: dict = {}
+    streaming.load_snapshot_handle(path, state, warm)
+    assert calls["n"] == 0
+    assert warm["t0_fingerprint_hits"] == 1
+
+
+def test_projection_allow_list_covers_every_key_the_evaluator_reads(tmp_path, monkeypatch):
+    """Proxy the decision and the snapshot record that evaluate() actually receives."""
+    decision_reads: set[str] = set()
+    snapshot_reads: set[str] = set()
+
+    class RecordingDict(dict):
+        def __init__(self, data, reads, prefix=""):
+            super().__init__()
+            self._reads = reads
+            self._prefix = prefix
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    value = RecordingDict(value, reads, prefix + str(key) + ".")
+                super().__setitem__(key, value)
+
+        def __getitem__(self, key):
+            self._reads.add(self._prefix + str(key))
+            return super().__getitem__(key)
+
+        def get(self, key, default=None):
+            self._reads.add(self._prefix + str(key))
+            return super().get(key, default)
+
+    real_evaluate = streaming.fb.SettledFeedbackCache.evaluate
+
+    def evaluate(self, **kwargs):
+        record = kwargs.get("record")
+        if isinstance(record, dict) and not isinstance(record, RecordingDict):
+            kwargs["record"] = RecordingDict(record, decision_reads)
+        snapshot = kwargs.get("t0_snapshot_record")
+        if isinstance(snapshot, dict) and not isinstance(snapshot, RecordingDict):
+            kwargs["t0_snapshot_record"] = RecordingDict(snapshot, snapshot_reads)
+        return real_evaluate(self, **kwargs)
+
+    monkeypatch.setattr(streaming.fb.SettledFeedbackCache, "evaluate", evaluate)
+    root, state = tmp_path / "evidence", tmp_path / "state"
+    output = tmp_path / "out" / "feedback.json"
+    _corpus(root, legacy=1, modern=2)
+    built = _build(root, output, state)
+    assert built["artifact_identity"] == _legacy_artifact(root)["artifact_identity"]
+    assert decision_reads, "the evaluator did not read a decision record"
+    allowed = set(streaming._RECORD_KEEP) | set(streaming._RECORD_NESTED) | {"evidence_axes"}
+    nested = {"evidence_axes": {"state", "fitness", "lineage", "method"}}
+    nested.update({key: set(fields) for key, fields in streaming._RECORD_NESTED.items()})
+    for path in decision_reads:
+        parts = path.split(".")
+        assert parts[0] in allowed, path
+        if len(parts) > 2 and parts[0] in nested:
+            assert parts[-1] in nested[parts[0]] or parts[1] in nested[parts[0]], path
+        elif len(parts) == 2 and parts[0] in nested:
+            assert parts[1] in nested[parts[0]], path
+    for path in snapshot_reads:
+        assert path.split(".")[0] in set(streaming._SNAPSHOT_RECORD_KEEP), path
+
+
 def test_price_fingerprint_hit_does_not_hash(tmp_path, monkeypatch):
     root, state = tmp_path / "evidence", tmp_path / "state"
     output = tmp_path / "out" / "feedback.json"
@@ -63,6 +162,12 @@ def test_price_fingerprint_hit_does_not_hash(tmp_path, monkeypatch):
     assert warm["metrics"].get("price_fingerprint_hits", 0) >= 1
     assert warm["metrics"].get("price_hash_bytes", 0) == 0
     assert hashed == [output]
+    receipt = json.loads(next((state / streaming.STATE_DIR / "price_receipts").glob("*.json")).read_text(encoding="utf-8"))
+    assert "snapshot" not in receipt
+    assert receipt["index_file"].endswith(".json")
+    index = json.loads((state / receipt["index_file"]).read_text(encoding="utf-8"))
+    assert index["source_sha256"] == receipt["source_sha256"]
+    assert isinstance(index["snapshot"], dict)
 
 
 def test_projection_keeps_artifact_identity_and_stores_only_the_read_fields(tmp_path):

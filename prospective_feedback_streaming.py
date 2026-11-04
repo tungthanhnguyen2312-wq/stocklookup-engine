@@ -36,13 +36,27 @@ import bounded_artifact_stream as bas
 import integrated_decision_prospective_feedback as forward_bridge
 import prospective_decision_outcome_feedback as fb
 import prospective_decision_retention as retention
+from stocklookup_core.evidence import source_verifier_receipts as _receipts
 from stocklookup_core.evidence import source_verifier
 from stocklookup_core.evidence.source_file_fingerprint import path_has_reparse_point, source_file_fingerprint
 
-STREAM_CONTRACT_VERSION = "prospective_feedback_stream/v1"
+STREAM_CONTRACT_VERSION = _receipts.STREAM_CONTRACT_VERSION
+STATE_DIR = _receipts.STATE_DIR
+SourceHandle = _receipts.SourceHandle
+StreamedRecords = _receipts.StreamedRecords
+scan_legacy_artifact = _receipts.scan_legacy_artifact
+load_snapshot_handle = _receipts.load_snapshot_handle
+_legacy_receipt_path = _receipts._legacy_receipt_path
+_receipt_path = _receipts._receipt_path
+_price_receipt_path = _receipts._price_receipt_path
+_fingerprint_index_path = _receipts._fingerprint_index_path
+_trusted_anchored_receipt = _receipts._trusted_anchored_receipt
+_bind_fingerprint = _receipts._bind_fingerprint
+_receipt_sha_for_same_file = _receipts._receipt_sha_for_same_file
+_verify_snapshot_stream = _receipts._verify_snapshot_stream
+_handle_from_t0_receipt = _receipts._handle_from_t0_receipt
 COMPLETION_CONTRACT_VERSION = "prospective_feedback_completion/v1"
 RESULT_CONTRACT_VERSION = "prospective_feedback_result/v1"
-STATE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_stream")
 PARTITION_CONTRACT_VERSION = "prospective_feedback_partition/v2"
 PARTITION_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_partitions")
 PARTITION_MAX_BYTES = 256 * 1024 * 1024  # one session's rows are decoded resident at assembly
@@ -195,53 +209,9 @@ class _HashedStream:
         return self.raw.digest.hexdigest(), self.raw.bytes_read
 
 
-class StreamedRecords:
-    """Placeholder for a ``records`` container that stays on disk. Supports ``len``/truthiness only."""
-
-    def __init__(self, path: Path, count: int, kind: str):
-        self.path, self.count, self.kind = Path(path), int(count), kind
-
-    def __len__(self) -> int:
-        return self.count
-
-    def __bool__(self) -> bool:
-        return self.count > 0
-
-    def __iter__(self):  # an accidental full materialisation must fail loudly, not silently load
-        raise TypeError("STREAMED_RECORDS_REQUIRE_EXPLICIT_STREAMING")
-
-    def items(self):
-        raise TypeError("STREAMED_RECORDS_REQUIRE_EXPLICIT_STREAMING")
-
-
-class SourceHandle(dict):
-    """Header (every non-record member) plus bookkeeping for one streamed source file."""
-    valid = True
-    raw_sha256 = None
-    size = None
-    path = None
-    t0_prices: Mapping[str, Any] | None = None
-
-
 def _metric(metrics: dict[str, Any] | None, key: str, amount: int | float = 1) -> None:
     if metrics is not None:
         metrics[key] = metrics.get(key, 0) + amount
-
-
-# --------------------------------------------------------------------------------------------------
-# Legacy Integrated Decision artifacts (header scan + record stream)
-# --------------------------------------------------------------------------------------------------
-
-def _legacy_receipt_path(state_root: Path, raw_sha: str) -> Path:
-    return state_root / STATE_DIR / "legacy_receipts" / (raw_sha + ".json")
-
-
-def _fingerprint_index_path(state_root: Path, kind: str, fingerprint: Mapping[str, Any]) -> Path:
-    return state_root / STATE_DIR / (kind + "_fingerprint") / (_sha256_bytes(_canon_bytes(_fingerprint_body(fingerprint))) + ".json")
-
-
-def _fingerprint_body(fingerprint: Mapping[str, Any]) -> dict[str, Any]:
-    return {key: fingerprint[key] for key in ("volume", "file_id", "size", "mtime_ns", "change")}
 
 
 def _now_utc() -> str:
@@ -258,272 +228,6 @@ def _refuse_reparse(path: Path) -> None:
         if parent == cursor:
             return
         cursor = parent
-
-
-def _trusted_anchored_receipt(state_root: Path, kind: str, fingerprint: Mapping[str, Any] | None,
-                              receipt_path_for) -> dict[str, Any] | None:
-    """Receipt produced by a full SHA-256 under the current verifier, at this exact fingerprint."""
-    if not fingerprint:
-        return None
-    anchor = _read_state_json(_fingerprint_index_path(state_root, kind, fingerprint))
-    if (not anchor or anchor.get("content_verified") is not True or anchor.get("fingerprint") != _fingerprint_body(fingerprint)
-            or anchor.get("code_digest") != _verification_code_digest()):
-        return None
-    raw = anchor.get("source_sha256")
-    if not isinstance(raw, str):
-        return None
-    receipt = _read_state_json(receipt_path_for(state_root, raw))
-    if (not receipt or receipt.get("contract_version") != STREAM_CONTRACT_VERSION or receipt.get("source_sha256") != raw
-            or receipt.get("size") != fingerprint["size"]):
-        return None
-    if kind == "t0" and receipt.get("code_digest") != _verification_code_digest():
-        return None
-    return receipt
-
-
-def _bind_fingerprint(state_root: Path, kind: str, fingerprint: Mapping[str, Any] | None, raw_sha: str) -> None:
-    if not fingerprint:
-        return
-    _refuse_reparse(state_root)
-    _atomic_write_json(_fingerprint_index_path(state_root, kind, fingerprint), {
-        "contract_version": STREAM_CONTRACT_VERSION, "fingerprint": _fingerprint_body(fingerprint),
-        "source_sha256": raw_sha, "code_digest": _verification_code_digest(), "content_verified": True,
-        "verified_at": _now_utc(),
-    })
-
-
-def _price_receipt_path(state_root: Path, raw_sha: str) -> Path:
-    return state_root / STATE_DIR / "price_receipts" / (raw_sha + ".json")
-
-
-def scan_legacy_artifact(path: Path, metrics: dict[str, Any] | None = None, state_root: Path | None = None,
-                         *, persist_receipts: bool = True) -> SourceHandle | None:
-    """Header-only pass (``records`` are decoded and discarded). ``None`` mirrors ``_load_json`` failures.
-
-    With ``state_root`` the header and record count are cached under the SHA-256 of the exact bytes, so an
-    unchanged multi-hundred-MB legacy artifact is hashed (fast) but not decoded again for its header.
-    A fingerprint hit uses that receipt and does not read the file bytes.
-    """
-    header: dict[str, Any] = {}
-    count = 0
-    if state_root is not None:
-        fingerprint = source_file_fingerprint(path)
-        cached = _trusted_anchored_receipt(state_root, "legacy", fingerprint, _legacy_receipt_path)
-        if cached is not None:
-            raw = cached["source_sha256"]
-            handle = SourceHandle(cached["header"])
-            handle["records"] = StreamedRecords(path, cached["record_count"], "legacy")
-            handle.valid, handle.raw_sha256, handle.size, handle.path = True, raw, cached["size"], Path(path)
-            _metric(metrics, "legacy_fingerprint_hits")
-            _metric(metrics, "legacy_receipt_hits")
-            return handle
-        _metric(metrics, "legacy_fingerprint_misses")
-        try:
-            raw = bas.source_hash(path)
-            size_now = path.stat().st_size
-        except OSError:
-            return None
-        _metric(metrics, "stream_sha256_bytes", size_now)
-        cached = _read_state_json(_legacy_receipt_path(state_root, raw))
-        if (cached and cached.get("contract_version") == STREAM_CONTRACT_VERSION and cached.get("source_sha256") == raw
-                and cached.get("size") == size_now and isinstance(cached.get("header"), dict) and isinstance(cached.get("record_count"), int)):
-            if persist_receipts:
-                try:
-                    _bind_fingerprint(state_root, "legacy", fingerprint, raw)
-                except (OSError, FeedbackStreamError):
-                    pass
-            handle = SourceHandle(cached["header"])
-            handle["records"] = StreamedRecords(path, cached["record_count"], "legacy")
-            handle.valid, handle.raw_sha256, handle.size, handle.path = True, raw, size_now, Path(path)
-            _metric(metrics, "legacy_receipt_hits")
-            return handle
-    try:
-        with _HashedStream(path) as stream:
-            parser = bas.ObjectStream(stream.text, sorted_required=False)
-            for key in parser.members():
-                if key == "records":
-                    for _ticker in parser.members():
-                        parser.value()
-                        count += 1
-                else:
-                    header[key] = parser.value()
-            if parser.peek():
-                return None
-            digest, size = stream.finish()
-    except (OSError, UnicodeError, ValueError):
-        return None
-    _metric(metrics, "stream_header_scan_bytes", size)
-    handle = SourceHandle(header)
-    handle.update({"records": StreamedRecords(path, count, "legacy")})
-    handle.valid, handle.raw_sha256, handle.size, handle.path = True, digest, size, Path(path)
-    if persist_receipts and state_root is not None and digest == raw and size == size_now:
-        try:
-            _atomic_write_json(_legacy_receipt_path(state_root, digest), {
-                "contract_version": STREAM_CONTRACT_VERSION, "source_sha256": digest, "size": size, "header": header,
-                "record_count": count, "content_verified": True, "verified_at": _now_utc()})
-            _bind_fingerprint(state_root, "legacy", fingerprint, digest)
-        except (OSError, ValueError, FeedbackStreamError):
-            pass
-    return handle
-
-
-def iter_legacy_records(handle: SourceHandle) -> Iterator[tuple[str, Any]]:
-    """Yield ``(ticker, decision)`` in file order, proving the exact bytes equal the header-scan hash."""
-    expected_sha, expected_size, expected_count = handle.raw_sha256, handle.size, len(handle["records"])
-    seen = 0
-    with _HashedStream(handle.path) as stream:
-        parser = bas.ObjectStream(stream.text, sorted_required=False)
-        for key in parser.members():
-            if key == "records":
-                previous = None
-                for ticker in parser.members():
-                    if previous is not None and ticker <= previous:
-                        raise FeedbackStreamError("LEGACY_RECORDS_NOT_SORTED_FOR_STREAMING:" + str(handle.path))
-                    previous = ticker
-                    seen += 1
-                    yield ticker, parser.value()
-            else:
-                parser.value()
-        digest, size = stream.finish()
-    if digest != expected_sha or size != expected_size or seen != expected_count:
-        raise SourceIntegrityError(REASON_INCOMPLETE_INPUT_CHANGED + ":" + str(handle.path))
-
-
-# --------------------------------------------------------------------------------------------------
-# Immutable T0 snapshots: streamed identity proof + receipt cache
-# --------------------------------------------------------------------------------------------------
-
-def _receipt_path(state_root: Path, raw_sha: str) -> Path:
-    return state_root / STATE_DIR / "t0_receipts" / (raw_sha + ".json")
-
-
-def _verify_snapshot_stream(path: Path) -> dict[str, Any]:
-    """Cryptographically equivalent to ``retention.validate_snapshot`` without materialising the snapshot."""
-    state = {"valid": True, "reason": None}
-    t0_candidates: dict[str, Any] = {}
-
-    def on_record(ticker, row):
-        if not state["valid"]:
-            return
-        if not isinstance(row, Mapping) or row.get("ticker") != ticker:
-            state.update(valid=False, reason="RECORD_TICKER_MISMATCH")
-            return
-        body = {k: v for k, v in row.items() if k != "prospective_snapshot_record_identity"}
-        if row.get("prospective_snapshot_record_identity") != retention.RECORD_PREFIX + _sha256_bytes(_canon_bytes(body)):
-            state.update(valid=False, reason="RECORD_IDENTITY_MISMATCH")
-            return
-        observation = row.get("t0_close_observation")
-        if isinstance(observation, Mapping):
-            t0_candidates[ticker] = dict(observation)
-
-    metadata, digest, count = bas.stream_artifact(path, excluded={"snapshot_identity"}, on_record=on_record)
-    if metadata.get("snapshot_identity") != retention.SNAPSHOT_PREFIX + digest:
-        state.update(valid=False, reason="SNAPSHOT_IDENTITY_MISMATCH")
-    if metadata.get("contract_version") != retention.CONTRACT_VERSION:
-        state.update(valid=False, reason="SNAPSHOT_CONTRACT_MISMATCH")
-    session = metadata.get("session")
-    t0_prices = {t: row for t, row in t0_candidates.items() if isinstance(session, str) and row.get("session") == session}
-    return {"header": metadata, "record_count": count, "valid": state["valid"], "reason": state["reason"], "t0_prices": t0_prices}
-
-
-def _handle_from_t0_receipt(path: Path, receipt: Mapping[str, Any]) -> SourceHandle:
-    handle = SourceHandle(receipt["header"])
-    handle["records"] = StreamedRecords(path, receipt["record_count"], "t0")
-    handle.valid = bool(receipt["valid"])
-    handle.raw_sha256, handle.size, handle.path = receipt["source_sha256"], receipt["size"], Path(path)
-    handle.t0_prices = receipt["t0_prices"]
-    return handle
-
-
-def load_snapshot_handle(path: Path, state_root: Path, metrics: dict[str, Any] | None = None,
-                         *, persist_receipts: bool = True) -> SourceHandle | None:
-    """Loader seam for ``retention.discover_snapshots``; ``None`` mirrors an unreadable file.
-
-    An exact fingerprint match on a receipt produced by a full SHA-256 under the current
-    verifier reuses ``raw_sha`` and does not read the file. Any other case hashes the bytes.
-    """
-    fingerprint = source_file_fingerprint(path)
-    anchored = _trusted_anchored_receipt(state_root, "t0", fingerprint, _receipt_path)
-    if anchored is not None:
-        _metric(metrics, "t0_fingerprint_hits")
-        _metric(metrics, "t0_receipt_hits")
-        return _handle_from_t0_receipt(path, anchored)
-    _metric(metrics, "t0_fingerprint_misses")
-    try:
-        raw_sha = bas.source_hash(path)
-        size = path.stat().st_size
-    except OSError:
-        return None
-    _metric(metrics, "stream_sha256_bytes", size)
-    receipt_file = _receipt_path(state_root, raw_sha)
-    receipt = _read_state_json(receipt_file)
-    if not (receipt and receipt.get("contract_version") == STREAM_CONTRACT_VERSION and receipt.get("source_sha256") == raw_sha
-            and receipt.get("size") == size and receipt.get("code_digest") == _verification_code_digest()):
-        receipt = None
-    if receipt is None:
-        try:
-            proof = _verify_snapshot_stream(path)
-        except (OSError, UnicodeError):
-            return None
-        except ValueError:
-            # Not canonical sorted JSON. The original loader accepted such a file when it still hashed
-            # to its identity; keep that for small files, otherwise treat it as unreadable.
-            if size > LEGACY_UNSORTED_FALLBACK_MAX_BYTES:
-                return None
-            snapshot = retention._load(path)
-            if not snapshot:
-                return None
-            records = snapshot.get("records") or {}
-            proof = {"header": {k: v for k, v in snapshot.items() if k != "records"}, "record_count": len(records),
-                     "valid": retention.validate_snapshot(snapshot), "reason": None,
-                     "t0_prices": {t: dict(r["t0_close_observation"]) for t, r in records.items()
-                                   if isinstance(r, Mapping) and isinstance(r.get("t0_close_observation"), Mapping)
-                                   and r["t0_close_observation"].get("session") == snapshot.get("session")}}
-        receipt = {"contract_version": STREAM_CONTRACT_VERSION, "source_sha256": raw_sha, "size": size,
-                   "code_digest": _verification_code_digest(), "content_verified": True, "verified_at": _now_utc(), **proof}
-        _metric(metrics, "stream_verified_bytes", size)
-        _metric(metrics, "t0_receipt_misses")
-        if persist_receipts:
-            try:
-                _atomic_write_json(receipt_file, receipt)
-            except OSError:
-                pass
-    else:
-        _metric(metrics, "t0_receipt_hits")
-    if persist_receipts:
-        try:
-            _bind_fingerprint(state_root, "t0", fingerprint, raw_sha)
-        except (OSError, FeedbackStreamError):
-            pass
-    return _handle_from_t0_receipt(path, receipt)
-
-
-def _receipt_sha_for_same_file(state_root: Path, kind: str, path: Path) -> str | None:
-    """SHA recorded for this volume and file id, including after mtime or bytes change.
-
-    Discovery qualifies the receipt header, so a later content change stays in the scrub set.
-    A file that never received a receipt has no anchor and is not pulled into scope.
-    """
-    current = source_file_fingerprint(path)
-    directory = state_root / STATE_DIR / (kind + "_fingerprint")
-    if not current or not directory.is_dir() or path_has_reparse_point(directory):
-        return None
-    digest = _verification_code_digest()
-    found: str | None = None
-    for candidate in directory.glob("*.json"):
-        if path_has_reparse_point(candidate):
-            continue
-        anchor = _read_state_json(candidate)
-        body = anchor.get("fingerprint") if isinstance(anchor, dict) else None
-        if (not isinstance(body, dict) or anchor.get("content_verified") is not True
-                or anchor.get("code_digest") != digest or body.get("volume") != current["volume"]
-                or body.get("file_id") != current["file_id"] or not isinstance(anchor.get("source_sha256"), str)):
-            continue
-        found = anchor["source_sha256"]
-        if (body.get("size") == current["size"] and body.get("mtime_ns") == current["mtime_ns"]
-                and body.get("change") == current["change"]):
-            return found
-    return found
 
 
 def _admitted_source_paths(root: Path, state_root: Path) -> tuple[set[Path], set[Path]]:
@@ -670,6 +374,28 @@ def _verification_code_digest() -> str:
     return source_verifier.verification_code_digest()
 
 
+def iter_legacy_records(handle: SourceHandle) -> Iterator[tuple[str, Any]]:
+    """Yield ``(ticker, decision)`` in file order, proving the exact bytes equal the header-scan hash."""
+    expected_sha, expected_size, expected_count = handle.raw_sha256, handle.size, len(handle["records"])
+    seen = 0
+    with _HashedStream(handle.path) as stream:
+        parser = bas.ObjectStream(stream.text, sorted_required=False)
+        for key in parser.members():
+            if key == "records":
+                previous = None
+                for ticker in parser.members():
+                    if previous is not None and ticker <= previous:
+                        raise FeedbackStreamError("LEGACY_RECORDS_NOT_SORTED_FOR_STREAMING:" + str(handle.path))
+                    previous = ticker
+                    seen += 1
+                    yield ticker, parser.value()
+            else:
+                parser.value()
+        digest, size = stream.finish()
+    if digest != expected_sha or size != expected_size or seen != expected_count:
+        raise SourceIntegrityError(REASON_INCOMPLETE_INPUT_CHANGED + ":" + str(handle.path))
+
+
 def iter_snapshot_records(handle: SourceHandle) -> Iterator[tuple[str, Any]]:
     """Yield ``(ticker, retained_record)`` in sorted order, proving the exact bytes equal the verified hash."""
     expected_sha, expected_size, expected_count = handle.raw_sha256, handle.size, len(handle["records"])
@@ -717,16 +443,28 @@ class PriceIndex:
         if content_sha:
             self._content_hash[session] = content_sha
 
+    def _snapshot_from_index(self, index_path: Path, raw_sha: str, size: int, session: str) -> dict[str, Any] | None:
+        cached = _read_state_json(index_path)
+        if (cached and cached.get("contract_version") == STREAM_CONTRACT_VERSION and cached.get("source_sha256") == raw_sha
+                and cached.get("size") == size and cached.get("session") == session and isinstance(cached.get("snapshot"), dict)):
+            return cached
+        return None
+
     def load(self, path: Path, session: str) -> dict[str, Any] | None:
-        """Fingerprint hit reuses the receipt. Any mismatch hashes the file before the snapshot is trusted."""
+        """Fingerprint hit reads the snapshot from the index file. A missing or disagreeing index hashes the file."""
         fingerprint = source_file_fingerprint(path)
         anchored = _trusted_anchored_receipt(self.state_root, "price", fingerprint, _price_receipt_path)
         if (anchored and anchored.get("session") == session and anchored.get("size") == (fingerprint or {}).get("size")
-                and isinstance(anchored.get("snapshot"), dict) and isinstance(anchored.get("source_sha256"), str)):
-            _metric(self.metrics, "price_fingerprint_hits")
-            _metric(self.metrics, "price_index_hits")
-            self._remember(path, session, anchored["source_sha256"], int(anchored["size"]), anchored.get("content_sha256"))
-            return anchored["snapshot"]
+                and isinstance(anchored.get("source_sha256"), str) and "snapshot" not in anchored):
+            index_rel = anchored.get("index_file")
+            index_path = Path(index_rel) if isinstance(index_rel, str) and Path(index_rel).is_absolute() else (
+                self.state_root / index_rel if isinstance(index_rel, str) else self._file(session, anchored["source_sha256"]))
+            cached = self._snapshot_from_index(index_path, anchored["source_sha256"], int(anchored["size"]), session)
+            if cached is not None:
+                _metric(self.metrics, "price_fingerprint_hits")
+                _metric(self.metrics, "price_index_hits")
+                self._remember(path, session, anchored["source_sha256"], int(anchored["size"]), anchored.get("content_sha256"))
+                return cached["snapshot"]
         _metric(self.metrics, "price_fingerprint_misses")
         try:
             raw_sha = bas.source_hash(path)
@@ -735,9 +473,9 @@ class PriceIndex:
             return None
         _metric(self.metrics, "stream_sha256_bytes", size)
         _metric(self.metrics, "price_hash_bytes", size)
-        cached = _read_state_json(self._file(session, raw_sha)) or _read_state_json(_price_receipt_path(self.state_root, raw_sha))
-        if cached and cached.get("contract_version") == STREAM_CONTRACT_VERSION and cached.get("source_sha256") == raw_sha \
-                and cached.get("session") == session and cached.get("size") == size and isinstance(cached.get("snapshot"), dict):
+        index_path = self._file(session, raw_sha)
+        cached = self._snapshot_from_index(index_path, raw_sha, size, session)
+        if cached is not None:
             _metric(self.metrics, "price_index_hits")
             snapshot = cached["snapshot"]
         else:
@@ -746,16 +484,22 @@ class PriceIndex:
             _metric(self.metrics, "stream_parsed_bytes", size)
             cached = None
         if snapshot is not None:
+            content_sha = cached.get("content_sha256") if isinstance(cached, dict) else None
+            index_body = {"contract_version": STREAM_CONTRACT_VERSION, "source_sha256": raw_sha, "size": size,
+                          "session": session, "snapshot": snapshot}
             receipt = {"contract_version": STREAM_CONTRACT_VERSION, "source_sha256": raw_sha, "size": size,
-                       "session": session, "snapshot": snapshot}
-            if isinstance(cached, dict) and cached.get("content_sha256"):
-                receipt["content_sha256"] = cached["content_sha256"]
+                       "session": session, "index_file": index_path.relative_to(self.state_root).as_posix()}
+            if isinstance(content_sha, str):
+                index_body["content_sha256"] = content_sha
+                receipt["content_sha256"] = content_sha
             try:
-                _atomic_write_json(self._file(session, raw_sha), receipt, allow_nan=True)
+                _atomic_write_json(index_path, index_body, allow_nan=True)
                 _atomic_write_json(_price_receipt_path(self.state_root, raw_sha), receipt, allow_nan=True)
                 _bind_fingerprint(self.state_root, "price", fingerprint, raw_sha)
             except (OSError, FeedbackStreamError):
                 pass
+        else:
+            receipt = {}
         self._remember(path, session, raw_sha, size, receipt.get("content_sha256") if snapshot is not None else None)
         return snapshot
 
@@ -860,6 +604,10 @@ class _StreamSettledCache(fb.SettledFeedbackCache):
 
     def _snapshot_content_hash(self, session, snapshot):
         return self._external_content_hash(session, snapshot)
+
+    def terminal_through(self, row):
+        """Public terminal session. A partial row returns None and is never reused as final."""
+        return self._terminal(row)
 
     def finish(self):
         return  # every contribution was persisted when it settled
@@ -1085,7 +833,7 @@ class _Partitions:
                 spools["rows"].append(row)
                 spools["trigger"].append(row["trigger_invalidation_outcome"] | {"feedback_identity": row["feedback_identity"], "ticker": row["ticker"]})
                 if terminal:
-                    last = self.dependencies.settled._terminal(row)
+                    last = self.dependencies.settled.terminal_through(row)
                     terminal = last is not None
                     through = max(through or last, last) if last else None
                 if bounded:
@@ -1102,6 +850,7 @@ class _Partitions:
                 _metric(self.metrics, "rows")
             entry = {"contract_version": PARTITION_CONTRACT_VERSION, "source_key": directory.name,
                      "context_key": context, "session": session, "row_count": spools["rows"].count,
+                     "future_inputs_digest": fb._settled_hash(self.dependencies.future_inputs) if self.dependencies.future(session) else None,
                      "terminal_proof": self.dependencies.proof(through) if terminal and through else None,
                      "extension_proof": {"window": self.dependencies.proof(window_through), "conditions": conditions}
                                         if bounded and window_through and not terminal else None}
@@ -1607,9 +1356,10 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
                     index = {(row.get("ticker"), row.get("decision_identity")): row for row in partitions.read_rows(prior)}
                     proof = _partition_proof(prior)
 
-                    def reuse(ticker, identity, _index=index, _proof=proof, _dependencies=dependencies):
+                    def reuse(ticker, identity, _index=index, _proof=proof, _dependencies=dependencies,
+                              _future=prior.get("future_inputs_digest")):
                         found = _index.get((ticker, identity))
-                        if found is not None and _row_is_reusable(found, _dependencies, _proof):
+                        if found is not None and _row_is_reusable(found, _dependencies, _proof, _future):
                             return found
                         return None
 
@@ -1699,12 +1449,23 @@ def _partition_proof(manifest: Mapping[str, Any] | None) -> dict[str, Any] | Non
     return None
 
 
-def _row_is_reusable(prior: Mapping[str, Any], dependencies, old_proof: Mapping[str, Any] | None) -> bool:
-    """Row-level ``extension_valid``. A partially mature row is never final."""
+def _row_is_reusable(prior: Mapping[str, Any], dependencies, old_proof: Mapping[str, Any] | None,
+                     future_digest: str | None = None) -> bool:
+    """Row-level ``extension_valid``. A partially mature row is never final.
+
+    A strict-prospective row is reusable only when the prior manifest recorded the same
+    future-input digest. Anything else is evaluated again.
+    """
     if not isinstance(old_proof, Mapping):
         return False
+    outcomes = prior.get("forward_outcomes") if isinstance(prior.get("forward_outcomes"), Mapping) else {}
+    session = outcomes.get("as_of_session")
+    if isinstance(session, str) and dependencies.future(session):
+        current = fb._settled_hash(dependencies.future_inputs)
+        if future_digest != current:
+            return False
     try:
-        through = dependencies.settled._terminal(prior)
+        through = dependencies.settled.terminal_through(prior)
     except (KeyError, TypeError, ValueError, AttributeError):
         return False
     if through is None:
@@ -1758,7 +1519,8 @@ def _projection_code_digest() -> str:
     global _PROJECTION_DIGEST
     if _PROJECTION_DIGEST is None:
         digest = hashlib.sha256()
-        for name in ("prospective_decision_outcome_feedback", "prospective_feedback_streaming"):
+        for name in ("prospective_decision_outcome_feedback", "integrated_decision_prospective_feedback",
+                     "prospective_feedback_streaming"):
             module = import_module(name)
             digest.update(hashlib.sha256(Path(module.__file__).read_bytes().replace(b"\r\n", b"\n")).digest())
         _PROJECTION_DIGEST = digest.hexdigest()

@@ -222,9 +222,11 @@ current verifier. Any mismatch, a missing receipt, an unreadable fingerprint or 
 hashes the file exactly as before and refreshes the receipt. `stream_sha256_bytes` counts only that
 full-hash branch. `tools/vault_snapshot.py` already reads ChangeTime, and the root feedback module
 must not import `tools`. The five-field helper is `stocklookup_core/evidence/source_file_fingerprint.py`.
-The verifier digest hashes that helper and `stocklookup_core/evidence/source_verifier.py` only.
-An evaluator-only edit of the streaming module does not invalidate receipts. This M1b deploy still
-changes the digest, because the verifier unit is new, so one seed is still required.
+The verifier digest hashes the fingerprint helper, `source_verifier.py`, `source_verifier_receipts.py`,
+`storage_portability.py`, `bounded_artifact_stream.py`, `prospective_decision_retention.py`
+and `retained_evidence_catalog.py`. An evaluator-only edit of the streaming module does not
+invalidate receipts. This M1b deploy still changes the digest, so one seed is still required.
+A price receipt stores the index path, not a second copy of the snapshot.
 
 `--scrub-sources --root <root> --state-root <state>` is an out-of-Daily check. Its scope is the
 set discovery admits. It re-hashes those sources, refreshes `verified_at` when the receipt matches,
