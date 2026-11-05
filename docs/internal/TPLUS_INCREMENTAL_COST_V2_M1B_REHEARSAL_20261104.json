@@ -10,16 +10,22 @@
   },
   "L2_removal": {
     "implementation_sha256_lf": "289629904b459f626ffc1fa380b14eb9f2d705098974e14b29e74235c77219dd",
-    "post_removal_requalification": "PENDING_CURRENT_CODE_FULL_CORPUS_NATIVE_BYTE_CHECK",
+    "post_removal_requalification": {
+      "artifact_identity": true,
+      "artifact_raw_sha256": true,
+      "artifact_size": true,
+      "input_digest": true,
+      "record_count": true
+    },
     "preserved": "Whole-partition exact/terminal/extension reuse, strict future context keys, existing evaluator and terminal contribution cache, expanded source verifier and reference-only price receipts.",
     "removed": "Prior-row lookup, row-level proof/copy path, unused future-input manifest field and its dedicated reuse test."
   },
   "acceptance": {
-    "L1": "PASS_REAL_COLD_AND_ALL_INVALIDATED_WARM",
+    "L1": "PASS_FINAL_SOURCE_FULL_CORPUS_AND_PRIOR_COLD_WARM_ADD_BYTE_PARITY",
     "L2": "REMOVED_REALISTIC_REUSE_ZERO_BELOW_20_PERCENT",
     "L3_L4": "EXISTING_PART_A_REUSED",
     "L5": "NOT_TAKEN",
-    "promotion": "NOT_AUTHORIZED_BY_THIS_CHECKPOINT"
+    "promotion": "NOT_ELIGIBLE_R2_AND_DISCOVERY_TARGETS_UNMET_LEAD_ACCEPTANCE_PENDING"
   },
   "baseline_checkpoint": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
   "baseline_cold_warm_parity": "PASS_NATIVE_BYTE_SHA_SIZE_IDENTITY_ROWS_INPUT_DIGEST",
@@ -28,7 +34,8 @@
     "recovery": "37_EXACT_VALID_PARTITIONS_REUSED_NO_REBUILD_FULL_NATIVE_ORACLE_PARITY",
     "timing_limit": "Initial attempt and recovery are separate measured runs, not one successful cold wall time."
   },
-  "continuation": "Let the bounded final-source full-corpus job finish; require native oracle bytes, identity, size, count and input digest. Then checkpoint locally. No push/promotion.",
+  "continuation": "Lead acceptance and authorized discovery corrective required; R2/discovery performance gates remain unmet. No M1b push/PR/promotion.",
+  "continued_on": "2026-11-05",
   "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
   "date": "2026-11-04",
   "derived_store_comparison": {
@@ -52,6 +59,9 @@
         "Name": "_stream"
       }
     ],
+    "final_source_retained_bytes": 3689693566.0,
+    "final_source_retained_met": true,
+    "final_source_retained_relative_change": -0.08197276894396022,
     "maximum_growth": 0.25,
     "measurement_scope": "Derived directory payload bytes at completed full-corpus R2 boundary; manifests and receipts included. Baseline recorded before verified pruning.",
     "met": true,
@@ -105,10 +115,27 @@
       "seconds": 364.78
     },
     "implementation_sha256_lf": "289629904b459f626ffc1fa380b14eb9f2d705098974e14b29e74235c77219dd",
+    "independent_native_byte_proof": true,
+    "measurement_scope": "Final code, fresh projection sidecars and partitions, previously qualified source receipts. This is one-time projection-rebuild qualification, not a warm R2 timing replacement.",
     "projection_digest": "2066378c35bbf5513ebe2b31b62d85edb6b200faf95d02924e3851a873e25023",
-    "requalification": "PENDING",
+    "requalification": {
+      "artifact_identity": true,
+      "artifact_raw_sha256": true,
+      "artifact_size": true,
+      "input_digest": true,
+      "record_count": true
+    },
     "source_commit": "f3ddf8342d694e8095a064bb6b0b2b8d07751ff8",
     "verifier_digest": "c29a3fd4c3726e98f9b6876bbabab9e413f3c8598550b226eef8c23119071d93"
+  },
+  "finished_fixture_pruning": {
+    "Bytes": 212903928.0,
+    "Count": 154,
+    "Free": 368111398912,
+    "PlanSha": "A7816D82C350F3AD4D67064ED9C3D8DD97F0C81BE91D90D66722B53960F51AF9",
+    "Scope": "ONLY_CLOSED_PYTEST_GENERATED_JSON_PAYLOADS",
+    "SourceMutations": false,
+    "measurement_note": "Only completed pytest fixture JSON was removed; no live corpus cache or evidence was touched. Final cold-projection qualification wall time includes this small host I/O overlap; earlier warm performance profiles do not."
   },
   "frozen_context": {
     "as_of": "2026-11-04T12:29:14.264899+00:00",
@@ -133,9 +160,11 @@
       "candidate-resume",
       "candidate-r2",
       "candidate-add",
-      "candidate-post"
+      "candidate-post",
+      "candidate-final"
     ]
   },
+  "initial_source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
   "measured_growth_projection": {
     "date_at_modeled_crossing_if_inside_retained_session_sequence": null,
     "evaluate_seconds_per_session": 22.169594594594592,
@@ -401,6 +430,23 @@
   },
   "production_ci": "41832648657_SUCCESS_6_OF_6",
   "production_daily": "PASS_JOURNAL_COMPLETE",
+  "production_prerequisite_final_verification": {
+    "ai_readiness": "READY_FOR_AI",
+    "ai_remote": "f18a2d0abdddb9f6d17f8b2ac7de524ac1586597",
+    "analytics_recomputed": false,
+    "dashboard_public_byte_identity": "PASS",
+    "dashboard_release": "9e0691a8f792e2f078d9ceaa277ef7de46aef195",
+    "phase": "COMPLETE_9_OF_9",
+    "post_merge_ci": "6_OF_6_PASS",
+    "production_head": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
+    "recovery_pull_request": 211,
+    "registry_working_bytes_preserved": true,
+    "registry_working_sha256": "77c949a78bc9d679a5b14fc3752615a03eaf411b2e14a0a7a5a262c754226bc0",
+    "remote_main": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
+    "session": "2026-11-04",
+    "status": "PASS",
+    "verification": "LIVE_MAIN_READBACK_AND_FINAL_RESULT_READ_2026_11_05"
+  },
   "production_release": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
   "real_corpus_profiles": {
     "baseline-r2": {
@@ -948,6 +994,313 @@
       "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
       "status": "FAILED",
       "wall_seconds": 2888.464373900002
+    },
+    "candidate-final": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 818.203125,
+      "discovery_helpers_seconds": {
+        "legacy._artifact_paths": 0.6674526999995578,
+        "legacy._handoff_bundles": 0.5972237999958452,
+        "legacy._operation_manifests": 2.623049000001629,
+        "legacy._read_summary_cache": 0.0018065000040223822,
+        "legacy._source_fingerprint": 103.2158006999889,
+        "t0._handoff_by_snapshot": 0.15697740000177873,
+        "t0._handoff_snapshot_inventory": 0.14046370000141906,
+        "t0._operation_manifests": 0.29894819999753963,
+        "t0._original_reuse_reasons": 45.20211019999988,
+        "t0.historical_paths": 47.416358900001796
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 1462.5697837000043,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 369514306,
+        "other_operations": 4004726,
+        "read_bytes": 104096850970,
+        "read_operations": 355635,
+        "write_bytes": 4363606853,
+        "write_operations": 88746
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1158045696,
+        "peak_process_committed_bytes": 1157148672,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7277154304,
+        "free_before": 369519247360,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 488157184,
+        "faults": 164391003,
+        "nonpaged_pool": 56024,
+        "paged_pool": 351624,
+        "peak_commit": 1157148672,
+        "peak_nonpaged_pool": 130072,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 944025600,
+        "working_set": 276697088
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.068,
+        "discovery_legacy_other_s": 104.389,
+        "discovery_t0_loader_s": 0.595,
+        "discovery_t0_other_s": 92.81,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partition_evaluate_s": {
+          "2026-09-03": 20.308,
+          "2026-09-08": 19.129,
+          "2026-09-09": 19.457,
+          "2026-09-10": 19.401,
+          "2026-09-11": 20.994,
+          "2026-09-14": 21.027,
+          "2026-09-15": 21.576,
+          "2026-09-16": 21.67,
+          "2026-09-17": 21.619,
+          "2026-09-18": 21.685,
+          "2026-09-21": 21.79,
+          "2026-09-22": 21.676,
+          "2026-09-23": 21.65,
+          "2026-09-24": 21.656,
+          "2026-09-28": 19.741,
+          "2026-09-29": 26.011,
+          "2026-09-30": 31.076,
+          "2026-10-01": 12.164,
+          "2026-10-02": 33.1,
+          "2026-10-05": 34.191,
+          "2026-10-06": 35.297,
+          "2026-10-07": 37.587,
+          "2026-10-08": 36.807,
+          "2026-10-09": 36.864,
+          "2026-10-12": 38.112,
+          "2026-10-13": 38.471,
+          "2026-10-14": 38.186,
+          "2026-10-15": 36.436,
+          "2026-10-16": 43.688,
+          "2026-10-19": 35.858,
+          "2026-10-20": 37.52,
+          "2026-10-21": 35.51,
+          "2026-10-22": 61.473,
+          "2026-10-23": 61.434,
+          "2026-11-02": 64.202,
+          "2026-11-03": 62.288,
+          "2026-11-04": 62.226
+        },
+        "partitions_built": 37,
+        "price_fingerprint_hits": 4,
+        "price_index_hits": 4,
+        "rows": 62271,
+        "rows_reevaluated": 62271,
+        "settled_misses": 31977,
+        "sidecar_bytes": 768041015,
+        "sidecar_bytes_written": 768041015,
+        "sidecar_decoded_bytes": 768041015,
+        "sidecar_json_decode_s": 4.426860099469195,
+        "sidecar_misses": 34,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 20.30715390000114,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 19.128816700002062,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 19.45653659999516,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 19.40093329999945,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 20.993838000002143,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 21.026486300004763,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 21.575874400004977,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 21.6701241999981,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 21.61821670000063,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 21.684655199998815,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 21.789291900000535,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 21.675367700001516,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 21.65002409999579,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 21.65563039999688,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 19.74090140000044,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 26.010899300003075,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 31.075246100001095,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 12.163785600001574,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.0999238000004,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 34.18981039999926,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 35.29702399999951,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 37.58648389999871,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 36.80692110000382,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 36.86356800000067,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 38.111203899999964,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 38.47014889999991,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 38.18532939999568,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 36.43592170000193,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 43.687883300000976,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 35.85773329999938,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 37.51990800000203,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 35.509836400000495,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 61.47279290000006,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 61.433790100003534,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 64.20112050000171,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 62.28716980000172,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 62.225915899995016,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1157148672,
+      "phases_seconds": {
+        "aggregate_s": 21.023,
+        "assemble_s": 13.585,
+        "discovery_legacy_s": 104.457,
+        "discovery_s": 200.218,
+        "discovery_t0_s": 93.405,
+        "evaluate_s": 1224.173,
+        "price_index_s": 0.077,
+        "total_s": 1459.389
+      },
+      "record_count": 62271,
+      "row_reuse_profile": {
+        "by_session": {},
+        "strict_prospective_rows_reused": 0
+      },
+      "source_checkpoint": "f3ddf8342d694e8095a064bb6b0b2b8d07751ff8",
+      "wall_seconds": 1461.4004045999973
     },
     "candidate-minus": {
       "artifact_identity": "prospective_decision_outcome_feedback:a6bbef568f0a0084ffc34e0de7a150df0b619d44b9c7987da947ace2a0433984",
@@ -3736,7 +4089,7 @@
     "method": "Conservative deploy planning proxy from cold failed-assembly attempt residual; includes discovery, source verification, input-sidecar creation and non-partition overhead. Not a separately timed cold seed.",
     "warm_seed_host_seconds": 215.8430315000005
   },
-  "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+  "source_checkpoint": "f3ddf8342d694e8095a064bb6b0b2b8d07751ff8",
   "source_correction_after_benchmark": {
     "L2_removal_commit": "2911d1c0b4116c632a04541a0fed34b055633585",
     "cleanup_fix": "Apply existing dead/stale writer cleanup to bounded source-key partition directories, with reparse refusal and the existing stale threshold. Live writer files remain protected.",
@@ -3749,5 +4102,5 @@
     "initial_validation": "125 main focused passed; 74 related passed and one nested-spool retry regression failed; targeted retry regression plus source-transition then 5 passed."
   },
   "state_scope": "ISOLATED_SCRATCH_ONLY",
-  "status": "FINAL_SOURCE_REAL_CORPUS_REQUALIFICATION_RUNNING"
+  "status": "REAL_CORPUS_VALIDATED_PERFORMANCE_RELEASE_GATES_UNMET"
 }
