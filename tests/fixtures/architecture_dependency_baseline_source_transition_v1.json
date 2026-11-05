@@ -1,0 +1,10 @@
+{
+  "contract_version": "architecture_dependency_baseline_source_transition/v1",
+  "base_commit": "b83fd916b02e245e0c6b10078060809bb31b971d",
+  "source_path": "config/architecture_dependency_baseline.json",
+  "archive": "tests/fixtures/architecture_dependency_baseline_v1.json.txt",
+  "prior_sha256_lf": "6b3eed9a1236481cf02fec38bd76553ea7ba56d4bd86918d4c37c1695aa19dbf",
+  "active_sha256_lf": "2295c370cb6bc84a789913e5938d140eb8cfa3619116f7d188ee48f6d97704fe",
+  "scope": "EXACT_ONE_FILE_M1B_GRANDFATHERED_EDGES_ONLY",
+  "release_authority": "NOT_GRANTED"
+}

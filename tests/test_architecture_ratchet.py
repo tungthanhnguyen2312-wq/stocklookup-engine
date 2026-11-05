@@ -24,6 +24,17 @@ def test_repository_dependency_ratchet():
     assert not guard.regressions(guard.snapshot(ROOT, POLICY), baseline, POLICY, layout["relocations"])
 
 
+def test_m1b_baseline_grandfather_peels_to_the_frozen_pin():
+    import hashlib
+    from tools.verify_retention_reader_transition import historical_bytes
+    live = (ROOT / guard.BASELINE).read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(live).hexdigest() == guard.MIGRATED_BASELINE_SHA256
+    pins = json.loads((ROOT / "tests/fixtures/e2e3_frozen_sources.json").read_text(encoding="utf-8"))["source_sha256_lf"]
+    historical = historical_bytes(ROOT, guard.BASELINE)
+    assert hashlib.sha256(historical).hexdigest() == pins[guard.BASELINE]
+    assert historical != live
+
+
 def test_baseline_is_byte_deterministic_and_portable(tmp_path, monkeypatch):
     write(tmp_path, "a.py", "import b\n")
     write(tmp_path, "b.py", "")

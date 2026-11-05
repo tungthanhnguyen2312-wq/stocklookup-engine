@@ -1,0 +1,15 @@
+{
+  "contract_version": "tplus_incremental_cost_v2_m1b_source_transition/v1",
+  "base_commit": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+  "scope": "EXACT_TPLUS_INCREMENTAL_COST_M1B_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "a4fcdb786c70dcab0c6bb294f84a6147fe49ac59cb343e1851d3fc512d01dd1d",
+  "active_e4_v2_digest": "ba06dc93a07f89e24bd68128418cb65268d8b1de86aaa1dd0d47efa76ed51ef0",
+  "sources": {
+    "prospective_feedback_streaming.py": {
+      "archive": "tests/fixtures/tplus_incremental_cost_v2_m1b_sources/prospective_feedback_streaming.py.txt",
+      "prior_sha256_lf": "0dcf7fe0687593bc05db9a0f487bd64b4309d6b6c80c47cb33081c45bdbe2dc1",
+      "active_sha256_lf": "d80f0194847bc7a96a5a0bbbf62f5bafef453027c7f9058ed2a427f8c37b3744"
+    }
+  }
+}

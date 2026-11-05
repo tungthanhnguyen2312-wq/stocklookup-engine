@@ -144,7 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("--state-root", help="Where derived caches/receipts live (default: --root).")
     parser.add_argument("--prior-result", help="Status sidecar of the earlier call, to report FEEDBACK_CALL_RELATION.")
     parser.add_argument("--scrub-sources", action="store_true",
-                        help="Out of Daily: re-hash every T0/legacy source, refresh verified_at, never publish.")
+                        help="Out of Daily: re-hash sources discovery admits, refresh verified_at, never publish.")
     parser.add_argument("--seed-state-only", action="store_true",
                         help="Out of Daily: write receipts, fingerprint anchors and sidecars. Publishes nothing.")
     args = parser.parse_args()

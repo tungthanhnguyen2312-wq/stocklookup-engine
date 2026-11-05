@@ -23441,6 +23441,34 @@
       "from"
     ],
     [
+      "stocklookup_core.evidence.hnx_disclosure_feed_parser",
+      "official_source_registry",
+      "module_load",
+      "static",
+      "from"
+    ],
+    [
+      "stocklookup_core.evidence.hnx_financial_filing_scaleout",
+      "official_financial_period_identity",
+      "lazy",
+      "static",
+      "from"
+    ],
+    [
+      "stocklookup_core.evidence.hnx_financial_filing_scaleout",
+      "official_source_registry",
+      "module_load",
+      "static",
+      "from"
+    ],
+    [
+      "stocklookup_core.evidence.official_authority_candidates",
+      "official_source_registry",
+      "lazy",
+      "static",
+      "import"
+    ],
+    [
       "stocklookup_core.evidence.official_document_acquisition",
       "official_source_registry",
       "module_load",
@@ -23579,6 +23607,55 @@
       "module_load",
       "static",
       "from"
+    ],
+    [
+      "stocklookup_core.evidence.official_listing_page_parser",
+      "official_source_registry",
+      "module_load",
+      "static",
+      "from"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier",
+      "bounded_artifact_stream",
+      "lazy",
+      "dynamic",
+      "import_module"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier",
+      "prospective_decision_retention",
+      "lazy",
+      "dynamic",
+      "import_module"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier",
+      "retained_evidence_catalog",
+      "lazy",
+      "dynamic",
+      "import_module"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier_receipts",
+      "bounded_artifact_stream",
+      "module_load",
+      "static",
+      "import"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier_receipts",
+      "prospective_decision_retention",
+      "module_load",
+      "static",
+      "import"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier_receipts",
+      "prospective_feedback_streaming",
+      "lazy",
+      "static",
+      "import"
     ],
     [
       "stocklookup_core.evidence.temporal_retention",
@@ -26076,6 +26153,14 @@
       "prospective_pit_capture_retention"
     ],
     [
+      "prospective_feedback_streaming",
+      "stocklookup_core.evidence.source_verifier"
+    ],
+    [
+      "prospective_feedback_streaming",
+      "stocklookup_core.evidence.source_verifier_receipts"
+    ],
+    [
       "prospective_market_evidence_retention",
       "completed_market_session_gate"
     ],
@@ -26262,6 +26347,18 @@
     [
       "stocklookup_core.evidence.official_document_qualification",
       "official_financial_filing_evidence"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier",
+      "stocklookup_core.evidence.source_verifier"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier",
+      "stocklookup_core.evidence.source_verifier_receipts"
+    ],
+    [
+      "stocklookup_core.evidence.source_verifier_receipts",
+      "prospective_feedback_streaming"
     ],
     [
       "stocklookup_core.financial.financial_reporting_currency",
