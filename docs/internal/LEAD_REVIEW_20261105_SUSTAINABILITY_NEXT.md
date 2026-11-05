@@ -151,3 +151,65 @@ Sửa đúng (a)+(b), giữ đường full-SHA khi receipt thiếu hoặc lệch
 - **Codex:** P-0, P-3, script P-4, hỗ trợ release PR của P-5.
 - **Claude:** P-1, review HANDOFF của P-2/P-5/P-6 (đối chiếu file kết quả). Không làm writer.
 - **Owner:** duyệt D-x, chạy foreground kích hoạt/backup, chạy Daily.
+
+---
+
+## 8. Bổ sung lần 3 (05/11, ~09:30) — kiểm chứng 4 điều kiện của ChatGPT + phát hiện mới
+
+Owner đã trao **toàn quyền quyết định** cho Lead sau lần kiểm tra này.
+
+### 8.1 Bốn điều kiện của ChatGPT: đều đúng, đã kiểm chứng trong code và đều được áp dụng
+
+| # | Điều kiện | Kiểm chứng | Áp dụng |
+|---|---|---|---|
+| E1 | P-0: ngoại lệ ghi checkpoint | Mâu thuẫn chữ nghĩa có thật trong §5 | Chỉ được **tạo mới** `production-v1\recovery-checkpoints\20261105-scratch-retire\`; không sửa thứ gì khác dưới `production-v1`. Không chứng minh được hết tham chiếu hoặc còn file đang mở → bỏ qua việc xóa và báo blocker. |
+| E2 | P-5: chỉ cảnh báo, không chặn | `owner_daily_progress.py:25` `AUTHORITY_EFFECT = "NONE_OPERATIONAL_OBSERVABILITY_ONLY"`; `:327` `disk_path: Path = Path("C:\\")` | Runway < 10 / < 5 phiên chỉ là **cảnh báo**. Không đổi admission/preflight. Muốn hard-block thì phải có quyết định riêng. |
+| E3 | P-3: exit 33 chưa đủ | `tools/run_prospective_decision_outcome_feedback.py:165-166` in `{"status":"SEEDED",…}` rồi `sys.exit(33)`; script M1 cũ chỉ kiểm tra exit code | Script M1b phải parse JSON stdout: `status == "SEEDED"` và đếm T0/legacy/sidecar khớp inventory. Script không tự chạy; Owner chạy foreground. |
+| E4 | Backup không giải phóng T: | Vault contract dòng 16 ("no delete, migrate…") và dòng 111–133 (restore cần catalog/resolver + **portable verifier được duyệt riêng**) | Đúng, và hệ quả lớn hơn: **D5 tiering không phải đòn bẩy ngắn hạn**, vì nó cần một milestone mới (catalog/resolver, portable verifier). Không được tính D3/D5 vào runway tháng 11. |
+
+### 8.2 Phát hiện mới: 356 GiB bản sao vật lý trong scratch (đòn bẩy lớn nhất)
+
+Đo kích thước theo thư mục trên T: (sum theo đường dẫn):
+
+| Thư mục | GiB |
+|---|---|
+| `T:\StockLookup\production-v1` | 239,17 |
+| `T:\StockLookup\scratch` | **410,65** |
+| ├ `preseal-producer-seal-20261026-r10` | **179,26** |
+| ├ `preseal-producer-seal-20261026-r8` | **177,09** |
+| ├ `owner-daily-16gb-recovery-20261028` | 21,59 |
+| ├ `iid-runtime-memory-evidence` | 11,59 |
+| ├ `tplus-v2-rehearsal-20261104` | 10,71 (D-S1) |
+| └ `tplus-m1b-rehearsal-20261104` | 5,05 (đang dùng) |
+| `T:\StockLookup\worktree-archives` | 13,05 |
+
+- r8/r10 là sandbox rehearsal đo bộ nhớ preseal ngày 27–28/10. `guard-result.json` của r10: `returncode 1`, `last_completed_stage BLOCKED_RUNTIME_RELEASE`, `authority_effect NONE_OPERATIONAL_OBSERVABILITY_ONLY`. Kết quả đo đã được ghi vào hợp đồng admission (PR #205).
+- Bốn file lớn nhất mỗi thư mục có **link count = 1**, tức là bản sao vật lý, không phải hardlink.
+- Không có file nào trong production code/config tham chiếu tới hai thư mục này.
+- Quét lại (kể cả file ẩn) **không thấy ghi mới sau 04/11**. Con số "2,38 GiB ghi mới" trong §1 là sai số của lần quét đầu; rút lại.
+- `T:\StockLookup\production-v1\retained-evidence\operations-review\canonical-post-close-v1\2026-10-26` có tồn tại trong Production.
+
+Hệ quả: lưu trữ r8+r10 sang W: rồi gỡ khỏi T: sẽ giải phóng ≈ **350 GiB**. Runway tăng từ ≈9 lên ≈ (340 + 11 + 350 − 160) / 19 ≈ **28 phiên**, tức sang khoảng giữa tháng 12. **Đường găng dung lượng hết gấp.** D4a/D5 trở về nhịp milestone bình thường (M2 → M3 → M4), không cần làm vội trong tháng 11.
+
+### 8.3 Quyết định của Lead (thực thi theo toàn quyền của Owner)
+
+| Mã | Quyết định |
+|---|---|
+| D3 | **DUYỆT.** Vault copy-only lên `W:` (WD4TB_BACKUP) các phiên 16/10 → mới nhất, có receipt; khôi phục thử 1 phiên vào scratch. Không xóa/di chuyển dữ liệu Production. |
+| D-S1 | **DUYỆT** đúng 2 đường dẫn ở §4, áp dụng E1. |
+| **D-S2 (mới)** | **DUYỆT:** lưu trữ nguyên trạng `preseal-producer-seal-20261026-r8` và `-r10` sang `W:\ProjectVault\StockLookup-scratch-archive\20261105\` với manifest SHA-256 toàn bộ file; verify lại từng file trên W: bằng hash; chỉ sau khi 100% khớp mới gỡ khỏi T:. Không xóa trước khi verify. Không áp dụng cho thư mục scratch khác; các thư mục khác chỉ báo cáo. |
+| D6 | **DUYỆT** (a)+(b), chỉ bắt đầu sau khi M1b chạy ổn 2 Daily. Không nằm trong prompt e2e này. |
+| D7 | Bỏ. Bốn gate contract giữ nguyên. |
+| D4a / D4 / D5 | **Chưa duyệt.** Quyết sau ledger M2 + D3 + khôi phục thử. Không còn gấp. |
+| Merge M1b, M2 | Lead review rồi merge. Kích hoạt M1b trong Production do Owner chạy foreground trước Daily. |
+
+### 8.4 Thứ tự đã sửa
+
+Prompt e2e cho Grok: `docs/internal/GROK_PROMPT_E2E_20261105.md` (cùng nhánh). Thứ tự chạy:
+
+```
+A1 D-S1 ─► A2 D-S2 (archive→verify→gỡ) ─► B M1b rebase+đo code cuối ─► C M1b PR+CI+script kích hoạt
+        ─► D M2 ledger+probe (PR) ─► E D3 vault backup + khôi phục thử ─► HANDOFF  [STOP: Lead review]
+```
+
+Mọi bước IO nặng đều kiểm tra không có Daily đang chạy.
