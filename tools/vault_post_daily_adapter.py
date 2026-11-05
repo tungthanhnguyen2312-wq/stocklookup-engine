@@ -87,8 +87,9 @@ def qualified_boundary(source: Path, boundary: Path, boundary_sha: str, *, max_b
             v.require(refs.get(ref["relative_path"]) == ref["sha256"], "completion/seal outside boundary closure")
         for row in files:
             rel = row["relative_path"]
-            v.require(not rel.startswith(("config/", "data/", "dashboard-runtime/"))
-                      and not any(token in rel for token in MUTABLE), "mutable source refused")
+            v.require(not any(part.lower() in {"config", "data", "dashboard-runtime"}
+                              for part in Path(rel).parts)
+                      and not any(token.lower() in rel.lower() for token in MUTABLE), "mutable source refused")
         t0 = handoff.get("prospective_decision_snapshot") or {}
         if any(row["family"] == "T0" for row in files):
             from prospective_t0_seal_index import load_verified
