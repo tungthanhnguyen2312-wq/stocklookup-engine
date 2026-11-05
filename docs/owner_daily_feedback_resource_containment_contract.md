@@ -242,9 +242,11 @@ stores `ticker`, `decision_identity`, and the projected retained record once. `r
 record's `integrated_decision_at_t0`, reduced to the fields the row evaluator reads. Fields the
 evaluator does not read are not stored. `artifact`, `temporal`, `source_path` and `t0_snapshot` are
 rebuilt at read time from the live handle and inventory, the same helper the direct T0 parse uses.
-A v2 sidecar does not match this contract and is rebuilt from the T0. Inside a rebuilt partition,
-a prior row is copied when its proof window and its open-condition re-check are unchanged. A row
-that is not terminal is evaluated again and is never treated as final.
+A v2 sidecar does not match this contract and is rebuilt from the T0. Every row in a rebuilt
+partition is evaluated through the existing evaluator and terminal contribution cache. M1b's
+row-level reuse experiment was removed after the retained-corpus one-new-T0 run skipped zero
+of 35,343 evaluated rows (below the required 20%). Whole-partition exact, terminal and extension
+reuse remains unchanged; that run reused 16 partitions and rebuilt 21.
 Its own SHA-256 is checked before use. A missing, truncated or corrupt sidecar is rebuilt from the
 T0. The store budget is 12 GiB and 4,096 files: about 60 sessions of the deduplicated sidecar, with
 headroom. A new sidecar that would exceed the budget is not written (`sidecar_skipped_budget`);
@@ -253,8 +255,9 @@ build. The settled store keeps its own 2 GiB cap and still fails closed when its
 exceed that cap. The T0 file remains the only authority. The round-1 2026-11-03 sidecar, which
 stored `record` twice plus the discovery fields, was 154,774,713 bytes against a 2,545,919,441-byte
 T0 (6.08 percent). After storing the projected record once, that same T0's sidecar is 78,984,877
-bytes (1,683 rows, 3.10 percent). The 33-sidecar store on the current corpus is 1,751,745,573
-bytes, about 53.1 MB per session. The budget is 12 GiB. Legacy artifacts still use their
+bytes (1,683 rows, 3.10 percent). Those are historical M1 measurements. The M1b retained-corpus
+34-sidecar store measured 768,052,643 bytes, against the updated M1 baseline's 1,831,868,061
+bytes. The budget is 12 GiB. Legacy artifacts still use their
 summary caches. Price files use the same fingerprint rule. A warm run whose price fingerprint
 matches does not add those bytes to `stream_sha256_bytes`.
 

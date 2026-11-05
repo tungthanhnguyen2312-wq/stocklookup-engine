@@ -4,12 +4,12 @@
   "scope": "EXACT_TPLUS_INCREMENTAL_COST_M1B_ONLY",
   "release_authority": "NOT_GRANTED",
   "previous_e4_v2_digest": "a4fcdb786c70dcab0c6bb294f84a6147fe49ac59cb343e1851d3fc512d01dd1d",
-  "active_e4_v2_digest": "11a8c868930656c091d7aba3327bf0a417e208c6adf4dba01c818d7969e5207d",
+  "active_e4_v2_digest": "d2a90b9af1a295acb276c112e9f97e14cfa969263255847e931fad6b49b8ee66",
   "sources": {
     "prospective_feedback_streaming.py": {
       "archive": "tests/fixtures/tplus_incremental_cost_v2_m1b_sources/prospective_feedback_streaming.py.txt",
       "prior_sha256_lf": "0dcf7fe0687593bc05db9a0f487bd64b4309d6b6c80c47cb33081c45bdbe2dc1",
-      "active_sha256_lf": "84b66213640dcc6919525d27685bdba0719f32f4230c7ca2ffbbfafc80321e9b"
+      "active_sha256_lf": "4cd0f50ba541a244c85bae103f8d5bc9680d1bda15799a2ef8ec52341055accf"
     }
   }
 }

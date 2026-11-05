@@ -784,41 +784,7 @@ class _Partitions:
             _metric(self.metrics, "partitions_invalidated")
         return None
 
-    def prior_manifest(self, session: str) -> dict[str, Any] | None:
-        """Newest intact variant that this run did not select. Row reuse reads it when the partition is rebuilt."""
-        directory, candidates = self._candidates(session)
-        if not directory.exists():
-            return None
-        for path in candidates:
-            value = _read_state_json(path)
-            if not value or value.get("session") != session or value.get("source_key") != directory.name:
-                continue
-            stem = Path(str(path)[:-len(".partition.json")])
-            if stem == self.selected.get(session) or not self._valid_bytes(stem, value):
-                continue
-            found = dict(value)
-            found["_stem"] = stem
-            return found
-        return None
 
-    def read_rows(self, manifest: Mapping[str, Any]) -> Iterator[dict[str, Any]]:
-        stem = manifest.get("_stem")
-        if not isinstance(stem, Path):
-            return
-        path = Path(str(stem) + ".rows")
-        raw = path.read_bytes()
-        if len(raw) != manifest["rows"]["bytes"] or _sha256_bytes(raw) != manifest["rows"]["sha256"]:
-            return
-        text, decoder, index = raw.decode("utf-8"), json.JSONDecoder(), 0
-        del raw
-        while index < len(text):
-            value, index = decoder.raw_decode(text, index)
-            if isinstance(value, dict):
-                yield value
-            if index < len(text):
-                if text[index] != ",":
-                    return
-                index += 1
 
     def build(self, position, session, rows):
         directory, _ = self._candidates(session)
@@ -850,7 +816,6 @@ class _Partitions:
                 _metric(self.metrics, "rows")
             entry = {"contract_version": PARTITION_CONTRACT_VERSION, "source_key": directory.name,
                      "context_key": context, "session": session, "row_count": spools["rows"].count,
-                     "future_inputs_digest": fb._settled_hash(self.dependencies.future_inputs) if self.dependencies.future(session) else None,
                      "terminal_proof": self.dependencies.proof(through) if terminal and through else None,
                      "extension_proof": {"window": self.dependencies.proof(window_through), "conditions": conditions}
                                         if bounded and window_through and not terminal else None}
@@ -1350,23 +1315,9 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
                 _metric(metrics, "partitions_reused")
                 _metric(metrics, "rows_reused", manifest["row_count"])
             else:
-                prior = partitions.prior_manifest(session)
-                reuse = None
-                if prior is not None:
-                    index = {(row.get("ticker"), row.get("decision_identity")): row for row in partitions.read_rows(prior)}
-                    proof = _partition_proof(prior)
-
-                    def reuse(ticker, identity, _index=index, _proof=proof, _dependencies=dependencies,
-                              _future=prior.get("future_inputs_digest")):
-                        found = _index.get((ticker, identity))
-                        if found is not None and _row_is_reusable(found, _dependencies, _proof, _future):
-                            return found
-                        return None
-
-                    reuse.prior = index  # type: ignore[attr-defined]
                 manifest = partitions.build(position, session, _iter_session_rows(
                     sources_by_session[session], settled, future_settled, marker, state_root=state_root,
-                    metrics=metrics, protected_inputs=protected_inputs, reuse=reuse))
+                    metrics=metrics, protected_inputs=protected_inputs))
             partition_seconds[session] = round(clock() - session_started, 3)
             manifests.append(manifest)
         metrics["partition_evaluate_s"] = partition_seconds
@@ -1437,77 +1388,18 @@ def _iter_rows(sources_by_session, settled, future_settled, marker, state_root=N
                                       state_root=state_root, metrics=metrics, protected_inputs=protected_inputs)
 
 
-def _partition_proof(manifest: Mapping[str, Any] | None) -> dict[str, Any] | None:
-    if not isinstance(manifest, Mapping):
-        return None
-    proof = manifest.get("terminal_proof")
-    if isinstance(proof, dict):
-        return proof
-    extension = manifest.get("extension_proof")
-    if isinstance(extension, dict) and isinstance(extension.get("window"), dict):
-        return extension["window"]
-    return None
 
 
-def _row_is_reusable(prior: Mapping[str, Any], dependencies, old_proof: Mapping[str, Any] | None,
-                     future_digest: str | None = None) -> bool:
-    """Row-level ``extension_valid``. A partially mature row is never final.
-
-    A strict-prospective row is reusable only when the prior manifest recorded the same
-    future-input digest. Anything else is evaluated again.
-    """
-    if not isinstance(old_proof, Mapping):
-        return False
-    outcomes = prior.get("forward_outcomes") if isinstance(prior.get("forward_outcomes"), Mapping) else {}
-    session = outcomes.get("as_of_session")
-    if isinstance(session, str) and dependencies.future(session):
-        current = fb._settled_hash(dependencies.future_inputs)
-        if future_digest != current:
-            return False
-    try:
-        through = dependencies.settled.terminal_through(prior)
-    except (KeyError, TypeError, ValueError, AttributeError):
-        return False
-    if through is None:
-        return False
-    current = dependencies.proof(through)
-    if not isinstance(current, dict):
-        return False
-    old_chain = list(old_proof.get("chain") or [])
-    old_prices = old_proof.get("prices") or {}
-    if current.get("chain") != old_chain[:len(current.get("chain") or [])]:
-        return False
-    if any(current.get("prices", {}).get(session) != old_prices.get(session) for session in current.get("chain") or []):
-        return False
-    outcomes = prior.get("forward_outcomes") if isinstance(prior.get("forward_outcomes"), Mapping) else {}
-    record = {"ticker": prior.get("ticker"), "as_of_session": outcomes.get("as_of_session"),
-              "trigger": prior.get("trigger"), "invalidation": prior.get("invalidation")}
-    try:
-        outcome = fb._trigger_invalidation(record, snapshots=dependencies.settled.snapshots, chain=dependencies.settled.chain)
-    except (KeyError, TypeError, ValueError):
-        return False
-    return outcome == prior.get("trigger_invalidation_outcome")
 
 
-def _iter_session_rows(sources, settled, future_settled, marker, state_root=None, metrics=None, protected_inputs=None,
-                       reuse=None) -> Iterator[dict[str, Any]]:
+def _iter_session_rows(sources, settled, future_settled, marker, state_root=None, metrics=None, protected_inputs=None) -> Iterator[dict[str, Any]]:
     streams = [_source_stream(index, source, state_root=state_root, metrics=metrics, protected_inputs=protected_inputs)
                for index, source in enumerate(sources)]
     for ticker, identity, _index, work in heapq.merge(*streams, key=lambda item: (item[0], item[1])):
         evaluator_choice, kwargs = work
-        if reuse is not None:
-            cached = reuse(ticker, identity)
-            if cached is not None:
-                _metric(metrics, "rows_reused_inside_partition")
-                yield cached
-                continue
         evaluator = future_settled if evaluator_choice(marker) else settled
         row = evaluator.evaluate(**kwargs)
         _metric(metrics, "rows_reevaluated")
-        if reuse is not None:
-            prior = reuse.prior.get((ticker, identity)) if hasattr(reuse, "prior") else None
-            if prior is not None and _canon_bytes(prior) != _canon_bytes(row):
-                _metric(metrics, "rows_output_changed")
         yield row
 
 

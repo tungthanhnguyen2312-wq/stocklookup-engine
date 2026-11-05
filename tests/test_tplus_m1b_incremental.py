@@ -1,4 +1,4 @@
-"""M1b levers: verifier split, price fingerprints, minimal projection, row reuse, scrub scope."""
+"""M1b levers: verifier split, price fingerprints, minimal projection, scrub scope."""
 from __future__ import annotations
 
 import json
@@ -186,21 +186,6 @@ def test_projection_keeps_artifact_identity_and_stores_only_the_read_fields(tmp_
     assert "trigger" in record and "invalidation" in record
 
 
-def test_row_reuse_inside_a_rebuilt_partition_keeps_identity(tmp_path, monkeypatch):
-    root, state = tmp_path / "evidence", tmp_path / "state"
-    for index in range(22):
-        _add_modern(root, f"2026-05-{index + 1:02d}", index)
-    output = tmp_path / "out" / "feedback.json"
-    first = _build(root, output, state)
-    assert first["outcome"] == streaming.OUTCOME_BUILT
-    expected = _legacy_artifact(root)["artifact_identity"]
-    assert first["artifact_identity"] == expected
-    monkeypatch.setattr(streaming._Partitions, "manifest", lambda self, position, session: None)
-    second = _build(root, tmp_path / "out" / "rebuilt.json", state)
-    assert second["outcome"] == streaming.OUTCOME_BUILT
-    assert second["artifact_identity"] == expected
-    assert second["metrics"].get("rows_reused_inside_partition", 0) > 0
-    assert second["metrics"].get("rows_reevaluated", 0) > 0
 
 
 def test_scrub_out_of_scope_missing_receipt_and_mismatch(tmp_path):
