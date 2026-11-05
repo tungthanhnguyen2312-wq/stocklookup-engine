@@ -153,8 +153,13 @@ try {
         '--seed-state-only', '--root', $EvidenceRoot, '--state-root', $EvidenceRoot
     )
     $seedJson = $seed.stdout | ConvertFrom-Json
+    # A verifier-digest change rebuilds every sidecar (misses); a re-seed of current state reuses
+    # them (hits). Either way each genuine T0 session must be covered exactly once.
     $sidecar = 0
-    if ($seedJson.metrics -and $null -ne $seedJson.metrics.sidecar_hits) { $sidecar = [int]$seedJson.metrics.sidecar_hits }
+    if ($seedJson.metrics) {
+        if ($null -ne $seedJson.metrics.sidecar_hits) { $sidecar += [int]$seedJson.metrics.sidecar_hits }
+        if ($null -ne $seedJson.metrics.sidecar_misses) { $sidecar += [int]$seedJson.metrics.sidecar_misses }
+    }
     $seedOk = ($seed.exit -eq 33 -and $seedJson.status -eq 'SEEDED' -and [int]$seedJson.t0_count -eq $ExpectedT0 -and [int]$seedJson.legacy_count -eq $ExpectedLegacy -and $sidecar -eq $ExpectedSidecar)
     if (-not $seedOk) {
         [ordered]@{ status = 'SEED_REJECTED'; exit = $seed.exit; stdout = $seed.stdout } | ConvertTo-Json -Compress | Write-Output
