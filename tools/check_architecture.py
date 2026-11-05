@@ -18,7 +18,7 @@ BASELINE = "config/architecture_dependency_baseline.json"
 POLICY = "config/architecture_dependency_policy.json"
 LAYOUT = "config/repository_layout.json"
 MIGRATION_CHECKPOINT = "d2ba70324a5d458091ac54549466a9bec57d6434"
-MIGRATED_BASELINE_SHA256 = '6b3eed9a1236481cf02fec38bd76553ea7ba56d4bd86918d4c37c1695aa19dbf'
+MIGRATED_BASELINE_SHA256 = '2295c370cb6bc84a789913e5938d140eb8cfa3619116f7d188ee48f6d97704fe'
 PRIOR_BASELINE_SHA256 = "749a59996a4d245ea3056289c5d59f443bf2ca60f7b61fe8dc4217f951772b26"
 
 

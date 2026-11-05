@@ -81,6 +81,15 @@ TPLUS_M1B_MANIFEST = "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transi
 TPLUS_M1B_BASE = "dc220164b6a4eb2b6fbec8175e588d6de9ab5553"
 TPLUS_M1B_SCOPE = "EXACT_TPLUS_INCREMENTAL_COST_M1B_ONLY"
 TPLUS_M1B_ARCHIVE = "tests/fixtures/tplus_incremental_cost_v2_m1b_sources/prospective_feedback_streaming.py.txt"
+ARCHITECTURE_BASELINE_SOURCE = "config/architecture_dependency_baseline.json"
+ARCHITECTURE_BASELINE_MANIFEST = "tests/fixtures/architecture_dependency_baseline_source_transition_v1.json"
+ARCHITECTURE_BASELINE_ARCHIVE = "tests/fixtures/architecture_dependency_baseline_v1.json.txt"
+ARCHITECTURE_BASELINE_BASE = "b83fd916b02e245e0c6b10078060809bb31b971d"
+ARCHITECTURE_BASELINE_SCOPE = "EXACT_ONE_FILE_M1B_GRANDFATHERED_EDGES_ONLY"
+_ARCHITECTURE_BASELINE_FIELDS = frozenset({
+    "contract_version", "base_commit", "source_path", "archive",
+    "prior_sha256_lf", "active_sha256_lf", "scope", "release_authority",
+})
 RESIDENT_MANIFEST = "tests/fixtures/owner_daily_resident_iid_source_transition_v1.json"
 RESIDENT_SOURCES = ("canonical_daily_operation.py", "stocklookup_core/decision/daily_integrated_decision_brief.py")
 RESIDENT_PRIOR_PINS = ("16172dae8073ebef819022b3bad71ca216c22e6c0ddbaa3ea31535fe5557cc7c",
@@ -689,9 +698,41 @@ def _thesis_production_prior_bytes(root: Path, relative: str) -> bytes:
     return prior
 
 
+def _architecture_baseline_prior_bytes(root: Path, active: bytes) -> bytes:
+    """Peel the M1b grandfathered edges back to the frozen baseline pin.
+
+    A missing manifest keeps older checkouts valid. The archive is the baseline
+    at ARCHITECTURE_BASELINE_BASE. Historical readers keep that pin; the live
+    file is the requalified ratchet surface.
+    """
+    manifest = root / ARCHITECTURE_BASELINE_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if set(spec) != _ARCHITECTURE_BASELINE_FIELDS:
+        raise ValueError("ARCHITECTURE_BASELINE_SOURCE_TRANSITION_SCOPE_INVALID")
+    if (spec.get("contract_version") != "architecture_dependency_baseline_source_transition/v1"
+            or spec.get("base_commit") != ARCHITECTURE_BASELINE_BASE
+            or spec.get("source_path") != ARCHITECTURE_BASELINE_SOURCE
+            or spec.get("archive") != ARCHITECTURE_BASELINE_ARCHIVE
+            or spec.get("scope") != ARCHITECTURE_BASELINE_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"):
+        raise ValueError("ARCHITECTURE_BASELINE_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / ARCHITECTURE_BASELINE_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
+    prior_sha = hashlib.sha256(prior).hexdigest()
+    active_sha = hashlib.sha256(active).hexdigest()
+    if (spec.get("prior_sha256_lf") != prior_sha or prior_sha != pins.get(ARCHITECTURE_BASELINE_SOURCE)
+            or spec.get("active_sha256_lf") != active_sha or active_sha == prior_sha):
+        raise ValueError("ARCHITECTURE_BASELINE_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    if relative == ARCHITECTURE_BASELINE_SOURCE:
+        content = _architecture_baseline_prior_bytes(root, content)
     content = _capacity_prior_bytes(root, relative, content)
     content = _storage_prior_bytes(root, relative, content)
     if relative in VALUATION_SOURCES:
