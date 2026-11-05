@@ -54,6 +54,10 @@ def test_report_counts_physical_bytes_duplicates_and_runway():
     assert report["physical_duplicates"]["hardlink_file_rows"] == 2
     assert report["runway"]["warning"] == "CRITICAL"
     assert report["per_session"][1]["growth_bytes"] == 0
+    assert report["artifact_physical"]["iid"]["physical_bytes"] == 100
+    assert report["artifact_physical"]["iid"]["logical_bytes"] == 200
+    assert report["artifact_physical"]["valuation"]["physical_bytes"] == 100
+    assert report["artifact_physical"]["full_universe"]["physical_bytes"] == 0
     shifted = ledger.build_report(rows, volume_total=1000, volume_used=210, volume_free=800,
                                   hash_budget=10, hashed_bytes=0)
     assert shifted["volume_agreement_within_2_percent"] is False
@@ -87,6 +91,40 @@ def test_scan_resumes_without_double_counting_and_classifies(tmp_path):
     hashed = ledger.hash_pending(list(rows.values()), budget=4, guard=lambda: None)
     assert hashed == 4
     assert sum(1 for row in rows.values() if row.get("sha256")) == 1
+
+
+def test_session_dates_ignore_hash_fragments_and_keep_dashed_days(tmp_path):
+    retained = tmp_path / "retained"
+    day = retained / "operations-review" / "daily-research-session-operations-v1" / "2026-11-04"
+    day.mkdir(parents=True)
+    hashed = day / "ab20261105cd20000198ef.json"
+    hashed.write_bytes(b"x")
+    family, session = ledger.family_and_session(hashed, retained)
+    assert session == "20261104"
+    assert family == "operations-review"
+    compact = retained / "market-wide-current-valuation-v1-20261103" / "body.bin"
+    compact.parent.mkdir()
+    compact.write_bytes(b"y")
+    family, session = ledger.family_and_session(compact, retained)
+    assert session == "20261103"
+    assert family == "market-wide-current-valuation-v1"
+    assert ledger.calendar_day("20000198") is None
+    report = ledger.build_report(
+        [{"path": "h", "size": 5, "dev": 1, "ino": 9, "nlink": 1, "group": "other",
+          "family": None, "session": "20000198", "sha256": None},
+         {"path": "d", "size": 7, "dev": 1, "ino": 10, "nlink": 1, "group": "retained_evidence",
+          "family": "daily", "session": "20261104", "sha256": None}],
+        volume_total=100, volume_used=12, volume_free=80, hash_budget=0, hashed_bytes=0)
+    assert [row["session"] for row in report["per_session"]] == ["20261104"]
+    horizon = ledger.build_report(
+        [{"path": "future", "size": 721047, "dev": 1, "ino": 1, "nlink": 1, "group": "other",
+          "family": None, "session": "20270916", "sha256": None},
+         {"path": "today", "size": 50, "dev": 1, "ino": 2, "nlink": 1, "group": "retained_evidence",
+          "family": "daily", "session": "20261104", "sha256": None}],
+        volume_total=1000, volume_used=50, volume_free=800, hash_budget=0, hashed_bytes=0,
+        as_of="20261105")
+    assert horizon["runway"]["sample_sessions"] == ["20261104"]
+    assert horizon["runway"]["bytes_per_session"] == 50
 
 
 def test_daily_guard_blocks_a_process_a_lock_and_an_unproven_window(tmp_path):
