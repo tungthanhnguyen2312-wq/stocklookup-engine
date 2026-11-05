@@ -1133,6 +1133,7 @@
     "tools/materialize_dnse_trades_canonical_shadow.py": "2423608ebbc170c97c4fd59b88bcdd221c7fad3b2b8ef68d67097fbe324af160",
     "tools/materialize_hnx_enumerable_universe_artifact.py": "44fee2aed9cda2554291980406917ceb095b5866063ee377d3fe63458871e272",
     "tools/operate_stocklookup.py": "ac3ec2712f0f4326a453ddbc4bd5407c86ab5f11bf19fa4c29cf3823ef4abfa7",
+    "tools/ops/Invoke-M1bActivation.ps1": "082129fc53564410e1c906b8e9faf4540ba51b71d571565d1250a7fbd195f9f5",
     "tools/owner_daily_host.py": "b18773c9f5424d6832a04a68e8318d72dfe0fb52cf021a23e0a15488c5fa6c33",
     "tools/prepare_current_foreign_flow_retention.py": "7912c4d360cc077c13ae33b43bb96ca45c089a2ae7b5358b16945545a36b1d1c",
     "tools/produce_and_validate_daily_session_shadow_recommendation_v1.py": "cc9d77647b62302d5a81f811d6cd4a1792814e7eefee9c678adbda67bbd70870",
