@@ -118,8 +118,8 @@
   "non_python_callers": {
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
-      "reason": "Focused selection adds the T+ incremental-cost, M1b and storage ledger tests; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "8653ff0a6864ccd73a1fb768513ab22819ff6c927b64c57461e441ae1dd5a8a3",
+      "reason": "Focused selection includes the offline Vault boundary-emitter regression suite; launcher commands, CI environments and required checks unchanged.",
+      "sha256": "0cfd065d153b2b27c107a7d6d72ac945f6ef66efcd7620d7fba12fe56c1aa30e",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",
