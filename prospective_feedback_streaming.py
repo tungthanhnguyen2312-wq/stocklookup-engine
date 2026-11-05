@@ -722,7 +722,13 @@ class _Partitions:
         self.dependencies, self.metrics, self.selected = dependencies, metrics, {}
         self.directory.mkdir(parents=True, exist_ok=True)
 
-    def prune_other_runs(self):
+    def prune_other_runs(self, *, stale_temp_seconds=6 * 3600):
+        # Partition spools live below source-key directories, not beside the final output.
+        # Reap only the same dead/stale writer files the output cleanup already recognizes.
+        for directory in self.directory.iterdir():
+            if directory.is_dir():
+                _refuse_reparse(directory)
+                cleanup_incomplete(directory, older_than_seconds=stale_temp_seconds)
         # Preserve recent V1 progress, without treating its corpus identity as a V2 proof.
         legacy = sorted((p for p in self.base.iterdir() if p.is_dir() and len(p.name) == 64),
                         key=lambda p: p.stat().st_mtime_ns, reverse=True)
@@ -1300,7 +1306,7 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     dependencies = _PartitionDependencies(sources_by_session, settled, marker, input_manifest["future_chain"],
                                           code, input_manifest["contracts"])
     partitions = _Partitions(state_root, dependencies, metrics)
-    partitions.prune_other_runs()
+    partitions.prune_other_runs(stale_temp_seconds=stale_temp_seconds)
     _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
                    max_entries=SETTLED_STORE_MAX_ENTRIES)
     protected_inputs: list[Path] = []
