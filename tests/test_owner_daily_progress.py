@@ -471,7 +471,8 @@ def test_post_close_registers_only_the_current_exact_session_output_root(tmp_pat
 
 
 def test_compact_heartbeat_retains_resource_sidecar_and_surfaces_threshold(tmp_path):
-    clock = FakeClock(); sampler = FakeSampler(disk=20 * 1024**3)
+    quiet = progress.RUNWAY_FLOOR_BYTES + 12 * progress.PLANNING_SESSION_BYTES
+    clock = FakeClock(); sampler = FakeSampler(disk=quiet)
     emitter, sidecar, lines = _emitter(tmp_path, clock, sampler)
     emitter.emit(phase_index=2, component="Prospective decision feedback", status="BEGIN")
     clock.value = 30

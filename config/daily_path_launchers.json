@@ -118,8 +118,8 @@
   "non_python_callers": {
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
-      "reason": "Focused selection adds the T+ incremental-cost and M1b tests; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "fc9ee89c29349b9c89457946bf4066ef9b38f2ed8830d8b313ed496bf0832c68",
+      "reason": "Focused selection adds the T+ incremental-cost, M1b and storage ledger tests; launcher commands, CI environments and required checks unchanged.",
+      "sha256": "8653ff0a6864ccd73a1fb768513ab22819ff6c927b64c57461e441ae1dd5a8a3",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",

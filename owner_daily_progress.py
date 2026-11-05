@@ -23,6 +23,10 @@ import uuid
 
 CONTRACT_VERSION = "owner_daily_progress/v1"
 AUTHORITY_EFFECT = "NONE_OPERATIONAL_OBSERVABILITY_ONLY"
+# Observability only. These constants do not change admission or preflight.
+RUNWAY_FLOOR_BYTES = 160 * 1024 ** 3
+# 14.6 GiB retained-evidence write from the 2026-11-03 runway note.
+PLANNING_SESSION_BYTES = 146 * (1024 ** 3) // 10
 STATUS_SCOPE = "TELEMETRY_SIDECAR_HEALTH_ONLY_NOT_RUN_OUTCOME"
 PROGRESS_PATH_ENV = "STOCK_LOOKUP_OWNER_DAILY_PROGRESS_PATH"
 RUN_ID_ENV = "STOCK_LOOKUP_OWNER_DAILY_RUN_ID"
@@ -320,11 +324,40 @@ def eta(*, completed: int | None, total: int | None, elapsed_seconds: float | No
     return remaining / rate, "COMPLETE" if remaining == 0 else "KNOWN", rate
 
 
+def runway_sessions(disk_free_bytes: int | None, *, session_bytes: int = PLANNING_SESSION_BYTES,
+                    floor_bytes: int = RUNWAY_FLOOR_BYTES) -> float | None:
+    """Sessions of headroom above the floor. Negative means the floor is already breached."""
+    if not isinstance(disk_free_bytes, int) or session_bytes <= 0:
+        return None
+    return (disk_free_bytes - floor_bytes) / session_bytes
+
+
+def runway_level(disk_free_bytes: int | None) -> str | None:
+    """WARNING under 10 sessions, CRITICAL under 5. Never an admission decision."""
+    sessions = runway_sessions(disk_free_bytes)
+    if sessions is None:
+        return None
+    if sessions < 5:
+        return "CRITICAL"
+    if sessions < 10:
+        return "WARNING"
+    return None
+
+
+def _volume_anchor(path: Path) -> Path:
+    anchor = Path(path.resolve().anchor)
+    return anchor if str(anchor) else path
+
+
 @dataclass
 class ResourceSampler:
-    """Dependency-free, bounded-on-demand resources for the emitting process only."""
+    """Dependency-free, bounded-on-demand resources for the emitting process only.
 
-    disk_path: Path = Path("C:\\")
+    disk_path stays unset until the caller names the Daily output. An unset probe
+    does not fall back to C:\\.
+    """
+
+    disk_path: Path | None = None
     child_pid: int | None = None
     run_output_paths: tuple[Path, ...] = ()
     size_outputs_at_boundaries: bool = True
@@ -336,16 +369,20 @@ class ResourceSampler:
     def set_run_output_paths(self, paths: list[str | Path] | tuple[str | Path, ...]) -> None:
         self.run_output_paths = _deduplicated_paths(paths)
         self.run_output_bytes = None
+        if self.disk_path is None and self.run_output_paths:
+            self.disk_path = _volume_anchor(self.run_output_paths[0])
 
     def sample_output_size(self) -> None:
         """Explicit diagnostic/phase-boundary sizing, never periodic sampling."""
         self.run_output_bytes = _path_size(self.run_output_paths)
 
     def sample(self) -> dict[str, int | None]:
-        try:
-            disk_free = int(shutil.disk_usage(self.disk_path).free)
-        except Exception:
-            disk_free = None
+        disk_free = None
+        if self.disk_path is not None:
+            try:
+                disk_free = int(shutil.disk_usage(self.disk_path).free)
+            except Exception:
+                disk_free = None
         rss, peak = _memory_for_pid(os.getpid())
         return {
             "rss_bytes": rss,
@@ -414,6 +451,7 @@ class OwnerDailyProgress:
         self._human_buckets: dict[tuple[int, str, str, str], int] = {}
         self._human_counter_history: dict[tuple[int, str, str, str], tuple[Any, Any]] = {}
         self._disk_warning = False
+        self._runway_level: str | None = None
         self.active_phase = 1
         self._checkpoint = {}
         self._phase2_started = None
@@ -620,7 +658,8 @@ class OwnerDailyProgress:
                     task_label=label, phase_elapsed_seconds=duration,
                     owner_eta_seconds=remaining if remaining else None,
                     request_detail=request_detail, work_detail=work_detail,
-                    disk_warning=isinstance(event.get("disk_free_bytes"), int) and event["disk_free_bytes"] < 10 * 1024**3)
+                    disk_warning=isinstance(event.get("disk_free_bytes"), int) and event["disk_free_bytes"] < 10 * 1024**3,
+                    runway_level=runway_level(event.get("disk_free_bytes")))
 
     def _human_line(self, event: Mapping[str, Any]) -> str:
         parts = [f"[{event['phase_index']}/9] {event['phase_label']}", event["phase_state"]]
@@ -636,6 +675,10 @@ class OwnerDailyProgress:
                 parts.append(event[field])
         if event.get("disk_warning"):
             parts.append("CẢNH BÁO: dung lượng đĩa thấp")
+        if event.get("runway_level") == "CRITICAL":
+            parts.append("CẢNH BÁO: còn dưới 5 phiên")
+        elif event.get("runway_level") == "WARNING":
+            parts.append("CẢNH BÁO: còn dưới 10 phiên")
         return " | ".join(parts)
 
     def _should_write_human(self, event: Mapping[str, Any], now: float) -> bool:
@@ -643,7 +686,10 @@ class OwnerDailyProgress:
         warning = isinstance(disk, int) and disk < 10 * 1024**3
         crossed_warning = warning and not self._disk_warning
         self._disk_warning = warning
-        if crossed_warning:
+        level = runway_level(disk if isinstance(disk, int) else None)
+        crossed_runway = level is not None and level != self._runway_level
+        self._runway_level = level
+        if crossed_warning or crossed_runway:
             return True
         if self._owner_phase(event):
             return event.get("status") in {"BEGIN", "END", "FAILED", "WARN", "FAIL"}
