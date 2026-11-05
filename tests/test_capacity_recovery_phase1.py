@@ -493,6 +493,27 @@ def test_adapter_refuses_bad_completion_and_optional_missing_vault(vault_fixture
     assert not list(vault.glob("snapshots/*/manifest.json"))
 
 
+@pytest.mark.parametrize("relative", ["code/config/live.json", "code/CONFIG/live.json",
+                                      "code/data/live.json", "code/dashboard-runtime/live.json",
+                                      "code/journal.JSON", "code/_STREAM/snapshot.json",
+                                      "code/_ARTIFACT_SUMMARY_CACHE/file.json"])
+def test_adapter_refuses_mutable_families_below_common_workspace_root(vault_fixture, relative):
+    source, vault, expected, observer = vault_fixture
+    path, _ = boundary_fixture(vault_fixture, qualified=True)
+    doc = json.loads(path.read_bytes())
+    mutable = source / relative
+    mutable.parent.mkdir(parents=True)
+    mutable.write_bytes(b"mutable state with a genuine native hash")
+    doc["files"].append(dict(relative_path=relative, size=mutable.stat().st_size,
+                             sha256=v.sha(mutable), family="IMMUTABLE_SESSION", state="COMPLETE",
+                             immutable=True, lock_dependent=False))
+    write(path, doc)
+    with pytest.raises(v.Refused, match="mutable source refused"):
+        adapter.snapshot_completed(source, vault, path, v.sha(path), expected,
+                                   opt_in=True, observer=observer)
+    assert not list(vault.glob("snapshots/*/manifest.json"))
+
+
 def test_adapter_interrupted_copy_and_resume(vault_fixture):
     source, vault, expected, observer = vault_fixture
     pair = boundary_fixture(vault_fixture, qualified=True)
