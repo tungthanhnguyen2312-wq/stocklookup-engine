@@ -36,8 +36,18 @@ function Get-LfSha256([string]$path) {
 }
 
 function Get-Git([string]$repo, [string[]]$gitArgs) {
-    $output = & git -C $repo @gitArgs 2>&1
-    if ($LASTEXITCODE -ne 0) { throw ("git failed: " + ($gitArgs -join ' ') + " " + ($output | Out-String)) }
+    # Windows PowerShell 5.1 turns native stderr (git progress such as "From https://...") into a
+    # terminating NativeCommandError under ErrorActionPreference=Stop. Judge git by its exit code.
+    $prior = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & git -C $repo @gitArgs 2>$null
+        $code = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $prior
+    }
+    if ($code -ne 0) { throw ("git failed: " + ($gitArgs -join ' ') + " exit " + $code) }
     return (($output | Out-String).Trim())
 }
 
