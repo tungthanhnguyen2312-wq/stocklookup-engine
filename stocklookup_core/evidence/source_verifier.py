@@ -9,7 +9,6 @@ hashes the file.
 from __future__ import annotations
 
 import hashlib
-from importlib import import_module
 from pathlib import Path
 
 _DIGEST: str | None = None
@@ -35,14 +34,18 @@ def reset_verification_code_digest() -> None:
     _DIGEST = None
 
 
+def _unit_path(name: str) -> Path:
+    """File for a verifier unit. Reading the path does not import the module."""
+    return Path(__file__).resolve().parents[2].joinpath(*name.split(".")).with_suffix(".py")
+
+
 def verification_code_digest() -> str:
     """SHA-256 of each verifier unit, normalized to LF. The streaming evaluator is not included."""
     global _DIGEST
     if _DIGEST is None:
         digest = hashlib.sha256()
         for name in _UNITS:
-            module = import_module(name)
-            payload = Path(module.__file__).read_bytes().replace(b"\r\n", b"\n")
+            payload = _unit_path(name).read_bytes().replace(b"\r\n", b"\n")
             digest.update(hashlib.sha256(payload).digest())
         _DIGEST = digest.hexdigest()
     return _DIGEST

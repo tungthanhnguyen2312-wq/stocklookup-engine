@@ -26,6 +26,7 @@ from importlib import import_module
 import json
 import os
 import shutil
+import sys
 import tempfile
 import time
 from collections import Counter, defaultdict
@@ -48,6 +49,7 @@ scan_legacy_artifact = _receipts.scan_legacy_artifact
 load_snapshot_handle = _receipts.load_snapshot_handle
 _legacy_receipt_path = _receipts._legacy_receipt_path
 _receipt_path = _receipts._receipt_path
+_receipts.bind_runtime(retention, sys.modules[__name__])
 _price_receipt_path = _receipts._price_receipt_path
 _fingerprint_index_path = _receipts._fingerprint_index_path
 _trusted_anchored_receipt = _receipts._trusted_anchored_receipt

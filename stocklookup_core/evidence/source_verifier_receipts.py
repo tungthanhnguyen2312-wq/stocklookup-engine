@@ -16,8 +16,18 @@ from pathlib import Path
 from typing import Any, Mapping
 
 import bounded_artifact_stream as bas
-import prospective_decision_retention as retention
 from stocklookup_core.evidence.source_file_fingerprint import path_has_reparse_point
+
+# The streaming module binds these after it imports this file. This module does not
+# import back into the Daily cycle; a test patch on the streaming module stays visible.
+_retention = None
+_streaming = None
+
+
+def bind_runtime(retention_module, streaming_module) -> None:
+    global _retention, _streaming
+    _retention = retention_module
+    _streaming = streaming_module
 
 STREAM_CONTRACT_VERSION = "prospective_feedback_stream/v1"
 STATE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_stream")
@@ -69,19 +79,16 @@ def _sha256_bytes(data: bytes) -> str:
 
 def _verifier_digest() -> str:
     """Honor a test patch on the streaming alias and on the verifier module."""
-    import prospective_feedback_streaming as streaming
-    return streaming._verification_code_digest()
+    return _streaming._verification_code_digest()
 
 
 def _current_fingerprint(path: Path):
     """Look up the helper on the streaming module so a test patch is visible."""
-    import prospective_feedback_streaming as streaming
-    return streaming.source_file_fingerprint(path)
+    return _streaming.source_file_fingerprint(path)
 
 
 def _raise_stream(message: str) -> None:
-    import prospective_feedback_streaming as streaming
-    raise streaming.FeedbackStreamError(message)
+    raise _streaming.FeedbackStreamError(message)
 
 
 def _now_utc() -> str:
@@ -243,8 +250,7 @@ def _bind_quietly(state_root: Path, kind: str, fingerprint: Mapping[str, Any] | 
     except OSError:
         pass
     except Exception as exc:
-        import prospective_feedback_streaming as streaming
-        if not isinstance(exc, streaming.FeedbackStreamError):
+        if not isinstance(exc, _streaming.FeedbackStreamError):
             raise
 
 
@@ -333,7 +339,7 @@ def scan_legacy_artifact(path: Path, metrics: dict[str, Any] | None = None, stat
 
 
 def _verify_snapshot_stream(path: Path) -> dict[str, Any]:
-    """Cryptographically equivalent to ``retention.validate_snapshot`` without materialising the snapshot."""
+    """Cryptographically equivalent to ``_retention.validate_snapshot`` without materialising the snapshot."""
     state = {"valid": True, "reason": None}
     t0_candidates: dict[str, Any] = {}
 
@@ -344,7 +350,7 @@ def _verify_snapshot_stream(path: Path) -> dict[str, Any]:
             state.update(valid=False, reason="RECORD_TICKER_MISMATCH")
             return
         body = {k: v for k, v in row.items() if k != "prospective_snapshot_record_identity"}
-        if row.get("prospective_snapshot_record_identity") != retention.RECORD_PREFIX + _sha256_bytes(_canon_bytes(body)):
+        if row.get("prospective_snapshot_record_identity") != _retention.RECORD_PREFIX + _sha256_bytes(_canon_bytes(body)):
             state.update(valid=False, reason="RECORD_IDENTITY_MISMATCH")
             return
         observation = row.get("t0_close_observation")
@@ -352,9 +358,9 @@ def _verify_snapshot_stream(path: Path) -> dict[str, Any]:
             t0_candidates[ticker] = dict(observation)
 
     metadata, digest, count = bas.stream_artifact(path, excluded={"snapshot_identity"}, on_record=on_record)
-    if metadata.get("snapshot_identity") != retention.SNAPSHOT_PREFIX + digest:
+    if metadata.get("snapshot_identity") != _retention.SNAPSHOT_PREFIX + digest:
         state.update(valid=False, reason="SNAPSHOT_IDENTITY_MISMATCH")
-    if metadata.get("contract_version") != retention.CONTRACT_VERSION:
+    if metadata.get("contract_version") != _retention.CONTRACT_VERSION:
         state.update(valid=False, reason="SNAPSHOT_CONTRACT_MISMATCH")
     session = metadata.get("session")
     t0_prices = {t: row for t, row in t0_candidates.items() if isinstance(session, str) and row.get("session") == session}
@@ -400,12 +406,12 @@ def load_snapshot_handle(path: Path, state_root: Path, metrics: dict[str, Any] |
         except ValueError:
             if size > _UNSORTED_FALLBACK_MAX_BYTES:
                 return None
-            snapshot = retention._load(path)
+            snapshot = _retention._load(path)
             if not snapshot:
                 return None
             records = snapshot.get("records") or {}
             proof = {"header": {k: v for k, v in snapshot.items() if k != "records"}, "record_count": len(records),
-                     "valid": retention.validate_snapshot(snapshot), "reason": None,
+                     "valid": _retention.validate_snapshot(snapshot), "reason": None,
                      "t0_prices": {t: dict(r["t0_close_observation"]) for t, r in records.items()
                                    if isinstance(r, Mapping) and isinstance(r.get("t0_close_observation"), Mapping)
                                    and r["t0_close_observation"].get("session") == snapshot.get("session")}}
