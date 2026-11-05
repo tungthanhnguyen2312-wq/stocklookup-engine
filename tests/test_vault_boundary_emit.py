@@ -151,6 +151,29 @@ def test_tampered_frozen_artifact_content_hash_refused(completed):
         run(completed)
 
 
+@pytest.mark.parametrize("status,identity,admitted", [("UNAVAILABLE", None, True),
+                                                     ("READY", None, False),
+                                                     ("UNAVAILABLE", "feedback:claimed", False)])
+def test_missing_feedback_requires_original_unavailable_proof(completed, status, identity, admitted):
+    handoff_path = completed["retained"]/f"operations-review/canonical-post-close-v1/{SESSION}/session_handoff_bundle.json"
+    handoff = json.loads(handoff_path.read_bytes())
+    missing = str(completed["retained"]/f"operations-review/feedback/{SESSION}/missing.json")
+    handoff.update(prospective_decision_feedback_identity=identity,
+                   deeper_bundles=dict(prospective_decision_feedback=missing))
+    write(handoff_path, handoff)
+    write(handoff_path.parent/"opportunity_research_bundle.json", dict(session=SESSION,
+          prospective_decision_feedback=dict(path=missing, identity=identity,
+                                            status=status, reason_code="FEEDBACK_COMPUTATION_ERROR")))
+    if admitted:
+        result = run(completed)
+        boundary = json.loads(Path(result["boundary"]).read_bytes())
+        assert boundary["unavailable_optional_refs"][0]["status"] == "UNAVAILABLE"
+        assert not any(x["relative_path"].endswith("missing.json") for x in boundary["files"])
+    else:
+        with pytest.raises(v.Refused, match="closure file missing"):
+            run(completed)
+
+
 def test_mutable_closure_member_refused(completed):
     write(completed["operation"].parent/"journal.json", {"mutable": True})
     with pytest.raises(v.Refused, match="mutable/ineligible"):

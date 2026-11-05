@@ -84,6 +84,11 @@ The default byte ceiling remains 64 MiB; real retained sessions need an explicit
    tier-1 handoff's direct deeper-bundle/recommended-input paths. Frozen input content
    SHA identities are recomputed with the existing bounded canonical JSON stream;
    both identity and exact registry path must match. Include adjacent tier indexes.
+   A missing downstream feedback locator is omitted only when the original tier-1
+   identity is explicitly null and the included same-session tier-2 bundle binds the
+   exact path with null identity, UNAVAILABLE status and a reason. Retain that negative
+   proof in `unavailable_optional_refs`, pinned to the native tier-2 SHA. A missing
+   claimed/READY observation or any other missing dependency still refuses.
 5. Require retained original T0. Include its whole identity directory, snapshot,
    seal index and write receipt. Its operation binding and native snapshot SHA must
    match. The existing native seal-index verifier must admit the original inode and

@@ -232,10 +232,25 @@ def emit(source: Path, repo: Path, retained: Path, session: str, out: Path, *,
     shadow = producer.get("daily_session_shadow_recommendation") or {}
     if shadow.get("path"):
         add(reference(shadow["path"]))
-    # Explicit retained handoff dependencies, including dated IID and feedback.
-    for value in (handoff.get("deeper_bundles") or {}).values():
+    # A locator for an explicitly UNAVAILABLE downstream observation is not a
+    # completed input. Preserve that original negative proof, never fabricate it.
+    unavailable = []
+    tier2_path = handoff_path.parent / "opportunity_research_bundle.json"
+    tier2 = json.loads(tier2_path.read_bytes())
+    for key, value in (handoff.get("deeper_bundles") or {}).items():
         if value:
-            add(reference(value))
+            path = reference(value)
+            feedback = tier2.get("prospective_decision_feedback") or {}
+            if (key == "prospective_decision_feedback" and not path.exists()
+                    and "prospective_decision_feedback_identity" in handoff
+                    and handoff["prospective_decision_feedback_identity"] is None
+                    and tier2.get("session") == session and feedback.get("status") == "UNAVAILABLE"
+                    and feedback.get("identity") is None and bool(feedback.get("reason_code"))
+                    and reference(feedback.get("path")) == path):
+                unavailable.append(dict(relative_path=path.relative_to(source).as_posix(),
+                                        status="UNAVAILABLE", reason_code=feedback["reason_code"]))
+            else:
+                add(path)
     for value in (handoff.get("recommended_ai_inputs") or {}).values():
         if value:
             add(reference(value))
@@ -278,6 +293,10 @@ def emit(source: Path, repo: Path, retained: Path, session: str, out: Path, *,
                             sha256=hashes[index_path.relative_to(source).as_posix()])],
                         committed_registry=dict(commit=commit, git_blob_sha256=v.digest(raw)),
                         closure_contract="vault_session_closure/v1")
+        if unavailable:
+            evidence_relative = tier2_path.relative_to(source).as_posix()
+            boundary["unavailable_optional_refs"] = [dict(x, evidence_ref=dict(
+                relative_path=evidence_relative, sha256=hashes[evidence_relative])) for x in unavailable]
         candidate = out / "boundary.candidate.json"
         # Qualification failure never publishes a COMPLETE boundary.
         out.mkdir(parents=True, exist_ok=True)
