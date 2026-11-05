@@ -1074,7 +1074,7 @@
     "tools/check_architecture.py": "5df6af9e9c1e854a0665b8ee378ddc67e82979228d81f0b3e45266536b9139ad",
     "tools/check_daily_launchers.py": "4623a3a79e1d9c094876c85524c7408376fa57e19fc3214626f92fd694a412d5",
     "tools/check_eodhd_access.py": "c96114cfc713a909e3567da84643ae5bb74d6ccaaa20c14daaf24a711c2d14c2",
-    "tools/check_owner_daily_host_preflight.py": "550212345630cec0aa900e205f72461e208587183cdc407a5fad746c4acd548a",
+    "tools/check_owner_daily_host_preflight.py": "40faec767650601f0b1a420cc1845e54fddef82f57fd30a8022ce68e465d7552",
     "tools/check_tactical_reversal_monday_readiness.py": "109c73f64937c9e49d521abf7099d4a1384f5ed711f16df4d1577db848b5d2a4",
     "tools/collect_dnse_prospective_pit_shadow.py": "6c28199e19de272ed9aba6b81c7263aff0df36dc36ffcc0ff689e31963170137",
     "tools/collect_market_evidence.py": "49c99c17daa7cead6ff328b97c66442d7ba61956905f5d32e875a03ba8dd2d74",
@@ -1509,6 +1509,34 @@
     "physical_green_bytes": 9932111872,
     "commit_green_bytes": 11005853696
   },
+  "live_daily_requalifications": [
+    {
+      "session": "2026-11-03",
+      "status": "CANONICAL_DAILY_BUILT_IID_UNDER_GUARD",
+      "run_log": "run-logs/stock_lookup_daily_20261103_160730.result.json",
+      "run_id": "9926bead482841a688bbcbd578c7b455",
+      "run_head_sha": "98d95cc0bcc2694db064b869d282812edcad2bd0",
+      "run_outcome": "PASS",
+      "iid_path": "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json",
+      "iid_bytes": 2394221971,
+      "iid_raw_sha256": "8cafb3128b86640760327def3c1e3a7933bc380153fe803796d2fdf658083362",
+      "peak_observed_single_process_rss_bytes": 5467045888,
+      "peak_stage": "Canonical Daily / canonical_checkpoints"
+    },
+    {
+      "session": "2026-11-04",
+      "status": "CANONICAL_DAILY_BUILT_IID_UNDER_GUARD",
+      "run_log": "run-logs/stock_lookup_daily_20261104_160647.result.json",
+      "run_id": "cd2726b3b0eb4f4a9ba55e6b992a5031",
+      "run_head_sha": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+      "run_outcome": "CANONICAL_DAILY_SEALED_THEN_GIT_PUSH_HTTP_500; completed by resume run stock_lookup_daily_20261104_codex_final PASS",
+      "iid_path": "operations-review/integrated-investment-decision-product-v1-20261104/integrated_investment_decision_product_artifact.json",
+      "iid_bytes": 2395425950,
+      "iid_raw_sha256": "fc073f46c4e48a98c7e9222b00a7f9e83de1c7d97c05049054d19183c4d5adb1",
+      "peak_observed_single_process_rss_bytes": 5473955840,
+      "peak_stage": "Canonical Daily / canonical_checkpoints"
+    }
+  ],
   "publication_recovery_corrective": {
     "base_commit": "d999d847ee3730931ea14909053950e4ac1cf5b6",
     "scope": "EXACT_COMPLETED_SESSION_PENDING_COMMIT_RECOVERY_ONLY",

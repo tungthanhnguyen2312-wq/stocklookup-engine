@@ -338,3 +338,62 @@ def test_bounded_ready_requires_strict_runner_and_propagates_failure(tmp_path, m
     monkeypatch.setattr(guard, "run_capacity_guarded", refused)
     with pytest.raises(owner.OwnerDailyError, match="OWNER_DAILY_CAPACITY_GUARD"):
         owner._run_daily(tmp_path, tmp_path)
+
+
+def _live_entry(**overrides):
+    entry = {"status": preflight.LIVE_REQUALIFICATION_STATUS, "iid_bytes": 2395425950,
+             "iid_raw_sha256": "fc073f46c4e48a98c7e9222b00a7f9e83de1c7d97c05049054d19183c4d5adb1",
+             "peak_observed_single_process_rss_bytes": 5473955840}
+    entry.update(overrides)
+    return entry
+
+
+def test_live_requalification_extends_bound_only_by_measured_margin_and_cap():
+    assert preflight.live_requalified_iid_bytes(None) == preflight.QUALIFIED_IID_BYTES
+    assert preflight.live_requalified_iid_bytes([_live_entry()]) == preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES
+    tight = _live_entry(peak_observed_single_process_rss_bytes=preflight.MEASURED_MAX_RSS_BYTES - 505)
+    assert preflight.live_requalified_iid_bytes([tight]) == 2395425950 + 100
+    for bad in (_live_entry(status="OFFLINE"), _live_entry(peak_observed_single_process_rss_bytes=preflight.MEASURED_MAX_RSS_BYTES + 1),
+                _live_entry(iid_bytes=True), _live_entry(iid_bytes="2395425950"), _live_entry(iid_raw_sha256=None),
+                _live_entry(peak_observed_single_process_rss_bytes=0), "entry"):
+        assert preflight.live_requalified_iid_bytes([bad]) == preflight.QUALIFIED_IID_BYTES
+    assert preflight.live_requalified_iid_bytes({"a": _live_entry()}) == preflight.QUALIFIED_IID_BYTES
+
+
+def test_november5_owner_refusal_is_ready_with_live_requalified_receipt():
+    observation = qualified_observation()
+    # 2026-11-05 21:22 Owner run after reboot: the 11-04 IID is 657,858 bytes above the offline bound.
+    observation["retained"]["iid"]["file_bytes"] = 2395425950
+    observation.update(available_physical_bytes=10303209472, available_commit_bytes=20162985984)
+    legacy = preflight.evaluate(observation)
+    assert legacy["classification"] == "AMBER"
+    assert legacy["dimensions"]["physical"]["capacity_basis"] == "LEGACY_IID_MODEL"
+    observation["capacity_qualification"]["iid_max_bytes"] = preflight.capacity_qualification(preflight.ROOT)["iid_max_bytes"]
+    result = preflight.evaluate(observation)
+    assert result["classification"] == "READY"
+    assert result["runtime_capacity_guard_required"] is True
+    assert result["dimensions"]["physical"]["green_min_bytes"] == preflight.QUALIFIED_PHYSICAL_BYTES
+    assert result["dimensions"]["commit"]["green_min_bytes"] == preflight.QUALIFIED_COMMIT_BYTES
+    assert result["capacity_admission"]["qualified_iid_max_bytes"] == preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES
+    observation["available_physical_bytes"] = preflight.QUALIFIED_PHYSICAL_BYTES - 1
+    assert preflight.evaluate(observation)["classification"] == "AMBER"
+
+
+def test_forged_iid_bound_never_exceeds_live_cap_or_bypasses_source_match():
+    observation = qualified_observation()
+    observation["capacity_qualification"]["iid_max_bytes"] = 10 ** 12
+    observation["retained"]["iid"]["file_bytes"] = preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES + 1
+    result = preflight.evaluate(observation)
+    assert result["capacity_admission"]["qualified_current_scale"] is False
+    assert result["dimensions"]["physical"]["capacity_basis"] == "LEGACY_IID_MODEL"
+    observation["retained"]["iid"]["file_bytes"] = 2395425950
+    observation["capacity_qualification"]["source_matches"] = False
+    assert preflight.evaluate(observation)["capacity_admission"]["qualified_current_scale"] is False
+
+
+def test_receipt_live_requalifications_are_measured_and_capped():
+    receipt = json.loads((preflight.ROOT / "config/owner_daily_capacity_qualification.json").read_text(encoding="utf-8"))
+    entries = receipt["live_daily_requalifications"]
+    assert {e["session"] for e in entries} == {"2026-11-03", "2026-11-04"}
+    assert all(e["peak_observed_single_process_rss_bytes"] < preflight.MEASURED_MAX_RSS_BYTES for e in entries)
+    assert preflight.capacity_qualification(preflight.ROOT)["iid_max_bytes"] == preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES

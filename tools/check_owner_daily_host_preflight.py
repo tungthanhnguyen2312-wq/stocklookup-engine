@@ -29,7 +29,32 @@ PHYSICAL_RESERVE_BYTES = GIB
 QUALIFIED_PHYSICAL_BYTES = MEASURED_MAX_PRIVATE_BYTES + OWNER_ALLOWANCE_BYTES + PHYSICAL_RESERVE_BYTES
 SUPERSEDED_CEILING_PHYSICAL_BYTES = int(9.25 * GIB)
 QUALIFIED_COMMIT_BYTES = 8 * GIB + GIB // 4 + 2 * GIB
+# The offline five-stage measurement binds QUALIFIED_IID_BYTES exactly. The IID grows
+# about 1 MB per session, so that exact bound alone refuses the next Daily. A live,
+# guarded Canonical Daily that itself built a larger IID is a whole-Daily measurement at
+# that scale. Receipt entries for such runs extend the bound by the measured RSS margin
+# divided by the same 5.05 IID multiplier, never beyond +1 % of the offline artifact.
+# Further growth needs a new offline qualification. Thresholds and Job ceilings stay unchanged.
+IID_PEAK_MULTIPLIER = 5.05
+LIVE_REQUALIFICATION_MAX_IID_BYTES = QUALIFIED_IID_BYTES + QUALIFIED_IID_BYTES // 100
+LIVE_REQUALIFICATION_STATUS = "CANONICAL_DAILY_BUILT_IID_UNDER_GUARD"
 GUIDANCE = ["Re-run host preflight; launch Daily alone only when READY."]
+
+
+def live_requalified_iid_bytes(entries: object) -> int:
+    """Largest IID bound the receipt's live-Daily entries support; the offline bound otherwise."""
+    bound = QUALIFIED_IID_BYTES
+    for entry in entries if isinstance(entries, list) else []:
+        if not isinstance(entry, dict) or entry.get("status") != LIVE_REQUALIFICATION_STATUS:
+            continue
+        iid, peak = entry.get("iid_bytes"), entry.get("peak_observed_single_process_rss_bytes")
+        if (not isinstance(iid, int) or isinstance(iid, bool) or not isinstance(peak, int) or isinstance(peak, bool)
+                or iid <= 0 or peak <= 0 or peak > MEASURED_MAX_RSS_BYTES
+                or not isinstance(entry.get("iid_raw_sha256"), str) or len(entry["iid_raw_sha256"]) != 64):
+            continue
+        supported = iid + int((MEASURED_MAX_RSS_BYTES - peak) / IID_PEAK_MULTIPLIER)
+        bound = max(bound, min(supported, LIVE_REQUALIFICATION_MAX_IID_BYTES))
+    return bound
 
 
 def capacity_source_paths(root: Path) -> list[str]:
@@ -54,9 +79,11 @@ def capacity_qualification(root: Path) -> dict:
         paths = capacity_source_paths(root)
         actual = {p: hashlib.sha256((root / p).read_bytes().replace(b"\r\n", b"\n")).hexdigest() for p in paths}
         matched = bool(actual) and actual == receipt["source_sha256"]
+        iid_max = live_requalified_iid_bytes(receipt.get("live_daily_requalifications")) if matched else None
     except (OSError, ValueError, KeyError, TypeError):
-        matched = False
-    return {"source_matches": matched, "profile": "PR195_CURRENT_SCALE_BOUNDED_V1" if matched else None}
+        matched, iid_max = False, None
+    return {"source_matches": matched, "profile": "PR195_CURRENT_SCALE_BOUNDED_V1" if matched else None,
+            "iid_max_bytes": iid_max}
 
 
 def _git(root: Path, *args: str) -> str | None:
@@ -242,9 +269,14 @@ def evaluate(observation: dict) -> dict:
     size = iid.get("file_bytes")
     peak = int(size * 5.05) if isinstance(size, int) and size > 0 else None
     factor = max(1.0, peak / (7 * GIB)) if peak is not None else 1.0
-    qualified = (observation.get("capacity_qualification", {}).get("source_matches") is True
-                 and observation.get("capacity_qualification", {}).get("profile") == "PR195_CURRENT_SCALE_BOUNDED_V1"
-                 and isinstance(size, int) and 0 < size <= QUALIFIED_IID_BYTES)
+    qualification = observation.get("capacity_qualification", {})
+    iid_max = qualification.get("iid_max_bytes")
+    # An absent bound means the offline artifact; a forged bound never exceeds the +1 % cap.
+    iid_max = (min(iid_max, LIVE_REQUALIFICATION_MAX_IID_BYTES)
+               if isinstance(iid_max, int) and not isinstance(iid_max, bool) and iid_max > 0 else QUALIFIED_IID_BYTES)
+    qualified = (qualification.get("source_matches") is True
+                 and qualification.get("profile") == "PR195_CURRENT_SCALE_BOUNDED_V1"
+                 and isinstance(size, int) and 0 < size <= iid_max)
     legacy_physical = int(6 * GIB * factor)
     legacy_commit_green = 12.0 * GIB * factor
     legacy_commit_floor = 9.2 * GIB * factor
@@ -303,7 +335,10 @@ def evaluate(observation: dict) -> dict:
             "runtime_capacity_guard_required": bounded_physical,
             "capacity_admission": {"qualified_current_scale": qualified,
                 "basis": "MEASURED_STAGES_PLUS_MODELED_RESERVES_NOT_LIVE_DAILY",
-                "qualified_iid_max_bytes": QUALIFIED_IID_BYTES,
+                "qualified_iid_max_bytes": iid_max,
+                "offline_qualified_iid_bytes": QUALIFIED_IID_BYTES,
+                "live_requalification_max_iid_bytes": LIVE_REQUALIFICATION_MAX_IID_BYTES,
+                "observed_iid_bytes": size,
                 "qualified_commit_green_bytes": QUALIFIED_COMMIT_BYTES,
                 "measured_max_private_bytes": MEASURED_MAX_PRIVATE_BYTES,
                 "measured_max_rss_bytes": MEASURED_MAX_RSS_BYTES,

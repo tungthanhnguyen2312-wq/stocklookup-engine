@@ -23,7 +23,9 @@ The [October-27 final corrective](owner_daily_16gb_host_and_pipeline_memory_reco
 capped physical READY at 9.25 GiB; the [November-2 measured-envelope corrective](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md#november-2-measured-physical-admission)
 replaces that with 8.202 GiB (measured private peak + Owner allowance + runtime-enforced reserve)
 for the fingerprinted optimized pipeline when
-the retained IID is no larger than the measured 2,394,768,092-byte artifact.
+the retained IID is no larger than the measured 2,394,768,092-byte artifact, or than the
+bound its [live-Daily requalification](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md#november-6-live-daily-iid-requalification)
+entries support (at most +1 %, 2,418,715,772 bytes).
 Qualified commit READY is at most 10.25 GiB: the 8 GiB aggregate Job, the
 0.25 GiB Owner allowance, and the 2 GiB runtime reserve. Its floor keeps the
 9.2/12 ratio beneath that cap. The 7 GiB process ceiling is unchanged. Missing
