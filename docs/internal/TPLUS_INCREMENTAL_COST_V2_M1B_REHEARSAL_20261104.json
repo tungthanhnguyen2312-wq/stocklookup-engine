@@ -38,6 +38,38 @@
   "continued_on": "2026-11-05",
   "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
   "date": "2026-11-04",
+  "final_code_20261105": {
+    "source_commit": "2df7903d403460b0eadfbf82a40c17a626e4056a",
+    "integrate_method": "rebase onto origin/main 63c92f486ea226e4253e5fcf2ebc591af4247e7d; no conflicts, including owner-daily files",
+    "state": "existing rehearsal partitions; full mode reused them. R2 invalidated and reevaluated every row.",
+    "oracle": {
+      "record_count": 62271,
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6"
+    },
+    "runs": {
+      "full_existing_partitions": {"child_wall_seconds": 254.871848099996, "host_wall_seconds": 256.17114249999577, "evaluate_s": 23.694, "discovery_s": 203.759, "peak_job_private_commit_bytes": 1127956480, "byte_parity": true},
+      "add": {"child_wall_seconds": 238.6867452000006, "host_wall_seconds": 240.3469008999964, "evaluate_s": 17.213, "discovery_s": 192.803, "peak_job_private_commit_bytes": 1128910848, "byte_parity": true},
+      "post": {"child_wall_seconds": 238.54642579999927, "host_wall_seconds": 240.05251289998705, "evaluate_s": 17.053, "discovery_s": 192.664, "peak_job_private_commit_bytes": 1128177664, "byte_parity": true},
+      "r2": {"child_wall_seconds": 827.361290300003, "host_wall_seconds": 830.9721284000116, "evaluate_s": 605.31, "discovery_s": 192.835, "rows_reevaluated": 62271, "peak_job_private_commit_bytes": 1187049472, "byte_parity": true, "gate": false}
+    },
+    "gates": {
+      "byte_parity": true,
+      "add_host_seconds": 240.3469008999964,
+      "add_limit_seconds": 600,
+      "add_plus_post_host_seconds": 480.39941379998345,
+      "add_plus_post_limit_seconds": 900,
+      "peak_job_private_commit_bytes": 1187049472,
+      "peak_limit_bytes": 2147483648,
+      "all_mandatory_pass": true
+    },
+    "scratch_growth_bytes_before_cleanup": 5752004608,
+    "scratch_growth_limit_bytes": 8589934592,
+    "cleanup_manifest": "T:\\StockLookup\\scratch\\grok-e2e-20261105\\b-cleanup-manifest.json",
+    "focused_tests": "448 passed, 0 failed. Log T:\\StockLookup\\scratch\\grok-e2e-20261105\\b-focused-tests.log"
+  },
   "derived_store_comparison": {
     "baseline_bytes": 4019154815,
     "candidate_bytes": 2955381505.0,
