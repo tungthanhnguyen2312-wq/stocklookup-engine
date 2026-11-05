@@ -40,7 +40,7 @@
   "date": "2026-11-04",
   "derived_store_comparison": {
     "baseline_bytes": 4019154815,
-    "candidate_bytes": 2955342990.0,
+    "candidate_bytes": 2955381505.0,
     "candidate_components": [
       {
         "Bytes": 768052643.0,
@@ -59,16 +59,18 @@
         "Name": "_stream"
       }
     ],
-    "final_source_retained_bytes": 3689693566.0,
+    "final_source_retained_bytes": 3689732081.0,
     "final_source_retained_met": true,
-    "final_source_retained_relative_change": -0.08197276894396022,
+    "final_source_retained_relative_change": -0.08196318608344033,
     "maximum_growth": 0.25,
-    "measurement_scope": "Derived directory payload bytes at completed full-corpus R2 boundary; manifests and receipts included. Baseline recorded before verified pruning.",
+    "measurement_scope": "Derived directory payload bytes plus root summary cache; manifests and receipts included. Root cache is native-SHA-identical between oracle and candidate. Baseline recorded before verified pruning.",
     "met": true,
-    "realistic_retained_variant_bytes": 3890412725.0,
-    "realistic_retained_variant_relative_change": -0.032032130118381574,
+    "realistic_retained_variant_bytes": 3890451240.0,
+    "realistic_retained_variant_relative_change": -0.03202254725786169,
     "realistic_retained_variants_met": true,
-    "relative_change": -0.2646854560142142
+    "relative_change": -0.26467587315369434,
+    "shared_root_summary_cache_bytes": 38515,
+    "shared_root_summary_cache_sha256": "68138b494548b7adfee74f10792ce242ce97cff1de495543ab9887d3bbdfd244"
   },
   "discovery_proposal": {
     "implementation_authority": "NOT_GRANTED_DO_NOT_EDIT_TWO_DISCOVERY_MODULES",
