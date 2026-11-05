@@ -47,7 +47,7 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
   `168e0f7`, post-merge CI 37893984528 success; zero production reclaim/activation.
 - **COMPLETE — Vault V1:** PR97 merged `3f3d4fe`; offline/opt-in, 77 candidates,
   zero deletion authority; C retention/runtime recovery still gated. Queue empty.
-  [Contract and acceptance](vault_incremental_snapshot_contract.md); explicit session emitter remains offline/opt-in.
+  [Contract](vault_incremental_snapshot_contract.md); session emitter offline/opt-in.
 - **Economics research:** PR96 matrix / PR117 [packet](company_economics_research_packet_consumer_v1_contract.md).
   Quality bridge LOCAL COMPLETE: offline/opt-in/non-voting; profit vs cash/components,
   denominator limits and thesis tests. No normalized EPS, strict valuation or Daily change.
