@@ -463,3 +463,27 @@ Live corroboration: run 9d68faee (11-02 16:47, code db496b39) built the IID at
 unrelated lineage stop. The child kept 2.43 GiB resident from IID into Producer;
 a K6/K8 process split would free only the ~0.85 GiB pre-IID residue while adding
 a 2.39 GB IID re-parse, so it is not adopted without a measured benefit.
+
+## November 6 live-Daily IID requalification
+
+On 2026-11-05 21:22, after a reboot, host preflight refused Daily with 9.596 GiB
+physical / 18.778 GiB commit available. The source fingerprint matched, but the
+2026-11-04 IID (2,395,425,950 bytes) was 657,858 bytes above the exact offline bound,
+so admission fell back to the legacy scaled bands (9.657 / 19.313 GiB). The IID grows
+about 1.2 MB per session. An exact single-artifact bound therefore refuses the next
+Daily after almost every session, even when nothing about the workload has changed.
+
+The receipt now records `live_daily_requalifications`: guarded live Canonical Dailies
+that themselves built a larger IID, with run id, code head, IID bytes, raw SHA-256 and
+the run's peak single-process RSS. The entries are 2026-11-03 (2,394,221,971 bytes,
+5,467,045,888 peak) and 2026-11-04 (2,395,425,950 bytes, 5,473,955,840 peak). Both
+peaks are about 1.74 GB below the measured 7,217,766,400 RSS envelope.
+
+An entry extends the IID bound to `iid + (7,217,766,400 - peak) / 5.05`, using the same
+multiplier as the legacy model. The extension is capped at +1 % of the offline artifact
+(2,418,715,772 bytes). An entry whose peak exceeds the envelope extends nothing.
+Beyond the cap, a new offline five-stage qualification is required.
+
+Unchanged: physical READY 8.202 GiB, commit READY 10.25 GiB, the 7/8 GiB Job ceilings,
+the 1 GiB physical / 2 GiB commit runtime floors, the source fingerprint and fail-closed
+behavior. This is admission evidence only, not a T0, authority or freshness claim.
