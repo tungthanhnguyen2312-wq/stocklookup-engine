@@ -23,6 +23,20 @@ Each step needs its own admission:
 - Retained-evidence write: about 14.6 GiB per session.
 - Runway: about 13 sessions.
 
+## M2 — storage ledger and 30/90-day runway alert
+
+`tools/storage_ledger.py` is read-only. It reports physical bytes for retained-evidence
+(by artifact family and session), the T+ store and sidecars, IID, scratch,
+recovery-checkpoints, worktree-archives, and content duplicates identified by SHA-256,
+link count, and file id. Hashing is bounded by a byte budget and resumes from its state
+file. It takes no locks and stops when a Daily is running. Runway is the free space above
+the 160 GiB floor, in sessions and at 30 and 90 days, using the measured session size.
+
+`owner_daily_progress.py` probes the volume that holds the Daily output path. It does not
+probe `C:\` unless that volume is the output volume. Under 10 sessions is a warning. Under
+5 sessions is a critical warning. `AUTHORITY_EFFECT` stays
+`NONE_OPERATIONAL_OBSERVABILITY_ONLY`. Admission and preflight do not change.
+
 ## Measured cause (Daily 2026-11-03)
 
 **Pre-handoff T+ completed**
