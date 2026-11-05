@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 import json
 from pathlib import Path
 
@@ -13,10 +13,33 @@ MUTABLE = ("/_stream/", "_artifact_summary_cache", "_settled_cache", "prospectiv
            "tactical-reversal-prospective-shadow-collection-v1/", "LATEST_", "journal.json")
 
 
+def native_reference(source: Path, value: str, *, relative_root: Path | None = None) -> Path:
+    """Resolve an original native reference without rewriting retained proof bytes.
+
+    Split workspaces retain absolute paths. They are accepted only inside the
+    explicit source root, with the same traversal/reparse checks as relative paths.
+    No relocation, search, fallback, or archive authority is supplied by this mapping.
+    """
+    v.require(isinstance(value, str) and bool(value), "native reference missing")
+    path = Path(value)
+    v.require(".." not in path.parts, "unsafe native reference")
+    if not path.is_absolute():
+        path = (relative_root or source) / path
+    try:
+        relative = path.absolute().relative_to(source.absolute()).as_posix()
+    except ValueError as exc:
+        raise v.Refused("native reference outside source") from exc
+    return v.safe_path(source, relative)
+
+
 @contextmanager
-def qualified_boundary(source: Path, boundary: Path, boundary_sha: str, *, max_bytes):
+def qualified_boundary(source: Path, boundary: Path, boundary_sha: str, *, max_bytes,
+                       locked_sources: v.LockedSources | None = None):
     """Use explicit native proof references, holding provenance stable throughout Vault copy."""
-    with v.LockedSources() as locks:
+    v.require(locked_sources is None or isinstance(locked_sources, v.LockedSources),
+              "explicit source lock owner required")
+    with (nullcontext(locked_sources) if locked_sources is not None else v.LockedSources()) as locks:
+        locks.validate_all()
         locks.acquire(boundary, expected_sha=boundary_sha)
         b, files, excluded = v.boundary_plan(source, boundary, boundary_sha, max_bytes)
         v.require(not excluded, "adapter boundary contains incomplete/mutable files")
@@ -70,8 +93,10 @@ def qualified_boundary(source: Path, boundary: Path, boundary_sha: str, *, max_b
         if any(row["family"] == "T0" for row in files):
             from prospective_t0_seal_index import load_verified
             ref = dict(t0.get("seal_index") or {})
-            index_path = v.safe_path(source, ref.get("path", ""))
-            snapshot_path = v.safe_path(source, t0.get("path", ""))
+            relative_root = (v.safe_path(source, b["native_reference_root"])
+                             if b.get("native_reference_root") else source)
+            index_path = native_reference(source, ref.get("path", ""), relative_root=relative_root)
+            snapshot_path = native_reference(source, t0.get("path", ""), relative_root=relative_root)
             receipt_path = index_path.parent / "prospective_t0_snapshot_write_receipt.json"
             native = {row["relative_path"]: row for row in files}
             for path in (snapshot_path, index_path, receipt_path):
@@ -83,7 +108,7 @@ def qualified_boundary(source: Path, boundary: Path, boundary_sha: str, *, max_b
                       "original T0 binding unverified")
             index = json.loads(index_path.read_bytes())
             v.require(snapshot_path == index_path.parent / index["snapshot_file"]
-                      and native[t0["path"]]["sha256"] == index["snapshot_file_sha256"],
+                      and native[snapshot_path.relative_to(source).as_posix()]["sha256"] == index["snapshot_file_sha256"],
                       "T0 native hash/path differs from original seal")
         locks.validate_all()
         yield locks

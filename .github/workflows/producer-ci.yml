@@ -179,6 +179,7 @@ env:
     tests/test_capacity_writer_lifecycle.py
     tests/test_capacity_recovery_phase1.py
     tests/test_vault_snapshot.py
+    tests/test_vault_boundary_emit.py
     tests/test_macro_canonical_daily_consumer.py
     tests/test_current_macro_regime.py
     tests/test_macro_market_regime_decision_context.py

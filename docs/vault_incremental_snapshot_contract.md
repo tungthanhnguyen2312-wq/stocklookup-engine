@@ -51,6 +51,65 @@ the captured filesystem fingerprints as well as content; they are not portable T
 Earlier manifests and files are never overwritten. A new changed file requires a new explicit
 completed boundary; its old vault version survives. The tool never edits the source version.
 
+## Explicit per-session emitter
+
+Owner backlog directive `CODEX_PROMPT_E2E_20261105_BACKLOG_FULL_AUTHORITY` authorizes
+the D3 emitter and copy-only session backups. `python -B -m tools.vault_boundary_emit
+--source COMMON_ROOT --repo PRODUCER --retained RETAINED --session YYYY-MM-DD
+--out OUTPUT [--max-bytes BYTES]` writes only within OUTPUT, disjoint from COMMON_ROOT.
+It never invokes Daily, acquisition, a seal writer, publication, or source cleanup.
+The default byte ceiling remains 64 MiB; real retained sessions need an explicit budget.
+
+`vault_session_closure/v1` is an explicit session-artifact preservation boundary:
+
+1. Read the registry from the exact Git HEAD blob, retaining commit and blob SHA256.
+   The selected completed row and selection must also match the working registry.
+   Require validated trading day, all required inputs and exact frozen identities.
+   A row present only in the working registry is refused, including October 26.
+2. The exact tier-1 `canonical-post-close-v1/<session>/session_handoff_bundle.json`
+   selects one operation identity and Producer run identity. Recompute both with the
+   existing owner functions. Include the entire identity-addressed
+   `daily-research-session-operations-v1/<session>/<hash>/` and
+   `daily-producer-runs-v1/<session>/<hash>/` trees, including manifests and delivery.
+   Verify original delivery-manifest native SHA/size claims.
+3. Include the one `canonical-daily-operation-v1/<session>/op-*/` tree whose
+   `daily_operation_record.json` binds those identities and is LOCAL_COMPLETE.
+   The existing adapter additionally requires COMPLETED Producer, runtime/trusted READY,
+   and the exact resolved acquisition session. Ambiguous matching records refuse.
+   Boundary `cutoff` is the original canonical record's `requested_at`, with
+   `cutoff_basis=ORIGINAL_CANONICAL_REQUESTED_AT`; it is not backup time or a new
+   source-knowledge/PIT claim. Original finer-grained cutoffs stay in their native files.
+4. Include every frozen registry input, any attached macro input, every Producer
+   source-plan artifact, the same-session shadow recommendation if bound, and the
+   tier-1 handoff's direct deeper-bundle/recommended-input paths. Frozen input content
+   SHA identities are recomputed with the existing bounded canonical JSON stream;
+   both identity and exact registry path must match. Include adjacent tier indexes.
+5. Require retained original T0. Include its whole identity directory, snapshot,
+   seal index and write receipt. Its operation binding and native snapshot SHA must
+   match. The existing native seal-index verifier must admit the original inode and
+   receipt. A diagnostic, unverified or missing T0 is refused; never reseal a copy.
+
+These are the complete dependencies of this session-artifact boundary. Nested raw-source
+URLs, provider provenance and historical analytical references remain native metadata;
+this is not a claim that the entire raw lake, runtime databases or all historical
+cross-session analysis can be reconstructed. Source retirement/portable T0 admission
+remain separately governed. Backup never authorizes source removal.
+
+No caller file list or immutable boolean can select payloads. Mutable/cache/stream,
+config/data/runtime, accumulator, temporary, lock and database members refuse the
+whole boundary. Native absolute references from split workspaces may be mapped only
+to their exact location inside COMMON_ROOT, after traversal and reparse checks.
+There is no path search, rebasing, transparent archive fallback or retained JSON edit.
+The adapter uses that same exact mapping for T0, retaining original proof bytes.
+
+Discovery fingerprints are checked under deny-write/delete source handles. Native
+hashes, original completion/seal references, committed HEAD stability and the existing
+`qualified_boundary` checks precede publication of `boundary.json`; the emitted
+boundary is consumed unchanged by the adapter. Candidate JSON may remain under OUTPUT
+after refusal, but is never published as `boundary.json`. The boundary's pinned SHA
+must be passed to the adapter. The Git commit/blob pin supplements the original
+registry proof; it does not commit or relabel any pending session.
+
 ## Incremental verification and interruption
 
 A prior COMPLETE manifest must have a separately trusted expected SHA, the same source root

@@ -99,9 +99,9 @@ This proves mechanics, not safe production hardlink lifecycle or production rest
 --boundary FILE --boundary-sha SHA --volumes FILE [--previous FILE --previous-sha SHA]
 [--max-bytes N]` consumes an already qualified, explicitly pinned
 `vault_completed_boundary/v1`. It reuses `tools.vault_snapshot.snapshot`; no new copier,
-Daily stage, scheduler or launcher hook. It does not automatically discover/generate a
-closure from every Daily directory. Automatic boundary emission remains deferred until
-the full immutable dependency closure can be proven.
+Daily stage, scheduler or launcher hook. The explicit offline
+[`vault_boundary_emit`](vault_incremental_snapshot_contract.md#explicit-per-session-emitter)
+proves the per-session closure before emission. It never selects a latest directory.
 
 Additional `completion_proof` references pin registry, original completion record, handoff,
 producer manifest and sealed operation manifest by native SHA. Proof documents are capped
