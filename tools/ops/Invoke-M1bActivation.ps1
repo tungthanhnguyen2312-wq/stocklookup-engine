@@ -17,6 +17,7 @@ param(
     [string]$Python = 'T:\StockLookup\production-v1\environments\core-313\Scripts\python.exe',
     [int64]$MinFreeBytes = 365072220160,
     [int64]$MinAvailableRamBytes = 4294967296,
+    [string[]]$ExpectedPendingFreezeSessions = @(),
     [switch]$PreflightOnly
 )
 
@@ -88,7 +89,30 @@ function Get-Preflight {
     if ($committedSha -ne $ExpectedRegistrySha256) { $failures.Add('REGISTRY_COMMIT_MISMATCH') }
     $worktreeRegistry = Join-Path $ProductionRepo $RegistryRelative
     $worktreeSha = Get-LfSha256 $worktreeRegistry
-    if ($worktreeSha -ne $committedSha) { $failures.Add('REGISTRY_WORKTREE_DIRTY') }
+    $pendingFreeze = $null
+    if ($worktreeSha -ne $committedSha) {
+        # A failed Producer leaves governed pre-Producer input freezes in the working registry
+        # (pending_session_input_freeze.py). Admit only what the repo's own classifier admits,
+        # bound to the governed retained-evidence root exactly as Owner Daily binds it.
+        $classify = "import json,sys; sys.path.insert(0, sys.argv[1]); from pathlib import Path; import pending_session_input_freeze as p; r = p.classify_pending_input_freeze(Path(sys.argv[1])); print(json.dumps({'admitted': r.admitted, 'reason_code': r.reason_code, 'sessions': list(r.sessions)}))"
+        $priorRetained = $env:STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT
+        $priorBytecode = $env:PYTHONDONTWRITEBYTECODE
+        try {
+            $env:STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT = $EvidenceRoot
+            $env:PYTHONDONTWRITEBYTECODE = '1'
+            $raw = & $Python -B -c $classify $ProductionRepo
+            if ($LASTEXITCODE -ne 0) { throw 'PENDING_FREEZE_CLASSIFIER_FAILED' }
+            $pendingFreeze = ($raw | Out-String).Trim() | ConvertFrom-Json
+        }
+        finally {
+            $env:STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT = $priorRetained
+            $env:PYTHONDONTWRITEBYTECODE = $priorBytecode
+        }
+        if (-not $pendingFreeze.admitted) { $failures.Add('REGISTRY_WORKTREE_DIRTY') }
+        elseif ($ExpectedPendingFreezeSessions.Count -eq 0 -or ((@($pendingFreeze.sessions) -join ',') -ne ($ExpectedPendingFreezeSessions -join ','))) {
+            $failures.Add('PENDING_FREEZE_SESSIONS_UNEXPECTED')
+        }
+    }
     [ordered]@{
         ram_available_bytes = $ram
         t_free_bytes = $free
@@ -96,6 +120,7 @@ function Get-Preflight {
         production_branch = $branch
         registry_commit_sha256 = $committedSha
         registry_worktree_sha256 = $worktreeSha
+        pending_input_freeze = $pendingFreeze
         merged_sha = $MergedSha
         expected_prior_head = $ExpectedPriorHead
         failures = @($failures)
@@ -114,6 +139,7 @@ Get-Git $ProductionRepo @('fetch', 'origin', $MergedSha)
 Get-Git $ProductionRepo @('merge', '--ff-only', $MergedSha)
 $deployed = Get-Git $ProductionRepo @('rev-parse', 'HEAD')
 if ($deployed -ne $MergedSha) { throw 'DEPLOY_HEAD_MISMATCH' }
+if ((Get-LfSha256 (Join-Path $ProductionRepo $RegistryRelative)) -ne $preflight.registry_worktree_sha256) { throw 'REGISTRY_CHANGED_BY_DEPLOY' }
 
 function Invoke-Feedback([string[]]$arguments) {
     $stdout = & $Python -B @arguments
