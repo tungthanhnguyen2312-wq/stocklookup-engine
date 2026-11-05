@@ -10,7 +10,7 @@ import pytest
 from tools.verify_retention_reader_transition import (
     TPLUS_DAILY_ARCHIVE, TPLUS_DAILY_BASE, TPLUS_DAILY_MANIFEST,
     TPLUS_RESUME_MANIFEST, TPLUS_RESUME_SOURCE, _tplus_daily_prior_bytes,
-    _tplus_incremental_cost_prior_bytes, _tplus_real_corpus_prior_bytes, historical_bytes,
+    _tplus_incremental_cost_prior_bytes, _tplus_m1b_prior_bytes, _tplus_real_corpus_prior_bytes, historical_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,8 +25,8 @@ def test_exact_merged_boundary_and_live_source_are_separately_bound():
     assert row["prior_sha256_lf"] == hashlib.sha256(prior).hexdigest()
     assert row["prior_sha256_lf"] == json.loads((ROOT / TPLUS_RESUME_MANIFEST).read_bytes())["sources"][TPLUS_RESUME_SOURCE]["active_sha256_lf"]
     # The 2026-11-03 real-corpus successor is peeled first; its archived prior is this layer's active source.
-    current = _tplus_incremental_cost_prior_bytes(
-        ROOT, TPLUS_RESUME_SOURCE, (ROOT / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
+    live = (ROOT / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    current = _tplus_incremental_cost_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, _tplus_m1b_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live))
     live = _tplus_real_corpus_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, current)
     assert _tplus_daily_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live) == prior
     assert hashlib.sha256(live).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]

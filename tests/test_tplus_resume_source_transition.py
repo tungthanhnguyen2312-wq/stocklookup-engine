@@ -9,7 +9,7 @@ import pytest
 from tools.verify_retention_reader_transition import (
     STORAGE_MANIFEST, TPLUS_RESUME_MANIFEST, TPLUS_RESUME_SOURCE, historical_bytes,
     TPLUS_DAILY_MANIFEST, TPLUS_DAILY_ARCHIVE, _tplus_daily_prior_bytes,
-    _tplus_incremental_cost_prior_bytes, _tplus_real_corpus_prior_bytes,
+    _tplus_incremental_cost_prior_bytes, _tplus_m1b_prior_bytes, _tplus_real_corpus_prior_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,8 +31,8 @@ def test_successor_peels_to_the_unchanged_storage_boundary():
     row = spec["sources"][TPLUS_RESUME_SOURCE]
     storage = json.loads((ROOT / STORAGE_MANIFEST).read_bytes())["sources"][TPLUS_RESUME_SOURCE]
     assert row["prior_sha256_lf"] == storage["active_sha256_lf"]  # the older manifest is not repinned
-    current = _tplus_incremental_cost_prior_bytes(
-        ROOT, TPLUS_RESUME_SOURCE, (ROOT / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
+    live = (ROOT / TPLUS_RESUME_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    current = _tplus_incremental_cost_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, _tplus_m1b_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live))
     live = _tplus_real_corpus_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, current)
     boundary = _tplus_daily_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live)
     assert hashlib.sha256(boundary).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]

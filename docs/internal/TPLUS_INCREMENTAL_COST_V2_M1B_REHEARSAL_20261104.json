@@ -1,0 +1,4140 @@
+{
+  "L2_realistic_acceptance": {
+    "benefit_met": false,
+    "denominator": "ALL_ROWS_IN_REBUILT_PARTITIONS_INCLUDING_THE_NEW_SESSION",
+    "ratio": 0.0,
+    "rows_output_changed": 0,
+    "rows_reevaluated": 35343,
+    "rows_reused_inside_partition": 0,
+    "threshold": 0.2
+  },
+  "L2_removal": {
+    "implementation_sha256_lf": "289629904b459f626ffc1fa380b14eb9f2d705098974e14b29e74235c77219dd",
+    "post_removal_requalification": {
+      "artifact_identity": true,
+      "artifact_raw_sha256": true,
+      "artifact_size": true,
+      "input_digest": true,
+      "record_count": true
+    },
+    "preserved": "Whole-partition exact/terminal/extension reuse, strict future context keys, existing evaluator and terminal contribution cache, expanded source verifier and reference-only price receipts.",
+    "removed": "Prior-row lookup, row-level proof/copy path, unused future-input manifest field and its dedicated reuse test."
+  },
+  "acceptance": {
+    "L1": "PASS_FINAL_SOURCE_FULL_CORPUS_AND_PRIOR_COLD_WARM_ADD_BYTE_PARITY",
+    "L2": "REMOVED_REALISTIC_REUSE_ZERO_BELOW_20_PERCENT",
+    "L3_L4": "EXISTING_PART_A_REUSED",
+    "L5": "NOT_TAKEN",
+    "promotion": "NOT_ELIGIBLE_R2_AND_DISCOVERY_TARGETS_UNMET_LEAD_ACCEPTANCE_PENDING"
+  },
+  "baseline_checkpoint": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+  "baseline_cold_warm_parity": "PASS_NATIVE_BYTE_SHA_SIZE_IDENTITY_ROWS_INPUT_DIGEST",
+  "candidate_cold_recovery": {
+    "initial_attempt": "ALL_37_PARTITIONS_COMPLETED_THEN_ASSEMBLY_DISK_RESERVE_STOP",
+    "recovery": "37_EXACT_VALID_PARTITIONS_REUSED_NO_REBUILD_FULL_NATIVE_ORACLE_PARITY",
+    "timing_limit": "Initial attempt and recovery are separate measured runs, not one successful cold wall time."
+  },
+  "continuation": "Lead acceptance and authorized discovery corrective required; R2/discovery performance gates remain unmet. No M1b push/PR/promotion.",
+  "continued_on": "2026-11-05",
+  "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
+  "date": "2026-11-04",
+  "final_code_20261105": {
+    "source_commit": "2df7903d403460b0eadfbf82a40c17a626e4056a",
+    "integrate_method": "rebase onto origin/main 63c92f486ea226e4253e5fcf2ebc591af4247e7d; no conflicts, including owner-daily files",
+    "state": "existing rehearsal partitions; full mode reused them. R2 invalidated and reevaluated every row.",
+    "oracle": {
+      "record_count": 62271,
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6"
+    },
+    "runs": {
+      "full_existing_partitions": {"child_wall_seconds": 254.871848099996, "host_wall_seconds": 256.17114249999577, "evaluate_s": 23.694, "discovery_s": 203.759, "peak_job_private_commit_bytes": 1127956480, "byte_parity": true},
+      "add": {"child_wall_seconds": 238.6867452000006, "host_wall_seconds": 240.3469008999964, "evaluate_s": 17.213, "discovery_s": 192.803, "peak_job_private_commit_bytes": 1128910848, "byte_parity": true},
+      "post": {"child_wall_seconds": 238.54642579999927, "host_wall_seconds": 240.05251289998705, "evaluate_s": 17.053, "discovery_s": 192.664, "peak_job_private_commit_bytes": 1128177664, "byte_parity": true},
+      "r2": {"child_wall_seconds": 827.361290300003, "host_wall_seconds": 830.9721284000116, "evaluate_s": 605.31, "discovery_s": 192.835, "rows_reevaluated": 62271, "peak_job_private_commit_bytes": 1187049472, "byte_parity": true, "gate": false}
+    },
+    "gates": {
+      "byte_parity": true,
+      "add_host_seconds": 240.3469008999964,
+      "add_limit_seconds": 600,
+      "add_plus_post_host_seconds": 480.39941379998345,
+      "add_plus_post_limit_seconds": 900,
+      "peak_job_private_commit_bytes": 1187049472,
+      "peak_limit_bytes": 2147483648,
+      "all_mandatory_pass": true
+    },
+    "scratch_growth_bytes_before_cleanup": 5752004608,
+    "scratch_growth_limit_bytes": 8589934592,
+    "cleanup_manifest": "T:\\StockLookup\\scratch\\grok-e2e-20261105\\b-cleanup-manifest.json",
+    "focused_tests": "448 passed, 0 failed. Log T:\\StockLookup\\scratch\\grok-e2e-20261105\\b-focused-tests.log"
+  },
+  "derived_store_comparison": {
+    "baseline_bytes": 4019154815,
+    "candidate_bytes": 2955381505.0,
+    "candidate_components": [
+      {
+        "Bytes": 768052643.0,
+        "Name": "_evaluator_inputs"
+      },
+      {
+        "Bytes": 1522569909.0,
+        "Name": "_partitions"
+      },
+      {
+        "Bytes": 635148775.0,
+        "Name": "_settled_store"
+      },
+      {
+        "Bytes": 29571663.0,
+        "Name": "_stream"
+      }
+    ],
+    "final_source_retained_bytes": 3689732081.0,
+    "final_source_retained_met": true,
+    "final_source_retained_relative_change": -0.08196318608344033,
+    "maximum_growth": 0.25,
+    "measurement_scope": "Derived directory payload bytes plus root summary cache; manifests and receipts included. Root cache is native-SHA-identical between oracle and candidate. Baseline recorded before verified pruning.",
+    "met": true,
+    "realistic_retained_variant_bytes": 3890451240.0,
+    "realistic_retained_variant_relative_change": -0.03202254725786169,
+    "realistic_retained_variants_met": true,
+    "relative_change": -0.26467587315369434,
+    "shared_root_summary_cache_bytes": 38515,
+    "shared_root_summary_cache_sha256": "68138b494548b7adfee74f10792ce242ce97cff1de495543ab9887d3bbdfd244"
+  },
+  "discovery_proposal": {
+    "implementation_authority": "NOT_GRANTED_DO_NOT_EDIT_TWO_DISCOVERY_MODULES",
+    "inventory_qualification": {
+      "expected_saving": "At most the measured inventory qualification time, with overlap accounted for; no claim that all checks can be removed.",
+      "function": "prospective_decision_retention.discover_snapshots -> historical_paths -> catalog path qualification",
+      "implementation_authority": "NOT_GRANTED",
+      "measured_seconds": 46.90739769998618,
+      "parity_risk": "A generic metadata-only shortcut can silently admit an unqualified restored copy. Requires explicit Lead review before editing either prohibited discovery module or the catalog seam.",
+      "proposal": "Share an explicitly qualified inventory/source proof within one build, bound to catalog/restore evidence, path, complete fingerprint, verifier digest and source SHA. Preserve storage-restoration qualification and full SHA on any missing or changed binding."
+    },
+    "legacy": {
+      "expected_saving": "Bounded by measured legacy discovery-other time; exact function timer recorded in subsequent runs.",
+      "finding": "Full SHA of every legacy summary source on every discovery, even summary hits.",
+      "function": "prospective_decision_outcome_feedback._source_fingerprint",
+      "measured_function_seconds": 105.47422829998686,
+      "parity_risk": "Summary inventory includes excluded artifacts. Bind header/count/classification inputs and verifier version; preserve all existing temporal qualification.",
+      "proposal": "Reuse the five-field source fingerprint, verifier-qualified raw-SHA receipt and indexed file anchor; full SHA on any missing/mismatched receipt."
+    },
+    "t0": {
+      "expected_saving_seconds_observed_upper_bound": 44.38064730000042,
+      "finding": "Original-T0 reuse re-streams records and then full-hashes the same T0 after header receipt verification.",
+      "function": "prospective_decision_retention._original_reuse_reasons",
+      "measured_function_seconds": 43.69090900000447,
+      "parity_risk": "Must bind every origination and competing-seal input; invalidating only raw T0 is insufficient. No change to PIT, source authority or admission.",
+      "proposal": "Introduce an explicit verifier-qualified origination proof keyed by original seal/index/write receipt, operation pair, capture binding and source fingerprint; retain full existing checks on miss."
+    }
+  },
+  "evidence_access": "READ_ONLY",
+  "evidence_role": "retained",
+  "final_source_cache_preparation": {
+    "Bytes": 4564299198.0,
+    "Files": 183,
+    "Free": 369519247360,
+    "PlanSha": "94E609170D263B01E5D846AF4E625AAFB02FBA175AF7964269A2A979CB8C83DC",
+    "SourceMutations": false
+  },
+  "final_source_checkpoint": {
+    "L2": "REMOVED",
+    "L2_removal_commit": "2911d1c0b4116c632a04541a0fed34b055633585",
+    "code_digest": "8929de89990290c691362ae1e7d722bae108e82bbb9a7361fcd276bb310e3524",
+    "focused_tests": {
+      "passed": 200,
+      "seconds": 364.78
+    },
+    "implementation_sha256_lf": "289629904b459f626ffc1fa380b14eb9f2d705098974e14b29e74235c77219dd",
+    "independent_native_byte_proof": true,
+    "measurement_scope": "Final code, fresh projection sidecars and partitions, previously qualified source receipts. This is one-time projection-rebuild qualification, not a warm R2 timing replacement.",
+    "projection_digest": "2066378c35bbf5513ebe2b31b62d85edb6b200faf95d02924e3851a873e25023",
+    "requalification": {
+      "artifact_identity": true,
+      "artifact_raw_sha256": true,
+      "artifact_size": true,
+      "input_digest": true,
+      "record_count": true
+    },
+    "source_commit": "f3ddf8342d694e8095a064bb6b0b2b8d07751ff8",
+    "verifier_digest": "c29a3fd4c3726e98f9b6876bbabab9e413f3c8598550b226eef8c23119071d93"
+  },
+  "finished_fixture_pruning": {
+    "Bytes": 212903928.0,
+    "Count": 154,
+    "Free": 368111398912,
+    "PlanSha": "A7816D82C350F3AD4D67064ED9C3D8DD97F0C81BE91D90D66722B53960F51AF9",
+    "Scope": "ONLY_CLOSED_PYTEST_GENERATED_JSON_PAYLOADS",
+    "SourceMutations": false,
+    "measurement_note": "Only completed pytest fixture JSON was removed; no live corpus cache or evidence was touched. Final cold-projection qualification wall time includes this small host I/O overlap; earlier warm performance profiles do not."
+  },
+  "frozen_context": {
+    "as_of": "2026-11-04T12:29:14.264899+00:00",
+    "basis": "ORIGINAL_ORACLE_LAUNCH_TIMESTAMP",
+    "contract": "frozen_m1b_rehearsal_context/v1",
+    "expected_artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+    "expected_full_input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+    "expected_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+    "governed_capture_records_equal": true,
+    "governed_session_chain_equal": true,
+    "horizon_projection_checks_equal": 190,
+    "reference_original_completion_time": "2026-11-04T13:23:48.271072+00:00",
+    "scope": "SCRATCH_DIAGNOSTIC_ONLY_NO_PRODUCTION_CLOCK_OR_PIT_CHANGE"
+  },
+  "independent_native_byte_proof": {
+    "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+    "artifact_size": 1437810864,
+    "method": "NATIVE_POWERSHELL_GET_FILE_HASH_SHA256",
+    "record_count": 62271,
+    "source_mutations": false,
+    "verified_runs": [
+      "candidate-resume",
+      "candidate-r2",
+      "candidate-add",
+      "candidate-post",
+      "candidate-final"
+    ]
+  },
+  "initial_source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+  "measured_growth_projection": {
+    "date_at_modeled_crossing_if_inside_retained_session_sequence": null,
+    "evaluate_seconds_per_session": 22.169594594594592,
+    "first_modeled_session_count_above_1200": 44,
+    "interpretation": "Offline worst-case all-invalidated model, not a measured historical Daily crossing. No causal size curve can be fitted from a single corpus size.",
+    "limitations": "Projection holds per-session mix, hardware and non-evaluate cost fixed; terminal maturity and growing discovery can change the slope. Use realistic add profile separately.",
+    "model": "stage_seconds(N) = observed_non_evaluate_seconds + observed_evaluate_seconds_per_session * N",
+    "non_evaluate_seconds": 237.81965600000115,
+    "retained_governed_calendar_projection": {
+      "after": "2026-11-04",
+      "contract_version": "governed_session_chain/v1",
+      "missed_sessions": [],
+      "n": 7,
+      "projected_sessions": [
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-09",
+        "2026-11-10",
+        "2026-11-11",
+        "2026-11-12",
+        "2026-11-13"
+      ],
+      "projection_is_evidence": false,
+      "realized_sessions": [],
+      "sessions": [
+        "2026-11-05",
+        "2026-11-06",
+        "2026-11-09",
+        "2026-11-10",
+        "2026-11-11",
+        "2026-11-12",
+        "2026-11-13"
+      ],
+      "state": "PROJECTED_ONLY",
+      "target": "2026-11-13"
+    },
+    "rows_measured": 62271,
+    "sessions_measured": 37
+  },
+  "measured_targets": {
+    "child_private_commit_bytes": {
+      "limit": 2147483648,
+      "measured": 1276600320,
+      "met": true
+    },
+    "one_new_t0_wall_s": {
+      "limit": 600,
+      "measured": 563.2921156000011,
+      "met": true
+    },
+    "pre_plus_post_wall_s": {
+      "limit": 900,
+      "measured": 769.2554438000006,
+      "met": true
+    },
+    "r2_all_invalidated_wall_s": {
+      "limit": 600,
+      "measured": 1058.0946560000011,
+      "met": false
+    },
+    "warm_discovery_s": {
+      "limit": 60,
+      "measured": 203.822,
+      "met": false
+    }
+  },
+  "oracle_job": {
+    "accounting_available": true,
+    "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+    "breakaway_ok": false,
+    "job_memory_limit_bytes": 2147483648,
+    "kill_on_job_close": true,
+    "limit_events": [],
+    "limit_flags": 8960,
+    "limit_scope": "UNKNOWN",
+    "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+    "peak_job_committed_bytes": 1193902080,
+    "peak_process_committed_bytes": 1193013248,
+    "process_memory_limit_bytes": 2147483648,
+    "silent_breakaway_ok": false
+  },
+  "prior_part_a_checkpoint_receipt": {
+    "checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+    "receipt": {
+      "baseline_commit": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+      "branch": "fix/tplus-incremental-cost-v2-m1b",
+      "contract": "tplus_incremental_cost_v2_m1b_rehearsal/v1",
+      "date": "2026-11-04",
+      "design_input_not_remeasured": {
+        "aggregate_s": 11.905,
+        "assemble_s": 17.617,
+        "discovery_s": 206.627,
+        "evaluate_s": 508.755,
+        "note": "Quoted from the published M1 round-2 rehearsal. This phase did not remeasure it.",
+        "oracle_identity": "prospective_decision_outcome_feedback:f8ceac1850d1d5a21d114e394c7252148e7ec5e8d3607382c00e57d679e5abbb",
+        "price_index_s": 2.546,
+        "r2_wall_s": 750.904,
+        "rows": 60588,
+        "sessions": 33,
+        "source": "docs/internal/TPLUS_INCREMENTAL_COST_V2_REHEARSAL_20261104.json",
+        "stage_s": 748.745,
+        "stream_sha256_bytes": 959906744
+      },
+      "fixture_profile": {
+        "all_partitions_invalidated": {
+          "artifact_identity": "prospective_decision_outcome_feedback:254c5d450dd7083a266c01efdc70fe5f51ccb8b02a4c4515fd8f030543b08545",
+          "note": "2026-05-08 at 2.061 s is a one-off fixture spike, not a corpus rate. stream_sha256_bytes stayed 0 because T0 fingerprint receipts hit.",
+          "oracle_match": true,
+          "partition_evaluate_s": {
+            "2026-05-01": 0.035,
+            "2026-05-02": 0.042,
+            "2026-05-03": 0.049,
+            "2026-05-04": 0.05,
+            "2026-05-05": 0.06,
+            "2026-05-06": 0.054,
+            "2026-05-07": 0.054,
+            "2026-05-08": 2.061,
+            "2026-05-09": 0.063,
+            "2026-05-10": 0.056,
+            "2026-05-11": 0.068,
+            "2026-05-12": 0.054,
+            "2026-05-13": 0.058,
+            "2026-05-14": 0.059,
+            "2026-05-15": 0.057,
+            "2026-05-16": 0.053,
+            "2026-05-17": 0.055,
+            "2026-05-18": 0.063,
+            "2026-05-19": 0.061,
+            "2026-05-20": 0.059,
+            "2026-05-21": 0.045,
+            "2026-05-22": 0.056,
+            "2026-05-23": 0.052
+          },
+          "phases_seconds": {
+            "aggregate_s": 0.027,
+            "assemble_s": 0.065,
+            "discovery_legacy_s": 0.096,
+            "discovery_s": 0.285,
+            "discovery_t0_s": 0.142,
+            "evaluate_s": 3.314,
+            "price_index_s": 0.0,
+            "total_s": 3.704
+          },
+          "repeated_after_stray_file_removed": true,
+          "rows_output_changed": 0,
+          "rows_reevaluated": 91,
+          "rows_reused_inside_partition": 1,
+          "settled_hits": 0,
+          "settled_misses": 91,
+          "sidecar_decoded_bytes": 380236,
+          "sidecar_json_decode_s": 0.003939,
+          "stream_sha256_bytes": 0
+        },
+        "cold": {
+          "artifact_identity": "prospective_decision_outcome_feedback:c66bb05295f0905bd4ad37b3fcd2bda9d87a497ec4041c6b6d02413c4d51a41e",
+          "discovery_split_s": {
+            "legacy_loader": 0.0,
+            "legacy_other": 0.178,
+            "t0_loader": 0.66,
+            "t0_other": 0.103
+          },
+          "json_decode_share_of_evaluate": 0.002,
+          "oracle_match": true,
+          "phases_seconds": {
+            "aggregate_s": 0.026,
+            "assemble_s": 0.069,
+            "discovery_legacy_s": 0.178,
+            "discovery_s": 0.986,
+            "discovery_t0_s": 0.763,
+            "evaluate_s": 1.831,
+            "price_index_s": 0.0,
+            "total_s": 2.927
+          },
+          "rows": 88,
+          "rows_output_changed": 0,
+          "rows_reevaluated": 88,
+          "rows_reused_inside_partition": 0,
+          "settled_hits": 0,
+          "settled_misses": "not recorded on the cold print",
+          "sidecar_decoded_bytes": 363704,
+          "sidecar_json_decode_s": 0.003706,
+          "stream_sha256_bytes": 971964
+        },
+        "corpus": "22 modern T0 sessions, then one appended session. Four tickers. No legacy artifact, so price files stay off the PriceIndex path.",
+        "one_new_session": {
+          "artifact_identity": "prospective_decision_outcome_feedback:254c5d450dd7083a266c01efdc70fe5f51ccb8b02a4c4515fd8f030543b08545",
+          "note": "rows_output_changed counts rows whose canonical bytes differ from the prior partition. The appended session matures earlier horizons. The artifact still matches the in-memory builder.",
+          "oracle_match": true,
+          "phases_seconds": {
+            "aggregate_s": 0.028,
+            "assemble_s": 0.077,
+            "discovery_legacy_s": 0.123,
+            "discovery_s": 0.833,
+            "discovery_t0_s": 0.664,
+            "evaluate_s": 1.36,
+            "price_index_s": 0.0,
+            "total_s": 2.311
+          },
+          "rows_output_changed": 80,
+          "rows_reevaluated": 84,
+          "rows_reused_inside_partition": 0,
+          "sidecar_decoded_bytes": 347172,
+          "sidecar_json_decode_s": 0.003548,
+          "stream_sha256_bytes": 44180
+        }
+      },
+      "fixture_scrub": {
+        "command_state_root": "T:\\StockLookup\\scratch\\tplus-m1b-rehearsal-20261104\\state\\builder",
+        "exit_code": 0,
+        "out_of_scope_status": "scrub_out_of_scope",
+        "published": false,
+        "scrub_clean": 23,
+        "scrub_mismatches": 0,
+        "scrub_out_of_scope": 1,
+        "scrub_sources": 23,
+        "status": "SCRUBBED"
+      },
+      "fixture_state": "T:\\StockLookup\\scratch\\tplus-m1b-rehearsal-20261104\\state",
+      "fixture_store_bytes": {
+        "builder_state": 2909053,
+        "note": "23 tiny sessions. Not a measurement of the 1.75 GB M1 store and not a plus-25 percent proof.",
+        "sidecars": 387964
+      },
+      "growth_projection": {
+        "reason": "The fixture is 23 sessions and 92 rows. Seconds per session on that corpus do not predict the 60,588-row stage. Phase 2 must measure the real corpus and fit the 1,200 s crossing. The mid-December 1,130 s model is not confirmed.",
+        "status": "NOT_FIT"
+      },
+      "levers": {
+        "L1_minimal_projection": "TAKEN. Sidecar contract prospective_feedback_evaluator_input/v3. Fixture JSON-decode was 0.0037 s of 1.831 s evaluate (0.2 percent). This does not close the 508 s evaluate.",
+        "L2_row_reuse": "TAKEN. On the 23-session fixture, forcing every partition manifest to miss reused 1 row and re-evaluated 91. Rows inside the 20-session horizon are not final. A streaming edit changes source_key, so M1 partition bytes are not visible to this code.",
+        "L3_price_fingerprint": "TAKEN. Covered by tests/test_tplus_m1b_incremental.py::test_price_fingerprint_hit_does_not_hash. The all-modern fixture never calls PriceIndex, so price_index_s is 0 here.",
+        "L4_verifier_unit": "TAKEN. Digest covers source_file_fingerprint.py and source_verifier.py only. This deploy still needs one seed because that unit is new.",
+        "L5_spool_write": "NOT_TAKEN. Published aggregate plus assemble is 29.522 s of 748.745 s (3.9 percent), under the 15 percent bar."
+      },
+      "phase": "PHASE_1_FIXTURE_ONLY",
+      "real_corpus": "NOT_RUN",
+      "retained_evidence": "NOT_READ",
+      "targets": {
+        "child_peak_le_2GiB": "NOT_MEASURED",
+        "pre_plus_post_le_900s": "NOT_MEASURED",
+        "r2_all_invalidated_le_600s": "NOT_MEASURED",
+        "warm_discovery_block": "The published 186-206 s is discover_prospective_corpus and discover_snapshots, in modules this phase must not edit. Price fingerprinting removes the price-file SHA from price_index_s (published 2.5 s), not that discovery time.",
+        "warm_discovery_le_60s": "NOT_MET_BY_THIS_DIFF",
+        "warm_one_new_t0_le_600s": "NOT_MEASURED"
+      },
+      "tests": {
+        "failure": "tests/test_roadmap_execution_state.py::test_real_bootstrap_roadmap_state_is_on_track",
+        "failure_reason": "ROADMAP_MULTIPLE_SOURCE_WRITERS. Active milestone TPLUS_INCREMENTAL_COST_V2 is matched by wt-tplus-incremental-v2-20261104 on fix/tplus-incremental-cost-v2 and by this required branch. The checker and the other worktree are outside the allowed edit set.",
+        "focused_suite": "164 passed, 1 failed"
+      },
+      "verifier": {
+        "active_e4_v2_digest": "199a9cf20d2be935470d573a8a128036a73984929ca182bf4d1d8f5e847ae7c9",
+        "prior_streaming_sha256_lf": "0dcf7fe0687593bc05db9a0f487bd64b4309d6b6c80c47cb33081c45bdbe2dc1",
+        "streaming_sha256_lf": "66d123411b4b01c5709f4122ce39593e0fc9678fed3b5cb6058c35ef4934a18e",
+        "units": [
+          "stocklookup_core.evidence.source_file_fingerprint",
+          "stocklookup_core.evidence.source_verifier"
+        ]
+      },
+      "worktree": "T:\\StockLookup\\scratch\\wt-tplus-m1b-20261104"
+    },
+    "role": "HISTORICAL_PART_A_FIXTURE_PROOF_NOT_CURRENT_REAL_CORPUS_STATUS"
+  },
+  "production_ci": "41832648657_SUCCESS_6_OF_6",
+  "production_daily": "PASS_JOURNAL_COMPLETE",
+  "production_prerequisite_final_verification": {
+    "ai_readiness": "READY_FOR_AI",
+    "ai_remote": "f18a2d0abdddb9f6d17f8b2ac7de524ac1586597",
+    "analytics_recomputed": false,
+    "dashboard_public_byte_identity": "PASS",
+    "dashboard_release": "9e0691a8f792e2f078d9ceaa277ef7de46aef195",
+    "phase": "COMPLETE_9_OF_9",
+    "post_merge_ci": "6_OF_6_PASS",
+    "production_head": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
+    "recovery_pull_request": 211,
+    "registry_working_bytes_preserved": true,
+    "registry_working_sha256": "77c949a78bc9d679a5b14fc3752615a03eaf411b2e14a0a7a5a262c754226bc0",
+    "remote_main": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
+    "session": "2026-11-04",
+    "status": "PASS",
+    "verification": "LIVE_MAIN_READBACK_AND_FINAL_RESULT_READ_2026_11_05"
+  },
+  "production_release": "63c92f486ea226e4253e5fcf2ebc591af4247e7d",
+  "real_corpus_profiles": {
+    "baseline-r2": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 263.625,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.6988924999968731,
+        "legacy._operation_manifests": 0.8884999000001699,
+        "legacy._read_summary_cache": 0.008032499998080311,
+        "t0._handoff_by_snapshot": 0.14560379999966244,
+        "t0._handoff_snapshot_inventory": 0.1630394999992859,
+        "t0._operation_manifests": 0.29802550000022165
+      },
+      "exit": 0,
+      "host_wall_seconds": 1099.1915998000004,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 39612650,
+        "other_operations": 1057733,
+        "read_bytes": 74124131080,
+        "read_operations": 633524,
+        "write_bytes": 2960411725,
+        "write_operations": 3574
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1185873920,
+        "peak_process_committed_bytes": 1184972800,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7519916032,
+        "free_before": 366824759296,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 486817792,
+        "faults": 29486048,
+        "nonpaged_pool": 55888,
+        "paged_pool": 351624,
+        "peak_commit": 1184972800,
+        "peak_nonpaged_pool": 133880,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 974172160,
+        "working_set": 276914176
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "evaluator_input_store_bytes": 1831868061,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partitions_built": 37,
+        "price_index_hits": 4,
+        "rows": 62271,
+        "settled_hits": 27769,
+        "settled_misses": 4208,
+        "sidecar_bytes": 1831856433,
+        "sidecar_hits": 34,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 959906744,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 43.54482030000145,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 44.630148699998244,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 46.357900700000755,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 44.56884010000067,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 39.681516399999964,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 43.53208249999807,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 44.48388530000011,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 46.491231199997856,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 43.47494619999998,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 46.83496979999836,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 40.815954199999396,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 44.76064600000245,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 40.926147900001524,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 44.59365439999965,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 44.85556689999794,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 47.47715039999821,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 43.40597049999997,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 2.0459007999997993,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 35.624302699998225,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 2.4767333999989205,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 2.4731062999999267,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 4.560781500000303,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 4.469855800001824,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 2.13349350000135,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 5.063198899999406,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 5.067512500001612,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 4.914452799999708,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 5.184435499999381,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 5.003773399999773,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 4.747707499998796,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 2.4469064000004437,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 4.467107799999212,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 4.505213500000536,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 2.518769999998767,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 5.052483700001176,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 4.9308935000008205,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 4.887161099999503,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1184972800,
+      "phases_seconds": {
+        "aggregate_s": 11.244,
+        "assemble_s": 15.656,
+        "discovery_s": 197.158,
+        "evaluate_s": 867.867,
+        "price_index_s": 2.551,
+        "total_s": 1094.829
+      },
+      "record_count": 62271,
+      "report_repair": {
+        "independent_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+        "original_return_preserved": "baseline-r2-result.original-report.json",
+        "reason": "R2 bypass applied to final result reader as well as terminal shortcut; artifact bytes unaffected",
+        "source": "published completion metadata plus independent native-byte SHA256"
+      },
+      "source_checkpoint": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+      "wall_seconds": 1097.2515483999996
+    },
+    "candidate-add": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 334.28125,
+      "discovery_helpers_seconds": {
+        "legacy._artifact_paths": 0.6674391999986256,
+        "legacy._handoff_bundles": 0.6890827999959583,
+        "legacy._operation_manifests": 0.8061722999991616,
+        "legacy._read_summary_cache": 0.0013095999966026284,
+        "legacy._source_fingerprint": 105.47422829998686,
+        "t0._handoff_by_snapshot": 0.15294440000434406,
+        "t0._handoff_snapshot_inventory": 0.144869200004905,
+        "t0._operation_manifests": 0.28889549999439623,
+        "t0._original_reuse_reasons": 43.69090900000447,
+        "t0.historical_paths": 46.90739769998618
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 563.2921156000011,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 58916562,
+        "other_operations": 812155,
+        "read_bytes": 79011893229,
+        "read_operations": 234678,
+        "write_bytes": 2506191523,
+        "write_operations": 6360
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1277497344,
+        "peak_process_committed_bytes": 1276600320,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7294234624,
+        "free_before": 367840137216,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 631627776,
+        "faults": 56150911,
+        "nonpaged_pool": 74384,
+        "paged_pool": 351624,
+        "peak_commit": 1276600320,
+        "peak_nonpaged_pool": 145440,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 1063804928,
+        "working_set": 418246656
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.032,
+        "discovery_legacy_other_s": 106.706,
+        "discovery_t0_loader_s": 76.634,
+        "discovery_t0_other_s": 90.792,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partition_evaluate_s": {
+          "2026-09-03": 1.325,
+          "2026-09-08": 0.295,
+          "2026-09-09": 0.24,
+          "2026-09-10": 0.234,
+          "2026-09-11": 0.233,
+          "2026-09-14": 0.241,
+          "2026-09-15": 0.288,
+          "2026-09-16": 0.223,
+          "2026-09-17": 0.237,
+          "2026-09-18": 0.235,
+          "2026-09-21": 0.226,
+          "2026-09-22": 0.239,
+          "2026-09-23": 0.249,
+          "2026-09-24": 0.233,
+          "2026-09-28": 0.246,
+          "2026-09-29": 0.249,
+          "2026-09-30": 54.816,
+          "2026-10-01": 5.323,
+          "2026-10-02": 34.322,
+          "2026-10-05": 4.983,
+          "2026-10-06": 4.798,
+          "2026-10-07": 5.156,
+          "2026-10-08": 4.679,
+          "2026-10-09": 2.911,
+          "2026-10-12": 5.654,
+          "2026-10-13": 5.34,
+          "2026-10-14": 5.502,
+          "2026-10-15": 5.398,
+          "2026-10-16": 5.634,
+          "2026-10-19": 3.452,
+          "2026-10-20": 3.148,
+          "2026-10-21": 5.056,
+          "2026-10-22": 5.141,
+          "2026-10-23": 5.489,
+          "2026-11-02": 5.629,
+          "2026-11-03": 5.998,
+          "2026-11-04": 63.321
+        },
+        "partition_variants_invalidated": 20,
+        "partitions_built": 21,
+        "partitions_corrupt": 21,
+        "partitions_invalidated": 21,
+        "partitions_reused": 16,
+        "partitions_reused_extension": 15,
+        "partitions_reused_terminal": 1,
+        "price_fingerprint_hits": 4,
+        "price_index_hits": 4,
+        "rows": 35343,
+        "rows_reevaluated": 35343,
+        "rows_reused": 26928,
+        "settled_misses": 5049,
+        "sidecar_bytes": 606756291,
+        "sidecar_bytes_written": 37136015,
+        "sidecar_decoded_bytes": 606756291,
+        "sidecar_hits": 19,
+        "sidecar_json_decode_s": 3.126778799916792,
+        "sidecar_misses": 1,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 2547220565,
+        "stream_verified_bytes": 2547220565,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 35,
+        "t0_fingerprint_misses": 2,
+        "t0_receipt_hits": 35,
+        "t0_receipt_misses": 1
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 53.79911809999612,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 4.938579599998775,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.54016070000216,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 4.351055200000701,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 4.427009899998666,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 4.510867100005271,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 4.311675499993726,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 2.2476779999997234,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 5.1110396000003675,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 4.532041799997387,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 4.688227099999494,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 4.852273700002115,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 4.815251799998805,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 2.6475944999983767,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 2.6336822000012035,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 4.276929200001177,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 4.613992300000973,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 4.729242100002011,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 5.098715100000845,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 5.180624600005103,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 63.31730619999871,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1276600320,
+      "phases_seconds": {
+        "aggregate_s": 13.556,
+        "assemble_s": 15.373,
+        "discovery_legacy_s": 106.737,
+        "discovery_s": 274.717,
+        "discovery_t0_s": 167.425,
+        "evaluate_s": 253.474,
+        "price_index_s": 0.093,
+        "total_s": 557.688
+      },
+      "record_count": 62271,
+      "row_reuse_profile": {
+        "by_session": {},
+        "strict_prospective_rows_reused": 0
+      },
+      "sidecar_json_decode_share_of_evaluate": 0.012335698335595731,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "wall_seconds": 559.685063500001
+    },
+    "candidate-cold": {
+      "error": "SCRATCH_DISK_RESERVE:366317469696:1610612736",
+      "exit": 1,
+      "host_wall_seconds": 2893.2264768999994,
+      "io": {
+        "other_bytes": 359070272,
+        "other_operations": 3609421,
+        "read_bytes": 246590495700,
+        "read_operations": 657817,
+        "write_bytes": 2957788056,
+        "write_operations": 87789
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1194029056,
+        "peak_process_committed_bytes": 1193132032,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7523254272,
+        "free_before": 369342623744,
+        "memory_limit_bytes": 2147483648
+      },
+      "peak_commit_bytes": 1193132032,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "status": "FAILED",
+      "wall_seconds": 2888.464373900002
+    },
+    "candidate-final": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 818.203125,
+      "discovery_helpers_seconds": {
+        "legacy._artifact_paths": 0.6674526999995578,
+        "legacy._handoff_bundles": 0.5972237999958452,
+        "legacy._operation_manifests": 2.623049000001629,
+        "legacy._read_summary_cache": 0.0018065000040223822,
+        "legacy._source_fingerprint": 103.2158006999889,
+        "t0._handoff_by_snapshot": 0.15697740000177873,
+        "t0._handoff_snapshot_inventory": 0.14046370000141906,
+        "t0._operation_manifests": 0.29894819999753963,
+        "t0._original_reuse_reasons": 45.20211019999988,
+        "t0.historical_paths": 47.416358900001796
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 1462.5697837000043,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 369514306,
+        "other_operations": 4004726,
+        "read_bytes": 104096850970,
+        "read_operations": 355635,
+        "write_bytes": 4363606853,
+        "write_operations": 88746
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1158045696,
+        "peak_process_committed_bytes": 1157148672,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7277154304,
+        "free_before": 369519247360,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 488157184,
+        "faults": 164391003,
+        "nonpaged_pool": 56024,
+        "paged_pool": 351624,
+        "peak_commit": 1157148672,
+        "peak_nonpaged_pool": 130072,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 944025600,
+        "working_set": 276697088
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.068,
+        "discovery_legacy_other_s": 104.389,
+        "discovery_t0_loader_s": 0.595,
+        "discovery_t0_other_s": 92.81,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partition_evaluate_s": {
+          "2026-09-03": 20.308,
+          "2026-09-08": 19.129,
+          "2026-09-09": 19.457,
+          "2026-09-10": 19.401,
+          "2026-09-11": 20.994,
+          "2026-09-14": 21.027,
+          "2026-09-15": 21.576,
+          "2026-09-16": 21.67,
+          "2026-09-17": 21.619,
+          "2026-09-18": 21.685,
+          "2026-09-21": 21.79,
+          "2026-09-22": 21.676,
+          "2026-09-23": 21.65,
+          "2026-09-24": 21.656,
+          "2026-09-28": 19.741,
+          "2026-09-29": 26.011,
+          "2026-09-30": 31.076,
+          "2026-10-01": 12.164,
+          "2026-10-02": 33.1,
+          "2026-10-05": 34.191,
+          "2026-10-06": 35.297,
+          "2026-10-07": 37.587,
+          "2026-10-08": 36.807,
+          "2026-10-09": 36.864,
+          "2026-10-12": 38.112,
+          "2026-10-13": 38.471,
+          "2026-10-14": 38.186,
+          "2026-10-15": 36.436,
+          "2026-10-16": 43.688,
+          "2026-10-19": 35.858,
+          "2026-10-20": 37.52,
+          "2026-10-21": 35.51,
+          "2026-10-22": 61.473,
+          "2026-10-23": 61.434,
+          "2026-11-02": 64.202,
+          "2026-11-03": 62.288,
+          "2026-11-04": 62.226
+        },
+        "partitions_built": 37,
+        "price_fingerprint_hits": 4,
+        "price_index_hits": 4,
+        "rows": 62271,
+        "rows_reevaluated": 62271,
+        "settled_misses": 31977,
+        "sidecar_bytes": 768041015,
+        "sidecar_bytes_written": 768041015,
+        "sidecar_decoded_bytes": 768041015,
+        "sidecar_json_decode_s": 4.426860099469195,
+        "sidecar_misses": 34,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 20.30715390000114,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 19.128816700002062,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 19.45653659999516,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 19.40093329999945,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 20.993838000002143,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 21.026486300004763,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 21.575874400004977,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 21.6701241999981,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 21.61821670000063,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 21.684655199998815,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 21.789291900000535,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 21.675367700001516,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 21.65002409999579,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 21.65563039999688,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 19.74090140000044,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 26.010899300003075,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 31.075246100001095,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 12.163785600001574,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.0999238000004,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 34.18981039999926,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 35.29702399999951,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 37.58648389999871,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 36.80692110000382,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 36.86356800000067,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 38.111203899999964,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 38.47014889999991,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 38.18532939999568,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 36.43592170000193,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 43.687883300000976,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 35.85773329999938,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 37.51990800000203,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 35.509836400000495,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 61.47279290000006,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 61.433790100003534,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 64.20112050000171,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 62.28716980000172,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 62.225915899995016,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1157148672,
+      "phases_seconds": {
+        "aggregate_s": 21.023,
+        "assemble_s": 13.585,
+        "discovery_legacy_s": 104.457,
+        "discovery_s": 200.218,
+        "discovery_t0_s": 93.405,
+        "evaluate_s": 1224.173,
+        "price_index_s": 0.077,
+        "total_s": 1459.389
+      },
+      "record_count": 62271,
+      "row_reuse_profile": {
+        "by_session": {},
+        "strict_prospective_rows_reused": 0
+      },
+      "source_checkpoint": "f3ddf8342d694e8095a064bb6b0b2b8d07751ff8",
+      "wall_seconds": 1461.4004045999973
+    },
+    "candidate-minus": {
+      "artifact_identity": "prospective_decision_outcome_feedback:a6bbef568f0a0084ffc34e0de7a150df0b619d44b9c7987da947ace2a0433984",
+      "artifact_raw_sha256": "830d56fcda35bcbf4d75ff48f96163f6f84eefa36d01dc7eac9bcc2dc72e70cd",
+      "artifact_size": 1383094260,
+      "cpu_seconds": 233.0625,
+      "discovery_helpers_seconds": {
+        "legacy._artifact_paths": 0.6988486000045668,
+        "legacy._handoff_bundles": 0.6785236000068835,
+        "legacy._operation_manifests": 0.7770072999992408,
+        "legacy._read_summary_cache": 0.0010573999970802106,
+        "legacy._source_fingerprint": 102.53592339998431,
+        "t0._handoff_by_snapshot": 0.15629310000076657,
+        "t0._handoff_snapshot_inventory": 0.12246179999783635,
+        "t0._operation_manifests": 0.28621299999940675,
+        "t0._original_reuse_reasons": 49.40910769999755,
+        "t0.historical_paths": 43.29910750000272
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 868.2429304000034,
+      "input_digest": "e6cfa419e3654c030648b45804521e847cbb9d4fcf9dff23b587524c47209454",
+      "io_delta": {
+        "other_bytes": 76402824,
+        "other_operations": 1272230,
+        "read_bytes": 56588407354,
+        "read_operations": 353788,
+        "write_bytes": 2894649299,
+        "write_operations": 5096
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1173151744,
+        "peak_process_committed_bytes": 1172230144,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7362748416,
+        "free_before": 369222660096,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 510648320,
+        "faults": 29314366,
+        "nonpaged_pool": 59016,
+        "paged_pool": 351624,
+        "peak_commit": 1172230144,
+        "peak_nonpaged_pool": 132520,
+        "peak_paged_pool": 362512,
+        "peak_working_set": 960675840,
+        "working_set": 299266048
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.095,
+        "discovery_legacy_other_s": 103.786,
+        "discovery_t0_loader_s": 0.998,
+        "discovery_t0_other_s": 49.999,
+        "evaluator_input_store_bytes": 730916286,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1383094260,
+        "partition_evaluate_s": {
+          "2026-09-03": 4.39,
+          "2026-09-08": 4.098,
+          "2026-09-09": 5.224,
+          "2026-09-10": 3.314,
+          "2026-09-11": 7.173,
+          "2026-09-14": 43.21,
+          "2026-09-15": 42.167,
+          "2026-09-16": 44.779,
+          "2026-09-17": 44.111,
+          "2026-09-18": 43.631,
+          "2026-09-21": 43.59,
+          "2026-09-22": 44.25,
+          "2026-09-23": 46.517,
+          "2026-09-24": 42.587,
+          "2026-09-28": 41.704,
+          "2026-09-29": 42.744,
+          "2026-09-30": 37.683,
+          "2026-10-01": 3.524,
+          "2026-10-02": 32.908,
+          "2026-10-05": 1.919,
+          "2026-10-06": 3.808,
+          "2026-10-07": 1.82,
+          "2026-10-08": 3.805,
+          "2026-10-09": 1.779,
+          "2026-10-12": 2.437,
+          "2026-10-13": 4.45,
+          "2026-10-14": 4.329,
+          "2026-10-15": 2.327,
+          "2026-10-16": 4.292,
+          "2026-10-19": 1.757,
+          "2026-10-20": 3.77,
+          "2026-10-21": 3.875,
+          "2026-10-22": 1.813,
+          "2026-10-23": 3.898,
+          "2026-11-02": 2.306,
+          "2026-11-03": 4.227
+        },
+        "partition_variants_invalidated": 20,
+        "partitions_built": 36,
+        "partitions_corrupt": 16,
+        "partitions_invalidated": 36,
+        "price_content_hash_bytes": 299209391,
+        "price_fingerprint_hits": 4,
+        "price_fingerprint_misses": 1,
+        "price_hash_bytes": 299209391,
+        "price_index_hits": 4,
+        "price_index_misses": 1,
+        "rows": 60588,
+        "rows_reevaluated": 60588,
+        "settled_hits": 26126,
+        "settled_misses": 5851,
+        "sidecar_bytes": 730905000,
+        "sidecar_decoded_bytes": 730905000,
+        "sidecar_hits": 33,
+        "sidecar_json_decode_s": 3.8313947009737603,
+        "spool_bytes": 1375503478,
+        "stream_parsed_bytes": 299209391,
+        "stream_sha256_bytes": 299209391,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 35,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 35
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 2.5631596999955946,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 3.966855899998336,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 5.103237800001807,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 3.190700099999958,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 7.049872699994012,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 43.08276740000292,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 42.03651510000054,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 44.65020769999683,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 43.987937600002624,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 41.55730500000209,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 43.470472599998175,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 44.12811399999919,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 46.39549420000549,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 42.46527049999713,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 41.578211099993496,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 42.620082399997045,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 37.549823600005766,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 3.52276780000102,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 32.90505349999876,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 1.9178272999997716,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 3.8067888999939896,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 1.8186729999943054,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 3.803669799999625,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 1.7772702000002027,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 2.434691800001019,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 4.448519400000805,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 4.327128500000981,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 2.325304000005417,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 4.290878699997847,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 1.7552156999954605,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 3.7677854000066873,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 3.8736269999935757,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 1.8109270999993896,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 3.896679400000721,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 2.3042003999944427,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 4.2253163999994285,
+          "session": "2026-11-03"
+        }
+      ],
+      "peak_commit_bytes": 1172230144,
+      "phases_seconds": {
+        "aggregate_s": 10.82,
+        "assemble_s": 13.366,
+        "discovery_legacy_s": 103.882,
+        "discovery_s": 155.371,
+        "discovery_t0_s": 50.996,
+        "evaluate_s": 635.352,
+        "price_index_s": 6.878,
+        "total_s": 822.274
+      },
+      "record_count": 60588,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "wall_seconds": 824.1624594999957
+    },
+    "candidate-post": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 104.140625,
+      "discovery_helpers_seconds": {
+        "legacy._artifact_paths": 0.7267425000027288,
+        "legacy._handoff_bundles": 0.7136087999970187,
+        "legacy._operation_manifests": 0.8569050999940373,
+        "legacy._read_summary_cache": 0.0012611999991349876,
+        "legacy._source_fingerprint": 105.21744379998563,
+        "t0._handoff_by_snapshot": 2.1543758000043454,
+        "t0._handoff_snapshot_inventory": 0.15294689999427646,
+        "t0._operation_manifests": 0.29718980000325246,
+        "t0._original_reuse_reasons": 43.52482869999949,
+        "t0.historical_paths": 44.89812080000411
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 205.96332819999952,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 3634372,
+        "other_operations": 118315,
+        "read_bytes": 59641666319,
+        "read_operations": 61648,
+        "write_bytes": 10160,
+        "write_operations": 328
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 515346432,
+        "peak_process_committed_bytes": 428949504,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7488397312,
+        "free_before": 365381271552,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 373813248,
+        "faults": 21278983,
+        "nonpaged_pool": 41336,
+        "paged_pool": 351624,
+        "peak_commit": 428949504,
+        "peak_nonpaged_pool": 49352,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 219963392,
+        "working_set": 164024320
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.018,
+        "discovery_legacy_other_s": 106.592,
+        "discovery_t0_loader_s": 2.278,
+        "discovery_t0_other_s": 90.613,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "price_fingerprint_hits": 4,
+        "price_index_hits": 4,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "ALREADY_COMPLETE",
+      "partition_timings": [],
+      "peak_commit_bytes": 428949504,
+      "phases_seconds": {
+        "discovery_legacy_s": 106.61,
+        "discovery_s": 200.048,
+        "discovery_t0_s": 92.89,
+        "price_index_s": 0.045,
+        "total_s": 204.087
+      },
+      "record_count": 62271,
+      "row_reuse_profile": {
+        "by_session": {},
+        "strict_prospective_rows_reused": 0
+      },
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "wall_seconds": 204.1163263999988
+    },
+    "candidate-r2": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 249.984375,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.7808231000017258,
+        "legacy._operation_manifests": 0.8843907000045874,
+        "legacy._read_summary_cache": 0.000884300003235694,
+        "t0._handoff_by_snapshot": 0.8481180000017048,
+        "t0._handoff_snapshot_inventory": 0.1462868999951752,
+        "t0._operation_manifests": 1.444543400000839,
+        "t0._original_reuse_reasons": 46.269907100002456
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 1058.0946560000011,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 39575364,
+        "other_operations": 1057654,
+        "read_bytes": 71034090292,
+        "read_operations": 372888,
+        "write_bytes": 2960403585,
+        "write_operations": 3573
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1188012032,
+        "peak_process_committed_bytes": 1187119104,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7360086016,
+        "free_before": 367755214848,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 487895040,
+        "faults": 29056815,
+        "nonpaged_pool": 55888,
+        "paged_pool": 351624,
+        "peak_commit": 1187119104,
+        "peak_nonpaged_pool": 133880,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 975216640,
+        "working_set": 277143552
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.072,
+        "discovery_legacy_other_s": 105.151,
+        "discovery_t0_loader_s": 1.83,
+        "discovery_t0_other_s": 96.231,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partition_evaluate_s": {
+          "2026-09-03": 42.534,
+          "2026-09-08": 41.161,
+          "2026-09-09": 43.552,
+          "2026-09-10": 40.015,
+          "2026-09-11": 42.501,
+          "2026-09-14": 40.235,
+          "2026-09-15": 41.759,
+          "2026-09-16": 43.757,
+          "2026-09-17": 41.964,
+          "2026-09-18": 44.148,
+          "2026-09-21": 43.028,
+          "2026-09-22": 44.151,
+          "2026-09-23": 38.384,
+          "2026-09-24": 43.878,
+          "2026-09-28": 44.088,
+          "2026-09-29": 44.457,
+          "2026-09-30": 40.657,
+          "2026-10-01": 3.757,
+          "2026-10-02": 33.802,
+          "2026-10-05": 3.938,
+          "2026-10-06": 1.886,
+          "2026-10-07": 3.829,
+          "2026-10-08": 1.842,
+          "2026-10-09": 3.558,
+          "2026-10-12": 2.465,
+          "2026-10-13": 2.406,
+          "2026-10-14": 4.44,
+          "2026-10-15": 4.501,
+          "2026-10-16": 2.569,
+          "2026-10-19": 3.979,
+          "2026-10-20": 1.837,
+          "2026-10-21": 3.856,
+          "2026-10-22": 3.883,
+          "2026-10-23": 1.898,
+          "2026-11-02": 4.445,
+          "2026-11-03": 2.359,
+          "2026-11-04": 2.309
+        },
+        "partitions_built": 37,
+        "price_fingerprint_hits": 4,
+        "price_index_hits": 4,
+        "rows": 62271,
+        "rows_reevaluated": 62271,
+        "settled_hits": 27769,
+        "settled_misses": 4208,
+        "sidecar_bytes": 768041015,
+        "sidecar_decoded_bytes": 768041015,
+        "sidecar_hits": 34,
+        "sidecar_json_decode_s": 4.1092608009130345,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 42.53363399999944,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 41.16117619999568,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 43.55216970000038,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 40.014542099997925,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 42.50076809999882,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 40.234447199996794,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 41.75870919999579,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 43.75705690000177,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 41.96341859999666,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 44.148294300001,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 43.0278393999979,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 44.15047780000168,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 38.38366010000027,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 43.87781499999983,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 44.08758289999969,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 44.4565092000048,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 40.65654930000164,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 3.7569595000022673,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.80139629999758,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 3.938354800004163,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 1.8862277000007452,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 3.829307499996503,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 1.8423095000034664,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 3.558230900001945,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 2.464446099998895,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 2.4063796999980696,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 4.440307600001688,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 4.5007809000017005,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 2.569003700002213,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 3.978509100001247,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 1.8364413999952376,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 3.8558083000025363,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 3.883049399999436,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 1.8975481000015861,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 4.445072000002256,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 2.3591841000015847,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 2.308673599996837,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1187119104,
+      "phases_seconds": {
+        "aggregate_s": 11.059,
+        "assemble_s": 16.085,
+        "discovery_legacy_s": 105.223,
+        "discovery_s": 203.822,
+        "discovery_t0_s": 98.061,
+        "evaluate_s": 820.275,
+        "price_index_s": 0.188,
+        "total_s": 1054.303
+      },
+      "record_count": 62271,
+      "sidecar_json_decode_share_of_evaluate": 0.005009613606306464,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "wall_seconds": 1056.2715697999956
+    },
+    "candidate-resume": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 127.4375,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.6144907000052626,
+        "legacy._operation_manifests": 0.7716179000053671,
+        "legacy._read_summary_cache": 0.008849199999531265,
+        "t0._handoff_by_snapshot": 0.14822670000285143,
+        "t0._handoff_snapshot_inventory": 0.14643980000255397,
+        "t0._operation_manifests": 0.2762607999975444,
+        "t0._original_reuse_reasons": 44.38064730000042
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 238.15219829999842,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 16969282,
+        "other_operations": 540736,
+        "read_bytes": 66899546897,
+        "read_operations": 67796,
+        "write_bytes": 1437831436,
+        "write_operations": 1740
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1128120320,
+        "peak_process_committed_bytes": 1127227392,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7333367808,
+        "free_before": 367755284480,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 470630400,
+        "faults": 23742109,
+        "nonpaged_pool": 53984,
+        "paged_pool": 351624,
+        "peak_commit": 1127227392,
+        "peak_nonpaged_pool": 126536,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 916643840,
+        "working_set": 260882432
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "discovery_legacy_loader_s": 0.064,
+        "discovery_legacy_other_s": 103.947,
+        "discovery_t0_loader_s": 1.113,
+        "discovery_t0_other_s": 92.087,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partition_evaluate_s": {
+          "2026-09-03": 0.06,
+          "2026-09-08": 0.175,
+          "2026-09-09": 0.181,
+          "2026-09-10": 0.176,
+          "2026-09-11": 0.179,
+          "2026-09-14": 0.178,
+          "2026-09-15": 0.177,
+          "2026-09-16": 0.183,
+          "2026-09-17": 0.18,
+          "2026-09-18": 0.181,
+          "2026-09-21": 0.178,
+          "2026-09-22": 0.178,
+          "2026-09-23": 0.175,
+          "2026-09-24": 0.248,
+          "2026-09-28": 0.178,
+          "2026-09-29": 0.178,
+          "2026-09-30": 0.181,
+          "2026-10-01": 0.102,
+          "2026-10-02": 0.124,
+          "2026-10-05": 0.105,
+          "2026-10-06": 0.104,
+          "2026-10-07": 0.105,
+          "2026-10-08": 0.106,
+          "2026-10-09": 0.119,
+          "2026-10-12": 0.147,
+          "2026-10-13": 0.149,
+          "2026-10-14": 0.149,
+          "2026-10-15": 0.15,
+          "2026-10-16": 0.154,
+          "2026-10-19": 0.145,
+          "2026-10-20": 0.144,
+          "2026-10-21": 0.149,
+          "2026-10-22": 0.147,
+          "2026-10-23": 0.164,
+          "2026-11-02": 0.152,
+          "2026-11-03": 0.149,
+          "2026-11-04": 0.152
+        },
+        "partitions_reused": 37,
+        "partitions_reused_exact": 37,
+        "price_fingerprint_hits": 4,
+        "price_index_hits": 4,
+        "rows_reused": 62271,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [],
+      "peak_commit_bytes": 1127227392,
+      "phases_seconds": {
+        "aggregate_s": 10.45,
+        "assemble_s": 13.567,
+        "discovery_legacy_s": 104.011,
+        "discovery_s": 197.718,
+        "discovery_t0_s": 93.2,
+        "evaluate_s": 10.388,
+        "price_index_s": 2.135,
+        "total_s": 234.575
+      },
+      "record_count": 62271,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "wall_seconds": 236.50482660000125
+    },
+    "candidate-scrub": {
+      "cpu_seconds": 146.90625,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 2.661360900005093,
+        "legacy._operation_manifests": 0.7735538999986602,
+        "legacy._read_summary_cache": 0.0015583999993395992,
+        "legacy._source_fingerprint": 102.7970679999562,
+        "t0._handoff_by_snapshot": 0.14110380000056466,
+        "t0._handoff_snapshot_inventory": 0.12780909999855794,
+        "t0._operation_manifests": 0.2715009999956237,
+        "t0._original_reuse_reasons": 45.674857600002724
+      },
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 295.300448199996,
+      "io_delta": {
+        "other_bytes": 5125804,
+        "other_operations": 146406,
+        "read_bytes": 93981965551,
+        "read_operations": 94425,
+        "write_bytes": 24988460,
+        "write_operations": 119
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 519491584,
+        "peak_process_committed_bytes": 401666048,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7422955520,
+        "free_before": 366317121536,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 362655744,
+        "faults": 29769504,
+        "nonpaged_pool": 39840,
+        "paged_pool": 351624,
+        "peak_commit": 401666048,
+        "peak_nonpaged_pool": 49488,
+        "peak_paged_pool": 362512,
+        "peak_working_set": 192241664,
+        "working_set": 154193920
+      },
+      "metrics": {
+        "scrub_bytes": 35753708197,
+        "scrub_clean": 37,
+        "scrub_mismatches": 0,
+        "scrub_out_of_scope": 80,
+        "scrub_sources": 37,
+        "scrub_verified_at": 37
+      },
+      "mismatches": [],
+      "out_of_scope": [
+        {
+          "kind": "t0",
+          "path": "operations-review/prospective-decision-retention-v1/2026-09-11/70d8cae93a0d3a23b9a9a4c3c7a8f76e7a2baa77e2775ad420b2765975fc9b94/prospective_decision_snapshot.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "t0",
+          "path": "operations-review/prospective-decision-retention-v1/2026-09-11/c11780cd798d0a27f6bf6ec7374fc1664549960ec56a2bd75c03602a19d924ee/prospective_decision_snapshot.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "t0",
+          "path": "operations-review/prospective-decision-retention-v1/2026-10-02/2a4594cad0e282cdcb83c61dc6f72d8d24bf2b874a86fec6158ad73364c91c91/prospective_decision_snapshot.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-08-25/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-03/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-04/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-08/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-09/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-10/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-11/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-14/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-15/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-16/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-17/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-18/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-21/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-22/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-23/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-24/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-28/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-29/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-09-30/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-01/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-02/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-05/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-06/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-07/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-08/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-09/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-12/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-13/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-14/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-15/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-16/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-19/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-20/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-21/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-22/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-23/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-10-26/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-11-02/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-11-03/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/canonical-post-close-v1/2026-11-04/enrichment/integrated_investment_decision_product.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260825/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260904/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260909/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260910/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260911/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260914/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260915/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260916/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260917/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260918/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260921/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260922/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260923/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260924/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260928/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260929/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20260930/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261001/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261005/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261006/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261007/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261008/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261009/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261012/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261013/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261014/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261015/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261016/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261019/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261020/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261021/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261022/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261023/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261026/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261102/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        },
+        {
+          "kind": "legacy",
+          "path": "operations-review/integrated-investment-decision-product-v1-20261104/integrated_investment_decision_product_artifact.json",
+          "status": "scrub_out_of_scope"
+        }
+      ],
+      "partition_timings": [],
+      "peak_commit_bytes": 401666048,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "status": "SCRUBBED",
+      "wall_seconds": 293.6954210999975
+    },
+    "candidate-seed": {
+      "cpu_seconds": 107.0,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.41306609999446664,
+        "legacy._operation_manifests": 0.46923929999320535,
+        "legacy._read_summary_cache": 0.01550419999693986,
+        "legacy._source_fingerprint": 104.01265629996487,
+        "t0._handoff_by_snapshot": 0.145814600000449,
+        "t0._handoff_snapshot_inventory": 0.14588430000003427,
+        "t0._operation_manifests": 0.27390400000149384,
+        "t0._original_reuse_reasons": 45.028716200002236
+      },
+      "elapsed_s": 209.894,
+      "exit": 0,
+      "frozen_as_of": "2026-11-04T12:29:14.264899+00:00",
+      "host_wall_seconds": 215.8430315000005,
+      "io_delta": {
+        "other_bytes": 2590590,
+        "other_operations": 93908,
+        "read_bytes": 59711009256,
+        "read_operations": 246845,
+        "write_bytes": 10162,
+        "write_operations": 328
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 519041024,
+        "peak_process_committed_bytes": 402436096,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 7284678656,
+        "free_before": 366317297664,
+        "memory_limit_bytes": 2147483648
+      },
+      "legacy_count": 3,
+      "memory_counters": {
+        "cb": 72,
+        "commit": 363241472,
+        "faults": 20838712,
+        "nonpaged_pool": 40112,
+        "paged_pool": 351624,
+        "peak_commit": 402436096,
+        "peak_nonpaged_pool": 49352,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 192397312,
+        "working_set": 152637440
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "evaluator_input_store_bytes": 768052643,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "sidecar_bytes": 768041015,
+        "sidecar_decoded_bytes": 768041015,
+        "sidecar_hits": 34,
+        "sidecar_json_decode_s": 2.970322901455802,
+        "stream_sha256_bytes": 0,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "partition_timings": [],
+      "peak_commit_bytes": 402436096,
+      "source_checkpoint": "14d5f246a01f62b802962279d813e79198767f17",
+      "status": "SEEDED",
+      "t0_count": 34,
+      "wall_seconds": 209.91301250000106
+    },
+    "oracle": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 2566.4375,
+      "exit": 0,
+      "host_wall_seconds": 3274.1913785999986,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 368377438,
+        "other_operations": 3588152,
+        "read_bytes": 254442733817,
+        "read_operations": 921758,
+        "write_bytes": 5459381367,
+        "write_operations": 89103
+      },
+      "job": {
+        "accounting_available": true,
+        "authority_effect": "NONE_OPERATIONAL_OBSERVABILITY_ONLY",
+        "breakaway_ok": false,
+        "job_memory_limit_bytes": 2147483648,
+        "kill_on_job_close": true,
+        "limit_events": [],
+        "limit_flags": 8960,
+        "limit_scope": "UNKNOWN",
+        "memory_accounting": "WINDOWS_JOB_PRIVATE_COMMIT",
+        "peak_job_committed_bytes": 1193902080,
+        "peak_process_committed_bytes": 1193013248,
+        "process_memory_limit_bytes": 2147483648,
+        "silent_breakaway_ok": false
+      },
+      "launch_resources": {
+        "available_ram_before": 6229508096,
+        "free_before": 370942332928,
+        "memory_limit_bytes": 2147483648
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 528007168,
+        "faults": 459986194,
+        "nonpaged_pool": 61192,
+        "paged_pool": 351608,
+        "peak_commit": 1193013248,
+        "peak_nonpaged_pool": 134968,
+        "peak_paged_pool": 362496,
+        "peak_working_set": 980037632,
+        "working_set": 315719680
+      },
+      "metrics": {
+        "avoided_iid_bytes": 0,
+        "evaluator_input_store_bytes": 1831868061,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_misses": 46,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partitions_built": 37,
+        "price_index_misses": 4,
+        "rows": 62271,
+        "settled_misses": 31977,
+        "sidecar_bytes": 1831856433,
+        "sidecar_bytes_written": 1831856433,
+        "sidecar_misses": 34,
+        "spool_bytes": 1429903914,
+        "stream_header_scan_bytes": 36257975031,
+        "stream_parsed_bytes": 959906744,
+        "stream_sha256_bytes": 75550087718,
+        "stream_verified_bytes": 34516807762,
+        "summary_hits": 0,
+        "t0_fingerprint_misses": 37,
+        "t0_receipt_misses": 36
+      },
+      "oracle_comparison": {
+        "artifact_identity": true,
+        "artifact_raw_sha256": true,
+        "artifact_size": true,
+        "input_digest": true,
+        "record_count": true
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 32.91825710000012,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 21.1862672999996,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 22.159097399999155,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 22.133234599999923,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 20.112236999999368,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 19.7588839,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 20.45881769999869,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 22.481627299999673,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 22.47234220000064,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 22.440789599999334,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 22.55612850000034,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 22.63177639999958,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 22.36630259999947,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 22.446419199999582,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 22.8401044000002,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 25.73780280000028,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 23.8046190999994,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 12.623348299999634,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.48016259999895,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 38.319943700000294,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 38.59180659999947,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 40.50469890000204,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 38.56117019999874,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 36.89063800000076,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 39.55581069999971,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 41.60155840000152,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 39.52755569999863,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 42.19000919999962,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 39.85640820000117,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 41.21627179999996,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 39.051607800000056,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 38.52611949999846,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 65.37582160000238,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 65.5148889000011,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 63.87307900000087,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 65.71148910000193,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 67.8400400999999,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1193013248,
+      "phases_seconds": {
+        "aggregate_s": 19.814,
+        "assemble_s": 13.832,
+        "discovery_s": 1938.952,
+        "evaluate_s": 1280.947,
+        "price_index_s": 16.001,
+        "total_s": 3270.972
+      },
+      "record_count": 62271,
+      "source_checkpoint": "dc220164b6a4eb2b6fbec8175e588d6de9ab5553",
+      "wall_seconds": 3273.0645430999975
+    }
+  },
+  "realistic_experiment_scope": {
+    "delta": "ONLY_NOV4_T0_PATH_IN_SCRATCH_INVENTORY",
+    "fixed": "Legacy inventory, completed-operation chain, PIT captures/calendar, other T0 and price evidence at the frozen oracle context.",
+    "interpretation": "One-new-T0 invalidation experiment requested by the scratch-inventory contract; not a replay of the entire historical Daily acquisition/capture sequence.",
+    "new_t0_freshness": "Receipt and sidecar absent before minus and verified absent again before add. Old full-corpus partition payloads removed before minus.",
+    "strict_prospective": "Existing guard requires identical future-input digest for any strict row reuse. Per-session and strict-row reuse counts are recorded on add."
+  },
+  "realistic_preparation": {
+    "Bytes": 2905588681.0,
+    "Files": 78,
+    "Free": 369222692864,
+    "PlanSha": "D145DE475312C3780487AA7F6CC4455CEA7B0A1DED9C34F21D161C60001FDA63",
+    "full_partition_variants": "ALL_74_OLD_FULL_PAYLOADS_REMOVED; MINUS_VARIANTS_REMAIN_FOR_REALISTIC_ROW_REUSE",
+    "new_t0_caches": "NOV4_RECEIPT_AND_V3_SIDECAR_REMOVED_BEFORE_MINUS; ADD_MUST_VERIFY_SOURCE_AND_BUILD_NEW_SIDECAR"
+  },
+  "runs": {
+    "baseline_all_invalidated_warm": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 263.625,
+      "discovery_helpers_seconds": {
+        "legacy._handoff_bundles": 0.6988924999968731,
+        "legacy._operation_manifests": 0.8884999000001699,
+        "legacy._read_summary_cache": 0.008032499998080311,
+        "t0._handoff_by_snapshot": 0.14560379999966244,
+        "t0._handoff_snapshot_inventory": 0.1630394999992859,
+        "t0._operation_manifests": 0.29802550000022165
+      },
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 39612650,
+        "other_operations": 1057733,
+        "read_bytes": 74124131080,
+        "read_operations": 633524,
+        "write_bytes": 2960411725,
+        "write_operations": 3574
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 486817792,
+        "faults": 29486048,
+        "nonpaged_pool": 55888,
+        "paged_pool": 351624,
+        "peak_commit": 1184972800,
+        "peak_nonpaged_pool": 133880,
+        "peak_paged_pool": 362256,
+        "peak_working_set": 974172160,
+        "working_set": 276914176
+      },
+      "metrics": {
+        "avoided_iid_bytes": 38583959172,
+        "evaluator_input_store_bytes": 1831868061,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_hits": 4,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partitions_built": 37,
+        "price_index_hits": 4,
+        "rows": 62271,
+        "settled_hits": 27769,
+        "settled_misses": 4208,
+        "sidecar_bytes": 1831856433,
+        "sidecar_hits": 34,
+        "spool_bytes": 1429903914,
+        "stream_sha256_bytes": 959906744,
+        "summary_hits": 42,
+        "t0_fingerprint_hits": 36,
+        "t0_fingerprint_misses": 1,
+        "t0_receipt_hits": 36
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 43.54482030000145,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 44.630148699998244,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 46.357900700000755,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 44.56884010000067,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 39.681516399999964,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 43.53208249999807,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 44.48388530000011,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 46.491231199997856,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 43.47494619999998,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 46.83496979999836,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 40.815954199999396,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 44.76064600000245,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 40.926147900001524,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 44.59365439999965,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 44.85556689999794,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 47.47715039999821,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 43.40597049999997,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 2.0459007999997993,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 35.624302699998225,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 2.4767333999989205,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 2.4731062999999267,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 4.560781500000303,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 4.469855800001824,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 2.13349350000135,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 5.063198899999406,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 5.067512500001612,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 4.914452799999708,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 5.184435499999381,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 5.003773399999773,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 4.747707499998796,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 2.4469064000004437,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 4.467107799999212,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 4.505213500000536,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 2.518769999998767,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 5.052483700001176,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 4.9308935000008205,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 4.887161099999503,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1184972800,
+      "phases_seconds": {
+        "aggregate_s": 11.244,
+        "assemble_s": 15.656,
+        "discovery_s": 197.158,
+        "evaluate_s": 867.867,
+        "price_index_s": 2.551,
+        "total_s": 1094.829
+      },
+      "record_count": 62271,
+      "report_repair": {
+        "independent_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+        "original_return_preserved": "baseline-r2-result.original-report.json",
+        "reason": "R2 bypass applied to final result reader as well as terminal shortcut; artifact bytes unaffected",
+        "source": "published completion metadata plus independent native-byte SHA256"
+      },
+      "state_bytes": 4019154815,
+      "store_bytes": {
+        "_evaluator_inputs": 1831868061,
+        "_partitions": 1522567757,
+        "_settled_store": 635148775,
+        "_stream": 29531707
+      },
+      "wall_seconds": 1097.2515483999996
+    },
+    "oracle_cold": {
+      "artifact_identity": "prospective_decision_outcome_feedback:28b9c2affe09af8a5f4483a131d0eff7304f14e920d54d9cb6cf0b7d26e9e982",
+      "artifact_raw_sha256": "3bd9080ec074a22bcc148bec7f47c0bb7058bba68a0d2211c04729bbed214e57",
+      "artifact_size": 1437810864,
+      "cpu_seconds": 2566.4375,
+      "input_digest": "e5c4b2d5736064d935cedf5aa5944f6d46686676d3fd22fba8c403b126ca70c6",
+      "io_delta": {
+        "other_bytes": 368377438,
+        "other_operations": 3588152,
+        "read_bytes": 254442733817,
+        "read_operations": 921758,
+        "write_bytes": 5459381367,
+        "write_operations": 89103
+      },
+      "memory_counters": {
+        "cb": 72,
+        "commit": 528007168,
+        "faults": 459986194,
+        "nonpaged_pool": 61192,
+        "paged_pool": 351608,
+        "peak_commit": 1193013248,
+        "peak_nonpaged_pool": 134968,
+        "peak_paged_pool": 362496,
+        "peak_working_set": 980037632,
+        "working_set": 315719680
+      },
+      "metrics": {
+        "avoided_iid_bytes": 0,
+        "evaluator_input_store_bytes": 1831868061,
+        "full_iid_bytes_parsed": 0,
+        "full_iid_parses": 0,
+        "legacy_fingerprint_misses": 46,
+        "legacy_receipt_hits": 4,
+        "output_bytes": 1437810864,
+        "partitions_built": 37,
+        "price_index_misses": 4,
+        "rows": 62271,
+        "settled_misses": 31977,
+        "sidecar_bytes": 1831856433,
+        "sidecar_bytes_written": 1831856433,
+        "sidecar_misses": 34,
+        "spool_bytes": 1429903914,
+        "stream_header_scan_bytes": 36257975031,
+        "stream_parsed_bytes": 959906744,
+        "stream_sha256_bytes": 75550087718,
+        "stream_verified_bytes": 34516807762,
+        "summary_hits": 0,
+        "t0_fingerprint_misses": 37,
+        "t0_receipt_misses": 36
+      },
+      "outcome": "BUILT",
+      "partition_timings": [
+        {
+          "seconds": 32.91825710000012,
+          "session": "2026-09-03"
+        },
+        {
+          "seconds": 21.1862672999996,
+          "session": "2026-09-08"
+        },
+        {
+          "seconds": 22.159097399999155,
+          "session": "2026-09-09"
+        },
+        {
+          "seconds": 22.133234599999923,
+          "session": "2026-09-10"
+        },
+        {
+          "seconds": 20.112236999999368,
+          "session": "2026-09-11"
+        },
+        {
+          "seconds": 19.7588839,
+          "session": "2026-09-14"
+        },
+        {
+          "seconds": 20.45881769999869,
+          "session": "2026-09-15"
+        },
+        {
+          "seconds": 22.481627299999673,
+          "session": "2026-09-16"
+        },
+        {
+          "seconds": 22.47234220000064,
+          "session": "2026-09-17"
+        },
+        {
+          "seconds": 22.440789599999334,
+          "session": "2026-09-18"
+        },
+        {
+          "seconds": 22.55612850000034,
+          "session": "2026-09-21"
+        },
+        {
+          "seconds": 22.63177639999958,
+          "session": "2026-09-22"
+        },
+        {
+          "seconds": 22.36630259999947,
+          "session": "2026-09-23"
+        },
+        {
+          "seconds": 22.446419199999582,
+          "session": "2026-09-24"
+        },
+        {
+          "seconds": 22.8401044000002,
+          "session": "2026-09-28"
+        },
+        {
+          "seconds": 25.73780280000028,
+          "session": "2026-09-29"
+        },
+        {
+          "seconds": 23.8046190999994,
+          "session": "2026-09-30"
+        },
+        {
+          "seconds": 12.623348299999634,
+          "session": "2026-10-01"
+        },
+        {
+          "seconds": 33.48016259999895,
+          "session": "2026-10-02"
+        },
+        {
+          "seconds": 38.319943700000294,
+          "session": "2026-10-05"
+        },
+        {
+          "seconds": 38.59180659999947,
+          "session": "2026-10-06"
+        },
+        {
+          "seconds": 40.50469890000204,
+          "session": "2026-10-07"
+        },
+        {
+          "seconds": 38.56117019999874,
+          "session": "2026-10-08"
+        },
+        {
+          "seconds": 36.89063800000076,
+          "session": "2026-10-09"
+        },
+        {
+          "seconds": 39.55581069999971,
+          "session": "2026-10-12"
+        },
+        {
+          "seconds": 41.60155840000152,
+          "session": "2026-10-13"
+        },
+        {
+          "seconds": 39.52755569999863,
+          "session": "2026-10-14"
+        },
+        {
+          "seconds": 42.19000919999962,
+          "session": "2026-10-15"
+        },
+        {
+          "seconds": 39.85640820000117,
+          "session": "2026-10-16"
+        },
+        {
+          "seconds": 41.21627179999996,
+          "session": "2026-10-19"
+        },
+        {
+          "seconds": 39.051607800000056,
+          "session": "2026-10-20"
+        },
+        {
+          "seconds": 38.52611949999846,
+          "session": "2026-10-21"
+        },
+        {
+          "seconds": 65.37582160000238,
+          "session": "2026-10-22"
+        },
+        {
+          "seconds": 65.5148889000011,
+          "session": "2026-10-23"
+        },
+        {
+          "seconds": 63.87307900000087,
+          "session": "2026-11-02"
+        },
+        {
+          "seconds": 65.71148910000193,
+          "session": "2026-11-03"
+        },
+        {
+          "seconds": 67.8400400999999,
+          "session": "2026-11-04"
+        }
+      ],
+      "peak_commit_bytes": 1193013248,
+      "phases_seconds": {
+        "aggregate_s": 19.814,
+        "assemble_s": 13.832,
+        "discovery_s": 1938.952,
+        "evaluate_s": 1280.947,
+        "price_index_s": 16.001,
+        "total_s": 3270.972
+      },
+      "record_count": 62271,
+      "wall_seconds": 3273.0645430999975
+    }
+  },
+  "scratch_cleanup": {
+    "baseline_artifact_body": "PRUNED_AFTER_INDEPENDENT_NATIVE_SHA_SIZE_VERIFICATION",
+    "candidate_cold_artifact_body": "PRUNED_AFTER_INDEPENDENT_NATIVE_SHA_SIZE_VERIFICATION_FOR_R2",
+    "preserved": "MEASUREMENTS_MANIFESTS_RECEIPTS_PROOF_HASHES_AND_ALL_PRODUCTION_EVIDENCE",
+    "reason": "340_GiB_FLOOR_PLUS_ASSEMBLY_RESERVE",
+    "scope": "ONLY_INDIVIDUALLY_VERIFIED_DERIVED_SCRATCH_PAYLOADS",
+    "source_mutations": false
+  },
+  "scrub_scope_proof": {
+    "all_expected_five_out_of_scope": true,
+    "exclusions": [
+      {
+        "classification": "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED",
+        "kind": "t0",
+        "path": "operations-review/prospective-decision-retention-v1/2026-09-11/70d8cae93a0d3a23b9a9a4c3c7a8f76e7a2baa77e2775ad420b2765975fc9b94/prospective_decision_snapshot.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_SNAPSHOT_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED",
+        "kind": "t0",
+        "path": "operations-review/prospective-decision-retention-v1/2026-09-11/c11780cd798d0a27f6bf6ec7374fc1664549960ec56a2bd75c03602a19d924ee/prospective_decision_snapshot.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_SNAPSHOT_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "INVALID_NON_GENUINE_SNAPSHOT_HEADER",
+        "kind": "t0",
+        "path": "operations-review/prospective-decision-retention-v1/2026-10-02/2a4594cad0e282cdcb83c61dc6f72d8d24bf2b874a86fec6158ad73364c91c91/prospective_decision_snapshot.json",
+        "reason_codes": [
+          "DISCOVERY_SNAPSHOT_LOADER_RETURNED_NONE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-08-25/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-03/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-04/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-08/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-09/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-10/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-11/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-14/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-15/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-16/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-17/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-18/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-21/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-22/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-23/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-24/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-28/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-29/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-09-30/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-01/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-02/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-05/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-06/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-07/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-08/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-09/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-12/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-13/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-14/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-15/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-16/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-19/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-20/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-21/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-22/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-23/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-10-26/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "CANONICAL_HANDOFF_BINDING_MISSING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-11-02/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-11-03/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/canonical-post-close-v1/2026-11-04/enrichment/integrated_investment_decision_product.json",
+        "reason_codes": [
+          "NONCANONICAL_COPY_OF_BOUND_ARTIFACT"
+        ]
+      },
+      {
+        "classification": "UNKNOWN_TEMPORAL_STATUS",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260825/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "NO_CANONICAL_HANDOFF_BINDING"
+        ]
+      },
+      {
+        "classification": "EXCLUDE_TEMPORAL_PROVENANCE_UNQUALIFIED",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260904/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "HANDOFF_ARTIFACT_IDENTITY_MISMATCH"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260909/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260910/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260911/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260914/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260915/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260916/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260917/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260918/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260921/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260922/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260923/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260924/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260928/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260929/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20260930/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261001/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261005/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261006/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261007/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261008/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261009/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261012/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261013/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261014/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261015/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261016/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261019/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261020/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261021/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261022/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261023/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "UNKNOWN_TEMPORAL_STATUS",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261026/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "NO_CANONICAL_HANDOFF_BINDING"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261102/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      },
+      {
+        "classification": "CURRENT_VIEW_OF_OLD_SESSION",
+        "kind": "legacy",
+        "path": "operations-review/integrated-investment-decision-product-v1-20261104/integrated_investment_decision_product_artifact.json",
+        "reason_codes": [
+          "IMMUTABLE_PROSPECTIVE_SNAPSHOT_IS_CANONICAL_T0_SOURCE"
+        ]
+      }
+    ],
+    "expected_original_five": [
+      "operations-review/prospective-decision-retention-v1/2026-10-02/2a4594cad0e282cdcb83c61dc6f72d8d24bf2b874a86fec6158ad73364c91c91/prospective_decision_snapshot.json",
+      "operations-review/canonical-post-close-v1/2026-11-02/enrichment/integrated_investment_decision_product.json",
+      "operations-review/canonical-post-close-v1/2026-11-03/enrichment/integrated_investment_decision_product.json",
+      "operations-review/integrated-investment-decision-product-v1-20261102/integrated_investment_decision_product_artifact.json",
+      "operations-review/integrated-investment-decision-product-v1-20261103/integrated_investment_decision_product_artifact.json"
+    ],
+    "metrics": {
+      "scrub_bytes": 35753708197,
+      "scrub_clean": 37,
+      "scrub_mismatches": 0,
+      "scrub_out_of_scope": 80,
+      "scrub_sources": 37,
+      "scrub_verified_at": 37
+    },
+    "scope_rule": "Exactly sources admitted by unchanged discovery; modern IID working views, unbound copies and non-genuine T0 excluded with explicit reasons.",
+    "status": "PASS",
+    "unexplained": []
+  },
+  "seed_cost_estimate": {
+    "cold_non_partition_residual_seconds": 1738.8863739000021,
+    "completed_partition_build_seconds_sum": 1149.578,
+    "initial_cold_attempt_seconds": 2888.464373900002,
+    "limitation": "Some sidecar preparation is lazy inside partition builds, so the residual alone is not a complete cold-seed bound. The entire cold attempt is an observed conservative planning ceiling on this corpus, not a guaranteed deadline.",
+    "method": "Conservative deploy planning proxy from cold failed-assembly attempt residual; includes discovery, source verification, input-sidecar creation and non-partition overhead. Not a separately timed cold seed.",
+    "warm_seed_host_seconds": 215.8430315000005
+  },
+  "source_checkpoint": "f3ddf8342d694e8095a064bb6b0b2b8d07751ff8",
+  "source_correction_after_benchmark": {
+    "L2_removal_commit": "2911d1c0b4116c632a04541a0fed34b055633585",
+    "cleanup_fix": "Apply existing dead/stale writer cleanup to bounded source-key partition directories, with reparse refusal and the existing stale threshold. Live writer files remain protected.",
+    "cleanup_regression": "Additional resource-containment suite found dead partition spool left after a killed child and successful retry. Cleanup previously visited only output parent.",
+    "final_validation": {
+      "passed": 200,
+      "scope": "All test_tplus_*, streaming, retention source transitions, roadmap, incremental/resume and resource guard/containment integration.",
+      "seconds": 364.78
+    },
+    "initial_validation": "125 main focused passed; 74 related passed and one nested-spool retry regression failed; targeted retry regression plus source-transition then 5 passed."
+  },
+  "state_scope": "ISOLATED_SCRATCH_ONLY",
+  "status": "REAL_CORPUS_VALIDATED_PERFORMANCE_RELEASE_GATES_UNMET"
+}

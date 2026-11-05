@@ -216,23 +216,37 @@ TPLUS_INCREMENTAL_COST_V2 removes two whole-corpus costs from the feedback child
 horizon, maturity, ordering, partition invalidation, artifact identity and the 1,200-second / 2 GiB
 resource ceilings stay as they are.
 
-A T0 or legacy source is trusted from its receipt only when the volume id, file id, size, mtime and
-NTFS ChangeTime still match a receipt produced by a full SHA-256 under the current verifier. Any
-mismatch, a missing receipt, an unreadable fingerprint or a reparse point hashes the file exactly as
-before and refreshes the receipt. `stream_sha256_bytes` counts only that full-hash branch.
-`tools/vault_snapshot.py` already reads ChangeTime, and the root feedback module must not import
-`tools`. The five-field helper is `stocklookup_core/evidence/source_file_fingerprint.py`.
+A T0, legacy, or exact-session price source is trusted from its receipt only when the volume id,
+file id, size, mtime and NTFS ChangeTime still match a receipt produced by a full SHA-256 under the
+current verifier. Any mismatch, a missing receipt, an unreadable fingerprint or a reparse point
+hashes the file exactly as before and refreshes the receipt. `stream_sha256_bytes` counts only that
+full-hash branch. `tools/vault_snapshot.py` already reads ChangeTime, and the root feedback module
+must not import `tools`. The five-field helper is `stocklookup_core/evidence/source_file_fingerprint.py`.
+The verifier digest hashes the fingerprint helper, `source_verifier.py`, `source_verifier_receipts.py`,
+`storage_portability.py`, `bounded_artifact_stream.py`, `prospective_decision_retention.py`
+and `retained_evidence_catalog.py`. An evaluator-only edit of the streaming module does not
+invalidate receipts. This M1b deploy still changes the digest, so one seed is still required.
+A price receipt stores the index path, not a second copy of the snapshot.
 
-`--scrub-sources --root <root> --state-root <state>` is an out-of-Daily check. It re-hashes every
-T0 and legacy source, refreshes `verified_at` when the receipt matches, and exits
-`EXIT_SOURCE_INTEGRITY` (31) on a mismatch. It does not publish a feedback artifact.
+`--scrub-sources --root <root> --state-root <state>` is an out-of-Daily check. Its scope is the
+set discovery admits. It re-hashes those sources, refreshes `verified_at` when the receipt matches,
+and exits `EXIT_SOURCE_INTEGRITY` (31) on a failure. A path outside that set is
+`scrub_out_of_scope` and does not change the exit code. An admitted source with no receipt is
+`RECEIPT_MISSING`. `RECEIPT_MISMATCH` is a receipt whose SHA-256 or size differs. The scrub does
+not publish a feedback artifact.
 
 An invalidated partition re-reads a rebuildable evaluator-input sidecar under
 `<state-root>/operations-review/prospective-decision-outcome-feedback-v1/_evaluator_inputs/`, keyed
-by the T0 SHA-256 and the projection digest (`prospective_feedback_evaluator_input/v2`). Each line
+by the T0 SHA-256 and the projection digest (`prospective_feedback_evaluator_input/v3`). Each line
 stores `ticker`, `decision_identity`, and the projected retained record once. `record` is that
-record's `integrated_decision_at_t0`. `artifact`, `temporal`, `source_path` and `t0_snapshot` are
+record's `integrated_decision_at_t0`, reduced to the fields the row evaluator reads. Fields the
+evaluator does not read are not stored. `artifact`, `temporal`, `source_path` and `t0_snapshot` are
 rebuilt at read time from the live handle and inventory, the same helper the direct T0 parse uses.
+A v2 sidecar does not match this contract and is rebuilt from the T0. Every row in a rebuilt
+partition is evaluated through the existing evaluator and terminal contribution cache. M1b's
+row-level reuse experiment was removed after the retained-corpus one-new-T0 run skipped zero
+of 35,343 evaluated rows (below the required 20%). Whole-partition exact, terminal and extension
+reuse remains unchanged; that run reused 16 partitions and rebuilt 21.
 Its own SHA-256 is checked before use. A missing, truncated or corrupt sidecar is rebuilt from the
 T0. The store budget is 12 GiB and 4,096 files: about 60 sessions of the deduplicated sidecar, with
 headroom. A new sidecar that would exceed the budget is not written (`sidecar_skipped_budget`);
@@ -241,17 +255,17 @@ build. The settled store keeps its own 2 GiB cap and still fails closed when its
 exceed that cap. The T0 file remains the only authority. The round-1 2026-11-03 sidecar, which
 stored `record` twice plus the discovery fields, was 154,774,713 bytes against a 2,545,919,441-byte
 T0 (6.08 percent). After storing the projected record once, that same T0's sidecar is 78,984,877
-bytes (1,683 rows, 3.10 percent). The 33-sidecar store on the current corpus is 1,751,745,573
-bytes, about 53.1 MB per session. The budget is 12 GiB. Legacy artifacts still use their
-summary caches. Price-index hashes are unchanged, so a warm discovery can still report a non-zero
-`stream_sha256_bytes` for price files.
+bytes (1,683 rows, 3.10 percent). Those are historical M1 measurements. The M1b retained-corpus
+34-sidecar store measured 768,052,643 bytes, against the updated M1 baseline's 1,831,868,061
+bytes. The budget is 12 GiB. Legacy artifacts still use their
+summary caches. Price files use the same fingerprint rule. A warm run whose price fingerprint
+matches does not add those bytes to `stream_sha256_bytes`.
 
 ### One-time seed before the first Daily on this code
 
-`_verification_code_digest()` includes this module, so every Production T0 receipt is invalid on
-the first Daily after deploy. That Daily would re-hash the corpus (the round-1 cold discovery was
-1,493 s and hashed about 70 GB) and parse every T0 to build sidecars, and the pre-handoff child
-would hit the unchanged 1,200 s deadline.
+This M1b deploy changes the verifier digest, so every Production T0 receipt is invalid until the
+seed below has run. The seed re-hashes the corpus and rebuilds v3 sidecars. It does not evaluate
+rows. A later deploy that changes only the streaming evaluator does not invalidate those receipts.
 
 Seed once, outside Daily, then scrub. This writes Production state. It is Owner-gated. Do not run
 it from an agent session.

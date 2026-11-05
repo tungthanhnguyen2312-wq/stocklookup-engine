@@ -261,6 +261,8 @@ env:
     tests/test_prospective_feedback_resume.py
     tests/test_prospective_feedback_incremental.py
     tests/test_tplus_incremental_cost_v2.py
+    tests/test_tplus_m1b_incremental.py
+    tests/test_tplus_m1b_source_transition.py
     tests/test_tplus_resume_source_transition.py
     tests/test_tplus_daily_source_transition.py
     tests/test_tplus_real_corpus_source_transition.py
