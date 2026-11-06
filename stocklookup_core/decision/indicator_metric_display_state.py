@@ -229,8 +229,16 @@ def build_ticker_display_metrics(ticker: str, card: Mapping[str, Any], *,
     if ev_ebitda_candidates:
         display_records["ev_ebitda"] = min(ev_ebitda_candidates, key=lambda r: _STATE_RANK.get(r["display_state"], 9))
 
-    return {
+    out = {
         metric_id: {"display_state": display_records[metric_id]["display_state"],
                     "value": display_records[metric_id]["value"]}
         for metric_id in INVESTOR_METRIC_ORDER if metric_id in display_records
     }
+    # Additive: a value taken from a research-proxy method (see
+    # indicator_metric_availability._VALUATION_RESEARCH_FALLBACK) carries basis=RESEARCH_PROXY
+    # so the Dashboard labels it as research context, never as the primary/official metric.
+    for metric_id, entry in out.items():
+        fitness = str((availability_records.get(metric_id) or {}).get("evidence_fitness") or "")
+        if entry["display_state"] == "AVAILABLE" and fitness.startswith(availability.RESEARCH_PROXY_FITNESS_PREFIX):
+            entry["basis"] = "RESEARCH_PROXY"
+    return out

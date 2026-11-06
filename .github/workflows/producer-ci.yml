@@ -182,6 +182,8 @@ env:
     tests/test_vault_boundary_emit.py
     tests/test_vault_restore_requalify.py
     tests/test_vault_t0_archive_location.py
+    tests/test_current_session_candlestick_projection.py
+    tests/test_post_daily_candlestick_release.py
     tests/test_macro_canonical_daily_consumer.py
     tests/test_current_macro_regime.py
     tests/test_macro_market_regime_decision_context.py
