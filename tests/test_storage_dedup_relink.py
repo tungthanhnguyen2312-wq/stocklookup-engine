@@ -2,6 +2,8 @@
 import hashlib
 import json
 import os
+import threading
+from pathlib import Path
 
 import pytest
 
@@ -28,7 +30,11 @@ def _fixture(tmp_path, *, kind="FULL_UNIVERSE", classification=relink.ELIGIBLE, 
 
 
 def _run(*args):
-    return relink.main([str(a) for a in args])
+    args = [str(a) for a in args]
+    if ("--apply" in args or "--rollback" in args) and "--writer-root" not in args:
+        # A per-test writer root: its kernel lease never collides with Production's.
+        args += ["--writer-root", str(Path(args[args.index("--out") + 1]).parent / "writer-repo")]
+    return relink.main(args)
 
 
 def test_default_is_plan_only_and_changes_nothing(tmp_path, capsys):
@@ -109,3 +115,70 @@ def test_t0_domain_is_refused(tmp_path, capsys):
 def test_out_inside_root_is_refused(tmp_path, capsys):
     root, packet, sha, *_ = _fixture(tmp_path)
     assert _run("--root", root, "--packet", packet, "--packet-sha", sha, "--out", root / "out") == 2
+
+
+def test_apply_refuses_while_production_writer_lease_is_held(tmp_path, capsys):
+    from tools.capture_writer_lease import writer_lease
+    root, packet, sha, keep, alias = _fixture(tmp_path)
+    repo, held, release = tmp_path / "repo", threading.Event(), threading.Event()
+
+    def daily():
+        with writer_lease(repo):
+            held.set()
+            release.wait(30)
+    worker = threading.Thread(target=daily)
+    worker.start()
+    try:
+        assert held.wait(30)
+        assert _run("--root", root, "--packet", packet, "--packet-sha", sha, "--out", tmp_path / "out",
+                    "--apply", "--writer-root", repo) == 2
+        assert "PRODUCTION_WRITER_ACTIVE" in capsys.readouterr().out
+        assert alias.stat().st_ino != keep.stat().st_ino
+    finally:
+        release.set()
+        worker.join()
+    assert relink.main([str(a) for a in ("--root", root, "--packet", packet, "--packet-sha", sha,
+                                         "--out", tmp_path / "out2", "--apply")]) == 2
+    assert "--writer-root" in capsys.readouterr().out
+
+
+def test_projected_bytes_count_only_inodes_whose_every_link_is_replaced(tmp_path, capsys):
+    root, packet, sha, keep, alias = _fixture(tmp_path)
+    os.link(alias, alias.with_name("outside-plan-link.ndjson"))  # a second name the packet does not cover
+    doc = json.loads(packet.read_text())
+    doc["groups"][0]["alias_paths"][0]["nlink"] = 2
+    packet.write_text(json.dumps(doc))
+    assert _run("--root", root, "--packet", packet, "--packet-sha", relink.packet_sha(doc),
+                "--out", tmp_path / "out", "--apply") == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["relinked"] == 1 and result["projected_bytes"] == 0
+    assert "measured_free_delta_bytes" in result
+
+
+def test_alias_touched_after_plan_refuses_apply(tmp_path):
+    root, packet, sha, keep, alias = _fixture(tmp_path)
+    rows = relink.plan(root, relink.load_packet(packet, sha), {"FULL_UNIVERSE"}, hash_content=True)
+    st = alias.stat()
+    os.utime(alias, ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000))
+    with pytest.raises(relink.Refused, match="alias changed since plan"):
+        relink.apply(root, rows, tmp_path / "relink.jsonl")
+    assert alias.stat().st_ino != keep.stat().st_ino
+
+
+def test_crash_after_replace_is_still_rolled_back_from_intent(tmp_path, capsys):
+    root, packet, sha, keep, alias = _fixture(tmp_path)
+    out = tmp_path / "out"
+    original_mtime = alias.stat().st_mtime_ns
+    assert _run("--root", root, "--packet", packet, "--packet-sha", sha, "--out", out, "--apply") == 0
+    receipt = out / "relink.jsonl"
+    lines = receipt.read_text().splitlines()
+    assert [json.loads(x)["state"] for x in lines] == ["RELINK_INTENT", "RELINKED"]
+    receipt.write_text(lines[0] + chr(10))  # crash before the RELINKED row became durable
+    capsys.readouterr()
+    assert _run("--root", root, "--out", out, "--rollback", receipt) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["rolled_back"] == 1 and result["semantic_recovery"] == "BYTES_ONLY"
+    row = json.loads((out / "rollback.jsonl").read_text().splitlines()[-1])
+    assert row["original_file_id_restored"] is False  # bytes back, original inode/fingerprint not
+    assert alias.stat().st_ino != keep.stat().st_ino and alias.read_bytes() == DATA
+    assert alias.stat().st_mtime_ns == original_mtime
