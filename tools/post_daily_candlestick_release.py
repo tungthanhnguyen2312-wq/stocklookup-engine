@@ -39,8 +39,10 @@ import hashlib
 import json
 import os
 import shutil
+import re
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -202,6 +204,55 @@ def instance_lock(checkpoint_root: Path):
     finally:
         with contextlib.suppress(OSError):
             lock.unlink()
+
+
+def _lock_dir() -> Path:
+    return Path(os.environ.get("STOCK_LOOKUP_RELEASE_LOCK_DIR") or tempfile.gettempdir()) / "stocklookup-release-locks"
+
+
+@contextlib.contextmanager
+def target_lock(kind: str, target: Path):
+    """Exclusive OS-held lock on one resolved release target (runtime dir or web checkout).
+
+    Codex F5: the checkpoint-root lock let two invocations with different checkpoint roots stage
+    the same runtime. This lock is keyed by the resolved target path, held across stage, publish
+    and rollback, and released by the OS when the process dies (no stale-lock reclaim)."""
+    key = hashlib.sha256(str(Path(target).resolve()).lower().encode()).hexdigest()[:16]
+    directory = _lock_dir()
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{kind}-{key}.lock"
+    handle = open(path, "a+b")
+    try:
+        try:
+            if os.name == "nt":
+                import msvcrt
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            raise Skip(f"TARGET_LOCK_HELD:{kind}:{Path(target).resolve()}") from None
+        try:
+            yield path
+        finally:
+            with contextlib.suppress(OSError):
+                if os.name == "nt":
+                    import msvcrt
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+    finally:
+        handle.close()
+
+
+def recheck_writers(observe_rows: Callable[[], list[tuple[int, str]] | None], stage: str) -> None:
+    """Preflight is one observation; re-observe right before each critical transaction."""
+    rows = observe_rows()
+    if rows is None:
+        raise Refused(f"WRITER_STATE_UNOBSERVABLE_BEFORE_{stage}")
+    writers = active_writers(rows, os.getpid())
+    if writers:
+        raise Refused(f"CONCURRENT_WRITER_BEFORE_{stage}:" + ",".join(writers))
 
 
 # ---------------------------------------------------------------- source gates
@@ -437,6 +488,15 @@ def stage_runtime(ckpt: Path, runtime_root: Path, journal: Path) -> tuple[Path, 
 def restore_runtime(runtime_root: Path, txn: Path) -> dict[str, Any]:
     record = json.loads((txn / "previous.json").read_text(encoding="utf-8"))
     data = runtime_root / "data"
+    # Codex F5 ownership: every runtime file must still be this transaction's staged bytes or its
+    # own backup (a torn interrupted stage is a mix of both). Anything else is a newer/foreign
+    # release: refuse and keep the journal instead of overwriting it.
+    staged = _txn_state(txn).get("staged") if (txn / "transaction.json").is_file() else None
+    if staged is not None:
+        current = _pair_hashes(data)
+        foreign = sorted(n for n in record if current.get(n) not in {record[n], staged.get(n)})
+        if foreign:
+            raise Refused("ROLLBACK_NOT_OWNER_RUNTIME_CHANGED:" + ",".join(foreign))
     for name, sha in record.items():
         if sha is None:
             with contextlib.suppress(FileNotFoundError):
@@ -480,12 +540,28 @@ def governed_publisher(producer_root: Path, runtime_root: Path, web_dir: Path, s
                                      producer_run_identity=run_identity)
 
 
-def verify_published(web_dir: Path, session: str, verified: Mapping[str, Any]) -> list[str]:
+_BUILD_INFO_JS = re.compile(r"\Awindow\.STOCK_LOOKUP_BUILD_INFO = (.*?);\s*\nwindow\.BUILD_INFO = window\.STOCK_LOOKUP_BUILD_INFO;\s*\Z", re.S)
+
+
+def build_info_js_matches(web_dir: Path, info: Mapping[str, Any]) -> bool:
+    try:
+        match = _BUILD_INFO_JS.match((web_dir / "data" / "build_info.js").read_text(encoding="utf-8"))
+        return bool(match) and json.loads(match.group(1)) == info
+    except (OSError, ValueError):
+        return False
+
+
+def verify_published(web_dir: Path, session: str, verified: Mapping[str, Any],
+                     expected_pair: Mapping[str, Any] | None = None) -> list[str]:
     problems = []
     try:
         info = json.loads((web_dir / "data" / "build_info.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return ["WEB_BUILD_INFO_UNREADABLE"]
+    if not build_info_js_matches(web_dir, info):
+        problems.append("WEB_BUILD_INFO_JS_MISMATCH")
+    if expected_pair is not None and _pair_hashes(web_dir / "data") != dict(expected_pair):
+        problems.append("WEB_SIDECAR_PAIR_MISMATCH")
     if info.get("market_session") != session:
         problems.append("WEB_SESSION_MISMATCH")
     comp = (((info.get("domains") or {}).get("signals") or {}).get("components") or {}).get("candlestick_patterns") or {}
@@ -544,7 +620,12 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                                          min_free_ram=int(args.min_free_ram_gib * GIB),
                                          min_free_disk=int(args.min_free_disk_gib * GIB),
                                          observe_rows=observe_rows, observe_ram=observe_ram)
-        with instance_lock(checkpoint_root):
+        with contextlib.ExitStack() as locks:
+            locks.enter_context(instance_lock(checkpoint_root))
+            if runtime_root is not None:
+                locks.enter_context(target_lock("runtime", runtime_root))
+            if web_dir is not None and (args.publish or args.rollback):
+                locks.enter_context(target_lock("web", web_dir))
             receipt["registry"] = committed_session(producer_root, args.session)
             receipt["operation"] = operation_binding(retained_root, args.session, args.source_identity)
             publish = publisher or (lambda *a: governed_publisher(
@@ -587,6 +668,7 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                 receipt["release_sessions"] = sessions
                 if sessions["runtime"] != args.session or sessions["web"] != args.session:
                     raise Refused("WORKSPACE_RELEASE_SESSION_MISMATCH")
+            recheck_writers(observe_rows, "STAGE")
             try:
                 txn, receipt["stage"] = stage_runtime(ckpt, runtime_root, journal)
             except (OSError, RuntimeError) as exc:
@@ -596,6 +678,7 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
             receipt["status"] = "STAGED"
             if not args.publish:
                 return code, receipt
+            recheck_writers(observe_rows, "PUBLISH")
             try:
                 result = publish(producer_root, runtime_root, web_dir, args.session,
                                                            args.complete_publication)
@@ -603,7 +686,8 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                 result = {"status": "FAILED", "reason": f"{type(exc).__name__}:{exc}"}
             receipt["publication"] = dict(result)
             ok = result.get("status") in PUBLISHED_STATES
-            problems = verify_published(web_dir, args.session, built) if ok else ["PUBLISHER_FAILED"]
+            problems = (verify_published(web_dir, args.session, built, _pair_hashes(ckpt))
+                        if ok else ["PUBLISHER_FAILED"])
             receipt["publication_checks"] = problems
             if not ok and result.get("publication_state") == "GITHUB_SOURCE_UPDATED":
                 # The governed release already pushed Dashboard source containing this pair, but
