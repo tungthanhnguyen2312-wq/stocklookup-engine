@@ -1058,7 +1058,7 @@
     "tools/build_current_research_decision_fitness.py": "ce54597b46925bb652b76bcf82fddfbd1bee4f95c881ffa9499b4a0bfb25818d",
     "tools/build_current_research_universe_integration_validation_20260913.py": "9bd88c1f94e11a9f9c44ee410b185a0ceb962aa00add99f9dce1d45e522ec35e",
     "tools/build_current_session_candlestick_projection.py": "f3e96c3349d67f88f9129cc9373fbb75d74b0b32b18b8c520c7c0c43a68294a9",
-    "tools/post_daily_candlestick_release.py": "01abf726ee496e4eacf40541f1cc26471146907c3d5e14c1395e7492c1d6e485",
+    "tools/post_daily_candlestick_release.py": "0d0d533e03254cd9a09fc052e3222fcbe99b468044dca249d47bde9e01fddf84",
     "tools/build_daily_analyst_brief.py": "48a17f0d14f6ef60f074ce796c6ec840cd52437a1b169050b24e212a02bef596",
     "tools/build_dnse_trades_reconciliation_composite_cohort.py": "0e9ba9ef8c190368d70de7d37a3faa42ae628c3971ad84fdfa753042338bd62c",
     "tools/build_frontend.py": "1cebeb79b75ada45deca6d8ef0e611273c133e3221b5c24930633a751a4c150d",
