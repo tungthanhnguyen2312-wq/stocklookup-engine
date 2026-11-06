@@ -14,6 +14,9 @@ from typing import Any, Iterable, Mapping
 
 import provider_financial_source_metadata as source
 from stocklookup_core.evidence.temporal_retention import capture_raw_receipt, project_retention_to_a1
+from stocklookup_core.financial.financial_flow_semantics_ttm_bridge import (
+    KBS_AMBIGUOUS_PERIOD_HEAD, ambiguous_heads, head_period_qualification,
+)
 
 CONTRACT_VERSION = "kbs_quarterly_financial_retention/v1"
 KBS_QUARTERLY_INCOME_TYPE = "KQKD"
@@ -158,8 +161,17 @@ def metadata_rows(request: Mapping[str, Any], raw: Mapping[str, Any], *, raw_has
         temporal_retention["warnings"] = [warning for warning in temporal_retention["warnings"] if warning]
         row["temporal_retention"] = temporal_retention
         row["a1_temporal_projection"] = project_retention_to_a1(temporal_retention)
-        row["metadata_identity"] = identity(row)
         rows.append(row)
+    # Canonical joiners read ONLY this field. ``flow_period_basis`` above stays the endpoint's
+    # claim (a quarter label alone) and must never be joined onto a canonical fact.
+    ambiguous = ambiguous_heads(rows, lambda r: (r["ticker"], r["statement_scope"], r["currency"]))
+    for index, row in enumerate(rows):
+        quarter, status = head_period_qualification(row)
+        if index in ambiguous:
+            quarter, status = None, KBS_AMBIGUOUS_PERIOD_HEAD
+        row["canonical_period_qualification"] = status
+        row["canonical_qualified_period"] = quarter
+        row["metadata_identity"] = identity(row)
     return rows
 
 

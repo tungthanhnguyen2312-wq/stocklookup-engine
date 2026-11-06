@@ -10,8 +10,9 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 import hashlib
 import json
+import re
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from stocklookup_core.financial.financial_analysis_engine_v2 import sign_transition
 from market_wide_current_fundamental_research import (
@@ -78,6 +79,92 @@ KBS_PERIOD_IDENTITY_UNVERIFIED = "KBS_PERIOD_IDENTITY_UNVERIFIED"
 RAW_KBS_PERIOD_LABEL_RETAINED = "RAW_KBS_PERIOD_LABEL_RETAINED_NOT_PERIOD_PROOF"
 
 
+# ---------------------------------------------------------------- ISO period-bound qualification
+#: Reasons a KBS head cannot become a canonical quarter. A label is never period proof.
+KBS_PERIOD_NOT_SINGLE_QUARTER = "KBS_PERIOD_NOT_SINGLE_QUARTER"
+KBS_LABEL_BOUNDS_DISAGREE = "KBS_LABEL_BOUNDS_DISAGREE"
+KBS_AMBIGUOUS_PERIOD_HEAD = "KBS_AMBIGUOUS_PERIOD_HEAD"
+KBS_STATEMENT_SCOPE_UNKNOWN = "KBS_STATEMENT_SCOPE_UNKNOWN"
+KBS_CURRENCY_NOT_VND = "KBS_CURRENCY_NOT_VND"
+QUALIFIED = "QUALIFIED"
+QUALIFIED_KBS_ISO_BOUNDS = "QUALIFIED_KBS_ISO_BOUNDS"
+_COMPARABLE_SCOPES = frozenset({"CONSOLIDATED", "STANDALONE_PARENT"})
+
+
+def iso_quarter_from_bounds(period_start: Any, period_end: Any) -> tuple[str | None, str | None]:
+    """(``YYYY-Qn``, None) only for exact ISO bounds of one calendar quarter, else (None, reason).
+
+    ``YYYYMM`` tokens, six/nine/twelve-month spans, partial months and spans that do not start
+    on the first day of the quarter that holds ``period_end`` are refused.
+    """
+    import calendar
+    from datetime import date
+    texts = [str(v or "").strip() for v in (period_start, period_end)]
+    if not all(re.fullmatch(r"\d{4}-\d{2}-\d{2}", t) for t in texts):
+        return None, KBS_PERIOD_IDENTITY_UNVERIFIED
+    try:
+        start, end = (date.fromisoformat(t) for t in texts)
+    except ValueError:
+        return None, KBS_PERIOD_IDENTITY_UNVERIFIED
+    quarter = (end.month - 1) // 3 + 1
+    first_month = (quarter - 1) * 3 + 1
+    last_day = calendar.monthrange(end.year, quarter * 3)[1]
+    if (start != date(end.year, first_month, 1) or end != date(end.year, quarter * 3, last_day)):
+        return None, KBS_PERIOD_NOT_SINGLE_QUARTER
+    return f"{end.year}-Q{quarter}", None
+
+
+def label_quarter(reporting_period: Any) -> str | None:
+    match = re.fullmatch(r"(\d{4})-Q([1-4])(?:_\d+)?", str(reporting_period or ""))
+    return f"{match.group(1)}-Q{match.group(2)}" if match else None
+
+
+def head_period_qualification(row: Mapping[str, Any]) -> tuple[str | None, str]:
+    """Single-head rule (spec section 3, steps 2-4, 9, 10): ISO bounds win over the label."""
+    quarter, reason = iso_quarter_from_bounds(row.get("period_start"), row.get("period_end"))
+    if quarter is None:
+        return None, str(reason)
+    labelled = label_quarter(row.get("reporting_period"))
+    if labelled is not None and labelled != quarter:
+        return None, KBS_LABEL_BOUNDS_DISAGREE
+    if str(row.get("statement_scope") or "").upper() not in _COMPARABLE_SCOPES:
+        return None, KBS_STATEMENT_SCOPE_UNKNOWN
+    if str(row.get("currency") or "").upper() != "VND":
+        return None, KBS_CURRENCY_NOT_VND
+    return quarter, QUALIFIED
+
+
+def ambiguous_heads(rows: Iterable[Mapping[str, Any]], group: Callable[[Mapping[str, Any]], Any]) -> set[int]:
+    """Indexes of heads that share a label with different ISO bounds, or overlap another range.
+
+    Identical ranges are not ambiguity here (value equality is decided by the fact layer).
+    """
+    from datetime import date
+    rows = list(rows)
+    flagged: set[int] = set()
+    by_group: dict[Any, list[int]] = {}
+    for index, row in enumerate(rows):
+        by_group.setdefault(group(row), []).append(index)
+    for members in by_group.values():
+        bounds = {}
+        for i in members:
+            try:
+                bounds[i] = (date.fromisoformat(str(rows[i].get("period_start"))),
+                             date.fromisoformat(str(rows[i].get("period_end"))))
+            except ValueError:
+                continue
+        labels: dict[str, set] = {}
+        for i, b in bounds.items():
+            labels.setdefault(str(rows[i].get("reporting_period")), set()).add(b)
+        for i, b in bounds.items():
+            if len(labels[str(rows[i].get("reporting_period"))]) > 1:
+                flagged.add(i)
+            for j, other in bounds.items():
+                if i != j and other != b and b[0] <= other[1] and other[0] <= b[1]:
+                    flagged.add(i)
+    return flagged
+
+
 def _fiscal_label(row: Mapping[str, Any]) -> str:
     return str(row.get("qualified_normalized_period") or row.get("reporting_period") or row.get("native_period_label") or "")
 
@@ -129,6 +216,70 @@ def qualify_proven_kbs_income_period(rows: Sequence[Mapping[str, Any]]) -> list[
                 row["period_normalization"] = "FAIL_CLOSED"
                 row["ttm_blocker"] = KBS_PERIOD_ALIGNMENT_UNRECONCILED
                 row["reconciliation_residual_vnd"] = residual
+    return output
+
+
+def qualify_kbs_income_from_retained_head(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Copy rows. Attach a research quarter to KBS income facts only from exact ISO head bounds.
+
+    Spec SOURCE_RECOVERY_SPEC_KBS_AND_FIVE section 3. Writes only ``qualified_normalized_period``
+    and ``period_normalization`` (plus a closed ``canonical_period_qualification`` reason);
+    ``reporting_period`` and values are never rewritten and ``flow_period_basis`` is never set.
+    Equal duplicate heads keep one observation; conflicting duplicates fail the whole payload;
+    a disagreement with the HPG FY2025 footing map fails both. Status stays provider research.
+    """
+    output = [dict(row) for row in rows]
+    eligible = [i for i, row in enumerate(output)
+                if row.get("provider") == "KBS" and row.get("statement_family") == "income_statement"
+                and not row.get("ttm_blocker") and (row.get("period_start") or row.get("period_end"))]
+    def payload(row):
+        return (row.get("ticker"), row.get("source_sha256") or row.get("raw_response_sha256"))
+    def group(row):
+        return (*payload(row), str(row.get("statement_scope") or "").upper(),
+                str(row.get("currency") or "").upper(), row.get("scale"), row.get("canonical_metric"))
+    flagged = {eligible[k] for k in ambiguous_heads([output[i] for i in eligible], group)}
+    qualified: dict[int, str] = {}
+    for i in eligible:
+        quarter, status = head_period_qualification(output[i])
+        if i in flagged:
+            quarter, status = None, KBS_AMBIGUOUS_PERIOD_HEAD
+        output[i]["canonical_period_qualification"] = status
+        if quarter is not None:
+            qualified[i] = quarter
+    # Same group + same ISO quarter: equal values keep the first head, unequal values gate the payload.
+    slots: dict[tuple, list[int]] = defaultdict(list)
+    for i, quarter in qualified.items():
+        slots[(*group(output[i]), quarter)].append(i)
+    conflicted, redundant = set(), set()
+    for members in slots.values():
+        if len({repr(output[i].get("value")) for i in members}) > 1:
+            conflicted.add(payload(output[members[0]]))
+        redundant.update(sorted(members, key=lambda i: (output[i].get("head_ordinal") or 0, i))[1:])
+    for i in eligible:
+        row = output[i]
+        if payload(row) in conflicted:
+            row["qualified_normalized_period"] = None
+            row["ttm_blocker"] = KBS_PERIOD_ALIGNMENT_BLOCKER
+            row["canonical_period_qualification"] = KBS_PERIOD_ALIGNMENT_BLOCKER
+            continue
+        if i not in qualified:
+            continue
+        if i in redundant:
+            row["canonical_period_qualification"] = "EQUAL_RESTATEMENT_VARIANT_REDUNDANT"
+            row["ttm_blocker"] = "EQUAL_RESTATEMENT_VARIANT_REDUNDANT"
+            continue
+        prior = row.get("qualified_normalized_period")
+        if prior and row.get("period_normalization") == "QUALIFIED_HPG_KBS_FY2025" and prior != qualified[i]:
+            row["qualified_normalized_period"] = None
+            row["period_normalization"] = "FAIL_CLOSED"
+            row["ttm_blocker"] = KBS_PERIOD_ALIGNMENT_UNRECONCILED
+            row["canonical_period_qualification"] = KBS_PERIOD_ALIGNMENT_UNRECONCILED
+            continue
+        if prior:
+            continue  # same quarter as the footed HPG map: keep that evidence
+        row["qualified_normalized_period"] = qualified[i]
+        row["period_normalization"] = QUALIFIED_KBS_ISO_BOUNDS
+        row["canonical_period_qualification"] = QUALIFIED
     return output
 
 
@@ -223,6 +374,11 @@ def flow_semantics(fact: Mapping[str, Any]) -> dict[str, Any]:
             result["reason"] = "VCI_OPERATING_CASH_FLOW_RESOLVER_EVIDENCE_REQUIRED"
             return result
     explicit = str(fact.get("flow_period_basis") or "")
+    # A KBS income fact may carry the endpoint's label-only STANDALONE_QUARTER claim (retention
+    # sidecar). That claim is not period proof: only a qualified normalized period is.
+    kbs_income = fact.get("provider") == "KBS" and fact.get("statement_family") == "income_statement"
+    if kbs_income and not fact.get("qualified_normalized_period"):
+        explicit = ""
     if explicit in FLOW_BASES and explicit != "UNKNOWN":
         result.update({"flow_period_basis": explicit, "method": "DIRECT_RETAINED_FLOW_METADATA",
                        "evidence": str(fact.get("flow_period_basis_evidence") or "retained_flow_period_basis"),
@@ -321,7 +477,7 @@ def _quarter_record(fact: Mapping[str, Any], semantic: Mapping[str, Any], value:
 
 def standalone_quarters(facts: Sequence[Mapping[str, Any]]) -> tuple[list[dict[str, Any]], Counter]:
     """Return direct or subtraction-derived standalone quarters; never make Q labels proof."""
-    facts = qualify_proven_kbs_income_period(facts)
+    facts = qualify_kbs_income_from_retained_head(qualify_proven_kbs_income_period(facts))
     candidates = [fact for fact in facts if fact.get("canonical_metric") in FLOW_METRICS and _usable(fact)]
     # A period label is never a representation key.  Keeping provider/scope/unit in
     # the key prevents a later provider row from overwriting an otherwise compatible
@@ -656,7 +812,7 @@ def research_observations(facts: Sequence[Mapping[str, Any]]) -> list[dict[str, 
     standalone quarter and cannot feed growth, TTM, or earnings turnaround.
     """
     observations = []
-    for fact in qualify_proven_kbs_income_period(facts):
+    for fact in qualify_kbs_income_from_retained_head(qualify_proven_kbs_income_period(facts)):
         if not _usable(fact) or fact.get("canonical_metric") not in FLOW_METRICS:
             continue
         if flow_semantics(fact).get("reason") != KBS_PERIOD_IDENTITY_UNVERIFIED:

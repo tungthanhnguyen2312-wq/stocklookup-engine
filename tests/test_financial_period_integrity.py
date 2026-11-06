@@ -393,6 +393,14 @@ def test_explicit_retained_flow_basis_still_builds_ttm() -> None:
         fact = _income("CMG", f"2025-Q{quarter}", quarter)
         fact["flow_period_basis"] = "STANDALONE_QUARTER"
         facts.append(fact)
+    # 2026-11-07 (KBS spec section 2): a label-only endpoint basis on a KBS income fact is not
+    # period proof and no longer builds a TTM; exact ISO head bounds do.
+    label_only = bridge.build_ticker_record(ticker="CMG", entity_type="corporate", facts=facts)
+    assert "revenue" not in label_only.get("ttm", {})
+    ends = {1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31"}
+    for quarter, fact in enumerate(facts, 1):
+        fact.update(period_start=f"2025-{(quarter - 1) * 3 + 1:02d}-01", period_end=f"2025-{ends[quarter]}",
+                    currency="VND", statement_scope="CONSOLIDATED")
     record = bridge.build_ticker_record(ticker="CMG", entity_type="corporate", facts=facts)
     assert record["ttm"]["revenue"]["value"] == 10
     assert record["research_observations"] == []
