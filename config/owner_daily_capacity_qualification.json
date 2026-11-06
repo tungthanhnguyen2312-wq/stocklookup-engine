@@ -1479,6 +1479,7 @@
     "tools/validate_producer_financial_home_completion.py": "8190ba307fbd0de4ebe1bc6f34b8f3e1063892b82d49e69d3d9ad3a661048d65",
     "tools/vault_boundary_emit.py": "1d4a2cecc7effa02a3f8f27ec5933f620228c7228d50f152efee3622c3df3aeb",
     "tools/vault_post_daily_adapter.py": "557580da7adabe42b7282b4e328bb58a004f44a4a6e8819eef92d7774cd1d103",
+    "tools/vault_restore_requalify.py": "80d94ae25d186efeade307407e792422b93099a676d3753519eba1c1c82c1301",
     "tools/vault_retention.py": "8b01db1034795711db5e2921d8d3183a472b8d37524ff916c03a02e758dde9a6",
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
