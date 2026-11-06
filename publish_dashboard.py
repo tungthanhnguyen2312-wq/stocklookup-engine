@@ -702,6 +702,35 @@ def compute_published_at(existing: dict[str, object], build_id: str, live: bool,
     return (now or datetime.now(VN_TZ)).isoformat(timespec="seconds")
 
 
+CANDLESTICK_SIDECAR = "data/candlestick_patterns.json"
+
+
+def candlestick_signal_domain(market_session: str) -> dict[str, object] | None:
+    """build_info ``domains.signals`` for the candlestick sidecar already in the web root.
+
+    Additive and fail-closed: only a ``current_session_candlestick_projection/v1`` payload whose
+    own identity verifies and whose source session equals this release's session is CURRENT.
+    A legacy scan (e.g. the frozen 2026-08-25 ``candle_scan.py`` output) is published as
+    explicitly not current, never as an implicit pass. No sidecar -> no domain (unchanged).
+    """
+    path = WEB_ROOT / CANDLESTICK_SIDECAR
+    if not path.is_file():
+        return None
+    from stocklookup_core.tactical import current_session_candlestick_projection as candles
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = None
+    component = candles.component_state(payload, market_session)
+    current = component["status"] == "CURRENT"
+    return {
+        "status": "CURRENT" if current else component["status"],
+        "source_session": market_session if current else component.get("source_session"),
+        "reason_codes": [] if current else list(component.get("reason_codes") or []),
+        "components": {"candlestick_patterns": component},
+    }
+
+
 def compute_manifest(rows: list[dict[str, str]], breadth: list[dict[str, str]],
                      market_session: str, head: str, live: bool = False,
                      workspace: Mapping[str, object] | None = None,
@@ -796,6 +825,9 @@ def compute_manifest(rows: list[dict[str, str]], breadth: list[dict[str, str]],
         "price_basis_contract": basis_contract,
         "files": files,
     }
+    signals = candlestick_signal_domain(market_session)
+    if signals is not None:
+        manifest["domains"] = {"signals": signals}
     if workspace is not None:
         manifest["investment_workspace"] = {
             "status": "CURRENT" if workspace.get("as_of_session") == market_session else "SESSION_MISMATCH",
