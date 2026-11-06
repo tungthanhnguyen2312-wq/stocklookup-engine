@@ -225,3 +225,26 @@ Pinned boundary/completion hashes are also rechecked before publication, includi
 registry proofs outside the payload closure. Native payload SHA/fingerprint checks,
 T0 verification, append-only receipts and the separate destination writer lock
 remain mandatory. Standalone Vault calls keep their existing locking behavior.
+
+## D4a storage reuse switches (2026-11-06, inactive)
+
+`config/daily_storage_reuse.json` (`daily_storage_reuse/v1`) holds two Owner switches, both
+`false`. Absent file means off; a present malformed file refuses the enrichment stage.
+Merging this change alters no Daily output. Turning a switch on is an Owner activation
+(config edit plus capacity source-pin refresh), separate from merge.
+
+- `reuse_immutable_delivery` passes the existing PR99 opt-in to `run_daily_producer`
+  (full-universe NDJSON and session bundle: operation → run directory as one protected inode).
+- `iid_working_view_hardlink` makes `_copy_iid_working_view` publish the enrichment IID as a
+  hardlink of the canonical IID after re-hashing it against the write receipt; cross-volume or a
+  refused link falls back to the verified copy. Writer audit: the only writers of either name
+  (`_write_json`, `_copy_iid_working_view`) replace by rename, so a later rewrite of one name
+  gets a new inode and never changes the other. No reader checks link count; T+ fingerprints are
+  first taken after the link exists, so a new session costs no extra T+ hashing. No read-only bit
+  is set on IID (a rename onto a read-only target would fail a same-session rerun).
+
+Measured on 2026-11-05 (SHA-identical, nlink=1): IID 2.232 GiB ×2, full universe 0.979 GiB ×2,
+session bundle 0.073 GiB ×2. Projected avoided growth with both switches: ≈3.28 GiB of the
+≈15.7 GiB unique per-session growth. Valuation context ×3 (0.487 GiB) is not covered.
+Historical relink stays a separate exact-path Owner decision; IID relink invalidates T+ receipt
+anchors (ChangeTime/file id) and needs an out-of-Daily seed and scrub before the next Daily.

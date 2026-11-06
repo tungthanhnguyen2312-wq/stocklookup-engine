@@ -1,0 +1,5 @@
+{
+  "schema": "daily_storage_reuse/v1",
+  "iid_working_view_hardlink": false,
+  "reuse_immutable_delivery": false
+}
