@@ -236,3 +236,41 @@ def test_committed_session_reads_head_blob_not_working_tree(tmp_path):
     with pytest.raises(tool.Refused, match="COMMITTED_REGISTRY_UNREADABLE"):
         _ORIGINAL_COMMITTED(tmp_path, SESSION, git=git)
     assert calls[1] == ("show", f"deadbeef:{tool.REGISTRY}")
+
+
+def test_default_publisher_gets_the_session_producer_run_identity(world, monkeypatch):
+    op = json.loads(world["op"].read_text())
+    op["daily_producer_run_identity"] = "daily_producer_run:abc"
+    world["op"].write_text(json.dumps(op))
+    seen = {}
+
+    def fake_governed(producer_root, runtime_root, web_dir, session, complete, *, run_identity=None):
+        seen["run_identity"] = run_identity
+        return {"status": "FAILED", "reason": "TEST"}
+    monkeypatch.setattr(tool, "governed_publisher", fake_governed)
+    code, r = tool.run(args(world, publish=True), observe_rows=lambda: [], observe_ram=lambda: 8 * GIB)
+    assert seen["run_identity"] == "daily_producer_run:abc"
+    assert r["status"] == "PUBLISH_FAILED_RUNTIME_ROLLED_BACK"
+
+
+def test_governed_publisher_binds_workspace_environment_and_run(monkeypatch, tmp_path):
+    import sys
+    import types
+    calls = {}
+    fake = types.ModuleType("tools.run_owner_daily")
+
+    def publish_dashboard_release(root, runtime_root, session, **kw):
+        import os
+        calls.update(kw, env=os.environ.get("STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT"))
+        return {"status": "PUBLISHED"}
+    fake.publish_dashboard_release = publish_dashboard_release
+    monkeypatch.setitem(sys.modules, "tools.run_owner_daily", fake)
+    import runtime_paths
+    monkeypatch.setattr(runtime_paths, "workspace_environment",
+                        lambda: {"STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT": str(tmp_path)})
+    monkeypatch.delenv("STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT", raising=False)
+    assert tool.governed_publisher(tmp_path, tmp_path, tmp_path, SESSION, True)["reason"] == "PRODUCER_RUN_IDENTITY_REQUIRED"
+    out = tool.governed_publisher(tmp_path, tmp_path, tmp_path, SESSION, True, run_identity="daily_producer_run:x")
+    assert out["status"] == "PUBLISHED"
+    assert calls["producer_run_identity"] == "daily_producer_run:x" and calls["complete_publication"] is True
+    assert calls["env"] == str(tmp_path)
