@@ -234,7 +234,8 @@ def operation_binding(retained_root: Path, session: str, source_identity: str) -
     if record.get("daily_producer_status") != "COMPLETED":
         raise Refused("SESSION_OPERATION_NOT_COMPLETED")
     return {"operation_record": str(path), "operation_record_sha256": _sha256_file(path),
-            "operation_identity": record.get("operation_identity")}
+            "operation_identity": record.get("operation_identity"),
+            "producer_run_identity": record.get("daily_producer_run_identity")}
 
 
 def default_snapshot_path(retained_root: Path, session: str) -> Path:
@@ -402,10 +403,18 @@ def release_sessions(runtime_root: Path, web_dir: Path) -> dict[str, Any]:
 
 
 def governed_publisher(producer_root: Path, runtime_root: Path, web_dir: Path, session: str,
-                       complete_publication: bool) -> dict[str, Any]:
+                       complete_publication: bool, *, run_identity: str | None = None) -> dict[str, Any]:
+    """The same adapter and bindings Daily uses: active-workspace evidence-root environment
+    (``runtime_paths.workspace_environment``) and the session's exact Daily producer run
+    identity, so the runtime is re-materialized from that one sealed run only."""
+    if not run_identity:
+        return {"status": "FAILED", "reason": "PRODUCER_RUN_IDENTITY_REQUIRED"}
+    from runtime_paths import workspace_environment
+    os.environ.update(workspace_environment())
     from tools.run_owner_daily import publish_dashboard_release
     return publish_dashboard_release(producer_root, runtime_root, session, web_dir=web_dir,
-                                     complete_publication=complete_publication)
+                                     complete_publication=complete_publication,
+                                     producer_run_identity=run_identity)
 
 
 def verify_published(web_dir: Path, session: str, verified: Mapping[str, Any]) -> list[str]:
@@ -458,13 +467,15 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
         with instance_lock(checkpoint_root):
             receipt["registry"] = committed_session(producer_root, args.session)
             receipt["operation"] = operation_binding(retained_root, args.session, args.source_identity)
+            publish = publisher or (lambda *a: governed_publisher(
+                *a, run_identity=receipt["operation"].get("producer_run_identity")))
             if args.rollback:
                 txn = latest_transaction(ckpt)
                 if txn is None:
                     raise Refused("NO_TRANSACTION_TO_ROLL_BACK")
                 receipt["rollback"] = restore_runtime(runtime_root, txn)
                 if args.publish:
-                    result = (publisher or governed_publisher)(producer_root, runtime_root, web_dir, args.session,
+                    result = publish(producer_root, runtime_root, web_dir, args.session,
                                                                args.complete_publication)
                     receipt["publication"] = dict(result)
                     if result.get("status") not in PUBLISHED_STATES:
@@ -496,7 +507,7 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
             if not args.publish:
                 return code, receipt
             try:
-                result = (publisher or governed_publisher)(producer_root, runtime_root, web_dir, args.session,
+                result = publish(producer_root, runtime_root, web_dir, args.session,
                                                            args.complete_publication)
             except Exception as exc:  # noqa: BLE001 - any publisher failure rolls the runtime pair back
                 result = {"status": "FAILED", "reason": f"{type(exc).__name__}:{exc}"}
@@ -513,7 +524,7 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                     # restored previous pair through the same path so the public state converges
                     # back instead of staying half-published.
                     try:
-                        again = (publisher or governed_publisher)(producer_root, runtime_root, web_dir, args.session,
+                        again = publish(producer_root, runtime_root, web_dir, args.session,
                                                                   args.complete_publication)
                     except Exception as exc:  # noqa: BLE001
                         again = {"status": "FAILED", "reason": f"{type(exc).__name__}:{exc}"}
