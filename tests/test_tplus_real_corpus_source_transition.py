@@ -10,7 +10,7 @@ import pytest
 from tools.verify_retention_reader_transition import (
     TPLUS_DAILY_MANIFEST, TPLUS_REAL_CORPUS_BASE, TPLUS_REAL_CORPUS_MANIFEST, TPLUS_REAL_CORPUS_SOURCES,
     TPLUS_RESUME_SOURCE, _iid_runtime_prior_bytes, _tplus_incremental_cost_prior_bytes, _tplus_m1b_prior_bytes,
-    _tplus_real_corpus_prior_bytes, historical_bytes,
+    _storage_reuse_d4a_prior_bytes, _tplus_real_corpus_prior_bytes, historical_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +27,7 @@ def test_successor_binds_the_merged_base_and_the_live_source(relative):
     assert prior == _lf(subprocess.check_output(["git", "show", f"{TPLUS_REAL_CORPUS_BASE}:{relative}"], cwd=ROOT))
     live = _lf((ROOT / relative).read_bytes())
     # The incremental-cost successor is peeled first. Its archived prior is this layer's active source.
+    live = _storage_reuse_d4a_prior_bytes(ROOT, relative, live)  # D4a successor (pipeline only) peels first
     bound = _tplus_incremental_cost_prior_bytes(ROOT, relative, _tplus_m1b_prior_bytes(ROOT, relative, live))
     assert hashlib.sha256(bound).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]
     assert _tplus_real_corpus_prior_bytes(ROOT, relative, bound) == prior
