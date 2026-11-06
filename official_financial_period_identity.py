@@ -27,6 +27,12 @@ _H1_VI = re.compile(
     r".{0,80}?30\s+th[áa]ng\s+6\s+n[ăa]m\s+(20\d{2})",
     re.IGNORECASE | re.DOTALL,
 )
+# Standard VAS interim wording: "Cho kỳ hoạt động 6 tháng kết thúc ngày 30 tháng 6 năm YYYY"
+# (OCR may render "o" as "º"). Full phrase with the exact end date is required.
+_H1_VI_OPERATING = re.compile(
+    r"k[ỳy]\s+h[oº][ạa]t\s+[đd][ộoº]ng\s+(?:6|s[áa]u)\s+th[áa]ng\s+k[ếe]t\s+th[úu]c\s+ng[àa]y\s+30\s+th[áa]ng\s+0?6\s+n[ăa]m\s+(20\d{2})",
+    re.IGNORECASE,
+)
 _H1_EN = re.compile(
     r"(?:six[-\s]month|interim|half[-\s]year).{0,80}?30\s+june\s+(20\d{2})",
     re.IGNORECASE | re.DOTALL,
@@ -83,6 +89,7 @@ def recognize_statement_period(text: str) -> dict[str, Any]:
         (_ANNUAL_EN, lambda m: m.group(1), ANNUAL),
         (_H1_VI, lambda m: f"{m.group(1)}-H1", INTERIM_H1),
         (_H1_EN, lambda m: f"{m.group(1)}-H1", INTERIM_H1),
+        (_H1_VI_OPERATING, lambda m: f"{m.group(1)}-H1", INTERIM_H1),
         (_Q2_VI, lambda m: f"{m.group(1)}-Q2", INTERIM_Q2),
         (_Q2_VI_LOSSY, lambda m: f"{m.group(1)}-Q2", INTERIM_Q2),
         (_H1_VI_LOSSY, lambda m: f"{m.group(1)}-H1", INTERIM_H1),
