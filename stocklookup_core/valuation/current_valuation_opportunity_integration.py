@@ -86,6 +86,33 @@ def evaluated_valuation_for_presentation(
     return accepted
 
 
+#: Exact fields copied from an admitted official field (``market_wide_current_fundamental_research``
+#: ``official_field_context``). Nothing is recomputed; authority and use limits travel with the value.
+OFFICIAL_FINANCIAL_CONTEXT_FIELDS = (
+    "canonical_metric", "statement_family", "reporting_period", "period_type", "period_start", "period_end",
+    "normalized_value", "currency", "statement_scope", "audit_or_review_status", "temporal_status",
+    "context_kind", "allowed_projection_use", "valuation_use", "ttm_derivation", "annualization",
+    "factual_status", "research_status", "knowledge_available_at", "document_sha256", "citation_id",
+    "source_page", "line_code",
+)
+
+
+def official_financial_context(valuation_record: Mapping[str, Any] | None) -> list[dict[str, Any]]:
+    """Admitted official exact fields already on the valuation input record, compacted.
+
+    Only rows the fundamental-research admission already marked factual ``qualified`` are kept.
+    ``valuation_use``/``ttm_derivation``/``annualization`` are copied verbatim, so an audited
+    annual context row stays NOT_PERMITTED for valuation on every surface.
+    """
+    financial = (valuation_record or {}).get("financial_input") or {}
+    rows = []
+    for row in financial.get("official_field_context") or []:
+        if not isinstance(row, Mapping) or row.get("factual_status") != "qualified":
+            continue
+        rows.append({key: copy.deepcopy(row.get(key)) for key in OFFICIAL_FINANCIAL_CONTEXT_FIELDS})
+    return sorted(rows, key=lambda r: (str(r["reporting_period"]), str(r["canonical_metric"]), str(r["citation_id"])))
+
+
 def _valuation_rows_for_join(
     tickers: list[str], *, features: Mapping[str, Any], valuation_records: Mapping[str, Any],
     financial_analysis_records: Mapping[str, Any], financial_analysis_context: Mapping[str, Any] | None,
@@ -228,6 +255,11 @@ def build_artifacts(
             financial_analysis=(dict(financial_analysis_product_records[ticker])
                                 if isinstance(financial_analysis_product_records.get(ticker), Mapping) else None),
         )
+        official_context = official_financial_context(valuation_records.get(ticker))
+        if official_context:
+            # Sibling context on the valuation axis: it never enters readiness, methods or
+            # disposition (built above), only the Workspace/Consumer read surfaces.
+            opportunity["valuation"]["official_financial_context"] = official_context
         opportunity_records[ticker] = opportunity
         decision_records[ticker] = build_ticker_decision(opportunity)
 
