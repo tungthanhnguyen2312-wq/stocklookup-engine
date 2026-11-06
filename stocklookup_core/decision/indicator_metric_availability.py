@@ -270,7 +270,10 @@ def _status_to_state(status: str | None) -> str:
         return "NOT_APPLICABLE"
     if token == "INSUFFICIENT_HISTORY":
         return "BUILDING_HISTORY"
-    if token.startswith("READY") or token in ("AVAILABLE", "AVAILABLE_REFERENCE_ONLY", "RESEARCH_USABLE",
+    # AVAILABLE_QUALIFIED is the valuation projection's own availability_state for a method
+    # whose status is RESEARCH_USABLE (it outranks AVAILABLE_REFERENCE_ONLY, which was already
+    # READY); before 2026-11-06 it fell through to INSUFFICIENT_DATA and hid real values.
+    if token.startswith("READY") or token in ("AVAILABLE", "AVAILABLE_QUALIFIED", "AVAILABLE_REFERENCE_ONLY", "RESEARCH_USABLE",
                                                 "READY_RESEARCH_ONLY", "PRODUCT_READY_RESEARCH_CONTEXT"):
         return "READY"
     if token in ("BLOCKED", "BLOCKED_BY_EVIDENCE", "INPUT_BLOCKED", "NOT_AVAILABLE", "NOT_COMPARABLE"):
@@ -386,6 +389,16 @@ _VALUATION_METHOD_METRICS: dict[str, str] = {
     "ev_ebitda_calc_ready": "EV/EBITDA_CALC_READY",
 }
 
+#: Research-proxy fallback when the primary method for an investor metric is not READY.
+#: Pure presentation consolidation over an already-computed method on the same card (same
+#: pattern as the EV/EBITDA preference in indicator_metric_display_state): nothing is
+#: recomputed, and the record is marked so the display can label it as a research proxy.
+RESEARCH_PROXY_FITNESS_PREFIX = "RESEARCH_PROXY:"
+_VALUATION_RESEARCH_FALLBACK: dict[str, str] = {
+    "pb": "P/B_CURRENT_RESEARCH",
+}
+
+
 def _entity_class_allows_corporate_only(entity_class: str | None) -> bool:
     return (entity_class or "").strip().lower() == "corporate"
 
@@ -401,6 +414,10 @@ def _valuation_method_record(metric_id: str, method_key: str, card: Mapping[str,
     if not isinstance(method, Mapping):
         return _not_currently_produced(metric_id, "VALUATION", reason_code="METHOD_NOT_PRESENT_IN_PRODUCT_PROJECTION")
     codes = method.get("blocker_reason_codes")
+    # The method's own status NOT_APPLICABLE (entity class / sector) must not be masked by
+    # availability_state NOT_AVAILABLE: "Không áp dụng" is the honest display, not "Chưa đủ dữ liệu".
+    if str(method.get("status") or "").upper() == "NOT_APPLICABLE":
+        return _not_applicable(metric_id, "VALUATION", reason_code="METHOD_NOT_APPLICABLE_THIS_ENTITY_CLASS")
     status = method.get("availability_state") or method.get("status")
     record = _generic_from_status(
         metric_id, "VALUATION", status=status, codes=codes, value=method.get("value"), as_of=as_of,
@@ -759,7 +776,13 @@ def evaluate_ticker(ticker: str, card: Mapping[str, Any], *, cohort_tickers: fro
     records["cash_quality_state"] = _financial_health_rollup_record("cash_quality_state", "cash_quality", card, as_of)
 
     for metric_id, method_key in _VALUATION_METHOD_METRICS.items():
-        records[metric_id] = _valuation_method_record(metric_id, method_key, card, as_of)
+        record = _valuation_method_record(metric_id, method_key, card, as_of)
+        fallback_key = _VALUATION_RESEARCH_FALLBACK.get(metric_id)
+        if fallback_key and record["availability_state"] not in ("READY", "NOT_APPLICABLE"):
+            fallback = _valuation_method_record(metric_id, fallback_key, card, as_of)
+            if fallback["availability_state"] == "READY":
+                record = dict(fallback, evidence_fitness=RESEARCH_PROXY_FITNESS_PREFIX + fallback_key)
+        records[metric_id] = record
     records["ebitda"] = ebitda_case_study_record(card, as_of)
 
     records["technical_trend_entry_state"] = _technical_trend_record(

@@ -132,7 +132,8 @@ def prepare_ohlcv(frame: pd.DataFrame) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
-def _features(frame: pd.DataFrame, *, prepared: bool = False) -> pd.DataFrame:
+def _features(frame: pd.DataFrame, *, prepared: bool = False,
+              liquidity_value_unit_documented: bool = True) -> pd.DataFrame:
     df = frame.copy().reset_index(drop=True) if prepared else prepare_ohlcv(frame)
     df["body"] = real_body(df)
     df["range"] = candle_range(df)
@@ -145,7 +146,10 @@ def _features(frame: pd.DataFrame, *, prepared: bool = False) -> pd.DataFrame:
     df["atr14"] = average_true_range(df)
     df["avg_volume20"] = average_volume(df)
     df["rel_vol_calc"] = safe_divide(df["volume"], df["avg_volume20"])
-    df["gtgd20_ty_calc"] = (df["close"] * df["volume"]).rolling(20, min_periods=3).mean() / 1e9
+    # Traded value needs a documented price unit; an undocumented provider unit yields null,
+    # never a guessed VND scale (and therefore no low-liquidity warning from a unit guess).
+    df["gtgd20_ty_calc"] = ((df["close"] * df["volume"]).rolling(20, min_periods=3).mean() / 1e9
+                            if liquidity_value_unit_documented else np.nan)
     df["tolerance"] = price_tolerance(df)
     df["downtrend"], df["uptrend"] = rolling_trend(df)
     df["sma50"] = df["close"].rolling(50, min_periods=20).mean()
@@ -440,9 +444,11 @@ PATTERN_REGISTRY: dict[str, PatternMeta] = {meta.key: meta for meta, _ in _DETEC
 PATTERN_DETECTORS: dict[str, Detector] = {meta.key: detector for meta, detector in _DETECTORS}
 
 
-def detect_patterns(frame: pd.DataFrame, *, prepared: bool = False) -> tuple[pd.DataFrame, pd.DataFrame]:
+def detect_patterns(frame: pd.DataFrame, *, prepared: bool = False,
+                    liquidity_value_unit_documented: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Return enriched bars and a boolean matrix keyed by registered patterns."""
-    features = _features(frame, prepared=prepared)
+    features = _features(frame, prepared=prepared,
+                         liquidity_value_unit_documented=liquidity_value_unit_documented)
     detected = pd.DataFrame(index=features.index)
     valid_candle = features["range"] > 0
     for key, detector in PATTERN_DETECTORS.items():
@@ -615,7 +621,8 @@ def _iso(value: object) -> str | None:
 def scan_timeframe(frame: pd.DataFrame, ticker: str, timeframe: str, *, as_of: datetime,
                    lookback: int, meta_row: Mapping[str, object] | None = None,
                    smc_latest: Iterable[str] = (), min_confidence: int = 40,
-                   max_results: int = 12, market_scan_date: str | None = None) -> list[dict]:
+                   max_results: int = 12, market_scan_date: str | None = None,
+                   liquidity_value_unit_documented: bool = True) -> list[dict]:
     bars = resample_ohlcv(frame, timeframe, as_of, prepared=True)
     if bars.empty:
         return []
@@ -624,7 +631,8 @@ def scan_timeframe(frame: pd.DataFrame, ticker: str, timeframe: str, *, as_of: d
     # This keeps SMA200/ATR/volume context intact without recomputing features
     # over every historical daily bar for all ~1,700 tickers.
     bars = bars.tail(lookback + 210).reset_index(drop=True)
-    features, matrix = detect_patterns(bars, prepared=True)
+    features, matrix = detect_patterns(
+        bars, prepared=True, liquidity_value_unit_documented=liquidity_value_unit_documented)
     for column in ("period_start", "period_end", "scheduled_period_end", "is_complete"):
         features[column] = bars[column].values
     meta_row = dict(meta_row or {})
@@ -675,7 +683,8 @@ def scan_timeframe(frame: pd.DataFrame, ticker: str, timeframe: str, *, as_of: d
 def _scan_ticker_job(task: tuple) -> tuple[bool, list[dict]]:
     """Top-level process worker; receives only one ticker group, never the market DataFrame."""
     (ticker, group, generated_at, scan_date, lookbacks, meta_row, smc_latest,
-     min_confidence, max_results_per_ticker_timeframe) = task
+     min_confidence, max_results_per_ticker_timeframe, *rest) = task
+    liquidity_value_unit_documented = bool(rest[0]) if rest else True
     daily = prepare_ohlcv(group)
     if len(daily) < 8:
         return False, []
@@ -685,6 +694,7 @@ def _scan_ticker_job(task: tuple) -> tuple[bool, list[dict]]:
             daily, str(ticker), timeframe, as_of=generated_at, lookback=lookbacks[timeframe],
             meta_row=meta_row, smc_latest=smc_latest, min_confidence=min_confidence,
             max_results=max_results_per_ticker_timeframe, market_scan_date=scan_date,
+            liquidity_value_unit_documented=liquidity_value_unit_documented,
         ))
     return True, found
 
@@ -712,7 +722,8 @@ def build_snapshot(ohlcv: pd.DataFrame, *, scan_date: str, generated_at: datetim
                    max_results_per_ticker_timeframe: int = 3,
                    tickers: Iterable[str] | None = None,
                    progress: Callable[[int], None] | None = None,
-                   workers: int = 1) -> dict:
+                   workers: int = 1,
+                   liquidity_value_unit_documented: bool = True) -> dict:
     """Scan all tickers/timeframes and return one strict JSON-safe snapshot object."""
     started = datetime.now()
     lookbacks = {**LOOKBACKS, **dict(lookbacks or {})}
@@ -733,7 +744,7 @@ def build_snapshot(ohlcv: pd.DataFrame, *, scan_date: str, generated_at: datetim
                 continue
             yield (ticker, group, generated_at, scan_date, lookbacks, snapshot_map.get(ticker),
                    list(smc_by_ticker.get(ticker, ())), min_confidence,
-                   max_results_per_ticker_timeframe)
+                   max_results_per_ticker_timeframe, liquidity_value_unit_documented)
 
     tasks = iter(task_stream())
     workers = max(1, int(workers))
