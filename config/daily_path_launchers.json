@@ -118,8 +118,8 @@
   "non_python_callers": {
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
-      "reason": "Focused selection includes the offline Vault boundary-emitter regression suite; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "d1e01c6ad1de61b5b744d4c0f7c82a5cf7f0a280f982cbad763920985130e182",
+      "reason": "Focused selection includes the offline Vault boundary-emitter and relocated-restore requalification and T0 archive-location and current-session candlestick projection/post-Daily release regression suites; launcher commands, CI environments and required checks unchanged.",
+      "sha256": "e2bde0017fedd348464ebd39601f98eefeed7b4c7fe5a427ba9d4038c9e318f4",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",

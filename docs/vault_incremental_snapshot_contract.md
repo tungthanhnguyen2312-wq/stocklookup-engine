@@ -225,6 +225,26 @@ interruption/resume, volume refusal, incomplete/temp exclusion, native receipt/s
 tampering, explicit restore, SQLite consistency/exclusivity, hardlink allocation, all retention categories,
 referenced backup protection and archive absence without acquisition. No full repository pytest.
 
+## Relocated restore re-qualification (D5, 2026-11-06)
+
+`tools/vault_restore_requalify.py` re-qualifies a staged restore at a **new** location against the
+pinned original completed boundary (`--boundary` + `--boundary-sha`). It needs no W: and writes only `--out`.
+
+- Identity separation: session, source identity, cutoff (`ORIGINAL_CANONICAL_REQUESTED_AT`), completion
+  proof, receipt/seal refs and T0 identities are copied verbatim from the original boundary; the receipt
+  records the new location (`restored_root`, optional volume attestation) separately.
+- Exactly one explicit, disjoint `--original-root` -> `--restored-root` mapping resolves the absolute native
+  references retained JSON carries. A reference on another drive/root, outside the mapped closure, or with
+  traversal refuses; nothing is searched, substituted or rewritten.
+- Strict closure: a missing file refuses (`PARTIAL_RESTORE`, never reacquisition), an extra file refuses
+  (`RESTORE_CONTAINS_FOREIGN_FILES`), every byte must match the original boundary SHA/size.
+- Semantic closure: completion record, operation/run identities, handoff binding and the original cutoff are
+  re-derived from the restored bytes; T0 index/receipt/snapshot bindings are verified except the
+  inode-bound fingerprint, reported as `NOT_PORTABLE`.
+- Result is `consumer_eligibility: NOT_ELIGIBLE`, `authority_effect: NONE`. Consumer admission still needs a
+  catalog `PRESENT_QUALIFIED` storage proof registered while the original was observable
+  (`register_portable_copy`); source retirement remains a separate Owner decision.
+
 ## Roadmap checkpoint
 
 Starting main is `9db35f157af38baf3807be1a6a6827e77fd461dc`. The prior Economics HEAD sentinel is
