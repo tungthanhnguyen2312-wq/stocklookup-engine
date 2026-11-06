@@ -35,3 +35,38 @@ def test_two_different_copies_refuse_and_identical_copies_resolve(tmp_path, monk
     retained.joinpath(*REL).write_bytes(b'{"a":2}')
     with pytest.raises(ValueError, match="THESIS_ENRICHMENT_CONTEXT_AMBIGUOUS"):
         thesis.enrichment_historical_context_path(producer, SESSION, retained)
+
+
+def _successor_copy(tmp_path):
+    import shutil
+    from pathlib import Path
+    from tools import verify_retention_reader_transition as v
+    repo = Path(__file__).resolve().parents[1]
+    for rel in (v.THESIS_SOURCE, v.THESIS_ARCHIVE, v.THESIS_MANIFEST, v.THESIS_ROOT_MANIFEST, v.THESIS_ROOT_ARCHIVE,
+                "tests/fixtures/e2e3_frozen_sources.json"):
+        target = tmp_path / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(repo / rel, target)
+    return v
+
+
+def test_successor_peels_live_bytes_back_to_prior_active_pin(tmp_path):
+    v = _successor_copy(tmp_path)
+    import hashlib
+    prior = v.historical_bytes(tmp_path, v.THESIS_SOURCE)
+    assert hashlib.sha256(prior).hexdigest() == "10aea634a50e83d5e8db4951155c5a7b6f753e3f091305bf7bee1ecadc463367"
+
+
+def test_successor_refuses_tampered_live_source_or_scope(tmp_path):
+    import json
+    v = _successor_copy(tmp_path)
+    live = tmp_path / v.THESIS_SOURCE
+    live.write_bytes(live.read_bytes() + b"\n# drift\n")
+    with pytest.raises(ValueError, match="THESIS_ROOT_SOURCE_TRANSITION_BINDING_INVALID"):
+        v.historical_bytes(tmp_path, v.THESIS_SOURCE)
+    manifest = tmp_path / v.THESIS_ROOT_MANIFEST
+    spec = json.loads(manifest.read_bytes())
+    spec["release_authority"] = "GRANTED"
+    manifest.write_text(json.dumps(spec), encoding="utf-8")
+    with pytest.raises(ValueError, match="THESIS_ROOT_SOURCE_TRANSITION_SCOPE_INVALID"):
+        v.historical_bytes(tmp_path, v.THESIS_SOURCE)
