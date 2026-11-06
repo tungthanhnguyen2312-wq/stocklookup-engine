@@ -150,3 +150,27 @@ def test_daily_producer_receives_owner_delivery_switch(tmp_path, monkeypatch, sw
                         lambda path=None: {"iid_working_view_hardlink": False, "reuse_immutable_delivery": switch})
     pipeline.run_canonical_post_close(tmp_path, tmp_path / "runtime", "2026-08-26")
     assert seen["reuse_immutable_delivery"] is switch
+
+
+def test_interrupted_link_publication_keeps_previous_view_and_cleans_stage(tmp_path, monkeypatch):
+    artifact, source, destination, receipt = _written(tmp_path)
+    previous = destination.read_bytes()
+    real_replace = pipeline.os.replace
+    monkeypatch.setattr(pipeline.os, "replace", lambda *a: (_ for _ in ()).throw(OSError("crash before publish")))
+    with pytest.raises(OSError):
+        pipeline._copy_iid_working_view(source, destination, session=SESSION, artifact=artifact, receipt=receipt, link=True)
+    assert destination.read_bytes() == previous and source.stat().st_nlink == 1
+    assert not list(destination.parent.glob(".iid-*"))
+    monkeypatch.setattr(pipeline.os, "replace", real_replace)
+    pipeline._copy_iid_working_view(source, destination, session=SESSION, artifact=artifact, receipt=receipt, link=True)
+    assert destination.read_bytes() == source.read_bytes() and source.stat().st_nlink == 2
+
+
+def test_replay_after_a_hard_crash_leftover_stage_publishes_the_view(tmp_path):
+    artifact, source, destination, receipt = _written(tmp_path)
+    leftover = destination.parent / ".iid-link-1-1.tmp"
+    os.link(source, leftover)  # a killed process left a second name behind
+    pipeline._copy_iid_working_view(source, destination, session=SESSION, artifact=artifact, receipt=receipt, link=True)
+    assert destination.read_bytes() == source.read_bytes()
+    assert destination.stat().st_ino == source.stat().st_ino
+    assert leftover.read_bytes() == source.read_bytes()  # inert extra name; never a consumer path
