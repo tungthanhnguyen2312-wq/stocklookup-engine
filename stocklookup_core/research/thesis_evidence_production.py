@@ -163,9 +163,26 @@ def _knowledge_cutoff_session_date(value):
     return parsed.astimezone(timezone(timedelta(hours=7))).date().isoformat()
 
 
-def enrichment_historical_context_path(root, session):
-    path = Path(root) / "operations-review" / "canonical-post-close-v1" / session / "enrichment" / "historical_context.json"
-    return path if path.is_file() else None
+def enrichment_historical_context_path(root, session, output_root=None):
+    """Exact-session enrichment batch under the governed evidence roots.
+
+    Production Daily retains canonical-post-close output under the retained-evidence root
+    (``output_root`` / STOCK_LOOKUP_RETAINED_EVIDENCE_ROOT), not under the Producer checkout.
+    Looking only under ``root`` found nothing on 2026-11-06, so the current stage staged no
+    V2 technical context (technical_context_digest == sha256 of nothing). Same exact relative
+    path, explicit roots only, never a latest-file search; two different copies refuse.
+    """
+    from stocklookup_core.evidence.evidence_roots import governed_evidence_roots
+    relative = Path("operations-review") / "canonical-post-close-v1" / session / "enrichment" / "historical_context.json"
+    bases = [Path(root)] + ([Path(output_root)] if output_root else []) + list(governed_evidence_roots(root))
+    found = []
+    for base in bases:
+        path = (base / relative)
+        if path.is_file() and path.resolve() not in [f.resolve() for f in found]:
+            found.append(path)
+    if len(found) > 1 and len({source_hash(f) for f in found}) > 1:
+        raise ValueError("THESIS_ENRICHMENT_CONTEXT_AMBIGUOUS")
+    return found[0] if found else None
 
 
 def stage_qualified_v2_technical(path, session, put, context_digest, root):
@@ -291,7 +308,7 @@ def build(*,root,output_root,session,stage,decision_path=None,technical_path=Non
         elif stage=="current":
             # Frozen caller passes no technical file when Level-2 decision has no sibling batch.
             # Adopt the retained enrichment batch only after V2, session, and cutoff checks.
-            candidate=enrichment_historical_context_path(root, session)
+            candidate=enrichment_historical_context_path(root, session, output_root)
             if candidate is not None:
                 adopted=stage_qualified_v2_technical(candidate, session, put, context_digest, root)
                 if adopted.get("status")=="ADOPTED":
