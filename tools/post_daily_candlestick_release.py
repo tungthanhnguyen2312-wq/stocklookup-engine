@@ -515,6 +515,14 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
             ok = result.get("status") in PUBLISHED_STATES
             problems = verify_published(web_dir, args.session, built) if ok else ["PUBLISHER_FAILED"]
             receipt["publication_checks"] = problems
+            if not ok and result.get("publication_state") == "GITHUB_SOURCE_UPDATED":
+                # The governed release already pushed Dashboard source containing this pair, but
+                # CI/Pages/public-byte completion did not finish. The public site is unchanged
+                # (Pages deploys only after CI); keep the runtime equal to the pushed source and
+                # report the recoverable SHA instead of diverging the runtime from it.
+                receipt["status"] = "SOURCE_UPDATED_COMPLETION_PENDING"
+                receipt["recoverable_release_source_sha"] = result.get("recoverable_release_source_sha")
+                return EXIT_FAILED, receipt
             if problems:
                 receipt["rollback"] = restore_runtime(runtime_root, txn)
                 receipt["status"] = "PUBLISH_FAILED_RUNTIME_ROLLED_BACK"
@@ -533,7 +541,8 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                                          if again.get("status") in PUBLISHED_STATES
                                          else "PUBLISH_FAILED_ROLLBACK_REPUBLISH_FAILED")
             else:
-                receipt["status"] = "PUBLISHED" if result.get("status") == "PUBLISHED" else "PUBLISHED_LOCAL"
+                published = result.get("status") == "PUBLISHED" or result.get("publication_state") == "PUBLISHED"
+                receipt["status"] = "PUBLISHED" if published else "PUBLISHED_LOCAL"
             return code, receipt
     except Skip as exc:
         receipt.update(status="SKIP", reason=str(exc))
