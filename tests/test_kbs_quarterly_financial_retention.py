@@ -98,9 +98,19 @@ def test_deepened_kbs_fixture_unlocks_rolling_four_quarters_but_ctd_missing_data
                 "statement_family": "income_statement", "reporting_period": period, "period_type": "quarterly",
                 "flow_period_basis": "STANDALONE_QUARTER", "value": value, "status": "provider_reported",
                 "statement_scope": "CONSOLIDATED", "currency": "unknown", "scale": 1}
+    def bounded(period: str, value: int) -> dict:
+        q = int(period[-1])
+        end = {1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31"}[q]
+        return {**fact(period, value), "period_start": f"2025-{(q - 1) * 3 + 1:02d}-01",
+                "period_end": f"2025-{end}", "currency": "VND", "source_sha256": "raw-cmg"}
+    # 2026-11-07: the endpoint's label-only STANDALONE_QUARTER claim no longer unlocks a TTM
+    # (spec section 2: the canonical joiner may not adopt it). ISO head bounds do.
+    label_only = bridge.build_ticker_record(ticker="CMG", entity_type="corporate",
+                                             facts=[fact(f"2025-Q{q}", q) for q in range(1, 5)])
+    assert "revenue" not in label_only.get("ttm", {})
     unlocked = bridge.build_ticker_record(ticker="CMG", entity_type="corporate",
-                                           facts=[fact(f"2025-Q{q}", q) for q in range(1, 5)])
+                                           facts=[bounded(f"2025-Q{q}", q) for q in range(1, 5)])
     blocked = bridge.build_ticker_record(ticker="CTD", entity_type="corporate",
-                                          facts=[fact(f"2025-Q{q}", q) for q in range(1, 4)])
+                                          facts=[bounded(f"2025-Q{q}", q) for q in range(1, 4)])
     assert unlocked["ttm"]["revenue"]["value"] == 10.0
     assert blocked["status"] == "BLOCKED"
