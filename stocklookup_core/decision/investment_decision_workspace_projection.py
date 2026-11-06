@@ -244,6 +244,10 @@ def _valuation_view(opportunity_record: Mapping[str, Any]) -> dict[str, Any]:
         "freshness_status": (valuation.get("freshness") or {}).get("freshness_status"),
         "source_session": (valuation.get("freshness") or {}).get("source_session"),
         "research_readiness": research_readiness_view(method_diagnostics),
+        # Admitted official exact fields (e.g. audited FY2025, reviewed H1) with their own
+        # valuation_use / ttm_derivation limits; present only when the Producer admitted any.
+        **({"official_financial_context": copy.deepcopy(valuation["official_financial_context"])}
+           if valuation.get("official_financial_context") else {}),
     }
 
 
