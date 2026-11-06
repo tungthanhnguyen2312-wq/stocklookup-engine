@@ -12,6 +12,13 @@ from tools import storage_dedup_relink as relink
 DATA = b'{"rows": [1, 2, 3]}\n' * 1000
 
 
+NTFS_ONLY = pytest.mark.skipif(
+    os.name != "nt",
+    reason="file-identity semantics: the fingerprint uses NTFS ChangeTime; ext4 reuses a freed inode "
+           "number immediately, so a replaced alias / rolled-back copy can carry the old inode. The "
+           "tool's apply/rollback target is the NTFS retained-evidence volume (T:).")
+
+
 def _fixture(tmp_path, *, kind="FULL_UNIVERSE", classification=relink.ELIGIBLE, keep_rel=None, alias_rel=None):
     root = tmp_path / "retained"
     keep_rel = keep_rel or "operations-review/daily-research-session-operations-v1/2026-10-02/op/ai_research_full_universe.ndjson"
@@ -87,6 +94,7 @@ def test_same_size_changed_content_blocks_apply(tmp_path, capsys):
     assert alias.stat().st_ino != keep.stat().st_ino
 
 
+@NTFS_ONLY
 def test_replaced_alias_file_id_blocks(tmp_path, capsys):
     root, packet, sha, keep, alias = _fixture(tmp_path)
     alias.unlink()
@@ -165,6 +173,7 @@ def test_alias_touched_after_plan_refuses_apply(tmp_path):
     assert alias.stat().st_ino != keep.stat().st_ino
 
 
+@NTFS_ONLY
 def test_crash_after_replace_is_still_rolled_back_from_intent(tmp_path, capsys):
     root, packet, sha, keep, alias = _fixture(tmp_path)
     out = tmp_path / "out"
