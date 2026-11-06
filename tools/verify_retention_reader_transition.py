@@ -90,6 +90,10 @@ THESIS_ROOT_MANIFEST = "tests/fixtures/thesis_current_technical_root_source_tran
 THESIS_ROOT_BASE = "83897636e1813ad0b6a016c0a8d50b3f5430ea27"
 THESIS_ROOT_SCOPE = "EXACT_THESIS_CURRENT_STAGE_ENRICHMENT_ROOT_ONLY"
 THESIS_ROOT_ARCHIVE = "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"
+OCR_RECOGNITION_MANIFEST = "tests/fixtures/ocr_unit_period_recognition_source_transition_v1.json"
+OCR_RECOGNITION_BASE = "b6c34442db28dfd249680e249ae59fc9494bfd84"
+OCR_RECOGNITION_SCOPE = "EXACT_OCR_UNIT_LABEL_AND_H1_OPERATING_PERIOD_RECOGNITION_ONLY"
+OCR_RECOGNITION_SOURCES = ("financial_statement_unit_resolution.py", "official_financial_period_identity.py")
 ARCHITECTURE_BASELINE_SOURCE = "config/architecture_dependency_baseline.json"
 ARCHITECTURE_BASELINE_MANIFEST = "tests/fixtures/architecture_dependency_baseline_source_transition_v1.json"
 ARCHITECTURE_BASELINE_ARCHIVE = "tests/fixtures/architecture_dependency_baseline_v1.json.txt"
@@ -814,9 +818,43 @@ def _architecture_baseline_prior_bytes(root: Path, active: bytes) -> bytes:
     return prior
 
 
+def _ocr_recognition_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-07 OCR recognition successor (Owner approved "fix the parser").
+
+    Only two recognizers changed: an OCR glyph variant of a bare unit-label line ("Bon vi:" /
+    "Don vj:" + one explicit currency) and the VAS phrase "kỳ hoạt động 6 tháng kết thúc ngày
+    30 tháng 6 năm YYYY". A missing manifest keeps older checkouts valid; other bytes pass through.
+    """
+    if relative not in OCR_RECOGNITION_SOURCES:
+        return active
+    manifest = root / OCR_RECOGNITION_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources"}
+            or spec.get("contract_version") != "ocr_unit_period_recognition_source_transition/v1"
+            or spec.get("base_commit") != OCR_RECOGNITION_BASE
+            or spec.get("scope") != OCR_RECOGNITION_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != OCR_RECOGNITION_SOURCES):
+        raise ValueError("OCR_RECOGNITION_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    archive = "tests/fixtures/ocr_unit_period_recognition_sources/" + relative + ".txt"
+    if not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("OCR_RECOGNITION_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("OCR_RECOGNITION_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _ocr_recognition_prior_bytes(root, relative, content)
     if relative == ARCHITECTURE_BASELINE_SOURCE:
         content = _architecture_baseline_prior_bytes(root, content)
     content = _capacity_prior_bytes(root, relative, content)

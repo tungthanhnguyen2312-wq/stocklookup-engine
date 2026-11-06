@@ -33,9 +33,20 @@ def _norm(value: str) -> str:
     return " ".join(normalized.replace("đ", "d").split())
 
 
+# Image-only VAS statements: Tesseract reads the printed label "Đơn vị:" as "Bon vi:" (Đ->B)
+# or "Don vj:" (i->j). Accepted ONLY when the whole OCR line is that label plus one explicit
+# currency token and nothing else; prose, scale words or amounts on the line never match.
+_OCR_UNIT_LABEL_LINE = re.compile(r"^[bd]on\s*v[ij](?:\s*tinh)?\s*[:;.]\s*(vnd|usd)$")
+
+
 def parse_explicit_unit_declaration(text: str) -> dict[str, Any] | None:
     """Parse one labelled declaration, preserving currency and scale separately."""
     normalized = _norm(text)
+    ocr_label = _OCR_UNIT_LABEL_LINE.fullmatch(normalized)
+    if ocr_label:
+        currency = ocr_label.group(1).upper()
+        return {"currency": currency, "unit_scale": 1, "unit_label": currency,
+                "evidence_text": str(text).strip(), "label_recognition": "OCR_UNIT_LABEL_GLYPH_VARIANT"}
     if re.fullmatch(r"vnd(\s+vnd)+", normalized) or re.search(r"\bvnd(\s+vnd)+\b", normalized):
         return {"currency": "VND", "unit_scale": 1, "unit_label": "VND",
                 "evidence_text": str(text).strip()}

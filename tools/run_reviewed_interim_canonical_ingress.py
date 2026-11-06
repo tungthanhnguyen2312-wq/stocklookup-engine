@@ -12,7 +12,7 @@ import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -43,6 +43,22 @@ DOCUMENTS = (
 )
 
 
+def ocr_page_text(page: Mapping[str, Any]) -> str:
+    """OCR page text with one line per Tesseract line (block/paragraph/line), tokens in raw order.
+
+    Line-based recognizers (unit, currency) need line boundaries; a page flattened to one line
+    let any prose mention of "đơn vị" on a front page be parsed as a page-wide unit claim.
+    Whitespace-normalized span checks are unaffected.
+    """
+    lines: dict[tuple[int, int, int], list[str]] = {}
+    tokens = (page.get("ocr_derived_text_evidence") or {}).get("tokens") or []
+    for token in sorted(tokens, key=lambda token: int(token.get("raw_token_order", 0))):
+        h = token.get("tsv_hierarchy") or {}
+        key = (int(h.get("block_num", 0)), int(h.get("par_num", 0)), int(h.get("line_num", 0)))
+        lines.setdefault(key, []).append(str(token.get("text") or ""))
+    return "\n".join(" ".join(words) for _, words in sorted(lines.items()))
+
+
 def _hash(value: Any) -> str:
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
 
@@ -59,7 +75,7 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
         allow_audited_annual_context: bool = False, annual_context_known_at: str | None = None,
         resolve_cash_flow_code_cells: bool = False, evidence_subdir: str = EVIDENCE_SUBDIR,
         front_matter_pages=FRONT_MATTER_PAGES, allow_unqualified_native_fallback: bool = False,
-        interim_qualified_at: str | None = None) -> dict[str, Any]:
+        interim_qualified_at: str | None = None, normalize_superscript_digits: bool = False) -> dict[str, Any]:
     from financial_evidence_currency_contract import COHORT, TARGET_PERIODS
     if (reporting_period not in TARGET_PERIODS or len(document_specs) > 3
             or any(s["ticker"] not in COHORT for s in document_specs)
@@ -88,6 +104,10 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
             # observation predates individual response completion. Never backdate it.
             known_at = max((known_at, annual_known), key=lambda value: datetime.fromisoformat(value.replace("Z", "+00:00")))
         fallback = {"allow_unqualified_native_fallback": True} if allow_unqualified_native_fallback else {}
+        if normalize_superscript_digits:
+            # Existing governed adapter superscript_digit_to_ascii_non_amount/v1: years/labels only,
+            # amount cells are never normalized (a damaged amount stays ambiguous).
+            fallback["normalize_superscript_digits"] = True
         front = materialize_tsv_pages(record, evidence_root=evidence_root, pages=front_matter_pages, **fallback)
         statements = materialize_tsv_pages(record, evidence_root=evidence_root, pages=spec["pages"], **fallback)
         materializations.append({"ticker": spec["ticker"], "front": front, "statements": statements})
@@ -125,10 +145,8 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
         if assurance["state"] == "QUALIFIED":
             from financial_evidence_currency_refresh import _metadata_from_pages
             from official_source_registry import load_registry
-            pages = {page['page_number']: ' '.join(str(token.get('text') or '') for token in sorted(
-                (page.get('ocr_derived_text_evidence') or {}).get('tokens') or [],
-                key=lambda token:int(token.get('raw_token_order',0))))
-                for materialization in (front, statements) for page in materialization['pages']}
+            pages = {page['page_number']: ocr_page_text(page)
+                     for materialization in (front, statements) for page in materialization['pages']}
             retained_path = (evidence_root / record['relative_path']).resolve()
             if not retained_path.is_relative_to(evidence_root.resolve()):
                 raise ValueError('RETAINED_DOCUMENT_PATH_OUTSIDE_EVIDENCE_ROOT')

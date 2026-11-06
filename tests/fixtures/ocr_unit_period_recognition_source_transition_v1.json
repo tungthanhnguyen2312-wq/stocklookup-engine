@@ -1,0 +1,18 @@
+{
+  "contract_version": "ocr_unit_period_recognition_source_transition/v1",
+  "base_commit": "b6c34442db28dfd249680e249ae59fc9494bfd84",
+  "scope": "EXACT_OCR_UNIT_LABEL_AND_H1_OPERATING_PERIOD_RECOGNITION_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "financial_statement_unit_resolution.py": {
+      "archive": "tests/fixtures/ocr_unit_period_recognition_sources/financial_statement_unit_resolution.py.txt",
+      "prior_sha256_lf": "68e962f302958b9be6adb8614b5001db005747471c283811ec2df1ed05a2471b",
+      "active_sha256_lf": "cd2a40240bd52c18bfd708f90a334fa8edcaa3f8845b3edbd1b35f1f26c25a19"
+    },
+    "official_financial_period_identity.py": {
+      "archive": "tests/fixtures/ocr_unit_period_recognition_sources/official_financial_period_identity.py.txt",
+      "prior_sha256_lf": "87c727c12aea86d180abd924d9660d1b2c626f8c0c08cc713c1a0c3c92d25f26",
+      "active_sha256_lf": "7ff8c108be863ebab2c4ac817476c52fd76981b16d77a991a110b396418564fd"
+    }
+  }
+}
