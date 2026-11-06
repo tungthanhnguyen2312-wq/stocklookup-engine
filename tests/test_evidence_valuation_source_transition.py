@@ -59,6 +59,10 @@ def test_two_file_transition_checks_archive_and_active_bytes():
         if relative in real_corpus:
             assert real_corpus[relative]["prior_sha256_lf"] == expected_live
             expected_live = real_corpus[relative]["active_sha256_lf"]
+        d4a = json.loads((ROOT / "tests/fixtures/storage_reuse_d4a_source_transition_v1.json").read_bytes())["sources"]
+        if relative in d4a:
+            assert d4a[relative]["prior_sha256_lf"] == expected_live
+            expected_live = d4a[relative]["active_sha256_lf"]
         assert hashlib.sha256(active).hexdigest() == expected_live
         assert hashlib.sha256(active).hexdigest() != hashlib.sha256(historical).hexdigest()
     identity = active_valuation_orchestration_identity(ROOT)
