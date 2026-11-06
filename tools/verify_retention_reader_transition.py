@@ -78,6 +78,11 @@ TPLUS_INCREMENTAL_BASE = "f43471435403c0de8efc2e6fd800e2b83356b9b6"
 TPLUS_INCREMENTAL_SCOPE = "EXACT_TPLUS_INCREMENTAL_COST_ONLY"
 TPLUS_INCREMENTAL_ARCHIVE = "tests/fixtures/tplus_incremental_cost_v2_sources/prospective_feedback_streaming.py.txt"
 TPLUS_M1B_MANIFEST = "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json"
+STORAGE_REUSE_D4A_MANIFEST = "tests/fixtures/storage_reuse_d4a_source_transition_v1.json"
+STORAGE_REUSE_D4A_BASE = "0258f391bd3e81256a7480dd171062a76af6d9ca"
+STORAGE_REUSE_D4A_SCOPE = "EXACT_STORAGE_REUSE_D4A_SWITCHES_AND_IID_VIEW_LINK_ONLY"
+STORAGE_REUSE_D4A_SOURCE = "canonical_post_close_pipeline.py"
+STORAGE_REUSE_D4A_ARCHIVE = "tests/fixtures/storage_reuse_d4a_sources/canonical_post_close_pipeline.py.txt"
 TPLUS_M1B_BASE = "dc220164b6a4eb2b6fbec8175e588d6de9ab5553"
 TPLUS_M1B_SCOPE = "EXACT_TPLUS_INCREMENTAL_COST_M1B_ONLY"
 TPLUS_M1B_ARCHIVE = "tests/fixtures/tplus_incremental_cost_v2_m1b_sources/prospective_feedback_streaming.py.txt"
@@ -253,12 +258,48 @@ def _resident_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     return prior
 
 
+def _storage_reuse_d4a_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the D4a storage-reuse successor before the 2026-11-03 evidence-root pin.
+
+    Only ``canonical_post_close_pipeline.py`` changed (Owner switches, IID view link, one
+    producer keyword). E4 v2 digest is unchanged. Bytes that are not the D4a active source
+    pass through so older layers keep their own fail-closed checks.
+    """
+    if relative != STORAGE_REUSE_D4A_SOURCE:
+        return active
+    manifest = root / STORAGE_REUSE_D4A_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "storage_reuse_d4a_source_transition/v1"
+            or spec.get("base_commit") != STORAGE_REUSE_D4A_BASE
+            or spec.get("scope") != STORAGE_REUSE_D4A_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("previous_e4_v2_digest") != spec.get("active_e4_v2_digest")
+            or not isinstance(sources, dict) or tuple(sources) != (STORAGE_REUSE_D4A_SOURCE,)):
+        raise ValueError("STORAGE_REUSE_D4A_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != STORAGE_REUSE_D4A_ARCHIVE):
+        raise ValueError("STORAGE_REUSE_D4A_SOURCE_TRANSITION_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    prior = (root / STORAGE_REUSE_D4A_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"] or row["prior_sha256_lf"] == row["active_sha256_lf"]:
+        raise ValueError("STORAGE_REUSE_D4A_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _tplus_real_corpus_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel the 2026-11-03 T+ evidence-root successor before every older pin of the same source.
 
     Only the feedback child's ``--root`` (operation evidence root) and the explicit empty-corpus
     refusal changed. Older manifests stay unchanged; a missing manifest keeps older checkouts valid.
     """
+    active = _storage_reuse_d4a_prior_bytes(root, relative, active)
     manifest = root / TPLUS_REAL_CORPUS_MANIFEST
     if relative not in TPLUS_REAL_CORPUS_SOURCES or not manifest.is_file():
         return active
