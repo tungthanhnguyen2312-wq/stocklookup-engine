@@ -27,7 +27,8 @@ watcher. One invocation does, in order, and stops at the first gate that does no
                   CURRENT only removes/annotates ``domains.signals`` -- the normal Dashboard and
                   AI handoff are never altered by this tool.
 
-``--rollback`` restores the runtime pair recorded by the latest transaction for the session and,
+``--rollback`` restores the runtime pair of ``--transaction`` (default: newest still-live journal
+transaction for this runtime) and,
 with ``--publish``, republishes through the same governed path.
 """
 from __future__ import annotations
@@ -351,24 +352,86 @@ def _copy_atomic(src: Path, dst: Path) -> None:
     os.replace(tmp, dst)
 
 
-def stage_runtime(ckpt: Path, runtime_root: Path, txn: Path) -> dict[str, Any]:
+# Transaction journal: lives OUTSIDE the rebuildable checkpoint directory and is keyed by
+# session + runtime target (not by code digest), so a checkpoint rebuild, a retry or a new engine
+# version can never erase or shadow the backup of the pair that was live before the first stage.
+OPEN_STATES = ("PREPARED", "STAGING")
+LIVE_STATES = ("STAGED", "PUBLISHED", "SOURCE_UPDATED")
+
+
+def journal_root(checkpoint_root: Path, session: str, runtime_root: Path) -> Path:
+    target = hashlib.sha256(str(Path(runtime_root).resolve()).lower().encode()).hexdigest()[:12]
+    return checkpoint_root / session / "transactions" / target
+
+
+def _pair_hashes(directory: Path) -> dict[str, str | None]:
+    return {n: (_sha256_file(directory / n) if (directory / n).is_file() else None) for n in (SIDECAR_JSON, SIDECAR_JS)}
+
+
+def _txn_state(txn: Path) -> dict[str, Any]:
+    return json.loads((txn / "transaction.json").read_text(encoding="utf-8"))
+
+
+def _set_state(txn: Path, state: str, **extra: Any) -> None:
+    record = _txn_state(txn)
+    record.update(extra, state=state, updated_at=_now())
+    _write_json(txn / "transaction.json", record)
+
+
+def transactions(journal: Path) -> list[Path]:
+    return sorted(p.parent for p in journal.glob("*/transaction.json"))
+
+
+def recover_interrupted(journal: Path, runtime_root: Path) -> list[str]:
+    """A transaction left PREPARED/STAGING (crash or kill mid-copy) is restored to its backup
+    BEFORE anything new is staged, so a retry can never back up a torn pair."""
+    recovered = []
+    for txn in transactions(journal):
+        if _txn_state(txn)["state"] in OPEN_STATES:
+            restore_runtime(runtime_root, txn)
+            _set_state(txn, "RECOVERED_RESTORED")
+            recovered.append(txn.name)
+    return recovered
+
+
+def stage_runtime(ckpt: Path, runtime_root: Path, journal: Path) -> tuple[Path, dict[str, Any]]:
     data = runtime_root / "data"
+    target = _pair_hashes(ckpt)
+    current = _pair_hashes(data)
+    if current == target:
+        # Already staged by an earlier attempt: reuse that transaction (and its ORIGINAL backup)
+        # instead of creating a new one whose "previous" would be this same pair.
+        for txn in reversed(transactions(journal)):
+            record = _txn_state(txn)
+            if record["state"] in LIVE_STATES and record.get("staged") == target:
+                return txn, {"runtime_data": str(data), "previous": record["previous"], "reused_transaction": True}
+    txn = journal / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     previous = txn / "previous"
-    previous.mkdir(parents=True, exist_ok=True)
+    previous.mkdir(parents=True)
     record = {}
     for name in (SIDECAR_JSON, SIDECAR_JS):
-        current = data / name
-        if current.is_file():
-            shutil.copyfile(current, previous / name)
+        if (data / name).is_file():
+            shutil.copyfile(data / name, previous / name)
             record[name] = _sha256_file(previous / name)
+            if record[name] != current[name]:
+                raise RuntimeError(f"BACKUP_HASH_MISMATCH:{name}")
         else:
             record[name] = None
     _write_json(txn / "previous.json", record)
-    for name in (SIDECAR_JSON, SIDECAR_JS):
-        _copy_atomic(ckpt / name, data / name)
-        if _sha256_file(data / name) != _sha256_file(ckpt / name):
-            raise RuntimeError(f"STAGE_HASH_MISMATCH:{name}")
-    return {"runtime_data": str(data), "previous": record}
+    _write_json(txn / "transaction.json", {"id": txn.name, "state": "PREPARED", "previous": record,
+                                           "staged": target, "created_at": _now(), "updated_at": _now()})
+    try:
+        _set_state(txn, "STAGING")
+        for name in (SIDECAR_JSON, SIDECAR_JS):
+            _copy_atomic(ckpt / name, data / name)
+            if _sha256_file(data / name) != target[name]:
+                raise RuntimeError(f"STAGE_HASH_MISMATCH:{name}")
+        _set_state(txn, "STAGED")
+    except BaseException:
+        restore_runtime(runtime_root, txn)
+        _set_state(txn, "STAGE_FAILED_RESTORED")
+        raise
+    return txn, {"runtime_data": str(data), "previous": record, "reused_transaction": False}
 
 
 def restore_runtime(runtime_root: Path, txn: Path) -> dict[str, Any]:
@@ -434,9 +497,26 @@ def verify_published(web_dir: Path, session: str, verified: Mapping[str, Any]) -
     return problems
 
 
-def latest_transaction(ckpt: Path) -> Path | None:
-    txns = sorted((ckpt / "transactions").glob("*/previous.json"))
-    return txns[-1].parent if txns else None
+def rollback_target(journal: Path, ckpt: Path, transaction_id: str | None) -> Path | None:
+    """Explicit --transaction id, else the newest transaction still LIVE in the journal; a
+    pre-journal (legacy) transaction under the checkpoint directory is honoured only when the
+    journal has none."""
+    txns = transactions(journal)
+    if transaction_id:
+        named = [t for t in txns if t.name == transaction_id]
+        legacy = ckpt / "transactions" / transaction_id
+        return named[0] if named else (legacy if (legacy / "previous.json").is_file() else None)
+    live = [t for t in txns if _txn_state(t)["state"] in LIVE_STATES]
+    if live:
+        return live[-1]
+    if txns:
+        return None
+    legacy = sorted((ckpt / "transactions").glob("*/previous.json"))
+    return legacy[-1].parent if legacy else None
+
+
+def web_matches_pair(web_dir: Path, record: Mapping[str, Any]) -> bool:
+    return _pair_hashes(web_dir / "data") == dict(record)
 
 
 # ---------------------------------------------------------------- entry
@@ -469,16 +549,23 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
             receipt["operation"] = operation_binding(retained_root, args.session, args.source_identity)
             publish = publisher or (lambda *a: governed_publisher(
                 *a, run_identity=receipt["operation"].get("producer_run_identity")))
+            journal = journal_root(checkpoint_root, args.session, runtime_root) if runtime_root else None
+            if journal is not None:
+                receipt["recovered_transactions"] = recover_interrupted(journal, runtime_root)
             if args.rollback:
-                txn = latest_transaction(ckpt)
+                txn = rollback_target(journal, ckpt, args.transaction)
                 if txn is None:
                     raise Refused("NO_TRANSACTION_TO_ROLL_BACK")
+                receipt["transaction"] = str(txn)
                 receipt["rollback"] = restore_runtime(runtime_root, txn)
+                if (txn / "transaction.json").is_file():
+                    _set_state(txn, "ROLLED_BACK")
                 if args.publish:
                     result = publish(producer_root, runtime_root, web_dir, args.session,
-                                                               args.complete_publication)
+                                     args.complete_publication)
                     receipt["publication"] = dict(result)
-                    if result.get("status") not in PUBLISHED_STATES:
+                    if result.get("status") not in PUBLISHED_STATES or not web_matches_pair(
+                            web_dir, receipt["rollback"]["restored"]):
                         code = EXIT_FAILED
                 receipt["status"] = "ROLLED_BACK" if code == EXIT_OK else "ROLLBACK_PUBLISH_FAILED"
                 return code, receipt
@@ -500,8 +587,11 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                 receipt["release_sessions"] = sessions
                 if sessions["runtime"] != args.session or sessions["web"] != args.session:
                     raise Refused("WORKSPACE_RELEASE_SESSION_MISMATCH")
-            txn = ckpt / "transactions" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-            receipt["stage"] = stage_runtime(ckpt, runtime_root, txn)
+            try:
+                txn, receipt["stage"] = stage_runtime(ckpt, runtime_root, journal)
+            except (OSError, RuntimeError) as exc:
+                receipt.update(status="STAGE_FAILED_RESTORED", reason=f"{type(exc).__name__}:{exc}")
+                return EXIT_FAILED, receipt
             receipt["transaction"] = str(txn)
             receipt["status"] = "STAGED"
             if not args.publish:
@@ -522,9 +612,12 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                 # report the recoverable SHA instead of diverging the runtime from it.
                 receipt["status"] = "SOURCE_UPDATED_COMPLETION_PENDING"
                 receipt["recoverable_release_source_sha"] = result.get("recoverable_release_source_sha")
+                _set_state(txn, "SOURCE_UPDATED",
+                           recoverable_release_source_sha=result.get("recoverable_release_source_sha"))
                 return EXIT_FAILED, receipt
             if problems:
                 receipt["rollback"] = restore_runtime(runtime_root, txn)
+                _set_state(txn, "ROLLED_BACK")
                 receipt["status"] = "PUBLISH_FAILED_RUNTIME_ROLLED_BACK"
                 code = EXIT_FAILED
                 if ok:
@@ -537,12 +630,16 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                     except Exception as exc:  # noqa: BLE001
                         again = {"status": "FAILED", "reason": f"{type(exc).__name__}:{exc}"}
                     receipt["rollback_publication"] = dict(again)
+                    # Converged only if the republished web pair is byte-equal to the restored one.
                     receipt["status"] = ("PUBLISH_FAILED_ROLLED_BACK_AND_REPUBLISHED"
                                          if again.get("status") in PUBLISHED_STATES
+                                         and web_matches_pair(web_dir, receipt["rollback"]["restored"])
                                          else "PUBLISH_FAILED_ROLLBACK_REPUBLISH_FAILED")
             else:
                 published = result.get("status") == "PUBLISHED" or result.get("publication_state") == "PUBLISHED"
                 receipt["status"] = "PUBLISHED" if published else "PUBLISHED_LOCAL"
+                _set_state(txn, "PUBLISHED" if published else "STAGED",
+                           release_source_sha=result.get("release_source_sha"))
             return code, receipt
     except Skip as exc:
         receipt.update(status="SKIP", reason=str(exc))
@@ -578,6 +675,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--complete-publication", action="store_true",
                         help="require Dashboard CI/Pages/public-byte proof (as Daily does)")
     parser.add_argument("--rollback", action="store_true")
+    parser.add_argument("--transaction", default=None, help="explicit transaction id to roll back")
     return parser
 
 

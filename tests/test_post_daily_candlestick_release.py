@@ -1,6 +1,7 @@
 import argparse
 import json
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -68,7 +69,8 @@ def args(w, **extra):
                 checkpoint_root=str(w["tmp"] / "ckpt"), producer_root=str(w["producer"]),
                 retained_root=str(w["retained"]), snapshot=None, runtime_root=str(w["runtime"]),
                 web_dir=str(w["web"]), workers=1, min_free_ram_gib=1.0, min_free_disk_gib=0.0,
-                stage=False, publish=False, complete_publication=False, rollback=False)
+                stage=False, publish=False, complete_publication=False, rollback=False,
+                transaction=None)
     base.update(extra)
     return argparse.Namespace(**base)
 
@@ -150,6 +152,7 @@ def _fake_publisher(world, *, fail=False, wrong_identity=False):
             return {"status": "FAILED", "reason": "SMOKE"}
         src = runtime_root / "data" / tool.SIDECAR_JSON
         (web_dir / "data" / tool.SIDECAR_JSON).write_bytes(src.read_bytes())
+        (web_dir / "data" / tool.SIDECAR_JS).write_bytes((runtime_root / "data" / tool.SIDECAR_JS).read_bytes())
         payload = json.loads(src.read_text(encoding="utf-8"))
         comp = projection.component_state(payload, session)
         if wrong_identity:
@@ -295,3 +298,93 @@ def test_source_pushed_but_completion_pending_keeps_runtime_equal_to_pushed_sour
     staged = (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes()
     ckpt = tool.checkpoint_dir(world["tmp"] / "ckpt", SESSION, world["snap"]["snapshot_identity"])
     assert staged == (ckpt / tool.SIDECAR_JSON).read_bytes()
+
+
+
+def _journal(world):
+    return tool.journal_root(world["tmp"] / "ckpt", SESSION, world["runtime"])
+
+
+def test_repeated_publish_preserves_original_rollback_target(world):
+    original = (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes()
+    assert go(world, publisher=_fake_publisher(world), publish=True)[1]["status"] == "PUBLISHED_LOCAL"
+    code, again = go(world, publisher=_fake_publisher(world), publish=True)
+    assert again["stage"]["reused_transaction"] is True
+    assert len(tool.transactions(_journal(world))) == 1
+    code, rb = go(world, rollback=True)
+    assert code == tool.EXIT_OK
+    assert (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes() == original
+
+
+def test_second_stage_copy_failure_restores_both_files(world, monkeypatch):
+    before = tool._pair_hashes(world["runtime"] / "data")
+    real = tool._copy_atomic
+    calls = []
+
+    def flaky(src, dst):
+        calls.append(dst.name)
+        if len(calls) == 2:
+            raise OSError("injected copy failure on the JS file")
+        return real(src, dst)
+    monkeypatch.setattr(tool, "_copy_atomic", flaky)
+    code, r = go(world, stage=True)
+    assert code == tool.EXIT_FAILED and r["status"] == "STAGE_FAILED_RESTORED"
+    assert tool._pair_hashes(world["runtime"] / "data") == before
+    [txn] = tool.transactions(_journal(world))
+    assert tool._txn_state(txn)["state"] == "STAGE_FAILED_RESTORED"
+
+
+def test_resume_after_interrupted_stage_uses_original_backup(world):
+    original = tool._pair_hashes(world["runtime"] / "data")
+    go(world)  # build checkpoint
+    ckpt = tool.checkpoint_dir(world["tmp"] / "ckpt", SESSION, world["snap"]["snapshot_identity"])
+    journal = _journal(world)
+    # Simulate a hard kill after JSON B was copied but before JS B: torn pair + STAGING journal.
+    txn = journal / "19990101T000000000000Z"
+    (txn / "previous").mkdir(parents=True)
+    for name in (tool.SIDECAR_JSON, tool.SIDECAR_JS):
+        (txn / "previous" / name).write_bytes((world["runtime"] / "data" / name).read_bytes())
+    (txn / "previous.json").write_text(json.dumps(original))
+    (txn / "transaction.json").write_text(json.dumps({"id": txn.name, "state": "STAGING", "previous": original,
+                                                      "staged": tool._pair_hashes(ckpt)}))
+    (world["runtime"] / "data" / tool.SIDECAR_JSON).write_bytes((ckpt / tool.SIDECAR_JSON).read_bytes())
+    code, r = go(world, stage=True)
+    assert r["recovered_transactions"] == [txn.name]
+    assert tool._txn_state(txn)["state"] == "RECOVERED_RESTORED"
+    new = [t for t in tool.transactions(journal) if t != txn]
+    assert len(new) == 1 and tool._txn_state(new[0])["previous"] == original  # backup is A, not the torn pair
+    code, rb = go(world, rollback=True)
+    assert tool._pair_hashes(world["runtime"] / "data") == original
+
+
+def test_checkpoint_rebuild_preserves_transaction_history(world, monkeypatch):
+    go(world, publisher=_fake_publisher(world), publish=True)
+    journal = _journal(world)
+    [txn] = tool.transactions(journal)
+    monkeypatch.setattr(tool, "code_digest", lambda: "e" * 64)  # new engine code -> new checkpoint dir
+    ckpt = tool.checkpoint_dir(world["tmp"] / "ckpt", SESSION, world["snap"]["snapshot_identity"])
+    code, r = go(world)
+    assert r["status"] == "BUILT" and ckpt.is_dir()
+    assert tool.transactions(journal) == [txn] and (txn / "previous.json").is_file()
+
+
+def test_rollback_by_explicit_transaction_id(world):
+    original = (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes()
+    code, r = go(world, publisher=_fake_publisher(world), publish=True)
+    txn_id = Path(r["transaction"]).name
+    code, rb = go(world, rollback=True, transaction=txn_id)
+    assert code == tool.EXIT_OK and (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes() == original
+    assert go(world, rollback=True)[1]["reason"] == "NO_TRANSACTION_TO_ROLL_BACK"  # already rolled back
+
+
+def test_post_push_completion_failure_keeps_recoverable_consistent_state(world):
+    code, r = go(world, publish=True, publisher=lambda *a: {
+        "status": "FAILED", "publication_state": "GITHUB_SOURCE_UPDATED",
+        "recoverable_release_source_sha": "a" * 40})
+    assert r["status"] == "SOURCE_UPDATED_COMPLETION_PENDING"
+    txn = Path(r["transaction"])
+    state = tool._txn_state(txn)
+    assert state["state"] == "SOURCE_UPDATED" and state["recoverable_release_source_sha"] == "a" * 40
+    # Retry reuses the same transaction (original backup kept), never a new backup of the pushed pair.
+    code, again = go(world, publisher=_fake_publisher(world), publish=True)
+    assert again["stage"]["reused_transaction"] is True and Path(again["transaction"]) == txn
