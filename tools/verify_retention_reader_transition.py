@@ -86,6 +86,10 @@ STORAGE_REUSE_D4A_ARCHIVE = "tests/fixtures/storage_reuse_d4a_sources/canonical_
 TPLUS_M1B_BASE = "dc220164b6a4eb2b6fbec8175e588d6de9ab5553"
 TPLUS_M1B_SCOPE = "EXACT_TPLUS_INCREMENTAL_COST_M1B_ONLY"
 TPLUS_M1B_ARCHIVE = "tests/fixtures/tplus_incremental_cost_v2_m1b_sources/prospective_feedback_streaming.py.txt"
+THESIS_ROOT_MANIFEST = "tests/fixtures/thesis_current_technical_root_source_transition_v1.json"
+THESIS_ROOT_BASE = "83897636e1813ad0b6a016c0a8d50b3f5430ea27"
+THESIS_ROOT_SCOPE = "EXACT_THESIS_CURRENT_STAGE_ENRICHMENT_ROOT_ONLY"
+THESIS_ROOT_ARCHIVE = "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"
 ARCHITECTURE_BASELINE_SOURCE = "config/architecture_dependency_baseline.json"
 ARCHITECTURE_BASELINE_MANIFEST = "tests/fixtures/architecture_dependency_baseline_source_transition_v1.json"
 ARCHITECTURE_BASELINE_ARCHIVE = "tests/fixtures/architecture_dependency_baseline_v1.json.txt"
@@ -708,6 +712,47 @@ def _valuation_orchestration_prior_bytes(root: Path, relative: str) -> bytes:
     return prior
 
 
+def _thesis_root_spec(root: Path) -> dict | None:
+    """Successor of the M1b pin: current-stage enrichment batch under governed roots.
+
+    Only ``thesis_evidence_production.py`` changed (exact relative path searched under the
+    checkout, the build output root and the governed evidence roots; differing copies refuse).
+    T0 semantics are unchanged. A missing manifest keeps older checkouts valid.
+    """
+    manifest = root / THESIS_ROOT_MANIFEST
+    if not manifest.is_file():
+        return None
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "thesis_current_technical_root_source_transition/v1"
+            or spec.get("base_commit") != THESIS_ROOT_BASE
+            or spec.get("scope") != THESIS_ROOT_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("previous_e4_v2_digest") == spec.get("active_e4_v2_digest")
+            or not isinstance(sources, dict) or tuple(sources) != (THESIS_SOURCE,)):
+        raise ValueError("THESIS_ROOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[THESIS_SOURCE]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != THESIS_ROOT_ARCHIVE):
+        raise ValueError("THESIS_ROOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    return spec
+
+
+def _thesis_root_prior_bytes(root: Path, active: bytes) -> bytes:
+    spec = _thesis_root_spec(root)
+    if spec is None:
+        return active
+    row = spec["sources"][THESIS_SOURCE]
+    prior = (root / THESIS_ROOT_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("THESIS_ROOT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _thesis_production_prior_bytes(root: Path, relative: str) -> bytes:
     """Return archived origin/main bytes for the one approved Thesis source.
 
@@ -727,7 +772,7 @@ def _thesis_production_prior_bytes(root: Path, relative: str) -> bytes:
             or spec.get("exception_scope") != THESIS_SCOPE or spec.get("release_authority") != "NOT_GRANTED"
             or spec.get("source_path") != THESIS_SOURCE or spec.get("archive") != THESIS_ARCHIVE):
         raise ValueError("THESIS_SOURCE_TRANSITION_SCOPE_INVALID")
-    active = (root / THESIS_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    active = _thesis_root_prior_bytes(root, (root / THESIS_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
     prior = (root / THESIS_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
     prior_sha = hashlib.sha256(prior).hexdigest()
     active_sha = hashlib.sha256(active).hexdigest()
@@ -845,7 +890,8 @@ def active_thesis_evidence_identity(root: Path) -> dict:
     """Attest the live Thesis source without adopting its historical or mixed digest."""
     spec = json.loads((root / THESIS_MANIFEST).read_bytes())
     historical_file = historical_bytes(root, THESIS_SOURCE)
-    active_file = (root / THESIS_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    live_file = (root / THESIS_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    active_file = _thesis_root_prior_bytes(root, live_file)
     historical_sha = hashlib.sha256(historical_file).hexdigest()
     active_sha = hashlib.sha256(active_file).hexdigest()
     if (historical_sha != spec["prior_sha256_lf"] or active_sha != spec["active_sha256_lf"]
@@ -909,6 +955,11 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if m1b["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = m1b["active_e4_v2_digest"]
+    thesis_root = _thesis_root_spec(root)
+    if thesis_root is not None:
+        if thesis_root["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = thesis_root["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

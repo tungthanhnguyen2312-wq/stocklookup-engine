@@ -21,6 +21,8 @@ TPLUS_ACTIVE_V2 = "9c6cbd5def1b496b94304bb8751d5f64dae108cf1e3b30634c50f6cdff71c
 MIXED_V2 = "c705b386c927a49adaf97be0a711cda5b27b2432cae2aaaa098a087a58b88698"
 HISTORICAL_V1 = "fa79baadcca197493b9ca70067fbd153f5e8bb7f50dfb6dbc6da53f253483d46"
 EMPTY = hashlib.sha256(b"").hexdigest()
+ROOT_FIX = "115c68452e84cc466eceaa355f982b427d0a2be5a8f0c2dbadce92a1ed4028ec"  # 2026-11-06 current-stage enrichment root successor
+THESIS_ROOT = "tests/fixtures/thesis_current_technical_root_source_transition_v1.json"
 
 
 def _lf(path: Path) -> bytes:
@@ -34,7 +36,8 @@ def _copy_file(root: Path, relative: str) -> None:
 
 
 def _copy_boundary(tmp_path: Path) -> None:
-    for relative in (THESIS_SOURCE, THESIS_ARCHIVE, THESIS_MANIFEST, "tests/fixtures/e2e3_frozen_sources.json"):
+    for relative in (THESIS_SOURCE, THESIS_ARCHIVE, THESIS_MANIFEST, "tests/fixtures/e2e3_frozen_sources.json",
+                     THESIS_ROOT, "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"):
         _copy_file(tmp_path, relative)
 
 
@@ -86,6 +89,7 @@ def _copy_domain(tmp_path: Path) -> None:
     m1b = "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json"
     relatives.append(m1b)
     relatives.extend(row["archive"] for row in json.loads((ROOT / m1b).read_bytes())["sources"].values())
+    relatives.extend([THESIS_ROOT, "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"])
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -102,7 +106,10 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     active = _lf(ROOT / THESIS_SOURCE)
     assert historical_bytes(ROOT, THESIS_SOURCE) == archive
     assert hashlib.sha256(archive).hexdigest() == PRIOR
-    assert hashlib.sha256(active).hexdigest() == ACTIVE
+    assert hashlib.sha256(active).hexdigest() == ROOT_FIX
+    root_fix = json.loads((ROOT / THESIS_ROOT).read_bytes())
+    assert root_fix["sources"][THESIS_SOURCE]["prior_sha256_lf"] == ACTIVE
+    assert hashlib.sha256(_lf(ROOT / root_fix["sources"][THESIS_SOURCE]["archive"])).hexdigest() == ACTIVE
     assert PRIOR != ACTIVE
     identity = active_thesis_evidence_identity(ROOT)
     assert identity["historical_sha256_lf"] == PRIOR
@@ -122,7 +129,8 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert incremental["previous_e4_v2_digest"] == real_corpus["active_e4_v2_digest"]
     m1b = json.loads((ROOT / "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json").read_bytes())
     assert m1b["previous_e4_v2_digest"] == incremental["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == m1b["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == root_fix["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

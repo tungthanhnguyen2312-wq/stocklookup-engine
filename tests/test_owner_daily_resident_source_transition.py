@@ -140,7 +140,9 @@ def test_exact_merged_archives_and_feedback_dependencies():
     assert incremental["previous_e4_v2_digest"] == real_corpus["active_e4_v2_digest"]
     m1b = json.loads((ROOT / "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json").read_bytes())
     assert m1b["previous_e4_v2_digest"] == incremental["active_e4_v2_digest"]
-    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == m1b["active_e4_v2_digest"]
+    root_fix = json.loads((ROOT / "tests/fixtures/thesis_current_technical_root_source_transition_v1.json").read_bytes())
+    assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
+    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
 
 
 @pytest.mark.parametrize("tamper", ["live", "archive", "scope", "forged_prior"])

@@ -1,0 +1,15 @@
+{
+  "contract_version": "thesis_current_technical_root_source_transition/v1",
+  "base_commit": "83897636e1813ad0b6a016c0a8d50b3f5430ea27",
+  "scope": "EXACT_THESIS_CURRENT_STAGE_ENRICHMENT_ROOT_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "ba06dc93a07f89e24bd68128418cb65268d8b1de86aaa1dd0d47efa76ed51ef0",
+  "active_e4_v2_digest": "555802cb602b523aa70571207cff40fb79f9f4b2f10e5b27fea3186795977f87",
+  "sources": {
+    "stocklookup_core/research/thesis_evidence_production.py": {
+      "archive": "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt",
+      "prior_sha256_lf": "9f384915d23661497e9132091a2aaac0030e5d54bc5060caeda89094b33901c7",
+      "active_sha256_lf": "115c68452e84cc466eceaa355f982b427d0a2be5a8f0c2dbadce92a1ed4028ec"
+    }
+  }
+}

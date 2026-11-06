@@ -175,7 +175,9 @@ def test_active_coupled_digest_refuses_both_prior_declared_and_main_receipts():
     assert incremental["previous_e4_v2_digest"] == real_corpus["active_e4_v2_digest"]
     m1b = json.loads((ROOT / "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json").read_bytes())
     assert m1b["previous_e4_v2_digest"] == incremental["active_e4_v2_digest"]
-    assert live["code_digest"] == m1b["active_e4_v2_digest"]
+    root_fix = json.loads((ROOT / "tests/fixtures/thesis_current_technical_root_source_transition_v1.json").read_bytes())
+    assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
+    assert live["code_digest"] == root_fix["active_e4_v2_digest"]
     for old in (row["prior_declared_e4_v2_digest"], row["base_live_e4_v2_digest"], row["active_e4_v2_digest"]):
         assert old != live["code_digest"]
         assert not e4.candidate_reuse_eligible({"source_version": "v2",

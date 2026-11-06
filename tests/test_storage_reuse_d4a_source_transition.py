@@ -41,7 +41,9 @@ def test_d4a_does_not_change_the_e4_v2_digest():
     spec = json.loads((ROOT / STORAGE_REUSE_D4A_MANIFEST).read_bytes())
     m1b = json.loads((ROOT / TPLUS_M1B_MANIFEST).read_bytes())
     assert spec["previous_e4_v2_digest"] == spec["active_e4_v2_digest"] == m1b["active_e4_v2_digest"]
-    assert e4.source_identity(ROOT, version="v2")["code_digest"] == m1b["active_e4_v2_digest"]
+    root_fix = json.loads((ROOT / "tests/fixtures/thesis_current_technical_root_source_transition_v1.json").read_bytes())
+    assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
+    assert e4.source_identity(ROOT, version="v2")["code_digest"] == root_fix["active_e4_v2_digest"]
 
 
 def test_other_sources_pass_through():
