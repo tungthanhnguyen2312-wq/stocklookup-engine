@@ -31,6 +31,7 @@ def world(tmp_path, monkeypatch):
     web = tmp_path / "web"
     for p in (producer, runtime / "data", web / "data"):
         p.mkdir(parents=True)
+    monkeypatch.setenv("STOCK_LOOKUP_RELEASE_LOCK_DIR", str(tmp_path / "locks"))
     snap = real_snapshot({"ENG": engulfing_series(), "FLAT": flat_series(), "OLD": flat_series(end="2026-11-04")})
     snap_path = tool.default_snapshot_path(retained, SESSION)
     snap_path.parent.mkdir(parents=True)
@@ -160,8 +161,14 @@ def _fake_publisher(world, *, fail=False, wrong_identity=False):
         info = {"market_session": session, "domains": {"signals": {"status": comp["status"],
                                                                    "components": {"candlestick_patterns": comp}}}}
         (web_dir / "data/build_info.json").write_text(json.dumps(info))
+        write_build_info_js(web_dir, info)
         return {"status": "LOCAL_PUBLISHED"}
     return publish
+
+
+def write_build_info_js(web_dir, info):
+    (web_dir / "data/build_info.js").write_text(
+        "window.STOCK_LOOKUP_BUILD_INFO = " + json.dumps(info) + ";\nwindow.BUILD_INFO = window.STOCK_LOOKUP_BUILD_INFO;\n")
 
 
 def test_publish_success_then_rollback_restores_previous_pair(world):
@@ -388,3 +395,60 @@ def test_post_push_completion_failure_keeps_recoverable_consistent_state(world):
     # Retry reuses the same transaction (original backup kept), never a new backup of the pushed pair.
     code, again = go(world, publisher=_fake_publisher(world), publish=True)
     assert again["stage"]["reused_transaction"] is True and Path(again["transaction"]) == txn
+
+
+
+# ---------------------------------------------------------------- Codex F4/F5 regressions
+def test_different_checkpoint_roots_cannot_stage_same_runtime(world):
+    before = tool._pair_hashes(world["runtime"] / "data")
+    with tool.target_lock("runtime", world["runtime"]):
+        code, r = go(world, stage=True, checkpoint_root=str(world["tmp"] / "other-ckpt"))
+    assert code == tool.EXIT_SKIP and r["reason"].startswith("TARGET_LOCK_HELD:runtime"), r
+    assert tool._pair_hashes(world["runtime"] / "data") == before
+    code, r = go(world, stage=True, checkpoint_root=str(world["tmp"] / "other-ckpt"))  # lock released
+    assert code == tool.EXIT_OK and r["status"] == "STAGED"
+
+
+def test_writer_starting_after_preflight_refuses_stage_without_write(world):
+    before = tool._pair_hashes(world["runtime"] / "data")
+    calls = []
+
+    def rows():
+        calls.append(1)
+        return [] if len(calls) == 1 else [(4242, "C:/py/python.exe tools/run_owner_daily.py")]
+    code, r = go(world, rows=rows, stage=True)
+    assert code == tool.EXIT_REFUSED and r["reason"].startswith("CONCURRENT_WRITER_BEFORE_STAGE"), r
+    assert tool._pair_hashes(world["runtime"] / "data") == before
+
+
+def test_rollback_refuses_to_overwrite_a_newer_runtime_pair(world):
+    code, r = go(world, publisher=_fake_publisher(world), publish=True)
+    txn = Path(r["transaction"])
+    newer = b'{"scan_date":"2026-11-09"}'
+    (world["runtime"] / "data" / tool.SIDECAR_JSON).write_bytes(newer)
+    code, rb = go(world, rollback=True)
+    assert code == tool.EXIT_REFUSED and rb["reason"].startswith("ROLLBACK_NOT_OWNER_RUNTIME_CHANGED"), rb
+    assert (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes() == newer
+    assert tool._txn_state(txn)["state"] == "PUBLISHED" or tool._txn_state(txn)["state"] == "STAGED"
+
+
+def test_valid_pair_with_mismatched_build_info_js_is_rejected(world):
+    good = _fake_publisher(world)
+
+    def stale_js(producer_root, runtime_root, web_dir, session, complete):
+        result = good(producer_root, runtime_root, web_dir, session, complete)
+        write_build_info_js(web_dir, {"market_session": "2026-11-05"})
+        return result
+    code, r = go(world, publisher=stale_js, publish=True)
+    assert code == tool.EXIT_FAILED and "WEB_BUILD_INFO_JS_MISMATCH" in r["publication_checks"], r
+
+
+def test_web_js_differing_from_checkpoint_is_rejected(world):
+    good = _fake_publisher(world)
+
+    def torn(producer_root, runtime_root, web_dir, session, complete):
+        result = good(producer_root, runtime_root, web_dir, session, complete)
+        (web_dir / "data" / tool.SIDECAR_JS).write_text("window.CANDLESTICK_PATTERNS = {};\n")
+        return result
+    code, r = go(world, publisher=torn, publish=True)
+    assert code == tool.EXIT_FAILED and "WEB_SIDECAR_PAIR_MISMATCH" in r["publication_checks"], r
