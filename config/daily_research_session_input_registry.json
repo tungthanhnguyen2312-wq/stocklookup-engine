@@ -3062,6 +3062,88 @@
         "official_universe": "current_official_market_universe:d77e16f82893df419689b24356d066d6a6431bd3c27e09190e3c319e004abb55",
         "event_context": "current_official_event_context:4edc3282f8d3297bfab4a76fc05d11a7995e65bb798006c9c5d3d3a67e16656c"
       }
+    },
+    "2026-11-06": {
+      "status": "COMPLETED_RETAINED_EVIDENCE",
+      "trading_day_valid": true,
+      "completion_evidence": {
+        "basis": "EXACT_SESSION_UPSTREAM_ARTIFACT_REGISTRY",
+        "required_current_session_inputs": [
+          "catalyst",
+          "corporate_intelligence",
+          "descriptive",
+          "fundamental",
+          "screening",
+          "tactical",
+          "triage",
+          "valuation"
+        ],
+        "policy": "The registry is a governed completed-session ledger. It does not infer completion from civil time, weekday, or a latest file.",
+        "canonical_post_close_pipeline_evidence": {
+          "contract_version": "canonical_post_close_pipeline/v1",
+          "session_coherence": {
+            "session": "2026-11-06",
+            "technical_coverage_semantics": {
+              "same_session_technical_feature_available_count": 909,
+              "current_active_equity_denominator": 1497,
+              "observed_session_cohort": 920,
+              "semantic_note": "The numeric same-session technical coverage field above is authoritative for this completed session; superseded pre-recovery coverage is not used."
+            },
+            "corporate_intelligence_coverage": {
+              "any_intelligence_coverage": 152,
+              "authority_tier_counts": {
+                "OFFICIAL_QUALIFIED": 161
+              },
+              "corporate_action_coverage": 152,
+              "current_event_coverage": 149,
+              "disposition_counts": {
+                "CURRENT_INTELLIGENCE_AVAILABLE": 149,
+                "HISTORICAL_INTELLIGENCE_ONLY": 3,
+                "NO_RETAINED_INTELLIGENCE": 1531
+              },
+              "event_status_counts": {
+                "APPROVED": 1,
+                "EXECUTED": 2,
+                "OFFICIAL_EVENT_CONTEXT": 158
+              },
+              "event_type_counts": {
+                "AGM": 46,
+                "BONUS": 6,
+                "BONUS_OR_STOCK_DIVIDEND": 1,
+                "CASH_DIVIDEND": 65,
+                "CORPORATE_ACTION": 1,
+                "DIVIDEND": 1,
+                "OTHER": 30,
+                "RIGHTS": 4,
+                "STOCK_DIVIDEND": 7
+              },
+              "freshness_counts": {
+                "DATE_UNKNOWN": 158,
+                "HISTORICAL_OVER_90_DAYS": 3
+              },
+              "governance_coverage": 0,
+              "ownership_coverage": 0,
+              "universe_count": 1683
+            },
+            "accepted_degraded_inputs": {
+              "catalyst": "EARLIER_RETAINED_CATALYST_CONTEXT"
+            },
+            "incompatible_inputs": []
+          }
+        }
+      },
+      "frozen_input_identities": {
+        "descriptive": "market_wide_current_descriptive_research:2f70526faaa34cf950a57c81ab109556fd1b5e0b2d2efd9866669a95d3c844e5",
+        "screening": "current_market_screening_opportunity_comparison_foundation:aa272c033f743b1a3134337be3e7168ca3693c612501e2a1fa64ddce14a4ed83",
+        "tactical": "watchlist_tactical_entry_classifier:d8488d53550490635ccb7929cc07d064c0e86c267ddc3f23bb1f120d943cc846",
+        "triage": "full_universe_entry_candidate_triage:b150f3d27e8388a36ef08e6f11eb76c1ce6b2ea19c93a233876362d9929b8d46",
+        "fundamental": "market_wide_current_fundamental_research:69f904104991f8a21019b948916452ff49f665f24ce64beff509a2d6d0f17e21",
+        "valuation": "market_wide_current_valuation:b4ceb15657a8d3518bcd31d9630dc44fed9b9e84cbdc3b342cd94896e1884863",
+        "catalyst": "catalyst_event_research_context:fcbada853866b0136a6c106da17b687dced1a8fe1a5c4021923b7582ed0c50fb",
+        "corporate_intelligence": "market_wide_current_corporate_intelligence:7186c1bc56f5b52150fc5a1f0c9d5184c9b2867f14ddc71699ea15916ff808a8",
+        "official_universe": "current_official_market_universe:d77e16f82893df419689b24356d066d6a6431bd3c27e09190e3c319e004abb55",
+        "event_context": "current_official_event_context:8fc0ce83194c9bda68bc8eb1ba6848f8519fc6f3a7e3915d6abcc1c8f46a21cf"
+      }
     }
   },
   "sessions": {
@@ -4780,6 +4862,48 @@
       "event_context": {
         "path": "operations-review/corporate-daily-frozen-inputs-v1/2026-11-05/4edc3282f8d3297bfab4a76fc05d11a7995e65bb798006c9c5d3d3a67e16656c.json",
         "artifact_identity": "current_official_event_context:4edc3282f8d3297bfab4a76fc05d11a7995e65bb798006c9c5d3d3a67e16656c"
+      }
+    },
+    "2026-11-06": {
+      "descriptive": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/market-wide-current-descriptive-research-v1-20261106/market_wide_current_descriptive_research_artifact.json",
+        "artifact_identity": "market_wide_current_descriptive_research:2f70526faaa34cf950a57c81ab109556fd1b5e0b2d2efd9866669a95d3c844e5"
+      },
+      "screening": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/current-market-screening-opportunity-comparison-foundation-v1-20261106/current_market_screening_opportunity_comparison_foundation_artifact.json",
+        "artifact_identity": "current_market_screening_opportunity_comparison_foundation:aa272c033f743b1a3134337be3e7168ca3693c612501e2a1fa64ddce14a4ed83"
+      },
+      "tactical": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/watchlist-tactical-entry-decision-v1-20261106/watchlist_tactical_entry_classifier_artifact.json",
+        "artifact_identity": "watchlist_tactical_entry_classifier:d8488d53550490635ccb7929cc07d064c0e86c267ddc3f23bb1f120d943cc846"
+      },
+      "triage": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/full-universe-entry-candidate-triage-v1-20261106/full_universe_entry_candidate_triage_20261106.json",
+        "artifact_identity": "full_universe_entry_candidate_triage:b150f3d27e8388a36ef08e6f11eb76c1ce6b2ea19c93a233876362d9929b8d46"
+      },
+      "fundamental": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/market-wide-current-fundamental-research-v1-20261106/market_wide_current_fundamental_research_artifact.json",
+        "artifact_identity": "market_wide_current_fundamental_research:69f904104991f8a21019b948916452ff49f665f24ce64beff509a2d6d0f17e21"
+      },
+      "valuation": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/market-wide-current-valuation-v1-20261106-session20261106/market_wide_current_valuation_artifact.json",
+        "artifact_identity": "market_wide_current_valuation:b4ceb15657a8d3518bcd31d9630dc44fed9b9e84cbdc3b342cd94896e1884863"
+      },
+      "catalyst": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/catalyst-event-research-context-v1-20260820/catalyst_event_research_context_artifact.json",
+        "artifact_identity": "catalyst_event_research_context:fcbada853866b0136a6c106da17b687dced1a8fe1a5c4021923b7582ed0c50fb"
+      },
+      "corporate_intelligence": {
+        "path": "T:/StockLookup/production-v1/retained-evidence/operations-review/market-wide-current-corporate-intelligence-v1-20261106/market_wide_current_corporate_intelligence_artifact.json",
+        "artifact_identity": "market_wide_current_corporate_intelligence:7186c1bc56f5b52150fc5a1f0c9d5184c9b2867f14ddc71699ea15916ff808a8"
+      },
+      "official_universe": {
+        "path": "operations-review/corporate-daily-frozen-inputs-v1/2026-11-06/d77e16f82893df419689b24356d066d6a6431bd3c27e09190e3c319e004abb55.json",
+        "artifact_identity": "current_official_market_universe:d77e16f82893df419689b24356d066d6a6431bd3c27e09190e3c319e004abb55"
+      },
+      "event_context": {
+        "path": "operations-review/corporate-daily-frozen-inputs-v1/2026-11-06/8fc0ce83194c9bda68bc8eb1ba6848f8519fc6f3a7e3915d6abcc1c8f46a21cf.json",
+        "artifact_identity": "current_official_event_context:8fc0ce83194c9bda68bc8eb1ba6848f8519fc6f3a7e3915d6abcc1c8f46a21cf"
       }
     }
   }
