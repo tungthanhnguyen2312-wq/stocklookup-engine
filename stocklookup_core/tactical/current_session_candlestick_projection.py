@@ -192,6 +192,7 @@ def _volume_confirmation(pattern: Mapping[str, Any]) -> str:
 
 TICKER_STATUSES = (
     "CONFIRMED_1D_PATTERN_ON_SESSION",
+    "CONFIRMED_HIGHER_TIMEFRAME_ON_SESSION",
     "FORMING_HIGHER_TIMEFRAME_ONLY",
     "RECENT_PATTERN_ONLY",
     "NO_PATTERN_DETECTED",
@@ -203,6 +204,10 @@ def ticker_status(found: list[Mapping[str, Any]]) -> str:
     latest = [p for p in found if p.get("bars_ago") == 0]
     if any(p.get("timeframe") == "1D" and p.get("status") == "completed" for p in latest):
         return "CONFIRMED_1D_PATTERN_ON_SESSION"
+    # A week/month whose period closed on this session (e.g. a Friday for 1W) is a confirmed
+    # pattern, not a forming one; only all-forming latest higher-timeframe hits are "forming".
+    if any(p.get("status") == "completed" for p in latest):
+        return "CONFIRMED_HIGHER_TIMEFRAME_ON_SESSION"
     if latest:
         return "FORMING_HIGHER_TIMEFRAME_ONLY"
     return "RECENT_PATTERN_ONLY" if found else "NO_PATTERN_DETECTED"

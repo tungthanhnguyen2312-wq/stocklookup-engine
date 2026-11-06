@@ -59,6 +59,7 @@ COMPONENT = "candlestick_patterns.component.json"
 JS_PREFIX = "window.CANDLESTICK_PATTERNS = "
 WRITER_MARKERS = ("run_owner_daily.py", "owner_daily_host.py", "stock_lookup_daily", "release_orchestrator.py")
 GIB = 1024 ** 3
+PUBLISHED_STATES = ("PUBLISHED", "READY", "PASS", "NO_CHANGE", "LOCAL_PUBLISHED")
 
 
 class Refused(Exception):
@@ -262,8 +263,18 @@ def load_verified_snapshot(path: Path, session: str, source_identity: str) -> tu
     return snapshot, file_sha
 
 
+def code_digest() -> str:
+    """Identity of the code that produces the sidecar: a checkpoint built by other projection or
+    detector code is never reused (LF-normalized like the capacity source pins)."""
+    digest = hashlib.sha256()
+    for rel in ("stocklookup_core/tactical/current_session_candlestick_projection.py",
+                "stocklookup_core/tactical/candlestick_patterns.py"):
+        digest.update(rel.encode() + b"\0" + (ROOT / rel).read_bytes().replace(b"\r\n", b"\n"))
+    return digest.hexdigest()
+
+
 def checkpoint_dir(checkpoint_root: Path, session: str, source_identity: str) -> Path:
-    return checkpoint_root / session / source_identity.rsplit(":", 1)[-1][:16]
+    return checkpoint_root / session / f"{source_identity.rsplit(':', 1)[-1][:16]}-{code_digest()[:12]}"
 
 
 # ---------------------------------------------------------------- verification
@@ -429,6 +440,7 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
     runtime_root = Path(args.runtime_root).resolve() if args.runtime_root else None
     web_dir = Path(args.web_dir).resolve() if args.web_dir else None
     receipt: dict[str, Any] = {"contract_version": CONTRACT_VERSION, "session": args.session,
+                               "code_digest": code_digest(),
                                "source_identity": args.source_identity, "started_at": _now(),
                                "mode": "rollback" if args.rollback else ("publish" if args.publish else
                                                                           "stage" if args.stage else "build")}
@@ -455,7 +467,7 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
                     result = (publisher or governed_publisher)(producer_root, runtime_root, web_dir, args.session,
                                                                args.complete_publication)
                     receipt["publication"] = dict(result)
-                    if result.get("status") not in ("PUBLISHED", "READY", "PASS", "NO_CHANGE", "LOCAL_PUBLISHED"):
+                    if result.get("status") not in PUBLISHED_STATES:
                         code = EXIT_FAILED
                 receipt["status"] = "ROLLED_BACK" if code == EXIT_OK else "ROLLBACK_PUBLISH_FAILED"
                 return code, receipt
@@ -489,13 +501,26 @@ def run(args: argparse.Namespace, *, publisher: Callable[..., Mapping[str, Any]]
             except Exception as exc:  # noqa: BLE001 - any publisher failure rolls the runtime pair back
                 result = {"status": "FAILED", "reason": f"{type(exc).__name__}:{exc}"}
             receipt["publication"] = dict(result)
-            ok = result.get("status") in ("PUBLISHED", "READY", "PASS", "NO_CHANGE", "LOCAL_PUBLISHED")
+            ok = result.get("status") in PUBLISHED_STATES
             problems = verify_published(web_dir, args.session, built) if ok else ["PUBLISHER_FAILED"]
             receipt["publication_checks"] = problems
             if problems:
                 receipt["rollback"] = restore_runtime(runtime_root, txn)
                 receipt["status"] = "PUBLISH_FAILED_RUNTIME_ROLLED_BACK"
                 code = EXIT_FAILED
+                if ok:
+                    # The publisher already released bytes that failed verification: release the
+                    # restored previous pair through the same path so the public state converges
+                    # back instead of staying half-published.
+                    try:
+                        again = (publisher or governed_publisher)(producer_root, runtime_root, web_dir, args.session,
+                                                                  args.complete_publication)
+                    except Exception as exc:  # noqa: BLE001
+                        again = {"status": "FAILED", "reason": f"{type(exc).__name__}:{exc}"}
+                    receipt["rollback_publication"] = dict(again)
+                    receipt["status"] = ("PUBLISH_FAILED_ROLLED_BACK_AND_REPUBLISHED"
+                                         if again.get("status") in PUBLISHED_STATES
+                                         else "PUBLISH_FAILED_ROLLBACK_REPUBLISH_FAILED")
             else:
                 receipt["status"] = "PUBLISHED" if result.get("status") == "PUBLISHED" else "PUBLISHED_LOCAL"
             return code, receipt

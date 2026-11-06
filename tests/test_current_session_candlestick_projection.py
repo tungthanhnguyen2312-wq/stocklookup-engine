@@ -128,6 +128,19 @@ class CurrentSessionCandlestickProjectionTest(unittest.TestCase):
         self.assertEqual(a["projection_identity"], b["projection_identity"])
 
 
+class TickerStatusTest(unittest.TestCase):
+    def test_closed_higher_timeframe_period_is_confirmed_not_forming(self):
+        d1 = {"timeframe": "1D", "status": "completed", "bars_ago": 0}
+        w_closed = {"timeframe": "1W", "status": "completed", "bars_ago": 0}
+        m_open = {"timeframe": "1M", "status": "forming", "bars_ago": 0}
+        old = {"timeframe": "1D", "status": "completed", "bars_ago": 3}
+        self.assertEqual(projection.ticker_status([d1, m_open]), "CONFIRMED_1D_PATTERN_ON_SESSION")
+        self.assertEqual(projection.ticker_status([w_closed, m_open]), "CONFIRMED_HIGHER_TIMEFRAME_ON_SESSION")
+        self.assertEqual(projection.ticker_status([m_open, old]), "FORMING_HIGHER_TIMEFRAME_ONLY")
+        self.assertEqual(projection.ticker_status([old]), "RECENT_PATTERN_ONLY")
+        self.assertEqual(projection.ticker_status([]), "NO_PATTERN_DETECTED")
+
+
 class PublishDashboardCandlestickDomainTest(unittest.TestCase):
     def test_manifest_domain_current_stale_legacy_absent(self):
         import tempfile
@@ -139,7 +152,7 @@ class PublishDashboardCandlestickDomainTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "data").mkdir()
-            with mock.patch.object(publish_dashboard, "WEB_ROOT", root):
+            with mock.patch.object(publish_dashboard, "WEB_ROOT", root),                     mock.patch.object(publish_dashboard, "BACKEND_ROOT", root / "absent-backend"):
                 self.assertIsNone(publish_dashboard.candlestick_signal_domain(SESSION))
                 (root / "data" / "candlestick_patterns.json").write_text(json.dumps(payload), encoding="utf-8")
                 current = publish_dashboard.candlestick_signal_domain(SESSION)
@@ -153,6 +166,28 @@ class PublishDashboardCandlestickDomainTest(unittest.TestCase):
                 legacy = publish_dashboard.candlestick_signal_domain(SESSION)
                 self.assertNotEqual(legacy["status"], "CURRENT")
                 self.assertIsNone(legacy["source_session"])
+
+    def test_manifest_attests_the_backend_sidecar_this_run_will_copy(self):
+        """compute_manifest runs before copy_public_artifacts(): the domain must describe the
+        BACKEND_ROOT sidecar about to be served, not the previous release left in WEB_ROOT."""
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+        import publish_dashboard
+
+        payload = projection.build_projection(snapshot({"ENG": engulfing_series()}), session=SESSION)
+        legacy = {"schema_version": 1, "scan_date": "2026-08-25", "patterns": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            web, backend = Path(tmp) / "web", Path(tmp) / "backend"
+            for root in (web, backend):
+                (root / "data").mkdir(parents=True)
+            (web / "data" / "candlestick_patterns.json").write_text(json.dumps(legacy), encoding="utf-8")
+            (backend / "data" / "candlestick_patterns.json").write_text(json.dumps(payload), encoding="utf-8")
+            with mock.patch.object(publish_dashboard, "WEB_ROOT", web),                     mock.patch.object(publish_dashboard, "BACKEND_ROOT", backend):
+                self.assertEqual(publish_dashboard.candlestick_signal_domain(SESSION)["status"], "CURRENT")
+                (backend / "data" / "candlestick_patterns.json").write_text(json.dumps(legacy), encoding="utf-8")
+                (web / "data" / "candlestick_patterns.json").write_text(json.dumps(payload), encoding="utf-8")
+                self.assertNotEqual(publish_dashboard.candlestick_signal_domain(SESSION)["status"], "CURRENT")
 
 
 if __name__ == "__main__":

@@ -713,7 +713,12 @@ def candlestick_signal_domain(market_session: str) -> dict[str, object] | None:
     A legacy scan (e.g. the frozen 2026-08-25 ``candle_scan.py`` output) is published as
     explicitly not current, never as an implicit pass. No sidecar -> no domain (unchanged).
     """
-    path = WEB_ROOT / CANDLESTICK_SIDECAR
+    # The manifest is computed BEFORE copy_public_artifacts() runs, so read the bytes this run
+    # will actually serve: the BACKEND_ROOT copy when one exists (COPY_ARTIFACTS mirrors it into
+    # WEB_ROOT), otherwise the file already in WEB_ROOT. Reading WEB_ROOT unconditionally
+    # attested the previous release's sidecar (found by the 2026-11-06 staging publish).
+    backend = BACKEND_ROOT / CANDLESTICK_SIDECAR
+    path = backend if BACKEND_ROOT != WEB_ROOT and backend.is_file() else WEB_ROOT / CANDLESTICK_SIDECAR
     if not path.is_file():
         return None
     from stocklookup_core.tactical import current_session_candlestick_projection as candles

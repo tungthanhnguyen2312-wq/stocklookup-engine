@@ -96,7 +96,15 @@ def test_skip_on_resources_and_writers_without_any_write(world):
     assert code == tool.EXIT_SKIP and r["reason"].startswith("CONCURRENT_DAILY_OR_RELEASE_WRITER")
     code, r = go(world, rows=lambda: None)
     assert code == tool.EXIT_SKIP and r["reason"] == "WRITER_STATE_UNOBSERVABLE"
-    assert not (world["tmp"] / "ckpt" / SESSION / world["snap"]["snapshot_sha256"][:16]).exists()
+    assert not tool.checkpoint_dir(world["tmp"] / "ckpt", SESSION, world["snap"]["snapshot_identity"]).exists()
+
+
+def test_checkpoint_from_other_engine_code_is_not_reused(world, monkeypatch):
+    code, first = go(world)
+    assert first["status"] == "BUILT"
+    monkeypatch.setattr(tool, "code_digest", lambda: "f" * 64)
+    code, second = go(world)
+    assert code == tool.EXIT_OK and second["status"] == "BUILT" and second["code_digest"] == "f" * 64
 
 
 def test_refuses_uncommitted_session_mismatched_identity_and_tampered_snapshot(world):
@@ -164,13 +172,26 @@ def test_publish_success_then_rollback_restores_previous_pair(world):
     assert (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes() == before
 
 
-@pytest.mark.parametrize("kind", ["fail", "wrong_identity"])
-def test_failed_publication_rolls_runtime_back(world, kind):
+def test_failed_publication_rolls_runtime_back(world):
     before = (world["runtime"] / "data" / tool.SIDECAR_JS).read_bytes()
-    publisher = _fake_publisher(world, fail=kind == "fail", wrong_identity=kind == "wrong_identity")
-    code, r = go(world, publisher=publisher, publish=True)
+    code, r = go(world, publisher=_fake_publisher(world, fail=True), publish=True)
     assert code == tool.EXIT_FAILED and r["status"] == "PUBLISH_FAILED_RUNTIME_ROLLED_BACK"
     assert (world["runtime"] / "data" / tool.SIDECAR_JS).read_bytes() == before
+
+
+def test_released_but_unverified_publication_is_rolled_back_and_republished(world):
+    before = (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes()
+    calls = []
+    bad, good = _fake_publisher(world, wrong_identity=True), _fake_publisher(world)
+
+    def publisher(*a):
+        calls.append(a)
+        return (bad if len(calls) == 1 else good)(*a)
+    code, r = go(world, publisher=publisher, publish=True)
+    assert code == tool.EXIT_FAILED and r["status"] == "PUBLISH_FAILED_ROLLED_BACK_AND_REPUBLISHED"
+    assert len(calls) == 2
+    assert (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes() == before
+    assert (world["web"] / "data" / tool.SIDECAR_JSON).read_bytes() == before
 
 
 def test_refuses_publish_when_workspace_release_is_other_session(world):
