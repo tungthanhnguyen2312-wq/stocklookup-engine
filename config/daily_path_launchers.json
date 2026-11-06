@@ -119,7 +119,7 @@
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
       "reason": "Focused selection includes the offline Vault boundary-emitter regression suite; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "0cfd065d153b2b27c107a7d6d72ac945f6ef66efcd7620d7fba12fe56c1aa30e",
+      "sha256": "d1e01c6ad1de61b5b744d4c0f7c82a5cf7f0a280f982cbad763920985130e182",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",
