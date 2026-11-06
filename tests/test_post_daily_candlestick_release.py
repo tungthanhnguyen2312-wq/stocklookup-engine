@@ -274,3 +274,24 @@ def test_governed_publisher_binds_workspace_environment_and_run(monkeypatch, tmp
     assert out["status"] == "PUBLISHED"
     assert calls["producer_run_identity"] == "daily_producer_run:x" and calls["complete_publication"] is True
     assert calls["env"] == str(tmp_path)
+
+
+def test_governed_ready_with_published_state_reports_published(world):
+    good = _fake_publisher(world)
+
+    def publisher(*a):
+        good(*a)
+        return {"status": "READY", "publication_state": "PUBLISHED", "public_byte_identity": "PASS"}
+    code, r = go(world, publisher=publisher, publish=True)
+    assert code == tool.EXIT_OK and r["status"] == "PUBLISHED"
+
+
+def test_source_pushed_but_completion_pending_keeps_runtime_equal_to_pushed_source(world):
+    code, r = go(world, publish=True, publisher=lambda *a: {
+        "status": "FAILED", "publication_state": "GITHUB_SOURCE_UPDATED",
+        "recoverable_release_source_sha": "f" * 40, "reason": "BLOCKED_CI_FAILED"})
+    assert code == tool.EXIT_FAILED and r["status"] == "SOURCE_UPDATED_COMPLETION_PENDING"
+    assert r["recoverable_release_source_sha"] == "f" * 40 and "rollback" not in r
+    staged = (world["runtime"] / "data" / tool.SIDECAR_JSON).read_bytes()
+    ckpt = tool.checkpoint_dir(world["tmp"] / "ckpt", SESSION, world["snap"]["snapshot_identity"])
+    assert staged == (ckpt / tool.SIDECAR_JSON).read_bytes()
