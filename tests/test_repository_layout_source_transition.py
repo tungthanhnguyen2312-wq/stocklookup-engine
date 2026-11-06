@@ -92,6 +92,8 @@ def _copy_boundary(tmp_path: Path) -> None:
              "tests/fixtures/owner_daily_iid_runtime_memory_source_transition_v1.json",
              "tests/fixtures/tplus_real_t0_corpus_source_transition_v1.json",
              "tests/fixtures/tplus_real_t0_corpus_v1_sources/canonical_post_close_pipeline.py.txt",
+             "tests/fixtures/storage_reuse_d4a_source_transition_v1.json",
+             "tests/fixtures/storage_reuse_d4a_sources/canonical_post_close_pipeline.py.txt",
              *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in LAUNCHER_SOURCES),
              *("tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/" + p + ".txt"
                for p in ("tools/run_owner_daily.py", "canonical_post_close_pipeline.py",

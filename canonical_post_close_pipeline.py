@@ -272,9 +272,77 @@ def _write_json(path: Path, value: Mapping[str, Any], *, capture_iid_receipt: bo
         temp.unlink(missing_ok=True)
 
 
+STORAGE_REUSE_CONFIG = ROOT / "config" / "daily_storage_reuse.json"
+STORAGE_REUSE_SCHEMA = "daily_storage_reuse/v1"
+_STORAGE_REUSE_SWITCHES = ("iid_working_view_hardlink", "reuse_immutable_delivery")
+
+
+def storage_reuse_switches(path: Path | None = None) -> dict[str, bool]:
+    """Owner-controlled storage reuse switches (D4a). Absent file means every switch is off.
+
+    A present but malformed file refuses: a typo must not silently change what Daily writes.
+    Switches change only how equal bytes are stored (one inode, several names); every
+    original path, native SHA, manifest and identity is unchanged.
+    """
+    path = STORAGE_REUSE_CONFIG if path is None else Path(path)
+    if not path.exists():
+        return {name: False for name in _STORAGE_REUSE_SWITCHES}
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise CanonicalPostCloseError("STORAGE_REUSE_CONFIG_UNREADABLE") from exc
+    if (not isinstance(value, dict) or value.get("schema") != STORAGE_REUSE_SCHEMA
+            or set(value) != {"schema", *_STORAGE_REUSE_SWITCHES}
+            or any(type(value[name]) is not bool for name in _STORAGE_REUSE_SWITCHES)):
+        raise CanonicalPostCloseError("STORAGE_REUSE_CONFIG_INVALID")
+    return {name: value[name] for name in _STORAGE_REUSE_SWITCHES}
+
+
+def _link_iid_working_view(source: Path, destination: Path, receipt: _IIDWriteReceipt,
+                           before: os.stat_result) -> bool:
+    """Publish the working view as a second name of the canonical IID inode.
+
+    Both IID writers (`_write_json` and the copy below) only ever replace a name by
+    rename, so a later rewrite of either path gives that path a new inode and never
+    mutates the shared one; the observable result equals an independent copy.
+    Returns False (caller copies) when the volume differs or the filesystem refuses links.
+    """
+    if destination.parent.stat().st_dev != before.st_dev:
+        return False
+    digest = hashlib.sha256()
+    with source.open("rb") as incoming:
+        for block in iter(lambda: incoming.read(1024 * 1024), b""):
+            digest.update(block)
+    if digest.hexdigest() != receipt.serialized_sha256:
+        raise CanonicalPostCloseError("INTEGRATED_DECISION_CANONICAL_SOURCE_BYTES_MISMATCH")
+    temporary = destination.parent / f".iid-link-{os.getpid()}-{before.st_ino}.tmp"
+    try:
+        try:
+            temporary.unlink(missing_ok=True)
+            os.link(source, temporary)
+        except OSError:
+            return False
+        linked = temporary.stat()
+        if ((linked.st_dev, linked.st_ino, linked.st_size, linked.st_mtime_ns)
+                != (before.st_dev, before.st_ino, receipt.size, receipt.mtime_ns)):
+            raise CanonicalPostCloseError("INTEGRATED_DECISION_CANONICAL_SOURCE_CHANGED_OR_EMPTY")
+        os.replace(temporary, destination)
+        published = destination.stat()
+        if (published.st_dev, published.st_ino) != (before.st_dev, before.st_ino):
+            raise CanonicalPostCloseError("INTEGRATED_DECISION_WORKING_VIEW_LINK_MISMATCH")
+        return True
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
 def _copy_iid_working_view(source: Path, destination: Path, *, session: str,
-                           artifact: Mapping[str, Any], receipt: _IIDWriteReceipt | None) -> None:
-    """Promote only the exact bytes emitted by this successful current IID build."""
+                           artifact: Mapping[str, Any], receipt: _IIDWriteReceipt | None,
+                           link: bool = False) -> None:
+    """Promote only the exact bytes emitted by this successful current IID build.
+
+    ``link`` (D4a, off unless the Owner switch is on) stores the view as a hardlink of the
+    verified canonical bytes instead of a second 2+ GB copy, falling back to the copy.
+    """
     contract = "integrated_investment_decision_product/v1"
     identity = artifact.get("artifact_identity")
     digest = artifact.get("artifact_sha256")
@@ -290,6 +358,8 @@ def _copy_iid_working_view(source: Path, destination: Path, *, session: str,
     if source.resolve() == destination.resolve():
         raise CanonicalPostCloseError("INTEGRATED_DECISION_WORKING_VIEW_EQUALS_CANONICAL_SOURCE")
     destination.parent.mkdir(parents=True, exist_ok=True)
+    if link and _link_iid_working_view(source, destination, receipt, before):
+        return
     temporary = None
     try:
         copied = 0
@@ -983,6 +1053,7 @@ def build_enrichment_components(
         results["current_corporate_knowledge_overlay"] = {"status": "AVAILABLE" if overlay["official_event_context"] else "UNAVAILABLE", "artifact": overlay, "path": out}
 
     iid_write_receipt: _IIDWriteReceipt | None = None
+    storage_reuse = storage_reuse_switches()
 
     def _attempt(name: str, level2_key: str, fn) -> None:
         try:
@@ -990,7 +1061,8 @@ def build_enrichment_components(
             out = enrichment_output_path(output_root, session, name)
             if name == "integrated_investment_decision_product":
                 _copy_iid_working_view(paths["integrated_investment_decision_product"], out,
-                                       session=session, artifact=artifact, receipt=iid_write_receipt)
+                                       session=session, artifact=artifact, receipt=iid_write_receipt,
+                                       link=storage_reuse["iid_working_view_hardlink"])
                 from prospective_decision_outcome_feedback import retain_iid_classification_summary
                 retain_iid_classification_summary(output_root, out, artifact)
             else:
@@ -2584,6 +2656,7 @@ def run_canonical_post_close(
             producer_head=producer_head or "UNKNOWN", consumer_head=consumer_head or "UNKNOWN",
             integrated_investment_decision_product=integrated_delivery,
             now=now,
+            reuse_immutable_delivery=storage_reuse_switches()["reuse_immutable_delivery"],
             **macro_delivery,
         )
     except DailyProducerError as exc:

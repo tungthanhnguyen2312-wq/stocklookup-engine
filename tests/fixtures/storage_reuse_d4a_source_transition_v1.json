@@ -1,0 +1,15 @@
+{
+  "contract_version": "storage_reuse_d4a_source_transition/v1",
+  "base_commit": "0258f391bd3e81256a7480dd171062a76af6d9ca",
+  "scope": "EXACT_STORAGE_REUSE_D4A_SWITCHES_AND_IID_VIEW_LINK_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "ba06dc93a07f89e24bd68128418cb65268d8b1de86aaa1dd0d47efa76ed51ef0",
+  "active_e4_v2_digest": "ba06dc93a07f89e24bd68128418cb65268d8b1de86aaa1dd0d47efa76ed51ef0",
+  "sources": {
+    "canonical_post_close_pipeline.py": {
+      "archive": "tests/fixtures/storage_reuse_d4a_sources/canonical_post_close_pipeline.py.txt",
+      "prior_sha256_lf": "3366fa17ef5d382b8fb2e9372ee44d6c5f46377617a4039f9720cd3c54ac1aa6",
+      "active_sha256_lf": "9b28211d34cd06c3a83305b012ec36179adcb25be484e656dd925b5dc7888712"
+    }
+  }
+}
