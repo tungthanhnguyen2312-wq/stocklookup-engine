@@ -2,7 +2,7 @@ from datetime import datetime
 
 from vn_time import VN_TZ
 
-from stocklookup_core.evidence import dnse_vnindex_session_level as level
+import dnse_vnindex_session_level as level
 
 
 def _epoch(day: str) -> int:

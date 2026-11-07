@@ -13,7 +13,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from financial_evidence_currency_contract import OUT_OF_SCOPE_PERIODS, is_out_of_scope_period
+# Same set as financial_evidence_currency_contract.OUT_OF_SCOPE_PERIODS.
+# This financial module does not import that root module: financial -> root
+# is a backward dependency. tests/test_q3_2026_research_freshness.py asserts
+# the two sets stay equal.
+CURRENCY_REFRESH_OUT_OF_SCOPE = frozenset({"2026-Q3", "2026-Q4", "2026-H2"})
 
 CONTRACT_VERSION = "q3_2026_research_freshness/v1"
 FOCUS_TICKERS = ("PAN", "HPG", "SSI", "EVF", "POW")
@@ -33,7 +37,7 @@ def classify_document(*, document_kind: str, period_label: str) -> dict[str, Any
     kind = str(document_kind or "").strip().upper()
     period = str(period_label or "").strip()
     known = kind in _KINDS
-    out_of_currency_refresh = is_out_of_scope_period(period) or period in {"2026-Q3", "2026-9M"}
+    out_of_currency_refresh = period in CURRENCY_REFRESH_OUT_OF_SCOPE or period in {"2026-Q3", "2026-9M"}
     nine_month_used_as_quarter = kind == "NINE_MONTH_CUMULATIVE" and period.endswith("-Q3")
     h1_used_as_q3 = kind == "H1_OR_Q2" and period.endswith("-Q3")
     press_as_statement = kind == "PRESS_RELEASE"
@@ -41,7 +45,7 @@ def classify_document(*, document_kind: str, period_label: str) -> dict[str, Any
     reasons = []
     if not known:
         reasons.append("DOCUMENT_KIND_UNKNOWN")
-    if period in OUT_OF_SCOPE_PERIODS or period == "2026-Q3":
+    if period in CURRENCY_REFRESH_OUT_OF_SCOPE or period == "2026-Q3":
         reasons.append("OUT_OF_FINANCIAL_EVIDENCE_CURRENCY_REFRESH_SCOPE")
     if nine_month_used_as_quarter:
         reasons.append("NINE_MONTH_CUMULATIVE_IS_NOT_Q3_STANDALONE")
@@ -58,7 +62,7 @@ def classify_document(*, document_kind: str, period_label: str) -> dict[str, Any
         "document_kind": kind if known else "UNKNOWN",
         "period_label": period,
         "duration_semantics": _KINDS.get(kind, "UNKNOWN"),
-        "currency_refresh_in_scope": not out_of_currency_refresh and period not in OUT_OF_SCOPE_PERIODS,
+        "currency_refresh_in_scope": not out_of_currency_refresh and period not in CURRENCY_REFRESH_OUT_OF_SCOPE,
         "official_fact_admitted": admissible,
         "valuation_use": "CLOSED",
         "existing_consumer_usable": False,

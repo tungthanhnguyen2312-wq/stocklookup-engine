@@ -2651,12 +2651,6 @@ def run_canonical_post_close(
     from canonical_daily_operation import prepare_macro_delivery
     macro_delivery = prepare_macro_delivery(root, session, artifact_root=artifact_root, enrichment=enrichment)
     try:
-        from stocklookup_core.evidence.dnse_vnindex_session_level import capture_current_session
-        capture_current_session(session=session, now=now)
-    except Exception:
-        # One optional index capture must not block the post-close pipeline.
-        pass
-    try:
         producer_result = run_daily_producer(
             root, session=session, latest_completed_session=False,
             producer_head=producer_head or "UNKNOWN", consumer_head=consumer_head or "UNKNOWN",

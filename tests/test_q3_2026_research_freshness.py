@@ -1,4 +1,11 @@
-from stocklookup_core.financial.q3_2026_research_freshness import classify_document, shadow_candidate
+from financial_evidence_currency_contract import OUT_OF_SCOPE_PERIODS
+from stocklookup_core.financial.q3_2026_research_freshness import (
+    CURRENCY_REFRESH_OUT_OF_SCOPE, classify_document, shadow_candidate,
+)
+
+
+def test_local_out_of_scope_set_matches_the_frozen_currency_contract():
+    assert CURRENCY_REFRESH_OUT_OF_SCOPE == OUT_OF_SCOPE_PERIODS
 
 
 def test_nine_month_is_not_a_standalone_quarter():

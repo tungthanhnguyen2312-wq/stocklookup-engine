@@ -337,6 +337,14 @@ def run_daily_producer(
         raise DailyProducerError("REFUSE_COMPLETED_SESSION_RUN:SELECT_EXACTLY_ONE_SESSION_MODE")
     registry = load_registry(root, registry_path)
     selected = resolve_latest_registered_completed_session(registry) if latest_completed_session else _iso_date(str(session))
+    # Optional same-session VN-Index capture. Skips unless the session is today's
+    # Vietnam date and the retained root is configured. A miss does not block Daily.
+    # The post-close pipeline stays byte-pinned, so the hook lives here.
+    try:
+        from dnse_vnindex_session_level import capture_current_session
+        capture_current_session(session=selected, now=now or vn_now())
+    except Exception:
+        pass
     gate = completed_session_gate(registry, selected, now=now)
     inputs, entries = resolve_inputs(root, selected, registry)
     coherence = validate_coherence(inputs, selected)
