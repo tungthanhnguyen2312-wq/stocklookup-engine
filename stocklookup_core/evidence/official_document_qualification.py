@@ -291,12 +291,13 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
     caller-selected source flags. Historical rows without metadata remain unproved.
     """
     from official_financial_filing_evidence import admit_official_financial_fact
-    from financial_evidence_currency_contract import DEFAULT_LANDING_ROOT
-    from runtime_paths import runtime_root
+    from financial_evidence_currency_contract import DEFAULT_LANDING_ROOT, LANDING_DOMAIN
+    from runtime_paths import official_landing_root
     kwargs = {"cutoff": cutoff, "intended_use": intended_use}
     if not isinstance(row.get("document_metadata"), Mapping):
         return admit_official_financial_fact(row, **kwargs)
-    base = (Path(evidence_root) if evidence_root is not None else runtime_root(DEFAULT_LANDING_ROOT)).resolve()
+    base = (Path(evidence_root) if evidence_root is not None
+            else official_landing_root(LANDING_DOMAIN, DEFAULT_LANDING_ROOT)).resolve()
     subdir = Path(str(row.get("evidence_subdir") or "."))
     landing = (base / subdir).resolve()
     if not landing.is_relative_to(base):

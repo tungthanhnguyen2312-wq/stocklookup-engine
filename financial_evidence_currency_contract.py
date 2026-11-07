@@ -13,7 +13,10 @@ from typing import Mapping
 CONTRACT_VERSION = "financial_evidence_currency_refresh/v1"
 MILESTONE_ID = "FINANCIAL_EVIDENCE_CURRENCY_AND_OFFICIAL_STATEMENT_REFRESH_V1"
 PUBLIC_ARTIFACT_DIR = "derived/financial-evidence-currency-refresh-v1"
+# Legacy (unprofiled) default only; a workspace profile resolves the landing under its
+# retained role via runtime_paths.official_landing_root.
 DEFAULT_LANDING_ROOT = r"C:\Projects\StockLookup\data-landing\official-financial-filings-v1"
+LANDING_DOMAIN = "official-financial-filings-v1"
 
 COHORT: tuple[str, ...] = (
     "HPG", "VNM", "FPT", "PNJ", "PAN", "PVD", "NVL",

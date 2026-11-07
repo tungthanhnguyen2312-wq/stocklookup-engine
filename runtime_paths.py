@@ -64,6 +64,23 @@ def workspace_path(role: str, legacy: str | os.PathLike[str], *, observer=None) 
     return profile["paths"][role] if profile else Path(legacy).expanduser().resolve()
 
 
+def official_landing_root(domain: str, legacy: str | os.PathLike[str], *, observer=None) -> Path:
+    """Governed location of retained official-filing landing evidence.
+
+    With a workspace profile the landing lives under the profile's retained role
+    (``<retained>/data-landing/<domain>``) and the legacy default is never consulted,
+    so a profiled Production replay cannot silently depend on another volume. Without a
+    profile the caller's legacy default is preserved. The runtime root is never a
+    landing location (landing evidence was never stored there).
+    """
+    if not domain or domain in {".", ".."} or Path(domain).name != domain:
+        raise ValueError("landing domain must be a single path segment")
+    profile = workspace_profile(observer=observer)
+    if profile:
+        return (profile["paths"]["retained"] / "data-landing" / domain).resolve()
+    return Path(legacy).expanduser().resolve()
+
+
 def workspace_environment(*, observer=None) -> dict[str, str]:
     """Qualified bindings for the existing execution-root contract; no process launch."""
     profile = workspace_profile(observer=observer)
