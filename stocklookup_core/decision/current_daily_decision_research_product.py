@@ -326,7 +326,11 @@ def build(*, descriptive: Mapping[str, Any], tactical: Mapping[str, Any], peer_r
 
 
 def markdown(artifact: Mapping[str, Any]) -> str:
-    market = artifact["market_brief"]; lines = ["# Current Daily Decision Research", "", f"Session: {artifact['session']}", "", "## Market brief", f"- Breadth: {market['breadth_state']}; momentum: {market['momentum_state']}.", f"- Coverage: {market['coverage']['same_session_technical_feature_available_count']} same-session technical records / {market['coverage']['current_active_equity_denominator']} current equity denominator; not an authoritative active universe.", f"- Data limits: {', '.join(market['data_quality_limitations'])}.", "", "## Today's research cohorts"]
+    market = artifact["market_brief"]; lines = ["# Current Daily Decision Research", "", f"Session: {artifact['session']}", "", "## Market brief", f"- Breadth: {market['breadth_state']}; momentum: {market['momentum_state']}.", f"- Coverage: {market['coverage']['same_session_technical_feature_available_count']} same-session technical records / {market['coverage']['current_active_equity_denominator']} current equity denominator; not an authoritative active universe.", f"- Data limits: {', '.join(market['data_quality_limitations'])}.", ""]
+    if isinstance(artifact.get("market_close_intelligence"), Mapping):
+        from stocklookup_core.decision.market_close_intelligence import markdown_lines as _mci_lines
+        lines += _mci_lines(artifact["market_close_intelligence"]) + [""]
+    lines += ["## Today's research cohorts"]
     for name, cohort in artifact["research_cohorts"].items(): lines.append(f"- {name}: {cohort['count']} deterministic tactical records (ticker order only; not a ranking).")
     review = artifact["high_priority_full_universe_review_set"]
     owner_focus = artifact.get("owner_focus") or {}

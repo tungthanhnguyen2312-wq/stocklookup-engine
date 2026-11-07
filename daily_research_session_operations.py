@@ -384,6 +384,15 @@ def build_operation(inputs: Mapping[str, Any], session: str, *, producer_head: s
         product["source_artifact_identities"]["macro_market_regime_context"] = regime_context["artifact_identity"]
         if canonical_packet is not None:
             product["canonical_decision_packet_identity"] = canonical_packet["artifact_identity"]
+        # Market Close Intelligence binds the same explicit market inputs; it computes no
+        # new measurement and owns no threshold (market_close_intelligence/v1).
+        from stocklookup_core.decision.market_close_intelligence import build as build_market_close
+        market_close = build_market_close(session=session, descriptive=inputs["descriptive"],
+            sector_leadership=packet_inputs.get("market_sector"), regime_context=regime_context,
+            market_flow_positioning=flow, benchmark=packet_inputs.get("market_benchmark"),
+            official_liquidity=packet_inputs.get("official_liquidity_status"))
+        product["market_close_intelligence"] = market_close
+        product["source_artifact_identities"]["market_close_intelligence"] = market_close["artifact_identity"]
         product.update(product_identity(product))
     if product_identity(product)["artifact_sha256"] != product["artifact_sha256"]: raise ValueError("PRODUCT_ARTIFACT_SELF_VERIFICATION_FAILED")
     snapshot = freeze_current_decision_surface(inputs["tactical"], inputs["triage"], inputs["fundamental"], inputs["valuation"])
@@ -436,6 +445,8 @@ def build_operation(inputs: Mapping[str, Any], session: str, *, producer_head: s
     )
     if regime_context is not None:
         manifest["outputs"]["macro_market_regime_context"] = regime_context["artifact_identity"]
+        if product.get("market_close_intelligence"):
+            manifest["outputs"]["market_close_intelligence"] = product["market_close_intelligence"]["artifact_identity"]
         manifest["macro_research_cutoff"] = macro_cutoff
         if canonical_packet is not None:
             manifest["outputs"]["canonical_decision_packet"] = canonical_packet["artifact_identity"]
