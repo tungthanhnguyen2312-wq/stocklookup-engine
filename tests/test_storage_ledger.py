@@ -93,6 +93,25 @@ def test_scan_resumes_without_double_counting_and_classifies(tmp_path):
     assert sum(1 for row in rows.values() if row.get("sha256")) == 1
 
 
+def test_capped_cli_keeps_inventory_and_withholds_runway(tmp_path):
+    volume = tmp_path / "volume"
+    day = volume / "retained" / "daily" / "2026-11-06"
+    day.mkdir(parents=True)
+    (day / "body.bin").write_bytes(b"measured bytes")
+    report_path = tmp_path / "report.json"
+    assert ledger.main([
+        "--volume", str(volume), "--retained-evidence", str(volume / "retained"),
+        "--state", str(tmp_path / "state.json"), "--output", str(report_path),
+        "--hash-budget-bytes", "0", "--max-files", "1", "--skip-guard",
+    ]) == 0
+    report = json.loads(report_path.read_bytes())
+    assert report["scan_stopped"] == "MAX_FILES"
+    assert report["per_session"][0]["physical_bytes"] == len(b"measured bytes")
+    assert report["runway"]["headroom_bytes"] == report["volume"]["free_bytes"] - ledger.FLOOR_BYTES
+    for field in ("bytes_per_session", "sessions", "sessions_per_day", "bytes_30d", "bytes_90d", "warning"):
+        assert report["runway"][field] is None
+
+
 def test_session_dates_ignore_hash_fragments_and_keep_dashed_days(tmp_path):
     retained = tmp_path / "retained"
     day = retained / "operations-review" / "daily-research-session-operations-v1" / "2026-11-04"

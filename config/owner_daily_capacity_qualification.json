@@ -1487,7 +1487,7 @@
     "tools/stocklookup_roadmap.py": "5484c04f99a4eb7f92c7e150122b2bc4a726f76783c7604b77d94a22a4dcbdc0",
     "tools/storage_capacity_plan.py": "e319688905c588d203ec89209a1f7ab1de03c30b2f67b1f28501f41ddb3e9207",
     "tools/storage_dedup_relink.py": "95098ced4d5a205b174a70a7290e8d438cd66dd7fee20de498ea12219e13d133",
-    "tools/storage_ledger.py": "9c0e680576b5a1cbe3cf2aae8095664b0ddffc9c3c43b66f20503d552c3b26b9",
+    "tools/storage_ledger.py": "f1b1f9c72b12dc8c287cfae2443fdcbe614f7a6838bbc4ecce3bd0404aa94e22",
     "tools/validate_canonical_daily_shadow_recommendation_autosourcing_v1.py": "74273adf237150999039ac3e93edb1d58e6fbb75f540bbdcc292bc25ff0024dc",
     "tools/validate_owner_daily_progress_telemetry.py": "d80a7dc8c0b0edfbb0021dbbdb55046f39b698e7fa127e2f3e1e8e410e2f6ebd",
     "tools/validate_producer_financial_home_completion.py": "8190ba307fbd0de4ebe1bc6f34b8f3e1063892b82d49e69d3d9ad3a661048d65",
