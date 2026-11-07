@@ -315,6 +315,17 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
     except (OSError, ValueError, TypeError, AttributeError):
         return admit_official_financial_fact(row, **kwargs)
     pages = None
+    layout_proof = None
+    ref = row.get("ocr_layout_proof")
+    if isinstance(ref, Mapping):
+        try:
+            from stocklookup_core.evidence.official_ocr_layout_proof import PROOF_DIR, layout_for
+            proof_path = (landing / str(ref.get("relative_path") or "")).resolve()
+            if (layout_for(row.get("document_sha256")) is not None and proof_path.is_relative_to(landing / PROOF_DIR)
+                    and proof_path.is_file()):
+                layout_proof = json.loads(proof_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, TypeError):
+            layout_proof = None
     if payload.startswith(b"%PDF"):
         try:
             from pypdf import PdfReader
@@ -330,8 +341,29 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
             required.discard(None)
             if len(required) <= 8 and all(isinstance(number, int) and 1 <= number <= len(reader.pages) for number in required):
                 pages = {number: reader.pages[number-1].extract_text() or "" for number in sorted(required)}
+                if layout_proof is not None and not any(text.strip() for text in pages.values()):
+                    # Image-only document: literals replay from the hash-bound retained OCR proof,
+                    # never from a fresh OCR run and never when a native text layer exists.
+                    from stocklookup_core.evidence.official_ocr_layout_proof import page_text
+                    pages = {number: page_text(layout_proof, number) for number in sorted(required)}
         except Exception:  # An unavailable/malformed retained parser leaves proof UNKNOWN.
             pass
+    if layout_proof is not None:
+        kwargs["ocr_layout_proof"] = layout_proof
+    if pages is None and layout_proof is not None and payload.startswith(b"%PDF"):
+        # No PDF text extractor in this runtime: only a registered layout whose absence of any text layer
+        # was verified at registration may replay literals from its hash-bound OCR proof.
+        from stocklookup_core.evidence.official_ocr_layout_proof import layout_for, page_text
+        verification = (layout_for(row.get("document_sha256")) or {}).get("text_layer_verification") or {}
+        metadata = row["document_metadata"]
+        required = {((claim or {}).get("evidence_span") or {}).get("source_page")
+                    for claim in (metadata.get("metadata_claims") or {}).values()}
+        proof_row = row.get("assurance_evidence") or {}
+        required.update((proof_row.get("page_number"), (proof_row.get("opinion_evidence") or {}).get("page_number"),
+                         (row.get("source_span") or {}).get("source_page")))
+        required.discard(None)
+        if verification.get("state") == "NONE_VERIFIED" and len(required) <= 8:
+            pages = {number: page_text(layout_proof, number) for number in sorted(required) if isinstance(number, int)}
     return admit_official_financial_fact(row, source_record=record, retained_bytes=payload,
                                        registry=source_registry, document_pages=pages, **kwargs)
 

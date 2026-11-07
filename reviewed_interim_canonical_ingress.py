@@ -195,6 +195,8 @@ def overlay_rows_from_panel_facts(panel_facts: Sequence[Mapping[str, Any]], *,
             "observed_at": fact["observed_at"], "knowledge_available_at": fact["knowledge_available_at"],
             "publication_date": None, "source_family": "issuer_ir", "restatement": None,
             "extraction_method": lineage.get("extraction_method"), "reason_codes": list(fact.get("reason_codes") or []),
+            **({"ocr_layout_proof": lineage["ocr_layout_proof"], "ocr_row_object": lineage.get("row_object"),
+                "ocr_unit_evidence": lineage.get("ocr_unit_evidence")} if lineage.get("ocr_layout_proof") else {}),
             "ingress_contract": CONTRACT_VERSION, "overlay_contract": OVERLAY_CONTRACT,
             **context_markers,
         })

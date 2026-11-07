@@ -90,6 +90,7 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
     evidence_root = landing_root / evidence_subdir
     annual_known = annual_context_known_at or datetime.now(timezone.utc).isoformat()
     documents, overlay_rows, precedence, ocr_reads, materializations = [], [], [], 0, []
+    proofs: list[dict[str, Any]] = []
     for spec in document_specs:
         record = _record(evidence_root, spec["sha256"])
         if record.get("reporting_period") != reporting_period:
@@ -153,12 +154,19 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
             retained_bytes = retained_path.read_bytes()
             metadata = _metadata_from_pages(pages, {**record,
                 'immutable_bytes_verified':hashlib.sha256(retained_bytes).hexdigest()==record['sha256']})
+            layout_proof = None
+            from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+            if layout_for(spec["sha256"]) is not None:
+                layout_proof, metadata = _registered_layout_metadata(
+                    record, spec, front, statements, metadata, front_matter_pages, retained_bytes)
+                proofs.append(layout_proof)
             panel_facts = panel_facts_from_qualified_ocr(
                 qualification, entity_type="corporate", statement_scope="consolidated",
                 audit_or_review_status=assurance["audit_or_review_status"], assurance_evidence=assurance,
                 document_metadata=metadata, source_record=record, retained_bytes=retained_bytes,
                 source_registry=load_registry(), document_pages=pages, evidence_subdir=evidence_subdir,
                 knowledge_available_at=known_at, observed_at=record["observed_at"],
+                **({"ocr_layout_proof": layout_proof} if layout_proof is not None else {}),
             )
             rows, blocked = overlay_rows_from_panel_facts(panel_facts,
                 allow_audited_annual_context=allow_audited_annual_context)
@@ -199,8 +207,44 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
         "valuation": {"pe_ttm_from_h1": False, "ps_ttm_from_h1": False, "pb_effect": "NONE"},
     }
     report["artifact_sha256"] = _hash(report)
+    if proofs:
+        report["ocr_layout_proofs"] = [{"document_sha256": p["document_sha256"], "proof_sha256": p["proof_sha256"],
+                                        "layout": p["layout"]} for p in proofs]
+        report.pop("artifact_sha256", None)
+        report["artifact_sha256"] = _hash(report)
     return {"report": report, "overlay_rows": overlay_rows, "precedence_rows": precedence,
-            "materializations": materializations}
+            "materializations": materializations, "ocr_layout_proofs": proofs, "evidence_root": str(evidence_root)}
+
+
+def _registered_layout_metadata(record, spec, front, statements, metadata, front_matter_pages, retained_bytes):
+    """Registered image-only layout: freeze the OCR proof and source currency/unit from statement pages.
+
+    Only when the front matter states no currency/unit and every parsed declaration in the document
+    agrees. Claims carry exact page/text spans with citation_kind statement_page_unit_declaration so
+    admission replaces only the front-page unit recognizer check with the table-bound unit proof.
+    """
+    from stocklookup_core.evidence.official_ocr_layout_proof import (STATEMENT_UNIT_CITATION_KIND, build_ocr_proof,
+                                           statement_unit_metadata_claims)
+    from stocklookup_core.evidence.financial_metadata_envelope import qualify_document_metadata
+    proof = build_ocr_proof(document_sha256=spec["sha256"], materializations=(front, statements))
+    claims = dict(metadata.get("metadata_claims") or {})
+    if (claims.get("currency") or {}).get("value") is not None or (claims.get("unit_scale") or {}).get("value") is not None:
+        return proof, metadata
+    from financial_statement_unit_resolution import parse_explicit_unit_declaration
+    unit = statement_unit_metadata_claims(proof, front_matter_pages, parse_explicit_unit_declaration)
+    if unit is None:
+        return proof, metadata
+    span = {"citation_id": _hash({"doc": spec["sha256"], "page": unit["page"], "text": unit["text"]}),
+            "document_sha256": spec["sha256"], "source_page": unit["page"], "text": unit["text"],
+            "citation_kind": STATEMENT_UNIT_CITATION_KIND}
+    claims["currency"] = {"value": unit["currency"], "evidence_span": span}
+    claims["unit_scale"] = {"value": unit["unit_scale"], "evidence_span": span}
+    document = dict(metadata.get("document") or {})
+    candidate = {"issuer_identity": metadata.get("issuer_identity"), "entity_type": metadata.get("entity_type"),
+                 "document": {**document, "sha256": document.get("document_sha256"),
+                              "immutable_bytes_verified": hashlib.sha256(retained_bytes).hexdigest() == record["sha256"]},
+                 "metadata": {**claims, **(metadata.get("optional_metadata_claims") or {})}}
+    return proof, qualify_document_metadata(candidate)
 
 
 def write_outputs(result: dict[str, Any], public_root: Path, *, preserve_other_periods: bool = False,
@@ -212,6 +256,9 @@ def write_outputs(result: dict[str, Any], public_root: Path, *, preserve_other_p
     from stocklookup_core.evidence.official_document_qualification import _publish_official_artifacts
     # Publication is append-only for every mode: legacy preservation flags no longer
     # authorize removing or replacing any retained evidence row.
+    if result.get("ocr_layout_proofs"):
+        # Layout-proof rows never touch the byte-pinned legacy overlay.
+        raise ValueError("LAYOUT_PROOF_RESULT_REQUIRES_write_layout_proof_outputs")
     path = public_root / PUBLIC_FACTS
     retained = path.read_bytes().decode("utf8") if path.exists() else ""
     plan = plan_official_overlay_publication(result["overlay_rows"], retained_text=retained,
@@ -232,6 +279,50 @@ def write_outputs(result: dict[str, Any], public_root: Path, *, preserve_other_p
     _publish_official_artifacts({path: plan["text"],
                                  prior_precedence: append_precedence_for_keys(old_precedence, result["precedence_rows"], appended_keys),
                                  public_root / report_name: rendered_report}, commit_path=path)
+
+
+def write_layout_proof_outputs(result: dict[str, Any], public_root: Path, *, report_name: str) -> dict[str, Any]:
+    """Persist the retained OCR proof(s), then append newly admitted exact keys to the modern overlay.
+
+    Admission is the full retained replay (``admit_retained_financial_fact``), which reloads the proof
+    from the landing root by hash; a row that does not replay as ADMITTED is not published.
+    """
+    from financial_evidence_currency_refresh import PUBLIC_LAYOUT_PROOF_FACTS, PUBLIC_LAYOUT_PROOF_PRECEDENCE
+    from official_financial_filing_evidence import append_precedence_for_keys, official_fact_key
+    from official_financial_filing_evidence import plan_official_overlay_publication
+    from stocklookup_core.evidence.official_ocr_layout_proof import canonical_json as proof_json, proof_reference
+    from stocklookup_core.evidence.official_document_qualification import (
+        _publish_official_artifacts, admit_retained_financial_fact)
+    for proof in result.get("ocr_layout_proofs") or []:
+        target = Path(result["evidence_root"]) / proof_reference(proof)["relative_path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        payload = proof_json(proof)
+        if target.exists():
+            if target.read_text(encoding="utf-8") != payload:
+                raise ValueError("OCR_LAYOUT_PROOF_CONTENT_CONFLICT")
+        else:
+            target.write_text(payload, encoding="utf-8")
+    rows = [row for row in result["overlay_rows"] if row.get("ocr_layout_proof")]
+    path = public_root / PUBLIC_LAYOUT_PROOF_FACTS
+    retained = path.read_bytes().decode("utf8") if path.exists() else ""
+    plan = plan_official_overlay_publication(rows, retained_text=retained, admission=admit_retained_financial_fact)
+    if plan["text"] is None:
+        return {"appended": 0}
+    appended_keys = [official_fact_key(row) for row in plan["appended"]]
+    precedence_path = public_root / PUBLIC_LAYOUT_PROOF_PRECEDENCE
+    old = precedence_path.read_bytes().decode("utf8") if precedence_path.exists() else ""
+    report = dict(result["report"])
+    report["overlay_write"] = {"policy": "APPEND_ONLY_NEW_EXACT_KEYS_MODERN_LAYOUT_PROOF_OVERLAY",
+                               "overlay": PUBLIC_LAYOUT_PROOF_FACTS, "appended_fact_count": len(plan["appended"]),
+                               "legacy_overlay_untouched": True}
+    report.pop("artifact_sha256", None)
+    report["artifact_sha256"] = _hash(report)
+    public_root.mkdir(parents=True, exist_ok=True)
+    _publish_official_artifacts({path: plan["text"],
+                                 precedence_path: append_precedence_for_keys(old, result["precedence_rows"], appended_keys),
+                                 public_root / report_name: json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"},
+                                commit_path=path)
+    return {"appended": len(plan["appended"]), "keys": appended_keys}
 
 
 def main() -> int:

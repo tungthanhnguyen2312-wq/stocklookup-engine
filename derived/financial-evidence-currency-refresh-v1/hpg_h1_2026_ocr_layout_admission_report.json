@@ -1,0 +1,589 @@
+{
+  "artifact_sha256": "435973f2b83248474824ac20622c110d8a89ca039e725d58a792b9c85cbc2cda",
+  "candidate_fact_count": 5,
+  "canonical_fact_count": 4,
+  "contract_version": "reviewed_interim_canonical_ingress/v2",
+  "documents": [
+    {
+      "assurance": {
+        "audit_or_review_status": "reviewed",
+        "citation_id": "25a3b25375139a06438376c62928bdbc04184ae59c7e198e20c9f1412dba148b",
+        "evidence_id": "25a3b25375139a06438376c62928bdbc04184ae59c7e198e20c9f1412dba148b",
+        "inheritance": "document_level_report_applies_to_all_statements_in_document",
+        "matched_anchors": [
+          "bao cao soat xet",
+          "soat xet so 2410",
+          "hop nhat",
+          "giua nien do",
+          "khong dua ra y kien kiem toan"
+        ],
+        "materialization_id": "b8009d8b0b69d9f1b2260d17701e895fa982f03f9d6f83bd16d42fd54412cd1f",
+        "opinion_evidence": null,
+        "page_number": 7,
+        "page_text_sha256": "9d62f949981b90e42c669a3f5256fe368b82612ebcd5467df66784c735a734e9",
+        "reason": null,
+        "rendered_image_sha256": "36361d0c953d81550bd08c1db83105ce8f6148726ff6f16801f07a340a831113",
+        "scope_of_assurance": "consolidated_interim_statements",
+        "state": "QUALIFIED",
+        "title_span": {
+          "raw_token_order": [
+            47,
+            48,
+            49,
+            50
+          ],
+          "token_ids": [
+            "3913b2468fd806e1658344427f92284a05cdcc6552d2cb05293d65e8d996d9dd",
+            "e779b7b224af92a03153539aa5eb97d09b515330c23a96731babf607993a29e4",
+            "c9d82fcb62c548c2d99a831a42bdef46e879637dc816382019be84edd977bc33",
+            "2a14c20a4213d29d2f9fe9fafd633998def0ac5b494aac4ebe4522c63945e125"
+          ]
+        }
+      },
+      "blocked_candidates": [
+        {
+          "canonical_metric": "cash_and_equivalents",
+          "line_code": "110",
+          "match_count": 0,
+          "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+          "state": "BLOCKED",
+          "statement_family": "balance_sheet"
+        },
+        {
+          "canonical_metric": "operating_cash_flow",
+          "line_code": "20",
+          "match_count": 0,
+          "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+          "state": "BLOCKED",
+          "statement_family": "cash_flow"
+        },
+        {
+          "canonical_metric": "investment_property_disposal_result",
+          "line_code": "21",
+          "match_count": 0,
+          "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+          "state": "BLOCKED",
+          "statement_family": "income_statement"
+        },
+        {
+          "canonical_metric": "provision_charge_or_reversal_adjustment",
+          "line_code": "03",
+          "match_count": 0,
+          "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+          "state": "BLOCKED",
+          "statement_family": "cash_flow"
+        },
+        {
+          "canonical_metric": "short_term_borrowings",
+          "line_code": "320",
+          "reason": "ROW_LABEL_DOES_NOT_SUPPORT_METRIC",
+          "state": "BLOCKED",
+          "statement_family": "balance_sheet"
+        },
+        {
+          "canonical_metric": "long_term_borrowings_or_finance_leases",
+          "line_code": "338",
+          "reason": "ROW_LABEL_DOES_NOT_SUPPORT_METRIC",
+          "state": "BLOCKED",
+          "statement_family": "balance_sheet"
+        },
+        {
+          "canonical_metric": "total_interest_bearing_debt",
+          "reason": "DEBT_COMPONENT_INCOMPLETE",
+          "state": "BLOCKED"
+        }
+      ],
+      "candidate_facts": [
+        {
+          "currency": "VND",
+          "line_code": "280",
+          "metric": "total_assets",
+          "source_page": 10,
+          "source_unit_scale": 1,
+          "value": 278929786247772
+        },
+        {
+          "currency": "VND",
+          "line_code": "400",
+          "metric": "shareholders_equity",
+          "source_page": 11,
+          "source_unit_scale": 1,
+          "value": 141516026790697
+        },
+        {
+          "currency": "VND",
+          "line_code": "10",
+          "metric": "revenue",
+          "source_page": 12,
+          "source_unit_scale": 1,
+          "value": 108059749601554
+        },
+        {
+          "currency": "VND",
+          "line_code": "60",
+          "metric": "net_income",
+          "source_page": 12,
+          "source_unit_scale": 1,
+          "value": 15480392467117
+        },
+        {
+          "currency": "VND",
+          "line_code": "61",
+          "metric": "attributable_net_income",
+          "source_page": 12,
+          "source_unit_scale": 1,
+          "value": 15365022248705
+        }
+      ],
+      "canonical_facts": [
+        {
+          "audit_or_review_status": "reviewed",
+          "citation_id": "e94024e1179b2dcdde882d9eb16d8359a6e928eca27aadfd12485ef70c78528f",
+          "currency": "VND",
+          "factual_reason_codes": [],
+          "factual_status": "qualified",
+          "line_code": "60",
+          "metric": "net_income",
+          "period": "2026-H1",
+          "period_end": "2026-06-30",
+          "period_start": "2026-01-01",
+          "period_type": "interim",
+          "research_reason_codes": [
+            "RESEARCH_PERIOD_NOT_ANNUAL"
+          ],
+          "research_status": "partial",
+          "scope": "consolidated",
+          "source_page": 12,
+          "source_unit_scale": 1,
+          "value": 15480392467117
+        },
+        {
+          "audit_or_review_status": "reviewed",
+          "citation_id": "db7568285a84194cb3d4df2c6eecee363dae36074af223638af8f93a9d8d3ae8",
+          "currency": "VND",
+          "factual_reason_codes": [],
+          "factual_status": "qualified",
+          "line_code": "10",
+          "metric": "revenue",
+          "period": "2026-H1",
+          "period_end": "2026-06-30",
+          "period_start": "2026-01-01",
+          "period_type": "interim",
+          "research_reason_codes": [
+            "RESEARCH_PERIOD_NOT_ANNUAL"
+          ],
+          "research_status": "partial",
+          "scope": "consolidated",
+          "source_page": 12,
+          "source_unit_scale": 1,
+          "value": 108059749601554
+        },
+        {
+          "audit_or_review_status": "reviewed",
+          "citation_id": "ca50bada429171c9fdbbb44bfc07d4bd6b2a6c69579307ccf397a380e367f38f",
+          "currency": "VND",
+          "factual_reason_codes": [],
+          "factual_status": "qualified",
+          "line_code": "400",
+          "metric": "shareholders_equity",
+          "period": "2026-H1",
+          "period_end": "2026-06-30",
+          "period_start": "2026-01-01",
+          "period_type": "interim",
+          "research_reason_codes": [
+            "RESEARCH_PERIOD_NOT_ANNUAL"
+          ],
+          "research_status": "partial",
+          "scope": "consolidated",
+          "source_page": 11,
+          "source_unit_scale": 1,
+          "value": 141516026790697
+        },
+        {
+          "audit_or_review_status": "reviewed",
+          "citation_id": "c0875d2862566f5d33319881fd0a6dc91bf1ec3663bf37f60fac9d115c8e4287",
+          "currency": "VND",
+          "factual_reason_codes": [],
+          "factual_status": "qualified",
+          "line_code": "280",
+          "metric": "total_assets",
+          "period": "2026-H1",
+          "period_end": "2026-06-30",
+          "period_start": "2026-01-01",
+          "period_type": "interim",
+          "research_reason_codes": [
+            "RESEARCH_PERIOD_NOT_ANNUAL"
+          ],
+          "research_status": "partial",
+          "scope": "consolidated",
+          "source_page": 10,
+          "source_unit_scale": 1,
+          "value": 278929786247772
+        }
+      ],
+      "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
+      "ingress_blocked": [
+        {
+          "key": {
+            "currency": "VND",
+            "metric": "attributable_net_income",
+            "period": "2026-H1",
+            "ticker": "HPG",
+            "value": 15365022248705
+          },
+          "reasons": [
+            "VALUE_NOT_QUALIFIED"
+          ],
+          "state": "BLOCKED"
+        }
+      ],
+      "knowledge_available_at": "2026-11-06T23:19:14Z",
+      "line_code_cell_resolution": {
+        "cells": [
+          {
+            "canonical_metric": "short_term_borrowings",
+            "expected_line_code": "320",
+            "match": {
+              "comparative_raw": "2.009.286.366.259",
+              "current_raw": "414.382.997.288",
+              "has_code": true,
+              "layout": "column_major_geometry",
+              "line_text": "8. Phaitra ngắn han khác",
+              "matched_anchor": null,
+              "note_reference": null,
+              "page": 11,
+              "row_object": {
+                "column_bands": {
+                  "bands": {
+                    "comparative_period_value": {
+                      "x0": 1527.0,
+                      "x1": 1840.0
+                    },
+                    "current_period_value": {
+                      "x0": 1182.0,
+                      "x1": 1496.0
+                    },
+                    "label": {
+                      "x0": 0.0,
+                      "x1": 951.0
+                    },
+                    "line_code": {
+                      "x0": 951.0,
+                      "x1": 1017.0
+                    },
+                    "note_reference": null
+                  },
+                  "comparative_period_label": "Số dau ky",
+                  "current_period_label": "Số cuối kỳ",
+                  "header_evidence": {
+                    "bbox": {
+                      "bottom": 588.0,
+                      "top": 511.0,
+                      "x0": 35.0,
+                      "x1": 1838.0
+                    },
+                    "line_ids": [
+                      148,
+                      149,
+                      150,
+                      151,
+                      152
+                    ],
+                    "period_header_class": "CLOSING_OPENING_BALANCE",
+                    "period_identities": {
+                      "comparative": {
+                        "header_class": "OPENING_BALANCE",
+                        "header_line_id": 152,
+                        "parsed_date": null,
+                        "raw_text": "Số dau ky",
+                        "source_token_orders": [
+                          81,
+                          82,
+                          83
+                        ],
+                        "x0": 1696.0,
+                        "x1": 1838.0
+                      },
+                      "current": {
+                        "header_class": "CLOSING_BALANCE",
+                        "header_line_id": 150,
+                        "parsed_date": null,
+                        "raw_text": "Số cuối kỳ",
+                        "source_token_orders": [
+                          91,
+                          92,
+                          93
+                        ],
+                        "x0": 1344.0,
+                        "x1": 1494.0
+                      }
+                    },
+                    "text": "i Mã minh kỳ (Phan lºại lai) số Số cuối 2026 NGUON VON Số dau ky 2025"
+                  },
+                  "recognizer_version": "column_major_geometry/v2"
+                },
+                "comparative_period_label": "Số dau ky",
+                "comparative_raw_value": "2.009.286.366.259",
+                "comparative_value_bbox": {
+                  "bottom": 1039.0,
+                  "top": 1015.0,
+                  "x0": 1570.0,
+                  "x1": 1836.0
+                },
+                "current_period_label": "Số cuối kỳ",
+                "current_raw_value": "414.382.997.288",
+                "current_value_bbox": {
+                  "bottom": 1038.0,
+                  "top": 1014.0,
+                  "x0": 1252.0,
+                  "x1": 1492.0
+                },
+                "document_sha": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
+                "label_binding": {
+                  "contract": "physical_midpoint_label/v1"
+                },
+                "label_source_token_orders": [
+                  191,
+                  192,
+                  193,
+                  194,
+                  195
+                ],
+                "line_code": "320",
+                "note_reference": null,
+                "page": 11,
+                "physical_line_reconstruction": {
+                  "line_id": 116,
+                  "row_baseline_bounds": [
+                    994.5,
+                    1035.5
+                  ],
+                  "vertical_tolerance": 3.0
+                },
+                "raw_label_fragments": [
+                  "8.",
+                  "Phaitra",
+                  "ngắn",
+                  "han",
+                  "khác"
+                ],
+                "recognizer_version": "column_major_geometry/v2",
+                "reconstructed_label": "8. Phaitra ngắn han khác",
+                "row_bbox": {
+                  "bottom": 1040.0,
+                  "top": 1006.0,
+                  "x0": 293.0,
+                  "x1": 1836.0
+                },
+                "statement_family": "balance_sheet",
+                "table_id": null
+              }
+            },
+            "secondary_run_count": 0,
+            "state": "PRIMARY_EXACT"
+          },
+          {
+            "canonical_metric": "long_term_borrowings_or_finance_leases",
+            "expected_line_code": "338",
+            "match": {
+              "comparative_raw": "16.700.201.489",
+              "current_raw": "19.546.428.655",
+              "has_code": true,
+              "layout": "column_major_geometry",
+              "line_text": "3. Phaitra dai han khác",
+              "matched_anchor": null,
+              "note_reference": null,
+              "page": 11,
+              "row_object": {
+                "column_bands": {
+                  "bands": {
+                    "comparative_period_value": {
+                      "x0": 1527.0,
+                      "x1": 1840.0
+                    },
+                    "current_period_value": {
+                      "x0": 1182.0,
+                      "x1": 1496.0
+                    },
+                    "label": {
+                      "x0": 0.0,
+                      "x1": 951.0
+                    },
+                    "line_code": {
+                      "x0": 951.0,
+                      "x1": 1017.0
+                    },
+                    "note_reference": null
+                  },
+                  "comparative_period_label": "Số dau ky",
+                  "current_period_label": "Số cuối kỳ",
+                  "header_evidence": {
+                    "bbox": {
+                      "bottom": 588.0,
+                      "top": 511.0,
+                      "x0": 35.0,
+                      "x1": 1838.0
+                    },
+                    "line_ids": [
+                      148,
+                      149,
+                      150,
+                      151,
+                      152
+                    ],
+                    "period_header_class": "CLOSING_OPENING_BALANCE",
+                    "period_identities": {
+                      "comparative": {
+                        "header_class": "OPENING_BALANCE",
+                        "header_line_id": 152,
+                        "parsed_date": null,
+                        "raw_text": "Số dau ky",
+                        "source_token_orders": [
+                          81,
+                          82,
+                          83
+                        ],
+                        "x0": 1696.0,
+                        "x1": 1838.0
+                      },
+                      "current": {
+                        "header_class": "CLOSING_BALANCE",
+                        "header_line_id": 150,
+                        "parsed_date": null,
+                        "raw_text": "Số cuối kỳ",
+                        "source_token_orders": [
+                          91,
+                          92,
+                          93
+                        ],
+                        "x0": 1344.0,
+                        "x1": 1494.0
+                      }
+                    },
+                    "text": "i Mã minh kỳ (Phan lºại lai) số Số cuối 2026 NGUON VON Số dau ky 2025"
+                  },
+                  "recognizer_version": "column_major_geometry/v2"
+                },
+                "comparative_period_label": "Số dau ky",
+                "comparative_raw_value": "16.700.201.489",
+                "comparative_value_bbox": {
+                  "bottom": 1350.0,
+                  "top": 1325.0,
+                  "x0": 1616.0,
+                  "x1": 1835.0
+                },
+                "current_period_label": "Số cuối kỳ",
+                "current_raw_value": "19.546.428.655",
+                "current_value_bbox": {
+                  "bottom": 1348.0,
+                  "top": 1324.0,
+                  "x0": 1271.0,
+                  "x1": 1490.0
+                },
+                "document_sha": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
+                "label_binding": {
+                  "contract": "physical_midpoint_label/v1"
+                },
+                "label_source_token_orders": [
+                  279,
+                  280,
+                  281,
+                  282,
+                  283
+                ],
+                "line_code": "338",
+                "note_reference": null,
+                "page": 11,
+                "physical_line_reconstruction": {
+                  "line_id": 93,
+                  "row_baseline_bounds": [
+                    1305.0,
+                    1345.5
+                  ],
+                  "vertical_tolerance": 3.0
+                },
+                "raw_label_fragments": [
+                  "3.",
+                  "Phaitra",
+                  "dai",
+                  "han",
+                  "khác"
+                ],
+                "recognizer_version": "column_major_geometry/v2",
+                "reconstructed_label": "3. Phaitra dai han khác",
+                "row_bbox": {
+                  "bottom": 1350.0,
+                  "top": 1318.0,
+                  "x0": 292.0,
+                  "x1": 1835.0
+                },
+                "statement_family": "balance_sheet",
+                "table_id": null
+              }
+            },
+            "secondary_run_count": 0,
+            "state": "PRIMARY_EXACT"
+          },
+          {
+            "canonical_metric": "operating_cash_flow",
+            "expected_line_code": "20",
+            "primary_match_count": 0,
+            "reason": "AMBIGUOUS_CODE_CELL_ROW_NOT_UNIQUE",
+            "secondary_run_count": 0,
+            "state": "BLOCKED"
+          }
+        ],
+        "contract_version": "ocr_cell_code_read/v1",
+        "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
+        "materialization_id": "000b94f23c2ee5878ea07984bdb5f27bb349da20d20d027c94dd4fb03cd76d8a",
+        "resolution_id": "7ec2cff95085e19a098974bf1f39c4a46539b7c256a8ede539f9a186140435d6"
+      },
+      "observed_at": "2026-09-29T11:31:14.408633Z",
+      "reporting_period": "2026-H1",
+      "ticker": "HPG"
+    }
+  ],
+  "financial_v2_pin": {
+    "authority_version": "2026-09-05.1",
+    "changed": false
+  },
+  "milestone_id": "FINANCIAL_EVIDENCE_REVIEWED_INTERIM_CANONICAL_INGRESS_V1",
+  "network_used": false,
+  "ocr_layout_proofs": [
+    {
+      "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
+      "layout": "VAS_TT43_2026_INTERIM_CONSOLIDATED_B01a_B02a_B03a_COLUMN_MAJOR_OCR",
+      "proof_sha256": "7ceeb8f68864434438fa306c6f34e990ea6ff0325942a49d840254ff8931555a"
+    }
+  ],
+  "ocr_reads": {
+    "front_matter_and_statement_pages": 14
+  },
+  "overlay_write": {
+    "appended_fact_count": 4,
+    "legacy_overlay_untouched": true,
+    "overlay": "ocr_layout_proof_official_facts.jsonl",
+    "policy": "APPEND_ONLY_NEW_EXACT_KEYS_MODERN_LAYOUT_PROOF_OVERLAY"
+  },
+  "precedence_statuses": [
+    "OFFICIAL_ONLY"
+  ],
+  "raw_pdf_or_image_bytes_committed": false,
+  "semantic_identity": {
+    "historical_affected_known": [
+      "HPG 2022 net_income=line61 (p3f13 semantic correction)",
+      "HPG 2023 net_income=line61 (p3f13 semantic correction)",
+      "annual OCR-path facts emitted by the pre-corrective STANDARD_FACT_RULES (line 61 as net_income); exhaustive count not audited"
+    ],
+    "historical_authority": "HISTORICAL_NET_INCOME_SEMANTIC_RECONCILIATION_REQUIRED",
+    "historical_rows_rewritten": false,
+    "line_60": "net_income (total profit after tax); requires explicit row label",
+    "line_61": "attributable_net_income (parent-attributable); requires explicit row label",
+    "line_61_as_net_income": "FORBIDDEN"
+  },
+  "valuation": {
+    "pb_effect": "NONE",
+    "pe_ttm_from_h1": false,
+    "ps_ttm_from_h1": false
+  }
+}

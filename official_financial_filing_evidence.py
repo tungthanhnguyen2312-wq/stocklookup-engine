@@ -72,7 +72,8 @@ def admit_official_financial_fact(row: Mapping[str, Any], **context) -> dict[str
 def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Mapping[str, Any] | None = None,
         retained_bytes: bytes | None = None, registry: Mapping[str, Any] | None = None,
         document_pages: Mapping[int, str] | None = None,
-        cutoff: str | None = None, intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY") -> dict[str, Any]:
+        cutoff: str | None = None, intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY",
+        ocr_layout_proof: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Pure common admission. Retained bytes and registry arrive independently of row claims.
 
     An overlay seal, SHA string or caller boolean cannot replace the retained source.
@@ -298,6 +299,14 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         reasons.append("INTENDED_USE_NOT_ADMITTED")
     if intended_use not in {"CURRENT_RESEARCH_FACTUAL_AUTHORITY", "CANONICAL_CITATION", "VALUATION_INPUT_WHERE_METRIC_PERMITS"}:
         reasons.append("INTENDED_USE_OUTSIDE_CONTRACT")
+    if row.get("ocr_layout_proof") is not None:
+        # Registered image-only layout (Owner corrective 2026-11-07): coordinate proofs replace exactly
+        # the contiguous-span and front-page-unit text checks; every other reason stays.
+        from stocklookup_core.evidence.official_ocr_layout_proof import apply_layout_proof
+        from financial_statement_unit_resolution import parse_explicit_unit_declaration
+        reasons, missing = apply_layout_proof(row, ocr_layout_proof, metadata if isinstance(metadata, Mapping) else None,
+                                              reasons, missing, parse_amount=parse_accounting_integer,
+                                              parse_unit=parse_explicit_unit_declaration)
     legacy = legacy_row_admission_entry(row)
     if legacy is not None:
         # Version-specific: the pinned v2 row substitutes only for the newer document-metadata

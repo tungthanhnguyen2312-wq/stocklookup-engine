@@ -674,7 +674,7 @@ def panel_facts_from_qualified_ocr(
     document_metadata: Mapping[str, Any] | None = None,
     source_record: Mapping[str, Any] | None = None, retained_bytes: bytes | None = None,
     source_registry: Mapping[str, Any] | None = None, document_pages: Mapping[int, str] | None = None,
-    evidence_subdir: str | None = None,
+    evidence_subdir: str | None = None, ocr_layout_proof: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Adapt already-qualified OCR geometry facts to the existing P3-F13 ingress shape.
 
@@ -709,6 +709,10 @@ def panel_facts_from_qualified_ocr(
     if not str(knowledge_available_at) or str(knowledge_available_at)[:10] <= period_end:
         raise ValueError("KNOWLEDGE_TIME_NOT_AFTER_PERIOD_END")
     output: list[dict[str, Any]] = []
+    _layout_ref = None
+    if ocr_layout_proof is not None:
+        from stocklookup_core.evidence.official_ocr_layout_proof import proof_reference
+        _layout_ref = proof_reference(ocr_layout_proof)
     instantaneous = {"cash_and_equivalents", "total_assets", "shareholders_equity", "total_interest_bearing_debt"}
     for fact in qualification.get("qualified_facts") or []:
         if fact.get("qualification_state") != "QUALIFIED":
@@ -755,6 +759,8 @@ def panel_facts_from_qualified_ocr(
                     "document_sha256": document_sha, "source_page": lineage.get("source_page"), "citation_id": citation_id},
                 "evidence_subdir": evidence_subdir,
                 **({"native_failure_evidence": lineage["native_failure_evidence"]} if lineage.get("native_failure_evidence") else {}),
+                **({"ocr_layout_proof": _layout_ref, "ocr_unit_evidence": lineage.get("unit_evidence")}
+                   if _layout_ref is not None else {}),
                 "extraction_method": "unqualified_native_tsv_ocr_geometry" if lineage.get("native_failure_evidence") else "image_only_tsv_ocr_geometry"},
         })
         from official_financial_filing_evidence import admit_official_financial_fact
@@ -764,9 +770,12 @@ def panel_facts_from_qualified_ocr(
             "source_unit_scale": fact["unit_scale"], "document_metadata": document_metadata,
             "assurance_evidence": assurance, "raw_value_text": ocr.get("current_raw"),
             "raw_row_label": projected["source_lineage"]["raw_row_label"],
-            "source_span": projected["source_lineage"]["source_span"]}
+            "source_span": projected["source_lineage"]["source_span"],
+            **({"ocr_layout_proof": _layout_ref, "ocr_row_object": row,
+                "ocr_unit_evidence": lineage.get("unit_evidence")} if _layout_ref is not None else {})}
         admission = admit_official_financial_fact(admission_row, source_record=source_record,
-            retained_bytes=retained_bytes, registry=source_registry, document_pages=document_pages)
+            retained_bytes=retained_bytes, registry=source_registry, document_pages=document_pages,
+            **({"ocr_layout_proof": ocr_layout_proof} if _layout_ref is not None else {}))
         projected["admission"] = admission
         if admission["state"] != "ADMITTED":
             projected.update(qualification_state="UNQUALIFIED", is_positive_authority=False,
