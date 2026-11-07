@@ -504,6 +504,117 @@ def pow_reviewed_page_research() -> dict[str, Any]:
     }
 
 
+EVF_Q3_SHA256 = "ace221dd37e1fd6e3036d6d5df431a43902246903b96a88b6a626dfcdf4b8475"
+EVF_Q3_URL = (
+    "https://www.evnfc.vn/storage/app/media/anh_ban_lanh_dao/"
+    "20261026%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20Q3%202026%20soat%20xet%201.pdf"
+)
+EVF_DISCLOSURE_URL = "https://www.evnfc.vn/index.php/tin-co-dong/reviewed-financial-statements-q3-2026"
+EVF_INCOME_LINES = (
+    "interest_income", "interest_expense", "net_interest_income", "pre_provision_profit",
+    "credit_loss_provision", "pretax_profit", "tax", "net_income",
+)
+# Visual read of PDF page 11 (printed page 10), million VND. Nine-month columns only.
+EVF_INCOME_COLUMNS = {
+    "2026-9M": {
+        "interest_income": 5839452, "interest_expense": 4126903, "net_interest_income": 1712549,
+        "pre_provision_profit": 1469579, "credit_loss_provision": 433809,
+        "pretax_profit": 1035770, "tax": 200431, "net_income": 835339,
+    },
+    "2025-9M": {
+        "interest_income": 4026565, "interest_expense": 2593169, "net_interest_income": 1433396,
+        "pre_provision_profit": 1546421, "credit_loss_provision": 641834,
+        "pretax_profit": 904587, "tax": 168374, "net_income": 736213,
+    },
+}
+
+
+def finance_company_income_cross_foot(lines: Mapping[str, int]) -> list[str]:
+    """Check the reviewed finance-company identities. This is not an industrial income statement."""
+    if any(code not in lines or type(lines[code]) is not int for code in EVF_INCOME_LINES):
+        return ["FINANCE_COMPANY_INCOME_CROSS_FOOT_INPUT_INCOMPLETE"]
+    reasons = []
+    if lines["net_interest_income"] != lines["interest_income"] - lines["interest_expense"]:
+        reasons.append("NET_INTEREST_DOES_NOT_FOOT")
+    if lines["pretax_profit"] != lines["pre_provision_profit"] - lines["credit_loss_provision"]:
+        reasons.append("PRETAX_DOES_NOT_FOOT_PRE_PROVISION_MINUS_CREDIT_PROVISION")
+    if lines["net_income"] != lines["pretax_profit"] - lines["tax"]:
+        reasons.append("NET_INCOME_DOES_NOT_FOOT_PRETAX_MINUS_TAX")
+    return reasons
+
+
+def evf_reviewed_page_research() -> dict[str, Any]:
+    """Nine-month reviewed rows. There is no standalone third-quarter column on the page."""
+    rows = []
+    rejected_columns = {}
+    for period, lines in EVF_INCOME_COLUMNS.items():
+        reasons = finance_company_income_cross_foot(lines)
+        if reasons:
+            rejected_columns[period] = reasons
+            continue
+        for metric in EVF_INCOME_LINES:
+            rows.append({
+                "metric": metric, "period": period, "value": lines[metric],
+                "unit": "MILLION_VND", "pdf_page": 11,
+            })
+    amounts = {(row["metric"], row["period"]): row["value"] for row in rows}
+
+    def _yoy(metric: str):
+        current = amounts.get((metric, "2026-9M"))
+        prior = amounts.get((metric, "2025-9M"))
+        if not isinstance(current, int) or not isinstance(prior, int) or not prior:
+            return None
+        return round(100 * (current / prior - 1), 2)
+
+    return {
+        "ticker": "EVF",
+        "source_url": EVF_Q3_URL,
+        "disclosure_url": EVF_DISCLOSURE_URL,
+        "sha256": EVF_Q3_SHA256,
+        "research_kind": "REVIEWED_NINE_MONTH_FINANCE_COMPANY",
+        "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE",
+        "source_role": "ISSUER_SITE_DISCLOSURE_PDF_HOST_NOT_AN_APPROVED_OFFICIAL_ROUTE",
+        "entity_class": "finance_company",
+        "commercial_bank": False,
+        "issuer_disclosure_date": "2026-10-26",
+        "publication_precision": "DATE_ONLY",
+        "statement_signed_date": "2026-10-22",
+        "reviewer": "A&C Auditing and Consulting Co., Ltd.",
+        "review_report_number": "2.0010/27/TC-AC",
+        "review_standard": "VSA_2410",
+        "review_pdf_page": 6,
+        "audit_or_review_status": "reviewed",
+        "review_scope": "POSITION_AT_2026-09-30_AND_NINE_MONTHS_ENDED_THAT_DATE",
+        "standalone_quarter_column": False,
+        "statement_scope": "separate",
+        "statement_scope_basis": "COVER_AND_INCOME_TITLE_DO_NOT_SAY_CONSOLIDATED",
+        "unit": "MILLION_VND",
+        "income_form": "B03a/TCTD",
+        "period_start_printed": "2026-01-01",
+        "period_end": "2026-09-30",
+        "session_binding": "NOT_A_SEALED_SESSION_FACT",
+        "official_fact_admitted": False,
+        "official_store_adoption": "REFUSED",
+        "valuation_use": "CLOSED",
+        "common_shareholder_pb": "UNAVAILABLE",
+        "existing_consumer_usable": False,
+        "industrial_ratios": "NOT_APPLICABLE",
+        "normalized_eps": "NOT_COMPUTED",
+        "observations": rows,
+        "rejected_income_columns": rejected_columns,
+        "net_income_yoy_pct": _yoy("net_income"),
+        "pre_provision_profit_yoy_pct": _yoy("pre_provision_profit"),
+        "credit_loss_provision_yoy_pct": _yoy("credit_loss_provision"),
+    }
+
+
+def evf_reviewed_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
+    """Bind the reviewed finance-company filing. Official admission stays closed."""
+    if _sha(pdf_bytes) != EVF_Q3_SHA256:
+        raise ValueError("EVF_RETAINED_PDF_DOES_NOT_MATCH")
+    return evf_reviewed_page_research()
+
+
 def pow_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
     """Research rows from the exact HOSE POW filing. A failed income column stays out."""
     if _sha(pdf_bytes) != POW_Q3_SHA256:

@@ -4,7 +4,9 @@ from stocklookup_core.financial.q3_2026_successor_research import (
     FOOT_CODES, HPG_9M_2026_LINES, HPG_CONSOLIDATED_Q3_URL, HPG_Q3_2026_LINES, HPG_TEXT_LAYER_SNIPPET,
     POW_INCOME_COLUMNS, POW_OCF_COLUMNS, POW_Q3_SHA256,
     hpg_consolidated_statement_shadow, income_cross_foot, issuer_blocker, operating_cash_flow_cross_foot,
-    pow_consolidated_statement_shadow, pow_reviewed_page_research, source_receipt,
+    EVF_INCOME_COLUMNS, evf_reviewed_page_research, evf_reviewed_statement_shadow,
+    finance_company_income_cross_foot, pow_consolidated_statement_shadow, pow_reviewed_page_research,
+    source_receipt,
     text_layer_fidelity, visual_income_shadow,
 )
 
@@ -127,6 +129,37 @@ def test_pow_sha_and_scope_when_bytes_match():
     path = Path(r"T:\StockLookup\scratch\codex-product-gap-closeout-20261107\pow-q3-2026.pdf")
     if path.is_file():
         bound = pow_consolidated_statement_shadow(pdf_bytes=path.read_bytes())
+        assert bound["observations"] == out["observations"]
+
+
+def test_evf_reviewed_nine_month_rows_are_not_a_standalone_quarter_or_a_bank():
+    for period in ("2026-9M", "2025-9M"):
+        assert finance_company_income_cross_foot(EVF_INCOME_COLUMNS[period]) == []
+    out = evf_reviewed_page_research()
+    assert out["official_fact_admitted"] is False
+    assert out["valuation_use"] == "CLOSED"
+    assert out["entity_class"] == "finance_company"
+    assert out["commercial_bank"] is False
+    assert out["statement_scope"] == "separate"
+    assert out["audit_or_review_status"] == "reviewed"
+    assert out["standalone_quarter_column"] is False
+    assert out["unit"] == "MILLION_VND"
+    assert out["industrial_ratios"] == "NOT_APPLICABLE"
+    assert len(out["observations"]) == 16
+    assert {row["period"] for row in out["observations"]} == {"2026-9M", "2025-9M"}
+    assert all(row["unit"] == "MILLION_VND" for row in out["observations"])
+    assert out["net_income_yoy_pct"] == round(100 * (835339 / 736213 - 1), 2)
+    assert out["pre_provision_profit_yoy_pct"] < 0
+    assert out["credit_loss_provision_yoy_pct"] < 0
+    try:
+        evf_reviewed_statement_shadow(pdf_bytes=b"%PDF-1.3\nnot-the-filing")
+    except ValueError as exc:
+        assert "EVF_RETAINED_PDF_DOES_NOT_MATCH" in str(exc)
+    else:
+        raise AssertionError("wrong EVF bytes were accepted")
+    path = Path(r"T:\StockLookup\scratch\codex-product-gap-closeout-20261107\evf-q3-2026-reviewed.pdf")
+    if path.is_file():
+        bound = evf_reviewed_statement_shadow(pdf_bytes=path.read_bytes())
         assert bound["observations"] == out["observations"]
 
 
