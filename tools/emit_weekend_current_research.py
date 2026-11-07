@@ -1,0 +1,85 @@
+"""Emit the current-research artifacts for the 2026-11-07 successor chain.
+
+The HPG PDF stays outside git. When the retained file is on this machine the
+emitter checks its SHA-256 before writing. Nothing here is an official fact
+and nothing is bound to the sealed 2026-11-06 Daily.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from stocklookup_core.decision.market_close_current_research import (  # noqa: E402
+    current_research_artifact, weekend_source_closures_20261107,
+)
+from stocklookup_core.financial.q3_2026_successor_research import (  # noqa: E402
+    HPG_CONSOLIDATED_Q3_BYTES, HPG_CONSOLIDATED_Q3_SHA256, hpg_consolidated_statement_shadow, issuer_blocker,
+)
+from stocklookup_core.valuation.common_shareholder_book_comparison import research_dependency  # noqa: E402
+
+OBSERVED_AT = "2026-11-07T10:51:54+07:00"
+RETAINED_PDF = Path(r"T:\StockLookup\scratch\grok-weekend-continuation-20261107\hpg-q3-2026-consolidated.pdf")
+POSTHOC_BENCHMARK = {
+    "index": "VNINDEX", "session": "2026-11-06", "close": 1725.36, "previous_close": 1740.73,
+    "previous_session": "2026-11-05",
+    "source_identity": "dnse_index_return_series/4cf91c602cb69b01a5acfb1bf6e772806a5ee09f7b22d9a0d216f8b78340511e",
+    "knowledge_available_at": "2026-11-07T09:49:56+07:00",
+    "authority": "DNSE_CURRENT_STATE_REPUBLISHED_INDEX_NOT_HOSE_ADMINISTRATOR",
+}
+
+
+def _check_retained_pdf() -> None:
+    if not RETAINED_PDF.is_file():
+        return
+    payload = RETAINED_PDF.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != HPG_CONSOLIDATED_Q3_SHA256 or len(payload) != HPG_CONSOLIDATED_Q3_BYTES:
+        raise SystemExit("RETAINED_PDF_DOES_NOT_MATCH")
+
+
+def q3_artifact() -> dict:
+    hpg = hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT)
+    pan = research_dependency(ticker="PAN")
+    return {
+        "contract_version": "q3_2026_successor_research/v1",
+        "knowledge_available_at": OBSERVED_AT,
+        "session_binding": "NOT_A_SEALED_SESSION_FACT",
+        "official_fact_admitted_count": 0,
+        "shadow_row_count": hpg["shadow_row_count"],
+        "issuers": {
+            "HPG": hpg,
+            "PAN": pan,
+            "SSI": issuer_blocker(ticker="SSI", reason_codes=[
+                "IR_INDEX_URL_PREVIOUSLY_404_NOT_RETRIED", "NO_EXACT_OFFICIAL_Q3_STATEMENT_URL"]),
+            "EVF": issuer_blocker(ticker="EVF", reason_codes=["NO_ADMITTED_ISSUER_IR_HOST"]),
+            "POW": issuer_blocker(ticker="POW", reason_codes=[
+                "IR_INDEX_URL_PREVIOUSLY_404_NOT_RETRIED", "NO_EXACT_OFFICIAL_Q3_STATEMENT_URL"]),
+        },
+    }
+
+
+def main() -> int:
+    _check_retained_pdf()
+    q3_path = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    market_path = Path(sys.argv[2]) if len(sys.argv) > 2 else None
+    q3 = q3_artifact()
+    market = current_research_artifact(benchmark=POSTHOC_BENCHMARK, closures=weekend_source_closures_20261107())
+    text_q3 = json.dumps(q3, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    text_market = json.dumps(market, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    if q3_path and market_path:
+        q3_path.write_text(text_q3, encoding="utf-8")
+        market_path.write_text(text_market, encoding="utf-8")
+        print(f"official_facts={q3['official_fact_admitted_count']} shadow_rows={q3['shadow_row_count']}")
+        return 0
+    sys.stdout.write(text_q3)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
