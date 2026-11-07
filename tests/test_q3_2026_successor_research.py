@@ -1,6 +1,10 @@
+from pathlib import Path
+
 from stocklookup_core.financial.q3_2026_successor_research import (
-    HPG_9M_2026_LINES, HPG_CONSOLIDATED_Q3_URL, HPG_Q3_2026_LINES, HPG_TEXT_LAYER_SNIPPET,
-    hpg_consolidated_statement_shadow, income_cross_foot, issuer_blocker, source_receipt,
+    FOOT_CODES, HPG_9M_2026_LINES, HPG_CONSOLIDATED_Q3_URL, HPG_Q3_2026_LINES, HPG_TEXT_LAYER_SNIPPET,
+    POW_INCOME_COLUMNS, POW_OCF_COLUMNS, POW_Q3_SHA256,
+    hpg_consolidated_statement_shadow, income_cross_foot, issuer_blocker, operating_cash_flow_cross_foot,
+    pow_consolidated_statement_shadow, pow_reviewed_page_research, source_receipt,
     text_layer_fidelity, visual_income_shadow,
 )
 
@@ -78,6 +82,52 @@ def test_receipt_stays_out_of_the_official_store():
 
 def statement_sha():
     return hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT)["sha256"]
+
+
+def test_pow_keeps_reconciled_rows_and_rejects_the_one_dong_income_columns():
+    current_quarter = dict(zip(FOOT_CODES, POW_INCOME_COLUMNS["2026-Q3"], strict=True))
+    current_nine = dict(zip(FOOT_CODES, POW_INCOME_COLUMNS["2026-9M"], strict=True))
+    assert current_quarter["61"] + current_quarter["62"] - current_quarter["60"] == 1
+    assert current_nine["60"] - (current_nine["50"] - current_nine["51"] - current_nine["52"]) == 1
+    assert income_cross_foot(current_quarter) == ["LINE_60_DOES_NOT_FOOT_61_PLUS_62"]
+    assert income_cross_foot(current_nine) == ["LINE_60_DOES_NOT_FOOT_50_MINUS_51_MINUS_52"]
+    assert income_cross_foot(dict(zip(FOOT_CODES, POW_INCOME_COLUMNS["2025-Q3"], strict=True))) == []
+    assert income_cross_foot(dict(zip(FOOT_CODES, POW_INCOME_COLUMNS["2025-9M"], strict=True))) == []
+    assert operating_cash_flow_cross_foot(POW_OCF_COLUMNS["2026-9M"]) == []
+    assert operating_cash_flow_cross_foot(POW_OCF_COLUMNS["2025-9M"]) == []
+    broken_cash = dict(POW_OCF_COLUMNS["2026-9M"])
+    broken_cash["20"] += 1
+    assert "LINE_20_DOES_NOT_FOOT_OPERATING_BRIDGE" in operating_cash_flow_cross_foot(broken_cash)
+
+
+def test_pow_sha_and_scope_when_bytes_match():
+    try:
+        pow_consolidated_statement_shadow(pdf_bytes=b"%PDF-1.3\nnot-the-filing")
+    except ValueError as exc:
+        assert "POW_RETAINED_PDF_DOES_NOT_MATCH" in str(exc)
+    else:
+        raise AssertionError("wrong POW bytes were accepted")
+    out = pow_reviewed_page_research()
+    assert out["sha256"] == POW_Q3_SHA256
+    assert out["official_fact_admitted"] is False
+    assert out["valuation_use"] == "CLOSED"
+    assert out["statement_scope"] == "consolidated"
+    assert out["audit_or_review_status"] == "unreviewed"
+    assert out["publication_precision"] == "DATE_ONLY"
+    periods = {(row["metric"], row["period"]) for row in out["observations"]}
+    assert ("revenue", "2026-Q3") not in periods
+    assert ("net_income", "2026-9M") not in periods
+    assert ("operating_cash_flow", "2026-9M") in periods
+    assert ("operating_cash_flow", "2025-9M") in periods
+    assert ("revenue", "2025-Q3") in periods
+    assert len(out["observations"]) == 8
+    assert out["operating_cash_flow_yoy_pct"] == -19.78
+    assert out["rejected_income_columns"]["2026-Q3"] == ["LINE_60_DOES_NOT_FOOT_61_PLUS_62"]
+    assert all(row["value"] != 2073116246766 for row in out["observations"])
+    path = Path(r"T:\StockLookup\scratch\codex-product-gap-closeout-20261107\pow-q3-2026.pdf")
+    if path.is_file():
+        bound = pow_consolidated_statement_shadow(pdf_bytes=path.read_bytes())
+        assert bound["observations"] == out["observations"]
 
 
 def test_blocker_requires_a_reason_and_admits_nothing():

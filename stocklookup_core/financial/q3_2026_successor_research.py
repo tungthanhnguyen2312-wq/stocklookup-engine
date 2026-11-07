@@ -376,3 +376,136 @@ def pan_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
             ],
         },
     }
+
+
+# Printed cash-flow codes. Line 16 is absent on this statement and is not invented.
+_OCF_ADJUSTMENT = ("1", "2", "3", "04", "05", "6", "7")
+_OCF_BRIDGE = ("8", "09", "10", "11", "12", "13", "14", "15", "17")
+
+
+def operating_cash_flow_cross_foot(lines: Mapping[str, int]) -> list[str]:
+    """Reconcile indirect operating cash flow without using an income-statement column."""
+    needed = (*_OCF_ADJUSTMENT, *_OCF_BRIDGE, "20")
+    if any(code not in lines or type(lines[code]) is not int for code in needed):
+        return ["OPERATING_CASH_FLOW_CROSS_FOOT_INPUT_INCOMPLETE"]
+    reasons = []
+    if lines["8"] != sum(lines[code] for code in _OCF_ADJUSTMENT):
+        reasons.append("LINE_08_DOES_NOT_FOOT_ADJUSTMENTS")
+    if lines["20"] != sum(lines[code] for code in _OCF_BRIDGE):
+        reasons.append("LINE_20_DOES_NOT_FOOT_OPERATING_BRIDGE")
+    return reasons
+
+
+POW_Q3_URL = (
+    "https://staticfile.hsx.vn/Uploads/UploadDocuments/2510748/"
+    "20261030%20-%20POW%20-%20BCTC%20HN%20Q3.2026.pdf"
+)
+POW_Q3_SHA256 = "c423af37737c4fb9ec1df98ff7b0145488f103a9667db5215aacd848ac12bcfb"
+# Visual read of PDF page 8, Mẫu B 02-DN/HN. FOOT_CODES order. The text layer is not used.
+POW_INCOME_COLUMNS = {
+    "2026-Q3": (
+        16772209338395, 35309657, 16772174028738, 14460963526725, 2311210502013,
+        2414031200864, 264579538441, 76335415657, 2073116246766, 1859571515433, 213544731334,
+    ),
+    "2025-Q3": (
+        7855188738891, 0, 7855188738891, 6564435636945, 1290753101946,
+        1011826163428, 63448641579, 0, 948377521849, 809300749571, 139076772278,
+    ),
+    "2026-9M": (
+        49405538196735, 35309657, 49405502887078, 40704201296076, 8701301591002,
+        7743502646042, 768090471308, 76846458593, 6898565716142, 6434493112525, 464072603617,
+    ),
+    "2025-9M": (
+        25404267937149, 0, 25404267937149, 22129728253869, 3274539683280,
+        2332117178740, 154529139499, -4385813849, 2181973853090, 1856808001611, 325165851479,
+    ),
+}
+# Visual read of PDF page 10, Mẫu B 03-DN/HN, indirect method. Nine-month columns only.
+POW_OCF_COLUMNS = {
+    "2026-9M": {
+        "1": 7743502646042, "2": 2914951688624, "3": -187835162208, "04": -91338511310,
+        "05": -1106693891039, "6": 1569009965027, "7": 0, "8": 10841596735136,
+        "09": -10695294079903, "10": -516740475711, "11": 4485469971400, "12": 60934634228,
+        "13": 0, "14": -685789088103, "15": -527074441481, "17": -224122149460,
+        "20": 2738981106106,
+    },
+    "2025-9M": {
+        "1": 2332117178740, "2": 2133062844670, "3": 336710508500, "04": 266135429886,
+        "05": -635500696480, "6": 411031425707, "7": 0, "8": 4843556691023,
+        "09": 1453805734294, "10": -469338827413, "11": -2905408694950, "12": 1177734207429,
+        "13": 0, "14": -380417324190, "15": -125156592660, "17": -180544591090,
+        "20": 3414230602443,
+    },
+}
+
+
+def pow_reviewed_page_research() -> dict[str, Any]:
+    """Rows read from the retained POW pages. Callers still have to match the PDF SHA."""
+    rows = []
+    rejected_columns = {}
+    for period, values in POW_INCOME_COLUMNS.items():
+        lines = dict(zip(FOOT_CODES, values, strict=True))
+        reasons = income_cross_foot(lines)
+        if reasons:
+            rejected_columns[period] = reasons
+            continue
+        for code, metric in DISPLAY_METRICS.items():
+            rows.append({
+                "metric": metric, "period": period, "value": lines[code],
+                "unit": "VND", "pdf_page": 8, "line_code": code,
+            })
+
+    for period, lines in POW_OCF_COLUMNS.items():
+        reasons = operating_cash_flow_cross_foot(lines)
+        if reasons:
+            rejected_columns[period + ":operating_cash_flow"] = reasons
+            continue
+        rows.append({
+            "metric": "operating_cash_flow", "period": period, "value": lines["20"],
+            "unit": "VND", "pdf_page": 10, "line_code": "20",
+        })
+
+    amounts = {(row["metric"], row["period"]): row["value"] for row in rows}
+    current_ocf = amounts.get(("operating_cash_flow", "2026-9M"))
+    prior_ocf = amounts.get(("operating_cash_flow", "2025-9M"))
+    ocf_yoy = None
+    if isinstance(current_ocf, int) and isinstance(prior_ocf, int) and prior_ocf:
+        ocf_yoy = round(100 * (current_ocf / prior_ocf - 1), 2)
+    return {
+        "ticker": "POW",
+        "source_url": POW_Q3_URL,
+        "sha256": POW_Q3_SHA256,
+        "research_kind": "COMPARATIVE_INCOME_AND_OPERATING_CASH_FLOW",
+        "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE",
+        "source_role": "EXCHANGE_HOSTED_ISSUER_DISCLOSURE_ATTACHMENT",
+        "issuer_disclosure_date": "2026-10-30",
+        "publication_precision": "DATE_ONLY",
+        "document_signature_time": "2026-10-30T16:40:59+07:00",
+        "retention": "LOCAL_PDF_SHA256_MATCHES_CODEX_CLOSEOUT_RECEIPT",
+        "audit_or_review_status": "unreviewed",
+        "statement_scope": "consolidated",
+        "unit": "VND",
+        "income_form": "B02-DN/HN",
+        "cash_flow_form": "B03-DN/HN",
+        "cash_flow_method": "INDIRECT",
+        "period_start_printed": "2026-01-01",
+        "period_end": "2026-09-30",
+        "session_binding": "NOT_A_SEALED_SESSION_FACT",
+        "official_fact_admitted": False,
+        "official_store_adoption": "REFUSED",
+        "valuation_use": "CLOSED",
+        "common_shareholder_pb": "UNAVAILABLE",
+        "existing_consumer_usable": False,
+        "text_layer": "NOT_SOURCE_FAITHFUL_NO_REPAIR",
+        "observations": rows,
+        "rejected_income_columns": rejected_columns,
+        "operating_cash_flow_yoy_pct": ocf_yoy,
+        "loan_and_lease_lines_excluded": ["321", "339"],
+    }
+
+
+def pow_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
+    """Research rows from the exact HOSE POW filing. A failed income column stays out."""
+    if _sha(pdf_bytes) != POW_Q3_SHA256:
+        raise ValueError("POW_RETAINED_PDF_DOES_NOT_MATCH")
+    return pow_reviewed_page_research()

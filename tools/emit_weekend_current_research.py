@@ -21,7 +21,7 @@ from stocklookup_core.decision.market_close_current_research import (  # noqa: E
 )
 from stocklookup_core.financial.q3_2026_successor_research import (  # noqa: E402
     HPG_CONSOLIDATED_Q3_BYTES, HPG_CONSOLIDATED_Q3_SHA256, hpg_consolidated_statement_shadow, issuer_blocker,
-    pan_consolidated_statement_shadow,
+    pan_consolidated_statement_shadow, pow_consolidated_statement_shadow,
 )
 from stocklookup_core.valuation.common_shareholder_book_comparison import research_dependency  # noqa: E402
 
@@ -45,26 +45,30 @@ def _check_retained_pdf() -> None:
         raise SystemExit("RETAINED_PDF_DOES_NOT_MATCH")
 
 
-def q3_artifact(*, pan_pdf: Path | None = None) -> dict:
+def q3_artifact(*, pan_pdf: Path | None = None, pow_pdf: Path | None = None) -> dict:
     hpg = hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT)
     pan = (pan_consolidated_statement_shadow(pdf_bytes=pan_pdf.read_bytes())
            if pan_pdf else research_dependency(ticker="PAN"))
+    pow_statement = (pow_consolidated_statement_shadow(pdf_bytes=pow_pdf.read_bytes())
+                     if pow_pdf else issuer_blocker(ticker="POW", reason_codes=[
+                         "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]))
+    issuers = {
+        "HPG": hpg,
+        "PAN": pan,
+        "SSI": issuer_blocker(ticker="SSI", reason_codes=[
+            "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]),
+        "EVF": issuer_blocker(ticker="EVF", reason_codes=["EXACT_Q3_DISCLOSURE_LOCATED_ISSUER_HOST_NOT_ADMITTED"]),
+        "POW": pow_statement,
+    }
+    observation_count = sum(len(item.get("observations", [])) for item in issuers.values() if isinstance(item, dict))
     return {
         "contract_version": "q3_2026_successor_research/v1",
         "knowledge_available_at": OBSERVED_AT,
         "session_binding": "NOT_A_SEALED_SESSION_FACT",
         "official_fact_admitted_count": 0,
         "shadow_row_count": hpg["shadow_row_count"],
-        "observation_count": len(pan.get("observations", [])),
-        "issuers": {
-            "HPG": hpg,
-            "PAN": pan,
-            "SSI": issuer_blocker(ticker="SSI", reason_codes=[
-                "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]),
-            "EVF": issuer_blocker(ticker="EVF", reason_codes=["EXACT_Q3_DISCLOSURE_LOCATED_ISSUER_HOST_NOT_ADMITTED"]),
-            "POW": issuer_blocker(ticker="POW", reason_codes=[
-                "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]),
-        },
+        "observation_count": observation_count,
+        "issuers": issuers,
     }
 
 
@@ -74,8 +78,9 @@ def main() -> int:
     parser.add_argument("q3_path", nargs="?", type=Path)
     parser.add_argument("market_path", nargs="?", type=Path)
     parser.add_argument("--pan-pdf", type=Path, help="Retained exact PAN consolidated Q3 filing")
+    parser.add_argument("--pow-pdf", type=Path, help="Retained exact POW consolidated Q3 filing")
     args = parser.parse_args()
-    q3 = q3_artifact(pan_pdf=args.pan_pdf)
+    q3 = q3_artifact(pan_pdf=args.pan_pdf, pow_pdf=args.pow_pdf)
     q3_path, market_path = args.q3_path, args.market_path
     market = current_research_artifact(benchmark=POSTHOC_BENCHMARK, closures=weekend_source_closures_20261107())
     text_q3 = json.dumps(q3, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
@@ -84,7 +89,10 @@ def main() -> int:
         market_path.write_text(text_market, encoding="utf-8")
     if q3_path:
         q3_path.write_text(text_q3, encoding="utf-8")
-        print(f"official_facts={q3['official_fact_admitted_count']} shadow_rows={q3['shadow_row_count']}")
+        print(
+            f"official_facts={q3['official_fact_admitted_count']} "
+            f"shadow_rows={q3['shadow_row_count']} observations={q3['observation_count']}"
+        )
         return 0
     sys.stdout.write(text_q3)
     return 0
