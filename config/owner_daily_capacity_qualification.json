@@ -697,7 +697,7 @@
     "stocklookup_core/decision/daily_integrated_decision_brief.py": "928a8098c3884bc52e1e7db9403f19475fab9823964c71bee2dc7f26dfa86492",
     "stocklookup_core/decision/daily_opportunity_decision_queue.py": "3fb18fe0dd537fc71635f10fd84059261312b745b96aaf2a4249b58d4f48a498",
     "stocklookup_core/decision/daily_session_shadow_recommendation.py": "5a06655726407d6e91aa59a659174016006c8848e2e552299f64d7c2d203e8bc",
-    "stocklookup_core/decision/dashboard_home_summary.py": "8bf8957412479cd857c77ca524275db0a1cf642e5ccb913b6bfe0e2b0ecc04eb",
+    "stocklookup_core/decision/dashboard_home_summary.py": "78d207bedd576cd0b8a0426bada4aa73d230306c05f18248fc92dd498e747543",
     "stocklookup_core/decision/historical_scaleout.py": "8100c8f9e50da94c4d0c9f9a4ec0cda2de0eb471957b64ae99282f68603184c6",
     "stocklookup_core/decision/human_ai_decision_evidence_packet.py": "53d94121a63858d5e8520a81740a47deafb4f95a35027fd3f6487e1c1d30db95",
     "stocklookup_core/decision/indicator_metric_availability.py": "ee7ce2346e3b8da0922ac557be9bcf8f0a25380240c35c6fac9a72888135a65c",
