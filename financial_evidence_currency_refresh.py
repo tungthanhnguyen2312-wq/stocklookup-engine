@@ -22,7 +22,6 @@ from financial_evidence_currency_contract import (
     COHORT,
     CONTRACT_VERSION,
     DEFAULT_LANDING_ROOT,
-    LANDING_DOMAIN,
     DIRECT_TARGET_LOCATORS,
     ENTITY_FAMILY,
     EVF_BLOCKER,
@@ -603,8 +602,7 @@ def run_refresh(
     framework is proven without live HTTP or giant OCR work.
     """
     observed = observed_at or _now()
-    from runtime_paths import official_landing_root
-    landing = Path(landing_root) if landing_root else official_landing_root(LANDING_DOMAIN, DEFAULT_LANDING_ROOT)
+    landing = Path(landing_root or DEFAULT_LANDING_ROOT)
     public = Path(public_root) if public_root else Path(__file__).resolve().parent / PUBLIC_ARTIFACT_DIR
     budget = BoundedHttpBudget()
     routes = {ticker: _route_for(ticker) for ticker in COHORT}

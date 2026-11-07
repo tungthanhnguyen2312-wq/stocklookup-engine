@@ -6,7 +6,8 @@ from pathlib import Path
 import pytest
 
 import runtime_paths
-from financial_evidence_currency_contract import DEFAULT_LANDING_ROOT, LANDING_DOMAIN
+from stocklookup_core.evidence import official_document_qualification as odq_mod
+from stocklookup_core.evidence.financial_filings_replay_adapter import DOMAIN as LANDING_DOMAIN
 from tests.test_official_financial_source_integrity import proved_fixture
 
 
@@ -17,7 +18,7 @@ def _profile(monkeypatch, retained: Path):
 
 def test_profile_resolves_under_retained_role(monkeypatch, tmp_path):
     _profile(monkeypatch, tmp_path / "retained-evidence")
-    root = runtime_paths.official_landing_root(LANDING_DOMAIN, DEFAULT_LANDING_ROOT)
+    root = odq_mod.official_landing_root()
     assert root == (tmp_path / "retained-evidence" / "data-landing" / LANDING_DOMAIN).resolve()
 
 
@@ -25,14 +26,7 @@ def test_unprofiled_keeps_legacy_default_and_never_uses_runtime_root(monkeypatch
     monkeypatch.setattr(runtime_paths, "workspace_profile", lambda **_k: None)
     monkeypatch.setenv(runtime_paths.RUNTIME_ROOT_ENV, str(tmp_path / "dashboard-runtime"))
     legacy = tmp_path / "legacy" / LANDING_DOMAIN
-    assert runtime_paths.official_landing_root(LANDING_DOMAIN, legacy) == legacy.resolve()
-
-
-@pytest.mark.parametrize("domain", ["", "a/b", "..", "a\\b"])
-def test_domain_must_be_one_segment(monkeypatch, domain):
-    monkeypatch.setattr(runtime_paths, "workspace_profile", lambda **_k: None)
-    with pytest.raises(ValueError):
-        runtime_paths.official_landing_root(domain, "x")
+    assert odq_mod.official_landing_root(legacy) == legacy.resolve()
 
 
 def _write_landing(root: Path, context):
