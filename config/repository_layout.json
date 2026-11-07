@@ -69,6 +69,7 @@
     "dnse_index_return_series_capability.py",
     "dnse_secrets_env.py",
     "dnse_trades_liquidity_basis.py",
+    "dnse_vnindex_session_level.py",
     "dnse_volume_composition_reconciliation.py",
     "empirical_setup_outcome_calibration.py",
     "entity_classification_contract.py",

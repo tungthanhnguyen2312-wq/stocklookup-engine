@@ -387,9 +387,13 @@ def build_operation(inputs: Mapping[str, Any], session: str, *, producer_head: s
         # Market Close Intelligence binds the same explicit market inputs; it computes no
         # new measurement and owns no threshold (market_close_intelligence/v1).
         from stocklookup_core.decision.market_close_intelligence import build as build_market_close
+        from dnse_vnindex_session_level import load_session_benchmark
+        benchmark = packet_inputs.get("market_benchmark")
+        if benchmark is None:
+            benchmark = load_session_benchmark(session)
         market_close = build_market_close(session=session, descriptive=inputs["descriptive"],
             sector_leadership=packet_inputs.get("market_sector"), regime_context=regime_context,
-            market_flow_positioning=flow, benchmark=packet_inputs.get("market_benchmark"),
+            market_flow_positioning=flow, benchmark=benchmark,
             official_liquidity=packet_inputs.get("official_liquidity_status"))
         product["market_close_intelligence"] = market_close
         product["source_artifact_identities"]["market_close_intelligence"] = market_close["artifact_identity"]
