@@ -398,6 +398,7 @@ def run_daily_producer(
         runtime_root_override=runtime_root_override,
         integrated_investment_decision_product=integrated_investment_decision_product,
         evaluated_valuation=evaluated_valuation,
+        market_close_intelligence=(operation.get("product") or {}).get("market_close_intelligence"),
     )
     run_identity = _run_identity(selected, producer_head, consumer_head, plan, operation["manifest"]["operation_identity"])
     run_dir = output_root / selected / run_identity.split(":", 1)[1]

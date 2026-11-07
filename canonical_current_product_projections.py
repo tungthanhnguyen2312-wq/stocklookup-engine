@@ -719,6 +719,7 @@ def materialize_and_write_current_product_projections(
     integrated_investment_decision_product: Mapping[str, Any] | None = None,
     current_corporate_knowledge_overlay: Mapping[str, Any] | None = None,
     evaluated_valuation: Mapping[str, Any] | None = None,
+    market_close_intelligence: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Top-level entry point: materialize both current products and write them into
     ``operation_dir`` (the same Daily Research Session Operation directory
@@ -818,6 +819,12 @@ def materialize_and_write_current_product_projections(
             home_summary = dashboard_home_summary.with_notable_cards(home_summary, workspace_index)
         except (ValueError, TypeError, KeyError):
             # The optional card shortcut must not suppress the existing Home summary.
+            pass
+        try:
+            if market_close_intelligence is not None:
+                home_summary = dashboard_home_summary.with_market_close(home_summary, market_close_intelligence)
+        except (ValueError, TypeError, KeyError):
+            # The optional close brief must not suppress the existing Home summary.
             pass
         home_summary_json_path = operation_dir / HOME_SUMMARY_JSON_FILENAME
         home_summary_js_path = operation_dir / HOME_SUMMARY_JS_FILENAME

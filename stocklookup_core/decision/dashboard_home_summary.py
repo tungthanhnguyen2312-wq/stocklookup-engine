@@ -364,3 +364,57 @@ def with_notable_cards(summary: Mapping[str, Any], workspace_index: Mapping[str,
 
 def js_fallback(summary: Mapping[str, Any]) -> str:
     return f"{JS_GLOBAL} = {json.dumps(summary, ensure_ascii=False, separators=(',', ':'))};\n"
+
+
+MARKET_CLOSE_CONTRACT = "market_close_intelligence/v1"
+
+
+def with_market_close(summary: Mapping[str, Any], market_close: Mapping[str, Any]) -> dict[str, Any]:
+    """Attach the already-built market-close brief. No new measurement."""
+    if (summary.get("contract_version") != CONTRACT_VERSION
+            or content_identity(summary)["artifact_identity"] != summary.get("artifact_identity")
+            or market_close.get("contract_version") != MARKET_CLOSE_CONTRACT
+            or market_close.get("session") != summary.get("as_of_session")
+            or not str(market_close.get("artifact_identity") or "").startswith(MARKET_CLOSE_CONTRACT + ":")):
+        raise DashboardHomeSummaryError("MARKET_CLOSE_SOURCE_OR_SESSION_INCOMPATIBLE")
+    components = market_close.get("components") or {}
+    breadth = components.get("breadth") or {}
+    sectors = components.get("sectors") or {}
+    weakening = [row.get("group") for row in (sectors.get("groups_by_leadership_state") or {}).get("WEAKENING", [])
+                 if isinstance(row, Mapping)]
+    block = {
+        "contract_version": MARKET_CLOSE_CONTRACT,
+        "session": market_close["session"],
+        "source_artifact_identity": market_close["artifact_identity"],
+        "component_status": copy.deepcopy(market_close.get("component_status") or {}),
+        "benchmark_index": copy.deepcopy(components.get("benchmark_index") or {}),
+        "breadth": {
+            "status": breadth.get("status"),
+            "denominator": breadth.get("denominator"),
+            "advancing": breadth.get("advancing"),
+            "declining": breadth.get("declining"),
+            "unchanged": breadth.get("unchanged"),
+            "scope": breadth.get("scope"),
+            "existing_descriptor": breadth.get("existing_descriptor"),
+        },
+        "sectors": {
+            "status": sectors.get("status"),
+            "group_count": sectors.get("group_count"),
+            "groups_with_more_decliners_than_advancers": sectors.get("groups_with_more_decliners_than_advancers"),
+            "groups_with_more_advancers_than_decliners": sectors.get("groups_with_more_advancers_than_decliners"),
+            "weakening": weakening,
+            "comparability": sectors.get("comparability"),
+        },
+        "liquidity_status": (components.get("liquidity") or {}).get("status"),
+        "foreign_flow_status": (components.get("foreign_flow") or {}).get("status"),
+        "macro_usable_axes": list((components.get("macro") or {}).get("usable_axes") or []),
+        "authority_boundary": copy.deepcopy(market_close.get("authority_boundary") or {}),
+    }
+    result = {}
+    for key, value in summary.items():
+        if key == "authority_effect":
+            result["market_close"] = block
+        if key not in {"artifact_sha256", "artifact_identity"}:
+            result[key] = value
+    result.update(content_identity(result))
+    return result

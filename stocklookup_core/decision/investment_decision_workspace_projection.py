@@ -224,6 +224,10 @@ def _valuation_view(opportunity_record: Mapping[str, Any]) -> dict[str, Any]:
         for method_id, detail in applicable_methods.items()
         if isinstance(detail, Mapping)
     }
+    pb = method_diagnostics.get("P/B_CURRENT_RESEARCH")
+    if isinstance(pb, Mapping):
+        from stocklookup_core.valuation.common_shareholder_book_comparison import from_pb_diagnostic
+        method_diagnostics["P/B_CURRENT_RESEARCH"] = {**pb, "common_shareholder_comparison": from_pb_diagnostic(pb)}
     return {
         "relative_research_state": display_state,
         "raw_upstream_relative_research_state": raw_state,
