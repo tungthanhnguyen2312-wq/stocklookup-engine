@@ -372,12 +372,14 @@ def test_release_sync_refuses_before_moving_head(tmp_path, kind):
 
 
 def test_release_sync_requires_active_profile(tmp_path, monkeypatch):
+    from tools.sync_producer_release import sync_producer_release
+
     monkeypatch.delenv("STOCK_LOOKUP_WORKSPACE_PROFILE", raising=False)
     with pytest.raises(ValueError, match="FREEZE_SYNC_PROFILE_REQUIRED"):
-        freeze.sync_producer_release(tmp_path, "0" * 40, {})
+        sync_producer_release(tmp_path, "0" * 40, {})
     monkeypatch.setenv("STOCK_LOOKUP_WORKSPACE_PROFILE", str(tmp_path / "wrong.json"))
     monkeypatch.setattr(workflow, "bind_active_workspace", lambda _: None)
     import runtime_paths
     monkeypatch.setattr(runtime_paths, "workspace_profile", lambda: {"paths": {"producer": tmp_path / "other"}})
     with pytest.raises(ValueError, match="FREEZE_SYNC_WRONG_PROFILE_ROOT"):
-        freeze.sync_producer_release(tmp_path, "0" * 40, {})
+        sync_producer_release(tmp_path, "0" * 40, {})

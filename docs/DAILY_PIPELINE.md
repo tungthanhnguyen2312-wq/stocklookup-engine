@@ -110,7 +110,7 @@ An unsealed input freeze is the sole additive registry diff plus its selected
 artifact identities. It is separate from historical executable source pins,
 reviewed amendments and the capacity receipt. Ordinary Daily still requires
 the frozen checkout to be at main before it starts. An operator may use
-`pending_session_input_freeze.sync_producer_release(root, approved_head, inventory)`
+`python -B tools/sync_producer_release.py --approved-head <sha> --inventory <path>`
 from verified released code to synchronize the Producer alone. This operation
 does not launch Daily or confer approval on another commit.
 
