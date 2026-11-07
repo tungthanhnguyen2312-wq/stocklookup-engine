@@ -12,9 +12,10 @@ Owner-admitted 2026-10-23. Bounded corrective of the NSO CPI route in
    matches `NSO_CPI_RELEASE_LOCATOR`, which accepts the October slug variant
    `consumer-price-index-cpi-gold-price-index-…` on the same official host and path.
    - The complete matching inventory is kept (bound `MAX_DISCOVERY_INVENTORY` = 32; exceeding it is
-     `DISCOVERY_INVENTORY_LIMIT_EXCEEDED` and blocks currency). The fetch budget is separate:
-     at most `MAX_FETCHED_DISCOVERED_RELEASES` = 3 are fetched, in a deterministic order that is never
-     evidence of publication period. Each inventoried link beyond the budget is retained as
+     `DISCOVERY_INVENTORY_LIMIT_EXCEEDED` and blocks currency). A usable archive allows five linked
+     releases and skips the two fixed releases. The fallback retains the two fixed releases and
+     at most three homepage-discovered releases. Fetch order is never evidence of publication
+     period. Each inventoried link beyond the budget is retained as
      `NOT_FETCHED:FETCH_BUDGET_EXCEEDED`.
    - Each discovered record carries `discovered_from`: the index `source_id`, its locator and payload SHA-256.
      A link present on both indexes keeps homepage provenance. An attempted archive with no usable
@@ -73,8 +74,8 @@ The October observation keeps the 03/11 date-level release and actual retrieval 
 The runtime source requalification was scoped to this acquisition and its session
 projection. Responses are capped at 512 KiB each, with at most seven requests.
 Paired Windows replay of the same retained responses used 52,494,336 bytes peak
-RSS on the prior source and 57,081,856 on the candidate. A candidate replay with
-all seven responses padded to the cap used 70,377,472 bytes peak RSS and 55,222,272
+RSS on the prior source and 55,709,696 on the candidate. A candidate replay with
+all seven responses padded to the cap used 70,443,008 bytes peak RSS and 55,320,576
 bytes peak pagefile usage. These are macro substep measurements. The Owner Daily
 resource envelope and preflight remain in force.
 

@@ -29,6 +29,7 @@ NSO_CPI_RELEASE_LOCATOR = re.compile(r"^https://www\.nso\.gov\.vn/en/data-and-st
 # An inventoried link that is not fetched is retained as NOT_FETCHED and also blocks currency.
 MAX_DISCOVERY_INVENTORY = 32
 MAX_FETCHED_DISCOVERED_RELEASES = 3
+MAX_FETCHED_ARCHIVE_RELEASES = 5
 MAX_NSO_HTML_BYTES = 512 * 1024
 MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
 # CURRENT_NEXT_RELEASE_UNANNOUNCED ends with the month after the next expected reference period (2026-09 CPI -> 2026-11-30).
@@ -309,7 +310,10 @@ def build(*, raw_records: list[Mapping[str, Any]], retrieved_at: str) -> dict[st
     discovered, truncated = discover_cpi_release_inventory(homepage, archive)
     discovery = {"homepage_locator": homepage.get("locator") if homepage else None, "homepage_payload_sha256": homepage.get("payload_sha256") if homepage else None, "max_discovery_inventory": MAX_DISCOVERY_INVENTORY, "max_fetched_discovered_releases": MAX_FETCHED_DISCOVERED_RELEASES, "inventory_truncated": truncated, "discovered_locators": discovered, "locator_status": {url: retained_status.get(url, "DISCOVERED_NOT_RETAINED") for url in discovered}}
     if archive is not None:
-        discovery["archive_unavailable"] = not any(NSO_CPI_RELEASE_LOCATOR.fullmatch(url) for url in _retained_links(archive))
+        archive_locators, _ = discover_cpi_release_inventory(archive)
+        discovery["archive_unavailable"] = not archive_locators
+        if archive_locators:
+            discovery["max_fetched_discovered_releases"] = MAX_FETCHED_ARCHIVE_RELEASES
     observations: dict[str, list[dict[str, Any]]] = {"vn_cpi_yoy": parsed}
     for metric_id, category, unit in TARGET_METRICS[1:]:
         observations[metric_id] = [_unavailable(metric_id, category, unit, retrieved_at)]
@@ -353,17 +357,20 @@ def acquire(*, retrieved_at: str | None = None) -> dict[str, Any]:
                                            error=exc, discovered_from={key: homepage[key] for key in ("source_id", "locator", "payload_sha256")})
             archive["source_id"] = "NSO_CPI_ARCHIVE"
         records.append(archive)
-    for url in NSO_CPI_RELEASES:
+    archive_locators, _ = discover_cpi_release_inventory(archive)
+    fixed_releases = () if archive_locators else NSO_CPI_RELEASES
+    fetch_budget = MAX_FETCHED_ARCHIVE_RELEASES if archive_locators else MAX_FETCHED_DISCOVERED_RELEASES
+    for url in fixed_releases:
         with urlopen(Request(url, headers=headers), timeout=30) as response:
             records.append(_raw_record(source_id=SOURCE_ID, url=url, raw=_read_html(response), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status))
     discovered, _ = discover_cpi_release_inventory(homepage, archive)
     fetched = 0
     for url in discovered:
-        if url in NSO_CPI_RELEASES:
+        if url in fixed_releases:
             continue
         origin = homepage if url in homepage_links else archive
         provenance = {key: origin[key] for key in ("source_id", "locator", "payload_sha256")}
-        if fetched >= MAX_FETCHED_DISCOVERED_RELEASES:
+        if fetched >= fetch_budget:
             records.append(_not_fetched_record(url=url, retrieved_at=retrieved_at, discovered_from=provenance)); continue
         fetched += 1
         try:

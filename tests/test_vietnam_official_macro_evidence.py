@@ -344,7 +344,7 @@ def test_acquire_keeps_homepage_provenance_for_links_shared_with_archive(monkeyp
 
     monkeypatch.setattr(nso, "urlopen", fake_urlopen)
     artifact = nso.acquire(retrieved_at=RETRIEVED)
-    assert requested == [nso.NSO_HOMEPAGE, nso.NSO_CPI_ARCHIVE, JUNE_URL, JULY_URL, SEPT_URL]
+    assert requested == [nso.NSO_HOMEPAGE, nso.NSO_CPI_ARCHIVE, SEPT_URL]
     retained = {row["locator"]: row for row in artifact["raw_payloads"]}
     assert retained[SEPT_URL]["discovered_from"] == PROVENANCE
     freshness = artifact["freshness_rules"]["vn_cpi_yoy"]
@@ -396,6 +396,10 @@ def test_october_cpi_acquisition_and_session_context(monkeypatch, archive_reacha
     }
     assert (latest["observation_period"], latest["publication_date"], latest["value"]) == ("2026-10", "2026-11-03", 5.09)
     assert latest["month_on_month"]["value"] == 0.20
+    assert artifact["release_discovery"]["max_fetched_discovered_releases"] == 5
+    assert {row["locator"] for row in artifact["raw_payloads"]} == {
+        nso.NSO_HOMEPAGE, nso.NSO_CPI_ARCHIVE, SEPT_URL, october,
+    }
     rows = current_macro_observations(artifact)
     assert rows[0]["previous_value"] == 5.08
     assert freshness["valid_through"] == "2026-12-02"
@@ -416,3 +420,30 @@ def test_august_cpi_explicit_verb_after_semicolon():
 def test_nso_html_payload_limit():
     with pytest.raises(OSError, match="NSO_HTML_RESPONSE_LIMIT_EXCEEDED"):
         nso._read_html(_Response(b"x" * (nso.MAX_NSO_HTML_BYTES + 1)))
+
+
+def test_archive_rollover_spends_no_requests_on_retired_fixed_releases(monkeypatch):
+    # Synthetic next archive window. Five index links must fit even after June drops out.
+    releases = {
+        f"https://www.nso.gov.vn/en/data-and-statistics/2026/{month + 1:02d}/"
+        f"consumer-price-index-gold-price-index-and-us-dollar-price-index-in-{name.lower()}-2026/":
+        (f"<p>The Consumer Price Index (CPI) in {name} rose by 5.09% year-on-year.</p>"
+         f"<p>Reference period: {month}/2026 Date of issue: 03/{month + 1:02d}/2026</p>").encode()
+        for month, name in enumerate(("July", "August", "September", "October", "November"), 7)
+    }
+    pages = {
+        nso.NSO_HOMEPAGE: f'<a href="{nso.NSO_CPI_ARCHIVE}">CPI</a>'.encode(),
+        nso.NSO_CPI_ARCHIVE: "".join(f'<a href="{url}">release</a>' for url in releases).encode(),
+        **releases,
+    }
+    requests = []
+
+    def fetch(request, timeout):
+        requests.append(request.full_url)
+        return _Response(pages[request.full_url])
+
+    monkeypatch.setattr(nso, "urlopen", fetch)
+    artifact = nso.acquire(retrieved_at="2026-12-04T00:00:00Z")
+    assert len(requests) == 7 and set(requests) == set(pages)
+    assert artifact["parse_failures"] == []
+    assert artifact["observations"]["vn_cpi_yoy"][-1]["observation_period"] == "2026-11"
