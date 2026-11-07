@@ -82,7 +82,7 @@
       ]
     },
     "tools/release_orchestrator.py": {
-      "ast_sha256": "e5054bdf8ebf1971016f950eaef04fb6ea6a92d5c2dcdd484f1280bbd32a616f",
+      "ast_sha256": "a74696fd9359a8c12c39096a815eb9fc811e7c5829dd2f900f0f8eccbb452af8",
       "reason": "Command plans to subprocess.run with cwd; loop dataflow is bounded.",
       "targets": [
         "publish_dashboard.py",
@@ -119,7 +119,7 @@
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
       "reason": "Focused selection includes the offline Vault boundary-emitter and relocated-restore requalification and T0 archive-location and current-session candlestick projection/post-Daily release and offline dedup-relink regression suites; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "354ae0a4b6313a6ae9d5cbb1b8da52947487804b8dc28a16f9a2722d106031ad",
+      "sha256": "0daa66bd82dadda5996035e0a7cac5a918688364a59d6052a154666e3a968226",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",
