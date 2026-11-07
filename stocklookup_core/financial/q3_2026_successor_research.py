@@ -272,3 +272,107 @@ def issuer_blocker(*, ticker: str, reason_codes: list[str]) -> dict[str, Any]:
         "exact_statement_url": None,
         "reason_codes": list(reason_codes),
     }
+
+
+# Exact visual review of HOSE PDF page 8, in FOOT_CODES order.
+PAN_INCOME_COLUMNS = {
+    "2026-Q3": (
+        4111272326123, 53769711450, 4057502614673, 3302330076444, 755172538229,
+        340839371347, 5258066320, -155310834, 335736615861, 195756189127, 139980426734,
+    ),
+    "2025-Q3": (
+        5212102498828, 74001160129, 5138101338699, 4122954757832, 1015146580867,
+        304850710456, 41579736668, -3107923193, 266378896981, 156192900845, 110185996136,
+    ),
+    "2026-9M": (
+        11694900115257, 256760945596, 11438139169661, 9170431501769, 2267707667892,
+        1483766186014, 108997134749, 11249172231, 1363519879034, 963087575991, 400432303042,
+    ),
+}
+PAN_Q3_URL = (
+    "https://staticfile.hsx.vn/Uploads/UploadDocuments/2508740/"
+    "20261027%20-%20PAN%20-%20BCTC%20Hop%20nhat%20Q3%202026%20kem%20giai%20trinh%20%28signed%29.pdf"
+)
+PAN_Q3_SHA256 = "d7e1422fcda668eb640abbdc73f1194380241e81c6ed9d33a5ef6e3ead0366b1"
+
+
+def pan_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
+    """Materialize display-only observations for the exact visually reviewed filing."""
+    if _sha(pdf_bytes) != PAN_Q3_SHA256:
+        raise ValueError("PAN_RETAINED_PDF_DOES_NOT_MATCH")
+
+    rows = []
+    rejected_columns = {}
+    for period, values in PAN_INCOME_COLUMNS.items():
+        lines = dict(zip(FOOT_CODES, values, strict=True))
+        reasons = income_cross_foot(lines)
+        if reasons:
+            rejected_columns[period] = reasons
+            continue
+        for code, metric in DISPLAY_METRICS.items():
+            rows.append({
+                "metric": metric, "period": period, "value": lines[code],
+                "unit": "VND", "pdf_page": 8, "line_code": code,
+            })
+
+    point_in_time = "2026-09-30"
+    for metric, period, value, unit, page in (
+        ("total_equity", point_in_time, 9414380321367, "VND", 7),
+        ("noncontrolling_interest", point_in_time, 3855460149352, "VND", 7),
+        ("issued_shares", point_in_time, 258072996, "shares", 34),
+        ("treasury_shares", point_in_time, 7399830, "shares", 34),
+        ("outstanding_shares", point_in_time, 250673166, "shares", 34),
+        ("net_inventory", point_in_time, 4331055601966, "VND", 26),
+        ("net_inventory", "2025-12-31", 3179033807421, "VND", 26),
+        ("operating_cash_flow", "2026-9M", -619520988619, "VND", 9),
+        ("receivables_cash_movement", "2026-9M", -2803360221257, "VND", 9),
+        ("inventory_cash_movement", "2026-9M", -1099450415124, "VND", 9),
+        ("pretax_disposal_gain", "2026-9M", 561507166021, "VND", 36),
+    ):
+        rows.append({"metric": metric, "period": period, "value": value, "unit": unit, "pdf_page": page})
+
+    amounts = {(row["metric"], row["period"]): row["value"] for row in rows}
+    equity = amounts["total_equity", point_in_time] - amounts["noncontrolling_interest", point_in_time]
+    shares = amounts["outstanding_shares", point_in_time]
+    if amounts["issued_shares", point_in_time] - amounts["treasury_shares", point_in_time] != shares:
+        raise ValueError("PAN_SHARE_NOTE_DOES_NOT_RECONCILE")
+    price = 16900
+    return {
+        "ticker": "PAN",
+        "source_url": PAN_Q3_URL,
+        "sha256": PAN_Q3_SHA256,
+        "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE",
+        "source_role": "EXCHANGE_HOSTED_ISSUER_DISCLOSURE_ATTACHMENT",
+        "issuer_disclosure_date": "2026-10-27",
+        "publication_precision": "DATE_ONLY",
+        "retained_at": "2026-11-07T09:01:04Z",
+        "audit_or_review_status": "unreviewed",
+        "statement_scope": "consolidated",
+        "session_binding": "NOT_A_SEALED_SESSION_FACT",
+        "official_fact_admitted": False,
+        "valuation_use": "CLOSED",
+        "existing_consumer_usable": False,
+        "observations": rows,
+        "rejected_income_columns": rejected_columns,
+        "revenue_yoy_pct": round(100 * (amounts["revenue", "2026-Q3"] / amounts["revenue", "2025-Q3"] - 1), 2),
+        "parent_profit_yoy_pct": round(100 * (
+            amounts["attributable_net_income", "2026-Q3"] / amounts["attributable_net_income", "2025-Q3"] - 1
+        ), 2),
+        "common_shareholder_pb": "UNAVAILABLE",
+        "book_sensitivity": {
+            "kind": "CROSS_DATE_ILLUSTRATION",
+            "book_date": point_in_time,
+            "reference_price_session": "2026-11-06",
+            "reference_price_basis": "CURRENT_DESCRIPTIVE_DNSE_REST_ADJUSTED_RETROSPECTIVE_RAW_AS_TRADED_NOT_PROMOTED",
+            "reference_price_source": "decision:PAN:5339b11b31869af6",
+            "reference_price_vnd": price,
+            "quarter_end_shares": shares,
+            "derived_equity_excluding_nci_vnd": equity,
+            "illustrative_multiple": price * shares / equity,
+            "reason_codes": [
+                "RECONCILED_PARENT_EQUITY_METHOD_NOT_ADMITTED",
+                "SHARE_CONTINUITY_THROUGH_PRICE_SESSION_UNPROVEN",
+                "RAW_PRICE_BASIS_NOT_BOUND",
+            ],
+        },
+    }
