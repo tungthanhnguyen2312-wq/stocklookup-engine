@@ -367,6 +367,7 @@ def js_fallback(summary: Mapping[str, Any]) -> str:
 
 
 MARKET_CLOSE_CONTRACT = "market_close_intelligence/v1"
+MARKET_CLOSE_IDENTITY_PREFIX = "market_close_intelligence:"
 
 
 def with_market_close(summary: Mapping[str, Any], market_close: Mapping[str, Any]) -> dict[str, Any]:
@@ -375,7 +376,7 @@ def with_market_close(summary: Mapping[str, Any], market_close: Mapping[str, Any
             or content_identity(summary)["artifact_identity"] != summary.get("artifact_identity")
             or market_close.get("contract_version") != MARKET_CLOSE_CONTRACT
             or market_close.get("session") != summary.get("as_of_session")
-            or not str(market_close.get("artifact_identity") or "").startswith(MARKET_CLOSE_CONTRACT + ":")):
+            or not str(market_close.get("artifact_identity") or "").startswith(MARKET_CLOSE_IDENTITY_PREFIX)):
         raise DashboardHomeSummaryError("MARKET_CLOSE_SOURCE_OR_SESSION_INCOMPATIBLE")
     components = market_close.get("components") or {}
     breadth = components.get("breadth") or {}

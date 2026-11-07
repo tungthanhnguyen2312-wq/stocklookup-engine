@@ -7,23 +7,31 @@ Owner-admitted 2026-10-23. Bounded corrective of the NSO CPI route in
 ## Defects corrected
 
 1. **Static locators.** `NSO_CPI_RELEASES` (June/July 2026) is kept. `acquire()` now fetches the NSO homepage
-   first and also follows CPI release links found there. A link qualifies only if it matches
-   `NSO_CPI_RELEASE_LOCATOR` (`https://www.nso.gov.vn/en/data-and-statistics/YYYY/MM/consumer-price-index-gold-price-index-and-us-dollar-price-index-in-…/`).
+   first. It also reads the first page of the official English CPI archive when the homepage links it.
+   It inventories release links from both pages, without pagination. A link qualifies only if it
+   matches `NSO_CPI_RELEASE_LOCATOR`, which accepts the October slug variant
+   `consumer-price-index-cpi-gold-price-index-…` on the same official host and path.
    - The complete matching inventory is kept (bound `MAX_DISCOVERY_INVENTORY` = 32; exceeding it is
-     `DISCOVERY_INVENTORY_LIMIT_EXCEEDED` and blocks currency). The fetch budget is separate:
-     at most `MAX_FETCHED_DISCOVERED_RELEASES` = 3 are fetched, in a deterministic order that is never
-     evidence of publication period. Each inventoried link beyond the budget is retained as
+     `DISCOVERY_INVENTORY_LIMIT_EXCEEDED` and blocks currency). A usable archive allows five linked
+     releases and skips the two fixed releases. The fallback retains the two fixed releases and
+     at most three homepage-discovered releases. Fetch order is never evidence of publication
+     period. Each inventoried link beyond the budget is retained as
      `NOT_FETCHED:FETCH_BUDGET_EXCEEDED`.
-   - Each discovered record carries `discovered_from`: the homepage `source_id`, its locator and its payload SHA-256.
+   - Each discovered record carries `discovered_from`: the index `source_id`, its locator and payload SHA-256.
+     A link present on both indexes keeps homepage provenance. An attempted archive with no usable
+     links blocks freshness and the retained failure is replayable.
    - A discovered page that cannot be fetched is retained as `FETCH_FAILED:<type>` with no payload and never yields a value.
 2. **Release followed but not acquired.** `build()` records `release_discovery`, the status of each discovered link:
    `PARSED`, `PARSE_BLOCKED`, `FETCH_FAILED`, `NOT_FETCHED` or `DISCOVERED_NOT_RETAINED`. Any retained or
    discovered CPI release that is not parsed may be newer (its period is never inferred from the locator) and blocks currency.
-3. **YoY wording.** The parser reads only CPI-subject sentences of the lead, under one clause grammar:
+3. **YoY wording.** The parser excludes HTML headings and the document head from the lead scan,
+   then reads only CPI-subject sentences of the lead under one clause grammar:
    `<verb> by X% <comparator>` with verb `rose`/`increased`/`decreased`/`fell` and comparator year-on-year,
-   over/compared with the same period last year, compared with the previous month (MoM) or compared with
+   over/compared with the same period last year, compared with the same period of the previous year,
+   compared with the previous month (MoM) or compared with
    December YYYY (year-to-date, not emitted). A clause without its own verb (`…, by X%`, `…, and by X%`)
    inherits the immediately preceding clause's verb only across a bare list separator.
+   A semicolon requires a new explicit supported verb.
 
    It fails closed in these cases:
    - any other word before "by" (`declined`, `changed`, `but`, …): `NSO_CPI_UNSUPPORTED_GOVERNING_VERB`;
@@ -56,7 +64,20 @@ Owner-admitted 2026-10-23. Bounded corrective of the NSO CPI route in
 
 `current_macro_observations` exposes `previous_value` only for the exactly adjacent prior month. Otherwise it adds the limitation `PREDECESSOR_PERIOD_NOT_ADJACENT:<prev>-><latest>`, and `INFLATION_PRESSURE` stays `UNKNOWN`. Nothing is interpolated.
 
-Consequence for September 2026: July → September is not adjacent, and no qualified August YoY exists (the official XLSX does not state one). The level 5.08% is exposed; the direction is `UNKNOWN`.
+At the October 23 checkpoint, July → September was not adjacent in retained evidence.
+The September level was 5.08%, with direction `UNKNOWN` at that checkpoint.
+
+The later English CPI archive links the August, September and October HTML releases.
+A 2026-11-07 acquisition replay qualified 4.89%, 5.08% and 5.09% YoY, respectively.
+The October observation keeps the 03/11 date-level release and actual retrieval time.
+
+The runtime source requalification was scoped to this acquisition and its session
+projection. Responses are capped at 512 KiB each, with at most seven requests.
+Paired Windows replay of the same retained responses used 52,494,336 bytes peak
+RSS on the prior source and 55,709,696 on the candidate. A candidate replay with
+all seven responses padded to the cap used 70,443,008 bytes peak RSS and 55,320,576
+bytes peak pagefile usage. These are macro substep measurements. The Owner Daily
+resource envelope and preflight remain in force.
 
 ## Not changed
 

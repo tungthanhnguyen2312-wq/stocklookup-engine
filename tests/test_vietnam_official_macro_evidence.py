@@ -288,8 +288,8 @@ def test_acquire_inventories_every_link_and_retains_budget_exceeded_candidates(m
         def __exit__(self, *args):
             return False
 
-        def read(self):
-            return self.body
+        def read(self, size=-1):
+            return self.body if size < 0 else self.body[:size]
 
     def fake_urlopen(request, timeout):
         requested.append(request.full_url)
@@ -325,12 +325,12 @@ class _Response:
     def __exit__(self, *_):
         return False
 
-    def read(self):
-        return self.body
+    def read(self, size=-1):
+        return self.body if size < 0 else self.body[:size]
 
 
 @pytest.mark.parametrize("september_reachable", [True, False])
-def test_acquire_follows_only_homepage_linked_official_releases_with_provenance(monkeypatch, september_reachable):
+def test_acquire_keeps_homepage_provenance_for_links_shared_with_archive(monkeypatch, september_reachable):
     pages = {nso.NSO_HOMEPAGE: "homepage_20261022.html", JUNE_URL: "cpi_2026-06_release.html", JULY_URL: "cpi_2026-07_release.html", SEPT_URL: "cpi_2026-09_release.html"}
     requested = []
 
@@ -338,11 +338,13 @@ def test_acquire_follows_only_homepage_linked_official_releases_with_provenance(
         requested.append(request.full_url)
         if request.full_url == SEPT_URL and not september_reachable:
             raise TimeoutError("offline")
+        if request.full_url == nso.NSO_CPI_ARCHIVE:
+            return _Response(f'<a href="{SEPT_URL}">September</a>'.encode())
         return _Response((FIXTURES / pages[request.full_url]).read_bytes())
 
     monkeypatch.setattr(nso, "urlopen", fake_urlopen)
     artifact = nso.acquire(retrieved_at=RETRIEVED)
-    assert requested == [nso.NSO_HOMEPAGE, JUNE_URL, JULY_URL, SEPT_URL]
+    assert requested == [nso.NSO_HOMEPAGE, nso.NSO_CPI_ARCHIVE, SEPT_URL]
     retained = {row["locator"]: row for row in artifact["raw_payloads"]}
     assert retained[SEPT_URL]["discovered_from"] == PROVENANCE
     freshness = artifact["freshness_rules"]["vn_cpi_yoy"]
@@ -351,3 +353,97 @@ def test_acquire_follows_only_homepage_linked_official_releases_with_provenance(
     else:
         assert retained[SEPT_URL]["parse_status"] == "FETCH_FAILED:TimeoutError" and retained[SEPT_URL]["payload_base64"] is None
         assert freshness["status"] == "STALE_OR_UNAVAILABLE"
+
+
+@pytest.mark.parametrize("archive_reachable", [True, False])
+def test_october_cpi_acquisition_and_session_context(monkeypatch, archive_reachable):
+    october = "https://www.nso.gov.vn/en/data-and-statistics/2026/11/consumer-price-index-cpi-gold-price-index-and-us-dollar-price-index-in-october-and-ten-months-of-2026/"
+    title = "Consumer Price Index (CPI), Gold Price Index and US Dollar Price Index in October 2026"
+    release = f"""<head><title>{title}</title></head><h1>{title}</h1>
+    <p>The Consumer Price Index (CPI) in October increased by 0.20% compared to the previous month,
+    rose by 4.41% compared to December 2025, and increased by 5.09% over the same period last year.
+    On average, in ten months of 2026, the CPI increased by 4.57% year-on-year.</p>
+    <p>Reference period: 10/2026 Date of issue: 03/11/2026</p>"""
+    archive = f'<a href="{october}">October</a><a href="{SEPT_URL}">September</a>'.encode()
+    pages = {
+        nso.NSO_HOMEPAGE: f'<a href="{nso.NSO_CPI_ARCHIVE}">CPI</a><p>Next releases 03/12/2026: Consumer price index, gold, and USD price indexes in November 2026</p>'.encode(),
+        nso.NSO_CPI_ARCHIVE: archive,
+        JUNE_URL: (FIXTURES / "cpi_2026-06_release.html").read_bytes(),
+        JULY_URL: (FIXTURES / "cpi_2026-07_release.html").read_bytes(),
+        SEPT_URL: (FIXTURES / "cpi_2026-09_release.html").read_bytes(),
+        october: release.encode(),
+    }
+
+    def fetch(request, timeout):
+        if request.full_url == nso.NSO_CPI_ARCHIVE and not archive_reachable:
+            raise TimeoutError
+        return _Response(pages[request.full_url])
+
+    monkeypatch.setattr(nso, "urlopen", fetch)
+    retrieved = "2026-11-07T07:56:00Z"
+    artifact = nso.acquire(retrieved_at=retrieved)
+    assert build(raw_records=artifact["raw_payloads"], retrieved_at=retrieved) == artifact
+    freshness = artifact["freshness_rules"]["vn_cpi_yoy"]
+    if not archive_reachable:
+        assert freshness["status"] == "STALE_OR_UNAVAILABLE"
+        assert "NSO_CPI_ARCHIVE_UNAVAILABLE" in freshness["reason_codes"]
+        return
+
+    latest = artifact["observations"]["vn_cpi_yoy"][-1]
+    assert latest["discovered_from"] == {
+        "source_id": "NSO_CPI_ARCHIVE", "locator": nso.NSO_CPI_ARCHIVE,
+        "payload_sha256": hashlib.sha256(archive).hexdigest(),
+    }
+    assert (latest["observation_period"], latest["publication_date"], latest["value"]) == ("2026-10", "2026-11-03", 5.09)
+    assert latest["month_on_month"]["value"] == 0.20
+    assert artifact["release_discovery"]["max_fetched_discovered_releases"] == 5
+    assert {row["locator"] for row in artifact["raw_payloads"]} == {
+        nso.NSO_HOMEPAGE, nso.NSO_CPI_ARCHIVE, SEPT_URL, october,
+    }
+    rows = current_macro_observations(artifact)
+    assert rows[0]["previous_value"] == 5.08
+    assert freshness["valid_through"] == "2026-12-02"
+    macro = build_macro(observations=rows, raw_sources=[], retrieved_at=retrieved)
+    context = session_context(macro, "2026-11-09", cutoff="2026-11-09T17:00:00+07:00")
+    assert context["observations"]["vn_cpi_yoy"]["value"] == 5.09
+
+
+def test_august_cpi_explicit_verb_after_semicolon():
+    record = synthetic("""<p>The Consumer Price Index (CPI) in August increased by 0.47% compared
+    with the previous month; increased by 3.57% compared with December 2025 and increased
+    by 4.89% compared with the same period of the previous year.</p>
+    <p>Reference period: 8/2026 Date of issue: 03/09/2026</p>""")
+    row = nso._parse_cpi(record)
+    assert (row["value"], row["month_on_month"]["value"]) == (4.89, 0.47)
+
+
+def test_nso_html_payload_limit():
+    with pytest.raises(OSError, match="NSO_HTML_RESPONSE_LIMIT_EXCEEDED"):
+        nso._read_html(_Response(b"x" * (nso.MAX_NSO_HTML_BYTES + 1)))
+
+
+def test_archive_rollover_spends_no_requests_on_retired_fixed_releases(monkeypatch):
+    # Synthetic next archive window. Five index links must fit even after June drops out.
+    releases = {
+        f"https://www.nso.gov.vn/en/data-and-statistics/2026/{month + 1:02d}/"
+        f"consumer-price-index-gold-price-index-and-us-dollar-price-index-in-{name.lower()}-2026/":
+        (f"<p>The Consumer Price Index (CPI) in {name} rose by 5.09% year-on-year.</p>"
+         f"<p>Reference period: {month}/2026 Date of issue: 03/{month + 1:02d}/2026</p>").encode()
+        for month, name in enumerate(("July", "August", "September", "October", "November"), 7)
+    }
+    pages = {
+        nso.NSO_HOMEPAGE: f'<a href="{nso.NSO_CPI_ARCHIVE}">CPI</a>'.encode(),
+        nso.NSO_CPI_ARCHIVE: "".join(f'<a href="{url}">release</a>' for url in releases).encode(),
+        **releases,
+    }
+    requests = []
+
+    def fetch(request, timeout):
+        requests.append(request.full_url)
+        return _Response(pages[request.full_url])
+
+    monkeypatch.setattr(nso, "urlopen", fetch)
+    artifact = nso.acquire(retrieved_at="2026-12-04T00:00:00Z")
+    assert len(requests) == 7 and set(requests) == set(pages)
+    assert artifact["parse_failures"] == []
+    assert artifact["observations"]["vn_cpi_yoy"][-1]["observation_period"] == "2026-11"

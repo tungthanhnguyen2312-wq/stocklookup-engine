@@ -1,6 +1,7 @@
 import pytest
 
 from stocklookup_core.decision import market_close_intelligence as mci
+from stocklookup_core.decision import dashboard_home_summary as home
 from stocklookup_core.decision.current_daily_decision_research_product import markdown
 
 S = "2026-11-06"
@@ -34,6 +35,19 @@ def _regime():
                                "freshness": {"status": "STALE_OR_UNAVAILABLE", "valid_through": "2026-09-30"}},
         "GLOBAL_RATES": {"state": "NEUTRAL", "authority": "OFFICIAL_PUBLIC_SOURCE", "freshness": {"status": "CURRENT"}},
         "FOREIGN_FLOW": {"state": "UNKNOWN", "authority": "PRESENTATION_ONLY_NOT_ANALYTICAL"}}}
+
+
+def test_home_attaches_the_producer_market_close_identity():
+    brief = mci.build(session=S, descriptive=_descriptive(), regime_context=_regime())
+    summary = {"contract_version": home.CONTRACT_VERSION, "as_of_session": S,
+               "authority_effect": "NONE / PRESENTATION_READ_MODEL_ONLY"}
+    summary.update(home.content_identity(summary))
+
+    bound = home.with_market_close(summary, brief)
+    assert bound["market_close"]["source_artifact_identity"] == brief["artifact_identity"]
+    assert bound["market_close"]["macro_usable_axes"] == ["GLOBAL_RATES"]
+    assert bound["market_close"]["breadth"]["denominator"] == 909
+    assert home.content_identity(bound)["artifact_identity"] == bound["artifact_identity"]
 
 
 def test_absent_components_are_unavailable_with_reasons_never_derived():
