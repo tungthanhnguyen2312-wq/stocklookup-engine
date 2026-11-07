@@ -168,7 +168,8 @@ def test_review_corrections_wording_is_bounded():
     assert "git fetch origin main" in text and "git ls-remote origin refs/heads/main" in text
     assert "local** remote-tracking ref" in text
     assert "Nothing else in repository authority blocks" not in text
-    assert "No additional documented blocker is currently known" in text and "must still pass at launch" in text
+    assert "fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**" in text
+    assert "**AMBER or BLOCKED must not launch.**" in text
     for doc in ("docs/ACTIVE_STATE.md", "docs/ROADMAP_CURRENT.md"):
         body = " ".join(read(doc).split())
         assert "always-blocked" not in body and "stay blocked or unknown regardless" not in body

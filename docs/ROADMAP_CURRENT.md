@@ -13,17 +13,9 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## PRIOR — STOCKLOOKUP_PRODUCER_DEEP_SIMPLIFICATION (RELEASED PR146)
 
-[Scope](parallel_domain_development_control_plane_v1_contract.md): disjoint native lanes;
-Owner merge gate. PR133 released; post-merge CI PASS (38318598892).
-PR145 released 2026-10-14; exact source-wave history and native receipts remain in STATE/ROADMAP. No successor or production activation follows.
-V3 PR131 merged `d11b101`; V2 PR130 merged `d53999b`.
-E5 PR127 merged `70fbba9`; post-merge CI PASS (38190156979).
-E4 PR126 merged `e9ee2fe`; four post-merge jobs PASS (38186488312).
-E2/E3 PR125 merged `0061d5f`; four post-merge jobs PASS (38181224017).
-E1 PR124 released `e990004`; four post-merge jobs PASS (38148897543).
-E0 COMPLETE at PR123 `56cdc36`; four post-merge jobs PASS (38139163689).
-Queue empty. Existing evidence and authority remain unchanged.
-PR119 COMPLETE at `d1c9c805`; four post-merge jobs PASS (38105025004).
+[Scope](parallel_domain_development_control_plane_v1_contract.md): disjoint native lanes
+and Owner merge gate. E0–E5, V2/V3 and the source waves are released. See
+[History](HISTORICAL_INDEX.md) for exact source-wave checkpoints and CI receipts.
 Fiscal mapping lacks issuer calendar/covered-period/provider-label/publication proof;
 existing semantics knowledge time is insufficient. No automatic conversion/promotion.
 Capacity Phase 1 COMPLETE: PR99 `168e0f7`, CI 37893984528 success;
