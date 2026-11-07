@@ -15,6 +15,7 @@ import re
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
+from stocklookup_core.evidence.official_financial_source_discovery import prior_inbox_research_lead
 from stocklookup_core.financial.q3_2026_research_freshness import classify_document
 
 CONTRACT_VERSION = "q3_2026_successor_research/v1"
@@ -24,6 +25,13 @@ HPG_CONSOLIDATED_Q3_URL = (
 )
 HPG_CONSOLIDATED_Q3_SHA256 = "22a4061c9816d11121816377ea78ae99cf68928a75aa8bdcb15e7ded1bbf5ec9"
 HPG_CONSOLIDATED_Q3_BYTES = 7200670
+# Inbox #66 PDF. Same 36-page consolidated statement, different bytes. Not a replacement.
+HPG_ALTERNATE_Q3_URL = (
+    "https://file.hoaphat.com.vn/hoaphat-com-vn/2026/10/20261029-hpg-bctc-hop-nhat-quy-3-2026-va-giai-trinh.pdf"
+)
+HPG_ALTERNATE_Q3_SHA256 = "5e06426f238cf639061124556c833659b5336b9cfdb20837ae0a48d117e7bb6e"
+HPG_ALTERNATE_Q3_BYTES = 20317398
+HPG_ALTERNATE_Q3_PAGES = 36
 # One mixed token from the pypdf extract of PDF page 6. It is evidence that the
 # text layer remaps digits. It is not an amount and it is not repaired.
 HPG_TEXT_LAYER_SNIPPET = "62.214.t87.236.97 6"
@@ -202,7 +210,7 @@ def visual_income_shadow(
     }
 
 
-def hpg_consolidated_statement_shadow(*, observed_at: str) -> dict[str, Any]:
+def hpg_consolidated_statement_shadow(*, observed_at: str, alternate_pdf_bytes: bytes | None = None) -> dict[str, Any]:
     """The one retained HPG consolidated Q3/2026 chain, both period columns."""
     receipt = {
         "contract_version": CONTRACT_VERSION,
@@ -231,6 +239,12 @@ def hpg_consolidated_statement_shadow(*, observed_at: str) -> dict[str, Any]:
         period_kind="NINE_MONTH_CUMULATIVE", period_label="2026-9M", pdf_page=6,
     )
     rows = q3["shadow_rows"] + nine["shadow_rows"]
+    alternate_sha = ""
+    if alternate_pdf_bytes is not None:
+        if (_sha(alternate_pdf_bytes) != HPG_ALTERNATE_Q3_SHA256
+                or len(alternate_pdf_bytes) != HPG_ALTERNATE_Q3_BYTES):
+            raise ValueError("HPG_ALTERNATE_PDF_DOES_NOT_MATCH")
+        alternate_sha = HPG_ALTERNATE_Q3_SHA256
     return {
         "contract_version": CONTRACT_VERSION,
         "ticker": "HPG",
@@ -257,7 +271,124 @@ def hpg_consolidated_statement_shadow(*, observed_at: str) -> dict[str, Any]:
         "columns": {"2026-Q3": q3, "2026-9M": nine},
         "shadow_row_count": len(rows),
         "shadow_rows": rows,
+        "alternate_document": {
+            **prior_inbox_research_lead(
+                issue=66,
+                reported_sha256=HPG_ALTERNATE_Q3_SHA256,
+                byte_sha256=alternate_sha,
+            ),
+            "source_url": HPG_ALTERNATE_Q3_URL,
+            "byte_length": HPG_ALTERNATE_Q3_BYTES,
+            "pages": HPG_ALTERNATE_Q3_PAGES,
+            "same_page_count_as_retained": True,
+            "page_6_gross_revenue_and_deduction_match_retained_text": True,
+            "retained_source_replaced": False,
+            "new_shadow_rows": 0,
+            "pdf_creation_is_not_a_pit_clock": True,
+        },
     }
+
+
+SSI_Q3_URL = (
+    "https://www.ssi.com.vn/upload/files/IR/20261030_SSI_Bao_cao_tai_chinh_hop_nhat_Quy_3_nam_2026.pdf"
+)
+SSI_Q3_SHA256 = "caa48d6f0ec4122c12ba69f1c1c6a71c84cb8c53fec3ea57ce6f3655eaee2d09"
+SSI_Q3_BYTES = 7752865
+# Clean digit reads. A glyph that tesseract rendered as a superscript is not repaired into a row.
+SSI_Q3_IDENTITY = {
+    "pretax_profit": 1388580831356,
+    "income_tax": 263589877632,
+    "net_income": 1124990953724,
+    "attributable_net_income": 1124923539033,
+    "noncontrolling_interest_profit": 67414691,
+}
+SSI_PAGE_ROWS = (
+    ("unrealized_pretax_profit", "2026-Q3", -141339414386, 11),
+    ("interest_expense", "2026-Q3", 849687392269, 10),
+    ("interest_expense", "2025-Q3", 686978549811, 10),
+    ("interest_expense", "2026-9M", 2369337866416, 10),
+    ("fvtpl_gain", "2026-Q3", 1378024703909, 8),
+    ("fvtpl_coupon_dividend", "2026-Q3", 519732670550, 8),
+    ("htm_interest", "2026-Q3", 140056391467, 8),
+    ("loan_and_receivable_interest", "2026-Q3", 1115199256167, 8),
+    ("loan_and_receivable_interest", "2025-Q3", 1005982654334, 8),
+    ("brokerage_revenue", "2026-Q3", 348933594669, 8),
+    ("brokerage_revenue", "2025-Q3", 921757004957, 8),
+    ("pretax_profit", "2026-9M", 4510978786990, 11),
+)
+
+
+def securities_income_identity(lines: Mapping[str, int]) -> list[str]:
+    """Q3 consolidated identity for a securities company. Not an industrial statement."""
+    needed = tuple(SSI_Q3_IDENTITY)
+    if any(code not in lines or type(lines[code]) is not int for code in needed):
+        return ["SECURITIES_INCOME_IDENTITY_INCOMPLETE"]
+    reasons = []
+    if lines["net_income"] != lines["pretax_profit"] - lines["income_tax"]:
+        reasons.append("NET_INCOME_DOES_NOT_FOOT_PRETAX_MINUS_TAX")
+    if lines["net_income"] != lines["attributable_net_income"] + lines["noncontrolling_interest_profit"]:
+        reasons.append("NET_INCOME_DOES_NOT_FOOT_PARENT_PLUS_NCI")
+    return reasons
+
+
+def ssi_consolidated_page_research() -> dict[str, Any]:
+    """Rows re-read from the IR consolidated PDF. Nine-month profit after tax stays out."""
+    reasons = securities_income_identity(SSI_Q3_IDENTITY)
+    rows = []
+    if not reasons:
+        for metric, value in SSI_Q3_IDENTITY.items():
+            rows.append({
+                "metric": metric, "period": "2026-Q3", "value": value, "unit": "VND", "pdf_page": 11,
+            })
+    for metric, period, value, page in SSI_PAGE_ROWS:
+        rows.append({"metric": metric, "period": period, "value": value, "unit": "VND", "pdf_page": page})
+    amounts = {(row["metric"], row["period"]): row["value"] for row in rows}
+    current_brokerage = amounts.get(("brokerage_revenue", "2026-Q3"))
+    prior_brokerage = amounts.get(("brokerage_revenue", "2025-Q3"))
+    brokerage_yoy = None
+    if isinstance(current_brokerage, int) and isinstance(prior_brokerage, int) and prior_brokerage:
+        brokerage_yoy = round(100 * (current_brokerage / prior_brokerage - 1), 2)
+    return {
+        "ticker": "SSI",
+        "source_url": SSI_Q3_URL,
+        "sha256": SSI_Q3_SHA256,
+        "byte_length": SSI_Q3_BYTES,
+        "research_kind": "UNREVIEWED_CONSOLIDATED_SECURITIES",
+        "evidence_layer": "OCR_CLEAN_DIGIT_READ",
+        "source_role": "ISSUER_IR_PDF_HOST_NOT_AN_APPROVED_OFFICIAL_ROUTE",
+        "entity_class": "securities",
+        "commercial_bank": False,
+        "issuer_disclosure_date": "2026-10-30",
+        "publication_precision": "DATE_ONLY",
+        "audit_or_review_status": "unreviewed",
+        "statement_scope": "consolidated",
+        "unit": "VND",
+        "income_form": "B02-CTCK/HN",
+        "period_end": "2026-09-30",
+        "session_binding": "NOT_A_SEALED_SESSION_FACT",
+        "official_fact_admitted": False,
+        "official_store_adoption": "REFUSED",
+        "valuation_use": "CLOSED",
+        "common_shareholder_pb": "UNAVAILABLE",
+        "existing_consumer_usable": False,
+        "industrial_ratios": "NOT_APPLICABLE",
+        "normalized_eps": "NOT_COMPUTED",
+        "observations": rows,
+        "rejected_identity": reasons,
+        "brokerage_revenue_yoy_pct": brokerage_yoy,
+        "nine_month_profit_after_tax": "OCR_DIGIT_AMBIGUOUS_NOT_EMITTED",
+        "margin_loan_and_borrowing_position": "NOT_RE_READ_THIS_PASS",
+        "prior_research_lead": prior_inbox_research_lead(
+            issue=109, reported_sha256=SSI_Q3_SHA256, byte_sha256=SSI_Q3_SHA256,
+        ),
+    }
+
+
+def ssi_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
+    """Bind the IR consolidated filing. A different endpoint's 403 does not erase this file."""
+    if _sha(pdf_bytes) != SSI_Q3_SHA256 or len(pdf_bytes) != SSI_Q3_BYTES:
+        raise ValueError("SSI_RETAINED_PDF_DOES_NOT_MATCH")
+    return ssi_consolidated_page_research()
 
 
 def issuer_blocker(*, ticker: str, reason_codes: list[str]) -> dict[str, Any]:
@@ -294,9 +425,22 @@ PAN_Q3_URL = (
     "20261027%20-%20PAN%20-%20BCTC%20Hop%20nhat%20Q3%202026%20kem%20giai%20trinh%20%28signed%29.pdf"
 )
 PAN_Q3_SHA256 = "d7e1422fcda668eb640abbdc73f1194380241e81c6ed9d33a5ef6e3ead0366b1"
+PAN_SEPARATE_Q3_URL = (
+    "https://staticfile.hsx.vn/Uploads/UploadDocuments/2508740/"
+    "20261027%20-%20PAN%20-%20BCTC%20Rieng%20Q3%202026%20kem%20giai%20trinh%20(signed).pdf"
+)
+PAN_SEPARATE_Q3_SHA256 = "e96209fff482c472253d64a76eca12ce94184d5de04edc679e5f884191aceb00"
+# Note 28.1, PDF page 40. External revenue only. The four amounts sum to the printed total.
+PAN_SEGMENT_EXTERNAL_REVENUE = (
+    ("segment_agri_external_revenue", 3962207992705),
+    ("segment_seafood_external_revenue", 6229358654574),
+    ("segment_packaged_food_external_revenue", 1240136581550),
+    ("segment_other_external_revenue", 50909091),
+)
+PAN_HOLDING_CASH = 19968968615
 
 
-def pan_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
+def pan_consolidated_statement_shadow(*, pdf_bytes: bytes, separate_pdf_bytes: bytes | None = None) -> dict[str, Any]:
     """Materialize display-only observations for the exact visually reviewed filing."""
     if _sha(pdf_bytes) != PAN_Q3_SHA256:
         raise ValueError("PAN_RETAINED_PDF_DOES_NOT_MATCH")
@@ -330,6 +474,28 @@ def pan_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
         ("pretax_disposal_gain", "2026-9M", 561507166021, "VND", 36),
     ):
         rows.append({"metric": metric, "period": period, "value": value, "unit": unit, "pdf_page": page})
+    segment_total = sum(value for _, value in PAN_SEGMENT_EXTERNAL_REVENUE)
+    if segment_total != 11431754137920:
+        raise ValueError("PAN_SEGMENT_EXTERNAL_REVENUE_DOES_NOT_FOOT")
+    for metric, value in PAN_SEGMENT_EXTERNAL_REVENUE:
+        rows.append({
+            "metric": metric, "period": "2026-9M", "value": value, "unit": "VND",
+            "pdf_page": 40, "statement_scope": "consolidated_segment",
+        })
+    rows.append({
+        "metric": "segment_external_revenue_total", "period": "2026-9M", "value": segment_total,
+        "unit": "VND", "pdf_page": 40, "statement_scope": "consolidated_segment",
+    })
+    holding_cash_bound = False
+    if separate_pdf_bytes is not None:
+        if _sha(separate_pdf_bytes) != PAN_SEPARATE_Q3_SHA256:
+            raise ValueError("PAN_SEPARATE_PDF_DOES_NOT_MATCH")
+        rows.append({
+            "metric": "holding_cash_and_equivalents", "period": "2026-09-30",
+            "value": PAN_HOLDING_CASH, "unit": "VND", "pdf_page": 5,
+            "statement_scope": "separate", "source_sha256": PAN_SEPARATE_Q3_SHA256,
+        })
+        holding_cash_bound = True
 
     amounts = {(row["metric"], row["period"]): row["value"] for row in rows}
     equity = amounts["total_equity", point_in_time] - amounts["noncontrolling_interest", point_in_time]
@@ -359,6 +525,15 @@ def pan_consolidated_statement_shadow(*, pdf_bytes: bytes) -> dict[str, Any]:
             amounts["attributable_net_income", "2026-Q3"] / amounts["attributable_net_income", "2025-Q3"] - 1
         ), 2),
         "common_shareholder_pb": "UNAVAILABLE",
+        "prior_research_lead": prior_inbox_research_lead(
+            issue=150, reported_sha256=PAN_Q3_SHA256, byte_sha256=PAN_Q3_SHA256,
+        ),
+        "rejected_nine_month_income_line_10_matches_segment_note_total": (
+            PAN_INCOME_COLUMNS["2026-9M"][FOOT_CODES.index("10")] == 11438139169661
+        ),
+        "holding_company_short_term_borrowing": "OCR_DIGIT_AMBIGUOUS_NOT_EMITTED",
+        "holding_cash_source_url": PAN_SEPARATE_Q3_URL if holding_cash_bound else None,
+        "holding_cash_sha256": PAN_SEPARATE_Q3_SHA256 if holding_cash_bound else None,
         "book_sensitivity": {
             "kind": "CROSS_DATE_ILLUSTRATION",
             "book_date": point_in_time,
@@ -401,6 +576,8 @@ POW_Q3_URL = (
     "20261030%20-%20POW%20-%20BCTC%20HN%20Q3.2026.pdf"
 )
 POW_Q3_SHA256 = "c423af37737c4fb9ec1df98ff7b0145488f103a9667db5215aacd848ac12bcfb"
+# Issuer-site PDF in Inbox #111. Different bytes from the retained HOSE filing.
+POW_INBOX_ISSUER_PDF_SHA256 = "ec37fd3aca86baab0167e5c90f5e30c930a95e9f558eb316431b4afec74b10a8"
 # Visual read of PDF page 8, Mẫu B 02-DN/HN. FOOT_CODES order. The text layer is not used.
 POW_INCOME_COLUMNS = {
     "2026-Q3": (
@@ -464,6 +641,17 @@ def pow_reviewed_page_research() -> dict[str, Any]:
             "metric": "operating_cash_flow", "period": period, "value": lines["20"],
             "unit": "VND", "pdf_page": 10, "line_code": "20",
         })
+    # Note 15 and Note 18 balances. They are not cash collected and are not added together.
+    for metric, period, value, page in (
+        ("trade_payable_pv_gas", "2026-09-30", 9597456727354, 29),
+        ("trade_payable_pv_gas", "2026-01-01", 4690622795164, 29),
+        ("accrued_uninvoiced_gas_purchase", "2026-09-30", 2213344253594, 30),
+        ("accrued_uninvoiced_gas_purchase", "2026-01-01", 1759162249417, 30),
+    ):
+        rows.append({
+            "metric": metric, "period": period, "value": value, "unit": "VND", "pdf_page": page,
+            "balance_not_cash_collection": True,
+        })
 
     amounts = {(row["metric"], row["period"]): row["value"] for row in rows}
     current_ocf = amounts.get(("operating_cash_flow", "2026-9M"))
@@ -501,6 +689,17 @@ def pow_reviewed_page_research() -> dict[str, Any]:
         "rejected_income_columns": rejected_columns,
         "operating_cash_flow_yoy_pct": ocf_yoy,
         "loan_and_lease_lines_excluded": ["321", "339"],
+        "gas_balance_is_not_cash_collection": True,
+        "pv_gas_receivable_pdf_not_bound": "INBOX_111_GAS_PDF_NOT_REDOWNLOADED",
+        "prior_research_lead": {
+            **prior_inbox_research_lead(
+                issue=111,
+                reported_sha256=POW_INBOX_ISSUER_PDF_SHA256,
+                byte_sha256=POW_Q3_SHA256,
+            ),
+            "retained_hose_pdf_checked_instead": True,
+            "retained_sha256": POW_Q3_SHA256,
+        },
     }
 
 
