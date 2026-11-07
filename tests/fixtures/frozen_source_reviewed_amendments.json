@@ -6,6 +6,12 @@
       "reason": "A Producer fast-forward in phase 1 no longer continues on pre-pull code; the owner entrypoint relaunches once on the new HEAD (2026-10-12 phase-6 ModuleNotFoundError).",
       "base_sha256_lf": "4a3877388c543d858820a5550632a74cbf155f70403af8cd0cdb6f58cb20db75",
       "sha256_lf": "18848d9f82e08dee2af6fa82c01a3491d033e1efdc7d6828461e3d0452a26311"
+    },
+    "tools/release_orchestrator.py": {
+      "milestone": "DASHBOARD_RELEASE_ROLLBACK_OWNERSHIP_20261108",
+      "reason": "Owner authorized the bounded rollback corrective. A moved Dashboard branch requires exact publisher action, direct parent and an unchanged remote before compare-and-swap.",
+      "base_sha256_lf": "3b33945f0554b57479d46b58bced3e2ae3e2f0dbd356e52f5061f96a0883e287",
+      "sha256_lf": "bf255b74f994d1d4c735b10edf67b955d0452d06ebac9114dc4c2895448beb3f"
     }
   }
 }

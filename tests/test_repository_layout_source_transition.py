@@ -25,6 +25,27 @@ def _base(relative: str) -> bytes:
     return _lf(subprocess.check_output(["git", "show", f"{LAYOUT_BASE}:{relative}"], cwd=ROOT))
 
 
+FROZEN_PINS = "tests/fixtures/e2e3_frozen_sources.json"
+ROLLBACK_SOURCE = "tools/release_orchestrator.py"
+
+
+def _historical_manifest_bytes(relative: str) -> bytes:
+    current = _lf((ROOT / relative).read_bytes())
+    if relative != FROZEN_PINS:
+        return current
+    # The later reviewed rollback amendment is outside the layout cohort.
+    # Reconstruct the historical manifest using only its exactly pinned change.
+    assert ROLLBACK_SOURCE not in LAYOUT_SOURCES
+    amendments = json.loads((ROOT / "tests/fixtures/frozen_source_reviewed_amendments.json").read_bytes())
+    pin = amendments["amendments"][ROLLBACK_SOURCE]
+    source = _lf((ROOT / ROLLBACK_SOURCE).read_bytes())
+    assert hashlib.sha256(source).hexdigest() == pin["sha256_lf"]
+    marker = f'"{ROLLBACK_SOURCE}": "{pin["sha256_lf"]}"'.encode()
+    original = f'"{ROLLBACK_SOURCE}": "{pin["base_sha256_lf"]}"'.encode()
+    assert current.count(marker) == 1
+    return current.replace(marker, original)
+
+
 class _Imports(ast.NodeTransformer):
     """Replace every import with a placeholder and record the names it binds."""
 
@@ -51,7 +72,7 @@ def test_transition_binds_base_archive_live_bytes_and_unchanged_historical_pins(
     spec = json.loads((ROOT / LAYOUT_MANIFEST).read_bytes())
     base_pins = json.loads(_base("tests/fixtures/e2e3_frozen_sources.json"))["source_sha256_lf"]
     pins = json.loads((ROOT / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
-    assert pins == base_pins
+    assert json.loads(_historical_manifest_bytes(FROZEN_PINS))["source_sha256_lf"] == base_pins
     assert identity["historical_receipt_adoption"] is False and identity["release_authority"] == "NOT_GRANTED"
     for relative, governing in LAYOUT_SOURCES.items():
         row = identity["sources"][relative]
@@ -175,7 +196,7 @@ def test_capacity_changes_only_child_launch_control_and_preserves_all_historical
         return ast.dump(tree, include_attributes=False)
     assert without_launch(before) == without_launch(after)
     for relative in {LAYOUT_MANIFEST, *LAYOUT_SOURCES.values(), "tests/fixtures/e2e3_frozen_sources.json"}:
-        assert _lf((ROOT / relative).read_bytes()) == _lf(subprocess.check_output([
+        assert _historical_manifest_bytes(relative) == _lf(subprocess.check_output([
             "git", "show", f"{base}:{relative}"], cwd=ROOT))
 
 
@@ -208,7 +229,7 @@ def test_launcher_successor_preserves_every_workflow_body_and_historical_boundar
     historical = {LAYOUT_MANIFEST, CAPACITY_MANIFEST, CAPACITY_ARCHIVE, *LAYOUT_SOURCES.values(),
                   "tests/fixtures/e2e3_frozen_sources.json"}
     for relative in historical:
-        assert _lf((ROOT / relative).read_bytes()) == _lf(subprocess.check_output([
+        assert _historical_manifest_bytes(relative) == _lf(subprocess.check_output([
             "git", "show", f"{spec['base_commit']}:{relative}"], cwd=ROOT))
 
 

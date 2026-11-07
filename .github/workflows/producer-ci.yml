@@ -27,6 +27,7 @@ env:
     tests/test_foundation_seams.py
     tests/test_e4_infrastructure.py
     tests/test_e5_runtime_seams.py
+    tests/test_release_orchestrator.py::ReleaseOrchestratorUnitTests::test_rollback_requires_exact_owned_unpushed_commit
     tests/test_e6_financial_boundary.py
     tests/test_official_financial_source_integrity.py
     tests/test_official_financial_quarterly_intake.py

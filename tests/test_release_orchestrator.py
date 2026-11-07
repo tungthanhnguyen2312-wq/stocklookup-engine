@@ -213,6 +213,63 @@ class ReleaseOrchestratorUnitTests(unittest.TestCase):
                                 cwd=self.web_dir, capture_output=True, text=True, check=True)
         self.assertEqual(status.stdout, "")
 
+    def test_rollback_requires_exact_owned_unpushed_commit(self):
+        def git(*args):
+            return subprocess.check_output(
+                ["git", *args], cwd=self.web_dir, env={**os.environ, **GIT_IDENTITY_ENV}, text=True,
+            ).strip()
+
+        remote = self.web_dir.parent / "remote.git"
+        git("init", "-q", "--bare", str(remote))
+        git("remote", "add", "origin", str(remote))
+        git("branch", "-M", "main")
+        git("push", "-q", "origin", "HEAD:main")
+        snapshot = release_orchestrator.capture_dashboard_transaction(self.web_dir)
+        tracked = self.web_dir / "README.md"
+        tracked.write_text("external bytes", encoding="utf-8")
+        git("commit", "-qam", "external descendant")
+        external_head = git("rev-parse", "HEAD")
+        action = "stocklookup-release-fixture"
+        with self.assertRaisesRegex(RuntimeError, "outside the release transaction"):
+            release_orchestrator.restore_dashboard_transaction(
+                self.web_dir, snapshot, release_action=action, branch="main",
+            )
+        self.assertEqual(git("rev-parse", "HEAD"), external_head)
+        self.assertEqual(tracked.read_text(encoding="utf-8"), "external bytes")
+
+        git("checkout", "-qB", "main", snapshot.head)
+        env = {**os.environ, **GIT_IDENTITY_ENV, "GIT_REFLOG_ACTION": action}
+
+        def commit_release():
+            tracked.write_text("release bytes", encoding="utf-8")
+            subprocess.run(["git", "commit", "-qam", "publisher commit"], cwd=self.web_dir, env=env, check=True)
+            return git("rev-parse", "HEAD")
+
+        owned_head = commit_release()
+        git("checkout", "-qb", "other-branch")
+        with self.assertRaisesRegex(RuntimeError, "branch changed"):
+            release_orchestrator.restore_dashboard_transaction(
+                self.web_dir, snapshot, release_action=action, branch="main",
+            )
+        self.assertEqual(git("rev-parse", "HEAD"), owned_head)
+        self.assertEqual(tracked.read_text(encoding="utf-8"), "release bytes")
+        git("checkout", "-q", "main")
+        release_orchestrator.restore_dashboard_transaction(
+            self.web_dir, snapshot, release_action=action, branch="main",
+        )
+        self.assertEqual(git("rev-parse", "HEAD"), snapshot.head)
+        self.assertEqual(tracked.read_bytes(), snapshot.tracked["README.md"])
+        self.assertEqual(git("status", "--porcelain"), "")
+
+        published_head = commit_release()
+        git("push", "-q", "origin", "HEAD:main")
+        with self.assertRaisesRegex(RuntimeError, "remote may already contain"):
+            release_orchestrator.restore_dashboard_transaction(
+                self.web_dir, snapshot, release_action=action, branch="main",
+            )
+        self.assertEqual(git("rev-parse", "HEAD"), published_head)
+        self.assertEqual(tracked.read_text(encoding="utf-8"), "release bytes")
+
     def test_managed_companion_rollback_is_path_exact(self):
         from dashboard_session_companions import companion_relpaths
         session = "2026-08-26"
