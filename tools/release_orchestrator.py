@@ -29,6 +29,7 @@ import tempfile
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+from uuid import uuid4
 
 SCRIPT_PATH = Path(__file__).resolve()
 PRODUCER_ROOT = SCRIPT_PATH.parent.parent
@@ -180,13 +181,20 @@ def capture_dashboard_transaction(
     )
 
 
-def restore_dashboard_transaction(web_dir: Path, snapshot: DashboardTransactionSnapshot) -> None:
+def restore_dashboard_transaction(
+    web_dir: Path,
+    snapshot: DashboardTransactionSnapshot,
+    *,
+    release_action: str | None = None,
+    branch: str | None = None,
+) -> None:
     """Restore tracked bytes and remove a local failed final commit without ``--hard``.
 
     This deliberately never enumerates/deletes untracked paths, preserving ignored
     operator-owned tools such as the local Tailwind executable.  The transaction is
-    entered only from a clean Dashboard index, so a mixed reset to the captured HEAD
-    merely drops staging from a failed local final commit before byte restoration.
+    entered only from a clean Dashboard index, so the captured tree clears staging before
+    byte restoration. A moved HEAD needs the exact publisher reflog action,
+    original parent and unchanged remote ref.
 
     Managed companion paths are the sole exception: newly created release-owned
     companions that were absent before the transaction are unlinked; preexisting
@@ -196,19 +204,29 @@ def restore_dashboard_transaction(web_dir: Path, snapshot: DashboardTransactionS
     rc, current_head = get_git_output(["rev-parse", "HEAD"], web_dir)
     if rc != 0:
         raise RuntimeError("cannot read Dashboard HEAD during rollback")
+    target_ref = f"refs/heads/{branch}" if branch else None
+    if target_ref:
+        branch_rc, current_ref = get_git_output(["symbolic-ref", "-q", "HEAD"], web_dir)
+        if branch_rc != 0 or current_ref != target_ref:
+            raise RuntimeError("Dashboard branch changed outside the release transaction; refusing rollback")
     if current_head != snapshot.head:
-        ancestor_rc, _ = get_git_output(["merge-base", "--is-ancestor", snapshot.head, current_head], web_dir)
-        if ancestor_rc != 0:
+        reflog_rc, reflog = get_git_output(["reflog", "-1", "--format=%H %gs", target_ref], web_dir) if target_ref else (1, "")
+        parent_rc, parents = get_git_output(["show", "-s", "--format=%P", current_head], web_dir)
+        owned = (
+            release_action and target_ref and reflog_rc == 0 and parent_rc == 0
+            and parents == snapshot.head and reflog.startswith(f"{current_head} {release_action}: ")
+        )
+        if not owned:
             raise RuntimeError("Dashboard HEAD changed outside the release transaction; refusing rollback")
-        result = subprocess.run(["git", "reset", "--mixed", snapshot.head], cwd=web_dir,
-                                capture_output=True, text=True, check=False)
-        if result.returncode != 0:
-            raise RuntimeError("failed to remove local unpushed release commit during rollback")
-    else:
-        result = subprocess.run(["git", "reset"], cwd=web_dir, capture_output=True,
-                                text=True, check=False)
-        if result.returncode != 0:
-            raise RuntimeError("failed to clear the Dashboard index during rollback")
+        remote_rc, remote_line = get_git_output(["ls-remote", "origin", target_ref], web_dir)
+        if remote_rc != 0 or remote_line.split() != [snapshot.head, target_ref]:
+            raise RuntimeError("Dashboard remote may already contain the release; refusing rollback")
+        rc, _ = get_git_output(["update-ref", target_ref, snapshot.head, current_head], web_dir)
+        if rc != 0:
+            raise RuntimeError("Dashboard HEAD changed before rollback; refusing rollback")
+    rc, _ = get_git_output(["read-tree", "--reset", snapshot.head], web_dir)
+    if rc != 0:
+        raise RuntimeError("failed to clear the Dashboard index during rollback")
     for relative, content in snapshot.tracked.items():
         path = web_dir / relative
         if not path.is_file() or path.read_bytes() != content:
@@ -573,6 +591,7 @@ def orchestrate(args: argparse.Namespace) -> int:
         env["STOCK_LOOKUP_WEB_DIR"] = str(web_dir)
         env["STOCK_LOOKUP_PRODUCER_DIR"] = str(producer_dir)
 
+        release_action = f"stocklookup-release-{uuid4().hex}" if transaction_snapshot else None
         try:
             for plan in argv_plans:
                 print(f"[INFO] Executing child process: {' '.join(plan)}")
@@ -580,14 +599,19 @@ def orchestrate(args: argparse.Namespace) -> int:
                 plan_text = " ".join(plan)
                 if "operate_stocklookup.py" in plan_text:
                     child_cwd = producer_dir
-                res = subprocess.run(plan, cwd=child_cwd, env=env, capture_output=False, shell=False)
+                child_env = env
+                if release_action and str(producer_dir / "publish_dashboard.py") in plan:
+                    child_env = {**env, "GIT_REFLOG_ACTION": release_action}
+                res = subprocess.run(plan, cwd=child_cwd, env=child_env, capture_output=False, shell=False)
                 if res.returncode != 0:
                     sys.stderr.write(f"[ERROR] Child process failed with exit code {res.returncode}: {plan}\n")
                     if live:
                         try:
                             if transaction_snapshot is not None:
                                 sys.stderr.write("[ROLLBACK] Restoring the pre-release Dashboard transaction...\n")
-                                restore_dashboard_transaction(web_dir, transaction_snapshot)
+                                restore_dashboard_transaction(
+                                    web_dir, transaction_snapshot, release_action=release_action, branch=web_branch,
+                                )
                             else:
                                 sys.stderr.write("[ROLLBACK] Restoring pre-run whole-market allowlist files...\n")
                                 restore_allowlist_state(web_dir, pre_run_state)
@@ -599,7 +623,9 @@ def orchestrate(args: argparse.Namespace) -> int:
             if live:
                 try:
                     if transaction_snapshot is not None:
-                        restore_dashboard_transaction(web_dir, transaction_snapshot)
+                        restore_dashboard_transaction(
+                            web_dir, transaction_snapshot, release_action=release_action, branch=web_branch,
+                        )
                     else:
                         restore_allowlist_state(web_dir, pre_run_state)
                 except RuntimeError as rollback_exc:
