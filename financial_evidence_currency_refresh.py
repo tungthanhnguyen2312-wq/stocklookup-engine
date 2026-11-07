@@ -68,6 +68,10 @@ import official_source_registry as registry_module
 VERSION = "1.0.0"
 SOURCE_ID = "issuer_ir"
 PUBLIC_FACTS = "qualified_official_facts.jsonl"
+# Modern-proof overlay (2026-11-07): rows admitted through a registered OCR layout proof. The legacy
+# overlay above is a byte-pinned closed set and is never appended to.
+PUBLIC_LAYOUT_PROOF_FACTS = "ocr_layout_proof_official_facts.jsonl"
+PUBLIC_LAYOUT_PROOF_PRECEDENCE = "ocr_layout_proof_official_precedence.jsonl"
 PUBLIC_PRECEDENCE = "official_legacy_precedence.jsonl"
 PUBLIC_REPORT = "cohort_report.json"
 LANDING_RUN_MANIFEST = "currency_refresh_run_manifest.json"
@@ -954,7 +958,18 @@ def run_refresh(
 
 
 def load_public_official_fact_rows(root: Path | str) -> list[dict[str, Any]]:
-    path = Path(root) / PUBLIC_ARTIFACT_DIR / PUBLIC_FACTS
+    """Legacy closed overlay followed by the modern layout-proof overlay (each row still re-admitted
+    by every consumer through ``admit_retained_financial_fact``)."""
+    rows = _load_overlay_rows(Path(root) / PUBLIC_ARTIFACT_DIR / PUBLIC_FACTS)
+    modern = _load_overlay_rows(Path(root) / PUBLIC_ARTIFACT_DIR / PUBLIC_LAYOUT_PROOF_FACTS)
+    from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+    for index, record in enumerate(modern, start=1):
+        if not isinstance(record.get("ocr_layout_proof"), dict) or layout_for(record.get("document_sha256")) is None:
+            raise OfficialOverlayArtifactError(f"OFFICIAL_LAYOUT_PROOF_OVERLAY_ROW_UNPROVEN:line={index}")
+    return rows + modern
+
+
+def _load_overlay_rows(path: Path) -> list[dict[str, Any]]:
     if not path.is_file():
         return []
     try:
