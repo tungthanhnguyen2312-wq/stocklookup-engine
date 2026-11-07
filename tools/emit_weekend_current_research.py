@@ -22,6 +22,7 @@ from stocklookup_core.decision.market_close_current_research import (  # noqa: E
 from stocklookup_core.financial.q3_2026_successor_research import (  # noqa: E402
     HPG_CONSOLIDATED_Q3_BYTES, HPG_CONSOLIDATED_Q3_SHA256, hpg_consolidated_statement_shadow, issuer_blocker,
     evf_reviewed_statement_shadow, pan_consolidated_statement_shadow, pow_consolidated_statement_shadow,
+    ssi_consolidated_statement_shadow,
 )
 from stocklookup_core.valuation.common_shareholder_book_comparison import research_dependency  # noqa: E402
 
@@ -45,18 +46,26 @@ def _check_retained_pdf() -> None:
         raise SystemExit("RETAINED_PDF_DOES_NOT_MATCH")
 
 
-def q3_artifact(*, pan_pdf: Path | None = None, pow_pdf: Path | None = None, evf_pdf: Path | None = None) -> dict:
-    hpg = hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT)
-    pan = (pan_consolidated_statement_shadow(pdf_bytes=pan_pdf.read_bytes())
-           if pan_pdf else research_dependency(ticker="PAN"))
+def q3_artifact(*, pan_pdf: Path | None = None, pan_separate_pdf: Path | None = None,
+                 pow_pdf: Path | None = None, evf_pdf: Path | None = None,
+                 ssi_pdf: Path | None = None, hpg_alternate_pdf: Path | None = None) -> dict:
+    hpg = hpg_consolidated_statement_shadow(
+        observed_at=OBSERVED_AT,
+        alternate_pdf_bytes=hpg_alternate_pdf.read_bytes() if hpg_alternate_pdf else None,
+    )
+    pan = (pan_consolidated_statement_shadow(
+        pdf_bytes=pan_pdf.read_bytes(),
+        separate_pdf_bytes=pan_separate_pdf.read_bytes() if pan_separate_pdf else None,
+    ) if pan_pdf else research_dependency(ticker="PAN"))
     pow_statement = (pow_consolidated_statement_shadow(pdf_bytes=pow_pdf.read_bytes())
                      if pow_pdf else issuer_blocker(ticker="POW", reason_codes=[
                          "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]))
+    ssi = (ssi_consolidated_statement_shadow(pdf_bytes=ssi_pdf.read_bytes()) if ssi_pdf else issuer_blocker(
+        ticker="SSI", reason_codes=["EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]))
     issuers = {
         "HPG": hpg,
         "PAN": pan,
-        "SSI": issuer_blocker(ticker="SSI", reason_codes=[
-            "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]),
+        "SSI": ssi,
         "EVF": (evf_reviewed_statement_shadow(pdf_bytes=evf_pdf.read_bytes()) if evf_pdf else issuer_blocker(
             ticker="EVF", reason_codes=["EXACT_Q3_DISCLOSURE_LOCATED_ISSUER_HOST_NOT_ADMITTED"])),
         "POW": pow_statement,
@@ -81,8 +90,14 @@ def main() -> int:
     parser.add_argument("--pan-pdf", type=Path, help="Retained exact PAN consolidated Q3 filing")
     parser.add_argument("--pow-pdf", type=Path, help="Retained exact POW consolidated Q3 filing")
     parser.add_argument("--evf-pdf", type=Path, help="Retained exact EVF reviewed nine-month filing")
+    parser.add_argument("--ssi-pdf", type=Path, help="Retained exact SSI consolidated Q3 filing")
+    parser.add_argument("--pan-separate-pdf", type=Path, help="Retained exact PAN separate Q3 filing")
+    parser.add_argument("--hpg-alternate-pdf", type=Path, help="HPG 29 Oct consolidated PDF, not a replacement")
     args = parser.parse_args()
-    q3 = q3_artifact(pan_pdf=args.pan_pdf, pow_pdf=args.pow_pdf, evf_pdf=args.evf_pdf)
+    q3 = q3_artifact(
+        pan_pdf=args.pan_pdf, pan_separate_pdf=args.pan_separate_pdf, pow_pdf=args.pow_pdf,
+        evf_pdf=args.evf_pdf, ssi_pdf=args.ssi_pdf, hpg_alternate_pdf=args.hpg_alternate_pdf,
+    )
     q3_path, market_path = args.q3_path, args.market_path
     market = current_research_artifact(benchmark=POSTHOC_BENCHMARK, closures=weekend_source_closures_20261107())
     text_q3 = json.dumps(q3, ensure_ascii=False, indent=2, sort_keys=True) + "\n"

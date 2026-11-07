@@ -1,12 +1,14 @@
 from pathlib import Path
 
 from stocklookup_core.financial.q3_2026_successor_research import (
-    FOOT_CODES, HPG_9M_2026_LINES, HPG_CONSOLIDATED_Q3_URL, HPG_Q3_2026_LINES, HPG_TEXT_LAYER_SNIPPET,
-    POW_INCOME_COLUMNS, POW_OCF_COLUMNS, POW_Q3_SHA256,
+    FOOT_CODES, HPG_9M_2026_LINES, HPG_ALTERNATE_Q3_SHA256, HPG_CONSOLIDATED_Q3_SHA256,
+    HPG_CONSOLIDATED_Q3_URL, HPG_Q3_2026_LINES, HPG_TEXT_LAYER_SNIPPET,
+    PAN_SEPARATE_Q3_SHA256, POW_INCOME_COLUMNS, POW_OCF_COLUMNS, POW_Q3_SHA256,
     hpg_consolidated_statement_shadow, income_cross_foot, issuer_blocker, operating_cash_flow_cross_foot,
     EVF_INCOME_COLUMNS, evf_reviewed_page_research, evf_reviewed_statement_shadow,
-    finance_company_income_cross_foot, pow_consolidated_statement_shadow, pow_reviewed_page_research,
-    source_receipt,
+    finance_company_income_cross_foot, pan_consolidated_statement_shadow,
+    pow_consolidated_statement_shadow, pow_reviewed_page_research,
+    source_receipt, ssi_consolidated_page_research, ssi_consolidated_statement_shadow,
     text_layer_fidelity, visual_income_shadow,
 )
 
@@ -122,7 +124,15 @@ def test_pow_sha_and_scope_when_bytes_match():
     assert ("operating_cash_flow", "2026-9M") in periods
     assert ("operating_cash_flow", "2025-9M") in periods
     assert ("revenue", "2025-Q3") in periods
-    assert len(out["observations"]) == 8
+    assert len(out["observations"]) == 12
+    assert out["gas_balance_is_not_cash_collection"] is True
+    assert out["prior_research_lead"]["bytes_rechecked"] is False
+    assert out["prior_research_lead"]["hub_memo_is_fact_authority"] is False
+    amounts = {(row["metric"], row["period"]): row["value"] for row in out["observations"]}
+    payable = amounts["trade_payable_pv_gas", "2026-09-30"]
+    accrual = amounts["accrued_uninvoiced_gas_purchase", "2026-09-30"]
+    assert payable + accrual != amounts["operating_cash_flow", "2026-9M"]
+    assert all(row["value"] != 8870358006299 for row in out["observations"])
     assert out["operating_cash_flow_yoy_pct"] == -19.78
     assert out["rejected_income_columns"]["2026-Q3"] == ["LINE_60_DOES_NOT_FOOT_61_PLUS_62"]
     assert all(row["value"] != 2073116246766 for row in out["observations"])
@@ -161,6 +171,68 @@ def test_evf_reviewed_nine_month_rows_are_not_a_standalone_quarter_or_a_bank():
     if path.is_file():
         bound = evf_reviewed_statement_shadow(pdf_bytes=path.read_bytes())
         assert bound["observations"] == out["observations"]
+
+
+def test_pan_segments_stay_on_the_consolidated_note_and_nine_month_profit_stays_rejected():
+    path = Path(r"T:\StockLookup\scratch\codex-product-gap-closeout-20261107\pan-q3-2026.pdf")
+    separate = Path(r"T:\StockLookup\scratch\grok-weekend-continuation-20261107\pan-q3-2026-separate.pdf")
+    if not path.is_file():
+        return
+    out = pan_consolidated_statement_shadow(pdf_bytes=path.read_bytes())
+    amounts = {(row["metric"], row["period"]): row["value"] for row in out["observations"]}
+    assert amounts["segment_external_revenue_total", "2026-9M"] == 11431754137920
+    assert out["rejected_income_columns"]["2026-9M"]
+    assert ("attributable_net_income", "2026-9M") not in amounts
+    assert out["holding_cash_sha256"] is None
+    assert out["prior_research_lead"]["bytes_rechecked"] is True
+    assert out["prior_research_lead"]["hub_memo_is_fact_authority"] is False
+    if separate.is_file():
+        bound = pan_consolidated_statement_shadow(
+            pdf_bytes=path.read_bytes(), separate_pdf_bytes=separate.read_bytes(),
+        )
+        holding = {(row["metric"], row["period"]): row for row in bound["observations"]}
+        assert holding["holding_cash_and_equivalents", "2026-09-30"]["value"] == 19968968615
+        assert holding["holding_cash_and_equivalents", "2026-09-30"]["source_sha256"] == PAN_SEPARATE_Q3_SHA256
+        assert bound["holding_company_short_term_borrowing"] == "OCR_DIGIT_AMBIGUOUS_NOT_EMITTED"
+
+
+def test_ssi_rows_are_securities_research_and_reject_a_different_hash():
+    out = ssi_consolidated_page_research()
+    amounts = {(row["metric"], row["period"]): row["value"] for row in out["observations"]}
+    assert out["entity_class"] == "securities"
+    assert out["industrial_ratios"] == "NOT_APPLICABLE"
+    assert out["official_fact_admitted"] is False
+    assert out["official_store_adoption"] == "REFUSED"
+    assert out["nine_month_profit_after_tax"] == "OCR_DIGIT_AMBIGUOUS_NOT_EMITTED"
+    assert amounts["net_income", "2026-Q3"] == amounts["pretax_profit", "2026-Q3"] - amounts["income_tax", "2026-Q3"]
+    assert amounts["brokerage_revenue", "2026-Q3"] == 348933594669
+    assert out["prior_research_lead"]["done_label_is_product_verified"] is False
+    assert out["sha256"] == "caa48d6f0ec4122c12ba69f1c1c6a71c84cb8c53fec3ea57ce6f3655eaee2d09"
+    try:
+        ssi_consolidated_statement_shadow(pdf_bytes=b"%PDF-1.4\nnot-the-filing")
+    except ValueError as exc:
+        assert "SSI_RETAINED_PDF_DOES_NOT_MATCH" in str(exc)
+    else:
+        raise AssertionError("wrong SSI bytes were accepted")
+    path = Path(r"T:\StockLookup\scratch\grok-weekend-continuation-20261107\ssi-q3-2026-consolidated.pdf")
+    if path.is_file():
+        assert ssi_consolidated_statement_shadow(pdf_bytes=path.read_bytes())["observations"] == out["observations"]
+
+
+def test_hpg_alternate_pdf_does_not_replace_the_retained_statement():
+    out = hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT)
+    assert out["sha256"] == HPG_CONSOLIDATED_Q3_SHA256
+    assert out["shadow_row_count"] == 6
+    assert out["alternate_document"]["retained_source_replaced"] is False
+    assert out["alternate_document"]["bytes_rechecked"] is False
+    assert out["alternate_document"]["reported_sha256"] == HPG_ALTERNATE_Q3_SHA256
+    assert out["alternate_document"]["pdf_creation_is_not_a_pit_clock"] is True
+    path = Path(r"T:\StockLookup\scratch\grok-weekend-continuation-20261107\hpg-q3-20261029-consolidated.pdf")
+    if path.is_file():
+        bound = hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT, alternate_pdf_bytes=path.read_bytes())
+        assert bound["sha256"] == HPG_CONSOLIDATED_Q3_SHA256
+        assert bound["alternate_document"]["bytes_rechecked"] is True
+        assert bound["shadow_rows"] == out["shadow_rows"]
 
 
 def test_blocker_requires_a_reason_and_admits_nothing():
