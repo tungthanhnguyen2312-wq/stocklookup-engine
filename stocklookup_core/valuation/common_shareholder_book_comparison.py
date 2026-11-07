@@ -120,3 +120,68 @@ def from_pb_diagnostic(diagnostic: Mapping[str, Any]) -> dict[str, Any]:
         price_vnd=parent.get("price_vnd"),
         common_shares=parent.get("common_shares"),
     )
+
+
+def earnings_quality_assessment(
+    *,
+    disposal_income_admitted: bool = False,
+    operating_cash_flow_admitted: bool = False,
+    inventory_admitted: bool = False,
+) -> dict[str, Any]:
+    """State the earnings-quality gap. Never invent a normalized EPS or a target."""
+    reasons = []
+    if not disposal_income_admitted:
+        reasons.append("DISPOSAL_INCOME_NOT_ADMITTED")
+    if not operating_cash_flow_admitted:
+        reasons.append("OPERATING_CASH_FLOW_NOT_ADMITTED")
+    if not inventory_admitted:
+        reasons.append("INVENTORY_NOT_ADMITTED")
+    return {
+        "normalized_eps": "NOT_COMPUTED",
+        "target_price": "NOT_EMITTED",
+        "effect_on_research_pe": "NOT_EVALUABLE",
+        "effect_on_research_pb": "NOT_EVALUABLE",
+        "reason_codes": reasons,
+        "rule": "PRETAX_NONRECURRING_INCOME_IS_NOT_SUBTRACTED_FROM_NET_INCOME",
+    }
+
+
+def research_dependency(
+    *,
+    ticker: str,
+    parent_equity_admitted: bool = False,
+    common_shares_admitted: bool = False,
+    treasury_shares_admitted: bool = False,
+    share_effective_time: str | None = None,
+    reporting_period: str | None = None,
+    price_basis: str | None = None,
+    exact_statement_url: str | None = None,
+    index_host_admitted: bool = False,
+) -> dict[str, Any]:
+    """Name every missing common-shareholder input. Do not fill one from another."""
+    missing = []
+    if not parent_equity_admitted:
+        missing.append("PARENT_EQUITY_NOT_ADMITTED")
+    if not common_shares_admitted:
+        missing.append("COMMON_SHARES_OUTSTANDING_NOT_ADMITTED")
+    if not treasury_shares_admitted:
+        missing.append("TREASURY_SHARES_NOT_ADMITTED")
+    if not share_effective_time:
+        missing.append("SHARE_COUNT_EFFECTIVE_TIME_UNKNOWN")
+    if not reporting_period:
+        missing.append("REPORTING_PERIOD_NOT_BOUND")
+    if not price_basis:
+        missing.append("PRICE_BASIS_NOT_BOUND")
+    if not exact_statement_url:
+        missing.append("NO_EXACT_OFFICIAL_Q3_STATEMENT_URL")
+    if not index_host_admitted:
+        missing.append("NO_ADMITTED_IR_INDEX_HOST")
+    return {
+        "contract_version": CONTRACT_VERSION,
+        "ticker": str(ticker or "").upper(),
+        "label": LABEL,
+        "common_shareholder_pb": "UNAVAILABLE" if missing else "INPUTS_PRESENT_NOT_COMPUTED_HERE",
+        "missing": missing,
+        "earnings_quality": earnings_quality_assessment(),
+        "cheapness_claim": "NOT_SUPPORTED",
+    }
