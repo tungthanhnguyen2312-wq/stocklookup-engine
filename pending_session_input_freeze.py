@@ -263,3 +263,90 @@ def registry_text_committing_session(root: Path, session: str) -> str | None:
     for ledger in ("sessions", "completed_sessions"):
         head[ledger][session] = work[ledger][session]
     return json.dumps(head, ensure_ascii=False, indent=2) + "\n"
+
+def freeze_byte_inventory(root: Path) -> tuple[dict, list[str]]:
+    """Bind the existing freeze's selected artifacts and dirty registry to exact bytes."""
+    from hashlib import sha256
+
+    if _git(root, "diff", "--cached", "--quiet")[0]:
+        raise ValueError("FREEZE_SYNC_INDEX_NOT_CLEAN")
+    freeze = classify_pending_input_freeze(root)
+    if not freeze.admitted:
+        raise ValueError("FREEZE_SYNC_INVALID_FREEZE:" + freeze.reason_code)
+    registry_path = root / REGISTRY_RELATIVE
+    if registry_path.resolve() != registry_path:
+        raise ValueError("FREEZE_SYNC_REDIRECTED_REGISTRY")
+    registry = registry_path.read_bytes()
+    body = json.loads(registry)
+    protected = {REGISTRY_RELATIVE}
+    sources = {}
+    retained = _governed_retained_root(root)
+    for session in freeze.sessions:
+        if retained is not None and (reason := _sealed_operation(retained, session)):
+            raise ValueError("FREEZE_SYNC_INVALID_FREEZE:" + reason)
+        for key, entry in body["sessions"][session].items():
+            path = Path(entry["path"])
+            if not path.is_absolute():
+                path = root / path
+            resolved = path.resolve()
+            if resolved != path:
+                raise ValueError("FREEZE_SYNC_REDIRECTED_SOURCE")
+            if path.is_relative_to(root):
+                protected.add(path.relative_to(root).as_posix())
+            raw = path.read_bytes()
+            artifact = json.loads(raw)
+            identity = entry["artifact_identity"]
+            payload = {k: v for k, v in artifact.items() if k not in ("artifact_sha256", "artifact_identity")}
+            canonical = json.dumps(payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+            digest = sha256(canonical.encode("utf-8")).hexdigest()
+            if (artifact.get("artifact_identity") != identity
+                    or artifact.get("artifact_sha256") != digest or not identity.endswith(":" + digest)):
+                raise ValueError(f"FREEZE_SYNC_SOURCE_CONTENT_MISMATCH:{session}/{key}")
+            sources[f"{session}/{key}"] = sha256(raw).hexdigest()
+    return {"registry_sha256": sha256(registry).hexdigest(), "sources": sources}, sorted(protected)
+
+
+def _sync_frozen_checkout(root: Path, approved_head: str, inventory: dict, *, check_writers) -> dict:
+    """Caller owns the canonical writer leases and has bound the Production profile."""
+    from stocklookup_core.acquisition.checkout_cleanliness_contract import classify_checkout_cleanliness
+
+    def git(*args):
+        code, value = _git(root, *args)
+        if code:
+            raise ValueError("FREEZE_SYNC_GIT_REFUSED:" + args[0])
+        return value.strip()
+
+    if not re.fullmatch(r"[0-9a-f]{40}", approved_head):
+        raise ValueError("FREEZE_SYNC_EXACT_RELEASE_REQUIRED")
+    if git("symbolic-ref", "--short", "HEAD") != "main":
+        raise ValueError("FREEZE_SYNC_WRONG_BRANCH")
+    if classify_checkout_cleanliness(root).unsafe_untracked_paths:
+        raise ValueError("FREEZE_SYNC_UNSAFE_UNTRACKED")
+    head = git("rev-parse", "HEAD")
+    before, protected = freeze_byte_inventory(root)
+    if before != inventory:
+        raise ValueError("FREEZE_SYNC_BYTE_PIN_MISMATCH")
+
+    git("fetch", "origin", "refs/heads/main:refs/remotes/origin/main")
+    if git("rev-parse", "refs/remotes/origin/main") != approved_head:
+        raise ValueError("FREEZE_SYNC_RELEASE_HEAD_MISMATCH")
+    if _git(root, "merge-base", "--is-ancestor", head, approved_head)[0]:
+        raise ValueError("FREEZE_SYNC_DIVERGED")
+    if _git(root, "diff", "--quiet", "--no-ext-diff", head, approved_head, "--", *protected)[0]:
+        raise ValueError("FREEZE_SYNC_TARGET_TOUCHES_PROTECTED_PATH")
+
+    check_writers()
+    if git("ls-remote", "--exit-code", "origin", "refs/heads/main").split() != [approved_head, "refs/heads/main"]:
+        raise ValueError("FREEZE_SYNC_REMOTE_ADVANCED")
+    if (git("rev-parse", "HEAD") != head or git("symbolic-ref", "--short", "HEAD") != "main"
+            or classify_checkout_cleanliness(root).unsafe_untracked_paths
+            or freeze_byte_inventory(root) != (before, protected)):
+        raise ValueError("FREEZE_SYNC_CHECKOUT_CHANGED")
+    if head != approved_head:
+        git("merge", "--ff-only", "--no-autostash", "--no-overwrite-ignore", approved_head)
+    if git("rev-parse", "HEAD") != approved_head or freeze_byte_inventory(root) != (before, protected):
+        raise ValueError("FREEZE_SYNC_POSTCONDITION_FAILED")
+    return {
+        "status": "FREEZE_PRESERVED_AT_APPROVED_HEAD" if head == approved_head else "FAST_FORWARDED_FREEZE_PRESERVED",
+        "previous_head": head, "head": approved_head, **before,
+    }

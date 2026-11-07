@@ -102,3 +102,5 @@ never revise them.
 - Read-only post-Daily acceptance: `python tools/run_first_real_session_acceptance.py` (see Monday
   contract; writes only a diagnostic report). Dry run: `--dry-run --session 2026-10-05 --cutoff … --output <scratch>`.
 - Registration of an original calendar receipt (explicit, offline, owner-gated): `tools/register_working_dates_receipt.py`.
+
+[Explicit Producer release sync](producer_freeze_release_sync_contract.md) preserves an admitted pending freeze before Daily preflight.
