@@ -312,6 +312,11 @@ def prepare_macro_delivery(root: Path, session: str, *, artifact_root: Path, enr
         from current_market_sector_leadership_context import content_identity
         if sector.get("session") != session or any(sector.get(k) != v for k, v in content_identity(sector).items()):
             packet_inputs["market_sector"] = None  # Local optional input rejection, not a core Daily failure.
+    # Optional, status only: the market close brief reports why exchange-basis value is absent.
+    from daily_official_liquidity_rollforward import STATUS_FILENAME as _LIQ_STATUS
+    liquidity_status = _load(paths["official_liquidity"].parent / _LIQ_STATUS)
+    packet_inputs["official_liquidity_status"] = (
+        liquidity_status if isinstance(liquidity_status, Mapping) and liquidity_status.get("target_session") == session else None)
     for key, component in (("financial_momentum", "financial_momentum"), ("corporate_event", "corporate_event_context"), ("historical", "historical_context")):
         packet_inputs[key] = (enrichment.get(component) or {}).get("artifact")
     return {"macro": macro, "macro_cutoff": cutoff, "decision_packet_inputs": packet_inputs}
