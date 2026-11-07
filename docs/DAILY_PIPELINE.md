@@ -102,3 +102,29 @@ never revise them.
 - Read-only post-Daily acceptance: `python tools/run_first_real_session_acceptance.py` (see Monday
   contract; writes only a diagnostic report). Dry run: `--dry-run --session 2026-10-05 --cutoff … --output <scratch>`.
 - Registration of an original calendar receipt (explicit, offline, owner-gated): `tools/register_working_dates_receipt.py`.
+
+
+### Explicit Producer release sync with a pending input freeze
+
+An unsealed input freeze is the sole additive registry diff plus its selected
+artifact identities. It is separate from historical executable source pins,
+reviewed amendments and the capacity receipt. Ordinary Daily still requires
+the frozen checkout to be at main before it starts. An operator may use
+`pending_session_input_freeze.sync_producer_release(root, approved_head, inventory)`
+from verified released code to synchronize the Producer alone. This operation
+does not launch Daily or confer approval on another commit.
+
+Record the registry and selected artifact SHA-256s once from a verified freeze
+using `freeze_byte_inventory(root)` and retain the returned inventory outside
+the checkout. Retain the same inventory across releases. A different approved
+SHA requires its own source review and CI. The active Production profile,
+canonical GitHub origin, existing writer leases, clean index, ancestry and live
+main must agree. Git must see identical tree entries at the registry and all
+selected in-checkout paths. Both the original bytes and freeze identities are
+checked again after the fast-forward. A matching retry returns
+`FREEZE_PRESERVED_AT_APPROVED_HEAD`.
+
+A release that changes executable sources continues through their existing
+reviewed transition and capacity checks. This sync refuses changed freeze paths,
+mismatched inventory, divergent history or concurrent writers. Any change to
+the protected input data requires its own governing disposition.

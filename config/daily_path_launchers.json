@@ -119,7 +119,7 @@
     ".github/workflows/producer-ci.yml": {
       "kind": "compile_and_cli",
       "reason": "Focused selection includes the offline Vault boundary-emitter and relocated-restore requalification and T0 archive-location and current-session candlestick projection/post-Daily release and offline dedup-relink regression suites; launcher commands, CI environments and required checks unchanged.",
-      "sha256": "0daa66bd82dadda5996035e0a7cac5a918688364a59d6052a154666e3a968226",
+      "sha256": "94eb8b429978e954a58cc86f187b9e702bda16af3adae3667d06759f6a90bd96",
       "targets": [
         "canonical_daily_operation.py",
         "daily_analysis_pipeline.py",

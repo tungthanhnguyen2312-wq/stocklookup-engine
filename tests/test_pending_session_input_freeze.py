@@ -129,6 +129,8 @@ def test_fresh_preflight_admits_exact_freeze_without_committing_or_rewriting(tmp
 def test_fresh_workflow_reaches_daily_and_does_not_commit_the_freeze(monkeypatch, tmp_path):
     root, origin = _clone(tmp_path)
     _apply_freeze(root)
+    bind = workflow.bind_active_workspace
+    monkeypatch.setattr(workflow, "bind_active_workspace", lambda checkout: bind(checkout, tmp_path / "fixture-binding.json"))
     monkeypatch.setattr(workflow, "preflight_consumer_repository", lambda *a, **k: {"head": "consumer", "status": "UP_TO_DATE"})
     monkeypatch.setattr(workflow, "_require_host_ready", lambda _root: {"classification": "READY"})
     monkeypatch.setattr(workflow, "_resolve_intended_session", lambda: SESSION)
@@ -279,3 +281,103 @@ def test_replay_of_unsealed_freeze_is_not_relabeled_complete(tmp_path):
     runtime.mkdir()
     with pytest.raises(workflow.OwnerDailyError, match="PENDING_DAILY_STATE_SESSION_NOT_VERIFIED"):
         _preflight(root, completed_session=SESSION, runtime_root=runtime)
+
+
+def _apply_content_verified_freeze(root):
+    from hashlib import sha256
+
+    payload = {"example": "retained input"}
+    digest = sha256(json.dumps(payload, separators=(",", ":")).encode()).hexdigest()
+    identities = {key: f"{key}:{digest}" for key in _identities()}
+    registry = _apply_freeze(root, identities=identities)
+    for entry in registry["sessions"][SESSION].values():
+        (root / entry["path"]).write_text(json.dumps({
+            **payload, "artifact_identity": entry["artifact_identity"], "artifact_sha256": digest,
+        }), encoding="utf-8")
+    return registry
+
+
+def _advance_frozen_origin(tmp_path, origin, relative, contents):
+    other = tmp_path / "release-author"
+    if not other.exists():
+        _git(tmp_path, "clone", "-q", str(origin), str(other))
+        _git(other, "config", "user.email", "test@example.com")
+        _git(other, "config", "user.name", "Test")
+    path = other / relative
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(contents, encoding="utf-8")
+    _git(other, "add", "-f", relative)
+    _git(other, "commit", "-qm", "approved release")
+    _git(other, "push")
+    return _git_out(other, "rev-parse", "HEAD")
+
+
+def test_explicit_release_sync_preserves_same_freeze_across_releases_and_retry(tmp_path):
+    root, origin = _clone(tmp_path)
+    _apply_content_verified_freeze(root)
+    receipt, paths = freeze.freeze_byte_inventory(root)
+    assert len(receipt["sources"]) == 10
+    for i in range(2):
+        head = _advance_frozen_origin(tmp_path, origin, f"release-{i}.txt", "approved")
+        result = freeze._sync_frozen_checkout(root, head, receipt, check_writers=lambda: None)
+        assert result["status"] == "FAST_FORWARDED_FREEZE_PRESERVED"
+        assert _git_out(root, "rev-parse", "HEAD") == head
+        assert freeze.freeze_byte_inventory(root) == (receipt, paths)
+        assert _preflight(root)["status"] == "PENDING_INPUT_FREEZE_AT_ORIGIN_MAIN"
+        assert env.producer_release_qualification(root)["qualified"]
+        retry = freeze._sync_frozen_checkout(root, head, receipt, check_writers=lambda: None)
+        assert retry["status"] == "FREEZE_PRESERVED_AT_APPROVED_HEAD"
+        assert retry["head"] == retry["previous_head"] == head
+
+
+@pytest.mark.parametrize("kind", ["registry", "tracked-source", "hash", "forged-content", "dirty", "staged", "stale", "diverged", "writer", "remote-race"])
+def test_release_sync_refuses_before_moving_head(tmp_path, kind):
+    root, origin = _clone(tmp_path)
+    registry = _apply_content_verified_freeze(root)
+    receipt, _ = freeze.freeze_byte_inventory(root)
+    path = registry["sessions"][SESSION]["tactical"]["path"]
+    relative = REGISTRY if kind == "registry" else path if kind == "tracked-source" else "release.txt"
+    head = _advance_frozen_origin(tmp_path, origin, relative, "approved")
+    if kind == "hash":
+        artifact = root / path
+        artifact.write_bytes(artifact.read_bytes() + b"\n")
+    if kind == "forged-content":
+        artifact = root / path
+        artifact.write_text(artifact.read_text(encoding="utf-8").replace("retained input", "tampered input"), encoding="utf-8")
+    if kind in ("dirty", "staged", "diverged"):
+        (root / "README.md").write_text("operator change", encoding="utf-8")
+        if kind != "dirty":
+            _git(root, "add", "README.md")
+        if kind == "diverged":
+            _git(root, "commit", "-qm", "local divergence")
+    before = _git_out(root, "rev-parse", "HEAD")
+    before_registry = (root / REGISTRY).read_bytes()
+    if kind == "stale":
+        head = before
+
+    def check_writers():
+        if kind == "writer":
+            raise BlockingIOError("writer owns runtime")
+        if kind == "remote-race":
+            _advance_frozen_origin(tmp_path, origin, "next.txt", "new release")
+
+    reasons = {"registry": "TARGET_TOUCHES_PROTECTED_PATH", "tracked-source": "TARGET_TOUCHES_PROTECTED_PATH",
+               "hash": "BYTE_PIN_MISMATCH", "forged-content": "SOURCE_CONTENT_MISMATCH", "dirty": "INVALID_FREEZE", "staged": "INDEX_NOT_CLEAN",
+               "stale": "RELEASE_HEAD_MISMATCH", "diverged": "DIVERGED", "writer": "writer owns runtime",
+               "remote-race": "REMOTE_ADVANCED"}
+    with pytest.raises((ValueError, BlockingIOError), match=reasons[kind]):
+        freeze._sync_frozen_checkout(root, head, receipt, check_writers=check_writers)
+    assert _git_out(root, "rev-parse", "HEAD") == before
+    assert (root / REGISTRY).read_bytes() == before_registry
+
+
+def test_release_sync_requires_active_profile(tmp_path, monkeypatch):
+    monkeypatch.delenv("STOCK_LOOKUP_WORKSPACE_PROFILE", raising=False)
+    with pytest.raises(ValueError, match="FREEZE_SYNC_PROFILE_REQUIRED"):
+        freeze.sync_producer_release(tmp_path, "0" * 40, {})
+    monkeypatch.setenv("STOCK_LOOKUP_WORKSPACE_PROFILE", str(tmp_path / "wrong.json"))
+    monkeypatch.setattr(workflow, "bind_active_workspace", lambda _: None)
+    import runtime_paths
+    monkeypatch.setattr(runtime_paths, "workspace_profile", lambda: {"paths": {"producer": tmp_path / "other"}})
+    with pytest.raises(ValueError, match="FREEZE_SYNC_WRONG_PROFILE_ROOT"):
+        freeze.sync_producer_release(tmp_path, "0" * 40, {})
