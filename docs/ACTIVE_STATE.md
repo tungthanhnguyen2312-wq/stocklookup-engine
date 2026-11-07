@@ -297,12 +297,10 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 8. Actual blockers right now
 
-1. The 2026-11-06 Owner Daily is sealed. Producer PR #235 and Dashboard PR #32
-   released HPG Q3 shadow research with six rows and zero official Q3 admissions.
-   The Market Close surface is published. Producer PR #234 adds the same-session
-   DNSE VN-Index capture. First live verification is pending the next eligible close.
-2. A later ordinary Daily still needs a fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**. The
-   launch check covers physical and commit memory, disk, writers and runtime provenance.
+1. Owner Daily 06/11 is sealed. HPG and PAN Q3 research is non-voting.
+   PAN's cross-date book illustration has no qualified comparator.
+   Live DNSE VN-Index verification awaits the next eligible close.
+2. Launch Daily only with fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**.
    **AMBER or BLOCKED must not launch.**
 
 ## 9. Next action

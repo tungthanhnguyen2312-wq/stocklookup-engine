@@ -6,6 +6,7 @@ and nothing is bound to the sealed 2026-11-06 Daily.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import sys
@@ -20,6 +21,7 @@ from stocklookup_core.decision.market_close_current_research import (  # noqa: E
 )
 from stocklookup_core.financial.q3_2026_successor_research import (  # noqa: E402
     HPG_CONSOLIDATED_Q3_BYTES, HPG_CONSOLIDATED_Q3_SHA256, hpg_consolidated_statement_shadow, issuer_blocker,
+    pan_consolidated_statement_shadow,
 )
 from stocklookup_core.valuation.common_shareholder_book_comparison import research_dependency  # noqa: E402
 
@@ -43,38 +45,45 @@ def _check_retained_pdf() -> None:
         raise SystemExit("RETAINED_PDF_DOES_NOT_MATCH")
 
 
-def q3_artifact() -> dict:
+def q3_artifact(*, pan_pdf: Path | None = None) -> dict:
     hpg = hpg_consolidated_statement_shadow(observed_at=OBSERVED_AT)
-    pan = research_dependency(ticker="PAN")
+    pan = (pan_consolidated_statement_shadow(pdf_bytes=pan_pdf.read_bytes())
+           if pan_pdf else research_dependency(ticker="PAN"))
     return {
         "contract_version": "q3_2026_successor_research/v1",
         "knowledge_available_at": OBSERVED_AT,
         "session_binding": "NOT_A_SEALED_SESSION_FACT",
         "official_fact_admitted_count": 0,
         "shadow_row_count": hpg["shadow_row_count"],
+        "observation_count": len(pan.get("observations", [])),
         "issuers": {
             "HPG": hpg,
             "PAN": pan,
             "SSI": issuer_blocker(ticker="SSI", reason_codes=[
-                "IR_INDEX_URL_PREVIOUSLY_404_NOT_RETRIED", "NO_EXACT_OFFICIAL_Q3_STATEMENT_URL"]),
-            "EVF": issuer_blocker(ticker="EVF", reason_codes=["NO_ADMITTED_ISSUER_IR_HOST"]),
+                "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]),
+            "EVF": issuer_blocker(ticker="EVF", reason_codes=["EXACT_Q3_DISCLOSURE_LOCATED_ISSUER_HOST_NOT_ADMITTED"]),
             "POW": issuer_blocker(ticker="POW", reason_codes=[
-                "IR_INDEX_URL_PREVIOUSLY_404_NOT_RETRIED", "NO_EXACT_OFFICIAL_Q3_STATEMENT_URL"]),
+                "EXACT_Q3_PDF_LOCATED_SOURCE_BYTES_UNVERIFIED"]),
         },
     }
 
 
 def main() -> int:
     _check_retained_pdf()
-    q3_path = Path(sys.argv[1]) if len(sys.argv) > 1 else None
-    market_path = Path(sys.argv[2]) if len(sys.argv) > 2 else None
-    q3 = q3_artifact()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("q3_path", nargs="?", type=Path)
+    parser.add_argument("market_path", nargs="?", type=Path)
+    parser.add_argument("--pan-pdf", type=Path, help="Retained exact PAN consolidated Q3 filing")
+    args = parser.parse_args()
+    q3 = q3_artifact(pan_pdf=args.pan_pdf)
+    q3_path, market_path = args.q3_path, args.market_path
     market = current_research_artifact(benchmark=POSTHOC_BENCHMARK, closures=weekend_source_closures_20261107())
     text_q3 = json.dumps(q3, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     text_market = json.dumps(market, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    if q3_path and market_path:
-        q3_path.write_text(text_q3, encoding="utf-8")
+    if market_path:
         market_path.write_text(text_market, encoding="utf-8")
+    if q3_path:
+        q3_path.write_text(text_q3, encoding="utf-8")
         print(f"official_facts={q3['official_fact_admitted_count']} shadow_rows={q3['shadow_row_count']}")
         return 0
     sys.stdout.write(text_q3)
