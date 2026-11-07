@@ -214,7 +214,8 @@ def artifact_physical(records: list[dict], physical_seen: dict[tuple, int]) -> d
 
 
 def build_report(records: list[dict], *, volume_total: int, volume_used: int, volume_free: int,
-                 hash_budget: int, hashed_bytes: int, as_of: str | None = None) -> dict:
+                 hash_budget: int, hashed_bytes: int, as_of: str | None = None,
+                 scan_stopped: str | None = None) -> dict:
     physical_seen: dict[tuple, int] = {}
     groups: dict[str, dict] = {}
     families: dict[str, dict] = {}
@@ -297,8 +298,10 @@ def build_report(records: list[dict], *, volume_total: int, volume_used: int, vo
             "content_duplicate_excess_bytes": excess,
         },
         "runway": runway(
-            [row["physical_bytes"] for row in growth], ordered_sessions, volume_free,
+            [row["physical_bytes"] for row in growth] if scan_stopped is None else [],
+            ordered_sessions if scan_stopped is None else [], volume_free,
             as_of=as_of or datetime.now().strftime("%Y%m%d")),
+        "scan_stopped": scan_stopped,
         "artifact_physical": artifact_physical(records, physical_seen),
         "hash": {"budget_bytes": hash_budget, "hashed_bytes": hashed_bytes, "resumable": True, "locks": False},
     }
@@ -515,9 +518,8 @@ def main(argv: list[str] | None = None) -> int:
     Path(state["files"]).write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in records), encoding="utf-8")
     report = build_report(
         records, volume_total=int(usage.total), volume_used=int(usage.used), volume_free=int(usage.free),
-        hash_budget=args.hash_budget_bytes, hashed_bytes=hashed,
+        hash_budget=args.hash_budget_bytes, hashed_bytes=hashed, scan_stopped=state.get("stopped"),
     )
-    report["scan_stopped"] = state.get("stopped")
     report["state"] = str(args.state)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

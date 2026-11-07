@@ -33,6 +33,7 @@ file. It takes no locks and stops when a Daily is running. Runway is the free sp
 the 160 GiB floor, in sessions and at 30 and 90 days, using the measured session size.
 A session is a real calendar day that stands alone in a path component, either
 `YYYYMMDD` or `YYYY-MM-DD`. An 8-digit slice of a hash is not a session.
+A stopped metadata scan keeps the inventory it measured and withholds runway projections.
 Runway uses session days on or before the scan date. Later dates are horizon
 labels inside files, and they stay in the session list without setting the median.
 
