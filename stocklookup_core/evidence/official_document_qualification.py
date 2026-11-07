@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -282,6 +283,24 @@ def load_document_qualification(path: Path) -> dict[str, Any]:
     return data.get("record", data)
 
 
+def official_landing_root(legacy: str | os.PathLike[str] | None = None) -> Path:
+    """Governed location of retained official-filing landing evidence.
+
+    With a workspace profile the landing is ``<retained role>/data-landing/<domain>`` and the
+    legacy default is never consulted, so a profiled Production replay cannot silently depend
+    on another volume. Without a profile the legacy default is kept. The runtime root is never
+    a landing location (landing evidence was never stored there).
+    """
+    from runtime_paths import workspace_profile
+    from stocklookup_core.evidence.financial_filings_replay_adapter import DOMAIN
+    profile = workspace_profile()
+    if profile:
+        return (Path(profile["paths"]["retained"]) / "data-landing" / DOMAIN).resolve()
+    if legacy is None:
+        from financial_evidence_currency_contract import DEFAULT_LANDING_ROOT as legacy
+    return Path(legacy).expanduser().resolve()
+
+
 def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path | None = None,
         registry: Mapping[str, Any] | None = None, cutoff: str | None = None,
         intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY") -> dict[str, Any]:
@@ -291,12 +310,10 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
     caller-selected source flags. Historical rows without metadata remain unproved.
     """
     from official_financial_filing_evidence import admit_official_financial_fact
-    from financial_evidence_currency_contract import DEFAULT_LANDING_ROOT
-    from runtime_paths import runtime_root
     kwargs = {"cutoff": cutoff, "intended_use": intended_use}
     if not isinstance(row.get("document_metadata"), Mapping):
         return admit_official_financial_fact(row, **kwargs)
-    base = (Path(evidence_root) if evidence_root is not None else runtime_root(DEFAULT_LANDING_ROOT)).resolve()
+    base = (Path(evidence_root) if evidence_root is not None else official_landing_root()).resolve()
     subdir = Path(str(row.get("evidence_subdir") or "."))
     landing = (base / subdir).resolve()
     if not landing.is_relative_to(base):

@@ -805,7 +805,7 @@
     "stocklookup_core/evidence/official_document_discovery.py": "e3b1290e5ca397748f56cd9aad7fcf880d9eb444d8b36c05493efdc1843d1d18",
     "stocklookup_core/evidence/official_document_downstream_shadow.py": "1db6fa9b69d0fda1db1a9f25ed1e10fd819be29cc2c5b88e3370f182b7c59e10",
     "stocklookup_core/evidence/official_document_ocr_handoff.py": "0cef468fc7a1a069e5e8bb3d7812a62cc633610a976f855a3c656612ebb9cd2c",
-    "stocklookup_core/evidence/official_document_qualification.py": "3f108b3a5e5292c9b07cbf6b58ffbaf928ebaa31572f82e33ecfe3ef9ff2325e",
+    "stocklookup_core/evidence/official_document_qualification.py": "b5c83c8694ab96f2ff56847d39f94d4ef478b35b470f4e1733c940d05f6fe830",
     "stocklookup_core/evidence/official_document_retrieval.py": "c060564aaa976d1230583adf6cda3f0300b7ef006e07045418c6e6e4fbc0bb6e",
     "stocklookup_core/evidence/official_document_store.py": "d301fbbd86c29cba47bdda51f065bc42454c830cfab02e6bdc17648fca9e8d77",
     "stocklookup_core/evidence/official_exchange_trading_statistics.py": "902a4172bd4ac5bb9a7c2b5654737d9621be2a09f75eb31087026add33dfb955",
