@@ -297,20 +297,21 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 8. Actual blockers right now
 
-1. The 2026-10-05 Owner Daily is complete. No additional documented blocker is currently known
-   for that session. A later ordinary Daily must still pass at launch: every runtime, evidence,
-   session and window gate (Phase A/B, calendar, credentials, repository preflight, runtime/trusted release)
-   still applies.
+1. The 2026-11-06 Owner Daily is sealed. Producer PR #235 and Dashboard PR #32
+   released HPG Q3 shadow research with six rows and zero official Q3 admissions.
+   The Market Close surface is published. Producer PR #234 adds the same-session
+   DNSE VN-Index capture. First live verification is pending the next eligible close.
 2. A later ordinary Daily still needs a fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**. The
-   post-closeout observation was **BLOCKED**: writers `WRITER_STATE_UNKNOWN` (one encoded PowerShell
-   child of the IDE; `active_writers` empty) and physical memory **AMBER** (~6.0 GiB available against
-   the 6 GiB green band). Commit and disk were READY. Thresholds are unchanged. Close IDEs and other
-   heavy processes, then re-run the preflight. **AMBER or BLOCKED must not launch.**
+   launch check covers physical and commit memory, disk, writers and runtime provenance.
+   **AMBER or BLOCKED must not launch.**
 
 ## 9. Next action
 
-Current closeout: clean local source checkpoints, isolated integration checks and exact native review receipt;
-then stop for separate release approval. No successor. [Financial intake](official_financial_quarterly_intake_contract.md) source/Daily gates remain.
+After the 2026-11-09 close and a fresh READY preflight, verify DNSE VN-Index through the
+retained bar, Market Close, Home summary and GitHub Pages. See the
+[NSO CPI contract](nso_cpi_acquisition_parser_freshness_corrective_20261023_contract.md)
+for release freshness and the [financial intake contract](official_financial_quarterly_intake_contract.md)
+for source and Daily gates.
 
 ## 10. Owner approvals that remain open
 

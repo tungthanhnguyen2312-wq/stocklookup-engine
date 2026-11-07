@@ -21,13 +21,15 @@ NSO_CPI_RELEASES = (
     "https://www.nso.gov.vn/en/data-and-statistics/2026/08/consumer-price-index-gold-price-index-and-us-dollar-price-index-in-july-and-the-first-seven-months-of-2026/",
 )
 NSO_HOMEPAGE = "https://www.nso.gov.vn/en/homepage/"
-# Only official NSO CPI release pages linked from the retained homepage are followed; nothing is inferred from a calendar.
-NSO_CPI_RELEASE_LOCATOR = re.compile(r"^https://www\.nso\.gov\.vn/en/data-and-statistics/\d{4}/\d{2}/consumer-price-index-gold-price-index-and-us-dollar-price-index-in-[a-z0-9-]+/$")
+NSO_CPI_ARCHIVE = "https://www.nso.gov.vn/en/cpi/"
+# Follow only exact English NSO release links from retained first-party indexes.
+NSO_CPI_RELEASE_LOCATOR = re.compile(r"^https://www\.nso\.gov\.vn/en/data-and-statistics/\d{4}/\d{2}/consumer-price-index(?:-cpi)?-gold-price-index-and-us-dollar-price-index-in-[a-z0-9-]+/$")
 # Inventory and fetch budget are separate: every matching homepage link is inventoried (bounded;
 # exceeding the bound blocks currency), while at most MAX_FETCHED_DISCOVERED_RELEASES are fetched.
 # An inventoried link that is not fetched is retained as NOT_FETCHED and also blocks currency.
 MAX_DISCOVERY_INVENTORY = 32
 MAX_FETCHED_DISCOVERED_RELEASES = 3
+MAX_NSO_HTML_BYTES = 512 * 1024
 MONTHS = ("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december")
 # CURRENT_NEXT_RELEASE_UNANNOUNCED ends with the month after the next expected reference period (2026-09 CPI -> 2026-11-30).
 UNANNOUNCED_CEILING_MONTHS_AFTER_PERIOD = 2
@@ -37,7 +39,7 @@ UNANNOUNCED_CEILING_MONTHS_AFTER_PERIOD = 2
 # such a bare list separator. Any other word before "by" (declined, changed, but, ...) is outside
 # the grammar and blocks the whole lead rather than inheriting a sign.
 _SUPPORTED_VERBS = {"rose": 1, "increased": 1, "decreased": -1, "fell": -1}
-_CLAUSE = re.compile(r"(?:\b([a-z]+)\s+)?\bby\s+(-?[0-9]+(?:\.[0-9]+)?)%\s*(year[- ]on[- ]year|over the same period last year|compared (?:with|to) the same period (?:of )?last year|compared (?:with|to) the previous month|compared (?:with|to) December [0-9]{4})?", re.I)
+_CLAUSE = re.compile(r"(?:\b([a-z]+)\s+)?\bby\s+(-?[0-9]+(?:\.[0-9]+)?)%\s*(year[- ]on[- ]year|over the same period last year|compared (?:with|to) the same period (?:(?:of )?last year|of the previous year)|compared (?:with|to) the previous month|compared (?:with|to) December [0-9]{4})?", re.I)
 _MOM_NOUN = re.compile(r"month-on-month (increase|decrease) of\s+(-?[0-9]+(?:\.[0-9]+)?)%", re.I)
 _LIST_SEPARATOR = re.compile(r"\s*,?\s*(?:and\s*)?", re.I)
 _CPI_SUBJECT = re.compile(r"consumer price index \(CPI\)|\bthe CPI\b|\bCPI\b", re.I)
@@ -75,20 +77,30 @@ def _raw_record(*, source_id: str, url: str, raw: bytes, content_type: str, retr
     return record
 
 
+def _read_html(response: Any) -> bytes:
+    raw = response.read(MAX_NSO_HTML_BYTES + 1)
+    if len(raw) > MAX_NSO_HTML_BYTES:
+        raise OSError("NSO_HTML_RESPONSE_LIMIT_EXCEEDED")
+    return raw
+
+
 def _fetch_failed_record(*, url: str, retrieved_at: str, error: Exception, discovered_from: Mapping[str, Any]) -> dict[str, Any]:
     return {"source_id": SOURCE_ID, "locator": url, "retrieval_timestamp": retrieved_at, "publication_date": None, "http_status": getattr(error, "code", None), "content_type": None, "payload_sha256": None, "payload_base64": None, "parse_status": "FETCH_FAILED:" + type(error).__name__, "discovered_from": dict(discovered_from)}
 
 
-def discover_cpi_release_inventory(homepage: Mapping[str, Any] | None) -> tuple[list[str], bool]:
-    """(Every official CPI release link in the retained homepage bytes in a deterministic order, truncated?).
+def _retained_links(record: Mapping[str, Any] | None) -> set[str]:
+    if not record or not record.get("payload_base64"):
+        return set()
+    page = base64.b64decode(str(record["payload_base64"])).decode("utf-8", errors="replace")
+    return {html.unescape(href) for href in re.findall(r"""href\s*=\s*["']([^"']+)["']""", page, re.I)}
 
-    The order only makes acquisition deterministic; it is never evidence of publication period.
-    """
-    if not homepage or not homepage.get("payload_base64"):
-        return [], False
-    page = base64.b64decode(str(homepage["payload_base64"])).decode("utf-8", errors="replace")
-    found = {html.unescape(href) for href in re.findall(r"href\s*=\s*[\"']([^\"']+)[\"']", page, re.I)}
-    matched = sorted((url for url in found if NSO_CPI_RELEASE_LOCATOR.match(url)), reverse=True)
+
+def discover_cpi_release_inventory(
+    homepage: Mapping[str, Any] | None, archive: Mapping[str, Any] | None = None,
+) -> tuple[list[str], bool]:
+    """Inventory bounded first-party release links without inferring their reference periods."""
+    links = _retained_links(homepage) | _retained_links(archive)
+    matched = sorted((url for url in links if NSO_CPI_RELEASE_LOCATOR.fullmatch(url)), reverse=True)
     return matched[:MAX_DISCOVERY_INVENTORY], len(matched) > MAX_DISCOVERY_INVENTORY
 
 
@@ -137,7 +149,9 @@ def _lead_claims(segment: str) -> tuple[set[float], set[float]]:
             if word in _SUPPORTED_VERBS:
                 # A verb opens the chain right after the CPI subject, or continues it across a bare separator.
                 gap = sentence[subjects[-1].end() if previous_end is None else previous_end:clause.start(1)]
-                if not (_SUBJECT_TO_VERB if previous_end is None else _LIST_SEPARATOR).fullmatch(gap):
+                separator = _SUBJECT_TO_VERB if previous_end is None else _LIST_SEPARATOR
+                explicit_semicolon = previous_end is not None and gap.strip() == ";"
+                if not separator.fullmatch(gap) and not explicit_semicolon:
                     raise ValueError("NSO_CPI_CLAIM_SUBJECT_UNRESOLVED")
                 direction = _SUPPORTED_VERBS[word]
             elif word in {"", "and"}:
@@ -181,7 +195,9 @@ def _parse_cpi(record: Mapping[str, Any]) -> dict[str, Any]:
     month, year = period.groups()
     if _release_months(raw_html, text) != {MONTHS[int(month) - 1]}:
         raise ValueError("NSO_CPI_TITLE_REFERENCE_PERIOD_MISMATCH")
-    yoy, mom = _lead_claims(_lead_cpi_segment(text))
+    # The October title itself contains "(CPI)" before the actual claim.
+    article_html = re.sub(r"<(head|h[1-6])\b[^>]*>.*?</\1\s*>", " ", raw_html, flags=re.I | re.S)
+    yoy, mom = _lead_claims(_lead_cpi_segment(_text(article_html.encode("utf-8"))))
     if not yoy:
         raise ValueError("NSO_CPI_REQUIRED_PUBLICATION_METADATA_OR_YOY_CLAIM_NOT_FOUND")
     if len(yoy) > 1:
@@ -243,6 +259,8 @@ def _cpi_freshness(*, parsed: list[Mapping[str, Any]], cpi_raw: list[Mapping[str
         freshness["reason_codes"].append("CALENDAR_ENTRY_ALREADY_RETAINED")
     if discovery.get("inventory_truncated"):
         freshness["reason_codes"].append("DISCOVERY_INVENTORY_LIMIT_EXCEEDED"); return freshness
+    if discovery.get("archive_unavailable"):
+        freshness["reason_codes"].append("NSO_CPI_ARCHIVE_UNAVAILABLE"); return freshness
     if unresolved:
         freshness["reason_codes"].append("NEWER_DISCOVERED_RELEASE_NOT_QUALIFIED"); freshness["unqualified_discovered_locators"] = unresolved
         return freshness
@@ -287,8 +305,11 @@ def build(*, raw_records: list[Mapping[str, Any]], retrieved_at: str) -> dict[st
         revision_chains.setdefault(str(observation["source_document_identity"]), []).append(str(observation["raw_payload_sha256"]))
     homepage = next((row for row in records if row.get("source_id") == "NSO_RELEASE_CALENDAR"), None)
     retained_status = {str(row.get("locator")): str(row.get("parse_status")).split(":")[0] for row in cpi_raw}
-    discovered, truncated = discover_cpi_release_inventory(homepage)
+    archive = next((row for row in records if row.get("source_id") == "NSO_CPI_ARCHIVE"), None)
+    discovered, truncated = discover_cpi_release_inventory(homepage, archive)
     discovery = {"homepage_locator": homepage.get("locator") if homepage else None, "homepage_payload_sha256": homepage.get("payload_sha256") if homepage else None, "max_discovery_inventory": MAX_DISCOVERY_INVENTORY, "max_fetched_discovered_releases": MAX_FETCHED_DISCOVERED_RELEASES, "inventory_truncated": truncated, "discovered_locators": discovered, "locator_status": {url: retained_status.get(url, "DISCOVERED_NOT_RETAINED") for url in discovered}}
+    if archive is not None:
+        discovery["archive_unavailable"] = not any(NSO_CPI_RELEASE_LOCATOR.fullmatch(url) for url in _retained_links(archive))
     observations: dict[str, list[dict[str, Any]]] = {"vn_cpi_yoy": parsed}
     for metric_id, category, unit in TARGET_METRICS[1:]:
         observations[metric_id] = [_unavailable(metric_id, category, unit, retrieved_at)]
@@ -318,21 +339,36 @@ def current_macro_observations(artifact: Mapping[str, Any]) -> list[dict[str, An
 def acquire(*, retrieved_at: str | None = None) -> dict[str, Any]:
     retrieved_at = retrieved_at or _now(); records: list[dict[str, Any]] = []; headers = {"User-Agent": "StockLookup-vietnam-official-macro-evidence/1.0"}
     with urlopen(Request(NSO_HOMEPAGE, headers=headers), timeout=30) as response:
-        homepage = _raw_record(source_id="NSO_RELEASE_CALENDAR", url=NSO_HOMEPAGE, raw=response.read(), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status)
+        homepage = _raw_record(source_id="NSO_RELEASE_CALENDAR", url=NSO_HOMEPAGE, raw=_read_html(response), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status)
+    archive = None
+    homepage_links = _retained_links(homepage)
+    if NSO_CPI_ARCHIVE in homepage_links:
+        try:
+            with urlopen(Request(NSO_CPI_ARCHIVE, headers=headers), timeout=30) as response:
+                archive = _raw_record(source_id="NSO_CPI_ARCHIVE", url=NSO_CPI_ARCHIVE, raw=_read_html(response),
+                                      content_type=response.headers.get_content_type(), retrieved_at=retrieved_at,
+                                      http_status=response.status)
+        except OSError as exc:
+            archive = _fetch_failed_record(url=NSO_CPI_ARCHIVE, retrieved_at=retrieved_at,
+                                           error=exc, discovered_from={key: homepage[key] for key in ("source_id", "locator", "payload_sha256")})
+            archive["source_id"] = "NSO_CPI_ARCHIVE"
+        records.append(archive)
     for url in NSO_CPI_RELEASES:
         with urlopen(Request(url, headers=headers), timeout=30) as response:
-            records.append(_raw_record(source_id=SOURCE_ID, url=url, raw=response.read(), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status))
-    provenance = {"source_id": "NSO_RELEASE_CALENDAR", "locator": NSO_HOMEPAGE, "payload_sha256": homepage["payload_sha256"]}
+            records.append(_raw_record(source_id=SOURCE_ID, url=url, raw=_read_html(response), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status))
+    discovered, _ = discover_cpi_release_inventory(homepage, archive)
     fetched = 0
-    for url in discover_cpi_release_locators(homepage):
+    for url in discovered:
         if url in NSO_CPI_RELEASES:
             continue
+        origin = homepage if url in homepage_links else archive
+        provenance = {key: origin[key] for key in ("source_id", "locator", "payload_sha256")}
         if fetched >= MAX_FETCHED_DISCOVERED_RELEASES:
             records.append(_not_fetched_record(url=url, retrieved_at=retrieved_at, discovered_from=provenance)); continue
         fetched += 1
         try:
             with urlopen(Request(url, headers=headers), timeout=30) as response:
-                records.append(_raw_record(source_id=SOURCE_ID, url=url, raw=response.read(), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status, discovered_from=provenance))
+                records.append(_raw_record(source_id=SOURCE_ID, url=url, raw=_read_html(response), content_type=response.headers.get_content_type(), retrieved_at=retrieved_at, http_status=response.status, discovered_from=provenance))
         except Exception as exc:  # retained as a failure; a discovered release that cannot be fetched never yields a value
             records.append(_fetch_failed_record(url=url, retrieved_at=retrieved_at, error=exc, discovered_from=provenance))
     records.append(homepage)

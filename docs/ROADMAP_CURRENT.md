@@ -73,6 +73,8 @@ It is not a new milestone. `queued_next` stays empty.
 ## NEXT EVIDENCE GATE — time-driven, not milestones
 
 These advance by accumulating real sessions, not by implementation:
+- First live DNSE VN-Index capture and Market Close publication after the 2026-11-09 close,
+  subject to a fresh READY Owner Daily preflight. See [Active State](ACTIVE_STATE.md).
 - Contiguous governed capture depth at 20 / 21 / 50 / 60 / 120 / 250 sessions
   (`READY_FOR_BOUNDED_EVALUATION` is an invitation to a separately governed review, never authorization).
 - Outcome maturity: T+20 / T+60 decisions mature only after their windows; foreign-flow 10 / 20-session cohorts.
