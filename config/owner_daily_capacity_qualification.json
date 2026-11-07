@@ -108,6 +108,7 @@
     "derived/financial-evidence-currency-refresh-v1/fpt_official_annual_consumer_proof.json": "eefbd59e76217723eee9a28236a0a2cae6f2b580d3dfe15e8259a70babff4ac6",
     "derived/financial-evidence-currency-refresh-v1/fpt_official_annual_context_report.json": "e390dadb47002edb05f42fd16fb6afa9065d8b6bc886e66fd950ead9159877da",
     "derived/financial-evidence-currency-refresh-v1/historical_net_income_semantic_correction_report.json": "960d73c87fbea98739257bc1bbd005926f33c0a6e17305d52a36acd47cccad5d",
+    "derived/financial-evidence-currency-refresh-v1/hpg_h1_2026_ocr_layout_admission_report.json": "e329679bebd6e86093e5e166fbaad7fc5a755d0f931fc6465f9c9ba87ff66ba1",
     "derived/financial-evidence-currency-refresh-v1/nvl_reviewed_h1_acquisition_proof.json": "e6a1cb91fc5c537f5602d887a2d8db253f7c1a3aeba28190efb528e14d1d2e33",
     "derived/financial-evidence-currency-refresh-v1/nvl_reviewed_h1_consumer_proof.json": "89df20bc4b44b72a3ee0985c9f2d59f01fc94fcaf0329473c11f501cb571cf97",
     "derived/financial-evidence-currency-refresh-v1/nvl_reviewed_h1_ingress_report.json": "73c20776bd77461853cc3212828cd77cacf50ba6797a0daa9df960e066eb2152",
