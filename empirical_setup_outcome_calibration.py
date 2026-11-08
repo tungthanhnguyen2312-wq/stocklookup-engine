@@ -814,3 +814,483 @@ _EMPIRICAL_CONTEXT_BOUNDARY = {
     "empirical_research_estimate_not_universal_probability": True,
     "never_silently_converted_to_executable_target": True,
 }
+
+
+
+# ── Market-gate decision quality (MARKET_GATE_DECISION_QUALITY_V1) ────────────────────────────
+#
+# Question: when a security-level setup was valid but the governed market gate
+# (``BEARISH_BREADTH_NARROWS_FRESH_ENTRY``) held its research posture at WAIT, what happened
+# afterwards, and what can be concluded? Read-only, downstream of retained decision records. It
+# reuses the shared session-counted horizon/excursion primitives, the governed session chain and
+# the existing outcome thresholds. It never reconstructs or rewrites a T0 decision and never
+# votes back into a posture.
+
+MARKET_GATE_CONTRACT_VERSION = "market_gate_decision_quality/v1"
+MARKET_GATE_CONDITION_CLASS = "BEARISH_BREADTH_NARROWS_FRESH_ENTRY"
+ALLOWED_ENTRY_CONDITION_CLASSES = ("FRESH_ENTRY_TRIGGER", "CONFIRMED_RETEST_ENTRY")
+ENTRY_POSTURES = frozenset({"INITIATE_ON_BREAKOUT", "ACCUMULATE_ON_RETEST"})
+GATED_GROUP, BASELINE_GROUP = "MARKET_GATED", "ALLOWED_ENTRY_BASELINE"
+MARKET_GATE_HORIZONS = {"T1": 1, "T3": 3, "T5": 5, "T10": 10, "T20": 20, "T60": 60}
+_UNIVERSE_HORIZONS = ("T1", "T3", "T5", "T10", "T20")
+# The governed outcome-label basis horizon (forward_close_return_5); not a new threshold.
+MARKET_GATE_LABEL_HORIZON = "T" + outcome_feedback.OUTCOME_POLICY_CONSTANTS["basis_horizon_for_outcome_label"].rsplit("_", 1)[1]
+INSUFFICIENT_EVIDENCE_FOR_POLICY_CHANGE = "INSUFFICIENT_EVIDENCE_FOR_POLICY_CHANGE"
+DESCRIPTIVE_EVIDENCE_NO_POLICY_CHANGE = "DESCRIPTIVE_EVIDENCE_ONLY_NO_AUTOMATIC_POLICY_CHANGE"
+_BRIEF_ARTIFACT_CONTRACT = "daily_session_integrated_decision_brief_artifact/v1"
+_PRICE_ROW_FIELDS = ("session", "close", "price_basis", "transformation_identity", "provider", "dataset", "qualification")
+_MARKET_GATE_BOUNDARY = {
+    "research_evaluation_only": True, "not_a_trading_signal_or_current_posture": True,
+    "does_not_vote_into_research_action_posture": True, "no_automatic_policy_change": True,
+    "counterfactual_close_to_close_not_an_executed_trade": True,
+    "no_transaction_costs_slippage_or_liquidity_modeled": True,
+    "price_basis_research_proxy_not_raw_as_traded_or_pit": True,
+    "close_path_is_not_intraday_mfe_mae": True,
+    "labels_descriptive_not_causal": True, "no_probability_or_confidence_score": True,
+}
+
+
+class MarketGateEvidenceError(ValueError):
+    pass
+
+
+def _gate_require(condition: bool, reason: str) -> None:
+    if not condition:
+        raise MarketGateEvidenceError(reason)
+
+
+def project_exact_session_price_rows(snapshot: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep only each ticker's own-session close row of one exact-session P3F9B snapshot.
+
+    These are exactly the facts ``retained_session_price_observations`` reads; never another
+    date's row.
+    """
+    session = snapshot.get("resolved_completed_session")
+    _gate_require(isinstance(session, str) and isinstance(snapshot.get("snapshot_identity"), str), "PRICE_SNAPSHOT_IDENTITY_MISSING")
+    records: dict[str, Any] = {}
+    for ticker, record in sorted((snapshot.get("records") or {}).items()):
+        rows = [{key: row.get(key) for key in _PRICE_ROW_FIELDS} for row in ((record or {}).get("observations") or [])
+                if isinstance(row, Mapping) and row.get("session") == session]
+        if rows:
+            records[ticker] = {"observations": rows}
+    return {"resolved_completed_session": session, "snapshot_identity": snapshot["snapshot_identity"], "records": records}
+
+
+def _boundary_level(boundary: Any, operator: str) -> float | None:
+    condition = boundary.get("condition") if isinstance(boundary, Mapping) else None
+    if not isinstance(condition, Mapping) or condition.get("status") != "MACHINE_EVALUABLE" or condition.get("operator") != operator:
+        return None
+    level = condition.get("reference_level")
+    return level if feedback_bridge._qualified_close(level) else None
+
+
+def market_gate_session_input(brief_artifact: Mapping[str, Any], *, seal_index: Mapping[str, Any] | None = None,
+                              t0_records: Mapping[str, Mapping[str, Any]] | None = None) -> dict[str, Any]:
+    """One retained session's decision facts, exactly as recorded at that session's cutoff.
+
+    ``brief_artifact`` is the retained Daily brief artifact (its content identity is re-verified).
+    The optional ``seal_index`` binds each ticker to its sealed T0 decision identity. The optional
+    ``t0_records`` (integrated_decision_v1 rows for gated tickers) add trigger levels. Every join
+    is identity-checked; a disagreement refuses instead of guessing.
+    """
+    from stocklookup_core.decision import daily_integrated_decision_brief as brief_module
+    _gate_require(isinstance(brief_artifact, Mapping) and brief_artifact.get("contract_version") == _BRIEF_ARTIFACT_CONTRACT, "BRIEF_ARTIFACT_CONTRACT_MISMATCH")
+    brief = brief_artifact.get("daily_integrated_decision_brief")
+    _gate_require(isinstance(brief, Mapping) and brief.get("artifact_identity") == brief_module.content_identity(brief)["artifact_identity"], "BRIEF_CONTENT_IDENTITY_INVALID")
+    session, iid = brief_artifact.get("session"), brief_artifact.get("integrated_investment_decision_product_identity")
+    _gate_require(_valid_session(session) and isinstance(iid, str) and bool(iid), "BRIEF_SESSION_OR_DECISION_SOURCE_MISSING")
+    rows: dict[str, dict[str, Any]] = {}
+    for row in (brief.get("decision_surface_index") or {}).get("rows") or []:
+        ticker = row.get("ticker")
+        compact = {key: row.get(key, FIELD_NOT_RETAINED) for key in
+                   ("research_action_posture", "posture_condition_class", "research_action_policy_version", "evidence_currency")}
+        _gate_require(isinstance(ticker, str) and rows.get(ticker, compact) == compact, "CONFLICTING_DECISION_ROW")
+        rows[ticker] = compact
+    market = brief.get("market_summary") or {}
+    breadth = market.get("breadth") or {}
+    context = {"market_regime": market.get("market_regime", FIELD_NOT_RETAINED),
+               **{key: breadth.get(key, FIELD_NOT_RETAINED) for key in ("breadth_descriptor", "advance_ratio", "advancing", "declining")}}
+    identities: dict[str, str] = {}
+    if seal_index is not None:
+        from prospective_t0_seal_index import verify
+        verify(dict(seal_index), "prospective_t0_seal_index")
+        _gate_require(seal_index.get("session") == session, "SEAL_INDEX_SESSION_MISMATCH")
+        for ticker, entry in sorted((seal_index.get("records") or {}).items()):
+            _gate_require(entry.get("ticker") == ticker and entry.get("source_decision_artifact_identity") == iid, "SEAL_INDEX_SOURCE_MISMATCH")
+            identities[ticker] = entry["integrated_decision_identity"]
+    t0: dict[str, dict[str, Any]] = {}
+    for ticker, record in sorted((t0_records or {}).items()):
+        _gate_require(record.get("ticker") == ticker and record.get("as_of_session") == session, "T0_RECORD_SESSION_MISMATCH")
+        _gate_require(ticker in rows and record.get("posture_condition_class") == rows[ticker]["posture_condition_class"], "T0_RECORD_CONDITION_MISMATCH")
+        identity = record.get("decision_identity")
+        _gate_require(isinstance(identity, str) and identities.get(ticker, identity) == identity, "T0_RECORD_DECISION_IDENTITY_MISMATCH")
+        identities.setdefault(ticker, identity)
+        downside = _boundary_level(record.get("invalidation"), "<")
+        declared = ((record.get("invalidation") or {}).get("condition") or {}).get("operator")
+        t0[ticker] = {
+            "tactical_phase": record.get("tactical_phase", FIELD_NOT_RETAINED),
+            "trigger_level": _boundary_level(record.get("trigger"), ">"),
+            "distance_to_trigger_pct": (record.get("trigger") or {}).get("distance_to_trigger_pct"),
+            "downside_invalidation_level": downside,
+            "downside_invalidation_status": ("RETAINED" if downside is not None else
+                                             "NOT_A_DOWNSIDE_BOUNDARY_AT_T0" if declared else "NOT_RETAINED_AT_T0"),
+        }
+    return {"session": session, "brief_artifact_identity": brief_artifact.get("artifact_identity"), "brief_identity": brief["artifact_identity"],
+            "iid_identity": iid, "policy_version": brief.get("policy_version", FIELD_NOT_RETAINED), "market_context": context,
+            "rows": rows, "decision_identities": identities, "t0_records": t0,
+            "seal_index_identity": (seal_index or {}).get("artifact_identity")}
+
+
+class _CachedChain(Sequence):
+    """Memoized view of a governed chain: identical answers, no new session semantics."""
+
+    def __init__(self, chain):
+        self._chain, self._next, self._prefix = chain, {}, {}
+        self.contract_version = getattr(chain, "contract_version", None)
+
+    def __len__(self):
+        return len(self._chain)
+
+    def __getitem__(self, item):
+        return self._chain[item]
+
+    def __contains__(self, item):
+        return item in self._chain
+
+    def index(self, value, *args):
+        return self._chain.index(value, *args)
+
+    def next_n_sessions(self, after, n, as_of=None):
+        key = (after, n, as_of)
+        if key not in self._next:
+            self._next[key] = self._chain.next_n_sessions(after, n, as_of=as_of)
+        return self._next[key]
+
+    def realized_prefix_after(self, after, n, as_of=None):
+        key = (after, n, as_of)
+        if key not in self._prefix:
+            self._prefix[key] = self._chain.realized_prefix_after(after, n, as_of=as_of)
+        return self._prefix[key]
+
+    def gaps(self):
+        return self._chain.gaps() if hasattr(self._chain, "gaps") else []
+
+
+def _window_observations(start: str, observations: Mapping[str, Any], chain: Sequence[str]) -> dict[str, Any]:
+    """Same strict realized prefix every existing path consumer sees; never skips a missed session."""
+    if not hasattr(chain, "realized_prefix_after"):
+        return dict(observations)
+    days = {start, *chain.realized_prefix_after(start, max(MARKET_GATE_HORIZONS.values()))} if start in chain else {start}
+    return {day: row for day, row in observations.items() if day in days}
+
+
+def _horizon_set(start: str, observations: Mapping[str, Any], chain: Sequence[str], names=tuple(MARKET_GATE_HORIZONS)) -> dict[str, Any]:
+    window = _window_observations(start, observations, chain)
+    result = {}
+    for name in names:
+        horizon = feedback_bridge._forward_horizon(as_of_session=start, horizon_sessions=MARKET_GATE_HORIZONS[name], chain=chain, observations=window)
+        excursion = feedback_bridge._close_excursion(as_of_session=start, horizon=horizon, chain=chain, observations=window)
+        row = {key: horizon.get(key) for key in ("status", "return", "start_session", "future_session", "start_price", "end_price", "price_basis", "series_fitness")}
+        row["required_completed_future_sessions"] = MARKET_GATE_HORIZONS[name]
+        row["close_mfe"] = excursion.get("CLOSE_MFE") if excursion.get("status") == feedback_bridge.MATURE else None
+        row["close_mae"] = excursion.get("CLOSE_MAE") if excursion.get("status") == feedback_bridge.MATURE else None
+        result[name] = row
+    return result
+
+
+def _outcome_band(horizon: Mapping[str, Any]) -> str:
+    """Existing outcome thresholds only (prospective_decision_outcome_feedback.OUTCOME_POLICY_CONSTANTS)."""
+    policy = outcome_feedback.OUTCOME_POLICY_CONSTANTS
+    if horizon.get("status") != feedback_bridge.MATURE:
+        return "INDETERMINATE"
+    if horizon["return"] >= policy["material_upside_return_greater_than_or_equal_to"]:
+        return "MATERIAL_UPSIDE"
+    mae = horizon.get("close_mae")
+    if (horizon["return"] < policy["adverse_return_strictly_less_than"] and mae is not None
+            and mae <= policy["large_close_adverse_excursion_less_than_or_equal_to"]):
+        return "LARGE_ADVERSE"
+    return "NO_MATERIAL_MOVE"
+
+
+def _sessions_until(chain: Sequence[str], start: str, end: str) -> int | None:
+    if hasattr(chain, "next_n_sessions"):
+        for n in range(1, max(MARKET_GATE_HORIZONS.values()) + 1):
+            target = chain.next_n_sessions(start, n).get("target")
+            if target == end:
+                return n
+            if target is None or target > end:
+                return None
+        return None
+    return chain.index(end) - chain.index(start) if start in chain and end in chain and end > start else None
+
+
+def _release(ticker: str, session: str, by_session: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+    """First later retained decision record no longer held by the gate (decision fact, not hindsight)."""
+    still_gated, absent = [], []
+    base = {"release_basis": "LATER_RETAINED_DECISION_RECORD_NOT_HINDSIGHT"}
+    for later in sorted(day for day in by_session if day > session):
+        row = by_session[later]["rows"].get(ticker)
+        if row is None:
+            absent.append(later)
+            continue
+        condition, posture = row["posture_condition_class"], row["research_action_posture"]
+        if condition == MARKET_GATE_CONDITION_CLASS:
+            still_gated.append(later)
+            continue
+        state = ("GATE_RELEASED_AFTER_CONFIRMATION" if posture in ENTRY_POSTURES else
+                 "RELEASED_EXTENDED_DO_NOT_CHASE" if condition == "EXTENDED_NO_CHASE" else
+                 "SETUP_FAILED_BY_RELEASE" if str(condition).startswith("FAILED_BREAKOUT") else "RELEASED_SETUP_NOT_ENTRY")
+        return {**base, "state": state, "release_session": later, "posture_at_release": posture, "condition_class_at_release": condition,
+                "later_decision_sessions_still_gated": still_gated, "later_decision_sessions_ticker_absent": absent}
+    return {**base, "state": "GATE_STILL_ACTIVE_AT_LAST_RECORD" if still_gated else "NO_LATER_DECISION_RECORD",
+            "release_session": None, "posture_at_release": None, "condition_class_at_release": None,
+            "later_decision_sessions_still_gated": still_gated, "later_decision_sessions_ticker_absent": absent}
+
+
+def _close_below_trigger(trigger: float | None, start: str, until: str | None, observations: Mapping[str, Any], chain: Sequence[str]) -> dict[str, Any]:
+    """Descriptive close event against the T0 pivot trigger; not the governed invalidation."""
+    semantics = "DESCRIPTIVE_CLOSE_EVENT_NOT_GOVERNED_INVALIDATION"
+    if trigger is None:
+        return {"status": "NO_T0_TRIGGER_LEVEL_RETAINED", "first_session": None, "semantics": semantics}
+    window = _window_observations(start, observations, chain)
+    origin = window.get(start)
+    days = sorted(day for day in window if day > start and (until is None or day <= until))
+    for day in days:
+        row = window[day]
+        if origin is None or not feedback_bridge._compatible_close_series(origin, row) or not feedback_bridge._qualified_close(row.get("close")):
+            return {"status": "PATH_NOT_COMPARABLE", "first_session": None, "semantics": semantics}
+        if row["close"] < trigger:
+            return {"status": "CLOSE_BELOW_T0_TRIGGER", "first_session": day, "semantics": semantics}
+    return {"status": "NOT_OBSERVED_IN_REALIZED_PATH" if days else "NO_REALIZED_LATER_SESSION", "first_session": None,
+            "sessions_checked": days, "semantics": semantics}
+
+
+def _gated_label(case: Mapping[str, Any]) -> dict[str, Any]:
+    horizon = case["horizons"][MARKET_GATE_LABEL_HORIZON]
+    band = _outcome_band(horizon)
+    base = {"basis_horizon": MARKET_GATE_LABEL_HORIZON, "semantics": "DESCRIPTIVE_NOT_CAUSAL"}
+    if band == "INDETERMINATE":
+        return {**base, "label": "INDETERMINATE", "reason": f"{MARKET_GATE_LABEL_HORIZON}_{horizon['status']}"}
+    if band == "LARGE_ADVERSE":
+        return {**base, "label": "AVOIDED_DOWNSIDE", "reason": "LARGE_CLOSE_DECLINE_WHILE_HELD"}
+    if band == "NO_MATERIAL_MOVE":
+        return {**base, "label": "NO_MATERIAL_MOVE", "reason": "WITHIN_EXISTING_OUTCOME_THRESHOLDS"}
+    delayed = case["delayed_entry"].get("return_from_release_to_label_horizon_end")
+    if (case["release"]["state"] == "GATE_RELEASED_AFTER_CONFIRMATION" and isinstance(delayed, (int, float))
+            and delayed > outcome_feedback.OUTCOME_POLICY_CONSTANTS["positive_return_strictly_greater_than"]):
+        return {**base, "label": "DELAYED_ENTRY_STILL_AVAILABLE", "reason": "RELEASED_INTO_ENTRY_POSTURE_AND_MOVE_CONTINUED"}
+    return {**base, "label": "MISSED_UPSIDE", "reason": "MATERIAL_UPSIDE_WITHOUT_PROFITABLE_POST_RELEASE_ENTRY"}
+
+
+def _gated_followup(case: dict[str, Any], *, observations, chain, by_session) -> None:
+    session = case["t0_session"]
+    release = _release(case["ticker"], session, by_session)
+    move: dict[str, Any] = {"status": "NOT_RELEASED"}
+    delayed: dict[str, Any] = {"status": "NOT_RELEASED_INTO_ENTRY_POSTURE", "counterfactual": "CLOSE_AT_RELEASE_SESSION_NOT_EXECUTED"}
+    if release["release_session"]:
+        sessions = _sessions_until(chain, session, release["release_session"])
+        release["governed_sessions_to_release"] = sessions
+        if sessions is None:
+            move = {"status": "RELEASE_SESSION_NOT_ON_GOVERNED_CHAIN"}
+        else:
+            raw = feedback_bridge._forward_horizon(as_of_session=session, horizon_sessions=sessions, chain=chain,
+                                                   observations=_window_observations(session, observations, chain))
+            move = {key: raw.get(key) for key in ("status", "return", "start_price", "end_price", "future_session")}
+        if release["state"] == "GATE_RELEASED_AFTER_CONFIRMATION":
+            delayed = {"status": "RELEASED_INTO_ENTRY_POSTURE", "counterfactual": "CLOSE_AT_RELEASE_SESSION_NOT_EXECUTED",
+                       "horizons_from_release": _horizon_set(release["release_session"], observations, chain, names=_UNIVERSE_HORIZONS)}
+            label_horizon = case["horizons"][MARKET_GATE_LABEL_HORIZON]
+            if (move.get("status") == feedback_bridge.MATURE and label_horizon["status"] == feedback_bridge.MATURE
+                    and release["release_session"] <= label_horizon["future_session"]):
+                delayed["return_from_release_to_label_horizon_end"] = label_horizon["end_price"] / move["end_price"] - 1
+    case["release"], case["move_before_release"], case["delayed_entry"] = release, move, delayed
+    case["close_below_t0_trigger"] = _close_below_trigger(case["t0_setup"].get("trigger_level"), session,
+                                                          release["release_session"], observations, chain)
+    case["descriptive_label"] = _gated_label(case)
+
+
+def _market_gate_case(item, ticker, row, group, *, observations, horizons, chain, by_session):
+    case = {"ticker": ticker, "t0_session": item["session"], "group": group,
+            "t0_decision_identity": item["decision_identities"].get(ticker, FIELD_NOT_RETAINED),
+            "t0_posture": row["research_action_posture"], "t0_condition_class": row["posture_condition_class"],
+            "t0_policy_version": row["research_action_policy_version"], "t0_evidence_currency": row["evidence_currency"],
+            "t0_market_context": dict(item["market_context"]),
+            "t0_sources": {"brief_identity": item["brief_identity"], "integrated_decision_identity": item["iid_identity"],
+                           "seal_index_identity": item["seal_index_identity"]},
+            "t0_setup": dict(item["t0_records"].get(ticker) or {}), "horizons": horizons}
+    case["outcome_band"] = {name: _outcome_band(value) for name, value in horizons.items()}
+    if group == GATED_GROUP:
+        _gated_followup(case, observations=observations, chain=chain, by_session=by_session)
+    return _identity(case, "market_gate_case:", "case_identity")
+
+
+def _summary_values(values) -> dict[str, Any]:
+    return _quantile_summary([value for value in values if isinstance(value, (int, float)) and not isinstance(value, bool)])
+
+
+def _group_horizon_summary(cases, horizon, universe) -> dict[str, Any]:
+    mature = [case for case in cases if case["horizons"][horizon]["status"] == feedback_bridge.MATURE]
+    returns = [case["horizons"][horizon]["return"] for case in mature]
+    excess = [case["horizons"][horizon]["return"] - universe[(case["t0_session"], horizon)]["median"]
+              for case in mature if (universe.get((case["t0_session"], horizon)) or {}).get("median") is not None]
+    sessions = {case["t0_session"] for case in mature}
+    return {"horizon": horizon, "eligible_count": len(cases),
+            "status_counts": dict(sorted(Counter(str(case["horizons"][horizon]["status"]) for case in cases).items())),
+            "mature_count": len(mature), "distinct_mature_t0_sessions": len(sessions),
+            "sample_adequacy": sample_adequacy(len(mature), len(sessions)),
+            "forward_close_return": _summary_values(returns),
+            "excess_vs_same_session_universe_median": _summary_values(excess),
+            "close_mfe": _summary_values(case["horizons"][horizon]["close_mfe"] for case in mature),
+            "close_mae": _summary_values(case["horizons"][horizon]["close_mae"] for case in mature),
+            "positive_return_count": sum(value > 0 for value in returns),
+            "outcome_bands": dict(sorted(Counter(case["outcome_band"][horizon] for case in mature).items()))}
+
+
+def build_market_gate_evaluation(session_inputs: Sequence[Mapping[str, Any]], *, chain: Sequence[str],
+                                 price_snapshots: Mapping[str, Mapping[str, Any]], policy_version: str = "v2",
+                                 evaluated_as_of: str) -> dict[str, Any]:
+    """Cohort-level market-gate decision-quality evaluation over every eligible retained session."""
+    by_session: dict[str, Mapping[str, Any]] = {}
+    for item in session_inputs:
+        prior = by_session.get(item["session"])
+        _gate_require(prior is None or prior["brief_identity"] == item["brief_identity"], "CONFLICTING_DECISION_RECORDS_FOR_SESSION")
+        by_session[item["session"]] = item  # an identical duplicate collapses; never double-counted
+    chain = _CachedChain(chain) if hasattr(chain, "next_n_sessions") else list(chain)
+    scoped = [day for day in sorted(by_session) if by_session[day]["policy_version"] == policy_version]
+    excluded = [{"session": day, "reason": "POLICY_VERSION_OUT_OF_SCOPE", "policy_version": by_session[day]["policy_version"]}
+                for day in sorted(by_session) if day not in scoped]
+    cases, universe = [], {}
+    for day in scoped:
+        item = by_session[day]
+        returns = {horizon: [] for horizon in _UNIVERSE_HORIZONS}
+        for ticker, row in sorted(item["rows"].items()):
+            group = (GATED_GROUP if row["posture_condition_class"] == MARKET_GATE_CONDITION_CLASS else
+                     BASELINE_GROUP if row["posture_condition_class"] in ALLOWED_ENTRY_CONDITION_CLASSES else None)
+            observations = feedback_bridge.retained_session_price_observations(price_snapshots, ticker)
+            horizons = _horizon_set(day, observations, chain, names=tuple(MARKET_GATE_HORIZONS) if group else _UNIVERSE_HORIZONS)
+            for horizon in _UNIVERSE_HORIZONS:
+                if horizons[horizon]["status"] == feedback_bridge.MATURE:
+                    returns[horizon].append(horizons[horizon]["return"])
+            if group:
+                cases.append(_market_gate_case(item, ticker, row, group, observations=observations, horizons=horizons,
+                                               chain=chain, by_session=by_session))
+        for horizon, values in returns.items():
+            universe[(day, horizon)] = {"mature_count": len(values), "median": _median(values)}
+    gated = [case for case in cases if case["group"] == GATED_GROUP]
+    baseline = [case for case in cases if case["group"] == BASELINE_GROUP]
+    groups = {name: {horizon: _group_horizon_summary(members, horizon, universe) for horizon in MARKET_GATE_HORIZONS}
+              for name, members in ((GATED_GROUP, gated), (BASELINE_GROUP, baseline))}
+    episodes = []
+    for day in sorted({case["t0_session"] for case in gated}):
+        members = [case for case in gated if case["t0_session"] == day]
+        episodes.append({"session": day, "market_context": dict(by_session[day]["market_context"]), "gated_count": len(members),
+                         "tickers": [case["ticker"] for case in members],
+                         "release_states": dict(sorted(Counter(case["release"]["state"] for case in members).items())),
+                         "postures_at_release": dict(sorted(Counter(str(case["release"]["posture_at_release"]) for case in members).items()))})
+    label_summary = groups[GATED_GROUP][MARKET_GATE_LABEL_HORIZON]
+    verdict = (INSUFFICIENT_EVIDENCE_FOR_POLICY_CHANGE if label_summary["sample_adequacy"] == INSUFFICIENT_SAMPLE
+               else DESCRIPTIVE_EVIDENCE_NO_POLICY_CHANGE)
+    moves = [case["move_before_release"] for case in gated if case["move_before_release"].get("status") == feedback_bridge.MATURE]
+    body = {
+        "contract_version": MARKET_GATE_CONTRACT_VERSION, "evaluated_as_of": evaluated_as_of, "policy_version_scope": policy_version,
+        "gate_rule": {"posture_condition_class": MARKET_GATE_CONDITION_CLASS, "held_posture": "WAIT_FOR_CONFIRMATION",
+                      "comparable_allowed_condition_classes": list(ALLOWED_ENTRY_CONDITION_CLASSES)},
+        "methodology": {
+            "t0_source": "RETAINED_DAILY_BRIEF_DECISION_SURFACE_WITH_SEALED_T0_DECISION_IDENTITY",
+            "horizon_counting": "GOVERNED_COMPLETED_SESSION_CHAIN_NO_CALENDAR_DAYS_NO_GAP_SKIPPING",
+            "return_basis": "RETAINED_EXACT_SESSION_CLOSE_TO_CLOSE",
+            "baseline": "SAME_POLICY_FRESH_ENTRY_OR_CONFIRMED_RETEST_ANY_SESSION; SAME_SESSION_DECISION_UNIVERSE_MEDIAN_FOR_EXCESS",
+            "label_horizon": MARKET_GATE_LABEL_HORIZON, "outcome_thresholds": dict(outcome_feedback.OUTCOME_POLICY_CONSTANTS),
+            "sample_adequacy_policy_version": SAMPLE_ADEQUACY_POLICY_VERSION,
+            "confounding_note": "GATED_AND_BASELINE_SETUPS_OCCUR_IN_DIFFERENT_MARKET_REGIMES; DIFFERENCES_ARE_NOT_CAUSAL",
+        },
+        "session_accounting": {"decision_sessions_supplied": len(by_session), "decision_sessions_in_scope": len(scoped),
+                               "sessions_with_active_gate": len(episodes), "excluded_sessions": excluded,
+                               "governed_chain_contract": getattr(chain, "contract_version", None) or "LEGACY_SORTED_RETAINED_SESSIONS",
+                               "governed_chain_gaps": chain.gaps() if hasattr(chain, "gaps") else []},
+        "case_counts": {GATED_GROUP: len(gated), BASELINE_GROUP: len(baseline)},
+        "cohort_identity": "market_gate_cohort:" + _hash(sorted([case["t0_session"], case["ticker"], case["group"], case["t0_decision_identity"]] for case in cases)),
+        "gate_episodes": episodes, "groups": groups,
+        "gated_release": {"release_states": dict(sorted(Counter(case["release"]["state"] for case in gated).items())),
+                          "move_before_release": _summary_values(move["return"] for move in moves),
+                          "move_before_release_mature_count": len(moves),
+                          "close_below_t0_trigger": dict(sorted(Counter(case["close_below_t0_trigger"]["status"] for case in gated).items()))},
+        "gated_descriptive_labels": dict(sorted(Counter(case["descriptive_label"]["label"] for case in gated).items())),
+        "same_session_universe_median": {f"{day}|{horizon}": value for (day, horizon), value in sorted(universe.items())},
+        "evidence_verdict": {"state": verdict, "policy_change_authorized": False,
+                             "label_horizon_mature_count": label_summary["mature_count"],
+                             "label_horizon_distinct_sessions": label_summary["distinct_mature_t0_sessions"],
+                             "label_horizon_status_counts": label_summary["status_counts"],
+                             "minimum_for_descriptive_review": {"observations": MIN_OBSERVATIONS_DESCRIPTIVE, "sessions": MIN_SESSIONS_DESCRIPTIVE}},
+        "cases": sorted(cases, key=lambda case: (case["group"], case["t0_session"], case["ticker"])),
+        "authority_boundary": dict(_MARKET_GATE_BOUNDARY),
+    }
+    return _identity(body, MARKET_GATE_CONTRACT_VERSION + ":")
+
+
+def _pct(value: Any) -> str:
+    return f"{value * 100:+.1f}%" if isinstance(value, (int, float)) and not isinstance(value, bool) else "không có"
+
+
+def render_market_gate_summary_vi(evaluation: Mapping[str, Any]) -> str:
+    """Plain-Vietnamese research summary; every number comes from the evaluation artifact."""
+    gated, baseline = evaluation["groups"][GATED_GROUP], evaluation["groups"][BASELINE_GROUP]
+    accounting, label = evaluation["session_accounting"], evaluation["methodology"]["label_horizon"]
+    lines = ["# Đánh giá quy tắc WAIT do thị trường chung", "",
+             f"Đánh giá đến {evaluation['evaluated_as_of']} · chính sách {evaluation['policy_version_scope']} · "
+             f"`{evaluation['artifact_identity'][:72]}`", "",
+             "Đây là bằng chứng nghiên cứu lịch sử, không phải tín hiệu mua/bán, và không thay đổi khuyến nghị hiện tại.", "",
+             "## Quy tắc đã làm gì",
+             f"- Trong {accounting['decision_sessions_in_scope']} phiên có hồ sơ quyết định theo chính sách này, cổng thị trường "
+             f"kích hoạt ở {accounting['sessions_with_active_gate']} phiên và giữ {evaluation['case_counts'][GATED_GROUP]} "
+             "thiết lập hợp lệ ở mức chờ xác nhận (WAIT)."]
+    for episode in evaluation["gate_episodes"]:
+        context = episode["market_context"]
+        lines.append(f"- Phiên {episode['session']}: {episode['gated_count']} mã bị giữ; độ rộng {context.get('breadth_descriptor')}, "
+                     f"tỷ lệ mã tăng {_pct(context.get('advance_ratio')).lstrip('+')}, chế độ {context.get('market_regime')}. "
+                     f"Sau đó: {episode['release_states']}; khuyến nghị nghiên cứu khi gỡ cổng: {episode['postures_at_release']}.")
+        lines += ["", "| Mã | Quyết định T0 | Phiên gỡ cổng | Khuyến nghị khi gỡ | Biến động đến lúc gỡ | T+1 sau khi gỡ | Đóng cửa dưới mức kích hoạt T0 |",
+                  "|---|---|---|---|---|---|---|"]
+        for case in (c for c in evaluation["cases"] if c["group"] == GATED_GROUP and c["t0_session"] == episode["session"]):
+            after = (case["delayed_entry"].get("horizons_from_release") or {}).get("T1") or {}
+            trigger = case["close_below_t0_trigger"]
+            lines.append(f"| {case['ticker']} | `{case['t0_decision_identity']}` | {case['release']['release_session'] or 'chưa'} | "
+                         f"{case['release']['posture_at_release'] or '-'} | {_pct(case['move_before_release'].get('return'))} | "
+                         f"{_pct(after.get('return')) if after.get('status') == feedback_bridge.MATURE else after.get('status') or '-'} | "
+                         f"{trigger['first_session'] if trigger['status'] == 'CLOSE_BELOW_T0_TRIGGER' else trigger['status']} |")
+        lines.append("")
+    release = evaluation["gated_release"]
+    moved = release["move_before_release"]
+    lines += ["", "## Kết quả đo được",
+              f"- Biến động từ phiên bị giữ đến phiên gỡ cổng (đóng cửa đến đóng cửa, giả định nghiên cứu, không phải lệnh đã khớp): "
+              f"{release['move_before_release_mature_count']} trường hợp đo được, trung vị {_pct(moved['median'])}, "
+              f"thấp nhất {_pct(moved['min'])}, cao nhất {_pct(moved['max'])}."]
+    for horizon in MARKET_GATE_HORIZONS:
+        row = gated[horizon]
+        if row["mature_count"]:
+            lines.append(f"- {horizon}: {row['mature_count']}/{row['eligible_count']} trường hợp đủ dữ liệu; trung vị "
+                         f"{_pct(row['forward_close_return']['median'])}, chênh lệch trung vị so với toàn thị trường cùng phiên "
+                         f"{_pct(row['excess_vs_same_session_universe_median']['median'])}; {row['positive_return_count']} trường hợp tăng.")
+        else:
+            lines.append(f"- {horizon}: chưa có trường hợp nào đủ dữ liệu ({row['status_counts']}).")
+    lines.append(f"- Nhãn mô tả ở {label}: {evaluation['gated_descriptive_labels']}.")
+    base = baseline[label]
+    lines += ["", "## Nhóm so sánh",
+              f"- {base['eligible_count']} thiết lập tương tự được phép (FRESH_ENTRY_TRIGGER/CONFIRMED_RETEST_ENTRY); "
+              f"{base['mature_count']} đủ dữ liệu ở {label} từ {base['distinct_mature_t0_sessions']} phiên; "
+              f"trung vị {_pct(base['forward_close_return']['median'])}.",
+              "- Nhóm này rơi vào chế độ thị trường khác, nên chênh lệch không chứng minh quan hệ nhân quả."]
+    verdict = evaluation["evidence_verdict"]
+    lines += ["", "## Kết luận", f"- Trạng thái bằng chứng: **{verdict['state']}**."]
+    if verdict["state"] == INSUFFICIENT_EVIDENCE_FOR_POLICY_CHANGE:
+        minimum = verdict["minimum_for_descriptive_review"]
+        lines.append(f"- Chưa đủ dữ liệu để kết luận quy tắc WAIT nên thay đổi: ở {label} mới có {verdict['label_horizon_mature_count']} "
+                     f"trường hợp từ {verdict['label_horizon_distinct_sessions']} phiên (cần ít nhất {minimum['observations']} trường hợp "
+                     f"từ {minimum['sessions']} phiên). Giữ nguyên quy tắc hiện tại.")
+    missed = sorted({day for gap in accounting["governed_chain_gaps"] if gap.get("state") == "MISSED_CAPTURE" for day in gap.get("sessions", [])})
+    if missed:
+        lines.append(f"- Các phiên không được ghi nhận đúng hạn ({', '.join(missed)}) làm đứt chuỗi phiên; mọi kỳ hạn đi qua "
+                     "các phiên này không được tính là đã đủ dữ liệu.")
+    lines += ["", "Giới hạn: giá là chuỗi nghiên cứu điều chỉnh hồi tố (không phải giá khớp thực tế hay PIT); chưa tính phí, "
+              "trượt giá, thanh khoản; biên lãi/lỗ lớn nhất chỉ dựa trên giá đóng cửa.", ""]
+    return "\n".join(lines)

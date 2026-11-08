@@ -206,6 +206,7 @@ tests/test_market_breadth_decision_provenance.py
 tests/test_market_data_lineage.py
 tests/test_market_data_source_authority.py
 tests/test_market_feature_store_v1.py
+tests/test_market_gate_decision_quality.py
 tests/test_market_phase2_foundation.py
 tests/test_market_price_volume_basis_authority.py
 tests/test_market_raw_lake.py

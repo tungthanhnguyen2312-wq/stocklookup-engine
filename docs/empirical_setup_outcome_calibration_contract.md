@@ -163,3 +163,45 @@ source inputs and production/runtime stores remain untouched.
 `prospective_decision_corpus_health/v2` adds operational session/horizon diagnosis through the existing retention producer. Snapshot identity/absence inventory remains separate from genuine legacy/immutable outcome coverage. Every admitted decision contributes exactly one count per shared feedback horizon, with unavailable horizons labelled UNKNOWN rather than omitted. Missing/invalid T0, pending completed-session depth, future-close absence/invalidity and price-series incompatibility remain distinct. Exact affected future endpoint sessions are retained only when the upstream outcome actually supplied them. Endpoint maturity never proves complete close-path fitness or calibration eligibility.
 
 The feedback artifact embeds this health verdict, and the existing offline maturation runner consumes the same object. Diagnostic content changes health/feedback wrapper hashes; T0/decision identities, source bytes, numerical returns, classifications, cohort thresholds and action policy do not change. No historical T0 backfill, automatic repair/acquisition, policy writer or authority promotion occurs.
+
+## Market-gate decision quality — `market_gate_decision_quality/v1` (2026-11-08)
+
+Offline, read-only, `NON_VOTING`. It asks what happened after the governed rule
+`BEARISH_BREADTH_NARROWS_FRESH_ENTRY` held an otherwise valid fired breakout or retest at
+`WAIT_FOR_CONFIRMATION`. It lives in `empirical_setup_outcome_calibration.py`; the runner is
+`tools/run_market_gate_decision_quality.py --root <retained root> [--output-dir <scratch>]`.
+
+- **T0 facts:** each completed session's retained Daily brief. The brief content identity is
+  re-verified, and the brief must bind to the handoff's operation and IID identity. The sealed
+  T0 seal index (`prospective_t0_seal_index/v1`, verified with its write receipt) supplies the
+  decision identity. Trigger levels come from the same operation's delivery row, and only when
+  its decision identity equals the sealed one. The posture, condition class, policy version and
+  breadth/regime at the cutoff are copied, never re-derived. A later record never relabels T0.
+- **Groups:** `MARKET_GATED`; `ALLOWED_ENTRY_BASELINE` (same policy version,
+  `FRESH_ENTRY_TRIGGER` or `CONFIRMED_RETEST_ENTRY` in any session); the same-session decision
+  universe median for excess returns. The groups sit in different regimes, so differences are
+  not causal.
+- **Outcomes:** `_forward_horizon`/`_close_excursion` over the governed session chain (T1, T3,
+  T5, T10, T20, T60). A missed capture breaks every horizon that crosses it. Statuses stay
+  explicit (`MISSED_CAPTURE`, `PENDING…`, `PRICE_BASIS_INCOMPATIBLE`, `CLOSE_PRICE_NOT_RETAINED`).
+  Prices are the exact-session snapshot's own-session close rows, read one snapshot at a time.
+- **Release:** the first later retained decision record that is no longer gated. The posture at
+  release gives `GATE_RELEASED_AFTER_CONFIRMATION`, `RELEASED_EXTENDED_DO_NOT_CHASE`,
+  `SETUP_FAILED_BY_RELEASE` or `RELEASED_SETUP_NOT_ENTRY`. The move to release, and the path
+  after release, are close-to-close research counterfactuals: no execution, costs, slippage or
+  liquidity. A close below the T0 trigger is a descriptive event, not the governed invalidation.
+- **Labels (T5 basis, existing `OUTCOME_POLICY_CONSTANTS`):** `AVOIDED_DOWNSIDE`,
+  `MISSED_UPSIDE`, `DELAYED_ENTRY_STILL_AVAILABLE`, `NO_MATERIAL_MOVE` or `INDETERMINATE` with
+  its reason. They are descriptive only.
+- **Verdict:** `INSUFFICIENT_EVIDENCE_FOR_POLICY_CHANGE` below the existing descriptive floor
+  (20 mature T5 observations from 5 sessions). Above it the verdict is descriptive only.
+  `policy_change_authorized` is always false; any rule change needs a separate approved
+  strategy-policy transition.
+
+First retained acceptance (as of 2026-11-06, policy v2, 16 sessions in scope):
+- The gate was active in one session: 2026-11-02, 15 names, `DETERIORATING_BREADTH`, 16% of names
+  advancing. All 15 names were released on 2026-11-03: 9 into an entry posture, 5 into a non-entry
+  setup and 1 failed breakout.
+- The one-session move to release had a median of 0.0%, ranging from −3.1% to +3.0%.
+- T3 and longer are `MISSED_CAPTURE` because 2026-11-05 was captured late. The verdict is
+  `INSUFFICIENT_EVIDENCE_FOR_POLICY_CHANGE`.
