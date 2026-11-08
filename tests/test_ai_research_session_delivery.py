@@ -771,3 +771,29 @@ def test_delivery_and_cockpit_never_pair_a_peer_verdict_with_a_peer_valuation_ga
     assert projection["decision_card_v1"]["AAA"]["valuation"]["context"]["peer_relative_state"] == "CHEAP_VS_PEERS"
     # The Product V2 artifact itself is never rewritten by delivery.
     assert operation["product"]["detailed_research_cards"]["AAA"]["valuation_context"]["peer_valuation_status"] == "VALUATION_PEER_CONTEXT_UNAVAILABLE"
+
+
+def test_cockpit_carries_brief_market_context_verbatim_only_when_the_brief_has_it():
+    import ai_research_session_delivery as delivery
+    integrated = _integrated_delivery_fixture()
+    inputs = {"descriptive": {"records": {"AAA": {}}}, "tactical": {"records": {"AAA": {}}},
+              "fundamental": {"records": {}}, "valuation": {"records": {}},
+              "integrated_investment_decision_product": integrated}
+    plain = _daily_brief_fixture(integrated)
+    without = json.loads(delivery.build_delivery(_operation(), {**inputs, "daily_integrated_decision_brief": plain})["projection"])
+    assert "brief_market_context_v1" not in without                     # older Brief -> unchanged projection
+    change = {"status": "AVAILABLE", "participation_character": "NARROWING", "changes": {"advance_ratio_pp": -12.67}}
+    gated = [{"ticker": "MCP", "security_setup": "FIRED_BREAKOUT_TRIGGER_QUALIFIED_AT_SECURITY_LEVEL",
+              "market_environment": "ADVERSE_MARKET_REGIME_HOLDS_FRESH_ENTRY", "market_regime": "DETERIORATING_BREADTH"}]
+    rich = {**plain, "what_changed_today": {**plain["what_changed_today"], "market_participation_change": change},
+            "opportunity_sets": {"market_gated_entries": gated, "set_counts": {"MARKET_GATED_ENTRY": 1}}}
+    projection = json.loads(delivery.build_delivery(_operation(), {**inputs, "daily_integrated_decision_brief": rich})["projection"])
+    block = projection["brief_market_context_v1"]
+    assert block["contract_version"] == "brief_market_context/v1"
+    assert block["daily_integrated_decision_brief_identity"] == rich["artifact_identity"]
+    assert block["market_participation_change"] == change and block["market_gated_entries"] == gated
+    assert block["market_gated_count"] == 1 and block["authority_boundary"]["is_actionable"] is False
+    assert projection["projection_identity"] != without["projection_identity"]
+    only_change = {**plain, "what_changed_today": {"market_participation_change": change}}
+    assert "market_gated_entries" not in delivery.brief_market_context(only_change)
+    assert delivery.brief_market_context(None) is None

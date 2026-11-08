@@ -237,6 +237,37 @@ def financial_research_card(card: Mapping[str, Any], fundamental: Mapping[str, A
     return result
 
 
+BRIEF_MARKET_CONTEXT_CONTRACT = "brief_market_context/v1"
+
+
+def brief_market_context(daily_brief: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Verbatim copy of the Brief's matched-cohort participation change and market-gated setups.
+
+    ``None`` when the Brief carries neither (its fields are themselves emitted only with evidence),
+    so a delivery built from an older Brief keeps its exact projection bytes. Nothing is recomputed.
+    """
+    if not isinstance(daily_brief, Mapping):
+        return None
+    participation = (daily_brief.get("what_changed_today") or {}).get("market_participation_change")
+    opportunity_sets = daily_brief.get("opportunity_sets") or {}
+    gated = opportunity_sets.get("market_gated_entries")
+    if participation is None and gated is None:
+        return None
+    block: dict[str, Any] = {
+        "contract_version": BRIEF_MARKET_CONTEXT_CONTRACT,
+        "session": daily_brief.get("session"),
+        "daily_integrated_decision_brief_identity": daily_brief.get("artifact_identity"),
+    }
+    if participation is not None:
+        block["market_participation_change"] = copy.deepcopy(participation)
+    if gated is not None:
+        block["market_gated_entries"] = copy.deepcopy(gated)
+        block["market_gated_count"] = ((opportunity_sets.get("set_counts") or {}).get("MARKET_GATED_ENTRY"))
+    block["authority_boundary"] = {"is_actionable": False, "no_universal_score": True, "no_position_size": True,
+                                   "market_environment_and_security_setup_kept_separate": True}
+    return block
+
+
 def _integrated_overlay_header(session: str, integrated: Mapping[str, Any], daily_brief: Mapping[str, Any] | None) -> dict[str, Any]:
     """Shared overlay metadata, independent of the per-ticker projection."""
     return {
@@ -720,6 +751,9 @@ def build_dashboard_projection(
             for key, value in overlay.items()
             if key != "records"
         }
+        market_context = brief_market_context(daily_integrated_brief)
+        if market_context is not None:
+            projection["brief_market_context_v1"] = market_context
     projection["projection_identity"] = "dashboard_decision_cockpit_projection:" + stable_id(projection)
     return projection
 
