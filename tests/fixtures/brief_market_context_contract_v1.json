@@ -554,6 +554,6 @@
  },
  "cases_sha256": "2ea916458e60a3e781718dae34e656d1897b18782026eaeff862db6b306e5dab",
  "contract_version": "brief_market_context_contract_fixture/v1",
- "generated_by": "stocklookup-engine:tools/build_brief_market_context_contract_fixture.py",
+ "generated_by": "stocklookup-engine:tests/build_brief_market_context_contract_fixture.py",
  "projection_contract": "brief_market_context/v1"
 }

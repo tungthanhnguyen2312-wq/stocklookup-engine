@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from stocklookup_core.decision import market_close_intelligence as mci
-from tools import build_brief_market_context_contract_fixture as gen
+import build_brief_market_context_contract_fixture as gen
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = json.loads(gen.FIXTURE_PATH.read_bytes())
@@ -17,7 +17,7 @@ def _pc(name):
 
 def test_committed_fixture_is_byte_identical_to_a_fresh_engine_run():
     # Fails on any Engine change that alters the delivered shape or values; regenerate with
-    # `python tools/build_brief_market_context_contract_fixture.py --write` and copy the file to
+    # `python tests/build_brief_market_context_contract_fixture.py --write` and copy the file to
     # stocklookup-dashboard tests/fixtures/ (its CI compares the copy with this repository's main).
     assert gen.FIXTURE_PATH.read_bytes().replace(b"\r\n", b"\n") == gen.render(gen.build_fixture())
 

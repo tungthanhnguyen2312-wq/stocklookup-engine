@@ -10,7 +10,7 @@ byte-for-byte against a fresh run (tests/test_brief_market_context_contract_fixt
 Dashboard keeps an identical copy that its CI compares with this repository's main. An incompatible
 Engine change therefore fails a test on both sides instead of leaving a stale Dashboard fixture.
 
-    python tools/build_brief_market_context_contract_fixture.py --write
+    python tests/build_brief_market_context_contract_fixture.py --write
 """
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ def build_fixture() -> dict[str, Any]:
     cases = build_cases()
     canonical = json.dumps(cases, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return {"contract_version": FIXTURE_CONTRACT, "projection_contract": "brief_market_context/v1",
-            "generated_by": "stocklookup-engine:tools/build_brief_market_context_contract_fixture.py",
+            "generated_by": "stocklookup-engine:tests/build_brief_market_context_contract_fixture.py",
             "cases_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(), "cases": cases}
 
 
