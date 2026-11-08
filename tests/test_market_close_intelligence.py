@@ -294,4 +294,7 @@ def test_integrated_brief_what_changed_today_carries_compact_participation_chang
     assert out["market_breadth_change"] == {"advance_ratio_direction": "IMPROVING"}  # existing field unchanged
     degraded = dib.build_what_changed_today(posture_transition={"availability": "UNAVAILABLE", "reason_codes": ["X"]},
                                             market_transition=None, sector_transition=None, watchlist_tickers=[])
-    assert degraded["market_participation_change"]["reason_codes"] == ["MATCHED_COHORT_CHANGE_NOT_SUPPLIED"]
+    assert "market_participation_change" not in degraded                      # not supplied -> omitted
+    refused = dib.build_what_changed_today(posture_transition=posture, sector_transition=None, watchlist_tickers=[],
+                                           market_transition={"matched_cohort": {"status": "UNAVAILABLE", "reason_codes": ["NO_PREVIOUS_PARTICIPATION_SNAPSHOT"]}})
+    assert refused["market_participation_change"] == {"status": "UNAVAILABLE", "reason_codes": ["NO_PREVIOUS_PARTICIPATION_SNAPSHOT"]}

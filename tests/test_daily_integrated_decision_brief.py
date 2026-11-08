@@ -306,9 +306,12 @@ class TestMarketGatedEntries:
         assert row["security_invalidation"]["invalidation_level"] == 9.0
         assert "No other condition is added here" in row["release_condition"]
 
-    def test_no_market_gated_names_yields_empty_set(self):
+    def test_no_market_gated_names_omits_the_additive_keys(self):
+        # Omission, not an empty set, so a session without gated names keeps its exact pre-change bytes.
         result = brief.build_opportunity_sets({"A": _record("A", posture="HOLD")}, None)
-        assert result["market_gated_entries"] == [] and result["set_counts"][brief.MARKET_GATED_ENTRY] == 0
+        assert "market_gated_entries" not in result
+        assert brief.MARKET_GATED_ENTRY not in result["sets"] and brief.MARKET_GATED_ENTRY not in result["set_counts"]
+        assert sum(result["set_counts"].values()) == 1
 
     def test_market_gated_rows_carry_no_order_or_size(self):
         result = brief.build_opportunity_sets({"MCP": self._gated("MCP")}, None)

@@ -182,6 +182,10 @@ def build_opportunity_sets(current_records: Mapping[str, Mapping[str, Any]], opp
     buckets: dict[str, list[str]] = {name: [] for name in OPPORTUNITY_SET_NAMES}
     for ticker, record in current_records.items():
         buckets[classify_opportunity_set(record)].append(ticker)
+    # Additive and conditional: an empty market-gated set is omitted so a session without one keeps the
+    # exact pre-change brief bytes (E4 baseline equality) and its partition is unchanged.
+    if not buckets[MARKET_GATED_ENTRY]:
+        del buckets[MARKET_GATED_ENTRY]
     sets: dict[str, Any] = {}
     for name, tickers in buckets.items():
         ordered = sorted(tickers, key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))
@@ -189,18 +193,20 @@ def build_opportunity_sets(current_records: Mapping[str, Mapping[str, Any]], opp
     top_now = sorted(buckets[ACTIONABLE_NOW], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))[:10]
     top_early = sorted(buckets[EARLY_SETUPS], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))[:10]
     risk_ordered = sorted(buckets[RISK_AVOID], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))[:10]
-    gated = sorted(buckets[MARKET_GATED_ENTRY], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))
-    return {
+    gated = sorted(buckets.get(MARKET_GATED_ENTRY, ()), key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))
+    result = {
         "sets": sets,
-        "set_counts": {name: len(buckets[name]) for name in OPPORTUNITY_SET_NAMES},
+        "set_counts": {name: len(buckets[name]) for name in OPPORTUNITY_SET_NAMES if name in buckets},
         "ordering_method": ORDERING_METHOD,
         "top_current_opportunities": [_compact_opportunity_row(current_records[t], priority_tier_by_ticker) for t in top_now],
         "top_early_setups": [_compact_opportunity_row(current_records[t], priority_tier_by_ticker) for t in top_early],
         "highest_risk_names": [_compact_opportunity_row(current_records[t], priority_tier_by_ticker) for t in risk_ordered],
-        "market_gated_entries": [_market_gated_row(current_records[t], priority_tier_by_ticker) for t in gated],
         "priority_tier_source_identity": (opportunity_prioritization or {}).get("artifact_identity"),
         "authority_boundary": {"no_universal_score": True, "no_probability_or_target": True, "priority_tier_optional_secondary_ordering_only": True},
     }
+    if gated:
+        result["market_gated_entries"] = [_market_gated_row(current_records[t], priority_tier_by_ticker) for t in gated]
+    return result
 
 
 # ── Market / Sector summary (sections 2-3) ──────────────────────────────────────────────────────
@@ -479,15 +485,24 @@ def build_decision_transitions(*, posture_transition: Mapping[str, Any] | None, 
     }
 
 
-def _participation_change(market_transition: Mapping[str, Any] | None) -> dict[str, Any]:
-    """Compact matched-cohort view (same denominator in both sessions); aggregates only."""
+def _participation_change(market_transition: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Compact matched-cohort view (same denominator in both sessions); aggregates only.
+
+    ``None`` means the next-session brief supplied no matched-cohort component; the caller then omits the
+    field so older inputs keep their exact brief bytes.
+    """
     change = (market_transition or {}).get("matched_cohort")
     if not isinstance(change, Mapping):
-        return {"status": "UNAVAILABLE", "reason_codes": ["MATCHED_COHORT_CHANGE_NOT_SUPPLIED"]}
+        return None
     if change.get("status") != "AVAILABLE":
         return {"status": change.get("status"), "reason_codes": list(change.get("reason_codes") or [])}
     return {key: change.get(key) for key in ("status", "rule", "previous_session", "adjacency", "cohort", "changes",
                                              "ma20_crossings", "participation_character", "market_close_condition_evaluation")}
+
+
+def _participation_field(market_transition: Mapping[str, Any] | None) -> dict[str, Any]:
+    change = _participation_change(market_transition)
+    return {} if change is None else {"market_participation_change": change}
 
 
 def build_what_changed_today(*, posture_transition: Mapping[str, Any] | None, market_transition: Mapping[str, Any] | None,
@@ -497,9 +512,10 @@ def build_what_changed_today(*, posture_transition: Mapping[str, Any] | None, ma
         return {
             "availability": (posture_transition or {}).get("availability", "UNAVAILABLE"),
             "reason_codes": (posture_transition or {}).get("reason_codes", ["POSTURE_TRANSITION_NOT_AVAILABLE"]),
-            "market_breadth_change": None, "market_participation_change": _participation_change(market_transition),
+            "market_breadth_change": None,
             "sector_leadership_changes": None, "new_actionable_now": [], "new_early_setups": [],
             "new_failed_breakouts": [], "new_breakdowns": [], "names_becoming_extended": [], "watchlist_posture_changes": [],
+            **_participation_field(market_transition),
         }
 
     def _tickers(pred) -> list[str]:
@@ -514,7 +530,7 @@ def build_what_changed_today(*, posture_transition: Mapping[str, Any] | None, ma
     return {
         "availability": "AVAILABLE",
         "market_breadth_change": (market_transition or {}).get("transition"),
-        "market_participation_change": _participation_change(market_transition),
+        **_participation_field(market_transition),
         "sector_leadership_changes": sorted(sector_changes, key=lambda row: row["group_key"]),
         "new_actionable_now": _tickers(lambda row: row["transition"] in _TRANSITIONS_TOWARD_ACTIONABLE),
         "new_early_setups": _tickers(lambda row: row["transition"] == "NEW_EARLY_WATCH"),

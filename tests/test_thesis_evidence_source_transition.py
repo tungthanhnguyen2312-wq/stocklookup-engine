@@ -132,7 +132,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
     summary_fp = json.loads((ROOT / "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json").read_bytes())
     assert summary_fp["previous_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == summary_fp["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    context_fp = json.loads((ROOT / "tests/fixtures/decision_context_premarket_source_transition_v1.json").read_bytes())
+    assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == context_fp["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

@@ -89,7 +89,17 @@ The governed posture rule `BEARISH_BREADTH_NARROWS_FRESH_ENTRY` holds a fired, o
 qualified breakout at `WAIT_FOR_CONFIRMATION` while the market regime is adverse. Before this
 change those names fell into the generic `EARLY_SETUPS` / `HOLD_MANAGE` buckets with no stated
 release condition. They now form the `MARKET_GATED_ENTRY` opportunity set and
-`opportunity_sets.market_gated_entries`. Each row shows the security setup, the market
+`opportunity_sets.market_gated_entries`.
+
+Both brief additions are emitted only when they carry evidence:
+- the market-gated keys appear only when at least one name is gated;
+- `what_changed_today.market_participation_change` appears only when the next-session brief
+  supplied a matched-cohort component, including a refused one with its reason.
+
+A session without either keeps its exact pre-change brief bytes, which the E4 baseline-equality test
+checks. The source change is bounded by
+`tests/fixtures/decision_context_premarket_source_transition_v1.json`. It archives the base brief,
+pins its hash, and extends the E4 v2 chain. `release_authority` is `NOT_GRANTED`. Each row shows the security setup, the market
 environment, the regime, the security's own invalidation and the release condition, which is the
 existing rule restated with nothing added. Posture, policy and decision identities are unchanged.
 
