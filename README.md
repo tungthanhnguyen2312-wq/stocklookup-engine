@@ -1,181 +1,49 @@
 # Stock Lookup
 
-**Hạ tầng nghiên cứu và hỗ trợ ra quyết định cho cổ phiếu Việt Nam, lấy evidence làm nền tảng.**
+**Hiểu thị trường và cổ phiếu Việt Nam rõ hơn — bằng dữ liệu có nguồn gốc, phân tích có thể kiểm tra và những giới hạn được nói rõ.**
 
-Stock Lookup chuyển dữ liệu thị trường, evidence tài chính, sự kiện doanh nghiệp, ngữ cảnh định giá, cấu trúc kỹ thuật và đầu vào rủi ro thành các sản phẩm nghiên cứu tất định cho chứng khoán trên HOSE, HNX và UPCoM.
+Stock Lookup là dự án nghiên cứu và hỗ trợ quyết định đầu tư cho cổ phiếu trên HOSE, HNX và UPCoM. Thay vì chỉ đưa ra một tín hiệu mua/bán, hệ thống giúp người đọc hiểu **điều gì đang diễn ra, bằng chứng nào ủng hộ nhận định, rủi ro nằm ở đâu và cần theo dõi điều gì tiếp theo**.
 
-Hệ thống được thiết kế theo một nguyên tắc:
+**[Khám phá Dashboard Stock Lookup](https://tungthanhnguyen2312-wq.github.io/stocklookup-dashboard/)**
 
-> **Dữ kiện và phép tính số học phải xuất phát từ evidence được lưu giữ và các bộ máy tính toán tất định. AI giải thích, tổng hợp, phản biện và làm rõ sự không chắc chắn — AI không trở thành authority về dữ liệu.**
+## Bạn có thể khám phá những gì?
 
-<a id="what-the-project-does"></a>
-## Dự án làm gì
+- **Tổng quan thị trường:** diễn biến phiên giao dịch, bức tranh thị trường, nhóm ngành và các điểm đáng chú ý.
+- **Cơ hội nghiên cứu:** tìm hiểu từng cổ phiếu qua giá, xu hướng, tình hình doanh nghiệp, định giá tham khảo, yếu tố tích cực và rủi ro. “Đáng nghiên cứu” không đồng nghĩa “nên mua”.
+- **Danh mục:** xem các vị thế do bạn tự nhập trong bối cảnh nghiên cứu và rủi ro; thông tin cá nhân của phần này được lưu trong trình duyệt.
+- **Vĩ mô:** theo dõi các chỉ số kinh tế và thời điểm cập nhật, với giải thích về ý nghĩa của chúng.
+- **Lịch sử:** đọc lại các báo cáo theo phiên để phân biệt thông tin ở thời điểm trước với nhận định hiện tại.
 
-```text
-Market / financial / corporate evidence
-        ↓
-Raw retention + provenance
-        ↓
-Canonical + temporal + fitness semantics
-        ↓
-Deterministic research engines
-        ↓
-Market / technical / fundamental / valuation / event context
-        ↓
-Integrated research decision + trigger / invalidation
-        ↓
-AI research handoff
-        ↓
-Human decision + Dashboard
-        ↓
-Prospective outcome feedback
-```
+Dashboard được thiết kế để đọc **tóm tắt dễ hiểu trước, chứng cứ chi tiết sau**. Một người mới tìm hiểu chứng khoán có thể bắt đầu từ bức tranh chung mà không cần hiểu các thuật ngữ kỹ thuật bên trong hệ thống.
 
-Quy trình production hiện tại được vận hành qua luồng Owner Daily chuẩn và phát hành các artifact nghiên cứu theo quy tắc quản trị tới các Consumer AI và Dashboard ở hạ nguồn.
+## Stock Lookup hình thành nhận định như thế nào?
 
-<a id="core-principles"></a>
-## Nguyên tắc cốt lõi
+1. **Thu thập và lưu giữ nguồn:** dữ liệu thị trường, báo cáo tài chính, công bố doanh nghiệp và những bằng chứng có liên quan.
+2. **Kiểm tra dữ liệu:** xác định số liệu thuộc nguồn nào, kỳ nào, có còn phù hợp và đủ điều kiện sử dụng cho mục đích đang xét hay không.
+3. **Phân tích bằng các phép tính có thể tái hiện:** kết hợp bối cảnh thị trường, kỹ thuật, tài chính, định giá và rủi ro, trong phạm vi bằng chứng cho phép.
+4. **Trình bày kết quả và phản biện:** nêu điểm tích cực, điểm bất lợi, điều kiện có thể thay đổi nhận định và những gì hiện chưa biết. Lớp nghiên cứu AI hỗ trợ giải thích, không tự tạo ra số liệu hay quyền kết luận.
+5. **Để con người quyết định:** kết quả nghiên cứu không phải lệnh giao dịch tự động.
 
-- **Evidence là nền tảng.** Các trạng thái chưa biết, cũ, proxy, bị chặn và đủ điều kiện luôn được thể hiện rõ.
-- **Authority số liệu thuộc tính toán tất định.** Các phép tính có thể mô hình hóa được triển khai bằng Python và kiểm chứng bằng kiểm thử có thể tái hiện.
-- **Đánh giá mức phù hợp ở cấp đặc trưng.** Authority còn thiếu chỉ chặn cách sử dụng phụ thuộc vào nó; không làm mất giá trị của nghiên cứu không liên quan.
-- **Kỷ luật point-in-time.** Nghiên cứu hiện tại, tái dựng lịch sử và authority cho PIT/backtest là các chế độ riêng biệt.
-- **Phân tích theo đặc thù ngành.** Ngân hàng, công ty chứng khoán, doanh nghiệp công nghiệp và các ngành khác không bị ép vào một mẫu tài chính chung.
-- **AI là lớp nghiên cứu.** AI có thể giải thích và phản biện luận điểm, nhưng không được tạo ra dữ kiện tài chính, ngày giao dịch không hưởng quyền, xác suất hoặc authority cho giá mục tiêu.
-- **Con người phê duyệt cuối cùng.** Trạng thái hành động phục vụ nghiên cứu không phải lệnh thực thi giao dịch.
+**Không đủ dữ liệu cũng là một kết quả quan trọng.** Một chỉ tiêu có thể chưa tính được, chỉ phù hợp để tham khảo, hoặc không áp dụng cho loại hình doanh nghiệp đang xét. Stock Lookup cố gắng thể hiện những khác biệt đó thay vì lấp chỗ trống bằng con số phỏng đoán.
 
-<a id="stock-lookup-repositories"></a>
-## Các repository của Stock Lookup
+## Giới hạn cần biết
 
-| Repository | Vai trò | Thư mục cục bộ |
-|---|---|---|
-| [stocklookup-engine](https://github.com/tungthanhnguyen2312-wq/stocklookup-engine) (repository này) | Producer: thu thập evidence, chuẩn hóa, bộ máy tài chính/định giá/quyết định tất định, Owner Daily và phát hành | `stock-core-private` |
-| [stocklookup-ai-research](https://github.com/tungthanhnguyen2312-wq/stocklookup-ai-research) | Consumer: dựng ngữ cảnh và báo cáo nghiên cứu AI từ artifact của Producer | `ai-core-private` |
-| [stocklookup-dashboard](https://github.com/tungthanhnguyen2312-wq/stocklookup-dashboard) | Dashboard công khai: <https://tungthanhnguyen2312-wq.github.io/stocklookup-dashboard/> | `market-dashboard` |
+Một số dữ liệu và phương pháp hiện chỉ phù hợp cho nghiên cứu, chưa đủ căn cứ để xác định giá trị hợp lý, xác suất kịch bản hoặc quy mô giao dịch. Dữ liệu công bố ở thời điểm sau không tự động được xem là thông tin đã biết trong quá khứ.
 
-Tên thư mục cục bộ được giữ nguyên sau khi đổi tên trên GitHub ngày 2026-10-24; `release_checkout_identity.CHECKOUT_ORIGIN_REPOSITORIES` ánh xạ chính xác từng thư mục với origin được chấp nhận.
+Stock Lookup là **công cụ hỗ trợ nghiên cứu**, không cung cấp tư vấn đầu tư cá nhân hóa, không bảo đảm dự báo và không tự động đặt lệnh.
 
-<a id="where-things-live"></a>
-## Mã nguồn nằm ở đâu
+## Mã nguồn và phát triển
 
-| Thư mục | Nội dung |
-|---|---|
-| `stocklookup.ps1` → `stocklookup.py` | Điểm vào được hỗ trợ duy nhất: `.\stocklookup.ps1 daily` (Owner Daily) |
-| [stocklookup_core/](stocklookup_core/) | Triển khai chuẩn, theo tầng: `acquisition` → `evidence` → `financial` → `valuation` / `tactical` → `research` → `portfolio` → `decision` |
-| [tools/](tools/) | Runner và công cụ phát triển có thể tái sử dụng (`tools/run_owner_daily.py` là luồng Daily) |
-| [tools/replay/](tools/replay/) | Engine và pilot lịch sử của các milestone đã hoàn tất; không chạy trong Daily |
-| Module `.py` ở thư mục gốc | Mã cũ được ghi nhận: bị đóng băng theo hash, khởi chạy bằng đường dẫn, hoặc được nguồn đóng băng import; xem [docs/REPOSITORY_LAYOUT_MIGRATION.md](docs/REPOSITORY_LAYOUT_MIGRATION.md) |
-| [config/](config/), [tests/](tests/), [docs/](docs/) | Registry/chính sách, kiểm thử tất định, hợp đồng và trạng thái hiện tại |
+Stock Lookup gồm ba repository có nhiệm vụ riêng:
 
-<a id="public-project-map"></a>
-## Bản đồ dự án dành cho người đọc
+- **[stocklookup-engine](https://github.com/tungthanhnguyen2312-wq/stocklookup-engine)** (repository này): thu thập, kiểm tra và phân tích dữ liệu; tạo các kết quả nghiên cứu.
+- **[stocklookup-ai-research](https://github.com/tungthanhnguyen2312-wq/stocklookup-ai-research)**: tổ chức hồ sơ nghiên cứu, giải thích và phản biện trên những bằng chứng được cung cấp.
+- **[stocklookup-dashboard](https://github.com/tungthanhnguyen2312-wq/stocklookup-dashboard)**: giao diện web để người dùng khám phá kết quả.
 
-| Mảng nội dung | Điểm bắt đầu |
-|---|---|
-| Định hướng sản phẩm | [docs/PRODUCT_NORTH_STAR.md](docs/PRODUCT_NORTH_STAR.md) |
-| Lộ trình chiến lược | [docs/NORTH_STAR.md](docs/NORTH_STAR.md) |
-| Trạng thái vận hành hiện tại | [docs/ACTIVE_STATE.md](docs/ACTIVE_STATE.md) |
-| Trạng thái thực thi đọc được bằng máy | [docs/ROADMAP_STATE.json](docs/ROADMAP_STATE.json) |
-| Lịch sử lộ trình / quan hệ phụ thuộc | [docs/ROADMAP.md](docs/ROADMAP.md) |
-| Quyết định kiến trúc | [docs/DECISIONS.md](docs/DECISIONS.md) |
-| Cấu trúc runtime cụ thể | [docs/SYSTEM_MAP.md](docs/SYSTEM_MAP.md) |
-| Hợp đồng đặc trưng phân tích và quyết định | [docs/ANALYTICS_AND_DECISION_FEATURE_SPEC.md](docs/ANALYTICS_AND_DECISION_FEATURE_SPEC.md) |
-| CI / các tầng dependency | [docs/CI_AND_DEPENDENCY_TIERS.md](docs/CI_AND_DEPENDENCY_TIERS.md) |
-| Di chuyển cấu trúc repository | [docs/REPOSITORY_LAYOUT_MIGRATION.md](docs/REPOSITORY_LAYOUT_MIGRATION.md) |
-| Triển khai thu thập dữ liệu | [stocklookup_core/acquisition/](stocklookup_core/acquisition/) |
-| Evidence từ tài liệu chính thức | [stocklookup_core/evidence/](stocklookup_core/evidence/) |
-| Bảng dữ liệu tài chính, Financial V2 và nghiên cứu cơ bản | [stocklookup_core/financial/](stocklookup_core/financial/) |
-| Tính toán định giá, doanh nghiệp so sánh và mở rộng đầu vào hiện tại | [stocklookup_core/valuation/](stocklookup_core/valuation/) |
-| Đầu vào quyết định, ngữ cảnh, gói dữ liệu, bản tóm tắt và bản chiếu workspace | [stocklookup_core/decision/](stocklookup_core/decision/) |
-| Ngữ cảnh kỹ thuật và định tuyến V2 (các nền tảng đóng băng giữ đường dẫn gốc) | [stocklookup_core/tactical/](stocklookup_core/tactical/) |
-| Nghiên cứu luận điểm và quy trình phân tích/hồ sơ/đánh giá/tình huống/học từ kết quả | [stocklookup_core/research/](stocklookup_core/research/) |
+**Dành cho người phát triển:** [Hướng dẫn đóng góp](CONTRIBUTING.md) · [Sơ đồ hệ thống](docs/SYSTEM_MAP.md) · [Nguyên tắc dữ liệu](docs/DATA_FIRST_DOCTRINE.md) · [Quy tắc dành cho coding agent](AGENTS.md) · [Chính sách bảo mật](SECURITY.md).
 
-<a id="canonical-runtime-path"></a>
-## Luồng runtime chuẩn
+Các hướng dẫn vận hành, lộ trình máy đọc được, quyết định kiến trúc và hồ sơ lịch sử được lưu trong thư mục [docs/](docs/) để người bảo trì tra cứu; chúng không phải hướng dẫn bắt đầu dành cho người sử dụng Dashboard. Việc chạy pipeline đầy đủ cần môi trường, dữ liệu và quyền truy cập nguồn phù hợp, không phải thao tác một bước trên bản clone mới.
 
-```text
-stocklookup.ps1
-  └─ stocklookup.py
-      └─ Owner Daily workflow
-          ├─ governed session resolution
-          ├─ market-data acquisition / reuse
-          ├─ canonical research materialization
-          ├─ tactical + financial + valuation integration
-          ├─ integrated decision products
-          ├─ AI handoff publication
-          └─ Dashboard release + verification
-```
-
-Luồng ở cấp module có authority được mô tả tại [docs/SYSTEM_MAP.md](docs/SYSTEM_MAP.md).
-
-<a id="current-execution-boundary"></a>
-## Ranh giới thực thi hiện tại
-
-Cổng nghiệm thu trực tiếp cho luồng Owner Daily thông thường ngày 1 tháng 10 năm 2026 đã hoàn tất. PR production đóng cổng này đã vượt qua Producer CI và được merge vào `main`.
-
-Ưu tiên tiếp theo của lộ trình là **Độ phủ Current Research và mức phù hợp cho quyết định**: đo lường chứng khoán nào hiện có ngữ cảnh sử dụng được về giá, kỹ thuật, cơ bản, định giá, doanh nghiệp/sự kiện và quyết định tích hợp; sau đó ưu tiên các khoảng trống làm giảm đáng kể chất lượng quyết định.
-
-Các nhánh cần authority cao hơn như RAW_AS_TRADED lịch sử đầy đủ, PIT backtesting, thanh khoản đủ điều kiện thực thi và xác định quy mô vị thế trực tiếp vẫn tách biệt, không được chặn Current Research không liên quan.
-
-<a id="repository-structure"></a>
-## Cấu trúc repository
-
-Repository có cấu trúc phẳng từ trước. Thư mục gốc đã giảm từ 595 xuống 258 module Python (2026-10-24); phần còn lại chủ yếu bị ràng buộc bởi nguồn Daily đóng băng, launcher theo đường dẫn hoặc nguồn lịch sử được thực thi lại. Đây là nợ kỹ thuật đã được ghi nhận, không phải cấu trúc package đích.
-
-Chính sách di chuyển là **từng bước và dựa trên đồ thị lời gọi**:
-
-- không viết lại toàn bộ sang `src/`;
-- không gọi một module là thành phần cũ chỉ dựa vào tên file;
-- chỉ di chuyển nhóm capability khi đã hiểu các Consumer production và kiểm thử của chúng;
-- di chuyển đi cùng công việc capability hữu ích, với kiểm chứng tính tương đương;
-- thu gọn dần thư mục gốc công khai thành một nhóm nhỏ các điểm truy cập chính.
-
-Xem [docs/REPOSITORY_LAYOUT_MIGRATION.md](docs/REPOSITORY_LAYOUT_MIGRATION.md).
-
-<a id="development"></a>
-## Phát triển
-
-<a id="requirements"></a>
-### Yêu cầu
-
-- Python 3.11+ (hỗ trợ Python 3.13)
-- Trên Windows, nên bật đường dẫn dài:
-  `git config --global core.longpaths true`
-
-<a id="install-core--test-dependencies"></a>
-### Cài dependency lõi và kiểm thử
-
-```bash
-python -m pip install -r requirements.txt -r requirements-test.txt -c constraints.txt
-```
-
-Runtime của các nhà cung cấp tùy chọn được chủ động tách khỏi tầng lõi hermetic. Xem [docs/CI_AND_DEPENDENCY_TIERS.md](docs/CI_AND_DEPENDENCY_TIERS.md).
-
-<a id="run-focused-verification"></a>
-### Chạy kiểm tra tập trung
-
-```bash
-python -m pytest -q tests/test_production_call_shape_smoke.py
-python -m py_compile stocklookup.py canonical_daily_operation.py daily_producer_pipeline.py
-python tools/stocklookup_roadmap.py --check
-```
-
-CI có các bước kiểm tra riêng cho cấu trúc, hồi quy hermetic, evidence được lưu giữ và dạng lời gọi production.
-
-<a id="contributing"></a>
-## Đóng góp
-
-Dự án tiếp nhận các đóng góp có thể tái hiện và có phạm vi rõ ràng. Bắt đầu với:
-
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [SECURITY.md](SECURITY.md)
-- [AGENTS.md](AGENTS.md) để xem quy tắc thực thi dành cho AI agent
-
-<a id="license"></a>
 ## Giấy phép
 
-MIT — xem [LICENSE](LICENSE).
-
----
-
-**Lưu ý về nghiên cứu:** Stock Lookup tạo đầu ra nghiên cứu định lượng và hỗ trợ ra quyết định. Hệ thống không cung cấp tư vấn đầu tư cá nhân hóa hoặc thực thi giao dịch tự động.
+Mã nguồn trong repository này được phát hành theo giấy phép [MIT](LICENSE). Quyền sử dụng dữ liệu, tài liệu và dịch vụ của bên thứ ba tuân theo điều khoản của từng nguồn.
