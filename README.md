@@ -37,7 +37,7 @@ Stock Lookup là **công cụ hỗ trợ nghiên cứu**, không cung cấp tư 
 Stock Lookup gồm ba repository có nhiệm vụ riêng:
 
 - **[stocklookup-engine](https://github.com/tungthanhnguyen2312-wq/stocklookup-engine)** (repository này): thu thập, kiểm tra và phân tích dữ liệu; tạo các kết quả nghiên cứu.
-- **[stocklookup-ai-research](https://github.com/tungthanhnguyen2312-wq/stocklookup-ai-research)**: tổ chức hồ sơ nghiên cứu, giải thích và phản biện trên những bằng chứng được cung cấp.
+- **Lớp nghiên cứu AI** (repository riêng, không công khai): tổ chức hồ sơ nghiên cứu, giải thích và phản biện trên những bằng chứng được cung cấp.
 - **[stocklookup-dashboard](https://github.com/tungthanhnguyen2312-wq/stocklookup-dashboard)**: giao diện web để người dùng khám phá kết quả.
 
 **Dành cho người phát triển:** [Hướng dẫn đóng góp](CONTRIBUTING.md) · [Sơ đồ hệ thống](docs/SYSTEM_MAP.md) · [Nguyên tắc dữ liệu](docs/DATA_FIRST_DOCTRINE.md) · [Quy tắc dành cho coding agent](AGENTS.md) · [Chính sách bảo mật](SECURITY.md).
