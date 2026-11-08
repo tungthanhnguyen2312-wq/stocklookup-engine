@@ -107,11 +107,19 @@ capability; resolving a conflict with/staleness in the active set; finding contr
 docs; or when the owner explicitly requests a rebaseline/governance audit. A new session, a new
 agent, or a normal bounded milestone is not by itself a trigger.
 
-`docs/ACTIVE_STATE.md` is where current-state reading starts; what is authoritative is decided by
-**Authority by domain** in the Reading contract above (it is a view, not an authority layer). Operations
-reviews, handoffs, historical roadmaps, and Consumer/Dashboard notes are evidence/reference, not competing
-current authority. If a prompt conflicts with that rule or the sources it names, surface the conflict and
-request an explicit owner override; do not silently change architecture.
+Operations reviews, handoffs, historical roadmaps and Consumer/Dashboard notes are evidence/reference,
+not competing current authority.
+
+## Owner-only Daily launch
+
+- Only the Owner starts Daily, by clicking the Desktop `Stock Lookup Daily.cmd` after freeing resources
+  (closing apps or rebooting). Agents never launch Daily, simulate an Owner launch, or trigger it via a
+  wrapper, scheduler, test harness or recovery command.
+- Chrome and AI agents run during development, so RAM/commit headroom below Daily host-preflight
+  thresholds is normal: not a Producer defect, not a blocker to offline work, no reason to ask the
+  Owner to close apps or reboot.
+- Never lower memory thresholds, change pagefile policy or add an alternative launcher. Daily readiness
+  is evaluated only when the Owner starts it.
 
 ## AI context hygiene
 

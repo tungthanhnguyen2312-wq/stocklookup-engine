@@ -11,9 +11,22 @@ The Desktop file should contain only a call to the Producer's own launcher, whic
 PowerShell host resident during host admission or the Daily:
 
     @"T:\StockLookup\production-v1\stock-core-private\tools\run_owner_daily.cmd" %*
-un_owner_daily.cmd" %*
 
 `tools/run_owner_daily.ps1` remains a forwarding front door to the same Python host.
+
+While the Production registry retains a pending input freeze, the launcher does not fast-forward;
+the checkout must already sit at `origin/main`. An operator brings it there beforehand with the
+guarded `tools/sync_producer_release.py` source sync, never with `reset`, `stash` or `rebase`.
+
+## Who starts Daily
+
+Only the Owner starts Daily, by clicking the Desktop launcher. Before clicking, the Owner closes
+applications or restarts the computer so the host preflight has the memory it needs. During
+ordinary development, Chrome and AI coding agents are running, so a host preflight below its
+thresholds at that time is expected and is not a Producer defect. Coding agents never launch
+Daily or trigger it indirectly, and they do not ask the Owner to free RAM for development work.
+The memory thresholds, pagefile policy and this single launcher stay unchanged. See the
+Owner-only Daily launch section of [AGENTS.md](../AGENTS.md).
 
 ## Green result
 
