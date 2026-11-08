@@ -1,0 +1,559 @@
+{
+ "cases": {
+  "adjacent_broadening_confirmed_with_churn": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": 25.0,
+       "advance_ratio_pp": 50.0,
+       "decline_ratio_pp": -50.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 2,
+       "crossed_below": 1,
+       "net": 1
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "CONFIRMED"
+      },
+      "participation_character": "BROADENING",
+      "previous_session": "2026-11-05",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 0,
+       "may_span_multiple_trading_sessions": false
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "Registry-adjacent weekday pair; matched cohort of 4 with 1 ticker joining, 1 leaving and 1 out of scope."
+  },
+  "asymmetric_missing_momentum": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": 25.0,
+       "advance_ratio_pp": 50.0,
+       "decline_ratio_pp": -50.0,
+       "positive_momentum_share_pp": 33.33
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 3,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 2,
+       "crossed_below": 1,
+       "net": 1
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "CONFIRMED"
+      },
+      "participation_character": "BROADENING",
+      "previous_session": "2026-11-05",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 0,
+       "may_span_multiple_trading_sessions": false
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "CCC momentum is UNKNOWN in the current session only; momentum shares use the 3 tickers known in both."
+  },
+  "cohort_reconciliation_mismatch": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "reason_codes": [
+       "CURRENT_PARTICIPATION_COHORT_DIFFERS_FROM_MARKET_BREADTH"
+      ],
+      "status": "UNAVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "Current snapshot row count differs from its own market_breadth count; the comparison is refused."
+  },
+  "different_ma20_eligibility": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": 0.0,
+       "advance_ratio_pp": 50.0,
+       "decline_ratio_pp": -50.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 3,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 1,
+       "crossed_below": 1,
+       "net": 0
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "NEITHER_CONFIRMED_NOR_REFUTED"
+      },
+      "participation_character": "UNCHANGED_ON_ONE_MEASURE",
+      "previous_session": "2026-11-05",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 0,
+       "may_span_multiple_trading_sessions": false
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "BBB MA20 side is UNKNOWN in the current session only; MA20 shares and crossings use the 3 tickers known in both."
+  },
+  "indeterminate_condition": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": 25.0,
+       "advance_ratio_pp": 0.0,
+       "decline_ratio_pp": 0.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 2,
+       "crossed_below": 1,
+       "net": 1
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "NEITHER_CONFIRMED_NOR_REFUTED"
+      },
+      "participation_character": "UNCHANGED_ON_ONE_MEASURE",
+      "previous_session": "2026-11-05",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 0,
+       "may_span_multiple_trading_sessions": false
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "Majority declines while the MA20 share rises; the condition is NEITHER_CONFIRMED_NOR_REFUTED."
+  },
+  "market_gated_entries": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_gated_count": 1,
+     "market_gated_entries": [
+      {
+       "decision_identity": "fixture-decision:MCP",
+       "distance_to_trigger_pct": 0.0,
+       "evidence_currency": null,
+       "fundamental_state": null,
+       "market_environment": "ADVERSE_MARKET_REGIME_HOLDS_FRESH_ENTRY",
+       "market_regime": "DETERIORATING_BREADTH",
+       "participation_confirmation_state": "NOT_AVAILABLE",
+       "posture_condition_class": "BEARISH_BREADTH_NARROWS_FRESH_ENTRY",
+       "release_condition": "The governed posture rule lifts this hold when the market regime is no longer in its bearish set (e.g. DETERIORATING_BREADTH), provided the security's own trigger and invalidation still hold. No other condition is added here.",
+       "research_action_policy_version": "v1",
+       "research_action_posture": "WAIT_FOR_CONFIRMATION",
+       "research_priority_tier": null,
+       "security_invalidation": {
+        "distance_to_invalidation_pct": -6.2,
+        "horizon": "SWING",
+        "invalidation_level": 9.0,
+        "invalidation_method": "PRIOR_SWING_LOW"
+       },
+       "security_setup": "FIRED_BREAKOUT_TRIGGER_QUALIFIED_AT_SECURITY_LEVEL",
+       "tactical_phase": "BREAKOUT",
+       "ticker": "MCP",
+       "trigger_state": "TRIGGERED",
+       "why_now": null
+      }
+     ],
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": 25.0,
+       "advance_ratio_pp": 50.0,
+       "decline_ratio_pp": -50.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal.",
+       "4 weekday(s) lie between the two sessions; unless all were exchange holidays, this change spans more than one trading session."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 2,
+       "crossed_below": 1,
+       "net": 1
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "CONFIRMED"
+      },
+      "participation_character": "BROADENING",
+      "previous_session": "2026-10-26",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 4,
+       "may_span_multiple_trading_sessions": true
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-02"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-02"
+   },
+   "description": "A fired, security-qualified breakout held by BEARISH_BREADTH_NARROWS_FRESH_ENTRY, beside an ordinary HOLD."
+  },
+  "missing_previous_snapshot": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "reason_codes": [
+       "NO_PREVIOUS_PARTICIPATION_SNAPSHOT"
+      ],
+      "status": "UNAVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "No previous governed snapshot; the refusal reason is carried, no change is shown."
+  },
+  "older_brief_without_new_fields": {
+   "cockpit": {
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "An older Brief carries neither field; the cockpit has no brief_market_context_v1 at all."
+  },
+  "refuted_condition": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": -50.0,
+       "advance_ratio_pp": -25.0,
+       "decline_ratio_pp": 25.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 0,
+       "crossed_below": 2,
+       "net": -2
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "REFUTED"
+      },
+      "participation_character": "NARROWING",
+      "previous_session": "2026-11-05",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 0,
+       "may_span_multiple_trading_sessions": false
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "Every matched ticker declines and falls below MA20; the published condition is REFUTED."
+  },
+  "registry_adjacent_calendar_separated": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION",
+      "changes": {
+       "above_ma20_share_pp": 25.0,
+       "advance_ratio_pp": 50.0,
+       "decline_ratio_pp": -50.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal.",
+       "4 weekday(s) lie between the two sessions; unless all were exchange holidays, this change spans more than one trading session."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 2,
+       "crossed_below": 1,
+       "net": 1
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "CONFIRMED"
+      },
+      "participation_character": "BROADENING",
+      "previous_session": "2026-10-26",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 4,
+       "may_span_multiple_trading_sessions": true
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-02"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-02"
+   },
+   "description": "Real retained shape 2026-10-26 -> 2026-11-02: registry calls it immediate, four weekdays lie between."
+  },
+  "registry_gap_unverified_adjacency": {
+   "cockpit": {
+    "brief_market_context_v1": {
+     "authority_boundary": {
+      "is_actionable": false,
+      "market_environment_and_security_setup_kept_separate": true,
+      "no_position_size": true,
+      "no_universal_score": true
+     },
+     "contract_version": "brief_market_context/v1",
+     "daily_integrated_decision_brief_identity": "daily_integrated_decision_brief/v1:contract-fixture",
+     "market_participation_change": {
+      "adjacency": "NON_ADJACENT_SESSION_GAP_2",
+      "changes": {
+       "above_ma20_share_pp": 25.0,
+       "advance_ratio_pp": 50.0,
+       "decline_ratio_pp": -50.0,
+       "positive_momentum_share_pp": 25.0
+      },
+      "cohort": {
+       "current_only": 1,
+       "matched": 4,
+       "matched_with_ma20_side_both_sessions": 4,
+       "matched_with_momentum_both_sessions": 4,
+       "previous_only": 1,
+       "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."
+      },
+      "limitations": [
+       "Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+       "A session-to-session change is descriptive; it is not a trend, forecast or timing signal.",
+       "The previous session is not verified as the immediately preceding completed session.",
+       "1 weekday(s) lie between the two sessions; unless all were exchange holidays, this change spans more than one trading session."
+      ],
+      "ma20_crossings": {
+       "crossed_above": 2,
+       "crossed_below": 1,
+       "net": 1
+      },
+      "market_close_condition_evaluation": {
+       "condition_source": "market_close_intelligence/v1:interpretation.next_session_conditions",
+       "hypothesis": "Participation improves",
+       "state": "CONFIRMED"
+      },
+      "participation_character": "BROADENING",
+      "previous_session": "2026-11-04",
+      "rule": "matched_cohort_session_change/v1",
+      "span": {
+       "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+       "calendar_weekdays_between": 1,
+       "may_span_multiple_trading_sessions": true
+      },
+      "status": "AVAILABLE"
+     },
+     "session": "2026-11-06"
+    },
+    "schema_version": "current_decision_cockpit_projection/v2",
+    "session": "2026-11-06"
+   },
+   "description": "Registry reports a gap of 2 completed sessions; adjacency is NON_ADJACENT."
+  }
+ },
+ "cases_sha256": "2ea916458e60a3e781718dae34e656d1897b18782026eaeff862db6b306e5dab",
+ "contract_version": "brief_market_context_contract_fixture/v1",
+ "generated_by": "stocklookup-engine:tools/build_brief_market_context_contract_fixture.py",
+ "projection_contract": "brief_market_context/v1"
+}
