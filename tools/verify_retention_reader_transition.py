@@ -90,6 +90,11 @@ THESIS_ROOT_MANIFEST = "tests/fixtures/thesis_current_technical_root_source_tran
 THESIS_ROOT_BASE = "83897636e1813ad0b6a016c0a8d50b3f5430ea27"
 THESIS_ROOT_SCOPE = "EXACT_THESIS_CURRENT_STAGE_ENRICHMENT_ROOT_ONLY"
 THESIS_ROOT_ARCHIVE = "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"
+LEGACY_SUMMARY_MANIFEST = "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json"
+LEGACY_SUMMARY_BASE = "58b42b664d8e5008bd1e8e16f7cb167b52b60d21"
+LEGACY_SUMMARY_SCOPE = "EXACT_TPLUS_LEGACY_SUMMARY_FINGERPRINT_REUSE_ONLY"
+LEGACY_SUMMARY_SOURCE = "prospective_decision_outcome_feedback.py"
+LEGACY_SUMMARY_ARCHIVE = "tests/fixtures/tplus_legacy_summary_fingerprint_sources/prospective_decision_outcome_feedback.py.txt"
 OCR_RECOGNITION_MANIFEST = "tests/fixtures/ocr_unit_period_recognition_source_transition_v1.json"
 OCR_RECOGNITION_BASE = "b6c34442db28dfd249680e249ae59fc9494bfd84"
 OCR_RECOGNITION_SCOPE = "EXACT_OCR_UNIT_LABEL_AND_H1_OPERATING_PERIOD_RECOGNITION_ONLY"
@@ -851,9 +856,42 @@ def _ocr_recognition_prior_bytes(root: Path, relative: str, active: bytes) -> by
     return prior
 
 
+def _legacy_summary_fingerprint_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the legacy summary-fingerprint reuse before the frozen storage pin.
+
+    Only ``prospective_decision_outcome_feedback.py`` changed. A missing manifest keeps older checkouts valid.
+    """
+    if relative != LEGACY_SUMMARY_SOURCE:
+        return active
+    manifest = root / LEGACY_SUMMARY_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_legacy_summary_fingerprint_source_transition/v1"
+            or spec.get("base_commit") != LEGACY_SUMMARY_BASE
+            or spec.get("scope") != LEGACY_SUMMARY_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (LEGACY_SUMMARY_SOURCE,)):
+        raise ValueError("TPLUS_LEGACY_SUMMARY_FINGERPRINT_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != LEGACY_SUMMARY_ARCHIVE):
+        raise ValueError("TPLUS_LEGACY_SUMMARY_FINGERPRINT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / LEGACY_SUMMARY_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TPLUS_LEGACY_SUMMARY_FINGERPRINT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _legacy_summary_fingerprint_prior_bytes(root, relative, content)
     content = _ocr_recognition_prior_bytes(root, relative, content)
     if relative == ARCHITECTURE_BASELINE_SOURCE:
         content = _architecture_baseline_prior_bytes(root, content)
@@ -998,6 +1036,14 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if thesis_root["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = thesis_root["active_e4_v2_digest"]
+    summary_manifest = root / LEGACY_SUMMARY_MANIFEST
+    if summary_manifest.is_file():
+        live_feedback = (root / LEGACY_SUMMARY_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+        _legacy_summary_fingerprint_prior_bytes(root, LEGACY_SUMMARY_SOURCE, live_feedback)
+        summary_fp = json.loads(summary_manifest.read_bytes())
+        if summary_fp["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = summary_fp["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

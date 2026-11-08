@@ -101,6 +101,73 @@ def _source_fingerprint(path: Path) -> dict[str, Any] | None:
         return None
 
 
+def _legacy_receipt_tools():
+    """Receipt reader used by streaming. Unbound or import failure means hash the bytes."""
+    try:
+        from stocklookup_core.evidence import source_verifier_receipts as receipts
+        from stocklookup_core.evidence.source_file_fingerprint import source_file_fingerprint
+    except (ImportError, AttributeError):
+        return None
+    if receipts._streaming is None:
+        return None
+    return receipts, source_file_fingerprint
+
+
+def _summary_fingerprint_from_receipt(state_root: Path, path: Path) -> dict[str, Any] | None:
+    """SHA-256 already proven for this exact five-field fingerprint. Mismatch hashes the file."""
+    tools = _legacy_receipt_tools()
+    if tools is None:
+        return None
+    receipts, source_file_fingerprint = tools
+    fingerprint = source_file_fingerprint(path)
+    if not fingerprint:
+        return None
+    receipt = receipts._trusted_anchored_receipt(state_root, "legacy", fingerprint, receipts._legacy_receipt_path)
+    if (not receipt or receipt.get("size") != fingerprint["size"]
+            or not isinstance(receipt.get("source_sha256"), str)):
+        return None
+    return {"size": fingerprint["size"], "mtime_ns": fingerprint["mtime_ns"], "sha256": receipt["source_sha256"]}
+
+
+def _fingerprint_from_summary_anchor(entry: Any, path: Path) -> dict[str, Any] | None:
+    """Reuse a summary whose identity already binds the five-field fingerprint to a full SHA-256."""
+    if not isinstance(entry, dict):
+        return None
+    anchor, source = entry.get("file_fingerprint"), entry.get("source")
+    tools = _legacy_receipt_tools()
+    if tools is None or not isinstance(anchor, dict) or not isinstance(source, dict):
+        return None
+    _, source_file_fingerprint = tools
+    current = source_file_fingerprint(path)
+    expected = {key: current[key] for key in ("volume", "file_id", "size", "mtime_ns", "change")} if current else None
+    raw = source.get("sha256")
+    if (expected != anchor or source.get("size") != anchor.get("size") or source.get("mtime_ns") != anchor.get("mtime_ns")
+            or not isinstance(raw, str) or len(raw) != 64 or any(c not in "0123456789abcdef" for c in raw)):
+        return None
+    return {"size": source["size"], "mtime_ns": source["mtime_ns"], "sha256": raw}
+
+
+def _attach_file_fingerprint(summary: Mapping[str, Any], path: Path) -> dict[str, Any]:
+    """Record the fingerprint observed for a hash just taken. The summary identity covers it."""
+    tools = _legacy_receipt_tools()
+    source = summary.get("source")
+    if tools is None or not isinstance(source, dict):
+        return dict(summary)
+    _, source_file_fingerprint = tools
+    try:
+        current = source_file_fingerprint(path)
+    except OSError:
+        return dict(summary)
+    if not current or source.get("size") != current["size"] or source.get("mtime_ns") != current["mtime_ns"]:
+        return dict(summary)
+    body = {key: value for key, value in summary.items() if key != "summary_identity"}
+    body["file_fingerprint"] = {key: current[key] for key in ("volume", "file_id", "size", "mtime_ns", "change")}
+    try:
+        return _identity(body, "iid-summary:", "summary_identity")
+    except (TypeError, ValueError):
+        return dict(summary)
+
+
 def _read_summary_cache(root: Path) -> dict[str, Any]:
     try:
         path = root / _SUMMARY_CACHE_PATH
@@ -330,14 +397,31 @@ def discover_prospective_corpus(root: str | Path, *, payload_projection=None,
     genuine: list[dict[str, Any]] = []
     entries = _read_summary_cache(cache_repository) if use_summary_cache else {}
     retained_entries: dict[str, Any] = {}
+    seed_receipts = cache_root is not None
     for path in _artifact_paths(repository):
         link = links.get(path.resolve())
         # Modern working views cannot be T0 authorities; their immutable snapshots are read below.
         if link is not None and link.get("prospective_snapshot_identity"):
             continue
         rel = _relative(repository, path)
-        fingerprint = _source_fingerprint(path) if use_summary_cache else None
         entry = entries.get(rel)
+        hashed_now = False
+        if use_summary_cache:
+            fingerprint = _summary_fingerprint_from_receipt(cache_repository, path) if seed_receipts else None
+            if fingerprint is None:
+                anchored = _fingerprint_from_summary_anchor(entry, path)
+                if anchored is not None and _valid_summary(entry, rel, anchored, link):
+                    fingerprint = anchored
+            if fingerprint is None:
+                fingerprint = _source_fingerprint(path)
+                hashed_now = fingerprint is not None
+                if cache_metrics is not None:
+                    cache_metrics["legacy_summary_fingerprint_misses"] = cache_metrics.get("legacy_summary_fingerprint_misses", 0) + 1
+            elif cache_metrics is not None:
+                cache_metrics["legacy_summary_fingerprint_hits"] = cache_metrics.get("legacy_summary_fingerprint_hits", 0) + 1
+                cache_metrics["legacy_summary_fingerprint_hit_bytes"] = cache_metrics.get("legacy_summary_fingerprint_hit_bytes", 0) + fingerprint["size"]
+        else:
+            fingerprint = None
         summary_hit = use_summary_cache and _valid_summary(entry, rel, fingerprint, link)
         # A summary can never replace the record payload of a genuine legacy authority.
         if summary_hit and link is not None and _qualify_linked_artifact(link, entry["header"])["status"] == GENUINE:
@@ -360,6 +444,8 @@ def discover_prospective_corpus(root: str | Path, *, payload_projection=None,
                             retained_entries[rel] = _make_summary(rel, fingerprint, artifact)
                     except (OSError, TypeError, ValueError):
                         pass
+        if seed_receipts and hashed_now and rel in retained_entries:
+            retained_entries[rel] = _attach_file_fingerprint(retained_entries[rel], path)
         if not artifact:
             continue
         link = links.get(path.resolve())

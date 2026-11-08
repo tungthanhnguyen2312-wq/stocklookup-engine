@@ -121,12 +121,14 @@ def test_exact_merged_archives_and_feedback_dependencies():
         live = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
         assert _resident_prior_bytes(ROOT, relative, live) == prior != live
     from tools.verify_retention_reader_transition import (
-        _tplus_incremental_cost_prior_bytes, _tplus_m1b_prior_bytes, _tplus_real_corpus_prior_bytes)
+        _legacy_summary_fingerprint_prior_bytes, _tplus_incremental_cost_prior_bytes,
+        _tplus_m1b_prior_bytes, _tplus_real_corpus_prior_bytes)
     for _, relative in V1_SOURCES:
         deployed = subprocess.check_output(["git", "show", BASE + ":" + relative], cwd=ROOT).replace(b"\r\n", b"\n")
-        # M1b peels first, then the incremental-cost successor, then the 2026-11-03 evidence-root successor.
+        # Newest successor peels first: summary fingerprint, M1b, incremental cost, then the evidence-root pin.
         live = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
-        current = _tplus_incremental_cost_prior_bytes(ROOT, relative, _tplus_m1b_prior_bytes(ROOT, relative, live))
+        current = _legacy_summary_fingerprint_prior_bytes(ROOT, relative, live)
+        current = _tplus_incremental_cost_prior_bytes(ROOT, relative, _tplus_m1b_prior_bytes(ROOT, relative, current))
         assert _tplus_real_corpus_prior_bytes(ROOT, relative, current) == deployed
     for relative in ("retained_evidence_catalog.py", "stocklookup_core/evidence/storage_portability.py"):
         deployed = subprocess.check_output(["git", "show", BASE + ":" + relative], cwd=ROOT).replace(b"\r\n", b"\n")
@@ -142,7 +144,9 @@ def test_exact_merged_archives_and_feedback_dependencies():
     assert m1b["previous_e4_v2_digest"] == incremental["active_e4_v2_digest"]
     root_fix = json.loads((ROOT / "tests/fixtures/thesis_current_technical_root_source_transition_v1.json").read_bytes())
     assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
-    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
+    summary_fp = json.loads((ROOT / "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json").read_bytes())
+    assert summary_fp["previous_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
+    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
 
 
 @pytest.mark.parametrize("tamper", ["live", "archive", "scope", "forged_prior"])

@@ -190,6 +190,72 @@ def test_legacy_fingerprint_hit_does_not_hash(tmp_path, monkeypatch):
     assert second.raw_sha256 == first.raw_sha256
 
 
+def _count_summary_hashes(monkeypatch):
+    import prospective_decision_outcome_feedback as feedback
+    calls = {"n": 0}
+    real = feedback._source_fingerprint
+
+    def counted(target):
+        calls["n"] += 1
+        return real(target)
+
+    monkeypatch.setattr(feedback, "_source_fingerprint", counted)
+    return feedback, calls
+
+
+def test_summary_anchor_skips_the_next_hash_and_preserves_inventory(tmp_path, monkeypatch):
+    import prospective_decision_outcome_feedback as feedback
+    root, state = tmp_path / "evidence", tmp_path / "state"
+    _add_legacy(root, "2026-02-08", 1)
+    cold: dict = {}
+    first = feedback.discover_prospective_corpus(root, cache_metrics=cold, cache_root=state)
+    assert cold["legacy_summary_fingerprint_misses"] >= 1
+    assert any(row.get("file_fingerprint") for row in json.loads(
+        (state / feedback._SUMMARY_CACHE_PATH).read_text(encoding="utf-8"))["entries"].values())
+    feedback, calls = _count_summary_hashes(monkeypatch)
+    warm: dict = {}
+    second = feedback.discover_prospective_corpus(root, cache_metrics=warm, cache_root=state)
+    assert calls["n"] == 0
+    assert warm["legacy_summary_fingerprint_hits"] >= 1
+    assert warm["legacy_summary_fingerprint_hit_bytes"] == _legacy_path(root).stat().st_size
+    assert first["inventory"] == second["inventory"]
+    assert first["classification_counts"] == second["classification_counts"]
+
+
+def test_summary_anchor_mismatch_or_corrupt_identity_hashes(tmp_path, monkeypatch):
+    import prospective_decision_outcome_feedback as feedback
+    import stocklookup_core.evidence.source_file_fingerprint as fingerprint_mod
+    root, state = tmp_path / "evidence", tmp_path / "state"
+    _add_legacy(root, "2026-02-09", 2)
+    original = feedback.discover_prospective_corpus(root, cache_root=state)
+    feedback, calls = _count_summary_hashes(monkeypatch)
+    real_fp = fingerprint_mod.source_file_fingerprint
+
+    def shifted(path):
+        found = real_fp(path)
+        if not found:
+            return found
+        found = dict(found)
+        found["change"] = int(found["change"]) + 1
+        return found
+
+    monkeypatch.setattr(fingerprint_mod, "source_file_fingerprint", shifted)
+    mismatched = feedback.discover_prospective_corpus(root, cache_root=state)
+    assert calls["n"] >= 1
+    assert mismatched["inventory"] == original["inventory"]
+    monkeypatch.undo()
+
+    cache_path = state / feedback._SUMMARY_CACHE_PATH
+    cache = json.loads(cache_path.read_text(encoding="utf-8"))
+    key = next(iter(cache["entries"]))
+    cache["entries"][key]["file_fingerprint"]["change"] += 9
+    cache_path.write_text(json.dumps(cache), encoding="utf-8")
+    feedback, calls = _count_summary_hashes(monkeypatch)
+    repaired = feedback.discover_prospective_corpus(root, cache_root=state)
+    assert calls["n"] >= 1
+    assert repaired["inventory"] == original["inventory"]
+
+
 # -- scrub ----------------------------------------------------------------------------------------
 
 def test_scrub_refreshes_verified_at_and_rejects_a_tampered_source(tmp_path):
