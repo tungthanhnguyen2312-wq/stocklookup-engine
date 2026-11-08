@@ -263,6 +263,7 @@ env:
     tests/test_prospective_decision_retention.py
     tests/test_multi_session_signal_velocity.py
     tests/test_empirical_setup_outcome_calibration.py
+    tests/test_market_gate_decision_quality.py
     tests/test_prospective_decision_outcome_measurement.py
     tests/test_prospective_decision_outcome_feedback.py
     tests/test_prospective_feedback_streaming.py
