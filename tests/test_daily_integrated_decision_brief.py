@@ -282,6 +282,44 @@ class TestBuildOpportunitySets:
         assert result["authority_boundary"]["no_universal_score"] is True
 
 
+class TestMarketGatedEntries:
+    """A fired breakout held at WAIT only by the market regime stays visible as a security setup."""
+
+    def _gated(self, ticker: str) -> dict:
+        rec = _record(ticker, posture="WAIT_FOR_CONFIRMATION", phase="BREAKOUT_CONFIRMED", trigger_state="TRIGGERED", distance=0.0)
+        rec["posture_condition_class"] = brief.MARKET_GATED_CONDITION_CLASS
+        rec["market_sector_context"] = {"market_regime": "DETERIORATING_BREADTH", "sector_leadership": "IN_LINE"}
+        return rec
+
+    def test_market_gated_breakout_gets_its_own_set_not_a_generic_wait(self):
+        records = {"MCP": self._gated("MCP"), "OTH": _record("OTH", posture="WAIT_FOR_CONFIRMATION", phase="BREAKOUT_CONFIRMED")}
+        assert brief.classify_opportunity_set(records["MCP"]) == brief.MARKET_GATED_ENTRY
+        assert brief.classify_opportunity_set(records["OTH"]) == brief.HOLD_MANAGE
+        result = brief.build_opportunity_sets(records, {"records": {"MCP": {"priority_tier": "PRIORITY_NOW"}}})
+        assert result["sets"][brief.MARKET_GATED_ENTRY] == {"tickers": ["MCP"], "count": 1}
+        assert sum(result["set_counts"].values()) == len(records)          # still a complete partition
+        row = result["market_gated_entries"][0]
+        assert row["ticker"] == "MCP" and row["research_action_posture"] == "WAIT_FOR_CONFIRMATION"   # posture unchanged
+        assert row["security_setup"] == "FIRED_BREAKOUT_TRIGGER_QUALIFIED_AT_SECURITY_LEVEL"
+        assert row["market_environment"] == "ADVERSE_MARKET_REGIME_HOLDS_FRESH_ENTRY"
+        assert row["market_regime"] == "DETERIORATING_BREADTH" and row["research_priority_tier"] == "PRIORITY_NOW"
+        assert row["security_invalidation"]["invalidation_level"] == 9.0
+        assert "No other condition is added here" in row["release_condition"]
+
+    def test_no_market_gated_names_omits_the_additive_keys(self):
+        # Omission, not an empty set, so a session without gated names keeps its exact pre-change bytes.
+        result = brief.build_opportunity_sets({"A": _record("A", posture="HOLD")}, None)
+        assert "market_gated_entries" not in result
+        assert brief.MARKET_GATED_ENTRY not in result["sets"] and brief.MARKET_GATED_ENTRY not in result["set_counts"]
+        assert sum(result["set_counts"].values()) == 1
+
+    def test_market_gated_rows_carry_no_order_or_size(self):
+        result = brief.build_opportunity_sets({"MCP": self._gated("MCP")}, None)
+        text = str(result["market_gated_entries"]).lower()
+        for forbidden in ("position_size", "quantity", "target_price", "probability", "buy now"):
+            assert forbidden not in text
+
+
 class TestBuildArtifactSessionValidation:
     def _minimal_integrated(self, session: str) -> dict:
         return {"session": session, "artifact_identity": "integrated_investment_decision_product/v1:x", "coverage": {"universe_denominator": 1, "integrated_context_available": 1}, "records": {"A": _record("A", posture="HOLD")}}

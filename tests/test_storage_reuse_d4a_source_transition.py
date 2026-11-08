@@ -45,7 +45,9 @@ def test_d4a_does_not_change_the_e4_v2_digest():
     assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
     summary_fp = json.loads((ROOT / "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json").read_bytes())
     assert summary_fp["previous_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
-    assert e4.source_identity(ROOT, version="v2")["code_digest"] == summary_fp["active_e4_v2_digest"]
+    context_fp = json.loads((ROOT / "tests/fixtures/decision_context_premarket_source_transition_v1.json").read_bytes())
+    assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
+    assert e4.source_identity(ROOT, version="v2")["code_digest"] == context_fp["active_e4_v2_digest"]
 
 
 def test_other_sources_pass_through():

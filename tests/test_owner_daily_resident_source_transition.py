@@ -10,7 +10,7 @@ import pytest
 from tools.verify_retention_reader_transition import (
     RESIDENT_MANIFEST, RESIDENT_SOURCES, _resident_prior_bytes,
     BRIEF_INPUT_MANIFEST, BRIEF_INPUT_SOURCE, BRIEF_INPUT_ARCHIVE, _brief_input_prior_bytes,
-    active_thesis_evidence_identity, legacy_source_identity,
+    _decision_context_prior_bytes, active_thesis_evidence_identity, legacy_source_identity,
 )
 from tools.qualify_e4_infrastructure import V1_SOURCES
 
@@ -119,6 +119,8 @@ def test_exact_merged_archives_and_feedback_dependencies():
     for relative in RESIDENT_SOURCES:
         prior = subprocess.check_output(["git", "show", BASE + ":" + relative], cwd=ROOT).replace(b"\r\n", b"\n")
         live = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
+        # The 2026-11-08 decision-context successor peels first (brief only; others pass through).
+        live = _decision_context_prior_bytes(ROOT, relative, live)
         assert _resident_prior_bytes(ROOT, relative, live) == prior != live
     from tools.verify_retention_reader_transition import (
         _legacy_summary_fingerprint_prior_bytes, _tplus_incremental_cost_prior_bytes,
@@ -146,7 +148,9 @@ def test_exact_merged_archives_and_feedback_dependencies():
     assert root_fix["previous_e4_v2_digest"] == m1b["active_e4_v2_digest"]
     summary_fp = json.loads((ROOT / "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json").read_bytes())
     assert summary_fp["previous_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
-    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
+    context_fp = json.loads((ROOT / "tests/fixtures/decision_context_premarket_source_transition_v1.json").read_bytes())
+    assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
+    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
 
 
 @pytest.mark.parametrize("tamper", ["live", "archive", "scope", "forged_prior"])
@@ -172,7 +176,8 @@ def test_resident_boundary_refuses_tampering(tmp_path, tamper):
 
 def test_brief_input_archive_preserves_the_exact_prior_source():
     prior = subprocess.check_output(["git", "show", "dc997714:" + BRIEF_INPUT_SOURCE], cwd=ROOT).replace(b"\r\n", b"\n")
-    live = (ROOT / BRIEF_INPUT_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    live = _decision_context_prior_bytes(ROOT, BRIEF_INPUT_SOURCE,
+                                         (ROOT / BRIEF_INPUT_SOURCE).read_bytes().replace(b"\r\n", b"\n"))
     assert _brief_input_prior_bytes(ROOT, BRIEF_INPUT_SOURCE, live) == prior != live
     for relative in (RESIDENT_MANIFEST, *(row["archive"] for row in
             json.loads((ROOT / RESIDENT_MANIFEST).read_bytes())["sources"].values())):

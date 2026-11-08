@@ -95,6 +95,12 @@ LEGACY_SUMMARY_BASE = "58b42b664d8e5008bd1e8e16f7cb167b52b60d21"
 LEGACY_SUMMARY_SCOPE = "EXACT_TPLUS_LEGACY_SUMMARY_FINGERPRINT_REUSE_ONLY"
 LEGACY_SUMMARY_SOURCE = "prospective_decision_outcome_feedback.py"
 LEGACY_SUMMARY_ARCHIVE = "tests/fixtures/tplus_legacy_summary_fingerprint_sources/prospective_decision_outcome_feedback.py.txt"
+DECISION_CONTEXT_MANIFEST = "tests/fixtures/decision_context_premarket_source_transition_v1.json"
+DECISION_CONTEXT_BASE = "73ab3b7f959eeb13f98bdebc8dc7e2496d6f2f4f"
+DECISION_CONTEXT_SCOPE = "EXACT_BRIEF_MATCHED_COHORT_AND_MARKET_GATED_ADDITIVE_FIELDS_ONLY"
+DECISION_CONTEXT_SOURCE = "stocklookup_core/decision/daily_integrated_decision_brief.py"
+DECISION_CONTEXT_ARCHIVE = "tests/fixtures/decision_context_premarket_sources/daily_integrated_decision_brief.py.txt"
+DECISION_CONTEXT_PRIOR_SHA256_LF = "928a8098c3884bc52e1e7db9403f19475fab9823964c71bee2dc7f26dfa86492"
 OCR_RECOGNITION_MANIFEST = "tests/fixtures/ocr_unit_period_recognition_source_transition_v1.json"
 OCR_RECOGNITION_BASE = "b6c34442db28dfd249680e249ae59fc9494bfd84"
 OCR_RECOGNITION_SCOPE = "EXACT_OCR_UNIT_LABEL_AND_H1_OPERATING_PERIOD_RECOGNITION_ONLY"
@@ -888,9 +894,45 @@ def _legacy_summary_fingerprint_prior_bytes(root: Path, relative: str, active: b
     return prior
 
 
+def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-08 additive brief fields (matched-cohort change, market-gated set).
+
+    Only ``daily_integrated_decision_brief.py`` changed; the new fields are emitted only when they carry
+    evidence, so a session without them keeps its exact prior brief bytes. A missing manifest keeps older
+    checkouts valid.
+    """
+    if relative != DECISION_CONTEXT_SOURCE:
+        return active
+    manifest = root / DECISION_CONTEXT_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "decision_context_premarket_source_transition/v1"
+            or spec.get("base_commit") != DECISION_CONTEXT_BASE
+            or spec.get("scope") != DECISION_CONTEXT_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (DECISION_CONTEXT_SOURCE,)):
+        raise ValueError("DECISION_CONTEXT_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != DECISION_CONTEXT_ARCHIVE):
+        raise ValueError("DECISION_CONTEXT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / DECISION_CONTEXT_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (row["prior_sha256_lf"] != DECISION_CONTEXT_PRIOR_SHA256_LF
+            or hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("DECISION_CONTEXT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _decision_context_prior_bytes(root, relative, content)
     content = _legacy_summary_fingerprint_prior_bytes(root, relative, content)
     content = _ocr_recognition_prior_bytes(root, relative, content)
     if relative == ARCHITECTURE_BASELINE_SOURCE:
@@ -1044,6 +1086,14 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if summary_fp["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = summary_fp["active_e4_v2_digest"]
+    context_manifest = root / DECISION_CONTEXT_MANIFEST
+    if context_manifest.is_file():
+        live_brief = (root / DECISION_CONTEXT_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+        _decision_context_prior_bytes(root, DECISION_CONTEXT_SOURCE, live_brief)
+        context = json.loads(context_manifest.read_bytes())
+        if context["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = context["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

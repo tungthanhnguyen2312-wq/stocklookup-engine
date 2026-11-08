@@ -33,6 +33,7 @@ from stocklookup_core.evidence.field_identity import stable_id
 from stocklookup_core.research.multi_session_thesis_recommendation_lifecycle import CONFIRMATION_STATES as TACTICAL_CONFIRMATION_STATES
 from stocklookup_core.research.multi_session_thesis_recommendation_lifecycle import build_artifact as build_lifecycle_artifact
 from stocklookup_core.evidence.session_comparison_semantics import build_comparison_metadata
+from stocklookup_core.decision.market_close_intelligence import participation_snapshot, session_change
 
 CONTRACT_VERSION = "next_session_decision_brief/v2"
 HIGH_PRIORITY_TIER = "PRIORITY_NOW"
@@ -147,7 +148,25 @@ def _breadth_view(breadth: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _market_transition(*, root: Path, registry: Mapping[str, Any], current_session: str, previous_session: str | None) -> dict[str, Any]:
+def _matched_cohort_change(current_descriptive: Mapping[str, Any], previous_descriptive: Mapping[str, Any],
+                           comparison_metadata: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Additive same-denominator view: the aggregate advance_ratio delta above compares two
+    different cohorts whenever technical coverage changes; this compares only tickers present
+    in both governed descriptive artifacts (matched_cohort_session_change/v1)."""
+    metadata = comparison_metadata or {}
+    adjacency = ("REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION" if metadata.get("is_immediate_previous_completed_session")
+                 else "NON_ADJACENT_SESSION_GAP_" + str(metadata.get("session_gap_trading_sessions"))
+                 if metadata.get("session_gap_trading_sessions") is not None else "ADJACENCY_UNVERIFIED")
+    try:
+        current = participation_snapshot(session=current_descriptive.get("session"), descriptive=current_descriptive)
+        previous = participation_snapshot(session=previous_descriptive.get("session"), descriptive=previous_descriptive)
+    except ValueError as exc:
+        return {"status": "UNAVAILABLE", "reason_codes": [str(exc)]}
+    return session_change(current, previous, adjacency=adjacency)
+
+
+def _market_transition(*, root: Path, registry: Mapping[str, Any], current_session: str, previous_session: str | None,
+                       comparison_metadata: Mapping[str, Any] | None = None) -> dict[str, Any]:
     current_descriptive = _resolve_registered_artifact(root=root, registry=registry, session=current_session, name="descriptive")
     if current_descriptive is None:
         return _section(availability=UNAVAILABLE, reason_codes=["CURRENT_DESCRIPTIVE_ARTIFACT_NOT_REGISTERED"], previous=None, current=None, transition=None)
@@ -183,6 +202,7 @@ def _market_transition(*, root: Path, registry: Mapping[str, Any], current_sessi
             "observed_session_cohort_current": current_view["observed_session_cohort"],
             "observed_session_cohort_delta": current_view["observed_session_cohort"] - previous_view["observed_session_cohort"],
         },
+        matched_cohort=_matched_cohort_change(current_descriptive, previous_descriptive, comparison_metadata),
         source_lineage=lineage,
     )
 
@@ -735,14 +755,15 @@ def _build_from_resolved_operations(
     resolved_previous_session = previous["session"] if previous else None
     qualified_chain = _qualified_session_chain(registry)
 
+    comparison_metadata = build_comparison_metadata(
+        registry=registry, current_session=current_session, comparison_session=resolved_previous_session,
+    )
     artifact: dict[str, Any] = {
         "schema_version": "1.0.0",
         "contract_version": CONTRACT_VERSION,
         "current_session": current_session,
         "previous_qualified_session": resolved_previous_session,
-        "comparison_metadata": build_comparison_metadata(
-            registry=registry, current_session=current_session, comparison_session=resolved_previous_session,
-        ),
+        "comparison_metadata": comparison_metadata,
         "binding": {
             "run_identity": run_identity,
             "run_identity_availability": AVAILABLE if run_identity else UNAVAILABLE,
@@ -751,7 +772,7 @@ def _build_from_resolved_operations(
             "current_session_bundle": {"identity": current["bundle"].get("operation_identity"), "sha256": current["bundle_sha256"]},
             "previous_session_bundle": {"identity": previous["bundle"].get("operation_identity"), "sha256": previous["bundle_sha256"]} if previous else None,
         },
-        "market_transition": _market_transition(root=root, registry=registry, current_session=current_session, previous_session=resolved_previous_session),
+        "market_transition": _market_transition(root=root, registry=registry, current_session=current_session, previous_session=resolved_previous_session, comparison_metadata=comparison_metadata),
         "sector_transition": _sector_transition(root=root, registry=registry, current_session=current_session, previous_session=resolved_previous_session),
         "opportunity_transition": _opportunity_transition(current["queue"], previous["queue"] if previous else None),
         "lifecycle": _lifecycle_section(current["bundle"], previous["bundle"] if previous else None, qualified_chain),
