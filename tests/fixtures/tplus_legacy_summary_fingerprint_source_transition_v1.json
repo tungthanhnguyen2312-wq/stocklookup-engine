@@ -1,0 +1,15 @@
+{
+  "contract_version": "tplus_legacy_summary_fingerprint_source_transition/v1",
+  "base_commit": "58b42b664d8e5008bd1e8e16f7cb167b52b60d21",
+  "scope": "EXACT_TPLUS_LEGACY_SUMMARY_FINGERPRINT_REUSE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "555802cb602b523aa70571207cff40fb79f9f4b2f10e5b27fea3186795977f87",
+  "active_e4_v2_digest": "4c289d65ca0c32bbec14efa504f14406816fea33b3c4d0a766dfc7d8d5dc28a8",
+  "sources": {
+    "prospective_decision_outcome_feedback.py": {
+      "archive": "tests/fixtures/tplus_legacy_summary_fingerprint_sources/prospective_decision_outcome_feedback.py.txt",
+      "prior_sha256_lf": "69e7f64da93a0575cbd134cf8252e190e89ad3f1202e2735b2172c7566f61a5b",
+      "active_sha256_lf": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2"
+    }
+  }
+}

@@ -6,7 +6,7 @@
     "prospective_decision_outcome_feedback.py": {
       "archive": "tests/fixtures/storage_portability_v1_sources/prospective_decision_outcome_feedback.py.txt",
       "prior_sha256_lf": "fd3390b380a264d42143a1614d0dc0b4e0e3347e90e0cf208218b0f48b0c6df1",
-      "active_sha256_lf": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2"
+      "active_sha256_lf": "69e7f64da93a0575cbd134cf8252e190e89ad3f1202e2735b2172c7566f61a5b"
     },
     "prospective_decision_retention.py": {
       "archive": "tests/fixtures/storage_portability_v1_sources/prospective_decision_retention.py.txt",
