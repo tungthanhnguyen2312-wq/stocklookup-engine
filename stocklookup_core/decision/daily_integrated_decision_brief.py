@@ -496,8 +496,10 @@ def _participation_change(market_transition: Mapping[str, Any] | None) -> dict[s
         return None
     if change.get("status") != "AVAILABLE":
         return {"status": change.get("status"), "reason_codes": list(change.get("reason_codes") or [])}
-    return {key: change.get(key) for key in ("status", "rule", "previous_session", "adjacency", "cohort", "changes",
-                                             "ma20_crossings", "participation_character", "market_close_condition_evaluation")}
+    # span and limitations carry the multi-session warning (registry-consecutive is not exchange-adjacent).
+    return {key: change.get(key) for key in ("status", "rule", "previous_session", "adjacency", "span", "cohort", "changes",
+                                             "ma20_crossings", "participation_character", "market_close_condition_evaluation",
+                                             "limitations")}
 
 
 def _participation_field(market_transition: Mapping[str, Any] | None) -> dict[str, Any]:

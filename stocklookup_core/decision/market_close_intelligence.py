@@ -272,17 +272,20 @@ def _weekdays_between(earlier: str, later: str) -> int | None:
     return sum(1 for k in range(1, days) if (start + timedelta(days=k)).weekday() < 5) if days > 1 else 0
 
 
-def _cohort_stats(rows: Mapping[str, list[Any]], tickers: list[str], trend_tickers: list[str]) -> dict[str, Any]:
+def _cohort_stats(rows: Mapping[str, list[Any]], tickers: list[str], trend_tickers: list[str],
+                  momentum_tickers: list[str]) -> dict[str, Any]:
+    """Each share uses a denominator shared by both sessions: matched tickers for advance/decline,
+    tickers with a known MA20 side in both sessions for MA20, and tickers with a known momentum
+    sign in both sessions for momentum. UNKNOWN stays missing; it is never counted as negative."""
     n = len(tickers)
     adv = sum(1 for t in tickers if rows[t][1] == 1)
     dec = sum(1 for t in tickers if rows[t][1] == -1)
     above = sum(1 for t in trend_tickers if rows[t][2] == 1)
-    mom_known = [t for t in tickers if rows[t][3] is not None]
-    pos = sum(1 for t in mom_known if rows[t][3] == 1)
+    pos = sum(1 for t in momentum_tickers if rows[t][3] == 1)
     return {"advancing": adv, "declining": dec, "unchanged": n - adv - dec,
             "advance_ratio": _ratio(adv, n), "decline_ratio": _ratio(dec, n),
             "above_ma20": above, "above_ma20_share": _ratio(above, len(trend_tickers)),
-            "positive_momentum_20d": pos, "positive_momentum_share": _ratio(pos, len(mom_known))}
+            "positive_momentum_20d": pos, "positive_momentum_share": _ratio(pos, len(momentum_tickers))}
 
 
 def _pp(after: float | None, before: float | None) -> float | None:
@@ -302,13 +305,21 @@ def session_change(current: Mapping[str, Any] | None, previous: Mapping[str, Any
         return _unavailable("PREVIOUS_SESSION_NOT_EARLIER", rule=SESSION_CHANGE_RULE)
     if previous.get("cohort_rule") != current.get("cohort_rule"):
         return _unavailable("COHORT_RULE_CHANGED_NOT_COMPARABLE", rule=SESSION_CHANGE_RULE)
+    # A snapshot whose row count disagrees with its own market_breadth count is not the cohort the
+    # Market Close brief describes; comparing it would evaluate that brief's condition on other data.
+    # An absent breadth count (older descriptive artifacts) is not a disagreement.
+    for side, snap in (("CURRENT", current), ("PREVIOUS", previous)):
+        if snap.get("cohort_reconciliation") == "DIFFERS_FROM_MARKET_BREADTH_COUNT":
+            return _unavailable(f"{side}_PARTICIPATION_COHORT_DIFFERS_FROM_MARKET_BREADTH", rule=SESSION_CHANGE_RULE)
     now_rows = {r[0]: r for r in current.get("cohort") or []}
     then_rows = {r[0]: r for r in previous.get("cohort") or []}
     matched = sorted(set(now_rows) & set(then_rows))
     if not matched:
         return _unavailable("NO_MATCHED_TICKERS_BETWEEN_SESSIONS", rule=SESSION_CHANGE_RULE)
     trend_matched = [t for t in matched if now_rows[t][2] is not None and then_rows[t][2] is not None]
-    before, after = _cohort_stats(then_rows, matched, trend_matched), _cohort_stats(now_rows, matched, trend_matched)
+    momentum_matched = [t for t in matched if now_rows[t][3] is not None and then_rows[t][3] is not None]
+    before = _cohort_stats(then_rows, matched, trend_matched, momentum_matched)
+    after = _cohort_stats(now_rows, matched, trend_matched, momentum_matched)
     crossed_up = sum(1 for t in trend_matched if then_rows[t][2] == 0 and now_rows[t][2] == 1)
     crossed_down = sum(1 for t in trend_matched if then_rows[t][2] == 1 and now_rows[t][2] == 0)
     changes = {
@@ -349,6 +360,7 @@ def session_change(current: Mapping[str, Any] | None, previous: Mapping[str, Any
                  "may_span_multiple_trading_sessions": bool(weekdays)},
         "previous_snapshot_identity": previous.get("artifact_identity"), "current_snapshot_identity": current.get("artifact_identity"),
         "cohort": {"matched": len(matched), "matched_with_ma20_side_both_sessions": len(trend_matched),
+                   "matched_with_momentum_both_sessions": len(momentum_matched),
                    "current_only": len(set(now_rows) - set(then_rows)), "previous_only": len(set(then_rows) - set(now_rows)),
                    "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."},
         "previous": before, "current": after, "changes": changes,

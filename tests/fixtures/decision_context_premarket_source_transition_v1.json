@@ -4,12 +4,12 @@
   "scope": "EXACT_BRIEF_MATCHED_COHORT_AND_MARKET_GATED_ADDITIVE_FIELDS_ONLY",
   "release_authority": "NOT_GRANTED",
   "previous_e4_v2_digest": "4c289d65ca0c32bbec14efa504f14406816fea33b3c4d0a766dfc7d8d5dc28a8",
-  "active_e4_v2_digest": "82a8c18488a46229115719ecc4d1cc31394830a45317fa40d1cf6a4c9bfe2f8a",
+  "active_e4_v2_digest": "842263d986c02ca128b37e6dd30f244c7c2069eeb6c498f2ed5218f0cd3896e7",
   "sources": {
     "stocklookup_core/decision/daily_integrated_decision_brief.py": {
       "archive": "tests/fixtures/decision_context_premarket_sources/daily_integrated_decision_brief.py.txt",
       "prior_sha256_lf": "928a8098c3884bc52e1e7db9403f19475fab9823964c71bee2dc7f26dfa86492",
-      "active_sha256_lf": "83be31e08c5ba34552eaa2ba05424543a859ffd9461781de1a972d298adf9cdc"
+      "active_sha256_lf": "2b158be454eb87cc29aeadd6b4c37f48160d946b24aec4d8fe4c148055caf6d7"
     }
   }
 }
