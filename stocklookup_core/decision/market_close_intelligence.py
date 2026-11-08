@@ -23,9 +23,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import date, timedelta
 from typing import Any, Mapping
 
 CONTRACT_VERSION = "market_close_intelligence/v1"
+SNAPSHOT_CONTRACT = "market_close_participation_snapshot/v1"
+SESSION_CHANGE_RULE = "matched_cohort_session_change/v1"
 
 _MACRO_AXES = ("INFLATION_PRESSURE", "FX_PRESSURE", "USD_PRESSURE", "DOMESTIC_RATES",
                "DOMESTIC_LIQUIDITY", "CREDIT_CONTEXT", "GLOBAL_RATES", "COMMODITY_CONTEXT")
@@ -188,6 +191,196 @@ def _macro(regime: Mapping[str, Any] | None) -> dict[str, Any]:
             "rule": "Only official/qualified series inside their freshness window are used; press reports are never macro authority."}
 
 
+# ---------------------------------------------------------------------------
+# Matched-cohort session change (market_close_participation_snapshot/v1 +
+# matched_cohort_session_change/v1). Pure functions; no I/O.
+#
+# Aggregate breadth ratios from two sessions have different denominators whenever
+# technical coverage changes (it has moved between 763 and 956 names), so their
+# difference mixes participation with coverage. The snapshot keeps, per ticker,
+# only the three signs the breadth statistics are built from (1-day return, MA20
+# side, 20-day momentum) for exactly the cohort market_breadth uses. Comparing two
+# snapshots on the tickers present in BOTH gives before/after ratios that share one
+# denominator; cohort churn is reported, never blended in. No threshold is
+# introduced: changes are signed differences, and the Market Close brief's own
+# published "Participation improves" condition is evaluated verbatim.
+# The previous session is never chosen here: callers pass two governed sessions.
+# ---------------------------------------------------------------------------
+
+_TREND_CODE = {"ABOVE_MA20": 1, "AT_OR_BELOW_MA20": 0}
+SNAPSHOT_COHORT_RULE = ("Same-session SHADOW_ONLY technical features inside the current descriptive scope - "
+                        "the exact cohort of market_breadth. Row = [ticker, sign(return_1d), MA20 side (1 above, "
+                        "0 at/below, null unknown), sign(momentum_20d)].")
+
+
+def _sign(value: Any) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return 1 if value > 0 else -1 if value < 0 else 0
+
+
+def participation_snapshot(*, session: str, descriptive: Mapping[str, Any]) -> dict[str, Any]:
+    """Compact per-ticker participation signs for one governed descriptive artifact."""
+    if not isinstance(session, str) or not session:
+        raise ValueError("MARKET_CLOSE_SESSION_MISSING:descriptive")
+    if descriptive.get("session") != session:
+        raise ValueError("MARKET_CLOSE_SESSION_MISMATCH:descriptive")
+    base: dict[str, Any] = {"schema_version": "1.0.0", "contract_version": SNAPSHOT_CONTRACT, "session": session,
+                            "descriptive_artifact_identity": descriptive.get("artifact_identity"),
+                            "cohort_rule": SNAPSHOT_COHORT_RULE}
+    records = descriptive.get("records")
+    if not isinstance(records, Mapping) or not records:
+        base.update({"status": "UNAVAILABLE", "reason_codes": ["DESCRIPTIVE_PER_TICKER_RECORDS_ABSENT"], "cohort": [], "cohort_count": 0})
+    else:
+        rows: list[list[Any]] = []
+        for ticker in sorted(records):
+            row = records[ticker]
+            if not isinstance(row, Mapping) or not row.get("in_current_descriptive_scope"):
+                continue
+            technical = row.get("technical_features") or {}
+            if technical.get("status") != "SHADOW_ONLY" or not technical.get("is_current_session"):
+                continue
+            values = technical.get("values") or {}
+            direction = _sign(values.get("return_1d"))
+            if direction is None:
+                continue
+            rows.append([str(ticker), direction, _TREND_CODE.get(row.get("trend_state")), _sign(values.get("momentum_20d"))])
+        expected = (descriptive.get("market_breadth") or {}).get("same_session_technical_feature_available_count")
+        base.update({"status": "AVAILABLE", "cohort": rows, "cohort_count": len(rows),
+                     "cohort_reconciliation": ("MATCHES_MARKET_BREADTH" if expected == len(rows)
+                                               else "DIFFERS_FROM_MARKET_BREADTH_COUNT" if isinstance(expected, int)
+                                               else "MARKET_BREADTH_COUNT_ABSENT")})
+    base["artifact_sha256"] = _hash(base)
+    base["artifact_identity"] = "market_close_participation_snapshot:" + base["artifact_sha256"]
+    return base
+
+
+def _direction(delta: float | None) -> str:
+    if delta is None:
+        return "UNKNOWN"
+    return "UP" if delta > 0 else "DOWN" if delta < 0 else "FLAT"
+
+
+def _weekdays_between(earlier: str, later: str) -> int | None:
+    """Mon-Fri dates strictly between two sessions. A warning input only: this is not an
+    exchange calendar and is never used to choose or validate a comparison session."""
+    try:
+        start, end = date.fromisoformat(earlier), date.fromisoformat(later)
+    except (TypeError, ValueError):
+        return None
+    days = (end - start).days
+    return sum(1 for k in range(1, days) if (start + timedelta(days=k)).weekday() < 5) if days > 1 else 0
+
+
+def _cohort_stats(rows: Mapping[str, list[Any]], tickers: list[str], trend_tickers: list[str]) -> dict[str, Any]:
+    n = len(tickers)
+    adv = sum(1 for t in tickers if rows[t][1] == 1)
+    dec = sum(1 for t in tickers if rows[t][1] == -1)
+    above = sum(1 for t in trend_tickers if rows[t][2] == 1)
+    mom_known = [t for t in tickers if rows[t][3] is not None]
+    pos = sum(1 for t in mom_known if rows[t][3] == 1)
+    return {"advancing": adv, "declining": dec, "unchanged": n - adv - dec,
+            "advance_ratio": _ratio(adv, n), "decline_ratio": _ratio(dec, n),
+            "above_ma20": above, "above_ma20_share": _ratio(above, len(trend_tickers)),
+            "positive_momentum_20d": pos, "positive_momentum_share": _ratio(pos, len(mom_known))}
+
+
+def _pp(after: float | None, before: float | None) -> float | None:
+    return round((after - before) * 100, 2) if isinstance(after, float) and isinstance(before, float) else None
+
+
+def session_change(current: Mapping[str, Any] | None, previous: Mapping[str, Any] | None, *,
+                   adjacency: str = "ADJACENCY_UNVERIFIED") -> dict[str, Any]:
+    """Matched-cohort participation change between two governed sessions. Descriptive only."""
+    if not isinstance(current, Mapping) or current.get("status") != "AVAILABLE":
+        return _unavailable("CURRENT_PARTICIPATION_SNAPSHOT_UNAVAILABLE", rule=SESSION_CHANGE_RULE)
+    if not isinstance(previous, Mapping):
+        return _unavailable("NO_PREVIOUS_PARTICIPATION_SNAPSHOT", rule=SESSION_CHANGE_RULE)
+    if previous.get("contract_version") != SNAPSHOT_CONTRACT or previous.get("status") != "AVAILABLE":
+        return _unavailable("PREVIOUS_PARTICIPATION_SNAPSHOT_UNAVAILABLE", rule=SESSION_CHANGE_RULE)
+    if not str(previous.get("session") or "") < str(current.get("session") or ""):
+        return _unavailable("PREVIOUS_SESSION_NOT_EARLIER", rule=SESSION_CHANGE_RULE)
+    if previous.get("cohort_rule") != current.get("cohort_rule"):
+        return _unavailable("COHORT_RULE_CHANGED_NOT_COMPARABLE", rule=SESSION_CHANGE_RULE)
+    now_rows = {r[0]: r for r in current.get("cohort") or []}
+    then_rows = {r[0]: r for r in previous.get("cohort") or []}
+    matched = sorted(set(now_rows) & set(then_rows))
+    if not matched:
+        return _unavailable("NO_MATCHED_TICKERS_BETWEEN_SESSIONS", rule=SESSION_CHANGE_RULE)
+    trend_matched = [t for t in matched if now_rows[t][2] is not None and then_rows[t][2] is not None]
+    before, after = _cohort_stats(then_rows, matched, trend_matched), _cohort_stats(now_rows, matched, trend_matched)
+    crossed_up = sum(1 for t in trend_matched if then_rows[t][2] == 0 and now_rows[t][2] == 1)
+    crossed_down = sum(1 for t in trend_matched if then_rows[t][2] == 1 and now_rows[t][2] == 0)
+    changes = {
+        "advance_ratio_pp": _pp(after["advance_ratio"], before["advance_ratio"]),
+        "decline_ratio_pp": _pp(after["decline_ratio"], before["decline_ratio"]),
+        "above_ma20_share_pp": _pp(after["above_ma20_share"], before["above_ma20_share"]),
+        "positive_momentum_share_pp": _pp(after["positive_momentum_share"], before["positive_momentum_share"]),
+    }
+    adv_dir, ma_dir = _direction(changes["advance_ratio_pp"]), _direction(changes["above_ma20_share_pp"])
+    if "UNKNOWN" in (adv_dir, ma_dir):
+        character = "UNKNOWN"
+    elif adv_dir == ma_dir == "UP":
+        character = "BROADENING"
+    elif adv_dir == ma_dir == "DOWN":
+        character = "NARROWING"
+    elif adv_dir == ma_dir == "FLAT":
+        character = "UNCHANGED"
+    elif "FLAT" in (adv_dir, ma_dir):
+        character = "UNCHANGED_ON_ONE_MEASURE"
+    else:
+        character = "DIVERGENT"
+    # Market Close's published next-session condition, evaluated verbatim on the matched cohort.
+    participation = ("CONFIRMED" if after["advancing"] > after["declining"] and ma_dir == "UP"
+                     else "REFUTED" if after["declining"] > after["advancing"] and ma_dir == "DOWN"
+                     else "NEITHER_CONFIRMED_NOR_REFUTED")
+    limitations = ["Cohort-level statistics on the observed technical cohort; not whole-market breadth.",
+                   "A session-to-session change is descriptive; it is not a trend, forecast or timing signal."]
+    if adjacency != "REGISTRY_IMMEDIATE_PREVIOUS_COMPLETED_SESSION":
+        limitations.append("The previous session is not verified as the immediately preceding completed session.")
+    weekdays = _weekdays_between(str(previous["session"]), str(current["session"]))
+    if weekdays:
+        limitations.append(f"{weekdays} weekday(s) lie between the two sessions; unless all were exchange holidays, "
+                           "this change spans more than one trading session.")
+    return {
+        "status": "AVAILABLE", "rule": SESSION_CHANGE_RULE,
+        "current_session": current["session"], "previous_session": previous["session"], "adjacency": adjacency,
+        "span": {"calendar_weekdays_between": weekdays, "basis": "MON_FRI_CALENDAR_WARNING_ONLY_NOT_EXCHANGE_CALENDAR",
+                 "may_span_multiple_trading_sessions": bool(weekdays)},
+        "previous_snapshot_identity": previous.get("artifact_identity"), "current_snapshot_identity": current.get("artifact_identity"),
+        "cohort": {"matched": len(matched), "matched_with_ma20_side_both_sessions": len(trend_matched),
+                   "current_only": len(set(now_rows) - set(then_rows)), "previous_only": len(set(then_rows) - set(now_rows)),
+                   "rule": "Every before/after ratio uses the matched tickers only, so both sessions share one denominator."},
+        "previous": before, "current": after, "changes": changes,
+        "ma20_crossings": {"crossed_above": crossed_up, "crossed_below": crossed_down, "net": crossed_up - crossed_down},
+        "participation_character": character,
+        "participation_character_rule": ("BROADENING = matched advance ratio and above-MA20 share both rose; NARROWING = both fell; "
+                                         "DIVERGENT = opposite signs; UNCHANGED = neither moved. Signed differences only; no threshold."),
+        "market_close_condition_evaluation": {"hypothesis": "Participation improves", "state": participation,
+                                              "condition_source": CONTRACT_VERSION + ":interpretation.next_session_conditions"},
+        "limitations": limitations,
+    }
+
+
+def _index_breadth_concordance(c: Mapping[str, Any]) -> dict[str, Any]:
+    bi, b = c["benchmark_index"], c["breadth"]
+    question = "Was the index move broad or concentrated?"
+    missing = [n for n, ok in (("benchmark_index", bi["status"] == "AVAILABLE"), ("breadth", b["status"] == "AVAILABLE")) if not ok]
+    if missing:
+        return {"question": question, "answer_state": "CANNOT_ANSWER", "missing_evidence": missing}
+    move = _sign(bi.get("change_points"))
+    majority = _sign(b["advancing"] - b["declining"])
+    if move in (None, 0) or majority == 0:
+        fact = "NO_DIRECTIONAL_DISAGREEMENT_EVALUABLE"
+    elif move == majority:
+        fact = "INDEX_AND_COHORT_MAJORITY_AGREE"
+    else:
+        fact = "INDEX_UP_WHILE_MORE_OF_COHORT_DECLINED" if move > 0 else "INDEX_DOWN_WHILE_MORE_OF_COHORT_ADVANCED"
+    return {"question": question, "answer_state": "PARTIAL", "observed_cohort_facts": [fact],
+            "note": ("VN-Index is cap-weighted on HOSE; the cohort is an equal-count cross-exchange technical cohort. "
+                     "Disagreement suggests a move carried by fewer, larger names; it is context, not proof of concentration.")}
+
+
 def _questions(c: Mapping[str, Any]) -> list[dict[str, Any]]:
     breadth, sectors = c["breadth"], c["sectors"]
     index_ok = c["benchmark_index"]["status"] == "AVAILABLE"
@@ -228,6 +421,7 @@ def _questions(c: Mapping[str, Any]) -> list[dict[str, Any]]:
                     "missing_evidence": ([] if index_ok else ["benchmark_index"]) + ["multi_session_same_cohort_comparison"],
                     "note": ("Cohort facts describe participation only. A confirmed broad uptrend would need most of the cohort "
                              "above MA20 with positive momentum; bottoming versus continuation cannot be separated from one session.")})
+    out.append(_index_breadth_concordance(c))
     out.append({"question": "Is there a false-breakout / bull-trap signature?", "answer_state": "CANNOT_ANSWER_FROM_ONE_SESSION",
                 "missing_evidence": ["next_session_same_cohort_follow_through"],
                 "note": "Per-ticker breakout setups are judged on their own trigger and invalidation in each card."})

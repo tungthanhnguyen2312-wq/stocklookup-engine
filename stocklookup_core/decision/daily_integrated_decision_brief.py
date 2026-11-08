@@ -64,7 +64,12 @@ ACTIONABLE_NOW, RETEST_CANDIDATES, EARLY_SETUPS = "ACTIONABLE_NOW", "RETEST_CAND
 EXTENDED_DO_NOT_CHASE, HOLD_MANAGE, RISK_AVOID = "EXTENDED_DO_NOT_CHASE", "HOLD_MANAGE", "RISK_AVOID"
 INSUFFICIENT_RESEARCH = "INSUFFICIENT_RESEARCH"
 CONSTRUCTIVE_NO_NEW_ENTRY = "CONSTRUCTIVE_NO_NEW_ENTRY"
-OPPORTUNITY_SET_NAMES = (CONSTRUCTIVE_NO_NEW_ENTRY, ACTIONABLE_NOW, EARLY_SETUPS, RETEST_CANDIDATES, EXTENDED_DO_NOT_CHASE, HOLD_MANAGE, RISK_AVOID, INSUFFICIENT_RESEARCH)
+# A fired, otherwise-qualified breakout that the governed posture rule holds at WAIT only
+# because of the market regime. Kept apart so a security-level setup is never hidden inside a
+# generic WAIT bucket; the posture itself is unchanged.
+MARKET_GATED_ENTRY = "MARKET_GATED_ENTRY"
+MARKET_GATED_CONDITION_CLASS = "BEARISH_BREADTH_NARROWS_FRESH_ENTRY"
+OPPORTUNITY_SET_NAMES = (CONSTRUCTIVE_NO_NEW_ENTRY, MARKET_GATED_ENTRY, ACTIONABLE_NOW, EARLY_SETUPS, RETEST_CANDIDATES, EXTENDED_DO_NOT_CHASE, HOLD_MANAGE, RISK_AVOID, INSUFFICIENT_RESEARCH)
 _EARLY_SETUP_PHASES = frozenset({"EARLY_REVERSAL", "BREAKOUT_SETUP", "BASE_BUILDING", "RETEST_AFTER_BREAKOUT"})
 
 
@@ -83,6 +88,8 @@ def classify_opportunity_set(record: Mapping[str, Any]) -> str:
     and tactical_phase -- never re-derives or overrides the posture policy itself."""
     if record.get("posture_condition_class") == "CONSTRUCTIVE_TREND_NO_FRESH_ENTRY":
         return CONSTRUCTIVE_NO_NEW_ENTRY
+    if record.get("posture_condition_class") == MARKET_GATED_CONDITION_CLASS:
+        return MARKET_GATED_ENTRY
     posture = record.get("research_action_posture")
     phase = record.get("tactical_phase")
     if posture == "INITIATE_ON_BREAKOUT":
@@ -151,6 +158,23 @@ def _compact_opportunity_row(record: Mapping[str, Any], priority_tier_by_ticker:
     }
 
 
+def _market_gated_row(record: Mapping[str, Any], priority_tier_by_ticker: Mapping[str, str]) -> dict[str, Any]:
+    """Security setup and market environment side by side; neither rewrites the other."""
+    row = _compact_opportunity_row(record, priority_tier_by_ticker)
+    invalidation = record.get("invalidation") or {}
+    row.update({
+        "security_setup": "FIRED_BREAKOUT_TRIGGER_QUALIFIED_AT_SECURITY_LEVEL",
+        "market_environment": "ADVERSE_MARKET_REGIME_HOLDS_FRESH_ENTRY",
+        "market_regime": (record.get("market_sector_context") or {}).get("market_regime"),
+        "release_condition": ("The governed posture rule lifts this hold when the market regime is no longer in its "
+                              "bearish set (e.g. DETERIORATING_BREADTH), provided the security's own trigger and "
+                              "invalidation still hold. No other condition is added here."),
+        "security_invalidation": {k: invalidation.get(k) for k in ("invalidation_level", "invalidation_method", "distance_to_invalidation_pct", "horizon")
+                                  if k in invalidation} or None,
+    })
+    return row
+
+
 def build_opportunity_sets(current_records: Mapping[str, Mapping[str, Any]], opportunity_prioritization: Mapping[str, Any] | None) -> dict[str, Any]:
     """Sections 4-5: deterministic opportunity sets plus ordered shortlists. No universal score."""
     priority_records = (opportunity_prioritization or {}).get("records") or {}
@@ -165,6 +189,7 @@ def build_opportunity_sets(current_records: Mapping[str, Mapping[str, Any]], opp
     top_now = sorted(buckets[ACTIONABLE_NOW], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))[:10]
     top_early = sorted(buckets[EARLY_SETUPS], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))[:10]
     risk_ordered = sorted(buckets[RISK_AVOID], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))[:10]
+    gated = sorted(buckets[MARKET_GATED_ENTRY], key=lambda t: _ordering_key(current_records[t], priority_tier_by_ticker))
     return {
         "sets": sets,
         "set_counts": {name: len(buckets[name]) for name in OPPORTUNITY_SET_NAMES},
@@ -172,6 +197,7 @@ def build_opportunity_sets(current_records: Mapping[str, Mapping[str, Any]], opp
         "top_current_opportunities": [_compact_opportunity_row(current_records[t], priority_tier_by_ticker) for t in top_now],
         "top_early_setups": [_compact_opportunity_row(current_records[t], priority_tier_by_ticker) for t in top_early],
         "highest_risk_names": [_compact_opportunity_row(current_records[t], priority_tier_by_ticker) for t in risk_ordered],
+        "market_gated_entries": [_market_gated_row(current_records[t], priority_tier_by_ticker) for t in gated],
         "priority_tier_source_identity": (opportunity_prioritization or {}).get("artifact_identity"),
         "authority_boundary": {"no_universal_score": True, "no_probability_or_target": True, "priority_tier_optional_secondary_ordering_only": True},
     }
@@ -453,6 +479,17 @@ def build_decision_transitions(*, posture_transition: Mapping[str, Any] | None, 
     }
 
 
+def _participation_change(market_transition: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Compact matched-cohort view (same denominator in both sessions); aggregates only."""
+    change = (market_transition or {}).get("matched_cohort")
+    if not isinstance(change, Mapping):
+        return {"status": "UNAVAILABLE", "reason_codes": ["MATCHED_COHORT_CHANGE_NOT_SUPPLIED"]}
+    if change.get("status") != "AVAILABLE":
+        return {"status": change.get("status"), "reason_codes": list(change.get("reason_codes") or [])}
+    return {key: change.get(key) for key in ("status", "rule", "previous_session", "adjacency", "cohort", "changes",
+                                             "ma20_crossings", "participation_character", "market_close_condition_evaluation")}
+
+
 def build_what_changed_today(*, posture_transition: Mapping[str, Any] | None, market_transition: Mapping[str, Any] | None,
                               sector_transition: Mapping[str, Any] | None, watchlist_tickers: Sequence[str]) -> dict[str, Any]:
     records = (posture_transition or {}).get("records") or {}
@@ -460,7 +497,8 @@ def build_what_changed_today(*, posture_transition: Mapping[str, Any] | None, ma
         return {
             "availability": (posture_transition or {}).get("availability", "UNAVAILABLE"),
             "reason_codes": (posture_transition or {}).get("reason_codes", ["POSTURE_TRANSITION_NOT_AVAILABLE"]),
-            "market_breadth_change": None, "sector_leadership_changes": None, "new_actionable_now": [], "new_early_setups": [],
+            "market_breadth_change": None, "market_participation_change": _participation_change(market_transition),
+            "sector_leadership_changes": None, "new_actionable_now": [], "new_early_setups": [],
             "new_failed_breakouts": [], "new_breakdowns": [], "names_becoming_extended": [], "watchlist_posture_changes": [],
         }
 
@@ -476,6 +514,7 @@ def build_what_changed_today(*, posture_transition: Mapping[str, Any] | None, ma
     return {
         "availability": "AVAILABLE",
         "market_breadth_change": (market_transition or {}).get("transition"),
+        "market_participation_change": _participation_change(market_transition),
         "sector_leadership_changes": sorted(sector_changes, key=lambda row: row["group_key"]),
         "new_actionable_now": _tickers(lambda row: row["transition"] in _TRANSITIONS_TOWARD_ACTIONABLE),
         "new_early_setups": _tickers(lambda row: row["transition"] == "NEW_EARLY_WATCH"),
