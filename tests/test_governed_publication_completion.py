@@ -110,6 +110,8 @@ class FakeGh:
         self.after_ci_dispatch = []
         self.after_pages_dispatch = []
         self.complete_after_watch = {}
+        self.watch_stdout = {}
+        self.blind_view = False
         self.calls = []
         self.ci_dispatch_count = 0
         self.pages_dispatch_count = 0
@@ -131,6 +133,8 @@ class FakeGh:
             run_id = int(args[2])
             return _cp(0, self.logs.get(run_id, ""))
         if args[:2] == ["run", "view"] and "--json" in args:
+            if self.blind_view:
+                return _cp(1, stderr="gh: watcher could not read the run")
             run_id = int(args[2])
             match = next(
                 (row for row in [*self.ci_runs, *self.pages_runs] if int(row["databaseId"]) == run_id),
@@ -149,7 +153,7 @@ class FakeGh:
                     self.ci_runs = [extra]
                 else:
                     self.pages_runs = [extra]
-            return _cp(self.watch_exit.get(run_id, 0))
+            return _cp(self.watch_exit.get(run_id, 0), stdout=self.watch_stdout.get(run_id, ""))
         if args[:2] == ["workflow", "run"]:
             workflow = args[2]
             if workflow == gpc.CI_WORKFLOW:
@@ -284,11 +288,64 @@ def test_ci_failure_stops_before_pages(web_dir, tmp_path):
     gh = FakeGh()
     gh.ci_runs = [_ci_row(status="in_progress", conclusion="")]
     gh.watch_exit[CI_ID] = 1
+    gh.watch_stdout[CI_ID] = "Refreshing run status every 3 seconds. Press Ctrl+C to quit."
+    gh.complete_after_watch[CI_ID] = _ci_row(status="completed", conclusion="failure")
     git = FakeGit()
-    with pytest.raises(gpc.PublicationCompletionError, match="BLOCKED_CI_FAILED"):
+    with pytest.raises(gpc.PublicationCompletionError, match="BLOCKED_CI_FAILED") as caught:
+        _complete(web_dir, gh, git, tmp_path)
+    assert "conclusion=failure" in str(caught.value)
+    assert "Refreshing run status" not in str(caught.value)
+    assert gh.pages_dispatch_count == 0
+    assert gh.ci_dispatch_count == 0
+    assert not any(args[:3] == ["workflow", "run", gpc.PAGES_WORKFLOW] for args in gh.calls)
+
+
+def test_completed_failure_is_not_redispatched(web_dir, tmp_path):
+    gh = FakeGh()
+    gh.ci_runs = [_ci_row(status="completed", conclusion="failure")]
+    git = FakeGit()
+    with pytest.raises(gpc.PublicationCompletionError, match="BLOCKED_CI_FAILED") as caught:
+        _complete(web_dir, gh, git, tmp_path)
+    assert caught.value.details["conclusion"] == "failure"
+    assert gh.ci_dispatch_count == 0
+    assert gh.pages_dispatch_count == 0
+
+
+def test_cancelled_ci_is_not_a_failure_or_a_publication(web_dir, tmp_path):
+    gh = FakeGh()
+    gh.ci_runs = [_ci_row(status="completed", conclusion="cancelled")]
+    git = FakeGit()
+    with pytest.raises(gpc.PublicationCompletionError, match="BLOCKED_CI_CANCELLED") as caught:
+        _complete(web_dir, gh, git, tmp_path)
+    assert caught.value.details["status"] == "completed"
+    assert gh.ci_dispatch_count == 0
+    assert gh.pages_dispatch_count == 0
+
+
+def test_queued_watch_exit_stays_not_terminal(web_dir, tmp_path):
+    gh = FakeGh()
+    gh.ci_runs = [_ci_row(status="queued", conclusion="")]
+    gh.watch_exit[CI_ID] = 1
+    gh.watch_stdout[CI_ID] = "Refreshing run status every 3 seconds. Press Ctrl+C to quit."
+    git = FakeGit()
+    with pytest.raises(gpc.PublicationCompletionError, match="BLOCKED_CI_NOT_TERMINAL") as caught:
+        _complete(web_dir, gh, git, tmp_path)
+    assert "Refreshing run status" not in str(caught.value)
+    assert caught.value.details["status"] == "queued"
+    assert gh.pages_dispatch_count == 0
+    assert gh.ci_dispatch_count == 0
+
+
+def test_watcher_read_failure_is_not_a_ci_failure(web_dir, tmp_path):
+    gh = FakeGh()
+    gh.ci_runs = [_ci_row(status="in_progress", conclusion="")]
+    gh.watch_exit[CI_ID] = 1
+    gh.blind_view = True
+    git = FakeGit()
+    with pytest.raises(gpc.PublicationCompletionError, match="BLOCKED_CI_WATCHER"):
         _complete(web_dir, gh, git, tmp_path)
     assert gh.pages_dispatch_count == 0
-    assert not any(args[:3] == ["workflow", "run", gpc.PAGES_WORKFLOW] for args in gh.calls)
+    assert gh.ci_dispatch_count == 0
 
 
 def test_automatic_exact_source_pages_success_is_reused(web_dir, tmp_path):

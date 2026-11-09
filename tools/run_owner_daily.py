@@ -1626,12 +1626,19 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
             )
         if telemetry is not None:
             if not publish_dashboard:
+                dashboard_end_status = "END"
                 dashboard_end_reason = "DASHBOARD_PUBLICATION_DISABLED"
             elif dashboard.get("status") in {"READY", "SKIPPED"}:
+                dashboard_end_status = "END"
                 dashboard_end_reason = None
             else:
+                # A push, a queued run, or a failed remote gate is not a completed phase.
+                dashboard_end_status = "FAILED"
                 dashboard_end_reason = str(dashboard.get("reason") or dashboard.get("status") or "DASHBOARD_NOT_READY")
-            telemetry.emit(phase_index=5, progress_kind="PUBLICATION", status="END", reason=dashboard_end_reason)
+            telemetry.emit(
+                phase_index=5, progress_kind="PUBLICATION",
+                status=dashboard_end_status, reason=dashboard_end_reason,
+            )
         if dashboard["status"] in {"READY", "SKIPPED"}:
             _journal_advance_strict(root, run_id, journal.DASHBOARD_PUBLISHED, detail={"status": dashboard["status"]})
 

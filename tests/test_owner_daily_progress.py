@@ -676,6 +676,21 @@ def test_telemetry_summary_health_fields_are_consistent_when_degraded(tmp_path):
     assert summary["status_scope"] == progress.STATUS_SCOPE
 
 
+def test_dashboard_publication_failure_is_not_reported_complete(tmp_path):
+    emitter, _sidecar, lines = _emitter(tmp_path, FakeClock())
+    emitter.emit(phase_index=5, progress_kind="PUBLICATION", status="BEGIN")
+    emitter.emit(
+        phase_index=5, progress_kind="PUBLICATION", status="FAILED",
+        reason="RELEASE_ORCHESTRATOR_EXIT_2:[ERROR] BLOCKED_CI_FAILED",
+    )
+    assert "XONG" not in lines[-1]
+    assert "LỖI" in lines[-1]
+    assert "[5/9]" in lines[-1]
+    ready, _sidecar, ready_lines = _emitter(tmp_path / "ready", FakeClock())
+    ready.emit(phase_index=5, progress_kind="PUBLICATION", status="END")
+    assert "XONG" in ready_lines[-1]
+
+
 
 def test_checkpoint_fields_and_request_measurements_are_distinct(tmp_path):
     clock = FakeClock()

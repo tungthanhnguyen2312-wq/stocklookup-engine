@@ -336,6 +336,62 @@ def _view_run_state(
     return str(payload.get("status") or ""), str(payload.get("conclusion") or "")
 
 
+def _stage_code(stage: str, kind: str) -> str:
+    """Map a run's own conclusion onto a stage-specific blocker.
+
+    ``kind`` is success, failure, cancelled, timeout, not_terminal, or watcher.
+    A git push and a watcher exit are not in this map.
+    """
+    prefix = {"ci": "CI", "pages": "PAGES"}.get(stage, "REMOTE")
+    codes = {
+        "failure": f"BLOCKED_{prefix}_FAILED",
+        "cancelled": f"BLOCKED_{prefix}_CANCELLED",
+        "timeout": f"BLOCKED_{prefix}_TIMEOUT",
+        "not_terminal": f"BLOCKED_{prefix}_NOT_TERMINAL",
+        "watcher": f"BLOCKED_{prefix}_WATCHER",
+    }
+    return codes[kind]
+
+
+def classify_run_conclusion(status: str, conclusion: str) -> str:
+    """Classify the run's own status and conclusion, never the watcher text."""
+    state = (status or "").strip().lower()
+    outcome = (conclusion or "").strip().lower()
+    if state == "completed" and outcome == "success":
+        return "success"
+    if state == "completed" and outcome == "cancelled":
+        return "cancelled"
+    if state == "completed" and outcome in {"timed_out", "timeout"}:
+        return "timeout"
+    if state == "completed" and outcome not in {"", "success"}:
+        return "failure"
+    if state in IN_PROGRESS_STATUSES:
+        return "not_terminal"
+    return "watcher"
+
+
+def _raise_run_outcome(
+    run_id: int | str,
+    stage: str,
+    status: str,
+    conclusion: str,
+    kind: str,
+) -> None:
+    code = _stage_code(stage, kind)
+    message = (
+        f"{code}: {stage} run {run_id} "
+        f"status={status or 'unknown'} conclusion={conclusion or 'unknown'}"
+    )
+    raise PublicationCompletionError(
+        code,
+        message,
+        run_id=str(run_id),
+        stage=stage,
+        status=status,
+        conclusion=conclusion,
+    )
+
+
 def watch_run(
     run_id: int | str,
     *,
@@ -344,13 +400,13 @@ def watch_run(
     timeout: float | None = None,
     stage: str,
 ) -> None:
-    """Wait until ``run_id`` succeeds.
+    """Wait until the run's own conclusion is success.
 
     ``gh run watch --exit-status`` can return non-zero while a run is still queued
     (2026-10-05 Dashboard CI 37334565714 was reported failed, then completed
-    success and Deploy Pages proved the public bytes). A non-zero watch is a
-    failure only when the run's own conclusion is not success. One follow-up
-    watch covers the early exit; it does not poll on a timer.
+    success and Deploy Pages proved the public bytes). The watcher exit and its
+    progress text are not a conclusion. One follow-up watch covers an early exit
+    while the run is still queued or in progress; it does not poll on a timer.
     """
     budget = _watch_timeout() if timeout is None else timeout
 
@@ -361,41 +417,42 @@ def watch_run(
         )
 
     def _timeout(exc: subprocess.TimeoutExpired) -> PublicationCompletionError:
-        code = "BLOCKED_CI_TIMEOUT" if stage == "ci" else "BLOCKED_PAGES_TIMEOUT" if stage == "pages" else "BLOCKED_REMOTE_TIMEOUT"
+        code = _stage_code(stage, "timeout")
         return PublicationCompletionError(
             code,
             f"{code}: gh run watch timed out for {stage} run {run_id}",
             run_id=str(run_id),
             stage=stage,
+            status="timeout",
+            conclusion="timed_out",
         )
 
+    def _view() -> tuple[str, str]:
+        return _view_run_state(run_id, cwd=cwd, runner=runner)
+
+    def _accept_or_raise(status: str, conclusion: str, *, allow_retry: bool) -> bool:
+        kind = classify_run_conclusion(status, conclusion)
+        if kind == "success":
+            return True
+        if kind in {"failure", "cancelled", "timeout"}:
+            _raise_run_outcome(run_id, stage, status, conclusion, kind)
+        if not allow_retry:
+            _raise_run_outcome(run_id, stage, status, conclusion, kind)
+        return False
+
     try:
-        result = _once()
+        _once()
     except subprocess.TimeoutExpired as exc:
         raise _timeout(exc) from exc
-    if result.returncode == 0:
+    status, conclusion = _view()
+    if _accept_or_raise(status, conclusion, allow_retry=True):
         return
-    status, conclusion = _view_run_state(run_id, cwd=cwd, runner=runner)
-    if status == "completed" and conclusion == "success":
-        return
-    if not (status == "completed" and conclusion not in ("", "success")):
-        try:
-            result = _once()
-        except subprocess.TimeoutExpired as exc:
-            raise _timeout(exc) from exc
-        if result.returncode == 0:
-            return
-        status, conclusion = _view_run_state(run_id, cwd=cwd, runner=runner)
-        if status == "completed" and conclusion == "success":
-            return
-    code = "BLOCKED_CI_FAILED" if stage == "ci" else "BLOCKED_PAGES_FAILED"
-    detail = (result.stderr or result.stdout or "").strip()
-    message = f"{code}: {stage} run {run_id} did not succeed"
-    if detail:
-        message = f"{message}: {detail[:300]}"
-    raise PublicationCompletionError(
-        code, message, run_id=str(run_id), stage=stage, stderr=detail[:500],
-    )
+    try:
+        _once()
+    except subprocess.TimeoutExpired as exc:
+        raise _timeout(exc) from exc
+    status, conclusion = _view()
+    _accept_or_raise(status, conclusion, allow_retry=False)
 
 
 def _successful_ci(rows: Sequence[Mapping[str, Any]], source_sha: str) -> dict[str, Any] | None:
@@ -406,6 +463,16 @@ def _successful_ci(rows: Sequence[Mapping[str, Any]], source_sha: str) -> dict[s
         and str(row.get("conclusion") or "") == "success"
     ]
     return matches[0] if len(matches) == 1 else matches[0] if matches else None
+
+
+def _terminal_unsuccessful_ci(rows: Sequence[Mapping[str, Any]], source_sha: str) -> dict[str, Any] | None:
+    matches = [
+        row for row in rows
+        if _is_ci_row(row, source_sha)
+        and classify_run_conclusion(str(row.get("status") or ""), str(row.get("conclusion") or ""))
+        in {"failure", "cancelled", "timeout"}
+    ]
+    return matches[0] if matches else None
 
 
 def _in_progress_ci(rows: Sequence[Mapping[str, Any]], source_sha: str) -> dict[str, Any] | None:
@@ -442,8 +509,25 @@ def resolve_dashboard_ci(
         refreshed = list_workflow_runs(CI_WORKFLOW, cwd=web_dir, commit=source_sha, runner=runner)
         successful = _successful_ci(refreshed, source_sha)
         if not successful:
-            raise PublicationCompletionError("BLOCKED_CI_FAILED", "watched Dashboard CI did not complete successfully")
+            terminal = _terminal_unsuccessful_ci(refreshed, source_sha)
+            if terminal:
+                _raise_run_outcome(
+                    terminal["databaseId"], "ci",
+                    str(terminal.get("status") or ""), str(terminal.get("conclusion") or ""),
+                    classify_run_conclusion(str(terminal.get("status") or ""), str(terminal.get("conclusion") or "")),
+                )
+            raise PublicationCompletionError(
+                "BLOCKED_CI_NOT_TERMINAL",
+                "BLOCKED_CI_NOT_TERMINAL: watched Dashboard CI has no terminal conclusion",
+            )
         return {"run": successful, "reused": True, "dispatched": False, "watched": True}
+    terminal = _terminal_unsuccessful_ci(rows, source_sha)
+    if terminal:
+        _raise_run_outcome(
+            terminal["databaseId"], "ci",
+            str(terminal.get("status") or ""), str(terminal.get("conclusion") or ""),
+            classify_run_conclusion(str(terminal.get("status") or ""), str(terminal.get("conclusion") or "")),
+        )
     if not allow_dispatch:
         raise PublicationCompletionError(
             "BLOCKED_CI_DISPATCH",
