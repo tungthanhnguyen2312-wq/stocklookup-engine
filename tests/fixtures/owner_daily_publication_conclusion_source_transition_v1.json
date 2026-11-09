@@ -1,0 +1,9 @@
+{
+  "contract_version": "owner_daily_publication_conclusion_source_transition/v1",
+  "base_commit": "f5fdbec888c971165065786e8221d67cc420a611",
+  "scope": "DASHBOARD_PUBLICATION_CONCLUSION_CLASSIFICATION_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "archive": "tests/fixtures/owner_daily_publication_conclusion_v1_sources/tools/run_owner_daily.py.txt",
+  "prior_sha256_lf": "ec8816e49d7e12e9015eeea201a67ad75dfa329d50fa9ab619da488d4b97af76",
+  "active_sha256_lf": "9f76508e22066d80e2199afcd4eb521a365bfe5276ed3cf69b88ac7cda1b7c73"
+}

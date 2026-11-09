@@ -129,6 +129,8 @@ def _copy_boundary(tmp_path: Path) -> None:
     paths.update({capture, json.loads((ROOT / capture).read_bytes())["archive"]})
     pending_commit = "tests/fixtures/owner_daily_pending_commit_source_transition_v1.json"
     paths.update({pending_commit, json.loads((ROOT / pending_commit).read_bytes())["archive"]})
+    publication = "tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json"
+    paths.update({publication, json.loads((ROOT / publication).read_bytes())["archive"]})
     multi_freeze = "tests/fixtures/owner_daily_multi_freeze_source_transition_v1.json"
     paths.update({multi_freeze, json.loads((ROOT / multi_freeze).read_bytes())["archive"]})
     tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
@@ -246,7 +248,7 @@ def test_launcher_successor_rejects_tampering(tmp_path, tamper):
         spec = json.loads(manifest.read_bytes())
         spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
         manifest.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT)_SOURCE_TRANSITION"):
+    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION)_SOURCE_TRANSITION"):
         _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))
 
 
@@ -261,6 +263,14 @@ def test_pending_daily_commit_successor_refuses_tampering(tmp_path, tamper):
         shutil.copyfile(ROOT / relative, target)
     source = tmp_path / 'tools/run_owner_daily.py'
     live = source.read_bytes().replace(b'\r\n', b'\n')
+    from tools.verify_retention_reader_transition import _publication_conclusion_prior_bytes
+    publication = 'tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json'
+    publication_spec = json.loads((ROOT / publication).read_bytes())
+    for relative in (publication, publication_spec['archive']):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
+    live = _publication_conclusion_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)
     assert _pending_commit_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live) == (ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n')
     if tamper == 'live':
         live += b'# tamper\n'
