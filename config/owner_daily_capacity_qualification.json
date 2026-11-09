@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "f447c54cad8a6c0979d5d33b673c3eccea740440be5368b9bb03189c99fb5de3",
+    "config/daily_path_launchers.json": "99d583599f7576b2066f1ff7506c833a7d8d75a869a6e8396da645ad69df04d7",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "9ed88654a092977aec9cbe678c132695201c9e47bbc267eee332e82581b7bbf2",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -162,7 +162,7 @@
     "full_universe_entry_candidate_triage.py": "95d9473d26b66b9f98332a27f54b38946245e90b553c48d3938b0cb034613af6",
     "generic_financial_canonicalizer.py": "61ee6137ed281a9a6ec61f46543de27a7c96cae1961d5d3983e6cbdbb1e9f709",
     "governed_previous_operation.py": "53bd8fdae641241bbaf0217f9733042866407b7958a1f7dc04e474ee4e60b425",
-    "governed_publication_completion.py": "51b28e3e8db94d7eb524b25a33d31b4cb70e6cd7c7d0fbc0dc88a2bfd0087306",
+    "governed_publication_completion.py": "b3b8120e95085be1ac0c39ee97b25c8f5f50bc0b18ce546860e3c9cd6bad8b68",
     "governed_session_chain.py": "e57f9544d7ed3df77aac0f1bba42d876133fbcaeb640778fce94e5845b32e5fd",
     "historical_net_income_semantic_correction.py": "8248a29c7ea83fdfb5e085081adcb95a4dcbbba2cdc86a21db840a742dbf7c30",
     "historical_series_failover.py": "83786b3fca4442c6a5c9d03e2fd0336fe618285e14acfd5501878845914918c8",
@@ -1386,7 +1386,7 @@
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
     "tools/run_owner_daily.cmd": "fd62709ebd133ed950ad204ea2aef115104d3b6d65ddafba9df8cc0b3df4602a",
     "tools/run_owner_daily.ps1": "a5b616a2127cd11b6a23a375331adf698f1630ff102fe73a27e6605c5c05783b",
-    "tools/run_owner_daily.py": "ec8816e49d7e12e9015eeea201a67ad75dfa329d50fa9ab619da488d4b97af76",
+    "tools/run_owner_daily.py": "9f76508e22066d80e2199afcd4eb521a365bfe5276ed3cf69b88ac7cda1b7c73",
     "tools/run_owner_daily_feedback_rehearsal.py": "994b36e2c066cce0effc77428688e53ea25ad8ae9a4d7530f83ba39e2da6b55f",
     "tools/run_owner_focus_core_financial_panel_coverage.py": "afbc3b454fc4618b941db0cbb4046d88bd8e7586f30741019f82609ef57a4691",
     "tools/run_owner_focus_image_only_corporate_ocr_batch.py": "a64d726c5ff985da2996ec3d2dcd47623d26aa768eaa25928a4950793ed2446e",
@@ -1500,7 +1500,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "41b35fea8c1bd2f064cc5f2301d2b54a5d8a6c4207f507d075ba076472ad92bc",
+    "tools/verify_retention_reader_transition.py": "22615ed09e9ee715be969f1b5c94ef2c61dfad6a50b24319f843186126df3b33",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1567,5 +1567,18 @@
     "new_capacity_measurement": false,
     "runtime_replay_peak_private_bytes": 3407503360,
     "source_transition": "tests/fixtures/owner_daily_pending_commit_source_transition_v1.json"
+  },
+  "publication_conclusion_corrective": {
+    "base_commit": "f5fdbec888c971165065786e8221d67cc420a611",
+    "scope": "DASHBOARD_PUBLICATION_CONCLUSION_CLASSIFICATION_ONLY",
+    "stage_qualification": "UNCHANGED_ANALYTICAL_AND_RESOURCE_GUARD_AST_BODIES_RETAINED_ENVELOPE",
+    "changed_source_paths": [
+      "config/daily_path_launchers.json",
+      "governed_publication_completion.py",
+      "tools/run_owner_daily.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "new_capacity_measurement": false,
+    "source_transition": "tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json"
   }
 }
