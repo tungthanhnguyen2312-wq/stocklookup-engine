@@ -173,6 +173,36 @@ backup under exclusive ownership, never over newly qualified immutable originals
 No database or Daily registry write is part of this operator. The runtime candidate
 database is queried using its existing read-only connection.
 
+### Scheduled same-day capture (Owner D2, 2026-11-10)
+
+`tools/run_scheduled_capture.py` (launcher `tools/run_scheduled_capture.cmd`) runs the capture-only
+operator on the session day without waiting for Owner Daily. It adds no acquisition logic: every
+attempt is one `run_capture_only.py --execute` child with that operator's own admission, Job limits,
+write scope and writer lease.
+
+- First attempt not before 15:35 Vietnam time; no attempt at or after 23:30, because listing
+  knowledge must be acquired on the session day. At most 12 attempts, 600 seconds apart.
+- One scheduler instance at a time. A busy writer lease (Owner Daily running) or a refused
+  admission is an attempt outcome and is retried; an existing capture record ends the run.
+- Weekends and a `NON_WORKING_DATE` attempt gate end the run as `NOT_A_MARKET_SESSION`.
+- Receipts go to `capture-receipts/<session>/attempt-NN-HHMMSS` beside the logs role. The state
+  after every attempt is `run-logs/pit_capture_<session>.status.json`.
+- After a capture it publishes the readiness record through `daily_boundary` under the writer
+  lease. It publishes nothing else, commits nothing and creates no T0.
+- Exit 0: captured, already captured, not a session, or another instance is running. Exit 4:
+  attempts exhausted or the same-day window closed without a record. Nothing is retried on a
+  later day and a missed session is never reconstructed.
+
+A record written by this operator has `t0_decision_snapshot_identity = null`. Owner Daily on the
+same session reuses the retained snapshot and bindings and seals its T0 through the seal index.
+Its own `daily_boundary` call then reports `RECOVERY_T0_BINDING_MISMATCH` as a soft outcome,
+because the immutable capture record cannot take a later T0 binding. The capture record is
+authoritative for capture completeness.
+
+The Owner Daily host reads the session's capture record after the run and writes `pit_capture`
+into the result file. A PASS for a session with no capture record is reported as `PARTIAL` with
+reason `PIT_CAPTURE_NOT_COMPLETE`. The host never writes, repairs or infers a record.
+
 The ordinary capture window and all calendar/source gates remain binding. Listing
 knowledge must itself belong to the requested session: after midnight, only verified
 retained listing acquisition from that original session may be used. A later listing

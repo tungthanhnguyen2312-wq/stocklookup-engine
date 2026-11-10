@@ -99,6 +99,40 @@ def resolve_paths(python: str, environ: dict) -> tuple[str, str]:
     return runtime, logs
 
 
+def retained_root(environ: dict) -> str:
+    profile = environ.get("STOCK_LOOKUP_WORKSPACE_PROFILE")
+    if profile:
+        with open(profile, "rb") as handle:
+            return str(json.loads(handle.read().decode("utf-8-sig"))["roles"]["retained"])
+    return os.path.join(os.path.dirname(ROOT), "retained-evidence")
+
+
+def pit_capture_attestation(retained: str, session) -> dict:
+    """Whether the session's immutable capture record exists. Read-only; never infers or repairs.
+
+    The record is written once, inside the capture window, by Daily or by the scheduled
+    capture. Daily keeps running when that write does not happen, so the Owner result states
+    it here instead of reporting PASS for a session that never entered the capture chain.
+    """
+    session = _text(session)
+    path = os.path.join(retained, "operations-review", "prospective-pit-capture-v1", "sessions", session + ".json")
+    try:
+        with open(path, encoding="utf-8") as handle:
+            record = json.load(handle)
+    except FileNotFoundError:
+        return {"session": session, "status": "MISSING", "path": path}
+    except (OSError, ValueError) as error:
+        return {"session": session, "status": "UNREADABLE", "path": path, "reason": type(error).__name__}
+    if (not isinstance(record, dict) or record.get("session") != session
+            or record.get("contract_version") != "prospective_capture_complete_session/v1"):
+        return {"session": session, "status": "UNREADABLE", "path": path, "reason": "RECORD_SHAPE"}
+    return {"session": session, "status": "COMPLETE", "path": path,
+            "completion_known_at": record.get("completion_known_at"),
+            "artifact_identity": record.get("artifact_identity"),
+            "t0_binding": "BOUND_BY_DAILY" if record.get("t0_decision_snapshot_identity") else "CAPTURE_ONLY_ORIGIN",
+            "verification": "RECORD_PRESENT_NOT_REHASHED"}
+
+
 def format_duration(seconds) -> str:
     if seconds is None:
         return UNKNOWN
@@ -406,6 +440,18 @@ def main(argv: list[str] | None = None) -> int:
         if os.path.exists(result):
             with open(result, encoding="utf-8-sig") as handle:
                 summary = json.load(handle)
+        capture = None
+        # An entry seam has no production evidence root; it attests only against an explicit one.
+        capture_root = (environ.get("STOCK_LOOKUP_PIT_CAPTURE_ROOT") if options["entry"]
+                        else retained_root(environ))
+        if capture_root and isinstance(summary, dict) and summary.get("session") and not options["replay"]:
+            capture = pit_capture_attestation(capture_root, summary["session"])
+            summary["pit_capture"] = capture
+            if summary.get("status") == "PASS" and capture["status"] != "COMPLETE":
+                summary["status"] = "PARTIAL"
+                summary["reason"] = "PIT_CAPTURE_NOT_COMPLETE"
+            with open(result, "w", encoding="utf-8") as handle:
+                json.dump(summary, handle, ensure_ascii=False, indent=4)
         get = lambda *keys: _dig(summary, *keys)
         owner_line("=" * 60)
         if summary and summary.get("status") == "PASS" and exit_code == 0:
@@ -415,6 +461,7 @@ def main(argv: list[str] | None = None) -> int:
             owner_line("-" * 60)
             for label in ("Daily", "Dashboard", "Bàn giao AI", "Xác minh từ xa", "Trung tâm Hành động"):
                 owner_line(" " + label + ": XONG")
+            owner_line(" Capture PIT: " + ("XONG (" + _text(capture.get("completion_known_at")) + ")" if capture else "KHÔNG ÁP DỤNG"))
             owner_line(" Trạng thái: PASS")
             if get("action_center", "view_open", "status") == "READY_VIEW_OPEN_FAILED":
                 owner_line(" CẢNH BÁO: chưa mở được màn hình, xem log chi tiết.")
@@ -428,12 +475,16 @@ def main(argv: list[str] | None = None) -> int:
             owner_line(f" Bước lỗi: [{current}/9] {LABELS[current - 1]}")
             explanation = ("Không thể xác minh gói bàn giao AI của phiên đã hoàn tất." if current == 6
                            else "Bước xử lý chưa vượt qua kiểm tra bắt buộc. Xem log chi tiết.")
+            if get("reason") == "PIT_CAPTURE_NOT_COMPLETE":
+                explanation = "Daily đã chạy xong nhưng phiên chưa có bản ghi capture PIT; phiên này không vào chuỗi capture."
             owner_line(" Lý do: " + explanation)
             reason = (get("reason") or get("action_center", "reason") or get("dashboard", "reason")
                       or ("OWNER_DAILY_" + _text(summary.get("status")) if summary else "NO_RESULT_FILE_WRITTEN"))
             owner_line(" Mã lỗi: " + _text(reason))
             if get("failed_step") == "Host preflight" and get("hint"):
                 owner_line(" Host preflight: " + _text(get("hint")))
+            if capture:
+                owner_line(" Capture PIT phiên " + capture["session"] + ": " + ("XONG" if capture["status"] == "COMPLETE" else "CHƯA CÓ (" + capture["status"] + ")"))
             owner_line(" Có thể tiếp tục từ phiên đã hoàn tất: " + ("CÓ" if get("resume_completed_session") else "KHÔNG"))
             owner_line(" Log chi tiết: " + log)
             owner_line(" Trạng thái: " + (_text(summary.get("status")) if summary else "INTERRUPTED"))

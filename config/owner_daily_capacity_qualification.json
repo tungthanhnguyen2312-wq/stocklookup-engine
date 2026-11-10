@@ -1146,7 +1146,7 @@
     "tools/materialize_hnx_enumerable_universe_artifact.py": "44fee2aed9cda2554291980406917ceb095b5866063ee377d3fe63458871e272",
     "tools/operate_stocklookup.py": "ac3ec2712f0f4326a453ddbc4bd5407c86ab5f11bf19fa4c29cf3823ef4abfa7",
     "tools/ops/Invoke-M1bActivation.ps1": "1f37a9ad79304b4a31cadc50d95cd23c95c461e9b90d829cbbfa54e4a1cbe138",
-    "tools/owner_daily_host.py": "b18773c9f5424d6832a04a68e8318d72dfe0fb52cf021a23e0a15488c5fa6c33",
+    "tools/owner_daily_host.py": "91b82a5501de5d18cf4a2e4cbbb9325ff71f0515c06862dbc70f1d9da50d536e",
     "tools/post_daily_candlestick_release.py": "c1d779fe6f7f57bb8ccda42d0794db5dcf02212389563015b35936883e45445a",
     "tools/prepare_current_foreign_flow_retention.py": "7912c4d360cc077c13ae33b43bb96ca45c089a2ae7b5358b16945545a36b1d1c",
     "tools/produce_and_validate_daily_session_shadow_recommendation_v1.py": "cc9d77647b62302d5a81f811d6cd4a1792814e7eefee9c678adbda67bbd70870",
@@ -1452,6 +1452,8 @@
     "tools/run_retained_official_route_ownership_evidence.py": "b916e30e6c6f6e9b3b29b9ab0801afae1b849f8eb4ab68f6ace7ebdae0baa65d",
     "tools/run_reviewed_interim_canonical_ingress.py": "4b29aaa210a4b078d67709d0e59f6c558d71df379310f948428fb2b2f4276e27",
     "tools/run_same_session_technical_coverage_disposition.py": "07a2cd7c699e85c563de61e7e2720cedd52d241a515f32a3976fda2099e0aa42",
+    "tools/run_scheduled_capture.cmd": "8088912b8369d8b0818822438ae4483d10be0ba2d517def67031f1070963eac1",
+    "tools/run_scheduled_capture.py": "7b075a1edc068a23e50f9be6c66a1c62e35283b52579e9d6e79804c1c66ce212",
     "tools/run_screener_master_projection.py": "b0eb8a07a1d15e95491bd5f8402e4ed893727f3499af3f648b3f9f60407b0309",
     "tools/run_sector_aware_relative_research.py": "a163fb332c7d4865ccd7ec493ab16c1846256874fb9ec784e47305bd14ecb452",
     "tools/run_securities_specialist_real_replay.py": "891a2c2c5aa614f83a00408324afb7c315b4351edc9122f3279a848bdbd6aab9",
@@ -1580,5 +1582,17 @@
     ],
     "new_capacity_measurement": false,
     "source_transition": "tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json"
+  },
+  "scheduled_capture_corrective": {
+    "base_commit": "f7b4bee27acdc9eee3b63a48910153fdcb72b55c",
+    "scope": "SCHEDULED_SAME_DAY_CAPTURE_AND_OWNER_RESULT_CAPTURE_ATTESTATION_ONLY",
+    "stage_qualification": "UNCHANGED_ANALYTICAL_AND_RESOURCE_GUARD_SOURCES; DAILY_LAUNCHER_AND_CAPTURE_OPERATOR_BYTES_UNCHANGED",
+    "changed_source_paths": [
+      "tools/owner_daily_host.py",
+      "tools/run_scheduled_capture.cmd",
+      "tools/run_scheduled_capture.py"
+    ],
+    "new_capacity_measurement": false,
+    "owner_decision": "D2 approved 2026-11-10"
   }
 }
