@@ -838,6 +838,13 @@ def build_current_valuation_artifact(
             "warnings": warnings,
             "is_actionable": False,
         }
+        supplied = (price_records.get(ticker) or {}).get("conditional_research_inputs")
+        if isinstance(supplied, Mapping):
+            from stocklookup_core.research.conditional_investment_case import case_from_supplied_inputs
+            row["conditional_research_case"] = case_from_supplied_inputs(
+                ticker=ticker, entity=entity, inputs=supplied,
+            )
+            warnings.append("CONDITIONAL_RESEARCH_CASE_IS_NOT_STRICT_VALUATION")
         records[ticker] = row
 
     metric_ready = {metric: sum(row["metrics"][metric]["status"] == "READY" for row in records.values()) for metric in METRICS}
