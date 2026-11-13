@@ -154,6 +154,12 @@ def _line(facts: Mapping[str, Any], identity: str) -> Mapping[str, Any] | None:
     return row if isinstance(row, Mapping) else None
 
 
+def _column_key(row: Mapping[str, Any]) -> tuple:
+    return tuple(row.get(key) for key in (
+        "ticker", "document_sha256", "statement_scope", "reporting_period", "currency", "unit_scale",
+    ))
+
+
 def _line_amount(facts: Mapping[str, Any], identity: str) -> int | None:
     row = _line(facts, identity)
     if row is None:
@@ -168,6 +174,11 @@ def statement_cross_foot(facts: Mapping[str, Mapping[str, Any]]) -> list[dict[st
     def add(name: str, left: int | None, right: int | None, parts: list[str]) -> None:
         if left is None or right is None:
             results.append({"name": name, "status": "INCOMPLETE", "residual": None, "parts": parts})
+            return
+        rows = [facts[key] for key in parts]
+        column = _column_key(rows[0])
+        if not all(column) or any(_column_key(row) != column for row in rows[1:]):
+            results.append({"name": name, "status": "INCOMPATIBLE_COLUMN", "residual": None, "parts": parts})
             return
         residual = left - right
         results.append({
@@ -222,6 +233,17 @@ def industrial_research_profile(
     shares = filing_share_basis(share_components, price_session=session, provider_share=provider_share)
     research_px = _decimal(price_state.get("research_vnd_per_share"))
     count = shares.get("research_shares")
+    facts = {
+        identity: row for identity, row in facts.items()
+        if isinstance(row, Mapping)
+        and row.get("ticker") == ticker.upper()
+        and row.get("accounting_identity") == identity
+        and row.get("statement_scope") == "consolidated"
+        and row.get("currency") == "VND"
+        and row.get("unit_scale") == 1
+        and row.get("document_sha256")
+        and row.get("reporting_period")
+    }
     foots = statement_cross_foot(facts)
     foot_state = {item["name"]: item["status"] for item in foots}
     market_cap = research_px * Decimal(count) if research_px is not None and isinstance(count, int) else None

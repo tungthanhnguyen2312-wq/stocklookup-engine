@@ -98,6 +98,23 @@ class ResearchProfileTests(unittest.TestCase):
         self.assertFalse(profile["execution_eligible"])
         self.assertFalse(profile["historical_basis_modified"])
 
+    def test_matching_arithmetic_across_different_columns_cannot_support_a_multiple(self):
+        facts = {
+            "TOTAL_PROFIT_AFTER_TAX": line("TOTAL_PROFIT_AFTER_TAX", 15),
+            "PARENT_PROFIT_AFTER_TAX": line("PARENT_PROFIT_AFTER_TAX", 12),
+            "NCI_PROFIT_AFTER_TAX": line("NCI_PROFIT_AFTER_TAX", 3, period="2026-Q2"),
+            "TOTAL_EQUITY_INCLUDING_NCI": {
+                **line("TOTAL_EQUITY_INCLUDING_NCI", 40), "currency": "USD",
+            },
+        }
+        profile = industrial_research_profile(
+            ticker="HPG", price=price(), share_components=components(), facts=facts,
+        )
+        assert profile["market_cap_vnd"] is not None
+        multiples = profile["multiples"]
+        assert multiples["price_over_reported_interim_parent_profit"]["value"] is None
+        assert multiples["price_over_total_equity_including_nci"]["value"] is None
+
     def test_share_basis_fails_closed_when_the_filing_does_not_foot(self):
         broken = components()
         broken["eps_denominator_shares"] = 8_442_964_521
