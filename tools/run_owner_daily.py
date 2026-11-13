@@ -121,6 +121,7 @@ from governed_publication_completion import (  # noqa: E402
 )
 import stocklookup_core.acquisition.owner_daily_journal as journal  # noqa: E402
 from owner_daily_progress import OwnerDailyProgress, PHASES, PROGRESS_PATH_ENV, safe_progress_path, recent_phase_estimates  # noqa: E402
+from owner_daily_progress import WORKFLOW_CORE_AI, WORKFLOW_FULL_PUBLISH  # noqa: E402
 from owner_daily_progress import RUN_ID_ENV, RUN_STARTED_AT_ENV, RUN_STARTED_MONOTONIC_ENV  # noqa: E402
 
 DEFAULT_WEB_DIR = CANONICAL_WEB_ROOT
@@ -1342,6 +1343,53 @@ def _dashboard_complete_attestation(dashboard: Mapping[str, Any], session: str) 
     }
 
 
+_NOT_REQUESTED = "NOT_REQUESTED"
+
+
+def _dashboard_not_requested(web_dir: Path, session: str) -> dict[str, Any]:
+    """CORE + AI never publishes the Dashboard, so it never reports this session as PUBLISHED.
+
+    The last published session is read from the local Dashboard checkout only: no fetch, no
+    Pages request. That basis is named so it is never mistaken for remote verification.
+    """
+    last: dict[str, Any] = {"session": None, "build_id": None, "basis": "LOCAL_DASHBOARD_BUILD_INFO_UNREADABLE"}
+    try:
+        info = json.loads((web_dir / "data" / "build_info.json").read_text(encoding="utf-8"))
+        market_session = info.get("market_session") if isinstance(info, dict) else None
+        if isinstance(market_session, str) and SESSION_RE.match(market_session):
+            last = {"session": market_session, "build_id": info.get("build_id"),
+                    "basis": "LOCAL_DASHBOARD_BUILD_INFO_NOT_REMOTE_VERIFIED"}
+    except (OSError, ValueError):
+        pass
+    return {"status": _NOT_REQUESTED, "publication_state": _NOT_REQUESTED, "expected_session": session,
+            "observed_session": None, "reason": "CORE_AI_WORKFLOW_DASHBOARD_NOT_REQUESTED",
+            "last_published": last, "stale": last["session"] != session}
+
+
+def _require_remote_handoff_attestation(handoff: Mapping[str, Any], session: str, *, exact: bool) -> None:
+    """Phase 6 owns remote verification: a handoff without exact-session remote proof is not done.
+
+    ``verify_remote_publication`` already binds session, build and origin/main. This guards its
+    result at the Owner boundary: a contradicting session always fails; CORE + AI, which has no
+    separate remote-verification phase, additionally requires the session to be stated.
+    """
+    remote = handoff.get("remote")
+    stated = remote.get("latest_session") if isinstance(remote, Mapping) else None
+    if (not isinstance(remote, Mapping) or (stated != session if exact or stated is not None else False)
+            or not isinstance(remote.get("remote_sha"), str) or not remote["remote_sha"]):
+        raise OwnerDailyError("AI handoff build", "AI_HANDOFF_REMOTE_ATTESTATION_INVALID",
+                              "The AI handoff repository did not prove this exact session on origin/main. "
+                              "Nothing was reported as delivered; start Daily again to republish.")
+
+
+def _workflow_completion(dashboard: Mapping[str, Any], action_center: Mapping[str, Any]) -> dict[str, str]:
+    """What a PASS covers, stated per part: PASS alone never implies an optional publication."""
+    return {"core": "COMPLETE", "ai_handoff": "PUBLISHED_REMOTE_VERIFIED",
+            "dashboard_publication": str(dashboard.get("publication_state") or dashboard.get("status")),
+            "action_center": str(action_center.get("status")),
+            "owner_view": str((action_center.get("view_open") or {}).get("status") or _NOT_REQUESTED)}
+
+
 def _presentation_bound_state(root: Path, session: str) -> str:
     """UNKNOWN on any failure -- the caller must never record ``journal.PRESENTATION_BOUND`` on
     an unknown basis. See CANONICAL_DAILY_OWNER_PUBLICATION_RESUME_AND_PRESENTATION_JOIN_V1
@@ -1449,7 +1497,12 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
                  handoff_repo: Path = DEFAULT_HANDOFF_REPO, dashboard_web_dir: Path = DEFAULT_WEB_DIR,
                  publish_dashboard: bool = True, dashboard_complete_publication: bool = True,
                  replay_completed_session: str | None = None,
-                 telemetry: OwnerDailyProgress | None = None) -> dict[str, Any]:
+                 telemetry: OwnerDailyProgress | None = None,
+                 workflow_mode: str = WORKFLOW_FULL_PUBLISH) -> dict[str, Any]:
+    # The launcher default is CORE + AI (see main); FULL_PUBLISH is the Owner's explicit request.
+    if workflow_mode not in (WORKFLOW_CORE_AI, WORKFLOW_FULL_PUBLISH):
+        raise ValueError("WORKFLOW_MODE_UNKNOWN")
+    full_publish = workflow_mode == WORKFLOW_FULL_PUBLISH
     bind_active_workspace(root)
     root, runtime_root, handoff_repo = root.resolve(), runtime_root.resolve(), handoff_repo.resolve()
     dashboard_web_dir = dashboard_web_dir.resolve()
@@ -1531,8 +1584,12 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         # The canonical Dashboard checkout must be publishable before analytical work starts:
         # a stale-but-clean checkout is fast-forwarded here, a dirty/ahead/diverged one stops
         # Daily now instead of failing Dashboard publication after the whole Daily.
-        dashboard_preflight = (preflight_dashboard_repository(dashboard_web_dir) if publish_dashboard
-                               else {"status": "SKIPPED", "reason": "DASHBOARD_PUBLICATION_DISABLED"})
+        if not full_publish:
+            # The Dashboard checkout is neither read for publication nor fast-forwarded.
+            dashboard_preflight = {"status": _NOT_REQUESTED, "reason": "CORE_AI_WORKFLOW_DASHBOARD_NOT_REQUESTED"}
+        else:
+            dashboard_preflight = (preflight_dashboard_repository(dashboard_web_dir) if publish_dashboard
+                                   else {"status": "SKIPPED", "reason": "DASHBOARD_PUBLICATION_DISABLED"})
         # The mandatory host gate belongs to phase 1: Canonical Daily is never shown as started
         # until a fresh acquisition's host preflight has returned READY. Replay acquires nothing.
         host_ready = None if replay_completed_session else _require_host_ready(root)
@@ -1610,9 +1667,11 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         # proves this exact session PUBLISHED on the current Dashboard origin/main SHA with
         # public-byte identity PASS. Local build_info session equality is never enough, and
         # journal DASHBOARD_PUBLISHED is never consulted.
-        if telemetry is not None:
+        if telemetry is not None and full_publish:
             telemetry.emit(phase_index=5, progress_kind="PUBLICATION", status="BEGIN")
-        if not publish_dashboard:
+        if not full_publish:
+            dashboard = _dashboard_not_requested(dashboard_web_dir, session)
+        elif not publish_dashboard:
             dashboard = {"status": "SKIPPED", "expected_session": session, "observed_session": None,
                         "reason": "DASHBOARD_PUBLICATION_DISABLED"}
         else:
@@ -1624,7 +1683,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
                 producer_run_identity=completion["record"]["daily_producer_run_identity"],
                 complete_publication=dashboard_complete_publication,
             )
-        if telemetry is not None:
+        if telemetry is not None and full_publish:
             if not publish_dashboard:
                 dashboard_end_status = "END"
                 dashboard_end_reason = "DASHBOARD_PUBLICATION_DISABLED"
@@ -1651,25 +1710,35 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         verified_handoff = _verify_ai_handoff_published(handoff_repo, session)
         handoff = ({"publication": {"status": "ALREADY_PUBLISHED_VERIFIED"}, "remote": verified_handoff}
                   if verified_handoff is not None else publish_ai_handoff(root, handoff_repo, completion))
+        _require_remote_handoff_attestation(handoff, session, exact=not full_publish)
         _journal_advance_strict(root, run_id, journal.AI_HANDOFF_PUBLISHED,
                          detail={"remote_sha": (handoff.get("remote") or {}).get("remote_sha")})
-        if telemetry is not None:
+        if telemetry is not None and not full_publish:
+            telemetry.emit(phase_index=6, progress_kind="PUBLICATION", status="END",
+                           reason="REMOTE_VERIFICATION_INCLUDED_IN_HANDOFF_PHASE")
+        elif telemetry is not None:
             telemetry.emit(phase_index=6, progress_kind="PUBLICATION", status="END")
             telemetry.emit(phase_index=7, progress_kind="PUBLICATION", status="BEGIN")
             telemetry.emit(phase_index=7, progress_kind="PUBLICATION", status="END",
                            reason="REMOTE_VERIFICATION_RETAINED_IN_GOVERNED_HANDOFF_RESULT")
 
         # Section 4.F: same pattern for the local-only Action Center artifact.
-        if telemetry is not None:
-            telemetry.emit(phase_index=8, progress_kind="PIPELINE", status="BEGIN")
-        verified_action_center = _verify_action_center_ready(session)
-        action_center = verified_action_center if verified_action_center is not None else materialize_action_center(root, session)
-        if action_center["status"] != "PARTIAL":
-            _journal_advance_strict(root, run_id, journal.ACTION_CENTER_READY, detail={"status": action_center["status"]})
-        if telemetry is not None:
-            telemetry.emit(phase_index=8, progress_kind="PIPELINE", status="END")
+        if not full_publish:
+            # Not requested is not a failure: nothing is built, read or opened.
+            action_center = {"status": _NOT_REQUESTED, "session": session,
+                             "reason": "CORE_AI_WORKFLOW_ACTION_CENTER_NOT_REQUESTED",
+                             "view_open": {"status": _NOT_REQUESTED}}
+        else:
+            if telemetry is not None:
+                telemetry.emit(phase_index=8, progress_kind="PIPELINE", status="BEGIN")
+            verified_action_center = _verify_action_center_ready(session)
+            action_center = verified_action_center if verified_action_center is not None else materialize_action_center(root, session)
+            if action_center["status"] != "PARTIAL":
+                _journal_advance_strict(root, run_id, journal.ACTION_CENTER_READY, detail={"status": action_center["status"]})
+            if telemetry is not None:
+                telemetry.emit(phase_index=8, progress_kind="PIPELINE", status="END")
 
-        dashboard_failed = dashboard["status"] not in {"READY", "SKIPPED"}
+        dashboard_failed = dashboard["status"] not in {"READY", "SKIPPED", _NOT_REQUESTED}
         if action_center["status"] == "PARTIAL" or dashboard_failed:
             _journal_advance(root, run_id, journal.BLOCKED, detail={
                 "dashboard_failed": dashboard_failed, "action_center_status": action_center["status"],
@@ -1677,12 +1746,14 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
             return {"status": "PARTIAL", "session": completion["session"], "daily_status": daily_status,
                     "producer_preflight": producer, "dashboard_preflight": dashboard_preflight, "consumer_preflight": consumer_preflight, "producer_state": producer_state,
                     "dashboard": dashboard, "ai_handoff": handoff, "action_center": action_center,
-                    "journal_run_id": run_id}
-        if telemetry is not None:
-            telemetry.emit(phase_index=9, progress_kind="PIPELINE", status="BEGIN")
-        action_center["view_open"] = open_action_center_view(str(action_center["view_path"]))
-        if telemetry is not None:
-            telemetry.emit(phase_index=9, progress_kind="PIPELINE", status="END")
+                    "workflow_mode": workflow_mode, "journal_run_id": run_id}
+        if full_publish:
+            if telemetry is not None:
+                telemetry.emit(phase_index=9, progress_kind="PIPELINE", status="BEGIN")
+            action_center["view_open"] = open_action_center_view(str(action_center["view_path"]))
+            if telemetry is not None:
+                telemetry.emit(phase_index=9, progress_kind="PIPELINE", status="END")
+        completion_scope = _workflow_completion(dashboard, action_center)
         # OWNER_COMPLETE_ATTESTATION: the durable, single terminal record of every identity a
         # PASS is supposed to attest -- see CANONICAL_DAILY_OWNER_PUBLICATION_RESUME_AND_
         # PRESENTATION_JOIN_V1 section 11. Observer/presentation availability itself never needs
@@ -1705,6 +1776,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         runtime_restage = (presentation_attestation or {}).get("runtime_restage") or {}
         _journal_advance_strict(root, run_id, journal.COMPLETE, detail={
             "session": str(completion["session"]),
+            "workflow_mode": workflow_mode, "completion": completion_scope,
             "canonical_daily_operation_identity": record.get("operation_identity"),
             "daily_producer_run_identity": record.get("daily_producer_run_identity"),
             "daily_producer_operation_identity": record.get("daily_producer_operation_identity"),
@@ -1731,6 +1803,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         return {"status": "PASS", "session": completion["session"], "daily_status": daily_status,
                 "producer_preflight": producer, "dashboard_preflight": dashboard_preflight, "consumer_preflight": consumer_preflight, "producer_state": producer_state,
                 "dashboard": dashboard, "ai_handoff": handoff, "action_center": action_center,
+                "workflow_mode": workflow_mode, "completion": completion_scope,
                 "journal_run_id": run_id}
     except ProducerCodeAdvanced:
         # Not a failure: the relaunched process starts its own journal run, superseding this one.
@@ -1739,7 +1812,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         # A later phase that raises used to discard a Dashboard result that had already
         # failed closed. The journal keeps that reason beside the exception.
         detail: dict[str, Any] = {"reason": f"{type(exc).__name__}:{exc}"}
-        if isinstance(dashboard, Mapping) and dashboard.get("status") not in (None, "READY", "SKIPPED"):
+        if isinstance(dashboard, Mapping) and dashboard.get("status") not in (None, "READY", "SKIPPED", _NOT_REQUESTED):
             detail["dashboard_status"] = dashboard.get("status")
             if dashboard.get("reason"):
                 detail["dashboard_reason"] = dashboard.get("reason")
@@ -1882,6 +1955,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-complete-publication", action="store_true",
                         help="Skip Dashboard CI/Deploy Pages/public-byte-identity verification after push "
                              "(faster, but only proves the source push, not PUBLISHED).")
+    parser.add_argument("--full-publish", action="store_true",
+                        help="Owner-requested FULL PUBLISH: also publish the Dashboard, build the Personal "
+                             "Action Center and open the Owner view. Default is CORE + PRIVATE AI.")
     parser.add_argument("--replay-completed-session", default=None, help="Validate/publish an already completed session without acquisition.")
     parser.add_argument("--result-path", type=Path, required=True)
     parser.add_argument("--progress-path", type=Path, default=None,
@@ -1895,6 +1971,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"HINT: {exc.hint}", file=sys.stderr)
         return 1
     safe_sidecar = safe_progress_path(args.progress_path, root=ROOT)
+    workflow_mode = WORKFLOW_FULL_PUBLISH if args.full_publish else WORKFLOW_CORE_AI
     relaunched = bool(os.environ.get(CODE_HEAD_ENV))
     if relaunched:
         # Same run as the process that relaunched this one: same run origin, and the owner view
@@ -1908,9 +1985,11 @@ def main(argv: list[str] | None = None) -> int:
                                        run_id=os.environ.get(RUN_ID_ENV) or None,
                                        run_started_monotonic=origin_monotonic,
                                        run_started_at=os.environ.get(RUN_STARTED_AT_ENV) or None)
+        telemetry.set_workflow(workflow_mode)
         telemetry.phase_estimates = dict(recent_phase_estimates(args.result_path.parent))
     else:
         telemetry = OwnerDailyProgress(safe_sidecar, session=args.replay_completed_session)
+        telemetry.set_workflow(workflow_mode)
         telemetry.start_view(recent_phase_estimates(args.result_path.parent))
     if args.progress_path is not None and safe_sidecar is None:
         telemetry.report_degraded("UNSAFE_PROGRESS_PATH")
@@ -1923,7 +2002,7 @@ def main(argv: list[str] | None = None) -> int:
                               publish_dashboard=not args.no_publish_dashboard,
                               dashboard_complete_publication=not args.no_complete_publication,
                               replay_completed_session=args.replay_completed_session,
-                              telemetry=telemetry)
+                              telemetry=telemetry, workflow_mode=workflow_mode)
         if result["status"] in ("PARTIAL", "BLOCKED"):
             code = 3
             result["resume_completed_session"] = bool(_auto_resumable_session(
@@ -1974,6 +2053,7 @@ def main(argv: list[str] | None = None) -> int:
     # This owner result is external operational metadata.  It is deliberately never supplied to
     # analytical builders or any content identity, and a broken telemetry sidecar never prevents it.
     result["telemetry"] = telemetry.summary()
+    result.setdefault("workflow_mode", workflow_mode)
     args.result_path.parent.mkdir(parents=True, exist_ok=True)
     args.result_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print("OWNER_DAILY_RESULT=" + str(args.result_path))

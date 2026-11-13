@@ -1774,7 +1774,7 @@ def test_external_result_path_is_accepted_and_written_unchanged(tmp_path, monkey
     assert workflow.main(["--result-path", str(target)]) == 0
     written = json.loads(target.read_text(encoding="utf-8"))
     assert written.pop("telemetry")["authority_effect"] == "NONE_OPERATIONAL_OBSERVABILITY_ONLY"
-    assert written == {"status": "PASS", "session": SESSION}
+    assert written == {"status": "PASS", "session": SESSION, "workflow_mode": "CORE_AI"}
     assert list(checkout.iterdir()) == []
 
 
@@ -1898,3 +1898,290 @@ def test_pending_daily_commit_requires_retained_completion_and_never_runs_fresh(
     with pytest.raises(workflow.OwnerDailyError, match='UNSAFE_GIT_DIVERGENCE'):
         _replay_preflight(root, runtime, session=None)
     assert _git_out(origin, 'rev-parse', 'main') == base
+
+
+# --- OWNER_DAILY_CORE_AI_FAST_PATH: the launcher default is CORE + PRIVATE AI; Dashboard
+# publication, the Personal Action Center and the Owner view run only on FULL PUBLISH.
+CORE_AI = workflow.WORKFLOW_CORE_AI
+FULL_PUBLISH = workflow.WORKFLOW_FULL_PUBLISH
+
+
+def _remote_handoff(session: str = SESSION, sha: str = "ai") -> dict:
+    return {"publication": {"status": "PUBLISHED_READY_FOR_AI"},
+            "remote": {"remote_sha": sha, "latest_session": session, "status": "READY_FOR_AI",
+                       "handoff_build_id": "handoff_build_test"}}
+
+
+def _core_ai_mocks(monkeypatch, *, handoff=None) -> list[str]:
+    """Every optional publication step fails the test if CORE + AI so much as calls it."""
+    calls: list[str] = []
+    monkeypatch.setattr(workflow, "preflight_repository", lambda *a, **k: {"head": "producer", "status": "UP_TO_DATE"})
+    monkeypatch.setattr(workflow, "commit_daily_state", lambda *a, **k: calls.append("state") or {"sha": "producer", "status": "NO_CHANGE"})
+    monkeypatch.setattr(workflow, "_run_daily", lambda *a, **k: calls.append("daily"))
+    monkeypatch.setattr(workflow, "publish_ai_handoff",
+                        lambda *a, **k: calls.append("handoff") or (handoff if handoff is not None else _remote_handoff()))
+    for name in ("preflight_dashboard_repository", "publish_dashboard_release", "_verify_dashboard_published",
+                 "materialize_action_center", "_verify_action_center_ready", "open_action_center_view"):
+        monkeypatch.setattr(workflow, name, lambda *a, _name=name, **k: pytest.fail(f"CORE + AI must not call {_name}"))
+    return calls
+
+
+def _runtime(tmp_path: Path) -> Path:
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    (runtime / "bundle_manifest.json").write_text("{}")
+    return runtime
+
+
+def _run(tmp_path: Path, runtime: Path, **kwargs):
+    return workflow.run_workflow(root=tmp_path, runtime_root=runtime, handoff_repo=tmp_path / "handoff",
+                                 dashboard_web_dir=tmp_path / "web", **kwargs)
+
+
+def test_core_ai_completes_without_dashboard_action_center_or_owner_view(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    _write_presentation_attestation(tmp_path)
+    _write_dashboard_build_info(tmp_path / "web", "2026-09-15", build_id="older")
+    calls = _core_ai_mocks(monkeypatch)
+
+    result = _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI)
+
+    assert result["status"] == "PASS" and result["workflow_mode"] == CORE_AI
+    assert result["daily_status"] == "COMPLETED" and calls == ["daily", "state", "handoff"]
+    assert result["completion"] == {
+        "core": "COMPLETE", "ai_handoff": "PUBLISHED_REMOTE_VERIFIED", "dashboard_publication": "NOT_REQUESTED",
+        "action_center": "NOT_REQUESTED", "owner_view": "NOT_REQUESTED"}
+    dashboard = result["dashboard"]
+    assert dashboard["status"] == dashboard["publication_state"] == "NOT_REQUESTED"
+    assert dashboard["observed_session"] is None and dashboard["stale"] is True
+    assert dashboard["last_published"] == {"session": "2026-09-15", "build_id": "older",
+                                           "basis": "LOCAL_DASHBOARD_BUILD_INFO_NOT_REMOTE_VERIFIED"}
+    assert result["dashboard_preflight"]["status"] == "NOT_REQUESTED"
+    assert result["action_center"]["status"] == "NOT_REQUESTED"
+    assert result["action_center"]["view_open"] == {"status": "NOT_REQUESTED"}
+    assert result["ai_handoff"]["remote"]["latest_session"] == SESSION
+
+    final = journal.read_journal(tmp_path)
+    assert [row["stage"] for row in final["stage_history"]] == [
+        journal.STARTED, journal.SESSION_RESOLVED, journal.LOCAL_COMPLETE, journal.PRODUCER_STATE_RETAINED,
+        journal.PRESENTATION_BOUND, journal.AI_HANDOFF_PUBLISHED, journal.COMPLETE]
+    attestation = final["attestation"]
+    assert attestation["workflow_mode"] == CORE_AI and attestation["completion"] == result["completion"]
+    assert attestation["dashboard"]["publication_state"] == "NOT_REQUESTED"
+    assert attestation["dashboard"]["release_source_sha"] is None
+    assert attestation["action_center"]["status"] == "NOT_REQUESTED"
+    assert attestation["t0_snapshot"]["identity"] == T0_IDENTITY
+
+
+@pytest.mark.parametrize("build_info_session, last_session, basis, stale", [
+    (None, None, "LOCAL_DASHBOARD_BUILD_INFO_UNREADABLE", True),
+    (SESSION, SESSION, "LOCAL_DASHBOARD_BUILD_INFO_NOT_REMOTE_VERIFIED", False),
+])
+def test_core_ai_never_reports_the_dashboard_as_published(monkeypatch, tmp_path, build_info_session, last_session, basis, stale):
+    _write_completion(tmp_path)
+    if build_info_session:
+        _write_dashboard_build_info(tmp_path / "web", build_info_session)
+    _core_ai_mocks(monkeypatch)
+
+    dashboard = _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI, replay_completed_session=SESSION)["dashboard"]
+
+    # A local checkout that already carries this session is still not proof of publication.
+    assert dashboard["status"] == "NOT_REQUESTED" and dashboard["publication_state"] != PUBLISHED
+    assert dashboard["last_published"]["session"] == last_session
+    assert dashboard["last_published"]["basis"] == basis and dashboard["stale"] is stale
+
+
+@pytest.mark.parametrize("mode, remote", [
+    (CORE_AI, {"remote_sha": "ai", "latest_session": "2026-09-15"}),
+    (CORE_AI, {"remote_sha": "ai"}),
+    (CORE_AI, {"remote_sha": "", "latest_session": SESSION}),
+    (CORE_AI, None),
+    (FULL_PUBLISH, {"remote_sha": "ai", "latest_session": "2026-09-15"}),
+])
+def test_wrong_session_or_forged_remote_handoff_never_completes(monkeypatch, tmp_path, mode, remote):
+    _write_completion(tmp_path)
+    _pass_publication_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "publish_ai_handoff", lambda *a, **k: {"publication": {}, "remote": remote})
+
+    with pytest.raises(workflow.OwnerDailyError, match="AI_HANDOFF_REMOTE_ATTESTATION_INVALID") as raised:
+        _run(tmp_path, _runtime(tmp_path), workflow_mode=mode, replay_completed_session=SESSION)
+
+    assert raised.value.step == "AI handoff build"
+    final = journal.read_journal(tmp_path)
+    assert final["stage"] != journal.COMPLETE and final["failure"]["stage"] == journal.FAILED
+    assert journal.AI_HANDOFF_PUBLISHED not in [row["stage"] for row in final["stage_history"]]
+
+
+def test_core_ai_verified_remote_handoff_is_reused_without_republishing(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    calls = _core_ai_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "_verify_ai_handoff_published",
+                        lambda *_a, **_k: {"remote_sha": "remote", "latest_session": SESSION, "handoff_build_id": "b"})
+
+    result = _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI, replay_completed_session=SESSION)
+
+    assert result["status"] == "PASS" and "handoff" not in calls and "daily" not in calls
+    assert result["ai_handoff"]["publication"]["status"] == "ALREADY_PUBLISHED_VERIFIED"
+    assert result["ai_handoff"]["remote"]["remote_sha"] == "remote"
+
+
+def test_full_publish_after_core_ai_replays_without_a_second_daily_or_new_t0(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    _write_presentation_attestation(tmp_path)
+    runtime = _runtime(tmp_path)
+    calls = _core_ai_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "_resolve_intended_session", lambda *a, **k: SESSION)
+    core = _run(tmp_path, runtime, workflow_mode=CORE_AI)
+    core_attestation = journal.read_journal(tmp_path)["attestation"]
+    record_before = (tmp_path / "operations-review").exists() and sorted(
+        (path.relative_to(tmp_path).as_posix(), path.read_bytes())
+        for path in (tmp_path / "operations-review").rglob("*")
+        if path.is_file() and "owner-daily-journal-v1" not in path.parts)
+
+    # The Owner later asks for FULL PUBLISH: the completed session is replayed, never re-run.
+    _pass_publication_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "preflight_dashboard_repository", lambda *a, **k: {"head": "dashboard", "status": "UP_TO_DATE"})
+    monkeypatch.setattr(workflow, "_verify_dashboard_published", lambda *a, **k: None)
+    monkeypatch.setattr(workflow, "_verify_action_center_ready", lambda *a, **k: None)
+    monkeypatch.setattr(workflow, "_run_daily", lambda *a, **k: pytest.fail("FULL PUBLISH must not rerun Canonical Daily"))
+    monkeypatch.setattr(workflow, "publish_ai_handoff", lambda *a, **k: _remote_handoff())
+    full = _run(tmp_path, runtime, workflow_mode=FULL_PUBLISH)
+
+    assert core["status"] == full["status"] == "PASS" and calls.count("daily") == 1
+    assert full["daily_status"] == "ALREADY_COMPLETED / RESUMED" and full["workflow_mode"] == FULL_PUBLISH
+    assert full["dashboard"]["publication_state"] == PUBLISHED
+    assert full["completion"]["dashboard_publication"] == PUBLISHED and full["completion"]["action_center"] == "READY"
+    full_attestation = journal.read_journal(tmp_path)["attestation"]
+    for key in ("session", "canonical_daily_operation_identity", "daily_producer_run_identity",
+                "daily_producer_operation_identity", "t0_snapshot"):
+        assert full_attestation[key] == core_attestation[key]
+    record_after = (tmp_path / "operations-review").exists() and sorted(
+        (path.relative_to(tmp_path).as_posix(), path.read_bytes())
+        for path in (tmp_path / "operations-review").rglob("*")
+        if path.is_file() and "owner-daily-journal-v1" not in path.parts)
+    assert record_after == record_before
+
+
+def test_core_ai_rerun_of_a_complete_session_is_idempotent(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    runtime = _runtime(tmp_path)
+    calls = _core_ai_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "_resolve_intended_session", lambda *a, **k: SESSION)
+
+    first = _run(tmp_path, runtime, workflow_mode=CORE_AI)
+    second = _run(tmp_path, runtime, workflow_mode=CORE_AI)
+
+    assert first["status"] == second["status"] == "PASS" and calls.count("daily") == 1
+    assert second["daily_status"] == "ALREADY_COMPLETED / RESUMED"
+    assert second["completion"] == first["completion"]
+
+
+def test_core_ai_keeps_producer_and_consumer_preflight_and_the_host_gate(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    _core_ai_mocks(monkeypatch)
+    seen: list[str] = []
+    monkeypatch.setattr(workflow, "preflight_repository",
+                        lambda *a, **k: seen.append(k["expected_name"]) or {"head": "producer", "status": "UP_TO_DATE"})
+    monkeypatch.setattr(workflow, "preflight_consumer_repository",
+                        lambda *a, **k: seen.append("consumer") or {"head": "consumer", "status": "UP_TO_DATE"})
+    monkeypatch.setattr(workflow, "_require_host_ready", lambda *a, **k: seen.append("host") or {"classification": "READY"})
+
+    result = _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI)
+
+    assert seen == ["stock-core-private", "consumer", "host"]
+    assert result["consumer_preflight"]["status"] == "UP_TO_DATE"
+    assert result["dashboard_preflight"] == {"status": "NOT_REQUESTED", "reason": "CORE_AI_WORKFLOW_DASHBOARD_NOT_REQUESTED"}
+
+
+def test_core_ai_presentation_unknown_still_blocks_before_the_handoff(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    _core_ai_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "_presentation_bound_state", lambda *a, **k: "UNKNOWN")
+    monkeypatch.setattr(workflow, "publish_ai_handoff", lambda *a, **k: pytest.fail("must not publish when UNKNOWN"))
+
+    result = _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI, replay_completed_session=SESSION)
+
+    assert result["status"] == "BLOCKED" and result["reason"] == "PRESENTATION_UNKNOWN_CANNOT_COMPLETE"
+    assert journal.read_journal(tmp_path)["stage"] != journal.COMPLETE
+
+
+@pytest.mark.parametrize("portfolio_status", ["AVAILABLE", "MISSING", "PRIVATE_UNAVAILABLE"])
+def test_full_publish_action_center_is_opt_in_and_reports_the_portfolio_state(monkeypatch, tmp_path, portfolio_status):
+    _write_completion(tmp_path)
+    _pass_publication_mocks(monkeypatch)
+    opened: list[str] = []
+    monkeypatch.setattr(workflow, "materialize_action_center", lambda *_a: {
+        "status": "READY", "session": SESSION, "portfolio_status": portfolio_status, "json_path": "p.json", "view_path": "p.md"})
+    monkeypatch.setattr(workflow, "open_action_center_view", lambda path: opened.append(path) or {"status": "READY"})
+
+    result = _run(tmp_path, _runtime(tmp_path), workflow_mode=FULL_PUBLISH, replay_completed_session=SESSION)
+
+    assert result["status"] == "PASS" and opened == ["p.md"]
+    assert result["action_center"]["portfolio_status"] == portfolio_status
+    assert result["completion"]["action_center"] == "READY" and result["completion"]["owner_view"] == "READY"
+
+
+def test_action_center_not_requested_is_distinct_from_action_center_failed(monkeypatch, tmp_path):
+    _write_completion(tmp_path)
+    runtime = _runtime(tmp_path)
+    _pass_publication_mocks(monkeypatch)
+    monkeypatch.setattr(workflow, "materialize_action_center",
+                        lambda *_a: {"status": "PARTIAL", "reason": "ACTION_CENTER_MATERIALIZATION_FAILED:test"})
+    failed = _run(tmp_path, runtime, workflow_mode=FULL_PUBLISH, replay_completed_session=SESSION)
+    _core_ai_mocks(monkeypatch)
+    not_requested = _run(tmp_path, runtime, workflow_mode=CORE_AI, replay_completed_session=SESSION)
+
+    assert failed["status"] == "PARTIAL" and failed["action_center"]["status"] == "PARTIAL"
+    assert failed["workflow_mode"] == FULL_PUBLISH
+    assert not_requested["status"] == "PASS" and not_requested["action_center"]["status"] == "NOT_REQUESTED"
+
+
+def test_unknown_workflow_mode_is_refused_before_any_work(monkeypatch, tmp_path):
+    monkeypatch.setattr(workflow, "preflight_repository", lambda *a, **k: pytest.fail("no work may start"))
+    with pytest.raises(ValueError, match="WORKFLOW_MODE_UNKNOWN"):
+        _run(tmp_path, tmp_path, workflow_mode="DASHBOARD_ONLY")
+    assert journal.read_journal(tmp_path) is None
+
+
+@pytest.mark.parametrize("argv, expected", [([], CORE_AI), (["--full-publish"], FULL_PUBLISH)])
+def test_launcher_default_is_core_ai_and_full_publish_is_explicit(monkeypatch, tmp_path, argv, expected):
+    checkout = tmp_path / "stock-core-private"
+    checkout.mkdir()
+    monkeypatch.setattr(workflow, "ROOT", checkout)
+    seen: dict = {}
+    monkeypatch.setattr(workflow, "run_workflow", lambda **kwargs: seen.update(kwargs) or {"status": "PASS", "session": SESSION})
+    target = tmp_path / "owner-daily-run-logs" / "run.result.json"
+
+    assert workflow.main([*argv, "--result-path", str(target)]) == 0
+
+    assert seen["workflow_mode"] == expected and seen["telemetry"].workflow_mode == expected
+    assert json.loads(target.read_text(encoding="utf-8"))["workflow_mode"] == expected
+
+
+def test_core_ai_telemetry_names_five_requested_phases_and_keeps_remote_verification(monkeypatch, tmp_path):
+    from owner_daily_progress import OwnerDailyProgress, PHASES, workflow_phases
+    _write_completion(tmp_path)
+    _core_ai_mocks(monkeypatch)
+    sidecar = tmp_path / "logs" / "run.progress.jsonl"
+    sidecar.parent.mkdir()
+    lines: list[str] = []
+    telemetry = OwnerDailyProgress(sidecar, human_sink=lines.append)
+    telemetry.set_workflow(CORE_AI)
+    telemetry.start_view({})
+
+    _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI, telemetry=telemetry)
+
+    events = [json.loads(line) for line in sidecar.read_text(encoding="utf-8").splitlines()]
+    owner = [event for event in events if event["component"] == PHASES.get(event["phase_index"])]
+    assert [(event["phase_index"], event["status"]) for event in owner] == [
+        (phase, status) for phase in (1, 2, 3, 4, 6) for status in ("BEGIN", "END")]
+    assert {event["phase_total"] for event in owner} == {5} and {event["workflow_mode"] for event in owner} == {CORE_AI}
+    assert [event["phase_ordinal"] for event in owner] == [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]
+    assert owner[-1]["reason"] == "REMOTE_VERIFICATION_INCLUDED_IN_HANDOFF_PHASE"
+    waiting = [line for line in lines if "ETA" in line and line.startswith("[")][:5]
+    assert [line.split("]")[0] for line in waiting] == [f"[{i}/5" for i in range(1, 6)]
+    assert not any("Dashboard" in line or "Trung tâm" in line for line in lines)
+    # A result or sidecar that names no workflow predates the split: all nine phases.
+    assert workflow_phases(None) == tuple(range(1, 10)) == workflow_phases(FULL_PUBLISH)
+    legacy = OwnerDailyProgress(None, human_sink=None).emit(phase_index=7, status="BEGIN")
+    assert (legacy["phase_total"], legacy["phase_ordinal"], legacy["workflow_mode"]) == (9, 7, None)
