@@ -23,13 +23,20 @@ from stocklookup_core.research.conditional_investment_case import (
     case_from_supplied_inputs,
 )
 from stocklookup_core.valuation.conditional_research_valuation import (
+    derive_parent_equity_research,
+    financing_research,
     industrial_research_profile,
+    price_over_derived_parent_equity,
+    printed_cash_to_earnings,
     scope_and_period_bridge,
+    trailing_twelve_month_earnings,
 )
 
 DEFAULT_INTAKE = Path(r"C:\Projects\StockLookup\agent-reports\official-financial-quarterly-intake-v1\REAL_FINANCIAL_INTAKE_CANDIDATES.json")
 DEFAULT_EXAMPLES = Path(r"C:\Projects\StockLookup\agent-reports\vn30-financial-metrics-unlock-20261014\work\valuation_examples.json")
 DEFAULT_FPT = ROOT / "derived" / "financial-evidence-currency-refresh-v1" / "fpt_official_annual_context_report.json"
+DEFAULT_QUALIFIED = ROOT / "derived" / "financial-evidence-currency-refresh-v1" / "qualified_official_facts.jsonl"
+COHORT_CUTOFF = "2026-10-13T23:59:59+00:00"
 
 HPG_LINES = {
     "hpg-h1-2026-gross-revenue": "GROSS_REVENUE",
@@ -73,8 +80,58 @@ def _hpg_fact(wrapper: dict, identity: str) -> dict:
     }
 
 
+def _flow_column(candidate: Mapping[str, Any], *, role: str, year: int, months: int | None, qualification: str) -> dict:
+    return {
+        "ticker": candidate.get("ticker"),
+        "accounting_identity": candidate.get("accounting_identity"),
+        "statement_scope": candidate.get("statement_scope"),
+        "currency": candidate.get("currency"),
+        "unit_scale": candidate.get("unit_scale"),
+        "reporting_period": candidate.get("reporting_period"),
+        "period_role": role,
+        "fiscal_year": year,
+        "months": months,
+        "normalized_integer": candidate.get("normalized_value") if isinstance(candidate.get("normalized_value"), int) else None,
+        "qualification": qualification,
+        "document_sha256": candidate.get("document_sha256"),
+    }
+
+
+def _qualified_row(row: Mapping[str, Any], identity: str) -> dict:
+    return {
+        "ticker": row.get("ticker"),
+        "accounting_identity": identity,
+        "statement_scope": row.get("statement_scope") or "consolidated",
+        "currency": row.get("currency"),
+        "unit_scale": 1,
+        "reporting_period": f"{row.get('period_start')}/{row.get('period_end')}",
+        "normalized_integer": row.get("normalized_value") if isinstance(row.get("normalized_value"), int) else None,
+        "qualification": "VERIFIED" if row.get("qualification_state") == "QUALIFIED" else "CONDITIONAL_RESEARCH",
+        "document_sha256": row.get("document_sha256"),
+        "canonical_metric": row.get("canonical_metric"),
+        "period_type": row.get("period_type"),
+        "knowledge_available_at": row.get("knowledge_available_at"),
+    }
+
+
+def _load_qualified(path: Path) -> list[dict]:
+    rows = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        if str(row.get("knowledge_available_at") or "") > COHORT_CUTOFF:
+            continue
+        rows.append(row)
+    return rows
+
+
+def _issuer_set(values: set[str]) -> list[str]:
+    return sorted(values)
+
+
 def build_cases(*, intake_path: Path = DEFAULT_INTAKE, examples_path: Path = DEFAULT_EXAMPLES,
-                fpt_path: Path = DEFAULT_FPT) -> dict:
+                fpt_path: Path = DEFAULT_FPT, qualified_path: Path = DEFAULT_QUALIFIED) -> dict:
     packet = _load(intake_path)
     rows = {row["evidence_id"]: row for row in packet["results"]}
     example = _load(examples_path)["HPG"]
@@ -166,14 +223,179 @@ def build_cases(*, intake_path: Path = DEFAULT_INTAKE, examples_path: Path = DEF
         "fpt_no_parent_profit_fact": all(row["metric"] != "attributable_net_income" for row in fpt["descriptive_evidence"]["canonical_facts"]),
         "fpt_parent_line_stays_blocked": any(row.get("canonical_metric") == "attributable_net_income" and row.get("reason") == "OCR_NUMERIC_AMBIGUITY" for row in fpt["descriptive_evidence"]["blocked"]),
     }
+    hpg_depth = _hpg_depth(rows, profile)
+    kbc_depth = _kbc_depth(rows)
+    qualified = _load_qualified(qualified_path)
+    cohort = _cohort_depth(qualified, hpg_depth, kbc_depth, profile)
+    hpg["research_depth"] = hpg_depth
+    kbc["research_depth"] = kbc_depth
+    expectations.update({
+        "hpg_derived_parent_equity": hpg_depth["parent_equity"]["value_vnd"] == 140656346514229 and hpg_depth["parent_equity"]["printed_parent_line"] is False,
+        "hpg_derived_parent_multiple_not_pb": hpg_depth["price_over_derived_parent_equity"]["display_method"] == "PRICE_OVER_DERIVED_PARENT_EQUITY" and hpg_depth["price_over_derived_parent_equity"]["strict_valuation_use"] == "STRICT_VALUATION_QUARANTINED",
+        "hpg_ttm_absent": hpg_depth["parent_ttm"]["ttm"] is None and "ANNUALIZATION_REFUSED" not in hpg_depth["parent_ttm"]["reason_codes"] and "NO_COMPATIBLE_TTM_BRIDGE" in hpg_depth["parent_ttm"]["reason_codes"],
+        "hpg_financing_not_debt": hpg_depth["financing"]["interest_bearing_debt_vnd"] is None and hpg_depth["financing"]["mixed_loans_and_finance_leases_vnd"] == 98529977232553 and hpg_depth["financing"]["ev_ebitda"] is None,
+        "hpg_pb_parent_stays_unusable": uses["pb_parent"]["eligibility"] == "UNUSABLE",
+        "kbc_ttm_absent": kbc_depth["parent_ttm"]["ttm"] is None and kbc_depth["revenue_yoy"]["not_ttm"] is True,
+        "kbc_revenue_yoy": kbc_depth["revenue_yoy"]["change_vnd"] == 205818765509,
+        "cohort_ttm_pe_stays_zero": cohort["after"]["true_ttm_pe"]["verified"] == 0 and cohort["after"]["true_ttm_pe"]["conditional_research"] == 0,
+        "cohort_parent_equity_research_gained": cohort["before"]["parent_equity_research"]["conditional_research"] == 0 and cohort["after"]["parent_equity_research"]["conditional_research"] == 1,
+        "vre_cash_quality_names_total_profit": any(item["ticker"] == "VRE" and item["earnings_identity"] == "TOTAL_PROFIT_AFTER_TAX" and item["ratio"] is not None for item in cohort["cash_quality"]),
+        "line_400_not_parent_book": all(item["counted_as_parent_equity"] is False for item in cohort["line_400_equity"]),
+    })
     failed = [name for name, ok in expectations.items() if not ok]
     return {
         "contract_version": "conditional_research_acceptance/v1",
         "producer_checkout_written": False,
         "ocr_invoked": False,
+        "automatic_production_daily": False,
         "cases": {"HPG": hpg, "KBC": kbc, "FPT": fpt},
+        "valuation_depth": {"hpg": hpg_depth, "kbc": kbc_depth, "cohort": cohort},
         "expectations": expectations,
         "failed_expectations": failed,
+    }
+
+
+def _hpg_depth(rows: Mapping[str, Any], profile: Mapping[str, Any]) -> dict:
+    def fact(evidence: str, identity: str) -> dict:
+        built = _hpg_fact(rows[evidence], identity)
+        built["qualification"] = "CONDITIONAL_RESEARCH"
+        return built
+
+    total = fact("hpg-h1-2026-equity-total", "TOTAL_EQUITY_INCLUDING_NCI")
+    nci = fact("hpg-h1-2026-nci-equity", "NON_CONTROLLING_INTERESTS")
+    parent_equity = derive_parent_equity_research(total, nci)
+    financing_rows = [
+        fact("hpg-h1-2026-cash-and-cash-equivalents", "CASH_AND_EQUIVALENTS"),
+        fact("hpg-h1-2026-short-term-loans-and-finance-leases", "SHORT_TERM_LOANS_AND_FINANCE_LEASES"),
+        fact("hpg-h1-2026-long-term-loans-and-finance-leases", "LONG_TERM_LOANS_AND_FINANCE_LEASES"),
+    ]
+    depreciation = fact("hpg-h1-2026-depreciation-line", "COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT")
+    flows = [fact("hpg-h1-2026-net-income-parent", "PARENT_PROFIT_AFTER_TAX")]
+    flows[0]["period_role"] = "UNKNOWN_DURATION"
+    flows[0]["fiscal_year"] = 2026
+    flows[0]["months"] = None
+    return {
+        "parent_equity": parent_equity,
+        "price_over_derived_parent_equity": price_over_derived_parent_equity(
+            market_cap_vnd=profile.get("market_cap_vnd"),
+            parent_equity_vnd=parent_equity.get("value_vnd"),
+            price_session="2026-10-13",
+            equity_period="2026-06-30",
+        ),
+        "financing": financing_research(financing_rows, depreciation=depreciation),
+        "parent_ttm": trailing_twelve_month_earnings(flows, identity="PARENT_PROFIT_AFTER_TAX"),
+        "share_authority": "CONDITIONAL_RESEARCH_ESTIMATE",
+    }
+
+
+def _kbc_depth(rows: Mapping[str, Any]) -> dict:
+    def column(evidence: str, role: str, year: int, months: int) -> dict:
+        candidate = rows[evidence]["candidate"]
+        built = _flow_column(candidate, role=role, year=year, months=months, qualification="CONDITIONAL_RESEARCH")
+        built["accounting_identity"] = {
+            "kbc-consol-9m-net-sales": "NET_REVENUE",
+            "kbc-consol-9m-2025-net-sales": "NET_REVENUE",
+            "kbc-consol-9m-parent-npat": "PARENT_PROFIT_AFTER_TAX",
+        }[evidence]
+        return built
+
+    revenue_columns = [
+        column("kbc-consol-9m-net-sales", "YTD", 2026, 9),
+        column("kbc-consol-9m-2025-net-sales", "YTD", 2025, 9),
+    ]
+    parent_columns = [column("kbc-consol-9m-parent-npat", "YTD", 2026, 9)]
+    revenue = trailing_twelve_month_earnings(revenue_columns, identity="NET_REVENUE")
+    parent = trailing_twelve_month_earnings(parent_columns, identity="PARENT_PROFIT_AFTER_TAX")
+    return {
+        "revenue_ttm": revenue,
+        "revenue_yoy": revenue["same_ytd_comparisons"][0],
+        "parent_ttm": parent,
+        "market_cap_vnd": None,
+    }
+
+
+def _bucket(verified: set[str], conditional: set[str], cohort: list[str]) -> dict[str, int]:
+    usable = verified | conditional
+    return {
+        "verified": len(verified),
+        "conditional_research": len(conditional - verified),
+        "unusable": len([ticker for ticker in cohort if ticker not in usable]),
+    }
+
+
+def _cohort_depth(qualified: list[dict], hpg_depth: Mapping[str, Any], kbc_depth: Mapping[str, Any], profile: Mapping[str, Any]) -> dict:
+    cohort = _issuer_set({str(row.get("ticker")) for row in qualified} | {"HPG", "KBC", "FPT"})
+    verified_parent = {row["ticker"] for row in qualified if row.get("canonical_metric") == "attributable_net_income" and row.get("qualification_state") == "QUALIFIED"}
+    conditional_parent = {"HPG", "KBC"}
+    line_400 = []
+    for row in qualified:
+        if row.get("canonical_metric") != "shareholders_equity":
+            continue
+        line_400.append({
+            "ticker": row.get("ticker"),
+            "value": row.get("normalized_value"),
+            "counted_as_parent_equity": False,
+            "reason": "LINE_400_IS_NOT_PROVEN_PARENT_BOOK",
+        })
+    cash_quality = []
+    by_ticker: dict[str, list[dict]] = {}
+    for row in qualified:
+        by_ticker.setdefault(row["ticker"], []).append(row)
+    for ticker, rows in sorted(by_ticker.items()):
+        earnings = next((row for row in rows if row.get("canonical_metric") == "net_income"), None)
+        cash = next((row for row in rows if row.get("canonical_metric") == "operating_cash_flow" and row.get("period_end") == (earnings or {}).get("period_end") and row.get("document_sha256") == (earnings or {}).get("document_sha256")), None)
+        if earnings and cash and earnings.get("currency") == cash.get("currency"):
+            quality = printed_cash_to_earnings(_qualified_row(earnings, "TOTAL_PROFIT_AFTER_TAX"), _qualified_row(cash, "OPERATING_CASH_FLOW"))
+            quality["ticker"] = ticker
+            cash_quality.append(quality)
+    before = {
+        "parent_net_income": _bucket(verified_parent, conditional_parent, cohort),
+        "compatible_ttm_earnings": _bucket(set(), set(), cohort),
+        "parent_equity_research": _bucket(set(), set(), cohort),
+        "market_cap": _bucket(set(), {"HPG"} if profile.get("market_cap_vnd") else set(), cohort),
+        "reported_period_earnings_multiple": _bucket(set(), {"HPG"}, cohort),
+        "true_ttm_pe": _bucket(set(), set(), cohort),
+        "compatible_parent_pb": _bucket(set(), set(), cohort),
+        "cash_or_financing_quality": _bucket(set(), {"HPG"}, cohort),
+        "ev_ebitda": _bucket(set(), set(), cohort),
+    }
+    after_parent_equity = {"HPG"} if hpg_depth["parent_equity"]["value_vnd"] is not None else set()
+    after_financing = set()
+    if hpg_depth["financing"]["mixed_loans_and_finance_leases_vnd"] is not None or hpg_depth["financing"]["cash_and_equivalents_vnd"] is not None:
+        after_financing.add("HPG")
+    after_financing.update(item["ticker"] for item in cash_quality if item.get("ratio") is not None)
+    after = {
+        "parent_net_income": before["parent_net_income"],
+        "compatible_ttm_earnings": before["compatible_ttm_earnings"],
+        "parent_equity_research": _bucket(set(), after_parent_equity, cohort),
+        "market_cap": before["market_cap"],
+        "reported_period_earnings_multiple": before["reported_period_earnings_multiple"],
+        "true_ttm_pe": before["true_ttm_pe"],
+        "compatible_parent_pb": before["compatible_parent_pb"],
+        "conditional_price_over_derived_parent_equity": _bucket(set(), after_parent_equity, cohort),
+        "cash_or_financing_quality": _bucket(
+            {item["ticker"] for item in cash_quality if item.get("fitness") == "VERIFIED"},
+            after_financing,
+            cohort,
+        ),
+        "ev_ebitda": before["ev_ebitda"],
+    }
+    return {
+        "cohort": cohort,
+        "cutoff": COHORT_CUTOFF,
+        "before": before,
+        "after": after,
+        "cash_quality": cash_quality,
+        "line_400_equity": line_400,
+        "blocked_reasons": {
+            "HPG_TTM": hpg_depth["parent_ttm"]["reason_codes"],
+            "KBC_PARENT_TTM": kbc_depth["parent_ttm"]["reason_codes"],
+            "KBC_REVENUE_TTM": kbc_depth["revenue_ttm"]["reason_codes"],
+            "EV_EBITDA": ["MIXED_OR_MISSING_DEBT", "DEPRECIATION_NOT_EBITDA", "NO_COMPATIBLE_PARENT_EBIT"],
+            "STRICT_PB": ["NO_PRINTED_PARENT_EQUITY_LINE"],
+            "FPT_PARENT_PROFIT": ["OCR_NUMERIC_AMBIGUITY"],
+            "PVD_H1_CURRENCY": ["USD_INTERIM_IS_NOT_COMBINED_WITH_VND_ANNUAL"],
+        },
     }
 
 
@@ -345,7 +567,25 @@ def render_markdown(packet: dict) -> str:
         "",
         f"Failed checks: {', '.join(packet['failed_expectations']) or 'none'}.",
         "",
+        "## Valuation depth",
+        "",
     ]
+    depth = packet.get("valuation_depth") or {}
+    hpg_depth = depth.get("hpg") or {}
+    kbc_depth = depth.get("kbc") or {}
+    parent_equity = hpg_depth.get("parent_equity") or {}
+    derived_multiple = hpg_depth.get("price_over_derived_parent_equity") or {}
+    financing = hpg_depth.get("financing") or {}
+    revenue_yoy = kbc_depth.get("revenue_yoy") or {}
+    cohort = depth.get("cohort") or {}
+    lines.extend([
+        f"HPG derived parent equity {parent_equity.get('value_vnd')} VND. Method: total consolidated equity minus printed non-controlling interest. Printed parent line: {parent_equity.get('printed_parent_line')}.",
+        f"Price over that derived equity: {derived_multiple.get('value')}. Display method {derived_multiple.get('display_method')}. The 30 June book is not the 13 October price session, and this is not parent P/B.",
+        f"HPG combined loans and finance leases {financing.get('mixed_loans_and_finance_leases_vnd')} VND. Cash and equivalents {financing.get('cash_and_equivalents_vnd')} VND. Interest-bearing debt, net debt and EV/EBITDA: {financing.get('interest_bearing_debt_vnd')}, {financing.get('net_debt_vnd')}, {financing.get('ev_ebitda')}.",
+        f"KBC nine-month consolidated revenue changed by {revenue_yoy.get('change_vnd')} VND versus the prior nine-month column. That comparison is not TTM. Parent TTM remains absent.",
+        f"Cohort {', '.join(cohort.get('cohort') or [])}. True TTM P/E stays 0. Strict parent P/B stays 0.",
+        "",
+    ])
     return "\n".join(lines)
 
 
