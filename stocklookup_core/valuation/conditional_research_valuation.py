@@ -7,6 +7,7 @@ current-share authority, a TTM multiple, or an execution input.
 from __future__ import annotations
 
 import re
+from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any, Mapping
 
@@ -457,6 +458,52 @@ _NOT_DEBT = frozenset({
 _YTD_MONTHS = frozenset({3, 6, 9})
 
 
+def _instant(value: Any, *, end_of_day: bool) -> datetime | None:
+    """Parse an ISO date or timestamp. A bare date has no proven hour."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip().replace("Z", "+00:00")
+    try:
+        if len(text) == 10:
+            day = datetime.fromisoformat(text).date()
+            return datetime.combine(day, time(23, 59, 59) if end_of_day else time(0, 0), tzinfo=timezone(timedelta(hours=7)))
+        moment = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return moment if moment.tzinfo else None
+
+
+def known_by(row: Mapping[str, Any], cutoff: str | None) -> str:
+    """KNOWN, FUTURE or UNPROVEN at a cutoff.
+
+    A date-only knowledge value counts from the end of that day in Vietnam, because the hour
+    is unknown. A row with no readable knowledge time is UNPROVEN, not known.
+    """
+    if cutoff is None:
+        return "KNOWN"
+    limit = _instant(cutoff, end_of_day=True)
+    known = _instant(row.get("knowledge_available_at"), end_of_day=True)
+    if limit is None or known is None:
+        return "UNPROVEN"
+    return "KNOWN" if known <= limit else "FUTURE"
+
+
+_OCR_QUALITY = ("OCR", "PRIOR_READ", "LOCATOR_NOT_RETAINED")
+
+
+def _bridge_caveats(rows: list[Mapping[str, Any]]) -> list[str]:
+    """Reasons a reconciling bridge is still weaker than its arithmetic."""
+    caveats: list[str] = []
+    presentation = {row.get("presentation_basis") for row in rows if row.get("presentation_basis")}
+    if len(presentation) > 1:
+        caveats.append("PRESENTATION_BASIS_DIFFERS_ACROSS_BRIDGE")
+    if any(any(mark in str(row.get("evidence_quality", "")).upper() for mark in _OCR_QUALITY) for row in rows):
+        caveats.append("OCR_OR_UNLOCATED_INPUT_IN_BRIDGE")
+    if any("VISUAL" in str(row.get("evidence_quality", "")).upper() for row in rows):
+        caveats.append("VISUALLY_READ_INPUT_IN_BRIDGE")
+    return caveats
+
+
 def _row_amount(row: Mapping[str, Any] | None) -> int | None:
     if not isinstance(row, Mapping):
         return None
@@ -468,6 +515,9 @@ def _compatible_rows(rows: list[Mapping[str, Any]]) -> bool:
         return bool(rows)
     first = rows[0]
     keys = ("ticker", "statement_scope", "reporting_period", "currency", "unit_scale", "document_sha256")
+    optional = ("consolidation_basis", "presentation_basis", "period_role", "months", "fiscal_year")
+    if any(row.get(key) != first.get(key) for row in rows for key in optional):
+        return False
     return all(row.get(key) == first.get(key) and row.get(key) not in {None, "", "UNKNOWN"} for row in rows for key in keys)
 
 
@@ -483,8 +533,20 @@ def derive_parent_equity_research(total: Mapping[str, Any] | None, nci: Mapping[
     if not isinstance(total, Mapping) or not isinstance(nci, Mapping):
         reasons.append("PARENT_EQUITY_INPUTS_ABSENT")
     else:
-        if total.get("accounting_identity") != "TOTAL_EQUITY_INCLUDING_NCI" or nci.get("accounting_identity") != "NON_CONTROLLING_INTERESTS":
+        identity = total.get("accounting_identity")
+        if identity not in {"TOTAL_EQUITY_INCLUDING_NCI", "CAPITAL_AND_RESERVES_INCLUDING_NCI"} or nci.get("accounting_identity") != "NON_CONTROLLING_INTERESTS":
             reasons.append("EQUITY_IDENTITIES_ARE_NOT_TOTAL_AND_NCI")
+        if (identity == "CAPITAL_AND_RESERVES_INCLUDING_NCI"
+                or total.get("consolidation_basis") == "FPT_TELECOM_FULLY_CONSOLIDATED"
+                or (total.get("ticker"), total.get("reporting_period")) == ("FPT", "2025-12-31")):
+            reconciliation = total.get("equity_reconciliation")
+            if (identity != "CAPITAL_AND_RESERVES_INCLUDING_NCI" or total.get("line_code") != "410"
+                    or nci.get("line_code") != "429" or not isinstance(reconciliation, Mapping)
+                    or any(type(reconciliation.get(code)) is not int for code in ("code_400_vnd", "code_410_vnd", "code_429_vnd", "code_430_vnd"))
+                    or reconciliation["code_410_vnd"] != _row_amount(total)
+                    or reconciliation["code_429_vnd"] != _row_amount(nci)
+                    or reconciliation["code_400_vnd"] != reconciliation["code_410_vnd"] + reconciliation["code_430_vnd"]):
+                reasons.append("EQUITY_CODE_410_400_430_429_RECONCILIATION_REQUIRED")
         if not _compatible_rows([total, nci]):
             reasons.append("EQUITY_COMPONENTS_ARE_NOT_THE_SAME_STATEMENT_COLUMN")
     total_amount = _row_amount(total)
@@ -498,7 +560,9 @@ def derive_parent_equity_research(total: Mapping[str, Any] | None, nci: Mapping[
         "eligibility": UNUSABLE if value is None else CONDITIONAL,
         "fitness": "UNUSABLE" if value is None else "CONDITIONAL_RESEARCH",
         "value_vnd": value,
-        "method": "TOTAL_EQUITY_MINUS_PRINTED_NCI",
+        "method": ("CAPITAL_AND_RESERVES_CODE_410_MINUS_PRINTED_NCI"
+                   if isinstance(total, Mapping) and total.get("accounting_identity") == "CAPITAL_AND_RESERVES_INCLUDING_NCI"
+                   else "TOTAL_EQUITY_MINUS_PRINTED_NCI"),
         "printed_parent_line": False,
         "official_fact_admitted": False,
         "strict_parent_pb": False,
@@ -553,17 +617,39 @@ def financing_research(rows: list[Mapping[str, Any]], *, depreciation: Mapping[s
     if depreciation and depreciation.get("accounting_identity") == "COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT":
         reasons.append("CASH_FLOW_DEPRECIATION_LINE_IS_NOT_EBITDA")
     cash = cash_rows[0] if len(cash_rows) == 1 else None
+    unknown_total = None
+    if unknown and len({row.get("accounting_identity") for row in unknown}) == len(unknown) and _compatible_rows(unknown) and all(_row_amount(row) is not None for row in unknown):
+        unknown_total = sum(_row_amount(row) or 0 for row in unknown)
+    # Printed loan lines of one balance sheet, whatever their lease content. Not debt.
+    printed = mixed + unknown
+    printed_total = None
+    if printed and len({row.get("accounting_identity") for row in printed}) == len(printed) and _compatible_rows(printed) and all(_row_amount(row) is not None for row in printed):
+        printed_total = sum(_row_amount(row) or 0 for row in printed)
+    cash_amount = _row_amount(cash)
+    cover = None
+    if printed_total and cash_amount is not None and _compatible_rows(printed + [cash]):
+        cover = _ratio(Decimal(cash_amount), Decimal(printed_total))
+        reasons.append("CASH_COVER_OF_PRINTED_LOAN_LINES_IS_NOT_NET_DEBT")
+    short = [row for row in printed if str(row.get("accounting_identity", "")).startswith("SHORT_TERM")]
+    short_total = sum(_row_amount(row) or 0 for row in short) if short and all(_row_amount(row) is not None for row in short) else None
     return {
         "interest_bearing_debt_vnd": None,
         "finance_lease_vnd": None,
         "mixed_loans_and_finance_leases_vnd": mixed_total,
+        "loans_lease_content_unknown_vnd": unknown_total,
+        "printed_loan_lines_vnd": printed_total,
+        "printed_short_term_loan_lines_vnd": short_total if printed_total is not None else None,
+        "short_term_share_of_printed_loan_lines": (
+            _ratio(Decimal(short_total), Decimal(printed_total)) if printed_total and short_total is not None else None),
+        "cash_cover_of_printed_loan_lines": cover,
         "cash_and_equivalents_vnd": _row_amount(cash),
         "net_debt_vnd": None,
         "enterprise_value_vnd": None,
         "ebitda_vnd": None,
         "ev_ebitda": None,
-        "eligibility": UNUSABLE if mixed_total is None and _row_amount(cash) is None else CONDITIONAL,
-        "fitness": "UNUSABLE" if mixed_total is None and _row_amount(cash) is None else _fitness(mixed or cash_rows),
+        "eligibility": UNUSABLE if printed_total is None and mixed_total is None and _row_amount(cash) is None else CONDITIONAL,
+        "fitness": ("UNUSABLE" if printed_total is None and mixed_total is None and _row_amount(cash) is None
+                    else _fitness(printed or cash_rows)),
         "official_fact_admitted": False,
         "reason_codes": sorted(set(reasons)),
     }
@@ -578,6 +664,7 @@ def _flow_key(row: Mapping[str, Any]) -> tuple:
 
 def trailing_twelve_month_earnings(
     columns: list[Mapping[str, Any]], *, identity: str, knowledge_cutoff: str | None = None,
+    allow_conditional_presentation_bridge: bool = False,
 ) -> dict[str, Any]:
     """Build TTM only from a full year plus matching YTD columns. Never annualize a stub."""
     selected = [row for row in columns if row.get("accounting_identity") == identity]
@@ -585,9 +672,12 @@ def trailing_twelve_month_earnings(
     if knowledge_cutoff is not None:
         kept = []
         for row in selected:
-            known = row.get("knowledge_available_at")
-            if known and str(known) > knowledge_cutoff:
+            state = known_by(row, knowledge_cutoff)
+            if state == "FUTURE":
                 reasons.append("FUTURE_KNOWLEDGE_EXCLUDED")
+                continue
+            if state == "UNPROVEN" and row.get("knowledge_available_at"):
+                reasons.append("KNOWLEDGE_TIME_UNREADABLE_EXCLUDED")
                 continue
             kept.append(row)
         selected = kept
@@ -615,13 +705,34 @@ def trailing_twelve_month_earnings(
             amounts = [_row_amount(current), _row_amount(annual), _row_amount(prior)]
             if any(amount is None for amount in amounts):
                 continue
+            legs = [current, annual, prior]
+            bases = {row.get("consolidation_basis") for row in legs if row.get("consolidation_basis")}
+            if len(bases) > 1:
+                # Different consolidation perimeters are different companies for this sum.
+                reasons.append("CONSOLIDATION_BASIS_CHANGED_NO_TTM_BRIDGE")
+                continue
+            caveats = _bridge_caveats(legs)
+            if "PRESENTATION_BASIS_DIFFERS_ACROSS_BRIDGE" in caveats and not allow_conditional_presentation_bridge:
+                reasons.append("PRESENTATION_BASIS_DIFFERS_ACROSS_BRIDGE")
+                continue
             bridges.append({
+                "basis_caveats": caveats,
+                "inputs": [{
+                    "role": role, "reporting_period": row.get("reporting_period"),
+                    "normalized_integer": _row_amount(row), "document_sha256": row.get("document_sha256"),
+                    "locator": row.get("locator"), "evidence_quality": row.get("evidence_quality"),
+                    "knowledge_available_at": row.get("knowledge_available_at"),
+                } for role, row in (("CURRENT_YTD", current), ("PRIOR_FULL_YEAR", annual), ("PRIOR_YTD", prior))],
+                "knowledge_available_at": max(
+                    (str(row["knowledge_available_at"]) for row in legs
+                     if _instant(row.get("knowledge_available_at"), end_of_day=True) is not None),
+                    key=lambda value: _instant(value, end_of_day=True), default=None),
                 "value_vnd": amounts[0] + amounts[1] - amounts[2],
                 "method": "CURRENT_YTD_PLUS_PRIOR_FULL_YEAR_MINUS_PRIOR_YTD",
                 "months_covered": 12,
                 "fiscal_year": year,
                 "ytd_months": months,
-                "fitness": _fitness([current, annual, prior]),
+                "fitness": "CONDITIONAL_RESEARCH" if caveats else _fitness(legs),
                 "source_periods": [current.get("reporting_period"), annual.get("reporting_period"), prior.get("reporting_period")],
                 "official_fact_admitted": False,
             })
@@ -634,6 +745,9 @@ def trailing_twelve_month_earnings(
         for (year, months), current in sorted(index.items()):
             prior = index.get((year - 1, months)) if isinstance(year, int) else None
             if prior is None or _row_amount(current) is None or _row_amount(prior) is None:
+                continue
+            if any(current.get(key) != prior.get(key) for key in ("consolidation_basis", "presentation_basis")):
+                reasons.append("YTD_COMPARISON_BASIS_MISMATCH")
                 continue
             comparisons.append({
                 "method": "SAME_YTD_PRIOR_YEAR_COMPARISON",
@@ -671,8 +785,11 @@ def printed_cash_to_earnings(earnings: Mapping[str, Any], cash: Mapping[str, Any
     identity = earnings.get("accounting_identity")
     if identity not in {"PARENT_PROFIT_AFTER_TAX", "TOTAL_PROFIT_AFTER_TAX"}:
         reasons.append("EARNINGS_LINE_IS_NOT_A_PRINTED_PROFIT")
+    scope_warning = None
     if identity == "TOTAL_PROFIT_AFTER_TAX":
         reasons.append("DENOMINATOR_IS_TOTAL_PROFIT_NOT_PARENT_PROFIT")
+    elif identity == "PARENT_PROFIT_AFTER_TAX" and cash.get("statement_scope") == "consolidated":
+        scope_warning = "CONSOLIDATED_OPERATING_CASH_FLOW_OVER_PARENT_ATTRIBUTABLE_PROFIT"
     earnings_amount = _row_amount(earnings)
     cash_amount = _row_amount(cash)
     if earnings_amount in (None, 0) or cash_amount is None:
@@ -682,10 +799,38 @@ def printed_cash_to_earnings(earnings: Mapping[str, Any], cash: Mapping[str, Any
     return {
         "ratio": ratio,
         "earnings_identity": identity,
+        "scope_warning": scope_warning,
         "fitness": "UNUSABLE" if ratio is None else _fitness([earnings, cash]),
         "valuation_use": "CLOSED",
         "official_fact_admitted": False,
         "is_actionable": False,
         "ttm_constructed": False,
+        "reason_codes": sorted(set(reasons)),
+    }
+
+
+def free_cash_flow_research(cash: Mapping[str, Any], capex: Mapping[str, Any]) -> dict[str, Any]:
+    """Operating cash flow plus the printed purchase line of the same column. Not a valuation input."""
+    reasons: list[str] = ["PRINTED_PURCHASE_LINE_IS_NOT_MAINTENANCE_CAPEX"]
+    if not _compatible_rows([cash, capex]):
+        reasons.append("CASH_FLOW_LINES_ARE_NOT_THE_SAME_STATEMENT_COLUMN")
+    if cash.get("accounting_identity") != "OPERATING_CASH_FLOW":
+        reasons.append("CASH_LINE_IS_NOT_OPERATING_CASH_FLOW")
+    if not str(capex.get("accounting_identity", "")).startswith("CAPEX_"):
+        reasons.append("PURCHASE_LINE_IS_NOT_A_PRINTED_CAPEX_LINE")
+    cash_amount, capex_amount = _row_amount(cash), _row_amount(capex)
+    if cash_amount is None or capex_amount is None:
+        reasons.append("CASH_FLOW_AMOUNT_ABSENT")
+    elif capex_amount > 0:
+        reasons.append("PURCHASE_LINE_IS_NOT_AN_OUTFLOW")
+    blocking = set(reasons) - {"PRINTED_PURCHASE_LINE_IS_NOT_MAINTENANCE_CAPEX"}
+    value = None if blocking else cash_amount + capex_amount
+    return {
+        "value_vnd": value,
+        "method": "OPERATING_CASH_FLOW_PLUS_PRINTED_PURCHASE_LINE",
+        "fitness": "UNUSABLE" if value is None else _fitness([cash, capex]),
+        "valuation_use": "CLOSED",
+        "official_fact_admitted": False,
+        "is_actionable": False,
         "reason_codes": sorted(set(reasons)),
     }

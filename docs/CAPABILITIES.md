@@ -177,12 +177,8 @@ HOSE Q3 locator, with filing-type admission and session share continuity still o
 
 ### 12. Current financial evidence
 - PR168/169 local: tainted KBS periods blocked; six unreviewed research rows remain separate. Authority unchanged; [release gate](ACTIVE_STATE.md).
-- Local projection checkpoint: the frozen August-23 baseline remains immutable. Session
-  projections add qualified PNJ/VRE 2026-H1 revenue/profit and three PVD USD income fields
-  as exact-field official facts. USD remains context only, excluded from the VND citation
-  lane under [currency context contract](currency_preserving_interim_context_contract.md); nonannual
-  research-use restrictions remain. PNJ parent profit and VRE reported disposal context
-  follow the [earnings contract](reported_earnings_component_context_contract.md); recurrence UNKNOWN.
+- Frozen August-23 baseline. PNJ/VRE H1 fields and PVD USD context retain [currency](currency_preserving_interim_context_contract.md) and [earnings](reported_earnings_component_context_contract.md) limits.
+- [Reviewed HPG/KBC/FPT financial cases](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md) are OFFLINE_ONLY / NON_VOTING.
   FPT FY2025 line 03 Provisions is an audited annual component in historical context only.
   2026-H1 reviewed consolidated current fields known 2026-10-08: VNM cash 4,535,672,366,831 VND; QNS equity 10,647,823,148,609 VND. The QNS detail page is discovery only and did not add another fact.
   FY2025 historical context now has ten fields: HPG revenue/profit, PNJ cash/operating flow, PVD revenue/profit/assets/equity and FPT revenue/equity. [Annual contract](audited_annual_exact_field_context_contract.md). Annual metrics/share gates unchanged; other fields retain geometry blockers.
