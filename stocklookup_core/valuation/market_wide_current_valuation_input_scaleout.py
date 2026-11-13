@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import copy
 from collections import Counter, defaultdict
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
 from stocklookup_core.financial import monetary_basis_contract as basis_contract
@@ -793,6 +793,7 @@ def build_current_valuation_artifact(
     p3e_artifact: Mapping[str, Any] | None = None,
     authoritative_share_states: Mapping[str, Mapping[str, Any]] | None = None,
     share_authority_artifact: Mapping[str, Any] | None = None,
+    conditional_case_builder: Callable[..., Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Materialize one record per research-universe ticker without imputation."""
     records: dict[str, Any] = {}
@@ -839,9 +840,8 @@ def build_current_valuation_artifact(
             "is_actionable": False,
         }
         supplied = (price_records.get(ticker) or {}).get("conditional_research_inputs")
-        if isinstance(supplied, Mapping):
-            from stocklookup_core.research.conditional_investment_case import case_from_supplied_inputs
-            row["conditional_research_case"] = case_from_supplied_inputs(
+        if conditional_case_builder is not None and isinstance(supplied, Mapping):
+            row["conditional_research_case"] = conditional_case_builder(
                 ticker=ticker, entity=entity, inputs=supplied,
             )
             warnings.append("CONDITIONAL_RESEARCH_CASE_IS_NOT_STRICT_VALUATION")

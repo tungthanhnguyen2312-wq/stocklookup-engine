@@ -23,3 +23,27 @@ Parent profit stays blocked on ambiguous digits. Cash, debt, current shares and 
 A later company highlight is not used as a statement fact.
 
 Failed checks: none.
+
+## Run locally
+
+From a clean checkout, use the offline CLI and two new output filenames in a
+scratch directory. The example mode takes the retained HPG/KBC intake, the
+retained HPG price/share example and the audited FPT context. Use `--intake`,
+`--valuation-examples` and `--fpt-annual` to select copies at other paths.
+
+```powershell
+python -B tools/build_conditional_research_cases.py --out-json <scratch>/cases.json --out-md <scratch>/cases.md
+python -B tools/build_conditional_research_cases.py --inputs <issuer-inputs.json> --out-json <scratch>/issuer.json --out-md <scratch>/issuer.md
+```
+
+Supply a JSON list (or an object with a `records` list) of
+`{"ticker":"ABC","entity":"corporate","inputs":{"price":{},"share_components":{},"facts":{}}}`
+records. Populate those inputs with the retained evidence and its provenance.
+An empty evidence object produces unavailable values. Annual context records
+can instead carry `canonical_facts`, `blocked`, `document_sha256` and
+`knowledge_available_at`. Supplied labels describe the input evidence and this
+command grants no new source authority. The CLI and supplied valuation member
+are opt-in. For a programmatic valuation snapshot, pass
+`conditional_case_builder=case_from_supplied_inputs` and supply
+`conditional_research_inputs` on the relevant price rows. The ordinary Daily
+workflow does not invoke them.

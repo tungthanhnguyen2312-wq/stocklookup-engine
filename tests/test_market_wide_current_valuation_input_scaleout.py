@@ -87,6 +87,25 @@ def _artifact(**kwargs):
     )
 
 
+def test_supplied_conditional_case_leaves_existing_metrics_and_readiness_intact():
+    from stocklookup_core.research.conditional_investment_case import case_from_supplied_inputs
+
+    baseline = _artifact()
+    prices, fundamentals, shares, p3e = _inputs()
+    prices["records"]["AAA"]["conditional_research_inputs"] = {"facts": {}}
+    inputs = dict(price_snapshot=prices, fundamental_artifact=fundamentals,
+                  share_promotion_artifact=shares, p3e_artifact=p3e)
+    assert build_current_valuation_artifact(**inputs) == baseline
+    result = build_current_valuation_artifact(**inputs, conditional_case_builder=case_from_supplied_inputs)
+    changed = result["records"]["AAA"]
+    assert changed["conditional_research_case"]["strict_authority"]["is_actionable"] is False
+    assert changed["metrics"] == baseline["records"]["AAA"]["metrics"]
+    assert changed["value_strategy"] == baseline["records"]["AAA"]["value_strategy"]
+    assert result["value_strategy_readiness"] == baseline["value_strategy_readiness"]
+    assert "conditional_research_case" not in baseline["records"]["AAA"]
+    assert "conditional_research_case" not in result["records"]["HPG"]
+
+
 def test_deterministic_and_lagged_shares_are_research_usable_not_ready():
     first = _artifact()
     second = _artifact()

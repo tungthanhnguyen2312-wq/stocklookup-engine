@@ -3,12 +3,27 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from tools.build_conditional_research_cases import build_cases, main
 from stocklookup_core.valuation.current_valuation_denominator_integrity import diagnose_multiple
 
 
-def test_retained_hpg_kbc_fpt_cases_match_their_sources():
-    packet = build_cases()
+@pytest.mark.retained_evidence(
+    "official-financial-quarterly-intake-v1/REAL_FINANCIAL_INTAKE_CANDIDATES.json",
+    "vn30-financial-metrics-unlock-20261014/work/valuation_examples.json",
+)
+def test_retained_hpg_kbc_fpt_cases_match_their_sources(request):
+    from pathlib import Path
+    from _test_tiers import retained_evidence_root
+    from tools.build_conditional_research_cases import DEFAULT_FPT
+
+    root = retained_evidence_root(Path(request.config.rootpath))
+    packet = build_cases(
+        intake_path=root / "official-financial-quarterly-intake-v1/REAL_FINANCIAL_INTAKE_CANDIDATES.json",
+        examples_path=root / "vn30-financial-metrics-unlock-20261014/work/valuation_examples.json",
+        fpt_path=DEFAULT_FPT,
+    )
     assert packet["failed_expectations"] == []
     hpg = packet["cases"]["HPG"]
     assert hpg["strict_authority"]["strict_decision_eligible"] is False
@@ -51,7 +66,7 @@ def test_interim_earnings_and_total_equity_are_not_strict_labels():
         "price_unit": "VND",
         "denominator_unit": "VND",
     })
-    assert plain["display_method"] == "P/B"
+    assert "display_method" not in plain
     assert plain["status"] == "UNKNOWN"
 
 

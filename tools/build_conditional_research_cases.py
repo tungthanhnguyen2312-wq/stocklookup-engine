@@ -351,7 +351,8 @@ def render_markdown(packet: dict) -> str:
 
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding="utf-8", newline="\n")
+    with path.open("x", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
 
 
 def _load_input_records(path: Path) -> list:
@@ -366,26 +367,31 @@ def _load_input_records(path: Path) -> list:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build offline conditional research cases from retained evidence.")
     parser.add_argument("--inputs", type=Path, help="JSON list of {ticker, entity, inputs} for the supplied-input contract.")
-    parser.add_argument("--out-json", type=Path, help="Machine-readable output. Defaults beside --inputs.")
-    parser.add_argument("--out-md", type=Path, help="Owner-readable output. Defaults beside --inputs.")
+    parser.add_argument("--intake", type=Path, help="Retained quarterly intake for the HPG/KBC/FPT examples.")
+    parser.add_argument("--valuation-examples", type=Path, help="Retained price and share examples.")
+    parser.add_argument("--fpt-annual", type=Path, help="Retained audited FPT annual context.")
+    parser.add_argument("--out-json", type=Path, required=True, help="New machine-readable output file.")
+    parser.add_argument("--out-md", type=Path, required=True, help="New Owner-readable output file.")
     args = parser.parse_args(argv)
+    outputs = [args.out_json.resolve(), args.out_md.resolve()]
+    if outputs[0] == outputs[1] or any(path.exists() for path in outputs):
+        parser.error("Output files must be distinct and must not already exist.")
     if args.inputs is not None:
+        if any((args.intake, args.valuation_examples, args.fpt_annual)):
+            parser.error("--inputs cannot be combined with retained example options.")
         packet = build_supplied_cases(_load_input_records(args.inputs))
-        out_json = args.out_json or args.inputs.with_suffix(".cases.json")
-        out_md = args.out_md or args.inputs.with_suffix(".cases.md")
-        _write(out_json, json.dumps(packet, ensure_ascii=False, indent=2) + "\n")
-        _write(out_md, render_supplied_markdown(packet))
-        print("supplied cases", ", ".join(case["ticker"] for case in packet["cases"]))
-        print(out_json)
-        print(out_md)
-        return 0
-    packet = build_cases()
-    out_dir = ROOT / "docs" / "internal"
-    _write(out_dir / "CONDITIONAL_RESEARCH_CASES_20261113.json", json.dumps(packet, ensure_ascii=False, indent=2) + "\n")
-    _write(out_dir / "CONDITIONAL_RESEARCH_CASES_20261113.md", render_markdown(packet))
-    if packet["failed_expectations"]:
-        raise SystemExit("failed: " + ", ".join(packet["failed_expectations"]))
-    print("cases ok", ", ".join(packet["cases"]))
+        markdown = render_supplied_markdown(packet)
+    else:
+        packet = build_cases(intake_path=args.intake or DEFAULT_INTAKE,
+                             examples_path=args.valuation_examples or DEFAULT_EXAMPLES,
+                             fpt_path=args.fpt_annual or DEFAULT_FPT)
+        if packet["failed_expectations"]:
+            raise SystemExit("failed: " + ", ".join(packet["failed_expectations"]))
+        markdown = render_markdown(packet)
+    _write(args.out_json, json.dumps(packet, ensure_ascii=False, indent=2) + "\n")
+    _write(args.out_md, markdown)
+    print(args.out_json)
+    print(args.out_md)
     return 0
 
 

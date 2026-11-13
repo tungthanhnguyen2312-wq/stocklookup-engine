@@ -202,7 +202,7 @@ def diagnose_multiple(observation: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "contract_version": CONTRACT_VERSION,
         "method_id": method,
-        "display_method": display_method,
+        **({"display_method": display_method} if display_method != method else {}),
         "status": status,
         "provider_multiple": provider,
         "arithmetic_multiple": arithmetic,
