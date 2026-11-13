@@ -7,9 +7,16 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from stocklookup_core.evidence.field_identity import stable_id
 from stocklookup_core.valuation.conditional_research_valuation import (
+    derive_parent_equity_research,
+    financing_research,
+    free_cash_flow_research,
     industrial_research_profile,
+    known_by,
+    printed_cash_to_earnings,
     scope_and_period_bridge,
+    trailing_twelve_month_earnings,
 )
 
 CONTRACT_VERSION = "conditional_investment_case/v1"
@@ -256,3 +263,86 @@ def case_from_supplied_inputs(*, ticker: str, entity: str, inputs: Mapping[str, 
     case = case_from_industrial_profile(profile, bridge=bridge, missing=list(inputs.get("missing") or []))
     case["attached_without_changing_strict_metrics"] = True
     return case
+
+_REVIEWED_EXTRACTION = {
+    "NATIVE_TEXT_LOCATED": ("NATIVE_TEXT", "NATIVE_TEXT_CROSS_FOOT"),
+    "PAGE_IMAGE_READ_CONFIRMED": ("SCANNED_PAGE_VISUAL",),
+    "PAGE_IMAGE_READ_AND_CROSS_FOOT_CONFIRMED": ("SCANNED_PAGE_VISUAL", "SCANNED_PAGE_VISUAL_CROSS_FOOT"),
+}
+
+
+def case_from_reviewed_evidence(
+    *, ticker: str, rows: list[Mapping[str, Any]], cutoff: str, basis_limit: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    """Use only independently reviewed numeric rows from an already byte-bound packet."""
+    evidence = []
+    for row in rows:
+        time_state = known_by(row, cutoff)
+        extraction = row["evidence_quality"]
+        reviewed = extraction in _REVIEWED_EXTRACTION.get(row["verification"], ())
+        state = (f"KNOWLEDGE_{time_state}" if time_state != "KNOWN" else
+                 "REVIEWED_RESEARCH" if reviewed else "CANDIDATE_EXCLUDED_FROM_CALCULATION")
+        evidence.append({**row, "calculation_state": state})
+
+    usable = [row for row in evidence if row["calculation_state"] == "REVIEWED_RESEARCH"
+              and row["currency"] == "VND"]
+    periods = {}
+    for row in usable:
+        periods.setdefault(row["reporting_period"], []).append(row)
+
+    def unique(items, identity):
+        matches = [row for row in items if row["accounting_identity"] == identity]
+        return matches[0] if len(matches) == 1 else {}
+
+    metrics = {}
+    for period, items in sorted(periods.items()):
+        parent = unique(items, "PARENT_PROFIT_AFTER_TAX")
+        cash = unique(items, "OPERATING_CASH_FLOW")
+        total_equity = unique(items, "CAPITAL_AND_RESERVES_INCLUDING_NCI") or unique(items, "TOTAL_EQUITY_INCLUDING_NCI")
+        nci = unique(items, "NON_CONTROLLING_INTERESTS")
+        capex_rows = [row for row in items if row["accounting_identity"].startswith("CAPEX_")]
+        period_metrics = {}
+        if parent or cash:
+            period_metrics["cash_to_parent_profit"] = printed_cash_to_earnings(parent, cash)
+        if cash or capex_rows:
+            period_metrics["operating_cash_less_printed_purchases"] = free_cash_flow_research(
+                cash, capex_rows[0] if len(capex_rows) == 1 else {},
+            )
+        if total_equity or nci:
+            period_metrics["derived_parent_equity"] = derive_parent_equity_research(total_equity, nci)
+        financing_rows = [row for row in items if row["accounting_identity"] == "CASH_AND_EQUIVALENTS"
+                          or row["accounting_identity"].endswith(("LOANS_AND_FINANCE_LEASES", "LOANS_LEASE_CONTENT_UNKNOWN"))]
+        if financing_rows:
+            period_metrics["financing"] = financing_research(financing_rows)
+        if period_metrics:
+            metrics[period] = period_metrics
+
+    earnings = trailing_twelve_month_earnings(
+        usable, identity="PARENT_PROFIT_AFTER_TAX",
+        allow_conditional_presentation_bridge=(
+            bool(basis_limit) and basis_limit.get("reason_code") == "ANNUAL_AND_INTERIM_PRESENTATION_DIFFER"
+        ),
+    )
+    if any(row["accounting_identity"] == "PARENT_PROFIT_AFTER_TAX"
+           and row["calculation_state"] != "REVIEWED_RESEARCH" for row in evidence):
+        earnings["reason_codes"].append("PARENT_PROFIT_CANDIDATES_EXCLUDED")
+    if basis_limit and earnings["ttm"] is None:
+        earnings["reason_codes"].append(basis_limit["reason_code"])
+    body = {
+        "contract_version": CONTRACT_VERSION,
+        "ticker": ticker,
+        "research_cutoff": cutoff,
+        "basis_limit": basis_limit,
+        "evidence_rows": evidence,
+        "metrics_by_period": metrics,
+        "parent_earnings": earnings,
+        "valuation": {
+            "price_vnd_per_share": None, "market_cap_vnd": None, "pe_ttm": None, "pb_parent": None,
+            "ev_ebitda": None, "reason_codes": ["NO_SOURCE_BOUND_SESSION_CLOSE_WITH_VERIFIED_MONETARY_UNIT"],
+        },
+        "strict_authority": {
+            "official_fact_admitted": False, "strict_decision_eligible": False, "execution_eligible": False,
+            "is_actionable": False, "target_price": None, "probability": None,
+        },
+    }
+    return {**body, "case_identity": "conditional_investment_case:" + stable_id(body)}

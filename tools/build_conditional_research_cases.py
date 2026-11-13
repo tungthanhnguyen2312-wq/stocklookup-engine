@@ -8,8 +8,11 @@ database, or attaches Daily authority.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
 import sys
+from decimal import Decimal
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -20,12 +23,14 @@ if str(ROOT) not in sys.path:
 from stocklookup_core.research.conditional_investment_case import (
     case_from_annual_context,
     case_from_industrial_profile,
+    case_from_reviewed_evidence,
     case_from_supplied_inputs,
 )
 from stocklookup_core.valuation.conditional_research_valuation import (
     derive_parent_equity_research,
     financing_research,
     industrial_research_profile,
+    known_by,
     price_over_derived_parent_equity,
     printed_cash_to_earnings,
     scope_and_period_bridge,
@@ -589,6 +594,155 @@ def render_markdown(packet: dict) -> str:
     return "\n".join(lines)
 
 
+def _file_sha256(path: Path) -> str:
+    with path.open("rb") as handle:
+        return hashlib.file_digest(handle, "sha256").hexdigest()
+
+
+def build_reviewed_packet(packet_path: Path, source_map_path: Path, *, expected_sha256: str) -> dict:
+    """Validate the exact reviewed packet and its original document bytes before building."""
+    raw = packet_path.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256) or digest != expected_sha256:
+        raise ValueError("REVIEWED_PACKET_SHA256_MISMATCH")
+    packet = json.loads(raw)
+    if (not isinstance(packet, dict) or packet.get("contract_version") != "financial_evidence_research_packet/v1"
+            or packet.get("authority") != "RESEARCH_CANDIDATES_ONLY_NO_OFFICIAL_FACT_ADMISSION_NO_NEW_SOURCE_AUTHORITY"):
+        raise ValueError("REVIEWED_PACKET_CONTRACT_INVALID")
+    cutoff = packet.get("research_cutoff")
+    if not isinstance(cutoff, str) or known_by({"knowledge_available_at": cutoff}, cutoff) != "KNOWN":
+        raise ValueError("REVIEWED_PACKET_CUTOFF_INVALID")
+    documents = packet.get("documents")
+    paths = _load(source_map_path)
+    if (not isinstance(documents, dict) or not documents or not isinstance(paths, dict)
+            or set(documents) != set(paths)):
+        raise ValueError("REVIEWED_PACKET_SOURCE_MAP_MISMATCH")
+    for sha, document in sorted(documents.items()):
+        if not re.fullmatch(r"[0-9a-f]{64}", sha):
+            raise ValueError("REVIEWED_PACKET_SOURCE_SHA256_INVALID")
+        if (not isinstance(document, dict) or document.get("text_layer") not in {"NATIVE_TEXT", "SCANNED", "SCANNED_OCR_LAYER"}
+                or not all(isinstance(document.get(key), str) and document[key].strip()
+                           for key in ("ticker", "source_url", "retained_filename"))
+                or not isinstance(paths[sha], str) or not paths[sha].strip()):
+            raise ValueError("REVIEWED_PACKET_SOURCE_METADATA_INVALID")
+        path = source_map_path.parent / paths[sha]
+        if not path.is_file():
+            raise ValueError(f"REVIEWED_PACKET_SOURCE_MISSING:{sha}")
+        if _file_sha256(path) != sha:
+            raise ValueError(f"REVIEWED_PACKET_SOURCE_SHA256_MISMATCH:{sha}")
+
+    basis_limits = packet.get("basis_limits", {})
+    rows = packet.get("rows")
+    if not isinstance(rows, list) or not rows or not isinstance(basis_limits, dict):
+        raise ValueError("REVIEWED_PACKET_ROWS_INVALID")
+    groups = {}
+    keys = set()
+    for row in rows:
+        if not isinstance(row, dict) or not all(isinstance(row.get(key), str) and row[key].strip()
+                                               for key in ("ticker", "accounting_identity", "statement_scope",
+                                                           "reporting_period", "locator", "verification",
+                                                           "evidence_quality", "document_sha256", "knowledge_basis")):
+            raise ValueError("REVIEWED_PACKET_ROW_METADATA_INVALID")
+        ticker = row["ticker"]
+        document = documents.get(row["document_sha256"])
+        if document is None or document["ticker"] != ticker:
+            raise ValueError("REVIEWED_PACKET_ROW_SOURCE_UNBOUND")
+        corroboration = row.get("corroborating_document_sha256")
+        if corroboration is not None and (not isinstance(corroboration, str)
+                                          or documents.get(corroboration, {}).get("ticker") != ticker):
+            raise ValueError("REVIEWED_PACKET_CORROBORATION_UNBOUND")
+        native = row["evidence_quality"].startswith("NATIVE_TEXT") or row["verification"] == "NATIVE_TEXT_LOCATED"
+        if native and document["text_layer"] != "NATIVE_TEXT":
+            raise ValueError("REVIEWED_PACKET_SCANNED_SOURCE_CANNOT_BE_NATIVE")
+        if (row.get("official_fact_admitted") is not False or row.get("qualification") != "CONDITIONAL_RESEARCH"
+                or row.get("annualize") is not False or type(row.get("normalized_integer")) is not int
+                or type(row.get("unit_scale")) is not int or row["unit_scale"] <= 0
+                or "currency" not in row or row["currency"] not in (None, "VND", "USD")):
+            raise ValueError("REVIEWED_PACKET_ROW_BOUNDARY_INVALID")
+        if row.get("period_role") in ("FULL_YEAR", "YTD"):
+            year, months = row.get("fiscal_year"), row.get("months")
+            if (type(year) is not int or type(months) is not int
+                    or months not in ((12,) if row["period_role"] == "FULL_YEAR" else (3, 6, 9))
+                    or row["reporting_period"] != (str(year) if months == 12 else f"{year}-{months}M")
+                    or not all(isinstance(row.get(key), str) and row[key].strip()
+                               for key in ("consolidation_basis", "presentation_basis"))):
+                raise ValueError("REVIEWED_PACKET_FLOW_PERIOD_INVALID")
+        key = (ticker, row["accounting_identity"], row["statement_scope"], row["reporting_period"])
+        if key in keys:
+            raise ValueError("REVIEWED_PACKET_DUPLICATE_COLUMN")
+        keys.add(key)
+        groups.setdefault(ticker, []).append(row)
+    for ticker, limit in basis_limits.items():
+        if (ticker not in groups or not isinstance(limit, dict)
+                or not all(isinstance(limit.get(key), str) and limit[key].strip() for key in ("reason_code", "detail"))
+                or ("document_sha256" in limit and (not isinstance(limit["document_sha256"], str)
+                    or documents.get(limit["document_sha256"], {}).get("ticker") != ticker))):
+            raise ValueError("REVIEWED_PACKET_BASIS_LIMIT_INVALID")
+
+    return {
+        "contract_version": "conditional_research_reviewed_cases/v1",
+        "packet_identity": f"financial_evidence_research_packet:{digest}",
+        "packet_sha256": digest,
+        "research_cutoff": cutoff,
+        "row_count": len(rows),
+        "documents": documents,
+        "verification_summary": packet.get("verification_summary"),
+        "structural_levels_context_only": packet.get("retained_levels", []),
+        "automatic_production_daily": False,
+        "cases": {ticker: case_from_reviewed_evidence(ticker=ticker, rows=groups[ticker], cutoff=cutoff,
+                                                       basis_limit=basis_limits.get(ticker))
+                  for ticker in sorted(groups)},
+    }
+
+
+def render_reviewed_markdown(packet: Mapping[str, Any]) -> str:
+    lines = [
+        "# Reviewed financial research cases",
+        "",
+        f"Cutoff `{packet['research_cutoff']}`. Reviewed packet `{packet['packet_sha256']}`.",
+        "",
+        "Original source bytes were matched to the packet digests. Numeric review status is shown per row.",
+        "Current market capitalization and multiples require a source-bound close with a verified monetary unit.",
+    ]
+    for ticker, case in packet["cases"].items():
+        lines.extend(["", f"## {ticker}", "", f"Case identity `{case['case_identity']}`.", ""])
+        if case["basis_limit"]:
+            lines.extend([case["basis_limit"]["detail"], ""])
+        earnings = case["parent_earnings"]
+        ttm = earnings["ttm"]
+        if ttm:
+            lines.append(f"- Conditional TTM parent profit **{ttm['value_vnd']:,} VND** using the three listed periods.")
+            for row in ttm["inputs"]:
+                lines.append(f"  - {row['role']} | {row['reporting_period']} | {row['normalized_integer']:,} VND | {row['evidence_quality']}")
+            lines.append(f"  - Caveats `{', '.join(ttm['basis_caveats']) or 'none'}`.")
+        else:
+            lines.append(f"- TTM parent profit unavailable. `{', '.join(earnings['reason_codes'])}`.")
+        for row in earnings["same_ytd_comparisons"]:
+            lines.append(f"- Same-duration YTD parent profit changed by {row['change_vnd']:,} VND.")
+        for period, metrics in case["metrics_by_period"].items():
+            for label, key, field in (
+                ("Operating cash / parent profit", "cash_to_parent_profit", "ratio"),
+                ("Operating cash less printed purchases", "operating_cash_less_printed_purchases", "value_vnd"),
+                ("Derived parent equity", "derived_parent_equity", "value_vnd"),
+                ("Cash over printed borrowing lines", "financing", "cash_cover_of_printed_loan_lines"),
+            ):
+                metric = metrics.get(key, {})
+                value = metric.get(field)
+                if value is not None:
+                    display = f"{value:,} VND" if isinstance(value, int) else f"{Decimal(value):.4f}×"
+                    lines.append(f"- {period} | {label} **{display}**.")
+                    if metric.get("scope_warning"):
+                        lines.append("  - The numerator is consolidated cash flow and the denominator is parent-attributable profit.")
+        lines.extend(["", "| Period | Printed identity | Value | Extraction | Calculation |",
+                      "|---|---|---:|---|---|"])
+        for row in case["evidence_rows"]:
+            lines.append(f"| {row['reporting_period']} | {row['accounting_identity']} | {row['normalized_integer']:,} | "
+                         f"{row['evidence_quality']} | {row['calculation_state']} |")
+        lines.extend(["", "Original digests, page locators, knowledge times and basis qualifiers are in the JSON."])
+    return "\n".join(lines) + "\n"
+
+
+
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8", newline="\n") as handle:
@@ -606,7 +760,11 @@ def _load_input_records(path: Path) -> list:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build offline conditional research cases from retained evidence.")
-    parser.add_argument("--inputs", type=Path, help="JSON list of {ticker, entity, inputs} for the supplied-input contract.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--reviewed-packet", type=Path, help="Explicit reviewed financial evidence packet.")
+    mode.add_argument("--inputs", type=Path, help="JSON list of {ticker, entity, inputs} for the supplied-input contract.")
+    parser.add_argument("--packet-sha256", help="Exact reviewed packet SHA-256.")
+    parser.add_argument("--source-map", type=Path, help="JSON map of document SHA-256 to local original file path.")
     parser.add_argument("--intake", type=Path, help="Retained quarterly intake for the HPG/KBC/FPT examples.")
     parser.add_argument("--valuation-examples", type=Path, help="Retained price and share examples.")
     parser.add_argument("--fpt-annual", type=Path, help="Retained audited FPT annual context.")
@@ -616,7 +774,17 @@ def main(argv: list[str] | None = None) -> int:
     outputs = [args.out_json.resolve(), args.out_md.resolve()]
     if outputs[0] == outputs[1] or any(path.exists() for path in outputs):
         parser.error("Output files must be distinct and must not already exist.")
-    if args.inputs is not None:
+    if args.reviewed_packet is not None:
+        if not args.source_map or not args.packet_sha256 or any((args.intake, args.valuation_examples, args.fpt_annual)):
+            parser.error("--reviewed-packet requires --source-map and --packet-sha256, without retained example options.")
+        try:
+            packet = build_reviewed_packet(args.reviewed_packet, args.source_map, expected_sha256=args.packet_sha256)
+        except (OSError, ValueError) as exc:
+            parser.error(str(exc))
+        markdown = render_reviewed_markdown(packet)
+    elif args.source_map is not None or args.packet_sha256 is not None:
+        parser.error("--source-map and --packet-sha256 require --reviewed-packet.")
+    elif args.inputs is not None:
         if any((args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--inputs cannot be combined with retained example options.")
         packet = build_supplied_cases(_load_input_records(args.inputs))

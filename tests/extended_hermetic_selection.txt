@@ -48,6 +48,8 @@ tests/test_collect_market_evidence.py
 tests/test_company_profile_sync.py
 tests/test_company_subsidiaries_sync.py
 tests/test_completed_market_session_gate.py
+tests/test_conditional_investment_case.py
+tests/test_conditional_research_valuation.py
 tests/test_core_financial_observation_expansion.py
 tests/test_corporate_action_evidence_registry.py
 tests/test_corporate_action_factors.py
