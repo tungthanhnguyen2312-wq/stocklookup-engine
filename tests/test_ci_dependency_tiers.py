@@ -487,7 +487,7 @@ def test_extended_selection_has_no_missing_duplicate_or_focused_files():
     # These two suites import undeclared optional pypdf during clean-core collection.
     assert not {"tests/test_cited_evidence_backup.py",
                 "tests/test_official_document_retrieval.py"}.intersection(entries)
-    assert len(entries) == 368, "reviewed extended cohort was omitted or expanded"
+    assert len(entries) == 370, "reviewed extended cohort was omitted or expanded"
     assert len(entries) == len(set(entries)), "duplicate extended file"
     assert not focused_files.intersection(entries), "a focused file also runs in extended CI"
     for entry in entries:
