@@ -4,7 +4,8 @@ param(
     [string]$EntryScript,
     [string]$LogDirectory,
     [switch]$NoPause,
-    [switch]$Diagnostic
+    [switch]$Diagnostic,
+    [switch]$FullPublish
 )
 $ErrorActionPreference = 'Stop'
 # Resolve the persistent writer before any log/directory is created. A stale
@@ -55,5 +56,6 @@ if ($EntryScript) { $hostArguments += @('--entry-script', $EntryScript) }
 if ($LogDirectory) { $hostArguments += @('--log-directory', $LogDirectory) }
 if ($NoPause) { $hostArguments += '--no-pause' }
 if ($Diagnostic) { $hostArguments += '--diagnostic' }
+if ($FullPublish) { $hostArguments += '--full-publish' }
 & $python @hostArguments
 exit $LASTEXITCODE

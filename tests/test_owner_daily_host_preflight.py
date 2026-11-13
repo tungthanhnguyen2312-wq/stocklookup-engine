@@ -438,7 +438,20 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt = json.loads(git_blob(receipt_path))
     assert prior_receipt["source_sha256"][relative] == spec["prior_sha256_lf"]
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
-    assert json.loads((root / receipt_path).read_bytes()) == prior_receipt
+    # The 2026-11-13 CORE + AI workflow corrective is the one later receipt change. It is
+    # admitted only as its own enumerated launcher paths plus its corrective record; this
+    # transition's source, every analytical source and all measured fields stay as they were.
+    live_receipt = json.loads((root / receipt_path).read_bytes())
+    corrective = live_receipt["core_ai_fast_path_corrective"]
+    assert corrective["new_capacity_measurement"] is False
+    assert corrective["changed_source_paths"] == [
+        "config/daily_path_launchers.json", "owner_daily_progress.py", "tools/owner_daily_host.py",
+        "tools/run_owner_daily.ps1", "tools/run_owner_daily.py", "tools/verify_retention_reader_transition.py"]
+    for path in corrective["changed_source_paths"]:
+        assert live_receipt["source_sha256"][path] != prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = live_receipt["source_sha256"][path]
+    prior_receipt["core_ai_fast_path_corrective"] = corrective
+    assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
     offline = set(spec["offline_paths"])

@@ -543,3 +543,53 @@ def test_one_click_cmd_route_admits_with_no_resident_powershell(tmp_path):
     assert chain.index("cmd.exe") <= 4, chain
     assert not any("powershell" in name or "pwsh" in name for name in chain[:chain.index("cmd.exe")]), chain
     assert next(logs.glob("*.result.json"))
+
+
+# --- OWNER_DAILY_CORE_AI_FAST_PATH: the host labels only the phases the Owner requested.
+class _Lines:
+    interactive = ready = False
+
+    def __init__(self):
+        self.lines: list[str] = []
+
+    def line(self, text: str) -> None:
+        self.lines.append(text)
+
+
+def test_host_forwards_full_publish_only_when_the_owner_asks():
+    host = _host()
+    assert host.parse_args([])["full_publish"] is False
+    assert host.parse_args(["--no-pause", "--full-publish"])["full_publish"] is True
+    with pytest.raises(host.HostRefusal):
+        host.parse_args(["--publish-dashboard"])
+    front_door = LAUNCHER.read_text(encoding="utf-8-sig")
+    assert "[switch]$FullPublish" in front_door
+    assert "if ($FullPublish) { $hostArguments += '--full-publish' }" in front_door
+
+
+def test_host_core_ai_view_shows_five_requested_phases_and_no_unrequested_row():
+    host = _host()
+    console = _Lines()
+    view = host.OwnerView(console, lambda _text: None, False)
+    view.handle("OWNER_DAILY_PRESENTATION=" + json.dumps(
+        {"session": None, "phase_estimates": {}, "workflow_mode": "CORE_AI", "phases": [1, 2, 3, 4, 6]}))
+    assert [line.split("]")[0] for line in console.lines] == [f"[{i}/5" for i in range(1, 6)]
+    assert console.lines[4].startswith("[5/5] Tạo gói bàn giao AI")
+    assert not any("Dashboard" in line or "Trung tâm" in line or "Mở màn hình" in line for line in console.lines)
+    view.handle("OWNER_DAILY_PROGRESS=" + json.dumps(
+        {"phase_index": 6, "status": "END", "owner_phase": True, "phase_state": "XONG", "elapsed_seconds": 9.0}))
+    assert console.lines[-1].startswith("[5/5] Tạo gói bàn giao AI | XONG")
+
+
+@pytest.mark.parametrize("phases", [None, [], [1, 1, 2], [0, 1], [1, "2"], "1,2,3"])
+def test_host_keeps_all_nine_phases_for_a_legacy_or_malformed_presentation(phases):
+    host = _host()
+    console = _Lines()
+    view = host.OwnerView(console, lambda _text: None, False)
+    presentation = {"session": None, "phase_estimates": {}}
+    if phases is not None:
+        presentation["phases"] = phases
+    view.handle("OWNER_DAILY_PRESENTATION=" + json.dumps(presentation))
+    assert [line.split("]")[0] for line in console.lines] == [f"[{i}/9" for i in range(1, 10)]
+    assert host.format_presentation({"phase_index": 7, "phase_label": "Xác minh từ xa", "status": "END",
+                                     "owner_phase": True}, None, None)["Row"].startswith("[7/9] ")

@@ -51,6 +51,19 @@ PHASES_VI = dict(enumerate((
     "Xác minh từ xa", "Trung tâm Hành động Cá nhân", "Mở màn hình dành cho chủ sở hữu",
 ), 1))
 STRUCTURED_CONSOLE_ENV = "STOCK_LOOKUP_OWNER_STRUCTURED_CONSOLE"
+# The Owner requests a workflow; the phase index stays the stable identity in both.
+WORKFLOW_CORE_AI = "CORE_AI"
+WORKFLOW_FULL_PUBLISH = "FULL_PUBLISH"
+WORKFLOW_PHASES = {
+    # Remote handoff verification runs inside phase 6; phases 5, 7, 8, 9 are not requested.
+    WORKFLOW_CORE_AI: (1, 2, 3, 4, 6),
+    WORKFLOW_FULL_PUBLISH: tuple(PHASES),
+}
+
+
+def workflow_phases(mode: str | None) -> tuple[int, ...]:
+    """A result or sidecar that names no workflow predates the split: it ran all nine phases."""
+    return WORKFLOW_PHASES.get(mode or WORKFLOW_FULL_PUBLISH, WORKFLOW_PHASES[WORKFLOW_FULL_PUBLISH])
 
 # Execution-order transitions in run_canonical_daily_operation. A handled soft
 # component counts as finished work, never as analytical availability or success.
@@ -448,6 +461,8 @@ class OwnerDailyProgress:
         self._last_resource_sample_at: float | None = None
         self._work_started: dict[tuple[int, str, str, str], float] = {}
         self.phase_estimates: dict[int, float] = {}
+        # Only the Owner parent is told the workflow; a Daily child keeps the nine-slot labels.
+        self.workflow_mode: str | None = None
         self._human_buckets: dict[tuple[int, str, str, str], int] = {}
         self._human_counter_history: dict[tuple[int, str, str, str], tuple[Any, Any]] = {}
         self._disk_warning = False
@@ -457,19 +472,29 @@ class OwnerDailyProgress:
         self._phase2_started = None
         self._request_detail = None
 
+    def set_workflow(self, mode: str | None) -> None:
+        self.workflow_mode = mode if mode in WORKFLOW_PHASES else None
+
+    def _phase_position(self, phase_index: int) -> tuple[int, int]:
+        phases = workflow_phases(self.workflow_mode)
+        return (phases.index(phase_index) + 1 if phase_index in phases else phase_index), len(phases)
+
     def start_view(self, estimates: Mapping[int, float]) -> None:
         self.phase_estimates = dict(estimates)
         if self.human_sink is None:
             return
+        phases = workflow_phases(self.workflow_mode)
         if os.environ.get(STRUCTURED_CONSOLE_ENV) == "1":
             self.human_sink("OWNER_DAILY_PRESENTATION=" + json.dumps({
                 "session": self.session, "phase_estimates": self.phase_estimates,
+                "workflow_mode": self.workflow_mode or WORKFLOW_FULL_PUBLISH, "phases": list(phases),
             }, ensure_ascii=False))
         else:
             self.human_sink("=" * 60 + "\n STOCK LOOKUP DAILY\n Ngày: " + (self.session or "đang xác định") + "\n" + "=" * 60)
-            for phase, label in PHASES_VI.items():
+            for ordinal, phase in enumerate(phases, 1):
+                label = PHASES_VI[phase]
                 estimate = self.phase_estimates.get(phase)
-                self.human_sink(f"[{phase}/9] {label} | CHỜ | ETA: " +
+                self.human_sink(f"[{ordinal}/{len(phases)}] {label} |CHỜ | ETA: " +
                                 ("~" + _format_duration(estimate) if estimate is not None else "chưa đủ dữ liệu"))
 
     def set_session(self, session: str | None) -> None:
@@ -662,7 +687,7 @@ class OwnerDailyProgress:
                     runway_level=runway_level(event.get("disk_free_bytes")))
 
     def _human_line(self, event: Mapping[str, Any]) -> str:
-        parts = [f"[{event['phase_index']}/9] {event['phase_label']}", event["phase_state"]]
+        parts = [f"[{event.get('phase_ordinal', event['phase_index'])}/{event.get('phase_total', PHASE_TOTAL)}] {event['phase_label']}", event["phase_state"]]
         if event.get("checkpoint_total"):
             parts.append(f"Tiến độ {event['checkpoint_completed']}/{event['checkpoint_total']} ({event['checkpoint_percent']:.0f}%)")
         if event.get("task_label"):
@@ -757,7 +782,9 @@ class OwnerDailyProgress:
                 "session": self.session,
                 "session_state": "RESOLVED" if self.session else "UNRESOLVED",
                 "phase_index": phase_index,
-                "phase_total": PHASE_TOTAL,
+                "phase_total": self._phase_position(phase_index)[1],
+                "phase_ordinal": self._phase_position(phase_index)[0],
+                "workflow_mode": self.workflow_mode,
                 "phase_name": resolved_phase_name,
                 "component": resolved_component,
                 "subtask": subtask,

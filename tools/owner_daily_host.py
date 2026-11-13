@@ -149,7 +149,8 @@ def _percent(value) -> str:
     return "" if value is None else str(int(float(value) + 0.5))
 
 
-def format_presentation(event: dict, checkpoint: dict | None, phase_started, width: int = 0) -> dict:
+def format_presentation(event: dict, checkpoint: dict | None, phase_started, width: int = 0,
+                        ordinal: int | None = None, phase_total: int = 9) -> dict:
     """Pure row/detail render plan shared by the interactive and redirected views."""
     checkpoint = checkpoint or {}
     phase = int(event["phase_index"])
@@ -161,7 +162,8 @@ def format_presentation(event: dict, checkpoint: dict | None, phase_started, wid
     progress = (f"{_text(checkpoint.get('checkpoint_completed'))}/{total} "
                 f"({_percent(checkpoint.get('checkpoint_percent'))}%)") if total else ""
     task = event.get("task_label") or checkpoint.get("checkpoint_label")
-    parts = [f"[{phase}/9] {_text(event.get('phase_label'))}", state]
+    position = f"[{ordinal or phase}/{phase_total}]"
+    parts = [f"{position} {_text(event.get('phase_label'))}", state]
     if progress:
         parts.append("Tiến độ " + progress)
     if task and state != "XONG":
@@ -169,7 +171,7 @@ def format_presentation(event: dict, checkpoint: dict | None, phase_started, wid
     row = " | ".join(parts)
     if width > 0 and len(row) > width:
         # On small consoles the measured work count stays visible before the label.
-        row = f"[{phase}/9] {progress} | {state} | {_text(task)}".rstrip(" |")
+        row = f"{position} {progress} | {state} | {_text(task)}".rstrip(" |")
         if len(row) > width:
             row = row[:max(1, width - 1)] + "…"
     elapsed = event.get("phase_elapsed_seconds")
@@ -265,6 +267,8 @@ class OwnerView:
         self.checkpoints: dict[int, dict] = {}
         self.starts: dict[int, object] = {}
         self.requests: dict[int, str] = {}
+        # Requested phases, by stable phase index. A child that names none ran all nine.
+        self.phases: tuple[int, ...] = tuple(range(1, 10))
 
     def handle(self, text: str) -> None:
         self.log(text)
@@ -287,12 +291,17 @@ class OwnerView:
             except OSError:
                 console.interactive = False
         estimates = presentation.get("phase_estimates") or {}
-        for phase in range(1, 10):
+        requested = presentation.get("phases")
+        if (isinstance(requested, list) and requested and len(set(requested)) == len(requested)
+                and all(_phase_index(phase) == phase for phase in requested)):
+            self.phases = tuple(requested)
+        for ordinal, phase in enumerate(self.phases, 1):
             estimate = estimates.get(str(phase))
             eta = UNKNOWN if estimate is None else "~" + format_duration(estimate)
-            console.line(f"[{phase}/9] {LABELS[phase - 1]} | CHỜ | ETA: {eta}")
+            console.line(f"[{ordinal}/{len(self.phases)}] {LABELS[phase - 1]} | CHỜ | ETA: {eta}")
         if console.interactive:
-            for _ in range(5):
+            # The block stays 14 rows tall: unrequested phases leave blank rows, never a status.
+            for _ in range(14 - len(self.phases)):
                 console.line("")
         console.ready = True
 
@@ -318,9 +327,11 @@ class OwnerView:
                 width = console.width()
             except (OSError, ValueError):
                 pass
-        rendered = format_presentation(event, self.checkpoints.get(phase), self.starts.get(phase), width)
-        if console.interactive and console.ready:
-            console.set_row(phase - 1, rendered["Row"])
+        ordinal = self.phases.index(phase) + 1 if phase in self.phases else None
+        rendered = format_presentation(event, self.checkpoints.get(phase), self.starts.get(phase), width,
+                                       ordinal=ordinal, phase_total=len(self.phases))
+        if console.interactive and console.ready and ordinal is not None:
+            console.set_row(ordinal - 1, rendered["Row"])
             for index in range(5):
                 details = rendered["Details"]
                 console.set_row(9 + index, "      " + details[index] if index < len(details) else "")
@@ -364,9 +375,10 @@ def run_owner(python: str, arguments: list[str], environ: dict, view: OwnerView,
 
 
 def parse_args(argv: list[str]) -> dict:
-    options = {"replay": None, "entry": None, "logs": None, "no_pause": False, "diagnostic": False}
+    options = {"replay": None, "entry": None, "logs": None, "no_pause": False, "diagnostic": False,
+               "full_publish": False}
     values = {"--replay-completed-session": "replay", "--entry-script": "entry", "--log-directory": "logs"}
-    flags = {"--no-pause": "no_pause", "--diagnostic": "diagnostic"}
+    flags = {"--no-pause": "no_pause", "--diagnostic": "diagnostic", "--full-publish": "full_publish"}
     items = iter(argv)
     for item in items:
         if item in values:
@@ -413,7 +425,10 @@ def main(argv: list[str] | None = None) -> int:
         arguments = ["-u", entry, "--runtime-root", runtime, "--result-path", result, "--progress-path", progress]
         if options["replay"]:
             arguments += ["--replay-completed-session", options["replay"]]
-        view = OwnerView(console, log_line, options["diagnostic"])
+        if options["full_publish"]:
+            # Default is CORE + PRIVATE AI; only this explicit Owner request publishes the rest.
+            arguments.append("--full-publish")
+        view =OwnerView(console, log_line, options["diagnostic"])
         temporary = environ.get("TMP") or environ.get("TEMP") or os.path.dirname(log)
         relaunch_path = os.path.join(temporary, "owner-daily-" + os.urandom(16).hex() + ".json")
         try:
@@ -459,8 +474,20 @@ def main(argv: list[str] | None = None) -> int:
             owner_line(" Phiên: " + _text(summary.get("session")))
             owner_line(" Tổng thời gian: " + format_duration(get("telemetry", "elapsed_seconds")))
             owner_line("-" * 60)
-            for label in ("Daily", "Dashboard", "Bàn giao AI", "Xác minh từ xa", "Trung tâm Hành động"):
-                owner_line(" " + label + ": XONG")
+            # A result that names no workflow predates the split and ran all nine phases.
+            core_ai = summary.get("workflow_mode") == "CORE_AI"
+            owner_line(" Chế độ: " + ("CORE + AI RIÊNG TƯ" if core_ai else "FULL PUBLISH"))
+            dashboard_state = get("dashboard", "status")
+            if dashboard_state == "NOT_REQUESTED":
+                last = get("dashboard", "last_published", "session")
+                dashboard_line = ("KHÔNG YÊU CẦU (bản đã công bố gần nhất theo checkout cục bộ: "
+                                  + (_text(last) if last else "không xác minh được") + ")")
+            else:
+                dashboard_line = "BỎ QUA" if dashboard_state == "SKIPPED" else "XONG"
+            action_line = "KHÔNG YÊU CẦU" if get("action_center", "status") == "NOT_REQUESTED" else "XONG"
+            for label, state in (("Daily", "XONG"), ("Dashboard", dashboard_line), ("Bàn giao AI", "XONG"),
+                                 ("Xác minh từ xa", "XONG"), ("Trung tâm Hành động", action_line)):
+                owner_line(" " + label + ": " + state)
             owner_line(" Capture PIT: " + ("XONG (" + _text(capture.get("completion_known_at")) + ")" if capture else "KHÔNG ÁP DỤNG"))
             owner_line(" Trạng thái: PASS")
             if get("action_center", "view_open", "status") == "READY_VIEW_OPEN_FAILED":
@@ -472,7 +499,8 @@ def main(argv: list[str] | None = None) -> int:
                 current = 8
             elif get("dashboard", "status") == "FAILED":
                 current = 5
-            owner_line(f" Bước lỗi: [{current}/9] {LABELS[current - 1]}")
+            position = view.phases.index(current) + 1 if current in view.phases else current
+            owner_line(f" Bước lỗi: [{position}/{len(view.phases)}] {LABELS[current - 1]}")
             explanation = ("Không thể xác minh gói bàn giao AI của phiên đã hoàn tất." if current == 6
                            else "Bước xử lý chưa vượt qua kiểm tra bắt buộc. Xem log chi tiết.")
             if get("reason") == "PIT_CAPTURE_NOT_COMPLETE":
