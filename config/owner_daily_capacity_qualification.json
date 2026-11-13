@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "99d583599f7576b2066f1ff7506c833a7d8d75a869a6e8396da645ad69df04d7",
+    "config/daily_path_launchers.json": "f38c0876bd715e4e60e162d6fc6850a723af7e8649603672075216d292196e6b",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "9ed88654a092977aec9cbe678c132695201c9e47bbc267eee332e82581b7bbf2",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -593,7 +593,7 @@
     "operations-review/vci-volume-composition-20260804/probe_observation.json": "311c97d01919a8445a41d656280f1246c987a6458e089c3b4a157ec1db88d685",
     "operations-review/vci-volume-composition-20260804/raw/vci_price_board_VCB_20260804T051433Z_b59c2965eee9f303.raw.json": "b59c2965eee9f303f493ce1e3f647ef06e08309bf57a89044867211317a77b6e",
     "operations-review/vnm-listing-discovery-20260804/pilot_run.json": "5f7e90cd252a8bbfeeaf70178d05cd1a91d02e2fb77c23b2e35cca2266b7d014",
-    "owner_daily_progress.py": "2d1fb4d6b1a1a54224668268d549a241edb8e5d9a24575ee530dcbd5d3a250a2",
+    "owner_daily_progress.py": "241455b755f6d2ff956c3d600fb7ebb6d0400a65f5bd8b09409786c80b4aed02",
     "owner_focus_core_financial_panel_coverage.py": "ad926ec1f594e4ed28ad999781a8f1cdfb20963c7cb122b0483d0f152d164df9",
     "owner_research_focus.py": "f2e213808b259b93028d9268718ec8107649b8d628f88cfaf9a1daef09b451cb",
     "ownership_structure_sync.py": "f9c0e276eb9e76352dfe603c78f20aa10b6b2b4597f715fb28b69ed01c8bba8a",
@@ -1146,7 +1146,7 @@
     "tools/materialize_hnx_enumerable_universe_artifact.py": "44fee2aed9cda2554291980406917ceb095b5866063ee377d3fe63458871e272",
     "tools/operate_stocklookup.py": "ac3ec2712f0f4326a453ddbc4bd5407c86ab5f11bf19fa4c29cf3823ef4abfa7",
     "tools/ops/Invoke-M1bActivation.ps1": "1f37a9ad79304b4a31cadc50d95cd23c95c461e9b90d829cbbfa54e4a1cbe138",
-    "tools/owner_daily_host.py": "91b82a5501de5d18cf4a2e4cbbb9325ff71f0515c06862dbc70f1d9da50d536e",
+    "tools/owner_daily_host.py": "97e3443bebfbab65cc0034f379e98256a3bf1948c836e48cc4952e01be1618f8",
     "tools/post_daily_candlestick_release.py": "c1d779fe6f7f57bb8ccda42d0794db5dcf02212389563015b35936883e45445a",
     "tools/prepare_current_foreign_flow_retention.py": "7912c4d360cc077c13ae33b43bb96ca45c089a2ae7b5358b16945545a36b1d1c",
     "tools/produce_and_validate_daily_session_shadow_recommendation_v1.py": "cc9d77647b62302d5a81f811d6cd4a1792814e7eefee9c678adbda67bbd70870",
@@ -1385,8 +1385,8 @@
     "tools/run_official_ssi_pow_ca_qualification.py": "44e19eb69941d6a622adc22f6e7199403f3e483967b8621b6b41e5ed6eb624f9",
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
     "tools/run_owner_daily.cmd": "fd62709ebd133ed950ad204ea2aef115104d3b6d65ddafba9df8cc0b3df4602a",
-    "tools/run_owner_daily.ps1": "a5b616a2127cd11b6a23a375331adf698f1630ff102fe73a27e6605c5c05783b",
-    "tools/run_owner_daily.py": "9f76508e22066d80e2199afcd4eb521a365bfe5276ed3cf69b88ac7cda1b7c73",
+    "tools/run_owner_daily.ps1": "371de90a4e7853a35f8c851c59f627c6b9e6212688331df3df1c1822df02aa6c",
+    "tools/run_owner_daily.py": "051161c4c273360a7bf677ae2dae26af9d692e6dc51ceb104b08585c4cd60f49",
     "tools/run_owner_daily_feedback_rehearsal.py": "994b36e2c066cce0effc77428688e53ea25ad8ae9a4d7530f83ba39e2da6b55f",
     "tools/run_owner_focus_core_financial_panel_coverage.py": "afbc3b454fc4618b941db0cbb4046d88bd8e7586f30741019f82609ef57a4691",
     "tools/run_owner_focus_image_only_corporate_ocr_batch.py": "a64d726c5ff985da2996ec3d2dcd47623d26aa768eaa25928a4950793ed2446e",
@@ -1502,7 +1502,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "22615ed09e9ee715be969f1b5c94ef2c61dfad6a50b24319f843186126df3b33",
+    "tools/verify_retention_reader_transition.py": "d166d5570808d0c31462bc04ea0c19e5a3635c9c1c0ead014d0b2a1d3731f8ce",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1594,5 +1594,21 @@
     ],
     "new_capacity_measurement": false,
     "owner_decision": "D2 approved 2026-11-10"
+  },
+  "core_ai_fast_path_corrective": {
+    "base_commit": "cfa53162efa236a2b27ed421b159743f5451375d",
+    "scope": "OWNER_WORKFLOW_MODE_CORE_AI_DEFAULT_AND_EXPLICIT_FULL_PUBLISH_ONLY",
+    "stage_qualification": "UNCHANGED_ANALYTICAL_AND_RESOURCE_GUARD_AST_BODIES_RETAINED_ENVELOPE",
+    "changed_source_paths": [
+      "config/daily_path_launchers.json",
+      "owner_daily_progress.py",
+      "tools/owner_daily_host.py",
+      "tools/run_owner_daily.ps1",
+      "tools/run_owner_daily.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "new_capacity_measurement": false,
+    "source_transition": "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json",
+    "owner_decision": "CORE + PRIVATE AI default approved 2026-11-13"
   }
 }

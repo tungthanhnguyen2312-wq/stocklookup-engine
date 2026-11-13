@@ -557,6 +557,28 @@ def _multi_freeze_prior_bytes(root: Path, relative: str, active: bytes) -> bytes
     return prior
 
 
+def _core_ai_fast_path_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the Owner workflow-mode successor before the publication-conclusion pin."""
+    manifest = root / "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json"
+    if relative != "tools/run_owner_daily.py" or not manifest.exists():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/owner_daily_core_ai_fast_path_v1_sources/tools/run_owner_daily.py.txt"
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "archive", "prior_sha256_lf", "active_sha256_lf"}
+            or spec["contract_version"] != "owner_daily_core_ai_fast_path_source_transition/v1"
+            or spec["base_commit"] != "cfa53162efa236a2b27ed421b159743f5451375d"
+            or spec["scope"] != "OWNER_WORKFLOW_MODE_CORE_AI_DEFAULT_AND_EXPLICIT_FULL_PUBLISH_ONLY"
+            or spec["release_authority"] != "NOT_GRANTED"
+            or spec["archive"] != archive):
+        raise ValueError("CORE_AI_FAST_PATH_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or spec["prior_sha256_lf"] == spec["active_sha256_lf"]):
+        raise ValueError("CORE_AI_FAST_PATH_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _publication_conclusion_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel the Dashboard CI conclusion classifier before the pending-commit pin."""
     manifest = root / "tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json"
@@ -602,6 +624,7 @@ def _pending_commit_prior_bytes(root: Path, relative: str, active: bytes) -> byt
 
 def _launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact lifecycle/import successor; no earlier manifest or source pin changes."""
+    active = _core_ai_fast_path_prior_bytes(root, relative, active)
     active = _publication_conclusion_prior_bytes(root, relative, active)
     active = _pending_commit_prior_bytes(root, relative, active)
     active = _multi_freeze_prior_bytes(root, relative, active)

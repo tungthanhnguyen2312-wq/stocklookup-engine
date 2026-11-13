@@ -1,0 +1,9 @@
+{
+  "contract_version": "owner_daily_core_ai_fast_path_source_transition/v1",
+  "base_commit": "cfa53162efa236a2b27ed421b159743f5451375d",
+  "scope": "OWNER_WORKFLOW_MODE_CORE_AI_DEFAULT_AND_EXPLICIT_FULL_PUBLISH_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "archive": "tests/fixtures/owner_daily_core_ai_fast_path_v1_sources/tools/run_owner_daily.py.txt",
+  "prior_sha256_lf": "9f76508e22066d80e2199afcd4eb521a365bfe5276ed3cf69b88ac7cda1b7c73",
+  "active_sha256_lf": "051161c4c273360a7bf677ae2dae26af9d692e6dc51ceb104b08585c4cd60f49"
+}

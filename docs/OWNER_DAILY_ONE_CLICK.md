@@ -5,7 +5,20 @@
 At or after about 16:30 Asia/Ho_Chi_Minh, double-click `Stock Lookup Daily.cmd` on the Desktop.
 It safely fast-forwards a clean Producer checkout, runs Canonical Daily, verifies retained
 completion evidence, commits only the governed session registry when needed, and publishes the
-compact private AI handoff.
+compact private AI handoff, verified on the remote for the exact session.
+
+That is the default, **CORE + PRIVATE AI** (five phases). It does not publish the Dashboard, build
+the Personal Action Center or open the Owner view; the result reports those as `NOT_REQUESTED` and
+names the last Dashboard session found in the local Dashboard checkout.
+
+**FULL PUBLISH** is the Owner's explicit request, through the same launcher:
+
+    "Stock Lookup Daily.cmd" --full-publish
+    "Stock Lookup Daily.cmd" --full-publish --replay-completed-session YYYY-MM-DD
+
+The first form on the same day as a completed CORE + AI run resumes that session; the second
+publishes an earlier completed session. Neither reruns Canonical Daily nor creates a new T0.
+(`tools/run_owner_daily.ps1 -FullPublish` is the equivalent front door.)
 
 The Desktop file should contain only a call to the Producer's own launcher, which keeps no
 PowerShell host resident during host admission or the Daily:

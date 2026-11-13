@@ -131,6 +131,8 @@ def _copy_boundary(tmp_path: Path) -> None:
     paths.update({pending_commit, json.loads((ROOT / pending_commit).read_bytes())["archive"]})
     publication = "tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json"
     paths.update({publication, json.loads((ROOT / publication).read_bytes())["archive"]})
+    core_ai = "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json"
+    paths.update({core_ai, json.loads((ROOT / core_ai).read_bytes())["archive"]})
     multi_freeze = "tests/fixtures/owner_daily_multi_freeze_source_transition_v1.json"
     paths.update({multi_freeze, json.loads((ROOT / multi_freeze).read_bytes())["archive"]})
     tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
@@ -248,7 +250,7 @@ def test_launcher_successor_rejects_tampering(tmp_path, tamper):
         spec = json.loads(manifest.read_bytes())
         spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
         manifest.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION)_SOURCE_TRANSITION"):
+    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION|CORE_AI_FAST_PATH)_SOURCE_TRANSITION"):
         _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))
 
 
@@ -263,13 +265,15 @@ def test_pending_daily_commit_successor_refuses_tampering(tmp_path, tamper):
         shutil.copyfile(ROOT / relative, target)
     source = tmp_path / 'tools/run_owner_daily.py'
     live = source.read_bytes().replace(b'\r\n', b'\n')
-    from tools.verify_retention_reader_transition import _publication_conclusion_prior_bytes
+    from tools.verify_retention_reader_transition import _core_ai_fast_path_prior_bytes, _publication_conclusion_prior_bytes
     publication = 'tests/fixtures/owner_daily_publication_conclusion_source_transition_v1.json'
     publication_spec = json.loads((ROOT / publication).read_bytes())
-    for relative in (publication, publication_spec['archive']):
+    core_ai = 'tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json'
+    for relative in (publication, publication_spec['archive'], core_ai, json.loads((ROOT / core_ai).read_bytes())['archive']):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
+    live = _core_ai_fast_path_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)
     live = _publication_conclusion_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)
     assert _pending_commit_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live) == (ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n')
     if tamper == 'live':
@@ -281,3 +285,59 @@ def test_pending_daily_commit_successor_refuses_tampering(tmp_path, tamper):
         (tmp_path / manifest).write_text(json.dumps(spec))
     with pytest.raises(ValueError, match='PENDING_COMMIT_SOURCE_TRANSITION_'):
         _pending_commit_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)
+
+
+# OWNER_DAILY_CORE_AI_FAST_PATH: the workflow-mode successor is bound to its exact prior bytes,
+# and everything that launches, guards or retains Canonical Daily is the same code as before.
+CORE_AI_MANIFEST = 'tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json'
+CORE_AI_UNCHANGED_BODIES = (
+    'bind_active_workspace', 'preflight_repository', 'preflight_dashboard_repository',
+    'preflight_consumer_repository', 'verify_daily_completion', 'commit_daily_state',
+    'verify_dashboard_session', 'publish_dashboard_release', '_require_host_ready', '_run_daily',
+    'resolve_m1_handoff_authority', 'verify_retained_daily_brief_for_handoff', 'publish_ai_handoff',
+    'materialize_action_center', 'open_action_center_view', '_resolve_intended_session',
+    '_auto_resumable_session', '_t0_snapshot_attestation', '_verify_dashboard_published',
+    '_verify_ai_handoff_published', '_verify_action_center_ready', 'validate_result_path',
+    'relaunch_on_advanced_code', 'supervised_main', 'validate_relaunch_request',
+)
+
+
+def _function_bodies(source: bytes) -> dict:
+    import ast
+    tree = ast.parse(source.decode('utf-8'))
+    return {node.name: ast.dump(node, include_attributes=False)
+            for node in tree.body if isinstance(node, (ast.FunctionDef, ast.ClassDef))}
+
+
+def test_core_ai_successor_leaves_daily_launch_guard_and_retention_bodies_unchanged():
+    spec = json.loads((ROOT / CORE_AI_MANIFEST).read_bytes())
+    prior = _function_bodies((ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n'))
+    live = _function_bodies((ROOT / 'tools/run_owner_daily.py').read_bytes().replace(b'\r\n', b'\n'))
+    assert set(CORE_AI_UNCHANGED_BODIES) <= set(prior)
+    assert {name: live[name] for name in CORE_AI_UNCHANGED_BODIES} == {name: prior[name] for name in CORE_AI_UNCHANGED_BODIES}
+    # Only the Owner orchestration and its argument parser changed; nothing was removed.
+    assert {name for name in prior if live.get(name) != prior[name]} == {'run_workflow', 'main'}
+    assert set(live) - set(prior) == {'_dashboard_not_requested', '_require_remote_handoff_attestation', '_workflow_completion'}
+
+
+@pytest.mark.parametrize('tamper', ['live', 'archive', 'scope'])
+def test_core_ai_successor_refuses_tampering(tmp_path, tamper):
+    from tools.verify_retention_reader_transition import _core_ai_fast_path_prior_bytes
+    spec = json.loads((ROOT / CORE_AI_MANIFEST).read_bytes())
+    for relative in (CORE_AI_MANIFEST, spec['archive']):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
+    live = (ROOT / 'tools/run_owner_daily.py').read_bytes().replace(b'\r\n', b'\n')
+    assert _core_ai_fast_path_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live) == (
+        ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n')
+    assert _core_ai_fast_path_prior_bytes(tmp_path, 'stocklookup.py', b'other') == b'other'
+    if tamper == 'live':
+        live += b'# tamper\n'
+    elif tamper == 'archive':
+        (tmp_path / spec['archive']).write_bytes(b'tamper')
+    else:
+        spec['scope'] = 'unbounded'
+        (tmp_path / CORE_AI_MANIFEST).write_text(json.dumps(spec))
+    with pytest.raises(ValueError, match='CORE_AI_FAST_PATH_SOURCE_TRANSITION_'):
+        _core_ai_fast_path_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)

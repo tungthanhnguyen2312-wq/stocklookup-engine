@@ -47,7 +47,7 @@ Legend — **Block**: failure stops the run at that stage. **Soft**: failure is 
 **Parent/child**: the Owner parent process, the Daily child (`daily_analysis_pipeline.py
 --canonical-post-close`, runs the kernel), or a retained-only/tool subprocess (grandchild).
 
-## A. Owner launcher (parent process, nine phases)
+## A. Owner launcher (parent, 9 phases; FULL = `--full-publish`; default: CORE + AI)
 
 | # | Phase | Purpose | Block/Soft | Process | Retained output | Retry / recovery |
 |---|---|---|---|---|---|---|
@@ -56,11 +56,11 @@ Legend — **Block**: failure stops the run at that stage. **Soft**: failure is 
 | 2 | Canonical Daily | Spawn the Daily child and wait; the child runs section B | Block | child | see B | interrupted but already-complete Daily resumes publication from the journal; otherwise rerun (retained exact-session snapshot is reused, no duplicate acquisition) |
 | 3 | Daily completion verification | Verify operation record, registry `COMPLETED_RETAINED_EVIDENCE`, runtime/trusted READY | Block | parent | none | fix and rerun; or `--replay-completed-session SESSION` |
 | 4 | Producer state publication | Commit only the governed session registry (`commit_daily_state`), `NO_CHANGE` when identical | Block | parent | git commit of `config/daily_research_session_input_registry.json` | idempotent; resumed step re-verifies |
-| 5 | Dashboard publication | `release_orchestrator` publishes to `stocklookup-dashboard` (folder `market-dashboard`); public byte identity check | Block (independent of AI handoff) | parent→tool | `dashboard-runtime`, Dashboard repo | `REUSED_EXISTING_PUBLICATION` on replay |
-| 6 | AI handoff build | Build/publish the compact private AI handoff; refuses without the exact retained Brief and Integrated Decision overlay (never recreated here) | Block | parent | `stocklookup-ai-handoffs` publication | `ALREADY_PUBLISHED_VERIFIED` on replay |
-| 7 | Remote verification | Confirm the remote handoff is `READY_FOR_AI` at the exact session/SHA | Block | parent | none | rerun |
-| 8 | Personal Action Center | Read-only owner view over retained artifacts | Soft | parent | action-center artifact | rerun |
-| 9 | Open owner view | Open the local view | Soft | parent | none | — |
+| 5 | Dashboard publication | `release_orchestrator` publishes to `stocklookup-dashboard` (folder `market-dashboard`); public byte identity check | FULL only; Block | parent→tool | `dashboard-runtime`, Dashboard repo | `REUSED_EXISTING_PUBLICATION` on replay |
+| 6 | AI handoff build | Build/publish the compact private AI handoff; refuses without the exact retained Brief and Integrated Decision overlay; verifies the remote | Block | parent | `stocklookup-ai-handoffs` publication | `ALREADY_PUBLISHED_VERIFIED` on replay |
+| 7 | Remote verification | Display of phase 6 remote proof (exact session/SHA) | FULL only | parent | none | rerun |
+| 8 | Personal Action Center | Owner view over retained artifacts | FULL only; Soft | parent | action-center artifact | rerun |
+| 9 | Open owner view | Open local view | FULL only | parent | none | — |
 
 `FINAL STATUS: PASS` means the remote AI handoff is `READY_FOR_AI`. It says nothing about T0 (see
 ACTIVE_STATE §3).
