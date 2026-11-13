@@ -182,27 +182,11 @@ def diagnose_multiple(observation: Mapping[str, Any]) -> dict[str, Any]:
     if method in _EARNINGS_MULTIPLES and earnings["status"] == NON_RECURRING_COMPONENT_PRESENT_OR_POSSIBLE:
         quarantine = True
         reasons.append(NON_RECURRING_COMPONENT_PRESENT_OR_POSSIBLE)
-    display_method = method
-    interim_roles = {"INTERIM", "H1", "QUARTER", "NINE_MONTH", "UNKNOWN_DURATION"}
-    if method in _EARNINGS_MULTIPLES and str(observation.get("reported_period_role") or "") in interim_roles:
-        display_method = "PRICE_OVER_REPORTED_INTERIM_EARNINGS"
-        reasons.append("INTERIM_OR_UNPROVEN_PERIOD_IS_NOT_A_TTM_PE")
-        quarantine = True
-    if method in {"P/B", "PB"} and observation.get("equity_identity") == "TOTAL_EQUITY_INCLUDING_NCI":
-        display_method = "PRICE_OVER_TOTAL_EQUITY_INCLUDING_NCI"
-        reasons.append("TOTAL_EQUITY_INCLUDING_NCI_IS_NOT_PARENT_BOOK_PB")
-        quarantine = True
-    if (
-        observation.get("cash_flow_scope") == "consolidated"
-        and observation.get("profit_identity") == "PARENT_PROFIT_AFTER_TAX"
-    ):
-        reasons.append("CONSOLIDATED_OPERATING_CASH_FLOW_OVER_PARENT_ATTRIBUTABLE_PROFIT")
     if status not in INTEGRITY_STATES:
         status = UNKNOWN
     return {
         "contract_version": CONTRACT_VERSION,
         "method_id": method,
-        **({"display_method": display_method} if display_method != method else {}),
         "status": status,
         "provider_multiple": provider,
         "arithmetic_multiple": arithmetic,

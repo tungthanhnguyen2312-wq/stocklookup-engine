@@ -357,6 +357,27 @@ def industrial_research_profile(
     }
 
 
+def diagnose_conditional_multiple(observation: Mapping[str, Any]) -> dict[str, Any]:
+    """Apply retained period and equity labels in the offline research path."""
+    from stocklookup_core.valuation.current_valuation_denominator_integrity import diagnose_multiple
+
+    result = diagnose_multiple(observation)
+    method = result["method_id"]
+    interim_roles = {"INTERIM", "H1", "QUARTER", "NINE_MONTH", "UNKNOWN_DURATION"}
+    if method in {"P/E", "PE", "PE_TTM", "P/E_TTM"} and observation.get("reported_period_role") in interim_roles:
+        result["display_method"] = "PRICE_OVER_REPORTED_INTERIM_EARNINGS"
+        result["reason_codes"].append("INTERIM_OR_UNPROVEN_PERIOD_IS_NOT_A_TTM_PE")
+    elif method in {"P/B", "PB"} and observation.get("equity_identity") == "TOTAL_EQUITY_INCLUDING_NCI":
+        result["display_method"] = "PRICE_OVER_TOTAL_EQUITY_INCLUDING_NCI"
+        result["reason_codes"].append("TOTAL_EQUITY_INCLUDING_NCI_IS_NOT_PARENT_BOOK_PB")
+    if "display_method" in result:
+        result["strict_valuation_use"] = "STRICT_VALUATION_QUARANTINED"
+    if (observation.get("cash_flow_scope") == "consolidated"
+            and observation.get("profit_identity") == "PARENT_PROFIT_AFTER_TAX"):
+        result["reason_codes"].append("CONSOLIDATED_OPERATING_CASH_FLOW_OVER_PARENT_ATTRIBUTABLE_PROFIT")
+    return result
+
+
 def specialist_research_guard(entity: str, method: str) -> dict[str, Any]:
     """Industrial enterprise value stays off bank, broker, insurer, and finance-company statements."""
     blocked = entity in SPECIALIST_ENTITIES and method in {"EV/EBITDA", "EV/Sales", "EV"}

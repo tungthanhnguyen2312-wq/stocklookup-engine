@@ -57,13 +57,23 @@ def live_requalified_iid_bytes(entries: object) -> int:
     return bound
 
 
+# Exact offline entry point and its private research modules. The release test
+# checks the Daily import/launch closure and verifies this scope transition.
+OFFLINE_CONDITIONAL_RESEARCH_SOURCES = frozenset({
+    "stocklookup_core/evidence/investment_evidence_assembly.py",
+    "stocklookup_core/research/conditional_investment_case.py",
+    "stocklookup_core/valuation/conditional_research_valuation.py",
+    "tools/build_conditional_research_cases.py",
+})
+
+
 def capacity_source_paths(root: Path) -> list[str]:
     """Tracked executable/config surface, not retained data, tests or documentation."""
     tracked = _git(root, "ls-files", "--", "*.py", "*.ps1", "*.cmd", "*.bat", "*.json", "*requirements*.txt", "constraints.txt")
     if tracked is None:
         return []
     return sorted(p for p in tracked.splitlines() if not p.startswith(
-        ("tests/", "docs/", ".github/")) and p not in {
+        ("tests/", "docs/", ".github/")) and p not in OFFLINE_CONDITIONAL_RESEARCH_SOURCES and p not in {
             "config/owner_daily_capacity_qualification.json",
             "config/daily_research_session_input_registry.json"})
 

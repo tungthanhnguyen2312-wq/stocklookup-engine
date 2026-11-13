@@ -91,9 +91,6 @@ env:
     tests/test_current_research_valuation_context.py
     tests/test_current_financial_valuation_input_unlock.py
     tests/test_current_valuation_denominator_integrity.py
-    tests/test_conditional_investment_case.py
-    tests/test_conditional_research_valuation.py
-    tests/test_investment_evidence_assembly.py
     tests/test_current_valuation_research_proxy.py
     tests/test_p3f_current_market_valuation.py
     tests/test_market_wide_current_valuation_input_scaleout.py

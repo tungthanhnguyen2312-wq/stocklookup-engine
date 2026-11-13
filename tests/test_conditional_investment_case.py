@@ -6,7 +6,7 @@ import json
 import pytest
 
 from tools.build_conditional_research_cases import build_cases, main
-from stocklookup_core.valuation.current_valuation_denominator_integrity import diagnose_multiple
+from stocklookup_core.valuation.conditional_research_valuation import diagnose_conditional_multiple
 
 
 @pytest.mark.retained_evidence(
@@ -37,7 +37,7 @@ def test_retained_hpg_kbc_fpt_cases_match_their_sources(request):
 
 
 def test_interim_earnings_and_total_equity_are_not_strict_labels():
-    interim = diagnose_multiple({
+    interim = diagnose_conditional_multiple({
         "method_id": "P/E_TTM",
         "price": 172658624434000,
         "denominator": 15365022248705,
@@ -49,7 +49,7 @@ def test_interim_earnings_and_total_equity_are_not_strict_labels():
     assert "INTERIM_OR_UNPROVEN_PERIOD_IS_NOT_A_TTM_PE" in interim["reason_codes"]
     assert interim["strict_valuation_use"] == "STRICT_VALUATION_QUARANTINED"
     assert interim["target_price"] is None
-    book = diagnose_multiple({
+    book = diagnose_conditional_multiple({
         "method_id": "P/B",
         "price": 100,
         "denominator": 80,
@@ -59,7 +59,7 @@ def test_interim_earnings_and_total_equity_are_not_strict_labels():
     })
     assert book["display_method"] == "PRICE_OVER_TOTAL_EQUITY_INCLUDING_NCI"
     assert "TOTAL_EQUITY_INCLUDING_NCI_IS_NOT_PARENT_BOOK_PB" in book["reason_codes"]
-    plain = diagnose_multiple({
+    plain = diagnose_conditional_multiple({
         "method_id": "P/B",
         "price": 100,
         "denominator": 50,

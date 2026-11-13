@@ -42,8 +42,4 @@ records. Populate those inputs with the retained evidence and its provenance.
 An empty evidence object produces unavailable values. Annual context records
 can instead carry `canonical_facts`, `blocked`, `document_sha256` and
 `knowledge_available_at`. Supplied labels describe the input evidence and this
-command grants no new source authority. The CLI and supplied valuation member
-are opt-in. For a programmatic valuation snapshot, pass
-`conditional_case_builder=case_from_supplied_inputs` and supply
-`conditional_research_inputs` on the relevant price rows. The ordinary Daily
-workflow does not invoke them.
+command grants no new source authority. The offline CLI owns the conditional valuation route.
