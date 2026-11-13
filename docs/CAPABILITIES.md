@@ -148,6 +148,15 @@ and no production Daily launch. Disk admission remains independently mandatory.
 
 ## C. Fundamental, valuation, decision
 
+[Conditional Financial Research](internal/CONDITIONAL_RESEARCH_CASES_20261113.md)
+released in Producer PR #253 at 8d6778bef1e55053c2c78e93acf3f7f418e1557a. HPG/KBC/FPT passed retained
+offline acceptance on the merged source. The CLI is an independent offline entry point. Strict
+valuation, official evidence admission, execution and sizing retain their
+existing authority boundaries. A later offline depth layer can derive parent equity
+only as total equity minus printed NCI, compare matching year-to-date columns, and
+refuse TTM, parent P/B, and EV/EBITDA when the bridge or the debt components are absent.
+Daily runtime and the capacity receipt stay unchanged.
+
 [VN30 financial/valuation research](vn30_financial_valuation_research_scaleout_v1_contract.md):
 local `EXPERIMENTAL / NON_VOTING / OFFLINE_ONLY` compatible opt-in projection over
 existing Producer metrics, labelled freshness and unchanged source lineage. One new

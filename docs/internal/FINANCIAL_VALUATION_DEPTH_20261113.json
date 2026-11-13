@@ -1,0 +1,1018 @@
+{
+  "contract_version": "conditional_research_acceptance/v1",
+  "producer_checkout_written": false,
+  "ocr_invoked": false,
+  "automatic_production_daily": false,
+  "cases": {
+    "HPG": {
+      "contract_version": "conditional_investment_case/v1",
+      "ticker": "HPG",
+      "fitness": "CONDITIONAL_RESEARCH",
+      "descriptive_evidence": {
+        "statement_cross_foots": [
+          {
+            "name": "NET_REVENUE_EQUALS_GROSS_MINUS_DEDUCTIONS",
+            "status": "EXACT",
+            "residual": 0,
+            "parts": [
+              "GROSS_REVENUE",
+              "REVENUE_DEDUCTIONS",
+              "NET_REVENUE"
+            ]
+          },
+          {
+            "name": "TOTAL_PAT_EQUALS_PARENT_PLUS_NCI",
+            "status": "EXACT",
+            "residual": 0,
+            "parts": [
+              "TOTAL_PROFIT_AFTER_TAX",
+              "PARENT_PROFIT_AFTER_TAX",
+              "NCI_PROFIT_AFTER_TAX"
+            ]
+          }
+        ],
+        "scope_period_findings": []
+      },
+      "conditional_interpretation": {
+        "market_cap_vnd": "172658624434000.00",
+        "market_cap_eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+        "interim_parent_profit_multiple": "11.23712166759485639921773228",
+        "interim_parent_profit_period": "2026-H1",
+        "total_equity_multiple": "1.220064104042173803878334598",
+        "research_price_vnd_per_share": "20450.00",
+        "source_unit_verified": false,
+        "research_shares": 8442964520,
+        "cash_conversion": {
+          "contract_version": "investment_evidence_assembly/v1",
+          "status": "VISUAL_REVIEW_RATIO_NOT_ADMITTED",
+          "ratio": "0.8227581394065649199129211525",
+          "operating_cash_flow": 12641697117285,
+          "parent_profit_after_tax": 15365022248705,
+          "ttm_constructed": false,
+          "scope_warning": "CONSOLIDATED_OPERATING_CASH_FLOW_OVER_PARENT_ATTRIBUTABLE_PROFIT",
+          "reason_codes": [
+            "DURATION_UNPROVEN_NO_ANNUALIZATION",
+            "VISUAL_REVIEW_IS_NOT_NATIVE_TEXT"
+          ],
+          "official_fact_admitted": false,
+          "valuation_use": "CLOSED",
+          "is_actionable": false
+        }
+      },
+      "strict_authority": {
+        "strict_decision_eligible": false,
+        "execution_eligible": false,
+        "official_fact_admitted": false,
+        "is_actionable": false,
+        "target_price": null,
+        "probability": null
+      },
+      "thesis": [
+        "A conditional research capitalization can be stated because the price session is on or after the filing's quoted dividend trade date and the share-count cross-foot is exact.",
+        "Parent profit in the reported column cross-foots to total profit, so a price-to-that-column ratio can be shown with an interim label."
+      ],
+      "counter_thesis": [
+        "One blocked strict multiple does not remove the other labeled research figures.",
+        "The share count is not current-common-outstanding authority.",
+        "No target price or probability is implied.",
+        "The pre-dividend share count under the post-trade price is unusable."
+      ],
+      "reading_notes": [
+        "Research capitalization uses the owner-accepted thousand-VND close and the same-filing post-dividend share count.",
+        "The close is not a verified endpoint unit and is not a qualified raw-as-traded price.",
+        "Interim parent-profit multiple eligibility is CONDITIONAL_RESEARCH_ESTIMATE; it is a reported-period column, not annual or TTM P/E.",
+        "Total-equity multiple eligibility is CONDITIONAL_RESEARCH_ESTIMATE; the denominator includes non-controlling interests and is not parent-shareholder P/B.",
+        "P/E TTM, parent P/B and EV/EBITDA stay unusable until their own evidence exists.",
+        "Research share count 8442964520 comes from one filing. A provider field that repeats it is not a second source.",
+        "Operating cash flow and parent profit share a consolidated column. The ratio is group cash flow over parent-attributable profit, not a parent-only cash conversion.",
+        "Cash-conversion status is VISUAL_REVIEW_RATIO_NOT_ADMITTED."
+      ],
+      "missing": [
+        "FOUR_COMPATIBLE_QUARTER_COLUMNS",
+        "PRINTED_PARENT_BOOK_EQUITY",
+        "SEPARATED_INTEREST_BEARING_DEBT",
+        "VSDC_OR_EXCHANGE_LISTING_CERTIFICATE",
+        "PROOF_OF_NO_ISSUANCE_AFTER_THE_QUOTED_TRADE_DATE"
+      ],
+      "catalysts": [
+        "NO_CATALYST_EVIDENCE_SUPPLIED"
+      ],
+      "risks": [
+        "SHARE_COUNT_CONTINUITY_AFTER_THE_FILING_IS_UNPROVEN",
+        "PRICE_ADJUSTMENT_BASIS_UNRESOLVED",
+        "INTERIM_EARNINGS_ARE_NOT_A_FULL_YEAR"
+      ],
+      "invalidation": [
+        "A later official share count that differs from the same-filing post-dividend count.",
+        "Evidence that the price session is before the quoted dividend trade date.",
+        "A same-scope quarter set that replaces the interim column as the earnings base.",
+        "A printed parent-book equity line, which would replace the total-equity ratio rather than rename it."
+      ],
+      "profile": {
+        "contract_version": "investment_evidence_assembly/v1",
+        "ticker": "HPG",
+        "entity": "corporate",
+        "session": "2026-10-13",
+        "price": {
+          "contract_version": "investment_evidence_assembly/v1",
+          "monetary_vnd_per_share": null,
+          "research_vnd_per_share": "20450.00",
+          "research_unit_basis": "OWNER_ACCEPTED_VN_LISTED_EQUITY_THOUSAND_VND",
+          "provider_native_value": "20.45",
+          "rejected_scale_assumption_vnd": null,
+          "price_multiplied_by_one_thousand": true,
+          "extra_scale_applied_by_gate": false,
+          "historical_bar_adjusted": false,
+          "monetary_valuation_permitted": false,
+          "strict_price_eligible": false,
+          "research_price_eligible": true,
+          "reason_codes": [
+            "OWNER_CONVENTION_NOT_ENDPOINT_DOCUMENTATION",
+            "PRICE_ADJUSTMENT_BASIS_UNRESOLVED",
+            "SOURCE_PRICE_UNIT_UNDOCUMENTED"
+          ],
+          "official_fact_admitted": false,
+          "source_unit_verified": false,
+          "authority_effect": "NONE"
+        },
+        "share_basis": {
+          "contract_version": "investment_evidence_assembly/v1",
+          "research_shares": 8442964520,
+          "pre_dividend_shares": 7675465855,
+          "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+          "role": "POST_DIVIDEND_ORDINARY_COUNT_SAME_FILING",
+          "independent_source_count": 1,
+          "provider_share_is_independent": false,
+          "quoted_trade_from": "2026-07-15",
+          "quoted_listing_effective": "2026-07-02",
+          "price_session": "2026-10-13",
+          "cross_foots": [
+            {
+              "name": "OPENING_PLUS_DIVIDEND_EQUALS_EPS_DENOMINATOR",
+              "exact": true
+            },
+            {
+              "name": "JUNE_CONTRIBUTED_CAPITAL_EQUALS_OPENING_TIMES_10000",
+              "exact": true
+            },
+            {
+              "name": "SUBSEQUENT_CHARTER_EQUALS_EPS_DENOMINATOR_TIMES_10000",
+              "exact": true
+            }
+          ],
+          "limits": [
+            "SINGLE_FILING_IS_NOT_MULTIPLE_INDEPENDENT_SOURCES",
+            "VISUAL_OR_NOTE_TEXT_IS_NOT_A_VSDC_CERTIFICATE",
+            "NO_PROOF_THAT_NO_LATER_ISSUANCE_OCCURRED",
+            "STRICT_CURRENT_COMMON_OUTSTANDING_NOT_ESTABLISHED",
+            "PAR_10000_IS_THE_FILING_RATIO_NOT_A_SEPARATE_SHARE_COUNT",
+            "PROVIDER_ISSUE_SHARE_REPEATS_THE_FILING_COUNT"
+          ],
+          "reason_codes": [],
+          "strict_current_common_outstanding": false,
+          "official_fact_admitted": false
+        },
+        "statement_cross_foots": [
+          {
+            "name": "NET_REVENUE_EQUALS_GROSS_MINUS_DEDUCTIONS",
+            "status": "EXACT",
+            "residual": 0,
+            "parts": [
+              "GROSS_REVENUE",
+              "REVENUE_DEDUCTIONS",
+              "NET_REVENUE"
+            ]
+          },
+          {
+            "name": "TOTAL_PAT_EQUALS_PARENT_PLUS_NCI",
+            "status": "EXACT",
+            "residual": 0,
+            "parts": [
+              "TOTAL_PROFIT_AFTER_TAX",
+              "PARENT_PROFIT_AFTER_TAX",
+              "NCI_PROFIT_AFTER_TAX"
+            ]
+          }
+        ],
+        "market_cap_vnd": "172658624434000.00",
+        "incompatible_pre_dividend_market_cap": {
+          "eligibility": "UNUSABLE",
+          "value_vnd": "156963276734750.00",
+          "reason": "PRICE_ON_OR_AFTER_DIVIDEND_TRADE_DATE_CANNOT_USE_OPENING_SHARES"
+        },
+        "multiples": {
+          "market_cap": {
+            "use": "market_cap",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "value": "172658624434000.00",
+            "period": "2026-10-13",
+            "denominator_identity": "POST_DIVIDEND_ORDINARY_COUNT_SAME_FILING",
+            "limits": [
+              "SINGLE_FILING_IS_NOT_MULTIPLE_INDEPENDENT_SOURCES",
+              "VISUAL_OR_NOTE_TEXT_IS_NOT_A_VSDC_CERTIFICATE",
+              "NO_PROOF_THAT_NO_LATER_ISSUANCE_OCCURRED",
+              "STRICT_CURRENT_COMMON_OUTSTANDING_NOT_ESTABLISHED",
+              "PAR_10000_IS_THE_FILING_RATIO_NOT_A_SEPARATE_SHARE_COUNT",
+              "PROVIDER_ISSUE_SHARE_REPEATS_THE_FILING_COUNT",
+              "PRICE_IS_OWNER_CONVENTION_NOT_ENDPOINT_PROOF",
+              "ADJUSTMENT_BASIS_UNRESOLVED_USES_PROVIDER_CLOSE_AS_QUOTED"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "price_over_reported_interim_parent_profit": {
+            "use": "price_over_reported_interim_parent_profit",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "value": "11.23712166759485639921773228",
+            "period": "2026-H1",
+            "denominator_identity": "PARENT_PROFIT_AFTER_TAX",
+            "limits": [
+              "VISUAL_REVIEW_NOT_NATIVE_TEXT",
+              "SAME_FILING_COLUMN",
+              "NOT_TTM",
+              "NOT_ANNUALIZED",
+              "H1_OR_INTERIM_COLUMN_IS_NOT_A_TTM_PE"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "pe_ttm": {
+            "use": "pe_ttm",
+            "eligibility": "UNUSABLE",
+            "value": null,
+            "period": null,
+            "denominator_identity": "PARENT_PROFIT_AFTER_TAX",
+            "limits": [
+              "FOUR_COMPATIBLE_QUARTER_COLUMNS_ABSENT",
+              "NO_ANNUALIZATION"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "price_over_reported_interim_net_revenue": {
+            "use": "price_over_reported_interim_net_revenue",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "value": "1.597807000947529568590889452",
+            "period": "2026-H1",
+            "denominator_identity": "NET_REVENUE",
+            "limits": [
+              "VISUAL_REVIEW_NOT_NATIVE_TEXT",
+              "SAME_FILING_COLUMN",
+              "NOT_TTM",
+              "NOT_ANNUALIZED",
+              "INTERIM_REVENUE_IS_NOT_A_TTM_PS"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "ps_ttm": {
+            "use": "ps_ttm",
+            "eligibility": "UNUSABLE",
+            "value": null,
+            "period": null,
+            "denominator_identity": "NET_REVENUE",
+            "limits": [
+              "FOUR_COMPATIBLE_QUARTER_COLUMNS_ABSENT"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "price_over_total_equity_including_nci": {
+            "use": "price_over_total_equity_including_nci",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "value": "1.220064104042173803878334598",
+            "period": "2026-06-30",
+            "denominator_identity": "TOTAL_EQUITY_INCLUDING_NCI",
+            "limits": [
+              "THIS_IS_NOT_PARENT_BOOK_PB",
+              "NCI_REMAINS_INSIDE_THE_DENOMINATOR"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "pb_parent": {
+            "use": "pb_parent",
+            "eligibility": "UNUSABLE",
+            "value": null,
+            "period": null,
+            "denominator_identity": "PARENT_BOOK_EQUITY_PRINTED_NOT_DERIVED",
+            "limits": [
+              "PARENT_BOOK_EQUITY_NOT_PRINTED"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          },
+          "ev_ebitda": {
+            "use": "ev_ebitda",
+            "eligibility": "UNUSABLE",
+            "value": null,
+            "period": null,
+            "denominator_identity": "EV_EBITDA",
+            "limits": [
+              "LOAN_AND_FINANCE_LEASE_LINES_ARE_NOT_A_DEBT_BALANCE",
+              "CASH_FLOW_DEPRECIATION_LINE_IS_NOT_EBITDA"
+            ],
+            "strict_decision_eligible": false,
+            "is_actionable": false,
+            "target_price": null,
+            "official_fact_admitted": false
+          }
+        },
+        "cash_conversion": {
+          "contract_version": "investment_evidence_assembly/v1",
+          "status": "VISUAL_REVIEW_RATIO_NOT_ADMITTED",
+          "ratio": "0.8227581394065649199129211525",
+          "operating_cash_flow": 12641697117285,
+          "parent_profit_after_tax": 15365022248705,
+          "ttm_constructed": false,
+          "scope_warning": "CONSOLIDATED_OPERATING_CASH_FLOW_OVER_PARENT_ATTRIBUTABLE_PROFIT",
+          "reason_codes": [
+            "DURATION_UNPROVEN_NO_ANNUALIZATION",
+            "VISUAL_REVIEW_IS_NOT_NATIVE_TEXT"
+          ],
+          "official_fact_admitted": false,
+          "valuation_use": "CLOSED",
+          "is_actionable": false
+        },
+        "strict_decision_eligible": false,
+        "execution_eligible": false,
+        "official_fact_admitted": false,
+        "historical_basis_modified": false,
+        "is_actionable": false
+      },
+      "bridge": null,
+      "research_depth": {
+        "parent_equity": {
+          "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+          "fitness": "CONDITIONAL_RESEARCH",
+          "value_vnd": 140656346514229,
+          "method": "TOTAL_EQUITY_MINUS_PRINTED_NCI",
+          "printed_parent_line": false,
+          "official_fact_admitted": false,
+          "strict_parent_pb": false,
+          "reason_codes": [
+            "DERIVED_PARENT_EQUITY_IS_NOT_A_PRINTED_LINE"
+          ]
+        },
+        "price_over_derived_parent_equity": {
+          "display_method": "PRICE_OVER_DERIVED_PARENT_EQUITY",
+          "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+          "fitness": "CONDITIONAL_RESEARCH",
+          "value": "1.227521037712532958151222622",
+          "strict_valuation_use": "STRICT_VALUATION_QUARANTINED",
+          "official_fact_admitted": false,
+          "is_actionable": false,
+          "target_price": null,
+          "reason_codes": [
+            "EQUITY_BALANCE_DATE_DIFFERS_FROM_PRICE_SESSION",
+            "PRICE_OVER_DERIVED_PARENT_EQUITY_IS_NOT_PARENT_PB"
+          ]
+        },
+        "financing": {
+          "interest_bearing_debt_vnd": null,
+          "finance_lease_vnd": null,
+          "mixed_loans_and_finance_leases_vnd": 98529977232553,
+          "cash_and_equivalents_vnd": 9782057360909,
+          "net_debt_vnd": null,
+          "enterprise_value_vnd": null,
+          "ebitda_vnd": null,
+          "ev_ebitda": null,
+          "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+          "fitness": "CONDITIONAL_RESEARCH",
+          "official_fact_admitted": false,
+          "reason_codes": [
+            "CASH_FLOW_DEPRECIATION_LINE_IS_NOT_EBITDA",
+            "LOANS_AND_FINANCE_LEASES_ARE_NOT_SEPARATED"
+          ]
+        },
+        "parent_ttm": {
+          "identity": "PARENT_PROFIT_AFTER_TAX",
+          "ttm": null,
+          "ttm_candidates": [],
+          "same_ytd_comparisons": [],
+          "quarter_plus_ytd": null,
+          "annualized_stub": null,
+          "eligibility": "UNUSABLE",
+          "fitness": "UNUSABLE",
+          "official_fact_admitted": false,
+          "strict_decision_eligible": false,
+          "reason_codes": [
+            "DURATION_UNPROVEN_NO_ANNUALIZATION",
+            "NO_COMPATIBLE_TTM_BRIDGE"
+          ]
+        },
+        "share_authority": "CONDITIONAL_RESEARCH_ESTIMATE"
+      }
+    },
+    "KBC": {
+      "ticker": "KBC",
+      "fitness": "DESCRIPTIVE_EVIDENCE",
+      "bridge": {
+        "contract_version": "investment_evidence_assembly/v1",
+        "findings": [
+          {
+            "name": "CONSOLIDATED_PARENT_VERSUS_SEPARATE_PROFIT",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "consolidated_parent": 911255360018,
+            "separate_profit": 542827055633,
+            "same_number": false,
+            "limits": [
+              "SEPARATE_PROFIT_IS_NOT_GROUP_PROFIT",
+              "OCR_CANDIDATE_NOT_NATIVE_LEXEME"
+            ]
+          },
+          {
+            "name": "QUARTER_IS_NOT_YEAR_TO_DATE",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "quarter_parent": 911255360018,
+            "nine_month_parent": 1142553865273,
+            "quarter_plus_nine_month": null,
+            "limits": [
+              "ADDING_Q3_TO_9M_WOULD_DOUBLE_COUNT",
+              "Q3_TIMES_FOUR_IS_NOT_A_YEAR"
+            ]
+          },
+          {
+            "name": "Q3_TOTAL_EQUALS_PARENT_PLUS_NCI",
+            "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+            "residual": 0,
+            "limits": [
+              "OCR_CANDIDATE_NOT_NATIVE_LEXEME"
+            ]
+          }
+        ],
+        "market_cap": null,
+        "reason_no_market_cap": "NO_PRICE_OBSERVATION_SUPPLIED_FOR_THIS_PROFILE",
+        "strict_decision_eligible": false,
+        "official_fact_admitted": false
+      },
+      "market_cap_vnd": null,
+      "strict_authority": {
+        "strict_decision_eligible": false,
+        "execution_eligible": false,
+        "official_fact_admitted": false,
+        "is_actionable": false,
+        "target_price": null,
+        "probability": null
+      },
+      "thesis": [
+        "KBC can be read as two scopes and two periods. Consolidated parent profit is not separate profit, and the third quarter is not the nine-month cumulative."
+      ],
+      "counter_thesis": [
+        "The figures are OCR candidates. native_numeric_literal_proven is false.",
+        "No price was supplied, so no capitalization is calculated."
+      ],
+      "missing": [
+        "QUALIFIED_PRICE",
+        "NATIVE_NUMERIC_LEXEME",
+        "PARENT_BOOK_EQUITY"
+      ],
+      "invalidation": [
+        "A native text span that disagrees with an OCR candidate.",
+        "A price observation, which would still need its own share basis before a capitalization."
+      ],
+      "research_depth": {
+        "revenue_ttm": {
+          "identity": "NET_REVENUE",
+          "ttm": null,
+          "ttm_candidates": [],
+          "same_ytd_comparisons": [
+            {
+              "method": "SAME_YTD_PRIOR_YEAR_COMPARISON",
+              "not_ttm": true,
+              "fiscal_year": 2026,
+              "ytd_months": 9,
+              "current_vnd": 5111910086988,
+              "prior_vnd": 4906091321479,
+              "change_vnd": 205818765509,
+              "fitness": "CONDITIONAL_RESEARCH",
+              "official_fact_admitted": false
+            }
+          ],
+          "quarter_plus_ytd": null,
+          "annualized_stub": null,
+          "eligibility": "UNUSABLE",
+          "fitness": "UNUSABLE",
+          "official_fact_admitted": false,
+          "strict_decision_eligible": false,
+          "reason_codes": [
+            "NO_COMPATIBLE_TTM_BRIDGE"
+          ]
+        },
+        "revenue_yoy": {
+          "method": "SAME_YTD_PRIOR_YEAR_COMPARISON",
+          "not_ttm": true,
+          "fiscal_year": 2026,
+          "ytd_months": 9,
+          "current_vnd": 5111910086988,
+          "prior_vnd": 4906091321479,
+          "change_vnd": 205818765509,
+          "fitness": "CONDITIONAL_RESEARCH",
+          "official_fact_admitted": false
+        },
+        "parent_ttm": {
+          "identity": "PARENT_PROFIT_AFTER_TAX",
+          "ttm": null,
+          "ttm_candidates": [],
+          "same_ytd_comparisons": [],
+          "quarter_plus_ytd": null,
+          "annualized_stub": null,
+          "eligibility": "UNUSABLE",
+          "fitness": "UNUSABLE",
+          "official_fact_admitted": false,
+          "strict_decision_eligible": false,
+          "reason_codes": [
+            "NO_COMPATIBLE_TTM_BRIDGE"
+          ]
+        },
+        "market_cap_vnd": null
+      }
+    },
+    "FPT": {
+      "contract_version": "conditional_investment_case/v1",
+      "ticker": "FPT",
+      "fitness": "DESCRIPTIVE_EVIDENCE",
+      "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
+      "knowledge_available_at": "2026-10-08T00:07:56.779802+00:00",
+      "descriptive_evidence": {
+        "canonical_facts": [
+          {
+            "metric": "revenue",
+            "value": 70112825100710,
+            "period": "2025",
+            "period_type": "annual",
+            "scope": "consolidated",
+            "line_code": "10",
+            "currency": "VND",
+            "audit_or_review_status": "audited",
+            "fitness": "DESCRIPTIVE_EVIDENCE",
+            "valuation_use": "NOT_PERMITTED_AUDITED_ANNUAL_CONTEXT"
+          },
+          {
+            "metric": "shareholders_equity",
+            "value": 43748040747539,
+            "period": "2025",
+            "period_type": "annual",
+            "scope": "consolidated",
+            "line_code": "400",
+            "currency": "VND",
+            "audit_or_review_status": "audited",
+            "fitness": "DESCRIPTIVE_EVIDENCE",
+            "valuation_use": "NOT_PERMITTED_AUDITED_ANNUAL_CONTEXT"
+          }
+        ],
+        "blocked": [
+          {
+            "canonical_metric": "cash_and_equivalents",
+            "line_code": "110",
+            "match_count": 0,
+            "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+            "state": "BLOCKED",
+            "statement_family": "balance_sheet"
+          },
+          {
+            "canonical_metric": "total_assets",
+            "line_code": "270",
+            "match_count": 0,
+            "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+            "state": "BLOCKED",
+            "statement_family": "balance_sheet"
+          },
+          {
+            "canonical_metric": "net_income",
+            "line_code": "60",
+            "match_count": 0,
+            "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+            "state": "BLOCKED",
+            "statement_family": "income_statement"
+          },
+          {
+            "canonical_metric": "attributable_net_income",
+            "line_code": "61",
+            "raw_value": "9,376,1²7,6²9,501",
+            "reason": "OCR_NUMERIC_AMBIGUITY",
+            "state": "BLOCKED",
+            "statement_family": "income_statement"
+          },
+          {
+            "canonical_metric": "operating_cash_flow",
+            "line_code": "20",
+            "match_count": 0,
+            "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+            "state": "BLOCKED",
+            "statement_family": "cash_flow"
+          },
+          {
+            "canonical_metric": "short_term_borrowings",
+            "line_code": "320",
+            "match_count": 0,
+            "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+            "state": "BLOCKED",
+            "statement_family": "balance_sheet"
+          },
+          {
+            "canonical_metric": "long_term_borrowings_or_finance_leases",
+            "line_code": "338",
+            "match_count": 0,
+            "reason": "ROW_NOT_UNIQUE_OR_NOT_GEOMETRICALLY_RESOLVED",
+            "state": "BLOCKED",
+            "statement_family": "balance_sheet"
+          },
+          {
+            "canonical_metric": "total_interest_bearing_debt",
+            "reason": "DEBT_COMPONENT_INCOMPLETE",
+            "state": "BLOCKED"
+          }
+        ]
+      },
+      "conditional_interpretation": {
+        "market_cap_vnd": null,
+        "reason": "NO_CONDITIONAL_PRICE_OR_SHARE_BASIS_SUPPLIED"
+      },
+      "press_not_statement": [],
+      "strict_authority": {
+        "strict_decision_eligible": false,
+        "execution_eligible": false,
+        "official_fact_admitted": false,
+        "is_actionable": false,
+        "target_price": null,
+        "probability": null
+      },
+      "thesis": [
+        "The usable research statement is the audited annual context that actually qualified. Current-period earnings, cash flow and valuation remain open questions."
+      ],
+      "counter_thesis": [
+        "An investor highlight or a later operating commentary is not a substitute for the missing statement lines.",
+        "Ambiguous parent-profit digits stay blocked rather than repaired."
+      ],
+      "reading_notes": [
+        "Qualified annual facts are historical context. They do not open a current multiple.",
+        "Line 400 shareholders' equity is not used as parent-shareholder book. No P/B is calculated.",
+        "Annual revenue is descriptive. It is not a TTM sales base."
+      ],
+      "missing": [
+        "CURRENT_PERIOD_REVIEWED_OR_AUDITED_INCOME",
+        "PARENT_PROFIT_AFTER_TAX",
+        "OPERATING_CASH_FLOW",
+        "CASH_AND_DEBT",
+        "CURRENT_COMMON_SHARES",
+        "PRICE_FOR_THIS_RESEARCH_DATE"
+      ],
+      "catalysts": [
+        "NO_CATALYST_EVIDENCE_SUPPLIED"
+      ],
+      "risks": [
+        "CURRENT_PERIOD_FINANCIAL_CONDITION_IS_NOT_IN_THIS_PACKET"
+      ],
+      "invalidation": [
+        "A later reviewed or audited statement for the current period that qualifies the missing lines.",
+        "A printed parent-profit figure that replaces the blocked ambiguous line."
+      ]
+    }
+  },
+  "valuation_depth": {
+    "hpg": {
+      "parent_equity": {
+        "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+        "fitness": "CONDITIONAL_RESEARCH",
+        "value_vnd": 140656346514229,
+        "method": "TOTAL_EQUITY_MINUS_PRINTED_NCI",
+        "printed_parent_line": false,
+        "official_fact_admitted": false,
+        "strict_parent_pb": false,
+        "reason_codes": [
+          "DERIVED_PARENT_EQUITY_IS_NOT_A_PRINTED_LINE"
+        ]
+      },
+      "price_over_derived_parent_equity": {
+        "display_method": "PRICE_OVER_DERIVED_PARENT_EQUITY",
+        "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+        "fitness": "CONDITIONAL_RESEARCH",
+        "value": "1.227521037712532958151222622",
+        "strict_valuation_use": "STRICT_VALUATION_QUARANTINED",
+        "official_fact_admitted": false,
+        "is_actionable": false,
+        "target_price": null,
+        "reason_codes": [
+          "EQUITY_BALANCE_DATE_DIFFERS_FROM_PRICE_SESSION",
+          "PRICE_OVER_DERIVED_PARENT_EQUITY_IS_NOT_PARENT_PB"
+        ]
+      },
+      "financing": {
+        "interest_bearing_debt_vnd": null,
+        "finance_lease_vnd": null,
+        "mixed_loans_and_finance_leases_vnd": 98529977232553,
+        "cash_and_equivalents_vnd": 9782057360909,
+        "net_debt_vnd": null,
+        "enterprise_value_vnd": null,
+        "ebitda_vnd": null,
+        "ev_ebitda": null,
+        "eligibility": "CONDITIONAL_RESEARCH_ESTIMATE",
+        "fitness": "CONDITIONAL_RESEARCH",
+        "official_fact_admitted": false,
+        "reason_codes": [
+          "CASH_FLOW_DEPRECIATION_LINE_IS_NOT_EBITDA",
+          "LOANS_AND_FINANCE_LEASES_ARE_NOT_SEPARATED"
+        ]
+      },
+      "parent_ttm": {
+        "identity": "PARENT_PROFIT_AFTER_TAX",
+        "ttm": null,
+        "ttm_candidates": [],
+        "same_ytd_comparisons": [],
+        "quarter_plus_ytd": null,
+        "annualized_stub": null,
+        "eligibility": "UNUSABLE",
+        "fitness": "UNUSABLE",
+        "official_fact_admitted": false,
+        "strict_decision_eligible": false,
+        "reason_codes": [
+          "DURATION_UNPROVEN_NO_ANNUALIZATION",
+          "NO_COMPATIBLE_TTM_BRIDGE"
+        ]
+      },
+      "share_authority": "CONDITIONAL_RESEARCH_ESTIMATE"
+    },
+    "kbc": {
+      "revenue_ttm": {
+        "identity": "NET_REVENUE",
+        "ttm": null,
+        "ttm_candidates": [],
+        "same_ytd_comparisons": [
+          {
+            "method": "SAME_YTD_PRIOR_YEAR_COMPARISON",
+            "not_ttm": true,
+            "fiscal_year": 2026,
+            "ytd_months": 9,
+            "current_vnd": 5111910086988,
+            "prior_vnd": 4906091321479,
+            "change_vnd": 205818765509,
+            "fitness": "CONDITIONAL_RESEARCH",
+            "official_fact_admitted": false
+          }
+        ],
+        "quarter_plus_ytd": null,
+        "annualized_stub": null,
+        "eligibility": "UNUSABLE",
+        "fitness": "UNUSABLE",
+        "official_fact_admitted": false,
+        "strict_decision_eligible": false,
+        "reason_codes": [
+          "NO_COMPATIBLE_TTM_BRIDGE"
+        ]
+      },
+      "revenue_yoy": {
+        "method": "SAME_YTD_PRIOR_YEAR_COMPARISON",
+        "not_ttm": true,
+        "fiscal_year": 2026,
+        "ytd_months": 9,
+        "current_vnd": 5111910086988,
+        "prior_vnd": 4906091321479,
+        "change_vnd": 205818765509,
+        "fitness": "CONDITIONAL_RESEARCH",
+        "official_fact_admitted": false
+      },
+      "parent_ttm": {
+        "identity": "PARENT_PROFIT_AFTER_TAX",
+        "ttm": null,
+        "ttm_candidates": [],
+        "same_ytd_comparisons": [],
+        "quarter_plus_ytd": null,
+        "annualized_stub": null,
+        "eligibility": "UNUSABLE",
+        "fitness": "UNUSABLE",
+        "official_fact_admitted": false,
+        "strict_decision_eligible": false,
+        "reason_codes": [
+          "NO_COMPATIBLE_TTM_BRIDGE"
+        ]
+      },
+      "market_cap_vnd": null
+    },
+    "cohort": {
+      "cohort": [
+        "FPT",
+        "HPG",
+        "KBC",
+        "PNJ",
+        "PVD",
+        "QNS",
+        "VNM",
+        "VRE"
+      ],
+      "cutoff": "2026-10-13T23:59:59+00:00",
+      "before": {
+        "parent_net_income": {
+          "verified": 2,
+          "conditional_research": 2,
+          "unusable": 4
+        },
+        "compatible_ttm_earnings": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "parent_equity_research": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "market_cap": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "reported_period_earnings_multiple": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "true_ttm_pe": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "compatible_parent_pb": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "cash_or_financing_quality": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "ev_ebitda": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        }
+      },
+      "after": {
+        "parent_net_income": {
+          "verified": 2,
+          "conditional_research": 2,
+          "unusable": 4
+        },
+        "compatible_ttm_earnings": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "parent_equity_research": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "market_cap": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "reported_period_earnings_multiple": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "true_ttm_pe": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "compatible_parent_pb": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        },
+        "conditional_price_over_derived_parent_equity": {
+          "verified": 0,
+          "conditional_research": 1,
+          "unusable": 7
+        },
+        "cash_or_financing_quality": {
+          "verified": 1,
+          "conditional_research": 1,
+          "unusable": 6
+        },
+        "ev_ebitda": {
+          "verified": 0,
+          "conditional_research": 0,
+          "unusable": 8
+        }
+      },
+      "cash_quality": [
+        {
+          "ratio": "0.4839361102505048544414126219",
+          "earnings_identity": "TOTAL_PROFIT_AFTER_TAX",
+          "fitness": "VERIFIED",
+          "valuation_use": "CLOSED",
+          "official_fact_admitted": false,
+          "is_actionable": false,
+          "ttm_constructed": false,
+          "reason_codes": [
+            "DENOMINATOR_IS_TOTAL_PROFIT_NOT_PARENT_PROFIT"
+          ],
+          "ticker": "VRE"
+        }
+      ],
+      "line_400_equity": [
+        {
+          "ticker": "FPT",
+          "value": 43748040747539,
+          "counted_as_parent_equity": false,
+          "reason": "LINE_400_IS_NOT_PROVEN_PARENT_BOOK"
+        },
+        {
+          "ticker": "PVD",
+          "value": 17098286949122,
+          "counted_as_parent_equity": false,
+          "reason": "LINE_400_IS_NOT_PROVEN_PARENT_BOOK"
+        },
+        {
+          "ticker": "QNS",
+          "value": 10647823148609,
+          "counted_as_parent_equity": false,
+          "reason": "LINE_400_IS_NOT_PROVEN_PARENT_BOOK"
+        },
+        {
+          "ticker": "VRE",
+          "value": 49310673000000,
+          "counted_as_parent_equity": false,
+          "reason": "LINE_400_IS_NOT_PROVEN_PARENT_BOOK"
+        }
+      ],
+      "blocked_reasons": {
+        "HPG_TTM": [
+          "DURATION_UNPROVEN_NO_ANNUALIZATION",
+          "NO_COMPATIBLE_TTM_BRIDGE"
+        ],
+        "KBC_PARENT_TTM": [
+          "NO_COMPATIBLE_TTM_BRIDGE"
+        ],
+        "KBC_REVENUE_TTM": [
+          "NO_COMPATIBLE_TTM_BRIDGE"
+        ],
+        "EV_EBITDA": [
+          "MIXED_OR_MISSING_DEBT",
+          "DEPRECIATION_NOT_EBITDA",
+          "NO_COMPATIBLE_PARENT_EBIT"
+        ],
+        "STRICT_PB": [
+          "NO_PRINTED_PARENT_EQUITY_LINE"
+        ],
+        "FPT_PARENT_PROFIT": [
+          "OCR_NUMERIC_AMBIGUITY"
+        ],
+        "PVD_H1_CURRENCY": [
+          "USD_INTERIM_IS_NOT_COMBINED_WITH_VND_ANNUAL"
+        ]
+      }
+    }
+  },
+  "expectations": {
+    "hpg_research_price": true,
+    "hpg_source_unit_not_verified": true,
+    "hpg_shares": true,
+    "hpg_market_cap": true,
+    "hpg_interim_not_ttm": true,
+    "hpg_parent_pb_unusable": true,
+    "hpg_total_equity_labeled": true,
+    "hpg_pre_dividend_unusable": true,
+    "hpg_cash_scope_warning": true,
+    "hpg_not_actionable": true,
+    "kbc_scopes_differ": true,
+    "kbc_quarter_not_added": true,
+    "kbc_q3_foots": true,
+    "kbc_no_market_cap": true,
+    "fpt_revenue_retained": true,
+    "fpt_no_market_cap": true,
+    "fpt_no_parent_profit_fact": true,
+    "fpt_parent_line_stays_blocked": true,
+    "hpg_derived_parent_equity": true,
+    "hpg_derived_parent_multiple_not_pb": true,
+    "hpg_ttm_absent": true,
+    "hpg_financing_not_debt": true,
+    "hpg_pb_parent_stays_unusable": true,
+    "kbc_ttm_absent": true,
+    "kbc_revenue_yoy": true,
+    "cohort_ttm_pe_stays_zero": true,
+    "cohort_parent_equity_research_gained": true,
+    "vre_cash_quality_names_total_profit": true,
+    "line_400_not_parent_book": true
+  },
+  "failed_expectations": []
+}

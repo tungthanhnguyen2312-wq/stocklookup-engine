@@ -438,3 +438,254 @@ def scope_and_period_bridge(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
         "strict_decision_eligible": False,
         "official_fact_admitted": False,
     }
+
+
+_MIXED_FINANCING = frozenset({
+    "SHORT_TERM_LOANS_AND_FINANCE_LEASES",
+    "LONG_TERM_LOANS_AND_FINANCE_LEASES",
+})
+_UNKNOWN_FINANCING = frozenset({
+    "SHORT_TERM_LOANS_LEASE_CONTENT_UNKNOWN",
+    "LONG_TERM_LOANS_LEASE_CONTENT_UNKNOWN",
+})
+_NOT_DEBT = frozenset({
+    "TOTAL_LIABILITIES",
+    "CASH_AND_EQUIVALENTS",
+    "CASH_ONLY_NOT_CASH_AND_EQUIVALENTS",
+    "COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT",
+})
+_YTD_MONTHS = frozenset({3, 6, 9})
+
+
+def _row_amount(row: Mapping[str, Any] | None) -> int | None:
+    if not isinstance(row, Mapping):
+        return None
+    return _integer(row.get("normalized_integer"))
+
+
+def _compatible_rows(rows: list[Mapping[str, Any]]) -> bool:
+    if len(rows) < 2:
+        return bool(rows)
+    first = rows[0]
+    keys = ("ticker", "statement_scope", "reporting_period", "currency", "unit_scale", "document_sha256")
+    return all(row.get(key) == first.get(key) and row.get(key) not in {None, "", "UNKNOWN"} for row in rows for key in keys)
+
+
+def _fitness(rows: list[Mapping[str, Any]]) -> str:
+    if rows and all(row.get("qualification") == "VERIFIED" for row in rows):
+        return "VERIFIED"
+    return "CONDITIONAL_RESEARCH"
+
+
+def derive_parent_equity_research(total: Mapping[str, Any] | None, nci: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Total equity minus printed NCI is a derived research measure, not a printed parent line."""
+    reasons: list[str] = []
+    if not isinstance(total, Mapping) or not isinstance(nci, Mapping):
+        reasons.append("PARENT_EQUITY_INPUTS_ABSENT")
+    else:
+        if total.get("accounting_identity") != "TOTAL_EQUITY_INCLUDING_NCI" or nci.get("accounting_identity") != "NON_CONTROLLING_INTERESTS":
+            reasons.append("EQUITY_IDENTITIES_ARE_NOT_TOTAL_AND_NCI")
+        if not _compatible_rows([total, nci]):
+            reasons.append("EQUITY_COMPONENTS_ARE_NOT_THE_SAME_STATEMENT_COLUMN")
+    total_amount = _row_amount(total)
+    nci_amount = _row_amount(nci)
+    if total_amount is None or nci_amount is None:
+        reasons.append("EQUITY_AMOUNT_ABSENT")
+    elif nci_amount < 0 or nci_amount > total_amount:
+        reasons.append("PARENT_NCI_COLLISION")
+    value = None if reasons else total_amount - nci_amount
+    return {
+        "eligibility": UNUSABLE if value is None else CONDITIONAL,
+        "fitness": "UNUSABLE" if value is None else "CONDITIONAL_RESEARCH",
+        "value_vnd": value,
+        "method": "TOTAL_EQUITY_MINUS_PRINTED_NCI",
+        "printed_parent_line": False,
+        "official_fact_admitted": False,
+        "strict_parent_pb": False,
+        "reason_codes": sorted(set(reasons)) or ["DERIVED_PARENT_EQUITY_IS_NOT_A_PRINTED_LINE"],
+    }
+
+
+def price_over_derived_parent_equity(*, market_cap_vnd: str | None, parent_equity_vnd: int | None, price_session: str | None, equity_period: str | None) -> dict[str, Any]:
+    """A research ratio. It stays conditional and does not become parent P/B."""
+    cap = _decimal(market_cap_vnd)
+    book = None if parent_equity_vnd in (None, 0) else Decimal(parent_equity_vnd)
+    reasons = ["PRICE_OVER_DERIVED_PARENT_EQUITY_IS_NOT_PARENT_PB"]
+    if cap is None or book is None:
+        reasons.append("MARKET_CAP_OR_DERIVED_PARENT_EQUITY_ABSENT")
+    if price_session and equity_period and price_session != equity_period:
+        reasons.append("EQUITY_BALANCE_DATE_DIFFERS_FROM_PRICE_SESSION")
+    value = None if cap is None or book is None else _ratio(cap, book)
+    return {
+        "display_method": "PRICE_OVER_DERIVED_PARENT_EQUITY",
+        "eligibility": UNUSABLE if value is None else CONDITIONAL,
+        "fitness": "UNUSABLE" if value is None else "CONDITIONAL_RESEARCH",
+        "value": value,
+        "strict_valuation_use": "STRICT_VALUATION_QUARANTINED",
+        "official_fact_admitted": False,
+        "is_actionable": False,
+        "target_price": None,
+        "reason_codes": sorted(set(reasons)),
+    }
+
+
+def financing_research(rows: list[Mapping[str, Any]], *, depreciation: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    """Show cash and loan lines without promoting mixed leases or total liabilities to debt."""
+    mixed = [row for row in rows if row.get("accounting_identity") in _MIXED_FINANCING]
+    unknown = [row for row in rows if row.get("accounting_identity") in _UNKNOWN_FINANCING]
+    liabilities = [row for row in rows if row.get("accounting_identity") == "TOTAL_LIABILITIES"]
+    cash_rows = [row for row in rows if row.get("accounting_identity") == "CASH_AND_EQUIVALENTS"]
+    cash_only = [row for row in rows if row.get("accounting_identity") == "CASH_ONLY_NOT_CASH_AND_EQUIVALENTS"]
+    reasons: list[str] = []
+    mixed_total = None
+    if mixed:
+        reasons.append("LOANS_AND_FINANCE_LEASES_ARE_NOT_SEPARATED")
+        if _compatible_rows(mixed) and all(_row_amount(row) is not None for row in mixed):
+            mixed_total = sum(_row_amount(row) or 0 for row in mixed)
+        else:
+            reasons.append("MIXED_FINANCING_COLUMNS_ARE_INCOMPATIBLE")
+    if unknown:
+        reasons.append("LOAN_CONTENT_UNKNOWN_NOT_INTEREST_BEARING_DEBT")
+    if liabilities:
+        reasons.append("TOTAL_LIABILITIES_ARE_NOT_INTEREST_BEARING_DEBT")
+    if cash_only:
+        reasons.append("CASH_ONLY_IS_NOT_CASH_AND_EQUIVALENTS")
+    if depreciation and depreciation.get("accounting_identity") == "COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT":
+        reasons.append("CASH_FLOW_DEPRECIATION_LINE_IS_NOT_EBITDA")
+    cash = cash_rows[0] if len(cash_rows) == 1 else None
+    return {
+        "interest_bearing_debt_vnd": None,
+        "finance_lease_vnd": None,
+        "mixed_loans_and_finance_leases_vnd": mixed_total,
+        "cash_and_equivalents_vnd": _row_amount(cash),
+        "net_debt_vnd": None,
+        "enterprise_value_vnd": None,
+        "ebitda_vnd": None,
+        "ev_ebitda": None,
+        "eligibility": UNUSABLE if mixed_total is None and _row_amount(cash) is None else CONDITIONAL,
+        "fitness": "UNUSABLE" if mixed_total is None and _row_amount(cash) is None else _fitness(mixed or cash_rows),
+        "official_fact_admitted": False,
+        "reason_codes": sorted(set(reasons)),
+    }
+
+
+def _flow_key(row: Mapping[str, Any]) -> tuple:
+    return (
+        row.get("ticker"), row.get("accounting_identity"), row.get("statement_scope"),
+        row.get("currency"), row.get("unit_scale"),
+    )
+
+
+def trailing_twelve_month_earnings(
+    columns: list[Mapping[str, Any]], *, identity: str, knowledge_cutoff: str | None = None,
+) -> dict[str, Any]:
+    """Build TTM only from a full year plus matching YTD columns. Never annualize a stub."""
+    selected = [row for row in columns if row.get("accounting_identity") == identity]
+    reasons: list[str] = []
+    if knowledge_cutoff is not None:
+        kept = []
+        for row in selected:
+            known = row.get("knowledge_available_at")
+            if known and str(known) > knowledge_cutoff:
+                reasons.append("FUTURE_KNOWLEDGE_EXCLUDED")
+                continue
+            kept.append(row)
+        selected = kept
+    if any(row.get("annualize") for row in selected):
+        reasons.append("ANNUALIZATION_REFUSED")
+    if any(row.get("period_role") == "UNKNOWN_DURATION" or row.get("months") in (None, 0) for row in selected):
+        reasons.append("DURATION_UNPROVEN_NO_ANNUALIZATION")
+    quarters = [row for row in selected if row.get("period_role") == "QUARTER"]
+    if quarters and len({(row.get("fiscal_year"), row.get("fiscal_quarter")) for row in quarters}) < 4:
+        reasons.append("FOUR_COMPATIBLE_QUARTER_COLUMNS_ABSENT")
+    bridges = []
+    grouped: dict[tuple, list[Mapping[str, Any]]] = {}
+    for row in selected:
+        if row.get("period_role") not in {"YTD", "FULL_YEAR"}:
+            continue
+        grouped.setdefault(_flow_key(row), []).append(row)
+    for group in grouped.values():
+        full = {row.get("fiscal_year"): row for row in group if row.get("period_role") == "FULL_YEAR" and row.get("months") == 12}
+        ytd = {(row.get("fiscal_year"), row.get("months")): row for row in group if row.get("period_role") == "YTD" and row.get("months") in _YTD_MONTHS}
+        for (year, months), current in sorted(ytd.items()):
+            prior = ytd.get((year - 1, months)) if isinstance(year, int) else None
+            annual = full.get(year - 1) if isinstance(year, int) else None
+            if prior is None or annual is None:
+                continue
+            amounts = [_row_amount(current), _row_amount(annual), _row_amount(prior)]
+            if any(amount is None for amount in amounts):
+                continue
+            bridges.append({
+                "value_vnd": amounts[0] + amounts[1] - amounts[2],
+                "method": "CURRENT_YTD_PLUS_PRIOR_FULL_YEAR_MINUS_PRIOR_YTD",
+                "months_covered": 12,
+                "fiscal_year": year,
+                "ytd_months": months,
+                "fitness": _fitness([current, annual, prior]),
+                "source_periods": [current.get("reporting_period"), annual.get("reporting_period"), prior.get("reporting_period")],
+                "official_fact_admitted": False,
+            })
+    if not bridges:
+        reasons.append("NO_COMPATIBLE_TTM_BRIDGE")
+    comparisons = []
+    for group in grouped.values():
+        ytd_rows = [row for row in group if row.get("period_role") == "YTD" and row.get("months") in _YTD_MONTHS]
+        index = {(row.get("fiscal_year"), row.get("months")): row for row in ytd_rows}
+        for (year, months), current in sorted(index.items()):
+            prior = index.get((year - 1, months)) if isinstance(year, int) else None
+            if prior is None or _row_amount(current) is None or _row_amount(prior) is None:
+                continue
+            comparisons.append({
+                "method": "SAME_YTD_PRIOR_YEAR_COMPARISON",
+                "not_ttm": True,
+                "fiscal_year": year,
+                "ytd_months": months,
+                "current_vnd": _row_amount(current),
+                "prior_vnd": _row_amount(prior),
+                "change_vnd": _row_amount(current) - _row_amount(prior),
+                "fitness": _fitness([current, prior]),
+                "official_fact_admitted": False,
+            })
+    return {
+        "identity": identity,
+        "ttm": bridges[0] if len(bridges) == 1 else None,
+        "ttm_candidates": bridges,
+        "same_ytd_comparisons": comparisons,
+        "quarter_plus_ytd": None,
+        "annualized_stub": None,
+        "eligibility": CONDITIONAL if len(bridges) == 1 else UNUSABLE,
+        "fitness": bridges[0]["fitness"] if len(bridges) == 1 else "UNUSABLE",
+        "official_fact_admitted": False,
+        "strict_decision_eligible": False,
+        "reason_codes": sorted(set(reasons)),
+    }
+
+
+def printed_cash_to_earnings(earnings: Mapping[str, Any], cash: Mapping[str, Any]) -> dict[str, Any]:
+    """Pair two printed lines from one column. A total-profit denominator stays named."""
+    reasons: list[str] = []
+    if not _compatible_rows([earnings, cash]):
+        reasons.append("CASH_AND_EARNINGS_ARE_NOT_THE_SAME_STATEMENT_COLUMN")
+    if cash.get("accounting_identity") != "OPERATING_CASH_FLOW":
+        reasons.append("CASH_LINE_IS_NOT_OPERATING_CASH_FLOW")
+    identity = earnings.get("accounting_identity")
+    if identity not in {"PARENT_PROFIT_AFTER_TAX", "TOTAL_PROFIT_AFTER_TAX"}:
+        reasons.append("EARNINGS_LINE_IS_NOT_A_PRINTED_PROFIT")
+    if identity == "TOTAL_PROFIT_AFTER_TAX":
+        reasons.append("DENOMINATOR_IS_TOTAL_PROFIT_NOT_PARENT_PROFIT")
+    earnings_amount = _row_amount(earnings)
+    cash_amount = _row_amount(cash)
+    if earnings_amount in (None, 0) or cash_amount is None:
+        reasons.append("CASH_OR_EARNINGS_AMOUNT_ABSENT")
+    blocking = {code for code in reasons if code != "DENOMINATOR_IS_TOTAL_PROFIT_NOT_PARENT_PROFIT"}
+    ratio = None if blocking or earnings_amount in (None, 0) else format(Decimal(cash_amount) / Decimal(earnings_amount), "f")
+    return {
+        "ratio": ratio,
+        "earnings_identity": identity,
+        "fitness": "UNUSABLE" if ratio is None else _fitness([earnings, cash]),
+        "valuation_use": "CLOSED",
+        "official_fact_admitted": False,
+        "is_actionable": False,
+        "ttm_constructed": False,
+        "reason_codes": sorted(set(reasons)),
+    }

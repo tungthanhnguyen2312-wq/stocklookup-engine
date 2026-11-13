@@ -5,11 +5,16 @@ import unittest
 from decimal import Decimal
 
 from stocklookup_core.valuation.conditional_research_valuation import (
+    derive_parent_equity_research,
     filing_share_basis,
+    financing_research,
     industrial_research_profile,
     parse_reported_integer,
+    price_over_derived_parent_equity,
+    printed_cash_to_earnings,
     scope_and_period_bridge,
     specialist_research_guard,
+    trailing_twelve_month_earnings,
 )
 
 QUOTE = (
@@ -152,6 +157,110 @@ class ResearchProfileTests(unittest.TestCase):
         self.assertIsNone(names["QUARTER_IS_NOT_YEAR_TO_DATE"]["quarter_plus_nine_month"])
         self.assertEqual(0, names["Q3_TOTAL_EQUALS_PARENT_PLUS_NCI"]["residual"])
         self.assertIsNone(bridge["market_cap"])
+
+
+def _column(**overrides):
+    row = {
+        "ticker": "HPG",
+        "accounting_identity": "PARENT_PROFIT_AFTER_TAX",
+        "statement_scope": "consolidated",
+        "currency": "VND",
+        "unit_scale": 1,
+        "document_sha256": "abc",
+        "qualification": "VERIFIED",
+        "normalized_integer": 100,
+        "period_role": "YTD",
+        "fiscal_year": 2026,
+        "months": 6,
+        "reporting_period": "2026-H1",
+    }
+    row.update(overrides)
+    return row
+
+
+class DepthTests(unittest.TestCase):
+    def test_hpg_parent_equity_is_derived_and_not_a_printed_fact(self):
+        total = _column(accounting_identity="TOTAL_EQUITY_INCLUDING_NCI", normalized_integer=141516026790697,
+                        reporting_period="2026-06-30", period_role="BALANCE")
+        nci = _column(accounting_identity="NON_CONTROLLING_INTERESTS", normalized_integer=859680276468,
+                      reporting_period="2026-06-30", period_role="BALANCE")
+        derived = derive_parent_equity_research(total, nci)
+        self.assertEqual(140656346514229, derived["value_vnd"])
+        self.assertFalse(derived["printed_parent_line"])
+        self.assertFalse(derived["official_fact_admitted"])
+        ratio = price_over_derived_parent_equity(
+            market_cap_vnd="172658624434000.00", parent_equity_vnd=derived["value_vnd"],
+            price_session="2026-10-13", equity_period="2026-06-30",
+        )
+        self.assertEqual("PRICE_OVER_DERIVED_PARENT_EQUITY", ratio["display_method"])
+        self.assertEqual("STRICT_VALUATION_QUARANTINED", ratio["strict_valuation_use"])
+        self.assertIsNone(ratio["target_price"])
+        collided = derive_parent_equity_research(total, _column(
+            accounting_identity="NON_CONTROLLING_INTERESTS", normalized_integer=141516026790698,
+            reporting_period="2026-06-30"))
+        self.assertIn("PARENT_NCI_COLLISION", collided["reason_codes"])
+        self.assertIsNone(collided["value_vnd"])
+
+    def test_ttm_bridge_requires_three_compatible_columns_and_refuses_annualization(self):
+        current = _column(normalized_integer=30, fiscal_year=2026, months=6)
+        prior = _column(normalized_integer=20, fiscal_year=2025, months=6, reporting_period="2025-H1")
+        annual = _column(normalized_integer=50, fiscal_year=2025, months=12, period_role="FULL_YEAR", reporting_period="2025")
+        bridged = trailing_twelve_month_earnings([current, prior, annual], identity="PARENT_PROFIT_AFTER_TAX")
+        self.assertEqual(60, bridged["ttm"]["value_vnd"])
+        self.assertEqual("VERIFIED", bridged["fitness"])
+        self.assertIsNone(bridged["quarter_plus_ytd"])
+        self.assertIsNone(bridged["annualized_stub"])
+        mismatched = trailing_twelve_month_earnings([
+            current, prior, _column(**{**annual, "currency": "USD"}),
+        ], identity="PARENT_PROFIT_AFTER_TAX")
+        self.assertIsNone(mismatched["ttm"])
+        doubled = trailing_twelve_month_earnings([
+            _column(period_role="UNKNOWN_DURATION", months=None, annualize=True, normalized_integer=30),
+        ], identity="PARENT_PROFIT_AFTER_TAX")
+        self.assertIsNone(doubled["ttm"])
+        self.assertIn("ANNUALIZATION_REFUSED", doubled["reason_codes"])
+        self.assertIn("DURATION_UNPROVEN_NO_ANNUALIZATION", doubled["reason_codes"])
+        overlap = trailing_twelve_month_earnings([
+            _column(period_role="QUARTER", fiscal_quarter=3, months=3, normalized_integer=10),
+            _column(period_role="YTD", months=9, normalized_integer=25),
+        ], identity="PARENT_PROFIT_AFTER_TAX")
+        self.assertIsNone(overlap["ttm"])
+        self.assertIsNone(overlap["quarter_plus_ytd"])
+        future = trailing_twelve_month_earnings([
+            current, prior,
+            _column(**annual, knowledge_available_at="2026-11-01T00:00:00Z"),
+        ], identity="PARENT_PROFIT_AFTER_TAX", knowledge_cutoff="2026-10-13T23:59:59Z")
+        self.assertIsNone(future["ttm"])
+        self.assertIn("FUTURE_KNOWLEDGE_EXCLUDED", future["reason_codes"])
+
+    def test_mixed_leases_and_total_liabilities_do_not_become_debt_or_ebitda(self):
+        financing = financing_research([
+            _column(accounting_identity="SHORT_TERM_LOANS_AND_FINANCE_LEASES", normalized_integer=70),
+            _column(accounting_identity="LONG_TERM_LOANS_AND_FINANCE_LEASES", normalized_integer=30),
+            _column(accounting_identity="CASH_AND_EQUIVALENTS", normalized_integer=10),
+            _column(accounting_identity="TOTAL_LIABILITIES", normalized_integer=200),
+        ], depreciation=_column(accounting_identity="COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT", normalized_integer=5))
+        self.assertIsNone(financing["interest_bearing_debt_vnd"])
+        self.assertIsNone(financing["net_debt_vnd"])
+        self.assertIsNone(financing["enterprise_value_vnd"])
+        self.assertIsNone(financing["ebitda_vnd"])
+        self.assertEqual(100, financing["mixed_loans_and_finance_leases_vnd"])
+        unknown = financing_research([
+            _column(accounting_identity="SHORT_TERM_LOANS_LEASE_CONTENT_UNKNOWN", normalized_integer=4),
+        ])
+        self.assertIsNone(unknown["interest_bearing_debt_vnd"])
+        self.assertIsNone(unknown["mixed_loans_and_finance_leases_vnd"])
+
+    def test_cash_conversion_names_a_total_profit_denominator(self):
+        quality = printed_cash_to_earnings(
+            _column(accounting_identity="TOTAL_PROFIT_AFTER_TAX", normalized_integer=3214788000000),
+            _column(accounting_identity="OPERATING_CASH_FLOW", normalized_integer=1555752000000),
+        )
+        self.assertEqual("TOTAL_PROFIT_AFTER_TAX", quality["earnings_identity"])
+        self.assertIn("DENOMINATOR_IS_TOTAL_PROFIT_NOT_PARENT_PROFIT", quality["reason_codes"])
+        self.assertEqual("CLOSED", quality["valuation_use"])
+        self.assertFalse(quality["ttm_constructed"])
+        self.assertIsNotNone(quality["ratio"])
 
 
 if __name__ == "__main__":
