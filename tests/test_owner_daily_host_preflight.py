@@ -397,3 +397,81 @@ def test_receipt_live_requalifications_are_measured_and_capped():
     assert {e["session"] for e in entries} == {"2026-11-03", "2026-11-04"}
     assert all(e["peak_observed_single_process_rss_bytes"] < preflight.MEASURED_MAX_RSS_BYTES for e in entries)
     assert preflight.capacity_qualification(preflight.ROOT)["iid_max_bytes"] == preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES
+
+def test_offline_financial_capacity_transition_preserves_the_qualified_daily_source():
+    import ast
+    import re
+
+    from test_daily_lazy_import_closure import daily_reachable
+    from tools.check_architecture import module_name
+
+    root = preflight.ROOT
+    spec = json.loads((root / "tests/fixtures/offline_financial_capacity_source_transition_v1.json").read_bytes())
+    assert spec["scope"] == "EXACT_OFFLINE_FINANCIAL_SOURCE_ENUMERATION_ONLY"
+    assert spec["new_capacity_measurement"] is False
+    relative = spec["source_path"]
+    assert relative == "tools/check_owner_daily_host_preflight.py"
+    archive = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(archive).hexdigest() == spec["prior_sha256_lf"]
+    assert hashlib.sha256(active).hexdigest() == spec["active_sha256_lf"]
+
+    prior_tree, active_tree = ast.parse(archive), ast.parse(active)
+    scope_name = "OFFLINE_CONDITIONAL_RESEARCH_SOURCES"
+    (scope,) = [node for node in active_tree.body if isinstance(node, ast.Assign)
+                and any(isinstance(target, ast.Name) and target.id == scope_name for target in node.targets)]
+    assert ast.unparse(scope.value.func) == "frozenset"
+    assert len(scope.value.args) == 1 and not scope.value.keywords
+    assert ast.literal_eval(scope.value.args[0]) == set(spec["offline_paths"])
+    active_tree.body.remove(scope)
+    (source_paths,) = [node for node in active_tree.body if isinstance(node, ast.FunctionDef)
+                       and node.name == "capacity_source_paths"]
+    (filter_expr,) = [node for node in ast.walk(source_paths) if isinstance(node, ast.BoolOp)]
+    (exclusion,) = [node for node in filter_expr.values if ast.unparse(node) == f"p not in {scope_name}"]
+    filter_expr.values.remove(exclusion)
+    assert ast.dump(active_tree) == ast.dump(prior_tree)
+
+    def git_blob(path):
+        return subprocess.check_output(["git", "show", f"{spec['base_commit']}:{path}"], cwd=root)
+
+    receipt_path = "config/owner_daily_capacity_qualification.json"
+    prior_receipt = json.loads(git_blob(receipt_path))
+    assert prior_receipt["source_sha256"][relative] == spec["prior_sha256_lf"]
+    prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
+    assert json.loads((root / receipt_path).read_bytes()) == prior_receipt
+    assert archive == git_blob(relative)
+
+    offline = set(spec["offline_paths"])
+    assert offline == preflight.OFFLINE_CONDITIONAL_RESEARCH_SOURCES
+    assert all((root / path).is_file() for path in offline)
+    assert not offline.intersection(preflight.capacity_source_paths(root))
+    assert not {module_name(path) for path in offline}.intersection(daily_reachable(root))
+    # Cover string-based import and launch registrations, including basename-only
+    # dispatch. The scope declaration itself is the sole permitted reference.
+    names = re.compile(rb"\b(?:" + b"|".join(re.escape(Path(path).stem.encode()) for path in sorted(offline)) + rb")\b")
+    for path in preflight.capacity_source_paths(root):
+        if path != relative:
+            assert not names.search((root / path).read_bytes()), path
+
+
+def test_offline_edits_keep_receipt_but_runtime_import_or_new_runtime_file_invalidates_it(tmp_path, monkeypatch):
+    offline = "tools/build_conditional_research_cases.py"
+    runtime = "daily_analysis_pipeline.py"
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "config").mkdir()
+    (tmp_path / offline).write_bytes(b"# offline case builder\n")
+    protected = tmp_path / runtime
+    protected.write_bytes(b"# qualified daily\n")
+    receipt = {"source_sha256": {runtime: hashlib.sha256(protected.read_bytes()).hexdigest()}}
+    (tmp_path / "config/owner_daily_capacity_qualification.json").write_text(json.dumps(receipt), encoding="utf-8")
+    tracked = [runtime, offline]
+    monkeypatch.setattr(preflight, "_git", lambda *_: "\n".join(tracked))
+    assert preflight.capacity_qualification(tmp_path)["source_matches"]
+    (tmp_path / offline).write_bytes(b"raise RuntimeError('offline only')\n")
+    assert preflight.capacity_qualification(tmp_path)["source_matches"]
+    protected.write_bytes(b"from tools import build_conditional_research_cases\n")
+    assert not preflight.capacity_qualification(tmp_path)["source_matches"]
+    protected.write_bytes(b"# qualified daily\n")
+    tracked.append("tools/other_offline_tool.py")
+    (tmp_path / tracked[-1]).write_bytes(b"# still needs review\n")
+    assert not preflight.capacity_qualification(tmp_path)["source_matches"]

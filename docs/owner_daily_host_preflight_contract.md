@@ -67,6 +67,17 @@ that estimate /7 GiB; smaller inputs
 never lower the baseline bands. Disk bands stay fixed. Future code or input changes
 may require renewed model qualification; the estimate is not a memory guarantee.
 
+The [offline financial scope transition](../tests/fixtures/offline_financial_capacity_source_transition_v1.json)
+excludes exactly the four private Conditional Financial Research source paths.
+The ordinary Daily import and launcher closure cannot reach those paths. The
+release test checks static and resolved dynamic edges, launcher targets and
+references in fingerprinted source. All other tracked executable and config
+paths remain subject to exact SHA-256 comparison. A change that imports or
+launches one of the excluded paths from Daily changes the protected caller and
+invalidates the receipt. Only the preflight source-enumeration hash changes in
+the receipt. Its measured envelope and runtime safeguards retain their original
+qualification.
+
 The normal Owner launcher evaluates it inside phase 1 (Repository preflight), after the
 repository preflights and before Canonical Daily is shown as started; a non-READY result is
 phase 1 FAILED with step `Host preflight`, and the child is spawned right after phase 2 BEGIN.

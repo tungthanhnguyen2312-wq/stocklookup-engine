@@ -1,0 +1,16 @@
+{
+  "contract_version": "offline_financial_capacity_source_transition/v1",
+  "base_commit": "42fb9ed9701b418612d37ee2541b8de967760f22",
+  "scope": "EXACT_OFFLINE_FINANCIAL_SOURCE_ENUMERATION_ONLY",
+  "new_capacity_measurement": false,
+  "source_path": "tools/check_owner_daily_host_preflight.py",
+  "archive": "tests/fixtures/offline_financial_capacity_v1_preflight.py.txt",
+  "prior_sha256_lf": "40faec767650601f0b1a420cc1845e54fddef82f57fd30a8022ce68e465d7552",
+  "active_sha256_lf": "c46eb491319d82791be60f10717712a332eaea4a3d053976586f3044bd416969",
+  "offline_paths": [
+    "stocklookup_core/evidence/investment_evidence_assembly.py",
+    "stocklookup_core/research/conditional_investment_case.py",
+    "stocklookup_core/valuation/conditional_research_valuation.py",
+    "tools/build_conditional_research_cases.py"
+  ]
+}
