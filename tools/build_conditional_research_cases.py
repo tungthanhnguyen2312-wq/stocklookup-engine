@@ -1,13 +1,17 @@
-"""Build offline HPG, KBC and FPT research cases from retained evidence.
+"""Build offline conditional research cases from retained evidence.
 
-Reads existing intake and annual-context files. Does not fetch, OCR, or write
-a production database.
+The default command rebuilds the HPG, KBC and FPT acceptance packet. A separate
+``--inputs`` command reads an explicit JSON list and uses the same supplied-input
+contract for any issuer. Neither command fetches, OCRs, writes a production
+database, or attaches Daily authority.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any, Mapping
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -16,6 +20,7 @@ if str(ROOT) not in sys.path:
 from stocklookup_core.research.conditional_investment_case import (
     case_from_annual_context,
     case_from_industrial_profile,
+    case_from_supplied_inputs,
 )
 from stocklookup_core.valuation.conditional_research_valuation import (
     industrial_research_profile,
@@ -172,6 +177,140 @@ def build_cases(*, intake_path: Path = DEFAULT_INTAKE, examples_path: Path = DEF
     }
 
 
+def build_supplied_cases(records: list[Mapping[str, Any]]) -> dict:
+    """Build cases from explicit records. Business rules stay in the shared engines."""
+    if not isinstance(records, list) or not records:
+        raise ValueError("inputs must be a non-empty list of {ticker, entity, inputs}")
+    cases = []
+    for index, record in enumerate(records):
+        if not isinstance(record, Mapping):
+            raise ValueError(f"record {index} must be an object")
+        ticker = str(record.get("ticker") or "").strip()
+        if not ticker:
+            raise ValueError(f"record {index} is missing ticker")
+        inputs = record.get("inputs")
+        if not isinstance(inputs, Mapping):
+            raise ValueError(f"record {index} is missing inputs")
+        entity = str(record.get("entity") or inputs.get("entity") or "corporate")
+        case = case_from_supplied_inputs(ticker=ticker, entity=entity, inputs=inputs)
+        authority = case.get("strict_authority") or {}
+        if authority.get("strict_decision_eligible") or authority.get("execution_eligible") or authority.get("official_fact_admitted") or authority.get("is_actionable"):
+            raise RuntimeError(f"{ticker} conditional case entered strict authority")
+        if authority.get("target_price") is not None or authority.get("probability") is not None:
+            raise RuntimeError(f"{ticker} conditional case invented a target or probability")
+        cases.append(case)
+    return {
+        "contract_version": "conditional_research_supplied_cases/v1",
+        "producer_checkout_written": False,
+        "automatic_production_daily": False,
+        "ocr_invoked": False,
+        "cases": cases,
+    }
+
+
+def _interpretation_lines(case: Mapping[str, Any]) -> list[str]:
+    cond = case.get("conditional_interpretation") or {}
+    order = (
+        "research_price_vnd_per_share",
+        "source_unit_verified",
+        "research_shares",
+        "market_cap_vnd",
+        "market_cap_eligibility",
+        "reason",
+        "interim_parent_profit_multiple",
+        "interim_parent_profit_period",
+        "total_equity_multiple",
+    )
+    lines = []
+    for key in order:
+        if key in cond:
+            lines.append(f"- {key}: {cond.get(key)}")
+    cash = cond.get("cash_conversion") or {}
+    if cash:
+        lines.append(f"- cash_conversion_status: {cash.get('status')}")
+        if cash.get("scope_warning"):
+            lines.append(f"- cash_conversion_scope_warning: {cash.get('scope_warning')}")
+    return lines
+
+
+def render_supplied_markdown(packet: Mapping[str, Any]) -> str:
+    """Owner reading of supplied cases. Labels come from the case, not from a ticker list."""
+    lines = [
+        "# Conditional research cases",
+        "",
+        "Inputs were supplied explicitly. These cases do not enter strict valuation, investment posture, sizing, execution, or official fact authority.",
+        "Automatic production Daily is not attached.",
+        "",
+    ]
+    for case in packet.get("cases") or []:
+        authority = case.get("strict_authority") or {}
+        lines.extend([
+            f"## {case.get('ticker')}",
+            "",
+            f"Fitness: {case.get('fitness')}.",
+            (
+                f"Strict decision eligible: {authority.get('strict_decision_eligible')}. "
+                f"Execution eligible: {authority.get('execution_eligible')}. "
+                f"Official fact admitted: {authority.get('official_fact_admitted')}. "
+                f"Actionable: {authority.get('is_actionable')}."
+            ),
+            f"Target price: {authority.get('target_price')}. Probability: {authority.get('probability')}.",
+        ])
+        if case.get("document_sha256"):
+            lines.append(f"Document SHA-256: {case.get('document_sha256')}.")
+        if case.get("knowledge_available_at"):
+            lines.append(f"Knowledge available at: {case.get('knowledge_available_at')}.")
+        lines.append("")
+        lines.append("Conditional interpretation:")
+        lines.extend(_interpretation_lines(case) or ["- none"])
+        lines.append("")
+        for label, key in (
+            ("Reading notes", "reading_notes"),
+            ("Thesis", "thesis"),
+            ("Counter-thesis", "counter_thesis"),
+            ("Missing", "missing"),
+            ("Risks", "risks"),
+            ("Invalidation", "invalidation"),
+        ):
+            values = case.get(key) or []
+            if not values:
+                continue
+            lines.append(f"{label}:")
+            lines.extend(f"- {item}" for item in values)
+            lines.append("")
+        press = case.get("press_not_statement") or []
+        if press:
+            lines.append("Press highlights kept out of the statements:")
+            lines.extend(f"- {item.get('status')}: used as a statement fact = {item.get('used_as_statement_fact')}." for item in press)
+            lines.append("")
+        findings = ((case.get("bridge") or {}).get("findings") or [])
+        if findings:
+            lines.append("Scope and period findings:")
+            for item in findings:
+                lines.append(
+                    f"- {item.get('name')}: eligibility {item.get('eligibility')}; residual {item.get('residual')}; "
+                    f"same number {item.get('same_number')}; quarter plus nine-month {item.get('quarter_plus_nine_month')}."
+                )
+            lines.append("")
+        facts = ((case.get("descriptive_evidence") or {}).get("canonical_facts") or [])
+        if facts:
+            lines.append("Qualified facts kept as descriptive context:")
+            for row in facts:
+                lines.append(
+                    f"- {row.get('metric')} {row.get('value')} {row.get('currency') or ''} "
+                    f"period {row.get('period')} scope {row.get('scope')} line {row.get('line_code')} "
+                    f"valuation use {row.get('valuation_use')}."
+                )
+            lines.append("")
+        blocked = ((case.get("descriptive_evidence") or {}).get("blocked") or [])
+        if blocked:
+            lines.append("Blocked candidates:")
+            for row in blocked:
+                lines.append(f"- {row.get('canonical_metric') or row.get('metric')}: {row.get('reason')}.")
+            lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def render_markdown(packet: dict) -> str:
     hpg = packet["cases"]["HPG"]
     cond = hpg["conditional_interpretation"]
@@ -210,14 +349,40 @@ def render_markdown(packet: dict) -> str:
     return "\n".join(lines)
 
 
-def main() -> int:
+def _write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def _load_input_records(path: Path) -> list:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, dict) and isinstance(payload.get("records"), list):
+        payload = payload["records"]
+    if not isinstance(payload, list):
+        raise SystemExit("inputs must be a JSON list or an object with a records list")
+    return payload
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Build offline conditional research cases from retained evidence.")
+    parser.add_argument("--inputs", type=Path, help="JSON list of {ticker, entity, inputs} for the supplied-input contract.")
+    parser.add_argument("--out-json", type=Path, help="Machine-readable output. Defaults beside --inputs.")
+    parser.add_argument("--out-md", type=Path, help="Owner-readable output. Defaults beside --inputs.")
+    args = parser.parse_args(argv)
+    if args.inputs is not None:
+        packet = build_supplied_cases(_load_input_records(args.inputs))
+        out_json = args.out_json or args.inputs.with_suffix(".cases.json")
+        out_md = args.out_md or args.inputs.with_suffix(".cases.md")
+        _write(out_json, json.dumps(packet, ensure_ascii=False, indent=2) + "\n")
+        _write(out_md, render_supplied_markdown(packet))
+        print("supplied cases", ", ".join(case["ticker"] for case in packet["cases"]))
+        print(out_json)
+        print(out_md)
+        return 0
     packet = build_cases()
     out_dir = ROOT / "docs" / "internal"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "CONDITIONAL_RESEARCH_CASES_20261113.json").write_text(
-        json.dumps(packet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    (out_dir / "CONDITIONAL_RESEARCH_CASES_20261113.md").write_text(
-        render_markdown(packet), encoding="utf-8")
+    _write(out_dir / "CONDITIONAL_RESEARCH_CASES_20261113.json", json.dumps(packet, ensure_ascii=False, indent=2) + "\n")
+    _write(out_dir / "CONDITIONAL_RESEARCH_CASES_20261113.md", render_markdown(packet))
     if packet["failed_expectations"]:
         raise SystemExit("failed: " + ", ".join(packet["failed_expectations"]))
     print("cases ok", ", ".join(packet["cases"]))

@@ -1,7 +1,9 @@
 """Real retained evidence and label guards for conditional research cases."""
 from __future__ import annotations
 
-from tools.build_conditional_research_cases import build_cases
+import json
+
+from tools.build_conditional_research_cases import build_cases, main
 from stocklookup_core.valuation.current_valuation_denominator_integrity import diagnose_multiple
 
 
@@ -51,3 +53,60 @@ def test_interim_earnings_and_total_equity_are_not_strict_labels():
     })
     assert plain["display_method"] == "P/B"
     assert plain["status"] == "UNKNOWN"
+
+
+def test_supplied_inputs_cover_a_future_issuer_without_strict_authority(tmp_path):
+    source = tmp_path / "issuer-inputs.json"
+    source.write_text(json.dumps({"records": [
+        {
+            "ticker": "zzz",
+            "entity": "corporate",
+            "inputs": {"price": {}, "share_components": {}, "facts": {}},
+        },
+        {
+            "ticker": "YYY",
+            "entity": "corporate",
+            "inputs": {
+                "canonical_facts": [{
+                    "metric": "revenue",
+                    "value": 10,
+                    "factual_status": "qualified",
+                    "period": {"start": "2025-01-01", "end": "2025-12-31"},
+                    "scope": "consolidated_statements",
+                    "line_code": "10",
+                    "currency": "VND",
+                }],
+                "blocked": [{
+                    "canonical_metric": "attributable_net_income",
+                    "reason": "OCR_NUMERIC_AMBIGUITY",
+                    "raw": "9,376,1²7,6²9,501",
+                }],
+                "press_highlights": [{"text": "later operating commentary"}],
+                "document_sha256": "abc",
+                "knowledge_available_at": "2026-10-08T00:07:56.779802+00:00",
+            },
+        },
+    ]}), encoding="utf-8")
+    out_json = tmp_path / "cases.json"
+    out_md = tmp_path / "cases.md"
+    assert main(["--inputs", str(source), "--out-json", str(out_json), "--out-md", str(out_md)]) == 0
+    packet = json.loads(out_json.read_text(encoding="utf-8"))
+    assert packet["automatic_production_daily"] is False
+    assert [case["ticker"] for case in packet["cases"]] == ["ZZZ", "YYY"]
+    zzz = packet["cases"][0]
+    assert zzz["conditional_interpretation"]["market_cap_vnd"] is None
+    assert zzz["strict_authority"]["is_actionable"] is False
+    assert zzz["strict_authority"]["target_price"] is None
+    yyy = packet["cases"][1]
+    facts = yyy["descriptive_evidence"]["canonical_facts"]
+    assert [row["metric"] for row in facts] == ["revenue"]
+    assert facts[0]["valuation_use"] == "NOT_PERMITTED_AUDITED_ANNUAL_CONTEXT"
+    assert yyy["descriptive_evidence"]["blocked"][0]["reason"] == "OCR_NUMERIC_AMBIGUITY"
+    assert yyy["press_not_statement"][0]["used_as_statement_fact"] is False
+    assert yyy["conditional_interpretation"]["market_cap_vnd"] is None
+    reading = out_md.read_text(encoding="utf-8")
+    assert "ZZZ" in reading and "YYY" in reading
+    assert "Automatic production Daily is not attached." in reading
+    again = tmp_path / "cases-again.json"
+    assert main(["--inputs", str(source), "--out-json", str(again), "--out-md", str(tmp_path / "cases-again.md")]) == 0
+    assert again.read_bytes() == out_json.read_bytes()
