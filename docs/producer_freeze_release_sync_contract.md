@@ -22,3 +22,28 @@ A release that changes executable sources continues through their existing
 reviewed transition and capacity checks. This sync refuses changed freeze paths,
 mismatched inventory, divergent history or concurrent writers. Any change to
 the protected input data requires its own governing disposition.
+
+## Rebaseline after completed Daily registry advancement
+
+Keep the original inventory and its sync receipt. For an authorized rebaseline,
+run the reviewed release-sync tool in read-only mode from the frozen Producer
+checkout with the active retained-evidence profile. Pass the full Producer
+head recorded with the original inventory.
+
+    python -B <reviewed-source>/tools/sync_producer_release.py --inventory <original-inventory> --rebaseline-from <original-head> --history-root <verified-git-store>
+
+The history store must contain the observed checkout and live canonical main.
+The tool requires each intervening registry change to be a first-parent,
+registry-only Daily commit adding one matching session to both ledgers. It
+checks retained completion records, the pending freeze classifier, protected
+source byte hashes and artifact self-identities. Removing those exact additions
+must reproduce the original registry byte hash. Keep the JSON returned on
+stdout beside the original inventory. Its original and current inventories,
+commit identities and completion record hashes form the audit trail.
+
+Save the result's `inventory` object separately for the existing
+`--approved-head` sync command. Sync continues to require exact registry and
+protected source bytes and unchanged protected Git paths across the target
+fast-forward. Future verified Daily registry advancement can be reconciled by
+running the same read-only proof from the original receipt. Use a new reviewed
+disposition if the frozen inputs or pending sessions actually change.

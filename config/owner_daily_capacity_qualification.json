@@ -1492,7 +1492,7 @@
     "tools/storage_capacity_plan.py": "e319688905c588d203ec89209a1f7ab1de03c30b2f67b1f28501f41ddb3e9207",
     "tools/storage_dedup_relink.py": "95098ced4d5a205b174a70a7290e8d438cd66dd7fee20de498ea12219e13d133",
     "tools/storage_ledger.py": "f1b1f9c72b12dc8c287cfae2443fdcbe614f7a6838bbc4ecce3bd0404aa94e22",
-    "tools/sync_producer_release.py": "50acea8f9c07ee35a1541f07c8fc39799672a3f2d663a484da43b3700851ff36",
+    "tools/sync_producer_release.py": "b35d78ffee2b3cf0185e8a8748bd93e76c48ed4fae318d433d850d82ad27f379",
     "tools/validate_canonical_daily_shadow_recommendation_autosourcing_v1.py": "74273adf237150999039ac3e93edb1d58e6fbb75f540bbdcc292bc25ff0024dc",
     "tools/validate_owner_daily_progress_telemetry.py": "d80a7dc8c0b0edfbb0021dbbdb55046f39b698e7fa127e2f3e1e8e410e2f6ebd",
     "tools/validate_producer_financial_home_completion.py": "8190ba307fbd0de4ebe1bc6f34b8f3e1063892b82d49e69d3d9ad3a661048d65",
@@ -1624,7 +1624,8 @@
       "tools/verify_retention_reader_transition.py"
     ],
     "source_transition": "tests/fixtures/owner_daily_tactical_shadow_source_transition_v1.json",
-    "new_capacity_measurement": false
+    "new_capacity_measurement": false,
+    "owner_decision": "Approved 2026-11-14: defer the non-voting tactical reversal shadow collector in default CORE + PRIVATE AI"
   },
   "hnx_listed_listing_presence_corrective": {
     "base_commit": "8b60f92ce7f7576c4b58a7c8c3454495bf995d88",
@@ -1657,5 +1658,15 @@
         "guard_wall_seconds": 12.103
       }
     }
+  },
+  "freeze_inventory_rebaseline_corrective": {
+    "base_commit": "68a971c182ac574fb6d5d2685bbe73cd97ba0bd8",
+    "scope": "EXPLICIT_OFFLINE_FREEZE_INVENTORY_REBASELINE_ONLY",
+    "changed_source_paths": [
+      "tools/sync_producer_release.py"
+    ],
+    "prior_source_sha256_lf": "50acea8f9c07ee35a1541f07c8fc39799672a3f2d663a484da43b3700851ff36",
+    "stage_qualification": "SYNC_BODY_UNCHANGED_AND_MODULE_OUTSIDE_DAILY_IMPORT_CLOSURE",
+    "new_capacity_measurement": false
   }
 }

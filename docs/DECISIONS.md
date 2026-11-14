@@ -1,3 +1,19 @@
+## 2026-11-14 — November release candidate Owner decisions
+
+The Owner approved deferring the approximately 880-second non-voting tactical
+reversal shadow collector in default CORE + PRIVATE AI. Shadow evidence may
+arrive later. Fresh FULL PUBLISH runs the collector in its original position,
+and governed standalone collection remains available. The decision preserves
+qualified decision inputs, Producer and sealed T0 identities, and AI handoff
+semantics. The existing publication-only resume path keeps its behavior.
+
+The Owner approved rebasing the November 8 registry-byte inventory through the
+five completed November 9–13 Daily commits, using the
+[release-sync inventory proof](producer_freeze_release_sync_contract.md).
+The October 26 freeze is still pending. Its ten source byte hashes and governed
+artifact identities must match. Both inventories and the transition proof are
+retained. This decision grants no production release or authority promotion.
+
 ## 2026-10-04 — feedback single-winner publication and explicit reap accounting
 
 Codex took over Claude Code's exact `ff6e3d0` candidate in place under owner release authorization. The independently verified check-then-`os.replace` race is corrected with feedback-only crash-released kernel leases covering immutable target, completion manifest and shared status. Artifact creation is no-clobber; parent IPC is attempt-local. Contenders reuse only exact COMPLETE input/content, otherwise report immutable conflict. Cleanup has one five-second grace budget and explicit tree accounting; uncertain reaping is `CHILD_REAP_UNCONFIRMED`, never analytical evidence. Windows deadline-only fallback declares its weaker guarantees. No shared release-orchestrator primitive changed: `NO_NEW_MONDAY_CRITICAL_EXPOSURE`. `FEEDBACK_RESOURCE_CONTAINMENT_READY` does not assert whole-host readiness: the earlier 9,853,145,088-byte enrichment/T0 peak remains and `MONDAY_HOST_PREFLIGHT_PENDING` requires live headroom preflight. No live Daily/provider calls or calendar registration; authority effect NONE.

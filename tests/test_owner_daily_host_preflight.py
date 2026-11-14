@@ -451,6 +451,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["core_ai_fast_path_corrective"] = corrective
     tactical_shadow = live_receipt["tactical_shadow_deferral_corrective"]
     assert tactical_shadow["new_capacity_measurement"] is False
+    assert tactical_shadow["owner_decision"].startswith("Approved 2026-11-14: defer the non-voting")
     assert tactical_shadow["changed_source_paths"] == [
         "canonical_daily_operation.py", "config/daily_path_launchers.json", "daily_analysis_pipeline.py",
         "tools/build_owner_compact_research.py", "tools/run_owner_daily.py",
@@ -484,6 +485,28 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert 0 < run["peak_job_private_bytes"] < preflight.MEASURED_MAX_RSS_BYTES
         assert 0 < run["guard_wall_seconds"] < 120
     prior_receipt["hnx_listed_listing_presence_corrective"] = hnx
+    rebaseline = live_receipt["freeze_inventory_rebaseline_corrective"]
+    sync_path = "tools/sync_producer_release.py"
+    assert rebaseline["changed_source_paths"] == [sync_path]
+    assert rebaseline["scope"] == "EXPLICIT_OFFLINE_FREEZE_INVENTORY_REBASELINE_ONLY"
+    assert rebaseline["new_capacity_measurement"] is False
+    assert rebaseline["prior_source_sha256_lf"] == prior_receipt["source_sha256"][sync_path]
+    old_sync = subprocess.check_output(["git", "show", f"7d2c6915a84a9576c5783336ddca13995aaeb13f:{sync_path}"], cwd=root)
+    new_sync = (root / sync_path).read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(old_sync).hexdigest() == rebaseline["prior_source_sha256_lf"]
+
+    def sync_body(raw):
+        return next(node for node in ast.parse(raw).body
+                    if isinstance(node, ast.FunctionDef) and node.name == "sync_producer_release")
+
+    assert ast.dump(sync_body(old_sync)) == ast.dump(sync_body(new_sync))
+    assert module_name(sync_path) not in daily_reachable(root)
+    for path in preflight.capacity_source_paths(root):
+        if path != sync_path and path.endswith((".py", ".cmd", ".ps1", ".bat")):
+            assert b"sync_producer_release" not in (root / path).read_bytes()
+    prior_receipt["source_sha256"][sync_path] = hashlib.sha256(new_sync).hexdigest()
+    prior_receipt["freeze_inventory_rebaseline_corrective"] = rebaseline
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
