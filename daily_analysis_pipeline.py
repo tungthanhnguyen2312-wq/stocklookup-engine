@@ -230,6 +230,8 @@ def parse(argv=None):
                     help="Run the canonical DNSE-based daily operation (Phase A eligibility, one P3F9B "
                          "acquisition, Phase B completion, current research, Canonical Daily Producer, "
                          "runtime + trusted-subset materialization). Never falls back to vn_stock_pipeline.py.")
+    p.add_argument("--defer-tactical-shadow", action="store_true",
+                   help="Defer the retained-only tactical shadow collector from Canonical Daily.")
     p.add_argument("--complete-publication", action="store_true",
                     help="After local/session gates, delegate to tools/release_orchestrator.py all "
                          "--live --expected-session <session> --complete-publication. Requires --canonical-post-close.")
@@ -251,6 +253,9 @@ def main(argv=None, runner=subprocess.run) -> int:
     from runtime_paths import RUNTIME_ROOT_ENV, runtime_root as resolve_runtime_root
     if args.complete_publication and not args.canonical_post_close:
         print("[daily_analysis] --complete-publication requires --canonical-post-close", file=sys.stderr)
+        return 2
+    if args.defer_tactical_shadow and (not args.canonical_post_close or args.complete_publication):
+        print("[daily_analysis] --defer-tactical-shadow requires local Canonical Daily", file=sys.stderr)
         return 2
     if args.canonical_post_close:
         from daily_execution_environment import format_preflight, preflight_canonical_daily
@@ -324,6 +329,8 @@ def main(argv=None, runner=subprocess.run) -> int:
                 no_new_provider_acquisition=args.no_new_provider_acquisition,
                 operating_mode=OPERATING_MODE_DIAGNOSTIC if diagnostic_override else OPERATING_MODE_ORDINARY_DAILY,
             )
+            if args.defer_tactical_shadow:
+                operation_kwargs["include_tactical_shadow"] = False
             if progress_callback is not None:
                 operation_kwargs["progress_callback"] = progress_callback
             result = run_canonical_daily_operation(*operation_args, **operation_kwargs)

@@ -682,7 +682,7 @@ def _require_host_ready(root: Path) -> dict[str, Any]:
 
 
 def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress | None = None,
-               host_ready: dict[str, Any] | None = None) -> None:
+               host_ready: dict[str, Any] | None = None, include_tactical_shadow: bool = True) -> None:
     """Run the canonical child with explicit sequential sidecar-writer ownership.
 
     ``run_workflow`` evaluates the host gate inside phase 1, before Canonical Daily BEGIN, and
@@ -700,6 +700,8 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
                        subtask="child_process", status="CHILD_STARTING")
     command = [sys.executable, "-u", "daily_analysis_pipeline.py", "--runtime-root", str(runtime_root),
                "--canonical-post-close"]
+    if not include_tactical_shadow:
+        command.append("--defer-tactical-shadow")
     if host_ready.get("runtime_capacity_guard_required"):
         from stocklookup_core.acquisition.feedback_resource_guard import run_capacity_guarded
         from tools.check_owner_daily_host_preflight import windows_memory
@@ -1601,7 +1603,8 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         if replay_completed_session:
             daily_status = "ALREADY_COMPLETED / RESUMED" if auto_resumed else "ALREADY_COMPLETED / REUSED"
         else:
-            _run_daily(root, runtime_root, telemetry=telemetry, host_ready=host_ready)
+            _run_daily(root, runtime_root, telemetry=telemetry, host_ready=host_ready,
+                       include_tactical_shadow=full_publish)
             daily_status = "COMPLETED"
         if telemetry is not None:
             telemetry.emit(phase_index=2, progress_kind="PIPELINE", status="END")

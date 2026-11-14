@@ -7,7 +7,10 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
-[Scope, program](tplus_incremental_cost_v2_contract.md); Owner D1/D2 11-03.
+[Scope and acceptance](tplus_incremental_cost_v2_contract.md). The November 13 retained
+production receipts meet the M1b time and memory targets. The November 11 and 12
+combined runs exceed 900 s, so repeatable combined cost remains open. PR213/242
+delivered M2's ledger and partial-scan suppression.
 
 ## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`
 

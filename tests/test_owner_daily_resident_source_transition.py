@@ -29,7 +29,8 @@ def test_post_producer_boundary_only_releases_the_finished_argument_container():
     active = (ROOT/relative).read_bytes().replace(b"\r\n", b"\n")
     assert (ROOT/POST_PRODUCER_ARCHIVE).read_bytes().replace(b"\r\n", b"\n") == prior
     assert _post_producer_prior_bytes(ROOT, relative, active) == prior != active
-    before, after = ast.parse(prior), ast.parse(active)
+    from tools.verify_retention_reader_transition import _tactical_shadow_prior_bytes
+    before, after = ast.parse(prior), ast.parse(_tactical_shadow_prior_bytes(ROOT, relative, active))
     removals = []
     for node in ast.walk(after):
         if isinstance(node, ast.Try):
@@ -51,6 +52,9 @@ def test_post_producer_boundary_refuses_tampering(tmp_path, tamper):
         target = tmp_path/path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT/path, target)
+    from tools.verify_retention_reader_transition import _tactical_shadow_prior_bytes
+    (tmp_path/relative).write_bytes(_tactical_shadow_prior_bytes(
+        ROOT, relative, (tmp_path/relative).read_bytes().replace(b"\r\n", b"\n")))
     assert _post_producer_prior_bytes(tmp_path, relative, (tmp_path/relative).read_bytes().replace(b"\r\n", b"\n"))
     spec = json.loads((tmp_path/POST_PRODUCER_MANIFEST).read_bytes())
     if tamper == "live":

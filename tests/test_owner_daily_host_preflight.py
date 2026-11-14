@@ -438,9 +438,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt = json.loads(git_blob(receipt_path))
     assert prior_receipt["source_sha256"][relative] == spec["prior_sha256_lf"]
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
-    # The 2026-11-13 CORE + AI workflow corrective is the one later receipt change. It is
-    # admitted only as its own enumerated launcher paths plus its corrective record; this
-    # transition's source, every analytical source and all measured fields stay as they were.
+    # Rebuild the current receipt using only the enumerated successor paths.
     live_receipt = json.loads((root / receipt_path).read_bytes())
     corrective = live_receipt["core_ai_fast_path_corrective"]
     assert corrective["new_capacity_measurement"] is False
@@ -451,6 +449,16 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert live_receipt["source_sha256"][path] != prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = live_receipt["source_sha256"][path]
     prior_receipt["core_ai_fast_path_corrective"] = corrective
+    tactical_shadow = live_receipt["tactical_shadow_deferral_corrective"]
+    assert tactical_shadow["new_capacity_measurement"] is False
+    assert tactical_shadow["changed_source_paths"] == [
+        "canonical_daily_operation.py", "config/daily_path_launchers.json", "daily_analysis_pipeline.py",
+        "tools/build_owner_compact_research.py", "tools/run_owner_daily.py",
+        "tools/verify_retention_reader_transition.py",
+    ]
+    for path in tactical_shadow["changed_source_paths"]:
+        prior_receipt["source_sha256"][path] = live_receipt["source_sha256"][path]
+    prior_receipt["tactical_shadow_deferral_corrective"] = tactical_shadow
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
@@ -460,10 +468,12 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert not offline.intersection(preflight.capacity_source_paths(root))
     assert not {module_name(path) for path in offline}.intersection(daily_reachable(root))
     # Cover string-based import and launch registrations, including basename-only
-    # dispatch. The scope declaration itself is the sole permitted reference.
+    # dispatch. The compact research command is independently checked as offline-only.
+    compact_command = "tools/build_owner_compact_research.py"
+    assert module_name(compact_command) not in daily_reachable(root)
     names = re.compile(rb"\b(?:" + b"|".join(re.escape(Path(path).stem.encode()) for path in sorted(offline)) + rb")\b")
     for path in preflight.capacity_source_paths(root):
-        if path != relative:
+        if path not in (relative, compact_command):
             assert not names.search((root / path).read_bytes()), path
 
 

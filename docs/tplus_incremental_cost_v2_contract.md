@@ -85,4 +85,19 @@ Partition invalidation itself (`context_key`) is semantically required and is un
 - Pre + post stages ≤ 900 s.
 - Child peak ≤ 2 GiB.
 
-The real Daily observation follows the Owner-gated merge and deploy.
+## November 13 host observation
+
+M1/M1b are deployed (PR210/212). The guarded calls took 322.877 s pre-handoff and
+470.727 s post-handoff (793.604 s combined), with peaks of 1,253,130,240 and
+1,284,591,616 bytes. The respective child receipts report 42 and 43 T0 fingerprint hits,
+24 and 26 evaluator-sidecar hits, 2,551,467,498 and zero streamed SHA-256 bytes, and zero full
+IID parses. The post pass records `INCREMENTAL` with the newly bound November 13 T0;
+the pre pass keeps the earlier observation boundary. Their durable outputs were
+1,761,400,190 and 1,817,859,487 bytes. These are retained host measurements, with no new
+production replay. The November 11 and 12 child receipts total 1,030 and 1,034 s
+respectively, above the 900 s target even before launcher overhead. The post pass
+recorded zero streamed SHA-256 bytes on all three days. Repeatable combined
+cost remains the native closeout gate.
+
+M2 source is delivered in PR213/242. The partial-scan tests cover withholding runway.
+Use the existing bounded ledger when a fresh inventory is needed.

@@ -10,8 +10,8 @@
       ]
     },
     "canonical_daily_operation.py": {
-      "ast_sha256": "3dd781753de371b4db217fa030dd158e82f9bb2cfd0087b15ba9601145ce45a5",
-      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID and post-seal allocation bounds only; subprocess argv remains macro_sync.py.",
+      "ast_sha256": "a57ccc94c8b334e373101dd9c0c85838c7b223e713e0c409a4eaa5ccc110b5d1",
+      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID and post-seal allocation bounds only; subprocess argv remains macro_sync.py. CORE + AI defers the retained tactical shadow child.",
       "targets": [
         "macro_sync.py",
         "tools/release_orchestrator.py"
@@ -27,8 +27,8 @@
       ]
     },
     "daily_analysis_pipeline.py": {
-      "ast_sha256": "6dba1f1db8063498603f98c142b164185d178c68048f010f3898f53f4304a5aa",
-      "reason": "Producer step matrix and injected runner; loops and producer_script helper are bounded by reviewed caller AST.",
+      "ast_sha256": "1ccc1164864359b3dbaf20414c7718552ea022b1a1805ee45af8d706055ffc66",
+      "reason": "Producer step matrix and injected runner; loops and producer_script helper are bounded by reviewed caller AST. CORE + AI passes the tactical shadow deferral to the canonical kernel.",
       "targets": [
         "candle_scan.py",
         "export_ai_bundle.py",
@@ -92,8 +92,8 @@
       ]
     },
     "tools/run_owner_daily.py": {
-      "ast_sha256": "bda75bd28a84d56f8b28a1483492a6a360efe9e611b6f423d8a3a481cc7e1f2f",
-      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only. IID runtime-memory corrective: same canonical argv; capacity diagnostics only. Capture-only corrective: shared exclusive writer lease only; existing Daily argv and workflow body unchanged. Multi-freeze recovery corrective: commit_daily_state commits only the sealed session's registry rows via git hash-object/update-index; Daily argv unchanged. November-4 publication recovery: exact completed-session pending commit admission and non-force push retry with remote SHA verification; canonical Daily argv unchanged. November-9 publication conclusion: phase 5 emits FAILED unless Dashboard publication is READY, SKIPPED, or disabled; canonical Daily argv unchanged. November-13 CORE + AI default: run_workflow takes the Owner workflow mode; Dashboard publication, Action Center and Owner view run only on --full-publish; remote handoff attestation is checked in the handoff phase; _run_daily, host gate and canonical Daily argv unchanged.",
+      "ast_sha256": "47365e57797d76544b21627db7812299b3928cf65f601e7b8d885358d3df9c51",
+      "reason": "Resolved dispatch plus exact caller AST; injected/unknown paths are not claimed as runtime proof. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. October-27 capacity corrective: same canonical argv, strict contained child for the qualified physical admission band; session/publication code unchanged. Launcher corrective: same canonical argv and guards; sequential supervisor handoff and deferred publication imports only. IID runtime-memory corrective: same canonical argv; capacity diagnostics only. Capture-only corrective: shared exclusive writer lease only; existing Daily argv and workflow body unchanged. Multi-freeze recovery corrective: commit_daily_state commits only the sealed session's registry rows via git hash-object/update-index; Daily argv unchanged. November-4 publication recovery: exact completed-session pending commit admission and non-force push retry with remote SHA verification; canonical Daily argv unchanged. November-9 publication conclusion: phase 5 emits FAILED unless Dashboard publication is READY, SKIPPED, or disabled; canonical Daily argv unchanged. November-13 CORE + AI default: run_workflow takes the Owner workflow mode; Dashboard publication, Action Center and Owner view run only on --full-publish; remote handoff attestation is checked in the handoff phase; _run_daily and the host gate were preserved there. Tactical shadow deferral adds only a CORE + AI argument to the same canonical child.",
       "targets": [
         "daily_analysis_pipeline.py",
         "tools/release_orchestrator.py",
