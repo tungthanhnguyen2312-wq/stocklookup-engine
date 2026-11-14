@@ -573,6 +573,20 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     d4a_on = (root / d4a_config).read_bytes().replace(b"\r\n", b"\n")
     assert d4a_on == d4a_off.replace(b"\r\n", b"\n").replace(b": false", b": true")
     prior_receipt["source_sha256"][d4a_config] = hashlib.sha256(d4a_on).hexdigest()
+    # Removal of unreferenced historical runners: pins disappear only for files deleted from
+    # the tree, each absent from the Daily closure at the base, with no capacity measurement change.
+    removal = live_receipt["unreachable_historical_runner_removal"]
+    assert removal["scope"] == "REMOVE_UNREFERENCED_HISTORICAL_TOOLS_ONLY"
+    assert removal["new_capacity_measurement"] is False
+    removed = removal["removed_source_paths"]
+    assert removed == sorted(set(removed)) and all(path.startswith("tools/") for path in removed)
+    reachable = daily_reachable(root)
+    for path in removed:
+        assert not (root / path).exists()
+        assert module_name(path) not in reachable
+        old = subprocess.check_output(["git", "show", f"{removal['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"].pop(path)
+    prior_receipt["unreachable_historical_runner_removal"] = removal
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
