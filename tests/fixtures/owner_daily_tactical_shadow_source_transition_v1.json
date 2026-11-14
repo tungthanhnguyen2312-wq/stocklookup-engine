@@ -1,0 +1,18 @@
+{
+  "base_commit": "7d2c6915a84a9576c5783336ddca13995aaeb13f",
+  "scope": "DEFER_TACTICAL_SHADOW_IN_CORE_AI_ONLY",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "prior_sha256_lf": "fb42465d5160ca1234213196dc2977dc4581a0b60c53bd3b553fbda4fed3c755",
+      "active_sha256_lf": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337"
+    },
+    "tools/run_owner_daily.py": {
+      "prior_sha256_lf": "051161c4c273360a7bf677ae2dae26af9d692e6dc51ceb104b08585c4cd60f49",
+      "active_sha256_lf": "01660b0311c0c9d36b4774eb39e3adbb9918262827ff0223fb59c195df4e0885"
+    },
+    "daily_analysis_pipeline.py": {
+      "prior_sha256_lf": "fcd011ff8b8877df9b0652f3c494dc8dfb506fc2b0e3c709b8008e9152505f64",
+      "active_sha256_lf": "89cd6f316e58f8ed516a254cd159ebdf1539b5835f536f5323dc003f251be031"
+    }
+  }
+}

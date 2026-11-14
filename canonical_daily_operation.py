@@ -686,6 +686,7 @@ def run_canonical_daily_operation(
     now: datetime | None = None,
     workers: int = 12,
     complete_publication: bool = False,
+    include_tactical_shadow: bool = True,
     working_dates_evidence: Mapping[str, Any] | None = None,
     exact_session_evidence: Mapping[str, Any] | None = None,
     working_dates_fetcher: Callable[[], Mapping[str, Any]] | None = None,
@@ -1128,10 +1129,16 @@ def run_canonical_daily_operation(
     # this is TACTICAL_REVERSAL_SHADOW_PROBE_POLICY_V1's own A/B observation collector.
     # Both are post-hoc and non-blocking -- a failure in either never revises the Daily
     # Producer result already finalized above.
-    tactical_shadow_collection = run_tactical_reversal_shadow_collection(
-        root, resolved_session, artifact_root=artifact_root,
-        **({"output_root": operation_output_root} if operation_output_root != root else {}),
-    )
+    if include_tactical_shadow or complete_publication:
+        tactical_shadow_collection = run_tactical_reversal_shadow_collection(
+            root, resolved_session, artifact_root=artifact_root,
+            **({"output_root": operation_output_root} if operation_output_root != root else {}),
+        )
+    else:
+        tactical_shadow_collection = {
+            "status": "DEFERRED", "session": resolved_session,
+            "reason": "TACTICAL_SHADOW_COLLECTION_OMITTED_FROM_CORE_AI",
+        }
     checkpoints.finish()  # PROSPECTIVE_COLLECTION_HANDLED
     tiers = build_tiered_bundle(
         root, resolved_session, acquisition=acquisition, producer_result=producer_result,

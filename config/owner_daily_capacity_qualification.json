@@ -20,7 +20,7 @@
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
     "canonical_daily_financial_v2_materialization.py": "7379bc3b3f7af098e16862df148e5a8357c4f8e77659007ecde24c4350c802c6",
-    "canonical_daily_operation.py": "fb42465d5160ca1234213196dc2977dc4581a0b60c53bd3b553fbda4fed3c755",
+    "canonical_daily_operation.py": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337",
     "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "f38c0876bd715e4e60e162d6fc6850a723af7e8649603672075216d292196e6b",
+    "config/daily_path_launchers.json": "13894ef6e7e99c40de158d79f2ed67609c860bbbf694509ad558e980c89a1845",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "9ed88654a092977aec9cbe678c132695201c9e47bbc267eee332e82581b7bbf2",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -84,7 +84,7 @@
     "current_research_scenario_context.py": "b2d6ae0b159f5a63b6d002c3f47bd0a632c925d96c1d4dfa841e38bb774be782",
     "current_state_relative_valuation.py": "4780bc0f9d730e82732c6823ba04ef81c26ae2778d98b09c8cac060abb0f50b0",
     "current_valuation_input_authority.py": "699e001f9362251c0678ecdd856945e155d0774c177160be1488bd9bd89e6b3c",
-    "daily_analysis_pipeline.py": "fcd011ff8b8877df9b0652f3c494dc8dfb506fc2b0e3c709b8008e9152505f64",
+    "daily_analysis_pipeline.py": "89cd6f316e58f8ed516a254cd159ebdf1539b5835f536f5323dc003f251be031",
     "daily_execution_environment.py": "dd9a95a6ebe4cfedfb521d98f6f0809fd224599aabd647cb6069f7c865c18186",
     "daily_official_liquidity_rollforward.py": "3899c0fdeb14e00c3b318d89167b05936a73f7cf60f4a98f6235ed3d933a9640",
     "daily_producer_pipeline.py": "766f4e649a90c30d99b96c3a9456e056dce350e3a73ad0aef2270eb0e04c288e",
@@ -831,7 +831,7 @@
     "stocklookup_core/evidence/price_basis_feature_fitness.py": "6a416b0c23e0903cc5dd46328bc7621871f4003777afa0417405ef39a8cd1403",
     "stocklookup_core/evidence/price_representation_contract.py": "225c7e94fbaf247707771e5c8b2df6ebc6dc69ea1660ed86ed8fbda056ea623e",
     "stocklookup_core/evidence/prospective_market_snapshot_contract.py": "e9ac78829f9070059aa900ca37ca1cccc729b127f6d05206f8580132c001f095",
-    "stocklookup_core/evidence/prospective_pit_capture.py": "7ab76afe020e72fc820d352ff2d8650c919c1d75acf3dea888f14d0dc5d63e5f",
+    "stocklookup_core/evidence/prospective_pit_capture.py": "30b5e93907a3d522589b5f807fa1b83749b5f26255f6dcd66b000b982e1224f0",
     "stocklookup_core/evidence/prospective_pit_evidence_analysis.py": "1f44b0fc59fb55632496a24471cc10dd4ad3c9312b64d0a45b278f61bba4e654",
     "stocklookup_core/evidence/prospective_route_ownership_review.py": "4c6a24e83719afb3c400a752d4333a85155f9e845a305141634c23bdc2d75b5a",
     "stocklookup_core/evidence/provider_official_bridge.py": "1fca7daf73361d720772f23d0e10433227662be3f905e403e26107695e6330da",
@@ -1071,6 +1071,7 @@
     "tools/build_frontend.py": "1cebeb79b75ada45deca6d8ef0e611273c133e3221b5c24930633a751a4c150d",
     "tools/build_kbs_trading_value_coverage.py": "367e978b14424788351cbececba0d43048eb340b8fba1c7c68dd2b19228c4dc3",
     "tools/build_market_wide_fundamental_research_cohort_scaleout_validation_v1.py": "5be25e63a6660ee02289e2eb1abb3f04f4b69874f15305c2bb4bf153e1edb854",
+    "tools/build_owner_compact_research.py": "14a0ceb9fa624bdb0c4d66fe9dd15224923ca963c3b3b0158c3484fafc3bda6f",
     "tools/build_phase2_canonical_market.py": "6e6508d797ca201371ac461f572e97bd2087fef4f34df5c69228d610f61ef2e4",
     "tools/build_phase3_feature_store.py": "f3e11a8744fac04d73e769d2191eeeaef5f3fe4c36587b67327cdf061e82b53d",
     "tools/build_provider_financial_monetary_basis_verdict.py": "fe8148ba3c46e8557a03f9e9716730e66f6085f6f3bb7f0fd933c7b07b0358cf",
@@ -1386,7 +1387,7 @@
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
     "tools/run_owner_daily.cmd": "fd62709ebd133ed950ad204ea2aef115104d3b6d65ddafba9df8cc0b3df4602a",
     "tools/run_owner_daily.ps1": "371de90a4e7853a35f8c851c59f627c6b9e6212688331df3df1c1822df02aa6c",
-    "tools/run_owner_daily.py": "051161c4c273360a7bf677ae2dae26af9d692e6dc51ceb104b08585c4cd60f49",
+    "tools/run_owner_daily.py": "01660b0311c0c9d36b4774eb39e3adbb9918262827ff0223fb59c195df4e0885",
     "tools/run_owner_daily_feedback_rehearsal.py": "994b36e2c066cce0effc77428688e53ea25ad8ae9a4d7530f83ba39e2da6b55f",
     "tools/run_owner_focus_core_financial_panel_coverage.py": "afbc3b454fc4618b941db0cbb4046d88bd8e7586f30741019f82609ef57a4691",
     "tools/run_owner_focus_image_only_corporate_ocr_batch.py": "a64d726c5ff985da2996ec3d2dcd47623d26aa768eaa25928a4950793ed2446e",
@@ -1491,7 +1492,7 @@
     "tools/storage_capacity_plan.py": "e319688905c588d203ec89209a1f7ab1de03c30b2f67b1f28501f41ddb3e9207",
     "tools/storage_dedup_relink.py": "95098ced4d5a205b174a70a7290e8d438cd66dd7fee20de498ea12219e13d133",
     "tools/storage_ledger.py": "f1b1f9c72b12dc8c287cfae2443fdcbe614f7a6838bbc4ecce3bd0404aa94e22",
-    "tools/sync_producer_release.py": "50acea8f9c07ee35a1541f07c8fc39799672a3f2d663a484da43b3700851ff36",
+    "tools/sync_producer_release.py": "b35d78ffee2b3cf0185e8a8748bd93e76c48ed4fae318d433d850d82ad27f379",
     "tools/validate_canonical_daily_shadow_recommendation_autosourcing_v1.py": "74273adf237150999039ac3e93edb1d58e6fbb75f540bbdcc292bc25ff0024dc",
     "tools/validate_owner_daily_progress_telemetry.py": "d80a7dc8c0b0edfbb0021dbbdb55046f39b698e7fa127e2f3e1e8e410e2f6ebd",
     "tools/validate_producer_financial_home_completion.py": "8190ba307fbd0de4ebe1bc6f34b8f3e1063892b82d49e69d3d9ad3a661048d65",
@@ -1502,7 +1503,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "d166d5570808d0c31462bc04ea0c19e5a3635c9c1c0ead014d0b2a1d3731f8ce",
+    "tools/verify_retention_reader_transition.py": "00614b09c6a8abe3470f5121cf0fe92bab78a3e0b7de20a7666e59c899d604f4",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1610,5 +1611,62 @@
     "new_capacity_measurement": false,
     "source_transition": "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json",
     "owner_decision": "CORE + PRIVATE AI default approved 2026-11-13"
+  },
+  "tactical_shadow_deferral_corrective": {
+    "base_commit": "7d2c6915a84a9576c5783336ddca13995aaeb13f",
+    "scope": "CORE_AI_OMITS_ONE_RETAINED_ONLY_SUBPROCESS; OFFLINE_RESEARCH_COMMAND",
+    "changed_source_paths": [
+      "canonical_daily_operation.py",
+      "config/daily_path_launchers.json",
+      "daily_analysis_pipeline.py",
+      "tools/build_owner_compact_research.py",
+      "tools/run_owner_daily.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "source_transition": "tests/fixtures/owner_daily_tactical_shadow_source_transition_v1.json",
+    "new_capacity_measurement": false,
+    "owner_decision": "Approved 2026-11-14: defer the non-voting tactical reversal shadow collector in default CORE + PRIVATE AI"
+  },
+  "hnx_listed_listing_presence_corrective": {
+    "base_commit": "8b60f92ce7f7576c4b58a7c8c3454495bf995d88",
+    "scope": "HNX_LISTED_CANONICAL_EXCHANGE_FOR_PROSPECTIVE_LISTING_PRESENCE_ONLY",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/prospective_pit_capture.py"
+    ],
+    "prior_source_sha256_lf": "7ab76afe020e72fc820d352ff2d8650c919c1d75acf3dea888f14d0dc5d63e5f",
+    "stage_qualification": "WINDOWS_JOB_GUARDED_RETAINED_CAPTURE_AND_TPLUS1_PRICE_HORIZON_PARITY",
+    "new_capacity_measurement": true,
+    "whole_daily_requalification": false,
+    "retained_replay": {
+      "session": "2026-11-13",
+      "market_snapshot_identity": "p3f9_exact_session_snapshot:ce69493f0d120ffd4c88b9a34f582eb340139f81145801e77e4d8186e1a2b06b",
+      "listing_source_identity": "prospective_listing_source_observations:d18a3154a97adae827dfc08e6c891485b9364379e5ca984ea99d2bd6840e3d2b",
+      "listing_rows": 1518,
+      "capture_rows": 918,
+      "tplus1_horizon_rows": 918,
+      "tplus1_canonical_rows_sha256": "2faecf8810b45c62ff12204e723d55c0316fac658f482cb590246b96434deec7",
+      "baseline": {
+        "positive_listings": 1219,
+        "capture_complete": 725,
+        "peak_job_private_bytes": 371699712,
+        "guard_wall_seconds": 15.321
+      },
+      "candidate": {
+        "positive_listings": 1518,
+        "capture_complete": 918,
+        "peak_job_private_bytes": 370196480,
+        "guard_wall_seconds": 12.103
+      }
+    }
+  },
+  "freeze_inventory_rebaseline_corrective": {
+    "base_commit": "68a971c182ac574fb6d5d2685bbe73cd97ba0bd8",
+    "scope": "EXPLICIT_OFFLINE_FREEZE_INVENTORY_REBASELINE_ONLY",
+    "changed_source_paths": [
+      "tools/sync_producer_release.py"
+    ],
+    "prior_source_sha256_lf": "50acea8f9c07ee35a1541f07c8fc39799672a3f2d663a484da43b3700851ff36",
+    "stage_qualification": "SYNC_BODY_UNCHANGED_AND_MODULE_OUTSIDE_DAILY_IMPORT_CLOSURE",
+    "new_capacity_measurement": false
   }
 }

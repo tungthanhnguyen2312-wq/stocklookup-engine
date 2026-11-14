@@ -146,9 +146,35 @@ def _post_producer_spec(root: Path) -> dict | None:
     return spec
 
 
+TACTICAL_SHADOW_MANIFEST = "tests/fixtures/owner_daily_tactical_shadow_source_transition_v1.json"
+TACTICAL_SHADOW_SOURCES = ("canonical_daily_operation.py", "tools/run_owner_daily.py", "daily_analysis_pipeline.py")
+TACTICAL_SHADOW_PIPELINE = "daily_analysis_pipeline.py"  # E2/E3-pinned; peeled first in historical_bytes.
+
+
+def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Conserve both historical source chains across the optional observer dispatch."""
+    manifest = root / TACTICAL_SHADOW_MANIFEST
+    if relative not in TACTICAL_SHADOW_SOURCES or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (spec.get("base_commit") != "7d2c6915a84a9576c5783336ddca13995aaeb13f"
+            or spec.get("scope") != "DEFER_TACTICAL_SHADOW_IN_CORE_AI_ONLY"
+            or tuple(spec.get("sources", {})) != TACTICAL_SHADOW_SOURCES):
+        raise ValueError("TACTICAL_SHADOW_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    archive = manifest.with_name(manifest.stem + "_sources") / (relative + ".txt")
+    prior = archive.read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TACTICAL_SHADOW_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _post_producer_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     if relative != EVALUATED_INPUT_SOURCE:
         return active
+    active = _tactical_shadow_prior_bytes(root, relative, active)
     spec = _post_producer_spec(root)
     if spec is None:
         return active
@@ -562,6 +588,7 @@ def _core_ai_fast_path_prior_bytes(root: Path, relative: str, active: bytes) -> 
     manifest = root / "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json"
     if relative != "tools/run_owner_daily.py" or not manifest.exists():
         return active
+    active = _tactical_shadow_prior_bytes(root, relative, active)
     spec = json.loads(manifest.read_bytes())
     archive = "tests/fixtures/owner_daily_core_ai_fast_path_v1_sources/tools/run_owner_daily.py.txt"
     if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "archive", "prior_sha256_lf", "active_sha256_lf"}
@@ -978,6 +1005,8 @@ def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> b
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    if relative == TACTICAL_SHADOW_PIPELINE:
+        content = _tactical_shadow_prior_bytes(root, relative, content)
     content = _decision_context_prior_bytes(root, relative, content)
     content = _legacy_summary_fingerprint_prior_bytes(root, relative, content)
     content = _ocr_recognition_prior_bytes(root, relative, content)

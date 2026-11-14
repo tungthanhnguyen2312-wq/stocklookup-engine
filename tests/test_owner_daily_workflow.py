@@ -1944,6 +1944,11 @@ def test_core_ai_completes_without_dashboard_action_center_or_owner_view(monkeyp
     _write_dashboard_build_info(tmp_path / "web", "2026-09-15", build_id="older")
     calls = _core_ai_mocks(monkeypatch)
 
+    def run_daily(*args, **kwargs):
+        assert kwargs["include_tactical_shadow"] is False
+        calls.append("daily")
+
+    monkeypatch.setattr(workflow, "_run_daily", run_daily)
     result = _run(tmp_path, _runtime(tmp_path), workflow_mode=CORE_AI)
 
     assert result["status"] == "PASS" and result["workflow_mode"] == CORE_AI

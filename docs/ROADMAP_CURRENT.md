@@ -7,7 +7,8 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
-[Scope, program](tplus_incremental_cost_v2_contract.md); Owner D1/D2 11-03.
+[Scope](tplus_incremental_cost_v2_contract.md). 11-13 meets M1b targets; 11-11/12 combined
+runs exceed 900 s (open). PR213/242: M2 ledger + partial-scan suppression.
 
 ## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`
 

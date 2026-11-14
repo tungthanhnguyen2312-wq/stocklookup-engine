@@ -271,7 +271,7 @@ cold guard/plan/adapter offline. Authority NONE; no production activation or rec
 - Contract: [dashboard_release_session_contract.md](dashboard_release_session_contract.md), [release_publication_contract.md](release_publication_contract.md); `release_orchestrator.py`, `research/ai_handoff_publication.py`
 - Runtime: `ACTIVE` · Authority: `SCOPED` (presentation of Producer verdicts; consumers may narrow, never widen) · Production: `OWNER_LAUNCHER` (phases 3–9)
 - Input: sealed Producer operation, retained Brief, Integrated Decision overlay · Predecessor: pre-M1 publication path
-- Blocker: none recorded · Next trigger: Monday `FINAL STATUS: PASS` = `READY_FOR_AI`
+- Blocker: none recorded · Next trigger: CORE + AI PASS = exact remote `READY_FOR_AI`; FULL PUBLISH adds Dashboard/Owner views
 
 ### 21. Host preflight (operator gate)
 - Contract: [owner_daily_host_preflight_contract.md](owner_daily_host_preflight_contract.md)

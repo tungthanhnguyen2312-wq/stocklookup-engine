@@ -9,6 +9,7 @@ import shutil
 import socket
 
 import pytest
+from _test_tiers import retained_evidence_root
 
 import canonical_daily_operation as cdo
 import completed_market_session_gate as gate
@@ -1298,10 +1299,10 @@ def test_retained_pre_workspace_session_fails_closed_before_publication(tmp_path
     import canonical_dashboard_runtime_release as runtime_release
     import canonical_trusted_subset_release as trusted
 
-    scaleout = ROOT / _PRE_WORKSPACE_SCALEOUT_ARTIFACT
+    scaleout = retained_evidence_root() / _PRE_WORKSPACE_SCALEOUT_ARTIFACT
     envelope = json.loads(scaleout.read_text(encoding="utf-8"))
-    snapshot = _p3f9b(
-        SESSION,
+    acquisition = _acquired(
+        tmp_path, SESSION, reused=True,
         requested_at=str(envelope["resolved_session"]["execution_timestamp"]),
         exact=int(envelope["exact_session_coverage"]["exact_session_observed_count"]),
         total=int(envelope["exact_session_coverage"]["attempted_candidate_count"]),
@@ -1310,19 +1311,7 @@ def test_retained_pre_workspace_session_fails_closed_before_publication(tmp_path
 
     def acquire(*a, **k):
         acquire_calls.append(1)
-        return {
-            "snapshot": snapshot,
-            "resolved_completed_session": SESSION,
-            "coverage": {
-                "exact_session_retained_count": snapshot["exact_session_observed_count"],
-                "total_candidates": snapshot["attempted_candidate_count"],
-                "ratio": snapshot["exact_session_observed_count"] / snapshot["attempted_candidate_count"],
-            },
-            "artifact_root": ROOT,
-            "eligibility": {"reused_existing_eligible_artifact": True, "redirected": False},
-            "paths": {},
-            "triage_status": {},
-        }
+        return acquisition
 
     runtime = tmp_path / "runtime"
     src_bctc = ROOT / "data_bctc"
@@ -1331,7 +1320,7 @@ def test_retained_pre_workspace_session_fails_closed_before_publication(tmp_path
 
     def runtime_mat(root, runtime_root, session, *, producer_run_identity=None):
         return runtime_release.materialize_canonical_runtime_release(
-            ROOT, runtime_root, session, producer_run_identity=producer_run_identity,
+            retained_evidence_root(), runtime_root, session, producer_run_identity=producer_run_identity,
         )
 
     def trusted_mat(producer_root, runtime_root, session, **kwargs):
@@ -1494,7 +1483,7 @@ def test_real_2026_09_21_retained_evidence_skips_working_dates_probe(tmp_path: P
         tmp_path, monkeypatch,
         session="2026-09-21",
         now=datetime(2026, 9, 21, 19, 0, tzinfo=VN_TZ),
-        evidence_dir=(ROOT / _REAL_2026_09_21_SNAPSHOT).parent,
+        evidence_dir=(retained_evidence_root() / _REAL_2026_09_21_SNAPSHOT).parent,
     )
 
 
@@ -1567,3 +1556,16 @@ def test_broken_progress_callback_does_not_change_canonical_record(tmp_path, mon
     observed = _run(tmp_path, monkeypatch, progress_callback=broken)
     assert observed["operation_identity"] == baseline["operation_identity"]
     assert observed["_calls"] == baseline["_calls"]
+
+
+def test_tactical_shadow_deferral_preserves_seal_t0_and_handoff(tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(cdo, "run_tactical_reversal_shadow_collection",
+                        lambda *a, **k: calls.append("shadow") or {"status": "SHADOW_COLLECTION_COMPLETE"})
+    complete = _run(tmp_path, monkeypatch)
+    core = _run(tmp_path, monkeypatch, include_tactical_shadow=False)
+    assert calls == ["shadow"]
+    assert core["tactical_reversal_shadow_collection"]["status"] == "DEFERRED"
+    assert complete["tactical_reversal_shadow_collection"]["status"] == "SHADOW_COLLECTION_COMPLETE"
+    for key in ("operation_identity", "producer_result", "prospective_decision_snapshot", "tiers"):
+        assert core[key] == complete[key]

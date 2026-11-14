@@ -133,6 +133,10 @@ def _copy_boundary(tmp_path: Path) -> None:
     paths.update({publication, json.loads((ROOT / publication).read_bytes())["archive"]})
     core_ai = "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json"
     paths.update({core_ai, json.loads((ROOT / core_ai).read_bytes())["archive"]})
+    from tools.verify_retention_reader_transition import TACTICAL_SHADOW_MANIFEST, TACTICAL_SHADOW_SOURCES
+    paths.add(TACTICAL_SHADOW_MANIFEST)
+    paths.update(TACTICAL_SHADOW_MANIFEST.removesuffix(".json") + "_sources/" + p + ".txt"
+                 for p in TACTICAL_SHADOW_SOURCES)
     multi_freeze = "tests/fixtures/owner_daily_multi_freeze_source_transition_v1.json"
     paths.update({multi_freeze, json.loads((ROOT / multi_freeze).read_bytes())["archive"]})
     tplus = "tests/fixtures/tplus_resumable_feedback_source_transition_v1.json"
@@ -250,7 +254,7 @@ def test_launcher_successor_rejects_tampering(tmp_path, tamper):
         spec = json.loads(manifest.read_bytes())
         spec["sources"]["runtime_paths.py"] = spec["sources"][CAPACITY_SOURCE]
         manifest.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION|CORE_AI_FAST_PATH)_SOURCE_TRANSITION"):
+    with pytest.raises(ValueError, match="(?:LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION|CORE_AI_FAST_PATH|TACTICAL_SHADOW)_SOURCE_TRANSITION"):
         _capacity_prior_bytes(tmp_path, CAPACITY_SOURCE, _lf(source.read_bytes()))
 
 
@@ -273,6 +277,8 @@ def test_pending_daily_commit_successor_refuses_tampering(tmp_path, tamper):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
+    from tools.verify_retention_reader_transition import _tactical_shadow_prior_bytes
+    live = _tactical_shadow_prior_bytes(ROOT, 'tools/run_owner_daily.py', live)
     live = _core_ai_fast_path_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)
     live = _publication_conclusion_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live)
     assert _pending_commit_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live) == (ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n')
@@ -312,7 +318,9 @@ def _function_bodies(source: bytes) -> dict:
 def test_core_ai_successor_leaves_daily_launch_guard_and_retention_bodies_unchanged():
     spec = json.loads((ROOT / CORE_AI_MANIFEST).read_bytes())
     prior = _function_bodies((ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n'))
-    live = _function_bodies((ROOT / 'tools/run_owner_daily.py').read_bytes().replace(b'\r\n', b'\n'))
+    from tools.verify_retention_reader_transition import _tactical_shadow_prior_bytes
+    live = _function_bodies(_tactical_shadow_prior_bytes(ROOT, 'tools/run_owner_daily.py',
+        (ROOT / 'tools/run_owner_daily.py').read_bytes().replace(b'\r\n', b'\n')))
     assert set(CORE_AI_UNCHANGED_BODIES) <= set(prior)
     assert {name: live[name] for name in CORE_AI_UNCHANGED_BODIES} == {name: prior[name] for name in CORE_AI_UNCHANGED_BODIES}
     # Only the Owner orchestration and its argument parser changed; nothing was removed.
@@ -328,7 +336,9 @@ def test_core_ai_successor_refuses_tampering(tmp_path, tamper):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)
-    live = (ROOT / 'tools/run_owner_daily.py').read_bytes().replace(b'\r\n', b'\n')
+    from tools.verify_retention_reader_transition import _tactical_shadow_prior_bytes
+    live = _tactical_shadow_prior_bytes(ROOT, 'tools/run_owner_daily.py',
+        (ROOT / 'tools/run_owner_daily.py').read_bytes().replace(b'\r\n', b'\n'))
     assert _core_ai_fast_path_prior_bytes(tmp_path, 'tools/run_owner_daily.py', live) == (
         ROOT / spec['archive']).read_bytes().replace(b'\r\n', b'\n')
     assert _core_ai_fast_path_prior_bytes(tmp_path, 'stocklookup.py', b'other') == b'other'

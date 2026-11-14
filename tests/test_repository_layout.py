@@ -529,6 +529,8 @@ def test_capacity_successor_conserves_historical_launcher_and_rejects_tampering(
                  "tests/fixtures/owner_daily_publication_conclusion_v1_sources/tools/run_owner_daily.py.txt",
                  "tests/fixtures/owner_daily_core_ai_fast_path_source_transition_v1.json",
                  "tests/fixtures/owner_daily_core_ai_fast_path_v1_sources/tools/run_owner_daily.py.txt",
+                 transition.TACTICAL_SHADOW_MANIFEST,
+                 transition.TACTICAL_SHADOW_MANIFEST.removesuffix(".json") + "_sources/tools/run_owner_daily.py.txt",
                  "tests/fixtures/owner_daily_multi_freeze_source_transition_v1.json",
                  "tests/fixtures/owner_daily_multi_freeze_v1_sources/tools/run_owner_daily.py.txt",
                  *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in transition.LAUNCHER_SOURCES),
@@ -553,7 +555,7 @@ def test_capacity_successor_conserves_historical_launcher_and_rejects_tampering(
         spec = json.loads(path.read_text())
         spec["source_path"] = "another.py"
         path.write_text(json.dumps(spec))
-    with pytest.raises(ValueError, match="(?:CAPACITY|LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION|CORE_AI_FAST_PATH)_SOURCE_TRANSITION_"):
+    with pytest.raises(ValueError, match="(?:CAPACITY|LAUNCHER|IID_RUNTIME_MEMORY|CAPTURE_WRITER|MULTI_FREEZE|PENDING_COMMIT|PUBLICATION_CONCLUSION|CORE_AI_FAST_PATH|TACTICAL_SHADOW)_SOURCE_TRANSITION_"):
         transition._capacity_prior_bytes(tmp_path, transition.CAPACITY_SOURCE, live)
 
 

@@ -20,6 +20,46 @@ The first form on the same day as a completed CORE + AI run resumes that session
 publishes an earlier completed session. Neither reruns Canonical Daily nor creates a new T0.
 (`tools/run_owner_daily.ps1 -FullPublish` is the equivalent front door.)
 
+## Deferred tactical shadow collection
+
+CORE + PRIVATE AI defers the tactical A/B observer. A fresh FULL PUBLISH runs it in the
+original position. A completed-session resume stays on the publication path. To collect
+the observer separately from retained inputs, use the existing runner with a private
+shadow store when the Daily and capture writers are idle.
+
+The November 13 trace measured K2–K4 904 s (including about 667 s in liquidity batches),
+K6 740 s, K7–K8 658 s, K9 49 s, K10–K12 174 s, K13–K14 250 s, K15 342 s,
+K16 880 s, K17 under 1 s, K18 2,012 s, K19 471 s, and K20 plus final recording 236 s.
+K13 feeds the handoff and current Thesis lineage. K15 binds the cohort and pre-handoff
+feedback. K18 feeds K20 and the private presentation attestation, which the Owner completion
+gate requires. K19 evaluates newly mature outcomes after today's T0 becomes discoverable.
+K16 has its own retained store and no downstream decision or handoff input. Holding the
+recorded remainder fixed, omitting K16 projects 5,920 s Canonical elapsed from 6,801 s.
+
+```powershell
+python tools/run_tactical_reversal_prospective_shadow_collection.py --retained-evidence-root <retained-root> --store-root <private-shadow-store> --session YYYY-MM-DD
+```
+
+## Compact private research
+
+Use the resolved, sealed operation directory under
+`operations-review/daily-research-session-operations-v1/<session>/<operation-digest>`.
+The command reads the retained Brief, product, Opportunity Queue, and available screener
+and Thesis evidence. It emits `market.md`, one Markdown file per requested ticker, and
+`research.json` with input digests and source identities. Omit `--tickers` for a market-only
+projection. Up to 12 explicit ticker arguments are accepted.
+
+```powershell
+python -B tools/build_owner_compact_research.py --operation-dir <sealed-operation-dir> --session YYYY-MM-DD --tickers HPG KBC FPT --output-dir <private-output-dir>
+```
+
+For reviewed financial research add `--reviewed-packet`, `--packet-sha256` and
+`--source-map` as described in the [reviewed packet procedure](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md).
+The earlier-session cutoff and document digest checks apply before any output is written.
+The Markdown and JSON are private, non-voting read models with no publication step.
+
+## Launcher routing
+
 The Desktop file should contain only a call to the Producer's own launcher, which keeps no
 PowerShell host resident during host admission or the Daily:
 

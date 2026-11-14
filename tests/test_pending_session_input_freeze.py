@@ -383,3 +383,82 @@ def test_release_sync_requires_active_profile(tmp_path, monkeypatch):
     monkeypatch.setattr(runtime_paths, "workspace_profile", lambda: {"paths": {"producer": tmp_path / "other"}})
     with pytest.raises(ValueError, match="FREEZE_SYNC_WRONG_PROFILE_ROOT"):
         sync_producer_release(tmp_path, "0" * 40, {})
+@pytest.mark.parametrize("case", ["valid", "mutated_source", "wrong_pin", "registry_rewrite", "wrong_commit", "missing_seal", "seal_conflict"])
+def test_rebaseline_follows_only_released_daily_additions(tmp_path, monkeypatch, case):
+    from tools.sync_producer_release import rebaseline_freeze_inventory
+    import release_checkout_identity
+
+    root, origin = _clone(tmp_path)
+    monkeypatch.setattr(release_checkout_identity, "origin_matches_checkout",
+                        lambda url, repository: url == str(origin))
+    path = root / REGISTRY
+
+    def write(body):
+        path.write_bytes((json.dumps(body, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+
+    write(json.loads(path.read_bytes()))
+    _git(root, "add", REGISTRY)
+    _git(root, "commit", "-qm", "Canonical registry formatting")
+    _git(root, "push")
+    original_head = _git_out(root, "rev-parse", "HEAD")
+    pending = _apply_content_verified_freeze(root)
+    write(pending)
+    original, _ = freeze.freeze_byte_inventory(root)
+    _git(root, "checkout", "--", REGISTRY)
+    added = "2026-10-12"
+    protected_bytes = {root / entry["path"]: (root / entry["path"]).read_bytes()
+                       for entry in pending["sessions"][SESSION].values()}
+    advanced = _apply_freeze(root, session=added)
+    for artifact_path, raw in protected_bytes.items():
+        artifact_path.write_bytes(raw)
+    if case == "registry_rewrite":
+        del advanced["sessions"][PRIOR]
+    write(advanced)
+    _git(root, "add", REGISTRY)
+    message = "ordinary commit" if case == "wrong_commit" else f"daily: retain {added} completed session"
+    _git(root, "commit", "-qm", message)
+    commit = _git_out(root, "rev-parse", "HEAD")
+    _git(root, "push")
+    for ledger in ("sessions", "completed_sessions"):
+        advanced[ledger][SESSION] = pending[ledger][SESSION]
+    write(advanced)
+
+    identity = "a" * 64
+    record = root / "operations-review/canonical-daily-operation-v1" / added / ("op-" + identity) / "daily_operation_record.json"
+    if case != "missing_seal":
+        record.parent.mkdir(parents=True)
+        record.write_text(json.dumps({
+            "session": added, "daily_operation_state": "LOCAL_COMPLETE", "daily_producer_status": "COMPLETED",
+            "runtime_release_status": "READY", "trusted_subset_status": "READY",
+            "acquisition": {"resolved_completed_session": added}, "daily_producer_run_identity": "run",
+            "daily_producer_operation_identity": "producer", "operation_identity": "canonical_daily_operation:" + identity,
+            "freeze": {"frozen_input_identities": advanced["completed_sessions"][added]["frozen_input_identities"]},
+            "registration": {"selection": advanced["sessions"][added] if case != "seal_conflict" else {}},
+        }), encoding="utf-8")
+    if case == "mutated_source":
+        artifact = root / pending["sessions"][SESSION]["tactical"]["path"]
+        artifact.write_bytes(artifact.read_bytes() + b"\n")
+    if case == "wrong_pin":
+        original["registry_sha256"] = "0" * 64
+    before = path.read_bytes()
+    if case == "valid":
+        result = rebaseline_freeze_inventory(root, original, original_head, root)
+        assert result == rebaseline_freeze_inventory(root, original, original_head, root)
+        assert result["inventory"] == freeze.freeze_byte_inventory(root)[0]
+        assert result["original_inventory"] == original
+        assert result["pending_sessions"] == [SESSION]
+        assert [row["commit"] for row in result["daily_advances"]] == [commit]
+        assert freeze._sync_frozen_checkout(root, commit, result["inventory"], check_writers=lambda: None)[
+            "status"] == "FREEZE_PRESERVED_AT_APPROVED_HEAD"
+        artifact = root / pending["sessions"][SESSION]["tactical"]["path"]
+        artifact.write_bytes(artifact.read_bytes() + b"\n")
+        with pytest.raises(ValueError, match="FREEZE_SYNC_BYTE_PIN_MISMATCH"):
+            freeze._sync_frozen_checkout(root, commit, result["inventory"], check_writers=lambda: None)
+    else:
+        errors = {"mutated_source": "SOURCE_PIN_MISMATCH", "wrong_pin": "ORIGINAL_PIN_MISMATCH",
+                  "registry_rewrite": "NONADDITIVE_COMMIT", "wrong_commit": "NOT_DAILY_COMMIT",
+                  "missing_seal": "DAILY_SEAL_UNVERIFIED", "seal_conflict": "DAILY_SEAL_UNVERIFIED"}
+        with pytest.raises(ValueError, match=errors[case]):
+            rebaseline_freeze_inventory(root, original, original_head, root)
+    assert _git_out(root, "rev-parse", "HEAD") == commit
+    assert path.read_bytes() == before

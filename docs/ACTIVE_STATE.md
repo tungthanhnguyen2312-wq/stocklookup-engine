@@ -1,6 +1,7 @@
 # Stock Lookup — Active State
 
-11-04 Daily PASS; [recovery proof](internal/OWNER_DAILY_PUBLICATION_RECOVERY_20261104.md). [T+ M1b](tplus_incremental_cost_v2_contract.md) active. Fresh preflight required.
+11-13 Daily PASS, `READY_FOR_AI`; PIT capture on. [T+ M1b](tplus_incremental_cost_v2_contract.md) active.
+[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.
