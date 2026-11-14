@@ -9,7 +9,7 @@ Start: Producer `514ee89e`, Consumer `4537e32e`. Working evidence (outside Git):
 | Block | Result | Proof |
 |---|---|---|
 | B — D4a activation | PR #263 merged `8052e53d`; post-merge CI 43633581596 6/6; Production fast-forwarded `514ee89e → 8052e53d`, freeze preserved (`FAST_FORWARDED_FREEZE_PRESERVED`) | Deployed config `4e6da55f`, receipt `dae93f0f` (exact plan pins); `capacity_qualification` source_matches on Production; `storage_reuse_switches()` = both true |
-| A — first removal | PR #264: 130 unreferenced historical runners (−19,923 LOC); non-test Python 1,057 → 927; `tools/*.py` 448 → 318 | Receipt corrective `unreachable_historical_runner_removal`; transition test re-derives each pin from base bytes |
+| A — first removal | PR #264: 127 unreferenced historical runners (−18,576 LOC); non-test Python 1,057 → 930; `tools/*.py` 448 → 321 | Receipt corrective `unreachable_historical_runner_removal`; transition test re-derives each pin from base bytes |
 
 ## Pending on a real session (do not simulate)
 
