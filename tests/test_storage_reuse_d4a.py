@@ -3,6 +3,7 @@
 Only how equal bytes are stored may change. Paths, bytes, identities and failure
 behaviour must equal the copy path; switches are off unless the Owner turns them on.
 """
+import hashlib
 import json
 import os
 
@@ -31,8 +32,17 @@ def _config(tmp_path, value):
     return path
 
 
-def test_shipped_config_is_valid_and_every_switch_is_off():
-    assert pipeline.storage_reuse_switches() == {"iid_working_view_hardlink": False, "reuse_immutable_delivery": False}
+def test_shipped_config_is_the_owner_approved_d4a_activation():
+    # Owner-approved activation (2026-11-15): both switches on together, exact planned bytes.
+    raw = pipeline.STORAGE_REUSE_CONFIG.read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(raw).hexdigest() == "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68"
+    assert pipeline.storage_reuse_switches() == {"iid_working_view_hardlink": True, "reuse_immutable_delivery": True}
+
+
+def test_both_switches_off_is_still_honoured_for_rollback(tmp_path):
+    path = _config(tmp_path, {"schema": "daily_storage_reuse/v1", "iid_working_view_hardlink": False,
+                              "reuse_immutable_delivery": False})
+    assert set(pipeline.storage_reuse_switches(path).values()) == {False}
 
 
 def test_absent_config_means_off(tmp_path):

@@ -564,6 +564,15 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         (root / copy_source).read_bytes().replace(b"\r\n", b"\n")
     ).hexdigest()
     prior_receipt["immutable_delivery_copy_corrective"] = copy_corrective
+    # D4a Owner activation: only the storage-reuse config pin changes, from its exact predecessor bytes.
+    d4a_config = "config/daily_storage_reuse.json"
+    d4a_off = subprocess.check_output(["git", "show", f"514ee89ec538a0d6aafa208cf8df4e0ea8a2068d:{d4a_config}"], cwd=root)
+    assert (hashlib.sha256(d4a_off.replace(b"\r\n", b"\n")).hexdigest()
+            == prior_receipt["source_sha256"][d4a_config]
+            == "9ed88654a092977aec9cbe678c132695201c9e47bbc267eee332e82581b7bbf2")
+    d4a_on = (root / d4a_config).read_bytes().replace(b"\r\n", b"\n")
+    assert d4a_on == d4a_off.replace(b"\r\n", b"\n").replace(b": false", b": true")
+    prior_receipt["source_sha256"][d4a_config] = hashlib.sha256(d4a_on).hexdigest()
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
