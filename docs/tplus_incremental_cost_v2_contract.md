@@ -174,10 +174,16 @@ Each timed-out child was reaped, its tree termination was confirmed, and it
 published no output or completion manifest. Invocation 3 reused 40 partitions
 exactly and built 4. Its artifact matched the retained November 13 artifact on
 identity, raw SHA-256, 1,817,859,487 bytes and 74,052 rows. The chain, T0, legacy
-and inventory input sets matched too. Its `input_digest` differed. The retained
-receipt does not break that digest into components, so the cause is not
-attributed. It is consistent with the live root having moved past the November 13
-boundary. Cumulative cold cost was 3,096.264 seconds.
+and inventory input sets matched too. Its `input_digest` differed. The full
+input manifest was captured on the live root, before evaluation. It reproduced the
+candidate digest. Replacing only `future_chain.as_of_date` (`io_known_at()`,
+2026-11-14 UTC) with the retained run's date (2026-11-13) reproduced the retained
+digest exactly. Every other input was therefore byte-identical: T0 and legacy
+hashes, inventories, price sources, the handoff inventory, the marker, capture
+sessions and calendar revisions. The difference is only the as-of date of the
+call. The same date also feeds `context_key` for strict prospective sessions, so
+those partitions are rebuilt on each new calendar day by design. Cumulative cold
+cost was 3,096.264 seconds.
 
 The partition source key and the evaluator-input projection both include this
 module's digest. Any deployed change to it therefore rebuilds the whole T+
@@ -185,3 +191,39 @@ derived state. On this host that needs more than two guarded calls. The first
 Daily stages after such a deployment are expected to time out while still
 persisting progress. Plan that bootstrap before release. These cold calls are not
 warm acceptance.
+
+## Rollout: seed before the first Daily
+
+Use the existing one-time seed (see the
+[containment contract](owner_daily_feedback_resource_containment_contract.md)).
+Do not deploy without it. This change keeps the verifier digest, so Production
+receipts stay valid. The seed only rebuilds evaluator-input sidecars under the
+new projection digest. It reads the retained root, writes only Production
+feedback state, and publishes nothing. Daily passes no state root, so that state
+is the retained-evidence root itself. The seed is Owner-run, outside Daily, after
+the fast-forward Production sync and before the next Daily:
+
+```
+python tools/run_prospective_decision_outcome_feedback.py --seed-state-only --root <retained-evidence> --state-root <retained-evidence>
+```
+
+Exit 33 means seeded. Partitions and the settled store are keyed by the code
+digest and start empty. That is the expected first-call cost measured below.
+
+Offline qualification (2026-11-14, isolated state): a copy of the Production
+verifier receipts, plus sidecars that the seed CLI then revalidated. Every
+sidecar hit checks source SHA-256, projection digest, content SHA-256 and row
+count. The seed took 130.296 s (exit 33, 420,515,840 B, all sidecars hit). The
+next guarded November 13 post-handoff call, with no partitions and no settled
+entries, collected in one call. It took 717.946 s with a 1,305,255,936 B peak.
+It built 44 partitions, had 41 sidecar hits and 31,977 settled misses, and
+re-evaluated 74,052 rows. The artifact was byte-identical to the retained
+November 13 artifact. Without the seed, the same state needed three calls.
+
+A seed from empty sidecars must parse every T0. Expect about 2,200 s (sidecar
+work in the three cold calls). It has no Daily deadline. On the first Daily
+after deployment, expect the pre-handoff stage at about 720 s. The post-handoff
+stage reuses that run's settled entries. That Daily may exceed the 900-second
+combined target once. Neither stage is expected to reach the 1,200-second
+deadline. The seeded first Daily is a bootstrap, not warm acceptance. Measure
+warm acceptance on the following session.
