@@ -26,6 +26,11 @@ from tools.build_conditional_research_cases import build_reviewed_packet, render
 
 MAX_TICKERS = 12
 TOP_ROWS = 5
+TACTICAL_CARD_SCOPE = (
+    "Independent tactical classifier context. Its entry state and action are research labels "
+    "for the stated horizon. Use the Integrated Decision for the current research posture; "
+    "if it is unavailable, the tactical card does not supply a substitute."
+)
 VN_TIME = timezone(timedelta(hours=7))
 
 
@@ -165,6 +170,10 @@ def build(operation_dir: Path, session: str, tickers=(), *, reviewed=None):
         methods = row.get("valuation_methods") or {}
         boundaries = select(row, "trigger_type", "trigger_state", "trigger_level", "distance_to_trigger_pct",
                             "invalidation_level", "invalidation_method", "distance_to_invalidation_pct")
+        research_card = select(card, "current_decision_state", "data_quality", "trigger", "invalidation",
+                               "authority_limitations")
+        if research_card:
+            research_card = {"decision_scope": TACTICAL_CARD_SCOPE, **research_card}
         brief_row = {
             "ticker": ticker,
             "integrated_decision": posture.get(ticker),
@@ -172,8 +181,7 @@ def build(operation_dir: Path, session: str, tickers=(), *, reviewed=None):
             "technical": select(row, "market_structure_state", "tactical_phase", "breakout_state",
                                 "bos_state", "choch_state", "tactical_confirmation_context", "decision_identity"),
             "entry_boundaries": boundaries,
-            "research_card": select(card, "current_decision_state", "data_quality", "trigger", "invalidation",
-                                    "authority_limitations"),
+            "research_card": research_card,
             "fundamentals": {**select(row, "fundamental_state"),
                              **select(fundamental, "authority_tier", "earnings_direction", "revenue_direction",
                                       "operating_cash_flow_direction", "limitations"),
@@ -249,12 +257,15 @@ def render_market(market):
 
 def render_ticker(session, row, reviewed, sources):
     lines = [f"# {row['ticker']} research for {session}", ""]
-    labels = (("Integrated Decision", "integrated_decision"), ("Market position", "market_position"),
+    labels = (("Integrated Decision: current research posture", "integrated_decision"),
+              ("Market position", "market_position"),
               ("Technical structure", "technical"),
-              ("Triggers and invalidation", "entry_boundaries"), ("Research card", "research_card"),
+              ("Integrated Decision triggers and invalidation", "entry_boundaries"),
+              ("Independent tactical research card", "research_card"),
               ("Fundamentals", "fundamentals"), ("Valuation", "valuation"), ("Thesis summary", "thesis_summary"),
               ("Thesis, catalysts and risks", "thesis_evidence"),
-              ("Opportunity Queue", "opportunity_queue"), ("Freshness and limitations", "remaining_uncertainties"))
+              ("Opportunity Queue: research priority and tactical context", "opportunity_queue"),
+              ("Freshness and limitations", "remaining_uncertainties"))
     for heading, key in labels:
         lines.extend([f"## {heading}", ""])
         value = row[key]
@@ -262,7 +273,10 @@ def render_ticker(session, row, reviewed, sources):
             for label, item in value.items():
                 if item is not None and item != [] and item != {}:
                     text = item if isinstance(item, str) else json.dumps(item, ensure_ascii=False, sort_keys=True)
-                    lines.append(f"- **{label.replace('_', ' ')}** · {text}")
+                    display_label = ("tactical classifier state"
+                                     if key == "research_card" and label == "current_decision_state"
+                                     else label.replace("_", " "))
+                    lines.append(f"- **{display_label}** · {text}")
         else:
             lines.append("Unavailable in the retained source for this ticker.")
         lines.append("")

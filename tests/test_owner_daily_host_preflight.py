@@ -523,6 +523,19 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["scheduled_capture_reliability_corrective"] = scheduled
 
+    compact = live_receipt["compact_research_decision_scope_corrective"]
+    compact_command = "tools/build_owner_compact_research.py"
+    assert compact["changed_source_paths"] == [compact_command]
+    assert compact["new_capacity_measurement"] is False
+    previous_compact = subprocess.check_output(
+        ["git", "show", f"{compact['base_commit']}:{compact_command}"], cwd=root
+    )
+    assert hashlib.sha256(previous_compact).hexdigest() == compact["prior_source_sha256_lf"]
+    prior_receipt["source_sha256"][compact_command] = hashlib.sha256(
+        (root / compact_command).read_bytes().replace(b"\r\n", b"\n")
+    ).hexdigest()
+    prior_receipt["compact_research_decision_scope_corrective"] = compact
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
@@ -533,7 +546,6 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert not {module_name(path) for path in offline}.intersection(daily_reachable(root))
     # Cover string-based import and launch registrations, including basename-only
     # dispatch. The compact research command is independently checked as offline-only.
-    compact_command = "tools/build_owner_compact_research.py"
     assert module_name(compact_command) not in daily_reachable(root)
     names = re.compile(rb"\b(?:" + b"|".join(re.escape(Path(path).stem.encode()) for path in sorted(offline)) + rb")\b")
     for path in preflight.capacity_source_paths(root):
