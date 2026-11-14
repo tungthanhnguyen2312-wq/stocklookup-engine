@@ -168,6 +168,8 @@ def build(operation_dir: Path, session: str, tickers=(), *, reviewed=None):
         fundamental = card.get("fundamental_context") or {}
         financial = row.get("financial_analysis") or {}
         methods = row.get("valuation_methods") or {}
+        events = row.get("corporate_intelligence_context") or {}
+        driver = events.get("forward_driver_context") or {}
         boundaries = select(row, "trigger_type", "trigger_state", "trigger_level", "distance_to_trigger_pct",
                             "invalidation_level", "invalidation_method", "distance_to_invalidation_pct")
         research_card = select(card, "current_decision_state", "data_quality", "trigger", "invalidation",
@@ -191,15 +193,34 @@ def build(operation_dir: Path, session: str, tickers=(), *, reviewed=None):
                                                           "balance_sheet_state", "missing_dimensions", "warnings")}
                                 if financial else {})},
             "valuation": {**select(card, "valuation_context"),
+                          **select(row, "valuation_method_reconciliation"),
+                          **({"peer_comparison_scope": {
+                              "retained_research_rank": row["valuation"].get("peer_relative_state"),
+                              "industry_qualified_comparison": "NOT_ESTABLISHED_IN_RETAINED_BRIEF",
+                          }} if isinstance(row.get("valuation"), Mapping) else {}),
                           **({"retained_methods": {name: select(methods[name], "value", "status", "source_status",
                                                              "method_id", "period_basis", "book_period",
                                                              "share_basis", "share_identity", "price_session",
                                                              "price_representation", "equity_definition",
                                                              "equity_source_status", "monetary_compatibility",
-                                                             "blocker_reason_codes", "limitations", "warnings")
-                                               for name in ("P/E", "P/E_TTM", "P/B", "P/B_CURRENT_RESEARCH", "EV/EBITDA")
+                                                             "blocker_reason_codes", "limitations", "warnings",
+                                                             "peer_percentile", "peer_cohort", "peer_comparability",
+                                                             "peer_comparison", "peer_relative_state")
+                                               for name in sorted(methods)
                                                if isinstance(methods.get(name), Mapping)}} if methods else {})},
-            "thesis_summary": select(row, "why_now", "counter_thesis"),
+            "business_evidence": {
+                **select(row, "fundamental_support", "financial_composite_context"),
+                **select(financial, "growth_basis", "free_cash_flow_proxy", "negative_evidence",
+                         "conflicting_evidence", "lineage_ref"),
+            },
+            "corporate_events": {
+                **select(events, "state", "fitness", "evidence_session", "freshest_material_event",
+                         "blocker_reason_codes", "event_identities"),
+                **({"forward_driver_blockers": driver["blocker_reason_codes"]}
+                   if "blocker_reason_codes" in driver else {}),
+            },
+            "portfolio_context": row.get("portfolio_action_context"),
+            "thesis_summary": select(row, "why_now", "counter_thesis", "missing_evidence_decision_effect"),
             "thesis_evidence": select(research_case, "supporting_evidence", "counter_thesis_evidence_detail",
                                       "risk_evidence", "catalysts", "technical_invalidation", "fundamental_invalidation",
                                       "evidence_gaps", "lineage", "authority_boundaries"),
@@ -262,15 +283,36 @@ def render_ticker(session, row, reviewed, sources):
               ("Technical structure", "technical"),
               ("Integrated Decision triggers and invalidation", "entry_boundaries"),
               ("Independent tactical research card", "research_card"),
-              ("Fundamentals", "fundamentals"), ("Valuation", "valuation"), ("Thesis summary", "thesis_summary"),
+              ("Fundamentals", "fundamentals"), ("Business evidence", "business_evidence"),
+              ("Corporate events", "corporate_events"), ("Portfolio context", "portfolio_context"),
+              ("Valuation", "valuation"), ("Thesis summary", "thesis_summary"),
               ("Thesis, catalysts and risks", "thesis_evidence"),
               ("Opportunity Queue: research priority and tactical context", "opportunity_queue"),
               ("Freshness and limitations", "remaining_uncertainties"))
     for heading, key in labels:
         lines.extend([f"## {heading}", ""])
-        value = row[key]
+        value = row.get(key)
         if value:
             for label, item in value.items():
+                if key == "valuation" and label == "retained_methods":
+                    for method, facts in item.items():
+                        status = facts.get("status") or "UNAVAILABLE"
+                        amount = facts.get("value")
+                        shown = f" {amount:,.4g}" if isinstance(amount, (float, int)) else ""
+                        period = facts.get("book_period") or facts.get("period_basis")
+                        basis = "; ".join(str(x) for x in (period, facts.get("share_basis")) if x)
+                        blockers = ", ".join(facts.get("blocker_reason_codes") or [])
+                        details = [x for x in (basis, blockers) if x]
+                        suffix = " (" + " · ".join(details) + ")" if details else ""
+                        lines.append(f"- **{method}** · {status}{shown}{suffix}")
+                    continue
+                if key == "valuation" and label == "valuation_method_reconciliation":
+                    for method, facts in item.items():
+                        state = facts.get("comparison_status")
+                        reason = facts.get("reason")
+                        if state and reason:
+                            lines.append(f"- **{method} basis check** · {state} · {reason}")
+                    continue
                 if item is not None and item != [] and item != {}:
                     text = item if isinstance(item, str) else json.dumps(item, ensure_ascii=False, sort_keys=True)
                     display_label = ("tactical classifier state"
