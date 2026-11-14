@@ -506,6 +506,22 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             assert b"sync_producer_release" not in (root / path).read_bytes()
     prior_receipt["source_sha256"][sync_path] = hashlib.sha256(new_sync).hexdigest()
     prior_receipt["freeze_inventory_rebaseline_corrective"] = rebaseline
+    scheduled = live_receipt["scheduled_capture_reliability_corrective"]
+    scheduler_path = "tools/run_scheduled_capture.py"
+    assert scheduled["changed_source_paths"] == [scheduler_path]
+    assert scheduled["scope"] == "SCHEDULED_CAPTURE_RETRY_BUDGET_EARLY_START_AND_STATUS_EVIDENCE_ONLY"
+    assert scheduled["new_capacity_measurement"] is False
+    assert scheduled["prior_source_sha256_lf"] == prior_receipt["source_sha256"][scheduler_path]
+    old_scheduler = subprocess.check_output(["git", "show", f"{scheduled['base_commit']}:{scheduler_path}"], cwd=root)
+    assert hashlib.sha256(old_scheduler.replace(b"\r\n", b"\n")).hexdigest() == scheduled["prior_source_sha256_lf"]
+    # The scheduler stays a separate operator: Daily never imports it, and the capture
+    # operator it launches (admission, writer lease, Job limits) keeps its qualified bytes.
+    assert module_name(scheduler_path) not in daily_reachable(root)
+    for operator in ("tools/run_capture_only.py", "tools/capture_writer_lease.py", "tools/run_scheduled_capture.cmd"):
+        assert live_receipt["source_sha256"][operator] == prior_receipt["source_sha256"][operator]
+    prior_receipt["source_sha256"][scheduler_path] = hashlib.sha256(
+        (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["scheduled_capture_reliability_corrective"] = scheduled
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
