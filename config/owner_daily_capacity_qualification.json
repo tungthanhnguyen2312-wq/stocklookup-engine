@@ -674,7 +674,7 @@
     "stocklookup_core/acquisition/eodhd_access.py": "19ce541522ec8c7d3baf19a055a8c404476bb21e9c5be0ee8831c9315a92e378",
     "stocklookup_core/acquisition/eodhd_market_data.py": "ac4f0c6489e098f2d7ac637d58c2a12a6fee450e9cbe0e0068f0923605274348",
     "stocklookup_core/acquisition/feedback_resource_guard.py": "45b4a700311f46cda990b792aa9b0e99ef4186350c8bae8285394210dff5c949",
-    "stocklookup_core/acquisition/immutable_delivery.py": "4ec6537ad502c66134fe93dc346f0b1710ab8780521260958d40b4a46eab16c6",
+    "stocklookup_core/acquisition/immutable_delivery.py": "30dc3cc3cdb38d73c91b21230f246f9a178d96cc6a926931dfccfd604d72a490",
     "stocklookup_core/acquisition/macro_sjc_adapter.py": "6a2cf87be5134684e56a13b56c56ed08f24bcebaf27d2861a3bc7078055aacec",
     "stocklookup_core/acquisition/macro_vcb_adapter.py": "01c7c9b43a4b42794ff87497ebe7e7f2bc5b47d3215278feddee9c06aa1fcd6b",
     "stocklookup_core/acquisition/market_wide_coverage_report.py": "79c586016f79df47825cd92244471918b3b9f8d908c53d5795ec45565f19cfef",
@@ -1697,5 +1697,13 @@
       "stocklookup_core/research/ai_handoff_publication.py": "08a9935ce46f7d352345cce7702888c73e2e3ff89d155d1f93440304b7905349",
       "tools/build_owner_compact_research.py": "b942eabea0cfd8678368a26d8671328fa1df59bf7b8d9f9dc32d85fb2e340d05"
     }
+  },
+  "immutable_delivery_copy_corrective": {
+    "base_commit": "7a5d4762fd618ab8b5832a076eee04e7172e5cac",
+    "scope": "BOUNDED_IMMUTABLE_DELIVERY_COPY_ONLY",
+    "prior_source_sha256_lf": {
+      "stocklookup_core/acquisition/immutable_delivery.py": "4ec6537ad502c66134fe93dc346f0b1710ab8780521260958d40b4a46eab16c6"
+    },
+    "new_capacity_measurement": false
   }
 }
