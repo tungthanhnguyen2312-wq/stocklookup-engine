@@ -531,11 +531,27 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         ["git", "show", f"{compact['base_commit']}:{compact_command}"], cwd=root
     )
     assert hashlib.sha256(previous_compact).hexdigest() == compact["prior_source_sha256_lf"]
-    prior_receipt["source_sha256"][compact_command] = hashlib.sha256(
-        (root / compact_command).read_bytes().replace(b"\r\n", b"\n")
-    ).hexdigest()
+    released_compact = subprocess.check_output(
+        ["git", "show", f"{live_receipt['fable_handoff_and_offline_research']['base_commit']}:{compact_command}"],
+        cwd=root,
+    )
+    prior_receipt["source_sha256"][compact_command] = hashlib.sha256(released_compact).hexdigest()
     prior_receipt["compact_research_decision_scope_corrective"] = compact
 
+    fable = live_receipt["fable_handoff_and_offline_research"]
+    assert fable["scope"] == "HANDOFF_PACKAGE_VALIDATION_AND_OFFLINE_OWNER_REPORT"
+    assert fable["new_capacity_measurement"] is False
+    assert set(fable["prior_source_sha256_lf"]) == {
+        "stocklookup_core/research/ai_handoff_publication.py", compact_command,
+    }
+    for path, expected in fable["prior_source_sha256_lf"].items():
+        assert expected == prior_receipt["source_sha256"][path]
+        old = subprocess.check_output(["git", "show", f"{fable['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(old).hexdigest() == expected
+        prior_receipt["source_sha256"][path] = hashlib.sha256(
+            (root / path).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest()
+    prior_receipt["fable_handoff_and_offline_research"] = fable
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
