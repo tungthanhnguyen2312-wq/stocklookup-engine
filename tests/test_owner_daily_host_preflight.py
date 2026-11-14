@@ -552,6 +552,18 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             (root / path).read_bytes().replace(b"\r\n", b"\n")
         ).hexdigest()
     prior_receipt["fable_handoff_and_offline_research"] = fable
+    copy_corrective = live_receipt["immutable_delivery_copy_corrective"]
+    assert copy_corrective["scope"] == "BOUNDED_IMMUTABLE_DELIVERY_COPY_ONLY"
+    assert copy_corrective["new_capacity_measurement"] is False
+    copy_source = "stocklookup_core/acquisition/immutable_delivery.py"
+    assert set(copy_corrective["prior_source_sha256_lf"]) == {copy_source}
+    old = subprocess.check_output(["git", "show", f"{copy_corrective['base_commit']}:{copy_source}"], cwd=root)
+    assert (copy_corrective["prior_source_sha256_lf"][copy_source]
+            == hashlib.sha256(old).hexdigest() == prior_receipt["source_sha256"][copy_source])
+    prior_receipt["source_sha256"][copy_source] = hashlib.sha256(
+        (root / copy_source).read_bytes().replace(b"\r\n", b"\n")
+    ).hexdigest()
+    prior_receipt["immutable_delivery_copy_corrective"] = copy_corrective
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

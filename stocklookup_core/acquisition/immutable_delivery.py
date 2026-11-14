@@ -134,23 +134,28 @@ def publish_file(target, source, *, expected_sha, expected_size, protect=False, 
     _namespace(source)
     _namespace(target)
     before = source.stat()
-    if not source.is_file() or before.st_size != expected_size or sha(source) != expected_sha:
+    if not source.is_file() or before.st_size != expected_size:
         raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
     target.parent.mkdir(parents=True, exist_ok=True)
     def target_equal():
         return (not target.is_symlink() and target.is_file()
                 and target.stat().st_size == expected_size and sha(target) == expected_sha)
     if target.exists():
+        if sha(source) != expected_sha:
+            raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
         if not target_equal():
             raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
         return "REUSED"
     fd, name = tempfile.mkstemp(prefix=".delivery-staging-", dir=target.parent)
     stage = Path(name)
     try:
+        copied_digest = hashlib.sha256()
         with os.fdopen(fd, "wb") as destination, source.open("rb") as origin:
             unsynced = 0
             for block in iter(lambda: origin.read(CHUNK), b""):
-                destination.write(block)
+                if destination.write(block) != len(block):
+                    raise AtomicWriteError("DELIVERY_STAGE_SHORT_WRITE")
+                copied_digest.update(block)
                 unsynced += len(block)
                 if unsynced >= _COPY_FLUSH_BYTES:
                     # Back-pressure the private copy's dirty file-cache pages too.
@@ -159,6 +164,8 @@ def publish_file(target, source, *, expected_sha, expected_size, protect=False, 
                     unsynced = 0
             destination.flush()
             os.fsync(destination.fileno())
+        if copied_digest.hexdigest() != expected_sha:
+            raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
         if stage.stat().st_size != expected_size or sha(stage) != expected_sha:
             raise AtomicWriteError("DELIVERY_STAGE_HASH_MISMATCH")
         if protect:
@@ -196,24 +203,19 @@ def retain_alias(source, target, *, expected_sha, expected_size, volume=None):
     if source.is_symlink() or target.is_symlink():
         raise AtomicWriteError("DELIVERY_SYMLINK_REFUSED")
     target.parent.mkdir(parents=True, exist_ok=True)
+    reuse_existing = target.exists()
+    if not reuse_existing:
+        observe = volume or volume_id
+        source_volume = observe(source)
+        if not protected(source) or source_volume != observe(target.parent):
+            return publish_file(target, source, expected_sha=expected_sha, expected_size=expected_size, protect=True)
     before = source.stat()
     if before.st_size != expected_size or sha(source) != expected_sha:
         raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
-    if target.exists():
+    if reuse_existing:
         if target.stat().st_size != expected_size or sha(target) != expected_sha:
             raise AtomicWriteError("IMMUTABLE_DELIVERY_CONTENT_CONFLICT:" + target.name)
         return "REUSED"
-    observe = volume or volume_id
-    source_volume = observe(source)
-    if not protected(source) or source_volume != observe(target.parent):
-        # The independent fallback is intentional; legacy bytes remain untouched.
-        content = source.read_bytes()
-        after = source.stat()
-        if (hashlib.sha256(content).hexdigest() != expected_sha
-                or (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
-                != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)):
-            raise AtomicWriteError("DELIVERY_SOURCE_PROOF_MISMATCH")
-        return publish_bytes(target, content, protect=True)
     try:
         os.link(source, target)
     except FileExistsError:
