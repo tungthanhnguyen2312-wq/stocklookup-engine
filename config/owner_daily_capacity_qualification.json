@@ -1071,7 +1071,7 @@
     "tools/build_frontend.py": "1cebeb79b75ada45deca6d8ef0e611273c133e3221b5c24930633a751a4c150d",
     "tools/build_kbs_trading_value_coverage.py": "367e978b14424788351cbececba0d43048eb340b8fba1c7c68dd2b19228c4dc3",
     "tools/build_market_wide_fundamental_research_cohort_scaleout_validation_v1.py": "5be25e63a6660ee02289e2eb1abb3f04f4b69874f15305c2bb4bf153e1edb854",
-    "tools/build_owner_compact_research.py": "14a0ceb9fa624bdb0c4d66fe9dd15224923ca963c3b3b0158c3484fafc3bda6f",
+    "tools/build_owner_compact_research.py": "b942eabea0cfd8678368a26d8671328fa1df59bf7b8d9f9dc32d85fb2e340d05",
     "tools/build_phase2_canonical_market.py": "6e6508d797ca201371ac461f572e97bd2087fef4f34df5c69228d610f61ef2e4",
     "tools/build_phase3_feature_store.py": "f3e11a8744fac04d73e769d2191eeeaef5f3fe4c36587b67327cdf061e82b53d",
     "tools/build_provider_financial_monetary_basis_verdict.py": "fe8148ba3c46e8557a03f9e9716730e66f6085f6f3bb7f0fd933c7b07b0358cf",
@@ -1677,6 +1677,16 @@
       "tools/run_scheduled_capture.py"
     ],
     "prior_source_sha256_lf": "7b075a1edc068a23e50f9be6c66a1c62e35283b52579e9d6e79804c1c66ce212",
+    "new_capacity_measurement": false
+  },
+  "compact_research_decision_scope_corrective": {
+    "base_commit": "3862fa5737aaaf4d5fef76cc9cce96ace011c844",
+    "scope": "OFFLINE_COMPACT_RESEARCH_DISTINGUISHES_INTEGRATED_POSTURE_AND_TACTICAL_CONTEXT",
+    "stage_qualification": "OFFLINE_COMMAND_OUTSIDE_DAILY_IMPORT_AND_LAUNCH_CLOSURE",
+    "changed_source_paths": [
+      "tools/build_owner_compact_research.py"
+    ],
+    "prior_source_sha256_lf": "14a0ceb9fa624bdb0c4d66fe9dd15224923ca963c3b3b0158c3484fafc3bda6f",
     "new_capacity_measurement": false
   }
 }
