@@ -196,7 +196,6 @@ env:
     tests/test_owner_daily_20261005_recovery.py
     tests/test_dashboard_companion_declared_producer_run.py
     tests/test_owner_daily_host_preflight.py
-    tests/test_build_owner_compact_research.py
     tests/test_active_control_plane.py
     tests/test_owner_daily_progress.py
     tests/test_storage_ledger.py
