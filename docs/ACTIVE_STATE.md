@@ -1,7 +1,7 @@
 # Stock Lookup — Active State
 
 11-13 Daily PASS, `READY_FOR_AI`; PIT capture on. [T+ M1b](tplus_incremental_cost_v2_contract.md) active.
-[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required.
+[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required. D4a ON 11-15; live check pending.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.
@@ -33,7 +33,6 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 - **Prior-period Daily integration:** [scope](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md), historical non-voting. [Reviewed financial cases](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md) remain offline.
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.
 - **RELEASED:** PR145/146 source wave; exact historical acceptance remains in [SYSTEM_MAP](SYSTEM_MAP.md). No new source authority or production admission follows.
-- [Oct13](daily_20261013_handoff_route_recovery_contract.md).
 - **RELEASED — [financial intake](official_financial_quarterly_intake_contract.md):** PR137; candidates; source admission gated.
 - **RELEASED — [Wave 1 replay](SYSTEM_MAP.md#wave-1-historical-replay-relocation--2026-10-13):** PR139; `tools/replay/`: 34 modules; root 325 → 291; replay unchanged.
 - **RELEASED — [unlock/transport](current_financial_valuation_input_unlock_v1_contract.md):** PR133: six H1 ratios/proxy shares; PR140: present labels (bound AI session ≥2026-10-14), no new facts/ratios.
