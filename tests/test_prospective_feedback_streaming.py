@@ -261,6 +261,46 @@ def test_interrupted_build_leaves_only_recognisable_incomplete_data_and_retry_re
     assert json.loads(output.read_text(encoding="utf-8")) == _legacy_artifact(root)
 
 
+@pytest.mark.parametrize("damage_completed_segment", [False, True])
+def test_resume_checks_completed_partitions_and_rebuilds_uncommitted_spools(
+        corpus, monkeypatch, damage_completed_segment):
+    root, sessions, state, output = corpus
+    write = streaming._atomic_write_json
+    committed = []
+
+    def interrupt_before_second_manifest(path, value, **kwargs):
+        if path.name.endswith(".partition.json"):
+            if committed:
+                assert path.with_suffix("").with_suffix(".rows").is_file()
+                assert path.with_suffix("").with_suffix(".trigger").is_file()
+                raise RuntimeError("interrupted before checkpoint publication")
+            committed.append(path)
+        return write(path, value, **kwargs)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(streaming, "_atomic_write_json", interrupt_before_second_manifest)
+        with pytest.raises(RuntimeError, match="interrupted before checkpoint publication"):
+            _build(root, output, state)
+
+    assert len(committed) == 1 and committed[0].is_file()
+    assert len(list((state / streaming.PARTITION_DIR).rglob("*.partition.json"))) == 1
+    assert not output.exists() and streaming.read_completion(output) is None
+
+    if damage_completed_segment:
+        segment = committed[0].with_suffix("").with_suffix(".rows")
+        data = segment.read_bytes()
+        segment.write_bytes(bytes([data[0] ^ 1]) + data[1:])  # Same length, different SHA-256.
+    resumed = _build(root, output, state)
+    assert resumed["metrics"].get("partitions_reused_exact", 0) == int(not damage_completed_segment)
+    assert resumed["metrics"].get("partitions_corrupt", 0) == int(damage_completed_segment)
+    assert resumed["metrics"]["partitions_built"] == len(sessions) - int(not damage_completed_segment)
+    clean = output.with_name("clean.json")
+    fresh = _build(root, clean, state.with_name("clean-state"))
+    assert resumed["artifact_identity"] == fresh["artifact_identity"]
+    assert _artifact_digest(output) == _artifact_digest(clean)
+    assert json.loads(output.read_bytes()) == _legacy_artifact(root)
+
+
 def test_dead_writer_temporaries_are_removed_on_the_next_run_without_manual_cleanup(corpus):
     root, _s, state, output = corpus
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -531,3 +571,45 @@ def test_assemble_refuses_missing_segments_instead_of_falling_back(tmp_path):
     for rows in (streaming._Segments([], 0), object()):
         with pytest.raises(streaming.FeedbackStreamError, match="FEEDBACK_STREAM_SEGMENTS_MISSING"):
             streaming._assemble(tmp_path / "out.json", sections, rows, streaming._Segments([], 0), {})
+
+
+
+def test_settled_hit_retains_the_validated_object_without_a_second_read(tmp_path, monkeypatch):
+    store = streaming._DiskSettledStore(tmp_path, {})
+    entry = {"feedback": {"ticker": "FPT"}}
+    store["ab"] = entry
+    reads = []
+    original = Path.read_bytes
+
+    def counted(path):
+        reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", counted)
+    stored = store.get("ab")
+    store["ab"] = stored
+    assert stored == entry
+    assert reads == [store._path("ab")]
+    recovered = {"feedback": {"ticker": "HPG"}}
+    store["ab"] = recovered
+    assert store.get("ab") == recovered
+
+
+@pytest.mark.parametrize("offset", [24, -1])
+def test_assembly_readback_rejects_header_and_body_damage(tmp_path, monkeypatch, offset):
+    segment = tmp_path / "segment"
+    segment.write_bytes(b'{"ticker":"FPT"}')
+    rows = streaming._Segments([segment], 1)
+    real_fsync = os.fsync
+    output = tmp_path / "output"
+    real_open = open
+
+    def damage_after_flush(fd):
+        real_fsync(fd)
+        with real_open(output, "r+b") as written:
+            written.seek(offset, os.SEEK_END if offset < 0 else os.SEEK_SET)
+            written.write(b"!")
+
+    monkeypatch.setattr(streaming.os, "fsync", damage_after_flush)
+    with pytest.raises(streaming.FeedbackStreamError, match="FEEDBACK_OUTPUT_READBACK_MISMATCH"):
+        streaming._assemble(output, {"contract_version": "test"}, rows, rows, {})

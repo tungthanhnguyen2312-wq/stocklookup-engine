@@ -101,3 +101,129 @@ cost remains the native closeout gate.
 
 M2 source is delivered in PR213/242. The partial-scan tests cover withholding runway.
 Use the existing bounded ledger when a fresh inventory is needed.
+
+## Retained I/O corrective
+
+The November 11 and 12 child-builder receipts attribute the combined overrun to
+post-handoff evaluation (592.864 and 589.528 seconds, versus 323.176 seconds on
+November 13). Both earlier runs rebuilt 8,415 more rows. Required partition
+invalidation remains in force. The settled store avoids rereading a contribution
+already validated by the evaluator. Assembly verifies the canonical body and
+emitted identity header and computes the raw hash in one disk readback.
+
+A guarded component replay of 2,000 settled hits and 26,928 retained output rows
+through November 12 took 60.561 seconds at baseline and 34.014 seconds after the
+change. Peak child commit was 592,506,880 and 594,432,000 bytes. The rows,
+assembled artifact identity and raw bytes matched. The replay did not exercise
+a full pre/post pair or the cold rebuild caused by the new evaluator digest.
+Repeatable warm and combined acceptance remains open.
+## Resume and warm acceptance
+
+The feedback builder commits a session partition only after the row and
+trigger segments are flushed, hashed and moved into place. The manifest is
+published last. To resume an interrupted offline rebuild, invoke the same
+bounded feedback runner again with the same retained input root and isolated
+state root. Keep the evaluator and verifier source unchanged between attempts.
+The runner rechecks source and context keys, manifest identity and both segment
+hashes. An unfinished partition is rebuilt. A strict prospective partition
+must match the current capture, calendar and as-of context. A resumed artifact
+is published only after complete assembly and verification. Record each
+attempt separately and keep earlier timeout receipts. Use a distinct scratch
+output when preserving a failed attempt's status.
+
+The November 11 and 12 status files identify the T0 admitted by each post
+handoff stage. They cannot restore the complete input view seen by either
+historical child. In particular, the reduced clone does not preserve the
+storage catalog, capture chain and calendar, seal and write receipts, and all
+inventoried paths. The original handoffs reference absolute Production paths.
+The post-handoff capture context also depends on the invocation's as-of
+boundary. Record HISTORICAL_BOUNDARY_UNAVAILABLE for these historical warm
+pairs unless that complete input view is recovered and verified.
+
+For the next genuine session on an authorized candidate, use the ordinary
+pre-handoff and post-handoff feedback calls with the same qualified state,
+source revision and retained root. Collect the evidence from an Owner-run
+session or from an authorized read-only capture of both input boundaries for
+the existing offline rehearsal. Retain the two status and completion
+manifests, the sealed T0 and its canonical handoff, and the matching bounded
+child BEGIN/END events and Job peak receipts. Bind the events to the same
+session and Daily run. Confirm the post-handoff input set adds exactly the
+handoff's T0, and check both complete artifacts against a qualified baseline
+on identical inputs by identity, raw SHA-256 and row count. Keep cold resume
+attempts out of the warm totals. The new-T0 stage must take at most 600 seconds,
+the two guarded child intervals together at most 900 seconds, and each Job
+peak at most 2 GiB with the 1,200-second deadline in force. Preserve the
+source and input identities used for parity. Prior component measurements or
+two calls after the handoff do not satisfy this gate.
+
+## Measured cold bootstrap (2026-11-14, offline)
+
+Candidate ce34c945, retained root read-only, isolated scratch state, unchanged
+1,200-second deadline and 2 GiB Job limit. Verifier receipts were valid. The
+evaluator, partition and settled stores started empty, as they would after this
+change is deployed. Three guarded post-handoff invocations for November 13 used
+the same state root:
+
+| Invocation | Outcome | Wall s | Peak commit B | Partitions after |
+|---|---|---:|---:|---:|
+| 1 | FEEDBACK_RESOURCE_TIMEOUT | 1,200.021 | 741,539,840 | 30 |
+| 2 | FEEDBACK_RESOURCE_TIMEOUT | 1,200.054 | 715,239,424 | 40 |
+| 3 | COLLECTED | 696.189 | 1,272,778,752 | 44 |
+
+Each timed-out child was reaped, its tree termination was confirmed, and it
+published no output or completion manifest. Invocation 3 reused 40 partitions
+exactly and built 4. Its artifact matched the retained November 13 artifact on
+identity, raw SHA-256, 1,817,859,487 bytes and 74,052 rows. The chain, T0, legacy
+and inventory input sets matched too. Its `input_digest` differed. The full
+input manifest was captured on the live root, before evaluation. It reproduced the
+candidate digest. Replacing only `future_chain.as_of_date` (`io_known_at()`,
+2026-11-14 UTC) with the retained run's date (2026-11-13) reproduced the retained
+digest exactly. Every other input was therefore byte-identical: T0 and legacy
+hashes, inventories, price sources, the handoff inventory, the marker, capture
+sessions and calendar revisions. The difference is only the as-of date of the
+call. The same date also feeds `context_key` for strict prospective sessions, so
+those partitions are rebuilt on each new calendar day by design. Cumulative cold
+cost was 3,096.264 seconds.
+
+The partition source key and the evaluator-input projection both include this
+module's digest. Any deployed change to it therefore rebuilds the whole T+
+derived state. On this host that needs more than two guarded calls. The first
+Daily stages after such a deployment are expected to time out while still
+persisting progress. Plan that bootstrap before release. These cold calls are not
+warm acceptance.
+
+## Rollout: seed before the first Daily
+
+Use the existing one-time seed (see the
+[containment contract](owner_daily_feedback_resource_containment_contract.md)).
+Do not deploy without it. This change keeps the verifier digest, so Production
+receipts stay valid. The seed only rebuilds evaluator-input sidecars under the
+new projection digest. It reads the retained root, writes only Production
+feedback state, and publishes nothing. Daily passes no state root, so that state
+is the retained-evidence root itself. The seed is Owner-run, outside Daily, after
+the fast-forward Production sync and before the next Daily:
+
+```
+python tools/run_prospective_decision_outcome_feedback.py --seed-state-only --root <retained-evidence> --state-root <retained-evidence>
+```
+
+Exit 33 means seeded. Partitions and the settled store are keyed by the code
+digest and start empty. That is the expected first-call cost measured below.
+
+Offline qualification (2026-11-14, isolated state): a copy of the Production
+verifier receipts, plus sidecars that the seed CLI then revalidated. Every
+sidecar hit checks source SHA-256, projection digest, content SHA-256 and row
+count. The seed took 130.296 s (exit 33, 420,515,840 B, all sidecars hit). The
+next guarded November 13 post-handoff call, with no partitions and no settled
+entries, collected in one call. It took 717.946 s with a 1,305,255,936 B peak.
+It built 44 partitions, had 41 sidecar hits and 31,977 settled misses, and
+re-evaluated 74,052 rows. The artifact was byte-identical to the retained
+November 13 artifact. Without the seed, the same state needed three calls.
+
+A seed from empty sidecars must parse every T0. Expect about 2,200 s (sidecar
+work in the three cold calls). It has no Daily deadline. On the first Daily
+after deployment, expect the pre-handoff stage at about 720 s. The post-handoff
+stage reuses that run's settled entries. That Daily may exceed the 900-second
+combined target once. Neither stage is expected to reach the 1,200-second
+deadline. The seeded first Daily is a bootstrap, not warm acceptance. Measure
+warm acceptance on the following session.

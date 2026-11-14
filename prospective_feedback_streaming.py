@@ -568,11 +568,17 @@ class _DiskSettledStore:
 
     def __init__(self, directory: Path, seed: Mapping[str, Any]):
         self.directory, self.seed = directory, seed
+        self._last_read = None
 
     def _path(self, key: str) -> Path:
         return self.directory / key[:2] / (key + ".json")
 
     def get(self, key, default=None):
+        value = self._read(key, default)
+        self._last_read = (key, value)
+        return value
+
+    def _read(self, key, default):
         if key in self.seed:
             return self.seed[key]
         try:
@@ -586,7 +592,10 @@ class _DiskSettledStore:
 
     def __setitem__(self, key, value) -> None:
         path = self._path(key)
-        if self.get(key) == value:
+        # The evaluator just validated this exact object on a hit. Its
+        # write-through retention call need not read the same file again.
+        last_read, self._last_read = self._last_read, None
+        if last_read and last_read[0] == key and last_read[1] is value:
             return
         try:
             _atomic_write_json(path, value, allow_nan=False)
@@ -1784,16 +1793,21 @@ def _assemble(final_tmp: Path, sections: Mapping[str, Any], rows: _Segments, tri
         out.flush()
         os.fsync(out.fileno())
         size = out.seek(0, os.SEEK_END)
-    # Re-read the bytes that reached disk: the identity member plus the hashed body must reproduce the digest.
+    # Verify the emitted header and body while hashing the complete file in the same pass.
     check = hashlib.sha256()
     check.update(b"{")
+    raw = hashlib.sha256()
     with open(final_tmp, "rb") as written:
-        written.seek(len(head))
+        header = written.read(len(head))
+        if header != head.replace(placeholder.encode(), identity.encode()):
+            raise FeedbackStreamError("FEEDBACK_OUTPUT_READBACK_MISMATCH")
+        raw.update(header)
         for block in iter(lambda: written.read(1 << 20), b""):
             check.update(block)
+            raw.update(block)
     if check.hexdigest() != digest.hexdigest():
         raise FeedbackStreamError("FEEDBACK_OUTPUT_READBACK_MISMATCH")
-    raw_sha = bas.source_hash(final_tmp)
+    raw_sha = raw.hexdigest()
     _metric(metrics, "output_bytes", size)
     return identity, size, raw_sha, rows.count
 
