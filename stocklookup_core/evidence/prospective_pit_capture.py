@@ -74,6 +74,8 @@ def listing_presence(row, *, session, source_artifact_identity, source_row=None)
     source = row.get("official_source")
     row_id = row.get("official_source_row_identity")
     exchange = row.get("exchange_or_market")
+    if exchange == "HNX_LISTED":
+        exchange = "HNX"
     proper = bool(ticker and source in LISTING_SOURCES and row_id and source_artifact_identity and
                   exchange in {"HOSE", "HNX", "UPCOM"} and known)
     same_session = False

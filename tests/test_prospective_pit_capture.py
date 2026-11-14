@@ -165,6 +165,75 @@ def test_prior_later_unknown_listing_not_same_session(known, claim):
     assert companion["exchange"] == "UNKNOWN"
 
 
+def test_hnx_listed_qualifies_with_canonical_exchange_and_exact_raw_source(tmp_path):
+    from stocklookup_core.evidence.current_official_market_universe import _source_row
+
+    raw = {"ticker": "AAA", "market": "HNX_LISTED", "source_identity": "official:fixture"}
+    projection = _source_row(row=raw, source="HNX_UPCOM", observed_at=DAY + "T02:00:00Z")
+    source = capture.identified(
+        {"records": [{"source_observation": raw, "current_universe_projection": projection}]},
+        "prospective_listing_source_observations",
+    )
+    source_path = tmp_path / "listing-source.json"
+    original = market.canonical(source)
+    source_path.write_bytes(original)
+    evidence = {"listing_sources": {"path": str(source_path), "artifact_identity": source["artifact_identity"]}}
+    batch, ref = store.listing_batch(evidence, session=DAY, root=tmp_path, created_at=TIME)
+    row, = batch["records"]
+
+    assert row["exchange"] == "HNX"
+    assert row["membership_claim"] == "LISTED_PRESENT_AT_SESSION"
+    assert row["binding_class"] == "SAME_SESSION_POSITIVE"
+    assert row["status_semantic_qualification"] == "UNQUALIFIED_FOR_ACTIVE"
+    assert capture.qualifying_presence(row, ticker="AAA", session=DAY, cutoff=TIME)
+    assert not capture.qualifying_presence(row, ticker="AAA", session=DAY, cutoff=DAY + "T01:00:00Z")
+    assert binding(listed=row)["exchange"] == "HNX"
+
+    assert raw["market"] == projection["exchange_or_market"] == "HNX_LISTED"
+    assert source_path.read_bytes() == original
+    assert row["source_artifact_identity"] == source["artifact_identity"]
+    assert row["exact_row_sha256"] == market.sha256_hex(market.canonical(raw))
+    assert row["exact_row_sha256"] != market.sha256_hex(market.canonical({**raw, "market": "HNX"}))
+    assert capture.verify(row, capture.LISTING_CONTRACT) == row
+    assert capture.verify(batch, capture.LISTING_CONTRACT + ":batch") == batch
+    assert store.listing_batch(evidence, session=DAY, root=tmp_path, created_at=TIME) == (batch, ref)
+
+
+@pytest.mark.parametrize(("changes", "source_identity", "binding_class"), [
+    ({"official_observed_at": "2026-10-04T02:00:00Z"}, "official:fixture", "PRIOR_CONTEXT_ONLY"),
+    ({"official_observed_at": "2026-10-06T02:00:00Z"}, "official:fixture", "LATER_NOT_BACKFILL"),
+    ({"official_observed_at": None}, "official:fixture", "UNKNOWN"),
+    ({"official_source": "unqualified:fixture"}, "official:fixture", "LATER_NOT_BACKFILL"),
+    ({"official_source_row_identity": None}, "official:fixture", "LATER_NOT_BACKFILL"),
+    ({}, None, "LATER_NOT_BACKFILL"),
+])
+def test_hnx_listed_does_not_bypass_time_or_source_gates(changes, source_identity, binding_class):
+    row = capture.listing_presence({
+        "ticker": "AAA", "exchange_or_market": "HNX_LISTED",
+        "official_source": "hnx_official_equity_universe/v1",
+        "official_source_row_identity": "official:AAA", "official_observed_at": DAY + "T02:00:00Z",
+        **changes,
+    }, session=DAY, source_artifact_identity=source_identity)
+    assert row["membership_claim"] == "UNKNOWN"
+    assert row["binding_class"] == binding_class
+    assert not capture.qualifying_presence(row, ticker="AAA", session=DAY, cutoff="2026-10-10T12:00:00Z")
+
+
+@pytest.mark.parametrize(("token", "exchange", "positive", "digest"), [
+    ("HOSE", "HOSE", True, "0ae1ca6a1b31c31e874fc861121640a0f5355ed19405125f5ea2c672c473c47a"),
+    ("HNX", "HNX", True, "9139131116e64a18408d57c09c19dd676fd21f7e2248621586678141fa56c521"),
+    ("UPCOM", "UPCOM", True, "ba59dc0810009e7a3f3a35c9893c8ffd3ebd878770c9ed0e0a4aee97db4bce23"),
+    (None, "UNKNOWN", False, "438ffb55ee401b3367c43865eec7e848a56153764c0a590b77c03d1f0f81bc58"),
+    ("UNKNOWN_EXCHANGE", "UNKNOWN_EXCHANGE", False, "3a8d3d17d20b5c89058ec02000022b372371e7a578a189a29557bf19f9a557a9"),
+])
+def test_existing_listing_exchange_behavior_and_identity(token, exchange, positive, digest):
+    row = presence(exchange=token, official_source="hnx_official_equity_universe/v1")
+    assert row["exchange"] == exchange
+    assert row["artifact_sha256"] == digest
+    assert row["artifact_identity"] == f"{capture.LISTING_CONTRACT}:{digest}"
+    assert bool(capture.qualifying_presence(row, ticker="AAA", session=DAY, cutoff=TIME)) is positive
+
+
 def test_listing_status_code_and_normalized_active_never_effective_membership():
     row = capture.listing_presence({"ticker": "AAA", "exchange_or_market": "HOSE", "official_source": "hose_public_stock_master/v1",
         "official_source_row_identity": "official:row", "official_observed_at": DAY + "T02:00:00Z", "listingStatusId": 11,

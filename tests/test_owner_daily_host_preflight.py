@@ -459,6 +459,31 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in tactical_shadow["changed_source_paths"]:
         prior_receipt["source_sha256"][path] = live_receipt["source_sha256"][path]
     prior_receipt["tactical_shadow_deferral_corrective"] = tactical_shadow
+    hnx = live_receipt["hnx_listed_listing_presence_corrective"]
+    assert hnx["base_commit"] == "8b60f92ce7f7576c4b58a7c8c3454495bf995d88"
+    assert hnx["scope"] == "HNX_LISTED_CANONICAL_EXCHANGE_FOR_PROSPECTIVE_LISTING_PRESENCE_ONLY"
+    assert hnx["stage_qualification"] == "WINDOWS_JOB_GUARDED_RETAINED_CAPTURE_AND_TPLUS1_PRICE_HORIZON_PARITY"
+    assert hnx["new_capacity_measurement"] is True
+    assert hnx["whole_daily_requalification"] is False
+    assert "owner_decision" not in hnx
+    capture_path = "stocklookup_core/evidence/prospective_pit_capture.py"
+    assert hnx["changed_source_paths"] == [capture_path]
+    assert hnx["prior_source_sha256_lf"] == prior_receipt["source_sha256"][capture_path]
+    current = (root / capture_path).read_bytes().replace(b"\r\n", b"\n")
+    token_mapping = b'    if exchange == "HNX_LISTED":\n        exchange = "HNX"\n'
+    assert current.count(token_mapping) == 1
+    previous = current.replace(token_mapping, b"")
+    assert hashlib.sha256(previous).hexdigest() == hnx["prior_source_sha256_lf"]
+    prior_receipt["source_sha256"][capture_path] = hashlib.sha256(current).hexdigest()
+
+    replay = hnx["retained_replay"]
+    assert replay["baseline"]["positive_listings"] < replay["candidate"]["positive_listings"] <= replay["listing_rows"]
+    assert replay["baseline"]["capture_complete"] < replay["candidate"]["capture_complete"] <= replay["capture_rows"]
+    assert replay["tplus1_horizon_rows"] == replay["capture_rows"]
+    for run in (replay["baseline"], replay["candidate"]):
+        assert 0 < run["peak_job_private_bytes"] < preflight.MEASURED_MAX_RSS_BYTES
+        assert 0 < run["guard_wall_seconds"] < 120
+    prior_receipt["hnx_listed_listing_presence_corrective"] = hnx
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

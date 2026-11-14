@@ -831,7 +831,7 @@
     "stocklookup_core/evidence/price_basis_feature_fitness.py": "6a416b0c23e0903cc5dd46328bc7621871f4003777afa0417405ef39a8cd1403",
     "stocklookup_core/evidence/price_representation_contract.py": "225c7e94fbaf247707771e5c8b2df6ebc6dc69ea1660ed86ed8fbda056ea623e",
     "stocklookup_core/evidence/prospective_market_snapshot_contract.py": "e9ac78829f9070059aa900ca37ca1cccc729b127f6d05206f8580132c001f095",
-    "stocklookup_core/evidence/prospective_pit_capture.py": "7ab76afe020e72fc820d352ff2d8650c919c1d75acf3dea888f14d0dc5d63e5f",
+    "stocklookup_core/evidence/prospective_pit_capture.py": "30b5e93907a3d522589b5f807fa1b83749b5f26255f6dcd66b000b982e1224f0",
     "stocklookup_core/evidence/prospective_pit_evidence_analysis.py": "1f44b0fc59fb55632496a24471cc10dd4ad3c9312b64d0a45b278f61bba4e654",
     "stocklookup_core/evidence/prospective_route_ownership_review.py": "4c6a24e83719afb3c400a752d4333a85155f9e845a305141634c23bdc2d75b5a",
     "stocklookup_core/evidence/provider_official_bridge.py": "1fca7daf73361d720772f23d0e10433227662be3f905e403e26107695e6330da",
@@ -1625,5 +1625,37 @@
     ],
     "source_transition": "tests/fixtures/owner_daily_tactical_shadow_source_transition_v1.json",
     "new_capacity_measurement": false
+  },
+  "hnx_listed_listing_presence_corrective": {
+    "base_commit": "8b60f92ce7f7576c4b58a7c8c3454495bf995d88",
+    "scope": "HNX_LISTED_CANONICAL_EXCHANGE_FOR_PROSPECTIVE_LISTING_PRESENCE_ONLY",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/prospective_pit_capture.py"
+    ],
+    "prior_source_sha256_lf": "7ab76afe020e72fc820d352ff2d8650c919c1d75acf3dea888f14d0dc5d63e5f",
+    "stage_qualification": "WINDOWS_JOB_GUARDED_RETAINED_CAPTURE_AND_TPLUS1_PRICE_HORIZON_PARITY",
+    "new_capacity_measurement": true,
+    "whole_daily_requalification": false,
+    "retained_replay": {
+      "session": "2026-11-13",
+      "market_snapshot_identity": "p3f9_exact_session_snapshot:ce69493f0d120ffd4c88b9a34f582eb340139f81145801e77e4d8186e1a2b06b",
+      "listing_source_identity": "prospective_listing_source_observations:d18a3154a97adae827dfc08e6c891485b9364379e5ca984ea99d2bd6840e3d2b",
+      "listing_rows": 1518,
+      "capture_rows": 918,
+      "tplus1_horizon_rows": 918,
+      "tplus1_canonical_rows_sha256": "2faecf8810b45c62ff12204e723d55c0316fac658f482cb590246b96434deec7",
+      "baseline": {
+        "positive_listings": 1219,
+        "capture_complete": 725,
+        "peak_job_private_bytes": 371699712,
+        "guard_wall_seconds": 15.321
+      },
+      "candidate": {
+        "positive_listings": 1518,
+        "capture_complete": 918,
+        "peak_job_private_bytes": 370196480,
+        "guard_wall_seconds": 12.103
+      }
+    }
   }
 }
