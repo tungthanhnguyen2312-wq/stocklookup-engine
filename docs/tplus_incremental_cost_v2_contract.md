@@ -101,3 +101,19 @@ cost remains the native closeout gate.
 
 M2 source is delivered in PR213/242. The partial-scan tests cover withholding runway.
 Use the existing bounded ledger when a fresh inventory is needed.
+
+## Retained I/O corrective
+
+The November 11 and 12 child-builder receipts attribute the combined overrun to
+post-handoff evaluation (592.864 and 589.528 seconds, versus 323.176 seconds on
+November 13). Both earlier runs rebuilt 8,415 more rows. Required partition
+invalidation remains in force. The settled store avoids rereading a contribution
+already validated by the evaluator. Assembly verifies the canonical body and
+emitted identity header and computes the raw hash in one disk readback.
+
+A guarded component replay of 2,000 settled hits and 26,928 retained output rows
+through November 12 took 60.561 seconds at baseline and 34.014 seconds after the
+change. Peak child commit was 592,506,880 and 594,432,000 bytes. The rows,
+assembled artifact identity and raw bytes matched. The replay did not exercise
+a full pre/post pair or the cold rebuild caused by the new evaluator digest.
+Repeatable warm and combined acceptance remains open.

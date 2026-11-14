@@ -1,0 +1,15 @@
+{
+  "base_commit": "6ddfcd57285a06fb7ed72e4623718095850559c0",
+  "contract_version": "tplus_feedback_io_source_transition/v1",
+  "scope": "SETTLED_READ_AND_ASSEMBLY_READBACK_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "842263d986c02ca128b37e6dd30f244c7c2069eeb6c498f2ed5218f0cd3896e7",
+  "active_e4_v2_digest": "7c7423d0b013db392218878003a3179a9379e2b1bd6a7485e753a9de3c2bf851",
+  "sources": {
+    "prospective_feedback_streaming.py": {
+      "archive": "tests/fixtures/tplus_feedback_io_v1_sources/prospective_feedback_streaming.py.txt",
+      "prior_sha256_lf": "d80f0194847bc7a96a5a0bbbf62f5bafef453027c7f9058ed2a427f8c37b3744",
+      "active_sha256_lf": "75943fffa0f79ae66b2540e2a68d1be4f3a52847e4b3a9a377bf6a3597bfc58f"
+    }
+  }
+}

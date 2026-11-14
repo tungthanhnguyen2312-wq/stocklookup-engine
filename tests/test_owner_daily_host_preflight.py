@@ -507,6 +507,21 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][sync_path] = hashlib.sha256(new_sync).hexdigest()
     prior_receipt["freeze_inventory_rebaseline_corrective"] = rebaseline
 
+    feedback_io = live_receipt["tplus_feedback_io_corrective"]
+    feedback_paths = ["prospective_feedback_streaming.py", "tools/verify_retention_reader_transition.py"]
+    assert feedback_io["changed_source_paths"] == feedback_paths
+    assert feedback_io["new_capacity_measurement"] is True
+    assert feedback_io["whole_daily_requalification"] is False
+    transition = json.loads((root / feedback_io["source_transition"]).read_bytes())
+    assert transition["base_commit"] == feedback_io["base_commit"]
+    assert transition["sources"][feedback_paths[0]]["prior_sha256_lf"] == prior_receipt["source_sha256"][feedback_paths[0]]
+    for path in feedback_paths:
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    for run in ("baseline", "candidate"):
+        assert 0 < feedback_io["retained_component_measurement"][run]["peak_process_bytes"] < 2 * 1024**3
+    prior_receipt["tplus_feedback_io_corrective"] = feedback_io
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

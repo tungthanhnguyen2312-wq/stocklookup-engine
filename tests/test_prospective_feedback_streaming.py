@@ -531,3 +531,45 @@ def test_assemble_refuses_missing_segments_instead_of_falling_back(tmp_path):
     for rows in (streaming._Segments([], 0), object()):
         with pytest.raises(streaming.FeedbackStreamError, match="FEEDBACK_STREAM_SEGMENTS_MISSING"):
             streaming._assemble(tmp_path / "out.json", sections, rows, streaming._Segments([], 0), {})
+
+
+
+def test_settled_hit_retains_the_validated_object_without_a_second_read(tmp_path, monkeypatch):
+    store = streaming._DiskSettledStore(tmp_path, {})
+    entry = {"feedback": {"ticker": "FPT"}}
+    store["ab"] = entry
+    reads = []
+    original = Path.read_bytes
+
+    def counted(path):
+        reads.append(path)
+        return original(path)
+
+    monkeypatch.setattr(Path, "read_bytes", counted)
+    stored = store.get("ab")
+    store["ab"] = stored
+    assert stored == entry
+    assert reads == [store._path("ab")]
+    recovered = {"feedback": {"ticker": "HPG"}}
+    store["ab"] = recovered
+    assert store.get("ab") == recovered
+
+
+@pytest.mark.parametrize("offset", [24, -1])
+def test_assembly_readback_rejects_header_and_body_damage(tmp_path, monkeypatch, offset):
+    segment = tmp_path / "segment"
+    segment.write_bytes(b'{"ticker":"FPT"}')
+    rows = streaming._Segments([segment], 1)
+    real_fsync = os.fsync
+    output = tmp_path / "output"
+    real_open = open
+
+    def damage_after_flush(fd):
+        real_fsync(fd)
+        with real_open(output, "r+b") as written:
+            written.seek(offset, os.SEEK_END if offset < 0 else os.SEEK_SET)
+            written.write(b"!")
+
+    monkeypatch.setattr(streaming.os, "fsync", damage_after_flush)
+    with pytest.raises(streaming.FeedbackStreamError, match="FEEDBACK_OUTPUT_READBACK_MISMATCH"):
+        streaming._assemble(output, {"contract_version": "test"}, rows, rows, {})

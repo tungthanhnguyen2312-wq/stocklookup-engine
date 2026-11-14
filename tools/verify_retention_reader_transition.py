@@ -77,6 +77,10 @@ TPLUS_INCREMENTAL_MANIFEST = "tests/fixtures/tplus_incremental_cost_v2_source_tr
 TPLUS_INCREMENTAL_BASE = "f43471435403c0de8efc2e6fd800e2b83356b9b6"
 TPLUS_INCREMENTAL_SCOPE = "EXACT_TPLUS_INCREMENTAL_COST_ONLY"
 TPLUS_INCREMENTAL_ARCHIVE = "tests/fixtures/tplus_incremental_cost_v2_sources/prospective_feedback_streaming.py.txt"
+TPLUS_FEEDBACK_IO_MANIFEST = "tests/fixtures/tplus_feedback_io_source_transition_v1.json"
+TPLUS_FEEDBACK_IO_ARCHIVE = "tests/fixtures/tplus_feedback_io_v1_sources/prospective_feedback_streaming.py.txt"
+TPLUS_FEEDBACK_IO_BASE = "6ddfcd57285a06fb7ed72e4623718095850559c0"
+TPLUS_FEEDBACK_IO_SCOPE = "SETTLED_READ_AND_ASSEMBLY_READBACK_ONLY"
 TPLUS_M1B_MANIFEST = "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json"
 STORAGE_REUSE_D4A_MANIFEST = "tests/fixtures/storage_reuse_d4a_source_transition_v1.json"
 STORAGE_REUSE_D4A_BASE = "0258f391bd3e81256a7480dd171062a76af6d9ca"
@@ -370,6 +374,35 @@ def _tplus_real_corpus_prior_bytes(root: Path, relative: str, active: bytes) -> 
     return prior
 
 
+def _tplus_feedback_io_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Conserve the released M1b bytes across the offline-verified I/O corrective."""
+    if relative != TPLUS_RESUME_SOURCE:
+        return active
+    manifest = root / TPLUS_FEEDBACK_IO_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_feedback_io_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_FEEDBACK_IO_BASE
+            or spec.get("scope") != TPLUS_FEEDBACK_IO_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != (TPLUS_RESUME_SOURCE,)):
+        raise ValueError("TPLUS_FEEDBACK_IO_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != TPLUS_FEEDBACK_IO_ARCHIVE):
+        raise ValueError("TPLUS_FEEDBACK_IO_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / TPLUS_FEEDBACK_IO_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("TPLUS_FEEDBACK_IO_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _tplus_m1b_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel the M1b successor before the M1 incremental-cost pin.
 
@@ -377,6 +410,7 @@ def _tplus_m1b_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """
     if relative != TPLUS_RESUME_SOURCE:
         return active
+    active = _tplus_feedback_io_prior_bytes(root, relative, active)
     manifest = root / TPLUS_M1B_MANIFEST
     if not manifest.is_file():
         return active
@@ -1169,6 +1203,12 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if context["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = context["active_e4_v2_digest"]
+    feedback_io_manifest = root / TPLUS_FEEDBACK_IO_MANIFEST
+    if feedback_io_manifest.is_file():
+        feedback_io = json.loads(feedback_io_manifest.read_bytes())
+        if feedback_io["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = feedback_io["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:
