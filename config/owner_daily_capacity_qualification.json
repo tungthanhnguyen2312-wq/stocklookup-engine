@@ -1454,7 +1454,7 @@
     "tools/run_reviewed_interim_canonical_ingress.py": "4b29aaa210a4b078d67709d0e59f6c558d71df379310f948428fb2b2f4276e27",
     "tools/run_same_session_technical_coverage_disposition.py": "07a2cd7c699e85c563de61e7e2720cedd52d241a515f32a3976fda2099e0aa42",
     "tools/run_scheduled_capture.cmd": "8088912b8369d8b0818822438ae4483d10be0ba2d517def67031f1070963eac1",
-    "tools/run_scheduled_capture.py": "7b075a1edc068a23e50f9be6c66a1c62e35283b52579e9d6e79804c1c66ce212",
+    "tools/run_scheduled_capture.py": "e7f785d1d1a5895b60fd54f3d65253959a7b4a5efeed108cdec1690be4eebc22",
     "tools/run_screener_master_projection.py": "b0eb8a07a1d15e95491bd5f8402e4ed893727f3499af3f648b3f9f60407b0309",
     "tools/run_sector_aware_relative_research.py": "a163fb332c7d4865ccd7ec493ab16c1846256874fb9ec784e47305bd14ecb452",
     "tools/run_securities_specialist_real_replay.py": "891a2c2c5aa614f83a00408324afb7c315b4351edc9122f3279a848bdbd6aab9",
@@ -1667,6 +1667,16 @@
     ],
     "prior_source_sha256_lf": "50acea8f9c07ee35a1541f07c8fc39799672a3f2d663a484da43b3700851ff36",
     "stage_qualification": "SYNC_BODY_UNCHANGED_AND_MODULE_OUTSIDE_DAILY_IMPORT_CLOSURE",
+    "new_capacity_measurement": false
+  },
+  "scheduled_capture_reliability_corrective": {
+    "base_commit": "6ddfcd57285a06fb7ed72e4623718095850559c0",
+    "scope": "SCHEDULED_CAPTURE_RETRY_BUDGET_EARLY_START_AND_STATUS_EVIDENCE_ONLY",
+    "stage_qualification": "CAPTURE_OPERATOR_ADMISSION_LEASE_AND_JOB_LIMITS_UNCHANGED; MODULE_OUTSIDE_DAILY_IMPORT_CLOSURE",
+    "changed_source_paths": [
+      "tools/run_scheduled_capture.py"
+    ],
+    "prior_source_sha256_lf": "7b075a1edc068a23e50f9be6c66a1c62e35283b52579e9d6e79804c1c66ce212",
     "new_capacity_measurement": false
   }
 }
