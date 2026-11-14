@@ -1,11 +1,7 @@
 # Stock Lookup — Active State
 
-November 13 Owner Daily PASS; private handoff `READY_FOR_AI`. Scheduled PIT capture is enabled
-and recorded complete for November 11–13. [T+ M1b](tplus_incremental_cost_v2_contract.md)
-fingerprint and sidecar reuse is active on the host. Native milestone closeout remains pending.
-Production source sync must preserve the admitted October 26 input freeze.
-Use the [Owner release-sync procedure](producer_freeze_release_sync_contract.md).
-Fresh preflight required.
+11-13 Daily PASS, `READY_FOR_AI`; PIT capture on. [T+ M1b](tplus_incremental_cost_v2_contract.md) active.
+[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

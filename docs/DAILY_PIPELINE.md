@@ -84,20 +84,11 @@ ACTIVE_STATE §3).
 | K13 | **Thesis T0 sidecar** | Retained-only compact T0 projection (needs a verified seal index) | Soft; `NOT_APPLICABLE` before 2026-10-03 | tool child (64 KiB result cap) | `thesis-evidence-t0-v1/<session>/<digest>/` (`COMPLETE.json` last) | `NON_VOTING` | `ALREADY_RETAINED`; incomplete dir rebuilds |
 | K14 | Decision packet | Retain verified pre-seal canonical packet (new sessions) | Block (no local handler) | child | decision packet | `SCOPED` | rerun |
 | K15 | **Pre-handoff prospective collection + feedback #1** | Cohort collection and first outcome-feedback child | Soft | tool children (admission → Job Object, 1,200 s total deadline) | `prospective-research-cohort-collection-v1`, `prospective-decision-outcome-feedback-v1` | `NON_VOTING` | `ALREADY_COMPLETE` reuse on identical inputs |
-| K16 | Tactical reversal shadow collection | A/B observation collector, run on a fresh FULL PUBLISH; deferred in CORE + PRIVATE AI | Soft | tool child | tactical shadow store | `NON_VOTING` | retained-only runner in [Owner runbook](OWNER_DAILY_ONE_CLICK.md) |
+| K16 | Tactical reversal shadow collection | A/B observer; deferred in CORE + AI ([runbook](OWNER_DAILY_ONE_CLICK.md)) | Soft | tool child | tactical shadow store | `NON_VOTING` | idempotent store |
 | K17 | **Handoff bundle** (`build_tiered_bundle`) | Write `session_handoff_bundle.json` (binds T0 status/identity, feedback status) and tier bundles | Block (no local handler) | child | handoff + tier bundles | `SCOPED` | rerun |
 | K18 | **Post-handoff observers** | Signal velocity → current foreign flow (live DNSE) → flow/price divergence → **Volume & Flow V2** → **Thesis current** sidecar | Soft each | child + tool child (Thesis) | observer artifacts; `thesis-evidence-current-v1/…` | `NON_VOTING` | immutable writes; replay diagnostics never publish pointers |
 | K19 | **Post-handoff outcome feedback #2** | Second feedback child (`INCREMENTAL` over #1) | Soft | tool child | `prospective-decision-outcome-feedback-post-handoff-v1` | `NON_VOTING` | `ALREADY_COMPLETE` reuse; resource/reap statuses are never evidence |
 | K20 | Presentation projection + runtime restage | Re-join Workspace/Screener with the now-available axes into a **new** artifact set (never the sealed Producer dir) | Soft | child | `post-handoff-presentation-projection-v1` | `SCOPED` presentation | falls back to sealed bytes |
-
-The November 13 trace measured K2–K4 904 s (including about 667 s in liquidity batches),
-K6 740 s, K7–K8 658 s, K9 49 s, K10–K12 174 s, K13–K14 250 s, K15 342 s,
-K16 880 s, K17 under 1 s, K18 2,012 s, K19 471 s, and K20 plus final recording 236 s.
-K13 feeds the handoff and current Thesis lineage. K15 binds the cohort and pre-handoff
-feedback. K18 feeds K20 and the private presentation attestation, which the Owner completion
-gate requires. K19 evaluates newly mature outcomes after today's T0 becomes discoverable.
-K16 has its own retained store and no downstream decision or handoff input. Holding the
-recorded remainder fixed, omitting K16 projects 5,920 s Canonical elapsed from 6,801 s.
 
 Heavy children (Thesis, feedback) are blocking calls that return only after the process is reaped, so
 no two heavy children overlap. Feedback and Thesis run **after** capture, marker, T0 and seal; they can

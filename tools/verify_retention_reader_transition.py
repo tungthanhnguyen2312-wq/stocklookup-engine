@@ -147,7 +147,8 @@ def _post_producer_spec(root: Path) -> dict | None:
 
 
 TACTICAL_SHADOW_MANIFEST = "tests/fixtures/owner_daily_tactical_shadow_source_transition_v1.json"
-TACTICAL_SHADOW_SOURCES = ("canonical_daily_operation.py", "tools/run_owner_daily.py")
+TACTICAL_SHADOW_SOURCES = ("canonical_daily_operation.py", "tools/run_owner_daily.py", "daily_analysis_pipeline.py")
+TACTICAL_SHADOW_PIPELINE = "daily_analysis_pipeline.py"  # E2/E3-pinned; peeled first in historical_bytes.
 
 
 def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
@@ -1004,6 +1005,8 @@ def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> b
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    if relative == TACTICAL_SHADOW_PIPELINE:
+        content = _tactical_shadow_prior_bytes(root, relative, content)
     content = _decision_context_prior_bytes(root, relative, content)
     content = _legacy_summary_fingerprint_prior_bytes(root, relative, content)
     content = _ocr_recognition_prior_bytes(root, relative, content)
