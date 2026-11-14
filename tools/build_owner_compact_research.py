@@ -194,6 +194,10 @@ def build(operation_dir: Path, session: str, tickers=(), *, reviewed=None):
                                 if financial else {})},
             "valuation": {**select(card, "valuation_context"),
                           **select(row, "valuation_method_reconciliation"),
+                          **({"peer_comparison_scope": {
+                              "retained_research_rank": row["valuation"].get("peer_relative_state"),
+                              "industry_qualified_comparison": "NOT_ESTABLISHED_IN_RETAINED_BRIEF",
+                          }} if isinstance(row.get("valuation"), Mapping) else {}),
                           **({"retained_methods": {name: select(methods[name], "value", "status", "source_status",
                                                              "method_id", "period_basis", "book_period",
                                                              "share_basis", "share_identity", "price_session",

@@ -1071,7 +1071,7 @@
     "tools/build_frontend.py": "1cebeb79b75ada45deca6d8ef0e611273c133e3221b5c24930633a751a4c150d",
     "tools/build_kbs_trading_value_coverage.py": "367e978b14424788351cbececba0d43048eb340b8fba1c7c68dd2b19228c4dc3",
     "tools/build_market_wide_fundamental_research_cohort_scaleout_validation_v1.py": "5be25e63a6660ee02289e2eb1abb3f04f4b69874f15305c2bb4bf153e1edb854",
-    "tools/build_owner_compact_research.py": "53eeda9a3ec38b663b0b22e25edd59427198a6f889be8f4a8eb32b466c0704dc",
+    "tools/build_owner_compact_research.py": "2b9c249d0d9002ce9f3435693138c13e877777f2221febc96581ab4af3ac8ed8",
     "tools/build_phase2_canonical_market.py": "6e6508d797ca201371ac461f572e97bd2087fef4f34df5c69228d610f61ef2e4",
     "tools/build_phase3_feature_store.py": "f3e11a8744fac04d73e769d2191eeeaef5f3fe4c36587b67327cdf061e82b53d",
     "tools/build_provider_financial_monetary_basis_verdict.py": "fe8148ba3c46e8557a03f9e9716730e66f6085f6f3bb7f0fd933c7b07b0358cf",
