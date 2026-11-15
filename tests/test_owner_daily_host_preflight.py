@@ -608,6 +608,25 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in (*paths, added):
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["reviewed_comparative_research_corrective"] = comparative
+    # Additions outside the Daily closure (any receipt entry carrying
+    # `added_unreachable_source_paths`, in receipt order): a pin appears only for a new module
+    # absent from the entry's base commit and unreachable from Daily, with no capacity change.
+    for key, addition in ((key, value) for key, value in live_receipt.items()
+                          if isinstance(value, dict) and "added_unreachable_source_paths" in value):
+        assert addition["scope"] == "ADD_UNREACHABLE_MODULES_ONLY"
+        assert addition["new_capacity_measurement"] is False
+        added_paths = addition["added_unreachable_source_paths"]
+        assert added_paths == sorted(set(added_paths))
+        for path in added_paths:
+            assert path.startswith(("tools/", "stocklookup_core/")) and path.endswith(".py")
+            assert path not in prior_receipt["source_sha256"]
+            assert subprocess.run(["git", "cat-file", "-e", f"{addition['base_commit']}:{path}"], cwd=root,
+                                  capture_output=True).returncode != 0
+            assert module_name(path) not in reachable
+            prior_receipt["source_sha256"][path] = hashlib.sha256(
+                (root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"] = dict(sorted(prior_receipt["source_sha256"].items()))
+        prior_receipt[key] = addition
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
