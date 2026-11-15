@@ -4,7 +4,7 @@
     "contract_version": "comparative_column_observation/v1",
     "use": "CONDITIONAL_NON_VOTING_RESEARCH_ONLY",
     "official_fact_admitted": false,
-    "reviewed_at": "2026-11-15T00:39:10.974074+00:00",
+    "reviewed_at": "2026-11-15T00:48:56.835697+00:00",
     "document": {
       "ticker": "FPT",
       "document_id": "1ba3bf46f212208543d0f9094dbe28915d421e6b2e522cb610225a35a6e0313b",
@@ -19,8 +19,8 @@
       "audit_or_review_status": "audited",
       "reporting_period": "2025",
       "assurance_pages": [
-        7,
-        8
+        6,
+        7
       ],
       "period_evidence_pages": [
         12,
@@ -51,8 +51,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "408318b22db8ab7221ba91fa48fa6b75bb0aaf3f27a1d7eb1d8b3425ce110638"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "ee39630d4595a1f3a3600d7e077358d741e9937fd8acaa4f697d26fd61f983c1"
       },
       {
         "ticker": "FPT",
@@ -77,8 +77,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "e612c32be204a154e4a58f3691041330b2f62fe6575f51c98c68d4b9e236afc9"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "dce7aac61256f15d313da4e638eb6cad8ef442861899fb04c45eb165cda42aa3"
       },
       {
         "ticker": "FPT",
@@ -103,8 +103,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "40b5809114e485b8e8ac0524c411a044fd8c17bdafa67c4bbe896aa12ade310f"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "57912f45654eb57591ac5615ed907cdd6d84237df61c36e7918e577253b761e4"
       },
       {
         "ticker": "FPT",
@@ -129,8 +129,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "ec56390a726a4dd26daf5466e4a55ccb7545e7bcba4a980b0fe77beaeb711c40"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "0f207e99257282f229be26e05e59913aceaf57f79d76cd50036d2877121e1a9b"
       },
       {
         "ticker": "FPT",
@@ -155,8 +155,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "146d5d82cd3eb3be7884cf5524965681106b8d2e830f6a73bb4bd1c126d5942e"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "13d62827ed58a2cf215e0926274eeba5185fb25401cc0f2ded717b5a17fbbdb4"
       },
       {
         "ticker": "FPT",
@@ -181,8 +181,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "4eafcd9e8b14ac51e2d4103ac059525b571b2e796710925937701d8745274db2"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "2e68093f224147993529d9c5f9ab6cc58fe57a7fb346a02d2cd3a2881418774f"
       },
       {
         "ticker": "FPT",
@@ -207,8 +207,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "c989b66e88a8029f10006a2e6ec8456d53083056eb60ade9d847c7e939b9707d"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b0c58f3c81fa71a0100b52429b0a304da96fafb66c471136a9cbd426e322737c"
       },
       {
         "ticker": "FPT",
@@ -233,8 +233,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "4ed3c574fb1afcc9d105101a2c16778d1ecd9162b0811c21ab5ba7b59b50e414"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "36e6a561fe3e44c8b785206edc0806ce5fb02a15ce5afb20b8ecb88c1bd14154"
       },
       {
         "ticker": "FPT",
@@ -259,8 +259,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "d90458e2924042cfd28fcf9cc70b24b4a1f465207c165d28dedb7f9567481ad2"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b71078722e8b9af7b39a943aca320513680b247a4ede91df6f4fe86345b699ef"
       },
       {
         "ticker": "FPT",
@@ -285,8 +285,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "bea453d7d3b9866253344126bb5a62eddb3f29b639c1245efa0deda1cf6976a3"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "bf3d0f0743fe9ccf06f0059a9c8b2f699ed34c673dcf241b7ad09e333d6e4ec6"
       },
       {
         "ticker": "FPT",
@@ -311,8 +311,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "6cae47067b147055554697f47b420cf4ef76e02ccd427169d92e637fab8111f4"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f34c4381c03b0647294d2327d3cc3bb365c880b5bc38537513de0318d13dd87c"
       },
       {
         "ticker": "FPT",
@@ -337,8 +337,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "7f7d4aec8dd32a100283731d093f6bc94afd93aadb43cc7a0306ee922c70fa61"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "dfd64c556b973f6cbd1864d2fe630efc9b0069759fdeccaebdd61f523cfb71cd"
       },
       {
         "ticker": "FPT",
@@ -363,8 +363,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "227743a2dd53f1f819f1e1c29d69aad3c47decc9f82ceac239e46eb675fa441a"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "9e6f8d7195fbc2f3bc2035509aa453385d34c66cfd824d68ce562d44ae01cfa0"
       },
       {
         "ticker": "FPT",
@@ -389,8 +389,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "d04ea3b8be78ec02893f68afb3cae18256374408aacea8ccc0007087f727745e"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b34ed29be994e8375a5410bc97afc90c77e7faba4154d7a7032734c07cbfea95"
       },
       {
         "ticker": "FPT",
@@ -415,8 +415,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "8f148d9c760cd5cda6e6c34d6fa6f2d43fef7fc0eb13c17fd86cd6e33d032dd6"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "aa0f361b27b8d3173600448aa4dc927d050448f2f35b9904f6059768a5c9fa0e"
       },
       {
         "ticker": "FPT",
@@ -441,8 +441,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "9988142b836696911aac56de566e7c4768080a80e468ece690a9230bd8b54568"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b7d43f0c0665e9c77a309d637eb1077bd8b6b3d9a215c81e2ecffb31b594069f"
       },
       {
         "ticker": "FPT",
@@ -467,8 +467,8 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "c37a6916cbb54ecde7631595de64c8bf4cb72f87c28eea38008b66c4d8309787"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "4d03bd444d7262e908a87c2dea914317aef08998acd9d6e2106cb830fdb4997d"
       },
       {
         "ticker": "FPT",
@@ -493,35 +493,35 @@
         "document_sha256": "bb14bafff1a7849217f34cf4b50e0e3d69d91968f217a66d7c68f07d4c1af284",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "7d9d1563b07bbab4ba690f45b9468c930616ea4b9f533f5fddd2713749705215"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b15dfd11574071b7fe2094bb79f596704b2ef21d7a5e94e9c96653ab0e580a87"
       }
     ],
     "original_comparative_checks": [
       {
         "metric": "revenue",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "e612c32be204a154e4a58f3691041330b2f62fe6575f51c98c68d4b9e236afc9"
+        "comparison_citation_id": "dce7aac61256f15d313da4e638eb6cad8ef442861899fb04c45eb165cda42aa3"
       },
       {
         "metric": "net_income",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "ec56390a726a4dd26daf5466e4a55ccb7545e7bcba4a980b0fe77beaeb711c40"
+        "comparison_citation_id": "0f207e99257282f229be26e05e59913aceaf57f79d76cd50036d2877121e1a9b"
       },
       {
         "metric": "attributable_net_income",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "4eafcd9e8b14ac51e2d4103ac059525b571b2e796710925937701d8745274db2"
+        "comparison_citation_id": "2e68093f224147993529d9c5f9ab6cc58fe57a7fb346a02d2cd3a2881418774f"
       },
       {
         "metric": "operating_cash_flow",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "4ed3c574fb1afcc9d105101a2c16778d1ecd9162b0811c21ab5ba7b59b50e414"
+        "comparison_citation_id": "36e6a561fe3e44c8b785206edc0806ce5fb02a15ce5afb20b8ecb88c1bd14154"
       },
       {
         "metric": "provision_charge_or_reversal_adjustment",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "bea453d7d3b9866253344126bb5a62eddb3f29b639c1245efa0deda1cf6976a3"
+        "comparison_citation_id": "bf3d0f0743fe9ccf06f0059a9c8b2f699ed34c673dcf241b7ad09e333d6e4ec6"
       }
     ],
     "comparability_notes": [
@@ -534,14 +534,14 @@
         "text": "Operating cash fell while profit rose. Higher cash taxes and greater receivables use of cash are reported contributors. The prior FY2024 source filing is unavailable in the verified retained set."
       }
     ],
-    "review_receipt": "cd4215e14d0df5ff32c8b07a2abc5ff97e2fece4585870901b0d3ecf7ef780ee"
+    "review_receipt": "405c4be0ecd74bc16168f5ff0298cd265257832c4046fc2c2e14296856c719e1"
   },
   {
     "ticker": "HPG",
     "contract_version": "comparative_column_observation/v1",
     "use": "CONDITIONAL_NON_VOTING_RESEARCH_ONLY",
     "official_fact_admitted": false,
-    "reviewed_at": "2026-11-15T00:39:10.974074+00:00",
+    "reviewed_at": "2026-11-15T00:48:56.835697+00:00",
     "document": {
       "ticker": "HPG",
       "document_id": "61bd40a3b6dc8322c2c017594babcb1b113c3d5e80429ea2e7edca204ed60e92",
@@ -561,7 +561,7 @@
       ],
       "period_evidence_pages": [
         10,
-        14
+        11
       ]
     },
     "rows": [
@@ -588,8 +588,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "722b49f692c1dc70669efd32aa217dcd2f37806bee635711c6010de6d1c2c984"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "a5fd13cf3fd8af054d64ccdfb28a7c3fa3126839dc7632ddca3936bcdc80fb97"
       },
       {
         "ticker": "HPG",
@@ -614,8 +614,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "dd455b0d083bd2031f26ab50cda1dfe3cdce51f9027c5bb59827ae68b672da15"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "d3ec9d8764cd6adfecf1436e8ef2143c60a0a988ee55221307f1aa8e2534c21a"
       },
       {
         "ticker": "HPG",
@@ -640,8 +640,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "5c24aba1497c9070e162b47b9f8d2d818e587a035f09c37f743d948707698ffe"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "05266ec25fea52b3ece8d1ac1820ddc1b7fe16e2588db561f12ef457c4a89ba0"
       },
       {
         "ticker": "HPG",
@@ -666,8 +666,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "d8015f3b0c0799329a69e8ebfa021ea53dec6f3fab45756ee7373e502c7dddb1"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "0458dfb06f986df7f1e1f8a3e23d1e00969c2a247e91c9a6e19685d21f368fd0"
       },
       {
         "ticker": "HPG",
@@ -692,8 +692,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "97c384e4d1c66229b5ab9db91403056e7e664e78bcd20a37d853dc1ea2546b93"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "adec898f59fbf9f2024b17a2644896146da7c0331a07a811f60d7e565ea18a4e"
       },
       {
         "ticker": "HPG",
@@ -718,8 +718,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "ed3b3b199bb2400d7558bbc9ed14efbb14c2ac3cd0aef6fcf63f9f0b63c731da"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "aff776154c9d3f2b627798376514a81a6f3429c549a757dfae4950c9006a23dc"
       },
       {
         "ticker": "HPG",
@@ -744,8 +744,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "67dd4c810a0085dfc88300e10007d6519d1c9bf77633580f0d7cf94daaa751e7"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "c9a72e91b30ae3fed05fdf7d785cc6f0dfc5e8bad5f291dc533b530479f9d5df"
       },
       {
         "ticker": "HPG",
@@ -770,8 +770,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "0524806d09324d7238cf945f941083c67074cec81bf4873a0bd180e5f86fc50d"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "dcdda8c1359a1c437363b929a26a8bc4b2ed0689d6115678c50a9d3bfb084476"
       },
       {
         "ticker": "HPG",
@@ -796,8 +796,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "f0920efc83814e0b51d0e0ac0732005171d1832bf1095968758b27935a680735"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "eefc36d1d73f975a70b82207220c19fdffed61748681c3325a968017fdc8edd4"
       },
       {
         "ticker": "HPG",
@@ -822,8 +822,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b67d0f9e88c6aee300673736f1c27d945be7f0dc91ac13891100b8adcabc4043"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "96a55977296e9d1cfc006c77c3b000f1d493d447c91863ebd3757adf1af1084a"
       },
       {
         "ticker": "HPG",
@@ -848,8 +848,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "2bcbf9c67103af9badeb02759343fd0263e8afd4f69ffbcbd0713387f21295a4"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "7dac2058ccb7ee14153963535781a2dea6331ad638fc86d54cef0227a48bb97e"
       },
       {
         "ticker": "HPG",
@@ -874,8 +874,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "3d1d283b05e37626cad22e87791589d72c706ec381698bf0193f75acfa70e3f4"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "54e0cd66731c12f25ab0b38bd107b0115b97968811221cd0b15ab359d21a0676"
       },
       {
         "ticker": "HPG",
@@ -900,8 +900,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "e50752238f15fa950e211e4c74ff7ea9d51d88b2de99f804edc29cccc60fbd8c"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "0d6f7a60b60a91e85c4f7e66edaf74260dde561c35cdf5fe5bb4ea9314dc3d2a"
       },
       {
         "ticker": "HPG",
@@ -926,8 +926,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b5eb6736fafeed06664f12265c902403b3ffc52d6c3f13d020add046ae82e8e0"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "c81c5f2640d2916720f7dfdde51ad61809a1353e8cdeafc5a6555e2ef6d52951"
       },
       {
         "ticker": "HPG",
@@ -952,8 +952,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "fb817c0888fb06d93dcbe5afa8b0e3b066e437f06a945f3f0fdc3d176112b623"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "d68a60cbf816c9fcc5999d9c7647a61fe24b6f4d3b1122c8863eab0db0529059"
       },
       {
         "ticker": "HPG",
@@ -978,8 +978,8 @@
         "document_sha256": "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "9b15771b7259c9d064af4531faa439508dce73a78544986bb11083c33f56dc12"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f6dac29715c406801c54643c2ac26c9798cc25dbd1d67e011780d5c893b3e115"
       }
     ],
     "original_comparative_checks": [
@@ -989,15 +989,15 @@
         "document_sha256": "304a93a65e1587f625e0045d6ec9bcfba6647d19df4034cfd8fc1ec7b62eeb64",
         "source_page": 11,
         "original_value": 138855112131387,
-        "comparison_citation_id": "dd455b0d083bd2031f26ab50cda1dfe3cdce51f9027c5bb59827ae68b672da15"
+        "comparison_citation_id": "d3ec9d8764cd6adfecf1436e8ef2143c60a0a988ee55221307f1aa8e2534c21a"
       },
       {
         "metric": "net_income",
         "status": "MATCHES_ORIGINAL",
         "document_sha256": "304a93a65e1587f625e0045d6ec9bcfba6647d19df4034cfd8fc1ec7b62eeb64",
-        "source_page": 11,
+        "source_page": 12,
         "original_value": 12020023621271,
-        "comparison_citation_id": "d8015f3b0c0799329a69e8ebfa021ea53dec6f3fab45756ee7373e502c7dddb1"
+        "comparison_citation_id": "0458dfb06f986df7f1e1f8a3e23d1e00969c2a247e91c9a6e19685d21f368fd0"
       },
       {
         "metric": "attributable_net_income",
@@ -1005,7 +1005,7 @@
         "document_sha256": "304a93a65e1587f625e0045d6ec9bcfba6647d19df4034cfd8fc1ec7b62eeb64",
         "source_page": 12,
         "original_value": 12021443836074,
-        "comparison_citation_id": "ed3b3b199bb2400d7558bbc9ed14efbb14c2ac3cd0aef6fcf63f9f0b63c731da"
+        "comparison_citation_id": "aff776154c9d3f2b627798376514a81a6f3429c549a757dfae4950c9006a23dc"
       },
       {
         "metric": "operating_cash_flow",
@@ -1013,7 +1013,7 @@
         "document_sha256": "304a93a65e1587f625e0045d6ec9bcfba6647d19df4034cfd8fc1ec7b62eeb64",
         "source_page": 13,
         "original_value": 6608320655215,
-        "comparison_citation_id": "0524806d09324d7238cf945f941083c67074cec81bf4873a0bd180e5f86fc50d"
+        "comparison_citation_id": "dcdda8c1359a1c437363b929a26a8bc4b2ed0689d6115678c50a9d3bfb084476"
       },
       {
         "metric": "provision_charge_or_reversal_adjustment",
@@ -1021,7 +1021,7 @@
         "document_sha256": "304a93a65e1587f625e0045d6ec9bcfba6647d19df4034cfd8fc1ec7b62eeb64",
         "source_page": 13,
         "original_value": 108500407214,
-        "comparison_citation_id": "b67d0f9e88c6aee300673736f1c27d945be7f0dc91ac13891100b8adcabc4043"
+        "comparison_citation_id": "96a55977296e9d1cfc006c77c3b000f1d493d447c91863ebd3757adf1af1084a"
       }
     ],
     "comparability_notes": [
@@ -1030,14 +1030,14 @@
         "text": "Operating cash improved materially. The VND 11.39 trillion payables contribution and VND 7.24 trillion inventory cash use make working-capital persistence a key test."
       }
     ],
-    "review_receipt": "2235f62a9d12493f8551241f94c82a57b6500b49d951a026e485110754e753aa"
+    "review_receipt": "0eae847c98703fd775e8be078c1cad991ec237b0d660ca1a150cf35ca17b3ad1"
   },
   {
     "ticker": "HPG",
     "contract_version": "comparative_column_observation/v1",
     "use": "CONDITIONAL_NON_VOTING_RESEARCH_ONLY",
     "official_fact_admitted": false,
-    "reviewed_at": "2026-11-15T00:39:10.974074+00:00",
+    "reviewed_at": "2026-11-15T00:48:56.835697+00:00",
     "document": {
       "ticker": "HPG",
       "document_id": "beb7e61ba5a794d6ce9847de0b66243af22c8b035cbef0f73ade15e7695ee35c",
@@ -1086,8 +1086,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "5d90033de25c49fc0907754ff2c8c07c2ca3e7636a00c365e757bee6263d32d6"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b5d4c3aa8bd46320a3b448ec24d7b4a6147441a0ef40eaef14968a785e2a6342"
       },
       {
         "ticker": "HPG",
@@ -1112,8 +1112,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "abc0353d9da1a2047dbd4fa78e5c4e6dc48584451ced8fd2be9857436c126404"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "8039c6692d6fbad97e6bc10a2de5e313cb1fa99528a424cf63e337fab2957de7"
       },
       {
         "ticker": "HPG",
@@ -1138,8 +1138,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "90f82e43fa67e64ad16a31704b38f862acf89689d7460904d737babb904ac63b"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f7c8cf60fb64c254833de2ae65e952448528ecb3747676cdaa019dfeaad55fce"
       },
       {
         "ticker": "HPG",
@@ -1164,8 +1164,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "1aa7b23a73dbf96e75a608e83280a2b4950f574921b1ae6bcaff09b30d2a0432"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "dd064c55ba3e91862f8f608ecf2be281d52916d79767ea1c2a7e1286b8938ea4"
       },
       {
         "ticker": "HPG",
@@ -1190,8 +1190,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "04e29c1424a33f4e7df1c3297e2846e82ae529d30c45b0b9ad9221a8a59ea499"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "a03a744bdd9eca18594df88ad04ef68f20edbf08baa98194ffd1f839fdfd4acd"
       },
       {
         "ticker": "HPG",
@@ -1216,8 +1216,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "58826118063471a61f9213a0a140ca563a568eb9ab33d0bde848fa6de333ec9a"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b565b75d520360880331744b5d03e0485e10ec45f8b14caabf61ec68e540d620"
       },
       {
         "ticker": "HPG",
@@ -1242,8 +1242,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b79b3538e8e79bbad7b7d7b18e4814c07a82e3aebb799cda562b1162ff7d52f8"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "9428346b328555f46f40184cbe8d4e88d6b88cc1ac57aabe32b02d3e43ec117d"
       },
       {
         "ticker": "HPG",
@@ -1268,8 +1268,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "7b05e89d1a690e0fe8b0fb0e061719df8854844d4872c4323db7726e53e9390d"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "ffc8879fde68c42be8ecac736c459e1aebf936bab0cc4460e2e449bd05cb1f45"
       },
       {
         "ticker": "HPG",
@@ -1294,8 +1294,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b5d424a0ddc9a0838f45dc8230034715cdd05418834fe08d081697d5b7728002"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "cab9f5367b4e0aa17d3200ce1ab8f07825de7b955fce9d141994c2364fcbf45c"
       },
       {
         "ticker": "HPG",
@@ -1320,8 +1320,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "0f217858d2bc4985021e0b17b0cbc7f3d33223614746ab911c4323841e06943b"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "ad607b08f6ab5aba2a0a204584bb1dadc101f8102b1e684b52bacfbd504c9831"
       },
       {
         "ticker": "HPG",
@@ -1346,8 +1346,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "ae0a67b0da0589bd873096831904445b89799773c208927b2c81d9bc9b4c4655"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "7bd21b7503aeda3bc09534816799fce42530ad3f31d169e5bc0c00c83dcb9f1c"
       },
       {
         "ticker": "HPG",
@@ -1372,8 +1372,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "cc0c7be964253de8a2f452373aadcd95c0f03114697aec8673b7c8b2eb71e9e2"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "1406d9c36c76a94b5cbba98a06437d73c3db5f5d43a3587d4f36004dae08b8b5"
       },
       {
         "ticker": "HPG",
@@ -1398,8 +1398,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "f6a445935800125cba20a935c007113cc9886b6381881a247605c23bb30e9099"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "5582232f43c27c3d81270a81f814c3902391f795ee60abd09fba85f62e5a48ba"
       },
       {
         "ticker": "HPG",
@@ -1424,8 +1424,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "9fa44c26b91b2486358ee66a76409a8036e270935b382b9a1d0644554c12c83b"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "370219a18b1fb89ee6939e59918dae7769f0d230975ccea489176709acd892c7"
       },
       {
         "ticker": "HPG",
@@ -1450,8 +1450,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "01554f271429a5dc54d14e5a2c64cfcf724c7c4b27170dc7740f84224689e68b"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "82ed1903cf0cfbc7b6067c344d9acbbe1e3619a492e4833c76a5b8e11d473200"
       },
       {
         "ticker": "HPG",
@@ -1476,8 +1476,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "61f1c7faaa3484fa3d8ddf6c70cbcc28e2732569527a6656e7d560b162b1df1c"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "416393a892e9f863851a644744ae6efe02526d5fa3505a12b9b8d56e3fe6903a"
       },
       {
         "ticker": "HPG",
@@ -1502,8 +1502,8 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "79cb35667fb4c1434a73cb29d9189ffed5d26b6e3b5b004d72e430ab902a850d"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "176f2e7d1b458b10b1505b1d9dd727e17f078e7680070d081d577652ac424b73"
       },
       {
         "ticker": "HPG",
@@ -1528,35 +1528,35 @@
         "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "51e455b87c91fd8904728df51a72f6c2d95d506b00ef3a566d1cea7351586d00"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f38fb0428a34e4d9f4922b51280bfb138c4d2f111856948e967352e4a0d3a609"
       }
     ],
     "original_comparative_checks": [
       {
         "metric": "revenue",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "abc0353d9da1a2047dbd4fa78e5c4e6dc48584451ced8fd2be9857436c126404"
+        "comparison_citation_id": "8039c6692d6fbad97e6bc10a2de5e313cb1fa99528a424cf63e337fab2957de7"
       },
       {
         "metric": "net_income",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "1aa7b23a73dbf96e75a608e83280a2b4950f574921b1ae6bcaff09b30d2a0432"
+        "comparison_citation_id": "dd064c55ba3e91862f8f608ecf2be281d52916d79767ea1c2a7e1286b8938ea4"
       },
       {
         "metric": "attributable_net_income",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "58826118063471a61f9213a0a140ca563a568eb9ab33d0bde848fa6de333ec9a"
+        "comparison_citation_id": "b565b75d520360880331744b5d03e0485e10ec45f8b14caabf61ec68e540d620"
       },
       {
         "metric": "operating_cash_flow",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "0f217858d2bc4985021e0b17b0cbc7f3d33223614746ab911c4323841e06943b"
+        "comparison_citation_id": "ad607b08f6ab5aba2a0a204584bb1dadc101f8102b1e684b52bacfbd504c9831"
       },
       {
         "metric": "provision_charge_or_reversal_adjustment",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "cc0c7be964253de8a2f452373aadcd95c0f03114697aec8673b7c8b2eb71e9e2"
+        "comparison_citation_id": "1406d9c36c76a94b5cbba98a06437d73c3db5f5d43a3587d4f36004dae08b8b5"
       }
     ],
     "comparability_notes": [
@@ -1577,14 +1577,14 @@
         "text": "The issuer reports some presentation reclassifications under Circulars 99 and 43 and assesses their impact as immaterial. The June comparison uses the columns as presented."
       }
     ],
-    "review_receipt": "9065c93d969f6dadfb8785d2ecf20834263899164516986d651fd1e3edb3a17a"
+    "review_receipt": "61bda9e0e0135ee37887855d7cb7f65bc9ccf52656592ca4fa6a1e25312633d0"
   },
   {
     "ticker": "PNJ",
     "contract_version": "comparative_column_observation/v1",
     "use": "CONDITIONAL_NON_VOTING_RESEARCH_ONLY",
     "official_fact_admitted": false,
-    "reviewed_at": "2026-11-15T00:39:10.974074+00:00",
+    "reviewed_at": "2026-11-15T00:48:56.835697+00:00",
     "document": {
       "ticker": "PNJ",
       "document_id": "964efd1c800de93d643eebc42476aaf7eadb465a256f1a48f04be2e25e3ad888",
@@ -1631,8 +1631,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "f469f6c9b41f8263fc21905f467bac60deacd15affeb5a154423c915c3495ace"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "90a2792cf85927ee74661ad262bfe07bd7c9d86ac00b19412d025c1df7b3b703"
       },
       {
         "ticker": "PNJ",
@@ -1657,8 +1657,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "21ff034cd78c54836cfc037d7ec5cbe6ed6f1af5ea5f0fe2f671990cad9fce2a"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "e65af2dbc7aaf145a4adacab39982a30307e72c52db35a80be8befd6aba3c477"
       },
       {
         "ticker": "PNJ",
@@ -1683,8 +1683,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "0fdb733ef66f8631227ad67e73db3c7ac87621a04fb87ea0ed90865bfbb20569"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "304b586a9ad6aded5791574db9a8f5da102f0cf948daf90d6b13062b1572562b"
       },
       {
         "ticker": "PNJ",
@@ -1709,8 +1709,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "e0e28e2919dd50718c450c52e21d4c6e86330bac0aff104729b4d9e18d9c02cb"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "1b85d75cf3d302179d33367081ceeb66d1a2d5c49a64aabc4c304c2b2abaa424"
       },
       {
         "ticker": "PNJ",
@@ -1735,8 +1735,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "2d9081bb7591031bbe8b1d98b925172e23a5dc0f0cf649c7d92f1e1bb7b2481c"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "4302189f847eed179a8e74979a64a0e1562bb08cc181f49fa483fd5b5ecc502c"
       },
       {
         "ticker": "PNJ",
@@ -1761,8 +1761,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "dd8d647a463cdc34ed4f5b9afbedb3e483a378514b801222615c2a240e748310"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "a10cfaff493e6dc1a278876046f6cbebecefacce30262639a7c8aed393a20746"
       },
       {
         "ticker": "PNJ",
@@ -1787,8 +1787,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "136f8d9448f6d108cde3fe032f9d1529ac11cc9ad750087686833e5e005b1792"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b18182780f18fe594c255f2e8675bf04d13604e128bb84a61b164f4e0fdf36f0"
       },
       {
         "ticker": "PNJ",
@@ -1813,8 +1813,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b4fb31c9e7b9e8fd6608373d073f1ee0352e62ecb4004119395797b122ae79c2"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "b0f9e2a38ff4504379f0b46bf9d2b9914e07885e5707a8ec1f8aec0b95306607"
       },
       {
         "ticker": "PNJ",
@@ -1839,8 +1839,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "1db091e2e4f47852aaf6b286347ed5ce8dc7e9678a61b70fa668a7f019ab6872"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "8a0bacb6b6c954a4b32514cbb9908a7ca403da9cc8bcecd8669309e126a706ff"
       },
       {
         "ticker": "PNJ",
@@ -1865,8 +1865,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "2683d8353a07c6fc7ebeab80600b37241e8b1fc9e531611e41b1a3af2c4da85e"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "5cf2f8e037431e32f4a53dbf9ec925c5aefce79d547992d98a34baf298968266"
       },
       {
         "ticker": "PNJ",
@@ -1891,8 +1891,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "f624d3c8fd568515d334b5b1d99349a0a610bc5f057944b9c015e25a62455b58"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f6814f88ee90d3965346ebd4ef4137c36a97d794b36e808bffbfad05bd6ad983"
       },
       {
         "ticker": "PNJ",
@@ -1917,8 +1917,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "6e00cd78320e2216f985e9f0750377dee75ceafd560121d551cf038932d47814"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "981a0b85067c97e963ae9bfd2f629165a217218cc5e06638e312246e04629f3b"
       },
       {
         "ticker": "PNJ",
@@ -1943,8 +1943,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "aed7babbbced32fcb11f17f03caa393ee28a8430ae44681faa6604b91a7f2a08"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "760bef3daddcbee0ea5931b873f80ba78b5ff6436d19d318eb723e5189fb71eb"
       },
       {
         "ticker": "PNJ",
@@ -1969,8 +1969,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "57168094ee6cd99c000edacff0f45f378ee61370751a72efaf527b869ef1ff7e"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "faee92283ac7bea7de028bdf2b3dd7830f24b0044eb5000167f52ebe934b723a"
       },
       {
         "ticker": "PNJ",
@@ -1995,8 +1995,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "43fbe3a768e120b7e1f8ca0b4ab9e17236ad8c9f5ba000ce7667b293290cef34"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "cbbf6e7e47ba8483583ceae17531b7d091e3555acb49bc511c7f1a280a584890"
       },
       {
         "ticker": "PNJ",
@@ -2021,8 +2021,8 @@
         "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "audited",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b40e56a12d79ccb57408a11adfb06c5b60d0c3ebd0d863b996abc254581e1ce1"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "86da2552172528171bce80d1028bb5739c805ec0caa3c726e1badf58ff7bcc0b"
       }
     ],
     "original_comparative_checks": [
@@ -2032,7 +2032,7 @@
         "document_sha256": "71eb69f97fab83a36ed3dca032193cfc24754f416d24d4ad136f198ab2a73099",
         "source_page": 10,
         "original_value": 37822837171385,
-        "comparison_citation_id": "21ff034cd78c54836cfc037d7ec5cbe6ed6f1af5ea5f0fe2f671990cad9fce2a"
+        "comparison_citation_id": "e65af2dbc7aaf145a4adacab39982a30307e72c52db35a80be8befd6aba3c477"
       },
       {
         "metric": "net_income",
@@ -2040,7 +2040,7 @@
         "document_sha256": "71eb69f97fab83a36ed3dca032193cfc24754f416d24d4ad136f198ab2a73099",
         "source_page": 10,
         "original_value": 2112916282946,
-        "comparison_citation_id": "e0e28e2919dd50718c450c52e21d4c6e86330bac0aff104729b4d9e18d9c02cb"
+        "comparison_citation_id": "1b85d75cf3d302179d33367081ceeb66d1a2d5c49a64aabc4c304c2b2abaa424"
       },
       {
         "metric": "attributable_net_income",
@@ -2048,7 +2048,7 @@
         "document_sha256": "71eb69f97fab83a36ed3dca032193cfc24754f416d24d4ad136f198ab2a73099",
         "source_page": 10,
         "original_value": 2112916282946,
-        "comparison_citation_id": "dd8d647a463cdc34ed4f5b9afbedb3e483a378514b801222615c2a240e748310"
+        "comparison_citation_id": "a10cfaff493e6dc1a278876046f6cbebecefacce30262639a7c8aed393a20746"
       },
       {
         "metric": "operating_cash_flow",
@@ -2056,7 +2056,7 @@
         "document_sha256": "71eb69f97fab83a36ed3dca032193cfc24754f416d24d4ad136f198ab2a73099",
         "source_page": 11,
         "original_value": 83185174755,
-        "comparison_citation_id": "b4fb31c9e7b9e8fd6608373d073f1ee0352e62ecb4004119395797b122ae79c2"
+        "comparison_citation_id": "b0f9e2a38ff4504379f0b46bf9d2b9914e07885e5707a8ec1f8aec0b95306607"
       },
       {
         "metric": "provision_charge_or_reversal_adjustment",
@@ -2064,7 +2064,7 @@
         "document_sha256": "71eb69f97fab83a36ed3dca032193cfc24754f416d24d4ad136f198ab2a73099",
         "source_page": 11,
         "original_value": 77722354056,
-        "comparison_citation_id": "2683d8353a07c6fc7ebeab80600b37241e8b1fc9e531611e41b1a3af2c4da85e"
+        "comparison_citation_id": "5cf2f8e037431e32f4a53dbf9ec925c5aefce79d547992d98a34baf298968266"
       }
     ],
     "comparability_notes": [
@@ -2073,14 +2073,14 @@
         "text": "Inventory absorbed VND 2.81 trillion. The low operating-cash conversion leaves a clear gap between reported earnings and cash generation."
       }
     ],
-    "review_receipt": "1bd6647750abe43bba86e32a6e65630c53cfe714f28de55bd05f89fccd2cf316"
+    "review_receipt": "97ef6934862c477b055c1aad79df657749f57bd469c866aa9da90837826309be"
   },
   {
     "ticker": "PNJ",
     "contract_version": "comparative_column_observation/v1",
     "use": "CONDITIONAL_NON_VOTING_RESEARCH_ONLY",
     "official_fact_admitted": false,
-    "reviewed_at": "2026-11-15T00:39:10.974074+00:00",
+    "reviewed_at": "2026-11-15T00:48:56.835697+00:00",
     "document": {
       "ticker": "PNJ",
       "document_id": "522919846aa47538257b413a5d5043d7b65d61977b17cd1e8defc9172b5671ec",
@@ -2127,8 +2127,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "b719375be3587ab95b2a359e921d36b699f676ce28b8a515202a6ad6fad45349"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "c3c543ba7b09a4d37981c154fd65126b7c1818bfb64241922b4a482753bbe672"
       },
       {
         "ticker": "PNJ",
@@ -2153,8 +2153,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "84d51b44939b096a1a3005f2ebef32d947e0e5672cfa4d4d5e282bd75c1abb17"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "99fccf0774accddc021a458c2f11daaf91f0c413ef535785e9365e9af0f5c2cb"
       },
       {
         "ticker": "PNJ",
@@ -2179,8 +2179,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "6d26ea1008bdd7c318954d96783b8864b7d30b75da37d4c2ed0ca9d5c15fefef"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "ffeeba79aa53a5d8ec37485f64d8d507cc9e19e8b6177d02acf362d1b7937cda"
       },
       {
         "ticker": "PNJ",
@@ -2205,8 +2205,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "1307a00fd717647ea54a992f733296d1e9351492fe3134f1b63566714a5809d1"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "98e6672cd6e1b06592520bc93b4791d791e953ed7998a3ecc61426da98088593"
       },
       {
         "ticker": "PNJ",
@@ -2231,8 +2231,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "7a102b24c9ca26f6e7b577cad54822fe93071a759e33f791097243fe316a7f80"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "ca5dad7be07a537e1de66ac058b2eb5396cf912b62d93771f314cc96311f3d33"
       },
       {
         "ticker": "PNJ",
@@ -2257,8 +2257,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "561ad2d5c58b7dabe70ad7025ea82ab16e857ef2115d7aa308001ea77a1f051e"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "9fd0bddc3163cd84dec818834d319aef0cc85b7f9803ffdca3b2d93b5bb97857"
       },
       {
         "ticker": "PNJ",
@@ -2283,8 +2283,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "05f9dddd4a247f9a1d6bdf0bff97df5945177139ce41f4bf3195b7ec367bc638"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "4adc97330d8ae291939abbe9be194046fcde3a67684de32db2a23fab48c5b4f2"
       },
       {
         "ticker": "PNJ",
@@ -2309,8 +2309,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "4312380c1fa41c86b83c09f4a46de0c23476cb2e4263acdd182f349e50e7c708"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "72bea00886cb89280c0ce2778a6ec4d9076131ef834594fd3a7b73a49a2e775f"
       },
       {
         "ticker": "PNJ",
@@ -2335,8 +2335,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "5f263c9e56eb68db99b6a9bc60a2ed37c42e4f4b2257b29f0445efc0f3b33e4c"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "448fd03c1c9f06f75c29f9c2918029e4fb4116f6c29b5cdd31d89e2b899665f1"
       },
       {
         "ticker": "PNJ",
@@ -2361,8 +2361,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "a2df5e81ec4c350ab24375bcf644f96bf6eab6648c6086dd992202962d19cbd0"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f809dd5d9fa1582ec14205f81ba90099847a214be15bd370c18461b3b6f2327c"
       },
       {
         "ticker": "PNJ",
@@ -2387,8 +2387,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "fd348b37355296f528ef2251f122d0101d8d6480c8c0d2d35a2f9159d06171c0"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "77d82ef74c623d3229491ef43d5f1028c9a000d613d57f71d0ae43929fe980a7"
       },
       {
         "ticker": "PNJ",
@@ -2413,8 +2413,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "cd30840ef9b238ab7c6352cd0e1f2eb8fff16b34af3069447008c4da62108f95"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "77ec1be8af6b0241a5d7e38d082ef353ed0daf15a7d7f46d58d1f9adb7adcc30"
       },
       {
         "ticker": "PNJ",
@@ -2439,8 +2439,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "9dae64fad362ec1b2f33af4363abe5fbd27a193a1408d54caffc78a48b138beb"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "8f1629e0f34db314a2b00245d67208390c9a5044795a7287a5872c5f5a7f9aab"
       },
       {
         "ticker": "PNJ",
@@ -2465,8 +2465,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "97d238c8cf0126f811f3af4493e22c8bdc3cca4f9664087cebae03c5e1790dbb"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "d761ea377931d749a70b5ab8945e4fe1544639db3c997c2d7d93c7fe4c40fb79"
       },
       {
         "ticker": "PNJ",
@@ -2491,8 +2491,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "29526fcde4b52399b36be9f99c872c0330a8b48b53577b0d925203dd67ac33ed"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "9e8af94a3efd6d5be770b153f0b70b210e0272d55c393b20114be63f6f6024e6"
       },
       {
         "ticker": "PNJ",
@@ -2517,8 +2517,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "cea0f1aef0e9c48624e739fa6513708908a19e6ab07671f028261b3c1785036a"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "84c9f1d3aa8af4b9475cd87e5863b5775312ada772e7e3234e64984fe63c777e"
       },
       {
         "ticker": "PNJ",
@@ -2543,8 +2543,8 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "ab9b39a20fdfe8ca21b73917023438342563cadbeebc59139fe4ae38f0b51aa3"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "f6b0495781d2e01e4714cb4275a1fe7309c97f7b05a8c5faa07bb4c0cafe806e"
       },
       {
         "ticker": "PNJ",
@@ -2569,35 +2569,35 @@
         "document_sha256": "db877169e7c19b4b81d60b37d5aab8f9938129a66b582c2229ffffebdca2a43d",
         "source_identity": "issuer_ir",
         "audit_or_review_status": "reviewed",
-        "knowledge_available_at": "2026-11-15T00:39:10.974074+00:00",
-        "citation_id": "06014dbbc4bffe82d530befb5b05a8c8ff9cb84084fbd68f3cc9c3043c5b79fd"
+        "knowledge_available_at": "2026-11-15T00:48:56.835697+00:00",
+        "citation_id": "810035b177a1ad532267c5062711f3a1cc369b9fa9d340e28736c79289fae9ab"
       }
     ],
     "original_comparative_checks": [
       {
         "metric": "revenue",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "84d51b44939b096a1a3005f2ebef32d947e0e5672cfa4d4d5e282bd75c1abb17"
+        "comparison_citation_id": "99fccf0774accddc021a458c2f11daaf91f0c413ef535785e9365e9af0f5c2cb"
       },
       {
         "metric": "net_income",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "561ad2d5c58b7dabe70ad7025ea82ab16e857ef2115d7aa308001ea77a1f051e"
+        "comparison_citation_id": "9fd0bddc3163cd84dec818834d319aef0cc85b7f9803ffdca3b2d93b5bb97857"
       },
       {
         "metric": "attributable_net_income",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "4312380c1fa41c86b83c09f4a46de0c23476cb2e4263acdd182f349e50e7c708"
+        "comparison_citation_id": "72bea00886cb89280c0ce2778a6ec4d9076131ef834594fd3a7b73a49a2e775f"
       },
       {
         "metric": "operating_cash_flow",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "a2df5e81ec4c350ab24375bcf644f96bf6eab6648c6086dd992202962d19cbd0"
+        "comparison_citation_id": "f809dd5d9fa1582ec14205f81ba90099847a214be15bd370c18461b3b6f2327c"
       },
       {
         "metric": "provision_charge_or_reversal_adjustment",
         "status": "ORIGINAL_REPORT_NOT_VERIFIED",
-        "comparison_citation_id": "cd30840ef9b238ab7c6352cd0e1f2eb8fff16b34af3069447008c4da62108f95"
+        "comparison_citation_id": "77ec1be8af6b0241a5d7e38d082ef353ed0daf15a7d7f46d58d1f9adb7adcc30"
       }
     ],
     "comparability_notes": [
@@ -2622,6 +2622,6 @@
         "text": "The accounting-policy note specifies January 1 through June 30. The prior column is identified as the six months ended June 30, 2025 by Note 26. The prior report was unavailable for an independent filing cross-check."
       }
     ],
-    "review_receipt": "3fb0d77db4a8513522ccf5b2b128a61fcafea809b7d44a4fe038a19e782a1fcf"
+    "review_receipt": "7662cb00eeccda8259ae2745aa9b7b5a45f16253e31a0785e743e75cd9ae60b6"
   }
 ]
