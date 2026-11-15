@@ -489,10 +489,12 @@ def test_production_call_shape_macro_refresh_and_load_run_once_before_producer(m
     monkeypatch.setattr(cdo, "build_macro_presentation_context", fake_load)
 
     captured: dict = {}
+    events = []
 
     def fake_run_daily_producer(*_args, **kwargs):
         order.append("daily_producer")
         captured["macro_presentation_context"] = kwargs.get("macro_presentation_context")
+        kwargs["progress_callback"]({"subtask": "producer_seal_detail", "status": "BEGIN"})
         return _producer(tmp_path, SESSION)
 
     monkeypatch.setattr(cdo, "run_daily_producer", fake_run_daily_producer)
@@ -506,12 +508,20 @@ def test_production_call_shape_macro_refresh_and_load_run_once_before_producer(m
         exact_session_evidence=None,
         acquire_fn=lambda *a, **k: _acquired(tmp_path, SESSION),
         producer_fn=None,
+        progress_callback=events.append,
         runtime_fn=lambda *a, **k: {"session": SESSION, "live_count": 889},
         trusted_fn=lambda *a, **k: {"session": SESSION, "trusted_subset_ready": True, "records_fingerprint": "fp"},
         publication_runner=None,
         out_dir=tmp_path / "operations-review",
     )
 
+    seal_events = [(e["subtask"], e["status"]) for e in events
+                   if e.get("subtask") in {"producer_seal", "producer_seal_detail"}]
+    assert seal_events == [
+        ("producer_seal", "BEGIN"), ("producer_seal", "END"),
+        ("producer_seal", "BEGIN"), ("producer_seal", "END"),
+        ("producer_seal", "BEGIN"), ("producer_seal_detail", "BEGIN"), ("producer_seal", "END"),
+    ]
     assert len(refresh_calls) == 1, "macro refresh must run at most once per operation"
     assert len(load_calls) == 1
     assert order.index("macro_refresh") < order.index("macro_load") < order.index("daily_producer")

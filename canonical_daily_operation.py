@@ -33,7 +33,7 @@ Authority effect remains NONE. No OS scheduler, poll, sleep, or background loop.
 """
 from __future__ import annotations
 
-from owner_daily_progress import CanonicalCheckpointProgress, observe_canonical_failure
+from owner_daily_progress import CanonicalCheckpointProgress, observe_canonical_failure, safe_callback
 
 import argparse
 import gc
@@ -972,6 +972,11 @@ def run_canonical_daily_operation(
     # retained snapshot the Dashboard later reuses from disk. A refresh failure never blocks
     # or weakens the exact-session equity core: macro presentation context degrades to an
     # explicit unavailable/partial state instead.
+    def producer_progress(task_label: str, status: str) -> None:
+        safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "producer_seal",
+            "progress_kind": "PIPELINE", "task_label": task_label, "status": status})
+
+    producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "BEGIN")
     macro_refresh = dict((macro_refresh_fn or refresh_macro_snapshot)(root, runtime_root))
     macro_presentation_context = dict(
         (macro_presentation_context_fn or build_macro_presentation_context)(
@@ -980,6 +985,8 @@ def run_canonical_daily_operation(
     )
     macro_delivery = prepare_macro_delivery(root, resolved_session, artifact_root=artifact_root, enrichment=enrichment, acquire_fn=macro_regime_acquirer, cutoff_fn=macro_cutoff_fn)
 
+    producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "END")
+    producer_progress("Chuẩn bị đầu vào Producer", "BEGIN")
     producer_head, consumer_head = _git_head(root), _git_head(root.parent / "ai-core-private")
     preseal_brief_builder = daily_integrated_decision_brief_builder
     # Injected producer functions are test/diagnostic seams with their own
@@ -1001,6 +1008,8 @@ def run_canonical_daily_operation(
         )
         if producer_fn is None:
             producer_kwargs["runtime_root_override"] = runtime_root
+            if progress_callback is not None:
+                producer_kwargs["progress_callback"] = progress_callback
             from daily_session_level2_package import session_artifact_paths
             from stocklookup_core.valuation.current_valuation_opportunity_integration import accept_evaluated_valuation
             evaluated_path = session_artifact_paths(artifact_root, resolved_session)["current_valuation_evaluated"]
@@ -1017,7 +1026,10 @@ def run_canonical_daily_operation(
                 operation_output_root=operation_output_root / "operations-review" / "daily-research-session-operations-v1",
                 shadow_artifact_output_root=operation_output_root / "operations-review" / "daily-session-shadow-recommendation-v1",
             )
+        producer_progress("Chuẩn bị đầu vào Producer", "END")
+        producer_progress("Chạy Producer", "BEGIN")
         producer_result = produce(root, **producer_kwargs)
+        producer_progress("Chạy Producer", "END")
         # Producer/current-product consumers have finished with these arguments.
         # Keep the returned operation and caller-owned evidence, but do not hold
         # a separate evaluated-valuation universe through retention/feedback.

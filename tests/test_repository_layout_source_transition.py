@@ -165,6 +165,13 @@ def _copy_boundary(tmp_path: Path) -> None:
 
 def test_tampered_live_source_fails_the_binding(tmp_path):
     _copy_boundary(tmp_path)
+    transition = "tests/fixtures/velocity_projection_and_producer_timing_v1"
+    for name in (transition + ".json",
+                 transition + "_sources/canonical_daily_operation.py.txt",
+                 transition + "_sources/canonical_post_close_pipeline.py.txt"):
+        target = tmp_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((ROOT / name).read_bytes())
     assert layout_transition_identity(tmp_path)["sources"]
     target = tmp_path / "canonical_post_close_pipeline.py"
     target.write_bytes(target.read_bytes() + b"\n# tamper\n")
