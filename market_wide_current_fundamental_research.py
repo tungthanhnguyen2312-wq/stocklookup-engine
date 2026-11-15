@@ -1522,7 +1522,8 @@ def project_session(*, baseline: Mapping[str, Any], official_rows: list[Mapping[
         from stocklookup_core.financial.official_income_prior_period_pairing import attach_prior_period_pairing
         attach_prior_period_pairing(artifact["records"], prior_rows=prior_period_inputs.get("rows") or [],
                                     comparative_observations=prior_period_inputs.get("comparative_observations") or [],
-                                    cutoff=cutoff, load_blockers=prior_period_inputs.get("load_blockers") or [])
+                                    cutoff=cutoff, load_blockers=prior_period_inputs.get("load_blockers") or [],
+                                    reviewed_comparatives=prior_period_inputs.get("reviewed_comparatives") or [])
     artifact["official_projection"] = {"cohort": cohort, "rejected_fields": rejected,
         "current_official_field_count": sum(f["temporal_status"] == "CURRENT_OFFICIAL_FACT" for fs in by_ticker.values() for f in fs),
         "historical_official_overlay_field_count": sum(f["temporal_status"] == "HISTORICAL_OFFICIAL_FACT" for fs in by_ticker.values() for f in fs),

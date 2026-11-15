@@ -79,3 +79,9 @@ gh pr list -R tungthanhnguyen2312-wq/stocklookup-engine; gh pr list -R tungthanh
 ```
 Production sync: `claude-reports/fable-transformation-20261115/sync_producer.ps1 -Target <merged sha> -CiRun <push run id>`
 (refuses 15:35–20:30 VN, a moved remote head, or a tree that differs from the candidate).
+
+## Official comparative financial evidence
+
+The Owner approved review of five retained HPG, PNJ and FPT reports for conditional financial research. The appended review file under `derived/financial-evidence-currency-refresh-v1` binds 86 visual cells to their issuer document, assurance, statement, page, printed code and label, column and knowledge time. The existing prior-period loader applies the review time at the research cutoff. The earnings/cash owner calculates reported growth and operating cash over total profit. The compact bundle carries the optional `official_income.reviewed_comparative` section to the Consumer dossier.
+
+The HPG and PNJ audited FY2024 cross-checks retain their original values and hashes. FPT's FY2025 notes retain the Telecom consolidation caveat for comparisons crossing into 2026. The review file represents conditional research only. D-1, voting states, strict valuation and share authority keep their existing contracts. Completed sessions, T0 and the November 13 handoff stay sealed. Live delivery enters on an eligible future session after the recorded review time.

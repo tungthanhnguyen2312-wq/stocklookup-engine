@@ -593,6 +593,21 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             old = subprocess.check_output(["git", "show", f"{removal['base_commit']}:{path}"], cwd=root)
             assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"].pop(path)
         prior_receipt[key] = removal
+    comparative = live_receipt["reviewed_comparative_research_corrective"]
+    assert comparative["scope"] == "NON_VOTING_REVIEWED_COMPARATIVES_ONLY"
+    assert comparative["new_capacity_measurement"] is False
+    paths = comparative["prior_source_sha256_lf"]
+    assert set(paths) == {"ai_research_session_delivery.py", "market_wide_current_fundamental_research.py",
+                          "stocklookup_core/financial/interim_earnings_cash_research.py",
+                          "stocklookup_core/financial/official_income_prior_period_pairing.py"}
+    added = "derived/financial-evidence-currency-refresh-v1/reviewed_comparative_column_observations_20261115.json"
+    assert comparative["added_source_paths"] == [added] and added not in prior_receipt["source_sha256"]
+    for path, digest in paths.items():
+        old = subprocess.check_output(["git", "show", f"{comparative['base_commit']}:{path}"], cwd=root)
+        assert digest == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+    for path in (*paths, added):
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["reviewed_comparative_research_corrective"] = comparative
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

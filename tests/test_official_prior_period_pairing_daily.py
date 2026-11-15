@@ -29,6 +29,45 @@ def bundle(rows):
     return {"rows": rows, "load_blockers": [], "comparative_observations": []}
 
 
+def test_reviewed_comparatives_flow_only_after_review_and_leave_official_facts_unchanged():
+    receipts = pairing.load_reviewed_comparatives(PUBLIC)
+    assert len(receipts) == 5 and sum(len(row["rows"]) for row in receipts) == 86
+    inputs = bundle([]) | {"reviewed_comparatives": receipts}
+    assert pairing.qualified_prior_inputs_at_cutoff(inputs, cutoff="2026-11-13T15:00:00+07:00") is None
+    cutoff = "2026-11-16T15:00:00+07:00"
+    assert pairing.qualified_prior_inputs_at_cutoff(inputs, cutoff=cutoff)["reviewed_comparatives"] == receipts
+    source = baseline()
+    source["records"]["HPG"]["entity_class"] = "corporate"
+    source.update(fundamental.content_identity(source))
+    options = dict(baseline=source, official_rows=[], session="2026-11-16", cutoff=cutoff)
+    plain = fundamental.project_session(**options)["records"]["HPG"]
+    candidate = fundamental.project_session(**options, prior_period_inputs=inputs)["records"]["HPG"]
+    first = delivery.financial_research_card({"ticker": "HPG"}, plain, {}, cutoff=cutoff)
+    second = delivery.financial_research_card({"ticker": "HPG"}, candidate, {}, cutoff=cutoff)
+    income = second["fundamental_research_context"]["official_income"]
+    reviewed = income.pop("reviewed_comparative")
+    assert reviewed["use"] == "CONDITIONAL_NON_VOTING_RESEARCH_ONLY"
+    assert reviewed["is_actionable"] is False and reviewed["strict_valuation_effect"] == "NONE"
+    h1 = next(report for report in reviewed["reports"] if report["document"]["reporting_period"] == "2026-H1")
+    assert {row["metric"] for row in h1["comparisons"]} == {"revenue", "net_income", "attributable_net_income", "operating_cash_flow"}
+    assert h1["cash_conversion"][0]["operating_cash_flow"] == 12_641_697_117_285
+    assert h1["cash_conversion"][0]["profit_metric"] == "net_income"
+    income.pop("prior_period_pairing")
+    assert second == first
+
+
+def test_reviewed_comparatives_reject_numeric_tamper_even_with_new_receipt_hash(tmp_path):
+    receipts = pairing.load_reviewed_comparatives(PUBLIC)
+    receipt = receipts[0]
+    receipt["rows"][0]["normalized_value"] += 1
+    row = receipt["rows"][0]
+    row["citation_id"] = pairing._hash({k: v for k, v in row.items() if k != "citation_id"})
+    receipt["review_receipt"] = pairing._hash({k: v for k, v in receipt.items() if k != "review_receipt"})
+    _write_json(tmp_path / pairing.REVIEWED_COMPARATIVE_FILE, receipts)
+    with pytest.raises(ValueError, match="REVIEWED_COMPARATIVE_ROW_BINDING_INVALID"):
+        pairing.load_reviewed_comparatives(tmp_path)
+
+
 def daily_fixture(tmp_path, monkeypatch):
     paths = _independent_component_session_paths(tmp_path, SESSION)
     snapshot = _write_valid_p3f9b_snapshot(paths["exact_session_snapshot"], SESSION)
