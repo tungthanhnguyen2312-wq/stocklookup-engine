@@ -7,7 +7,7 @@
   "source_byte_normalization": "CRLF_TO_LF",
   "source_sha256": {
     "ai_analyzer.py": "fda937cc914c27c64a88de16ea56e36ac4d407ba57bffbd68eb8138256e334f1",
-    "ai_research_session_delivery.py": "9c09b7540ccf7c2c9a676dde9d20042f7da48c8cb14fc37dbb32056b258abb3e",
+    "ai_research_session_delivery.py": "a40d3d739a1eff65ccf5f65c39a0df28230ba98483aa447c7b7873c4cc28629b",
     "annual_financial_ocr_materialization.py": "8966fb81dbef6e43da2ccafed0471b669b66a8a65ae11d214a4a9d79571b9eba",
     "annual_provider_financial_recovery.py": "26458d4b77fe876c1dfa3231123030f4c2e1bd079fe287f596f4a7d6c1a594f5",
     "atomic_io.py": "87cdc583c1d3be4c2185cc8640beac6a9f8f5d9bb35733354605bcc6417f0a89",
@@ -120,6 +120,7 @@
     "derived/financial-evidence-currency-refresh-v1/retained_cash_flow_balance_consumer_proof.json": "509ef2bc54797e0d8e6d551ccc90c550b4ab00b6dbee3b1524ff9aee17116dba",
     "derived/financial-evidence-currency-refresh-v1/retained_cash_flow_balance_report.json": "63c7014638efbbdd0f759226cb64db9d6758dc1b509c620a397f692da6c9a46c",
     "derived/financial-evidence-currency-refresh-v1/retained_h1_component_context_report.json": "c1261ba7053a1e520228cf26a98a80f760cc3d360727e08594f6ddf0e4564187",
+    "derived/financial-evidence-currency-refresh-v1/reviewed_comparative_column_observations_20261115.json": "29a42d1de45bc8c2532986b0867d178387b3fe4f9336286a94b66ce6fba541b4",
     "derived/financial-evidence-currency-refresh-v1/reviewed_interim_canonical_ingress_report.json": "8d2070651a67ad0607b4fc4e808fe545ef0459794f68da951df8b31eb4fc32b5",
     "derived/financial-evidence-currency-refresh-v1/triad_current_h1_acquisition_proof.json": "b6a7367f6b83c38b86142eb973522948892babdd7b2356ef4cd6e8d4c4387d7f",
     "derived/financial-evidence-currency-refresh-v1/triad_current_h1_consumer_proof.json": "adc7bd1aed6eb01ca2bfaf753309c8d4e2e106233753ed2c0d97d86e35521f1e",
@@ -186,7 +187,7 @@
     "market_raw_lake.py": "2267a9bf8bd5891df79bc72f74963f2e4c37b5c9fd69ec515f509cbb9f04b0c5",
     "market_wide_current_corporate_intelligence.py": "002c1e1ec9fc320f92c202a75e9e9af8bbcb9b12f8beb52cd1d52c768b2a4fb0",
     "market_wide_current_descriptive_research.py": "5b5608e42956ae23e2241a38a51edc6335a2c26bf235d38d56312ef07263e209",
-    "market_wide_current_fundamental_research.py": "bb694dbf0b30ec960015080ae4c9624a50eed7961e6a7178be64400058922fa2",
+    "market_wide_current_fundamental_research.py": "bce0d93a49825137503e6bfb93181468650c1cbd3f96f262c051f6bdc48704d7",
     "market_wide_current_liquidity_research.py": "cc178a0a99d32145da5094aea81bc58bb854299eb7c888ae9022f2155af5dece",
     "market_wide_current_shares_resolver.py": "2eb76aae63017ad4e08581f7de2eb855afe659fc78a1c15fa96cdd4f283e8021",
     "market_wide_current_technical_coverage_scaleout.py": "d1ff39f394a46b9b2749dc9a206424cc121fd8f8c1a52cd6e16d20061dbd5a3c",
@@ -895,7 +896,7 @@
     "stocklookup_core/financial/fundamental_research_readiness.py": "d8d235146f94a66090cedfcf67458626065be2c7445f6eed2816aea5b3e2b38f",
     "stocklookup_core/financial/fundamental_signal_consumption_contract.py": "c7a46b5a80c01437b73a93eddda7df72e6f89b67c1e6d595e98122c55b6eb041",
     "stocklookup_core/financial/fundamental_thesis_invalidation_precision.py": "c8965e76c2aa769db176157509092d237f66deb7d17f8ff1f1c132b7b9d444e1",
-    "stocklookup_core/financial/interim_earnings_cash_research.py": "06632f83b3df2590701ba18766dcfa3eb06aec1b829a54cf097759f347e50587",
+    "stocklookup_core/financial/interim_earnings_cash_research.py": "503f7b2f34bb26bb7a779d791ac339a36f1d3a1d10fc7b28092e9cde0b9d7a22",
     "stocklookup_core/financial/market_wide_calculation_readiness.py": "3c72a270f8b5fea97dd708282821cee1d95b3e4fc965c26773393b1d6396ff4f",
     "stocklookup_core/financial/market_wide_financial_analysis_v2_scaleout.py": "eddf4fb4f4d60c51ef7eef4a330b8039358edba98354725e129f6f31d79fe93a",
     "stocklookup_core/financial/market_wide_financial_coverage.py": "c70219d1063c9aeb55573c2ca3fc40870180399676d85595dc2105d8f8c993a7",
@@ -903,7 +904,7 @@
     "stocklookup_core/financial/market_wide_fundamental_features.py": "fd5a2fb04db7c6ec53644f5443da21eb0be0c145f37b290b494b1dd1a6e6cdbf",
     "stocklookup_core/financial/monetary_basis_contract.py": "eb168a8100c926af2287461847a0593c20fdc19bb2d6403714bab12e41a85cd5",
     "stocklookup_core/financial/multi_period_financial_panel.py": "17422f47e10ef690f2b87b7d4dbeb97adf993fd3f3dc4e17d72cdf0119def0fe",
-    "stocklookup_core/financial/official_income_prior_period_pairing.py": "cbce7657a52665b0531a97a5c6731076c3311af06d22d98b383f081f468e2d1b",
+    "stocklookup_core/financial/official_income_prior_period_pairing.py": "d4631408b31204a0f8cc6c7bd3030cd640eb97f3b870694487217545e3c07137",
     "stocklookup_core/financial/operational_fundamental_context_integration.py": "4d4c58ac07031e3e0d561161e7ad6e097df92ec3df7f2eef92fb3b43ba1dde49",
     "stocklookup_core/financial/p3c_comparative_financial_evidence.py": "77f1e178d24da73a7f864b79cfec23eeb73ca578b0e51d066be966969ec55e06",
     "stocklookup_core/financial/p3f10_fundamental_evidence_scaleout.py": "f9c7d973e5a0d2909c63ed8c385786df94bdb7b672c15d9aeb601678ad847e63",
@@ -1719,5 +1720,19 @@
       "tools/run_vci_intraday_pagination.py",
       "tools/run_vietnam_official_macro_evidence.py"
     ]
+  },
+  "reviewed_comparative_research_corrective": {
+    "base_commit": "c6fe692a3905b4df45f3ace68c33e4d48e29a0bc",
+    "scope": "NON_VOTING_REVIEWED_COMPARATIVES_ONLY",
+    "prior_source_sha256_lf": {
+      "ai_research_session_delivery.py": "9c09b7540ccf7c2c9a676dde9d20042f7da48c8cb14fc37dbb32056b258abb3e",
+      "market_wide_current_fundamental_research.py": "bb694dbf0b30ec960015080ae4c9624a50eed7961e6a7178be64400058922fa2",
+      "stocklookup_core/financial/interim_earnings_cash_research.py": "06632f83b3df2590701ba18766dcfa3eb06aec1b829a54cf097759f347e50587",
+      "stocklookup_core/financial/official_income_prior_period_pairing.py": "cbce7657a52665b0531a97a5c6731076c3311af06d22d98b383f081f468e2d1b"
+    },
+    "added_source_paths": [
+      "derived/financial-evidence-currency-refresh-v1/reviewed_comparative_column_observations_20261115.json"
+    ],
+    "new_capacity_measurement": false
   }
 }

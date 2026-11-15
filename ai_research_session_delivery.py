@@ -234,6 +234,11 @@ def financial_research_card(card: Mapping[str, Any], fundamental: Mapping[str, A
     pairing = research_card_pairing(fundamental, income, ticker=card.get("ticker"), cutoff=cutoff)
     if pairing is not None:
         income["prior_period_pairing"] = pairing
+    reviewed = ((fundamental or {}).get("official_income_research_context") or {}).get("reviewed_comparative")
+    if (isinstance(reviewed, Mapping) and reviewed.get("ticker") == card.get("ticker")
+            and reviewed.get("cutoff") == cutoff and reviewed.get("is_actionable") is False
+            and all(reviewed.get(key) == "NONE" for key in ("vote_effect", "strict_valuation_effect", "ttm_effect"))):
+        income["reviewed_comparative"] = copy.deepcopy(reviewed)
     return result
 
 
