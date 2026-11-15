@@ -2,7 +2,7 @@
 from __future__ import annotations
 from collections import Counter
 from functools import lru_cache
-import hashlib, json
+import hashlib, io, json
 import os
 import tempfile
 from pathlib import Path
@@ -10,9 +10,6 @@ from typing import Any, Mapping, Sequence
 import stocklookup_core.financial.fundamental_signal_consumption_contract as fundamental_signals
 import prospective_decision_retention as retention
 from stocklookup_core.evidence import source_file_fingerprint as native_fingerprint
-from stocklookup_core.evidence.source_verifier_receipts import (
-    _HashedStream, _atomic_write_json, _read_state_json,
-)
 
 # v1.3 (CURRENT_RESEARCH_FUNDAMENTAL_PROMOTION_HARDENING_V1): a fundamental_trajectory change
 # between two records produced under different fundamental decision-policy epochs is
@@ -182,15 +179,90 @@ def _project_snapshot(path: Path, *, raw_proof: dict | None = None) -> tuple[dic
     return dict(metadata, records=records), valid
 
 
+# Receipt I/O stays local and stdlib-only: this observer must not join the import component of the
+# T+ verifier modules (tests/test_e5_runtime_seams.py keeps that component's size exact).
+_RECEIPT_MAX_BYTES = 64 * 1024 * 1024
+
+
+class _HashingBinary(io.RawIOBase):
+    def __init__(self, path: Path):
+        self._file = open(path, "rb", buffering=0)
+        self.digest = hashlib.sha256()
+        self.bytes_read = 0
+
+    def readable(self) -> bool:
+        return True
+
+    def readinto(self, buffer) -> int:
+        count = self._file.readinto(buffer)
+        if count:
+            self.digest.update(memoryview(buffer)[:count])
+            self.bytes_read += count
+        return count
+
+    def close(self) -> None:
+        try:
+            self._file.close()
+        finally:
+            super().close()
+
+
+class _HashedStream:
+    """UTF-8 text view of a file whose raw bytes are hashed as they are read."""
+
+    def __init__(self, path: Path):
+        self.raw = _HashingBinary(path)
+        self.text = io.TextIOWrapper(io.BufferedReader(self.raw, buffer_size=1 << 20), encoding="utf-8")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.text.close()
+        return False
+
+    def finish(self) -> tuple[str, int]:
+        while self.raw.readinto(bytearray(1 << 20)):
+            pass
+        return self.raw.digest.hexdigest(), self.raw.bytes_read
+
+
+def _atomic_write_json(path: Path, value: Any, *, allow_nan: bool = True) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=allow_nan).encode("utf-8")
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".velocity-state-", suffix=".tmp", delete=False) as out:
+            temporary = Path(out.name)
+            out.write(payload)
+            out.flush()
+            os.fsync(out.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+def _read_state_json(path: Path) -> dict[str, Any] | None:
+    try:
+        if path.stat().st_size > _RECEIPT_MAX_BYTES:
+            return None
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
 @lru_cache(maxsize=1)
 def _projection_verifier_sha() -> str:
     import bounded_artifact_stream
-    from stocklookup_core.evidence import source_verifier_receipts
 
     digest = hashlib.sha256()
     for module in (__file__, retention.__file__, bounded_artifact_stream.__file__,
-                   fundamental_signals.__file__, native_fingerprint.__file__,
-                   source_verifier_receipts.__file__):
+                   fundamental_signals.__file__, native_fingerprint.__file__):
         digest.update(hashlib.sha256(Path(module).read_bytes()).digest())
     return digest.hexdigest()
 

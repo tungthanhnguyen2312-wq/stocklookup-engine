@@ -196,7 +196,7 @@
     "meta_sync.py": "4b0f1cacf1cbd4cd87f6d9def08f836e2f109a0d8de0d05e1843b969382a4972",
     "metadata_registry_export.py": "98570851904ac962b3f560bf98dd500ac009efcfc0d23562e9f5d5eb5384f379",
     "missing_payload_reconciliation.py": "4e1bd959e3dfe1a15d582e0b6c8ed0f1256148122b3a74363ea02ce57f57f8a5",
-    "multi_session_signal_velocity.py": "5b96ba274c28d45089cdd004d3f3d9af9965dca98234970ed7b8b758d9cc3c2e",
+    "multi_session_signal_velocity.py": "f2dd7fc0fbbaf28dc5f5065e0f77b5efa3187c4e092c27b00da6752385dbcdad",
     "multi_source_exact_session_resolver.py": "5305371e20a022204421d5f379e4026b82427cbeb112d56b1714296d104fb2a4",
     "multi_source_market_evidence_contract.py": "87fb222e35fbc603b47b1313320465cf400b79aeb90909dacaa717c8cc9827e5",
     "mva_daily_research_bundle.py": "138e925fdf29be722925a95af33b2e647307e2c5c208d3fae11a3ced6276a509",

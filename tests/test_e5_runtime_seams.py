@@ -225,10 +225,7 @@ def test_cycle_cuts_remain_real_and_restoring_them_restores_coupling():
             ('stocklookup_core.financial.financial_reporting_currency','stocklookup_core.decision.human_ai_decision_evidence_packet')]
     assert not any(tuple(edge[:2]) in cuts for edge in graph['edges'])
     restored = list(graph['edges'])+[(left,right,'lazy','static','from') for left,right in cuts]
-    # 27 since the signal-velocity projection receipts: multi_session_signal_velocity reuses the
-    # hashing/state helpers of source_verifier_receipts, which reads bounded_artifact_stream.
-    # The live graph limits above are unchanged; only this restored-coupling control grew.
-    assert max(map(len,guard.cyclic_components(restored,eager=False)[1]))==27
+    assert max(map(len,guard.cyclic_components(restored,eager=False)[1]))==26
     assert sum(map(len,guard.cyclic_components(restored,eager=False)[1])) > sum(map(len,groups))
     # E6 legitimately reduces the separate financial component. Preserve the
     # exact E5 negative control against immutable E5 source, rather than require
