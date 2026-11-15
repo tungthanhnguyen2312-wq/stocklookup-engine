@@ -166,7 +166,7 @@ def _velocity_projection_prior_bytes(root: Path, relative: str, active: bytes) -
     if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
         return active
     archive = manifest.parent / (name + "_sources") / (relative + ".txt")
-    prior = archive.read_bytes().replace(b"\\r\\n", b"\\n")
+    prior = archive.read_bytes().replace(b"\r\n", b"\n")
     if (hashlib.sha256(prior).hexdigest() != row["predecessor_sha256_lf"]
             or row["predecessor_sha256_lf"] == row["active_sha256_lf"]):
         raise ValueError("VELOCITY_PROJECTION_SOURCE_TRANSITION_BINDING_INVALID")
