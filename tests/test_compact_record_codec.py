@@ -112,3 +112,26 @@ def test_dropping_a_reference_changes_the_logical_hash():
     # Still structurally valid (two uses), but the unexpanded placeholder stays null,
     # so the caller's existing identity check over the expanded record fails.
     assert codec.logical_sha256(envelope) != codec.logical_sha256(record)
+
+
+def test_hints_never_change_the_envelope_and_input_is_untouched():
+    records = [_record(), {"x": _record(), "y": _record()}, _record()]
+    snapshots = [canonical_bytes(record) for record in records]
+    hints: set = set()
+    with_hints = [canonical_bytes(codec.encode_record(record, hints=hints)) for record in records]
+    without = [canonical_bytes(codec.encode_record(record)) for record in records]
+    assert with_hints == without and hints
+    assert [canonical_bytes(record) for record in records] == snapshots
+
+
+def test_unicode_and_scalar_edge_values_round_trip():
+    context = {"ghi chú": ["Thép Hòa Phát — quý 3", 1.5e-7, -0.0, 10**20, True, None, "\u2028\"\\"] * 400}
+    record = {"a": context, "b": copy.deepcopy(context), "c": {"deep": copy.deepcopy(context)}}
+    envelope = codec.encode_record(record)
+    assert len(envelope["refs"]) == 3
+    assert canonical_bytes(codec.decode_record(json.loads(canonical_bytes(envelope)))) == canonical_bytes(record)
+
+
+def test_non_string_object_keys_are_refused():
+    with pytest.raises(codec.CompactRecordError, match="NON_STRING_OBJECT_KEY|RECORD_NOT_CANONICAL_JSON"):
+        codec.encode_record({"a": {1: "x", "b": "y" * 5000}})

@@ -22,7 +22,7 @@ import json
 from typing import Any
 
 VERSION = "compact_record/v1"
-MIN_SUBTREE_BYTES = 4096
+MIN_SUBTREE_CHARS = 4096
 MAX_DEPTH = 12
 _ENVELOPE_KEYS = frozenset({"compact_record", "literal", "refs", "blocks"})
 _ENCODER = json.JSONEncoder(ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
@@ -42,31 +42,68 @@ def is_compact_record(value: Any) -> bool:
             and set(value) == _ENVELOPE_KEYS)
 
 
-def encode_record(record: Any, *, min_subtree_bytes: int = MIN_SUBTREE_BYTES) -> dict[str, Any]:
-    """Return a deterministic envelope; the input is not modified."""
+def encode_record(record: Any, *, min_subtree_chars: int = MIN_SUBTREE_CHARS,
+                  hints: set | None = None) -> dict[str, Any]:
+    """Return a deterministic envelope; the input is not modified.
+
+    The envelope shares the untouched subtrees of ``record`` (no deep copy), so serialise it
+    before mutating the input. ``hints`` is an optional caller-owned set that remembers which
+    path shapes held large subtrees in earlier records of the same artifact; it only avoids
+    re-serialising them and never changes the result.
+    """
     if is_compact_record(record):
         raise CompactRecordError("RECORD_ALREADY_COMPACT")
+    if hints is None:
+        hints = set()
     groups: dict[bytes, list[tuple]] = {}
     sizes: dict[bytes, int] = {}
+    encode = _ENCODER.encode
 
-    def locate(value: Any, path: tuple) -> None:
-        if not isinstance(value, (dict, list)) or not value:
-            return
-        raw = _canonical(value)
-        if len(raw) < min_subtree_bytes:
-            return  # no child can reach the threshold either
-        if path:
-            digest = hashlib.sha256(raw).digest()
-            groups.setdefault(digest, []).append(path)
-            sizes[digest] = len(raw)
-        if len(path) < MAX_DEPTH:
-            items = value.items() if isinstance(value, dict) else enumerate(value)
+    def scan(value: Any, path: tuple) -> str:
+        """Canonical text of a non-empty container, assembled from its children."""
+        if len(path) >= MAX_DEPTH:
+            text = encode(value)
+        else:
+            parts = []
+            if isinstance(value, dict):
+                try:
+                    keys = sorted(value)
+                except TypeError as error:
+                    raise CompactRecordError("NON_STRING_OBJECT_KEY") from error
+                items = [(key, value[key]) for key in keys]
+            else:
+                items = list(enumerate(value))
+            is_object = isinstance(value, dict)
             for key, child in items:
-                if isinstance(value, dict) and not isinstance(key, str):
+                if is_object and not isinstance(key, str):
                     raise CompactRecordError("NON_STRING_OBJECT_KEY")
-                locate(child, (*path, key))
+                if isinstance(child, (dict, list)) and child:
+                    child_path = (*path, key)
+                    shape = _shape(child_path)
+                    if shape in hints:
+                        text = scan(child, child_path)
+                    else:
+                        text = encode(child)
+                        if len(text) >= min_subtree_chars:
+                            hints.add(shape)
+                            text = scan(child, child_path)
+                else:
+                    text = encode(child)
+                parts.append(_key_text(key) + ":" + text if is_object else text)
+            text = ("{" + ",".join(parts) + "}") if is_object else ("[" + ",".join(parts) + "]")
+        if path and len(text) >= min_subtree_chars:
+            digest = hashlib.sha256(text.encode("utf-8")).digest()
+            groups.setdefault(digest, []).append(path)
+            sizes[digest] = len(text)
+        return text
 
-    locate(record, ())
+    if isinstance(record, (dict, list)) and record:
+        try:
+            scan(record, ())
+        except CompactRecordError:
+            raise
+        except (TypeError, ValueError) as error:  # mixed/non-string keys, NaN, non-JSON values
+            raise CompactRecordError("RECORD_NOT_CANONICAL_JSON") from error
     chosen: dict[tuple, int] = {}
     block_paths: list[tuple] = []
 
@@ -84,21 +121,44 @@ def encode_record(record: Any, *, min_subtree_bytes: int = MIN_SUBTREE_BYTES) ->
         for path in uses:
             chosen[path] = index
 
-    def strip(value: Any, path: tuple) -> Any:
-        if path in chosen:
-            return None
-        if isinstance(value, dict):
-            return {key: strip(child, (*path, key)) for key, child in value.items()}
-        if isinstance(value, list):
-            return [strip(child, (*path, index)) for index, child in enumerate(value)]
-        return value
-
+    # Copy only the containers on the way to a reference; everything else is shared.
+    literal = record
+    copied: dict[tuple, Any] = {}
+    if chosen:
+        literal = copied[()] = dict(record) if isinstance(record, dict) else list(record)
+        for path in chosen:
+            node = literal
+            for depth, part in enumerate(path[:-1], 1):
+                prefix = path[:depth]
+                child = copied.get(prefix)
+                if child is None:
+                    original = node[part]
+                    child = copied[prefix] = dict(original) if isinstance(original, dict) else list(original)
+                    node[part] = child
+                node = child
+            node[path[-1]] = None
     return {
         "compact_record": VERSION,
-        "literal": strip(record, ()),
+        "literal": literal,
         "refs": [[list(path), chosen[path]] for path in sorted(chosen, key=_path_key)],
         "blocks": [_get(record, path) for path in block_paths],
     }
+
+
+_KEY_TEXT: dict[str, str] = {}
+
+
+def _key_text(key: str) -> str:
+    text = _KEY_TEXT.get(key)
+    if text is None:
+        text = _ENCODER.encode(key)
+        if len(_KEY_TEXT) < 65536:
+            _KEY_TEXT[key] = text
+    return text
+
+
+def _shape(path: tuple) -> tuple:
+    return tuple(part if isinstance(part, str) else 0 for part in path)
 
 
 def decode_record(envelope: Any) -> Any:
