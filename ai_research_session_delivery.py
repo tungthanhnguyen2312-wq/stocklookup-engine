@@ -14,7 +14,7 @@ import json
 from typing import Any, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
-from stocklookup_core.evidence.record_subtree_codec import encode_record
+from stocklookup_core.evidence.record_subtree_codec import CODEC_VERSION, encode_record
 from stocklookup_core.decision.current_daily_decision_research_product import (
     ABSENT_OWNER_FOCUS_STATUS, INTEGRATED_PEER_VERDICTS, is_present_research_card, reconcile_card_peer_valuation,
 )
@@ -949,6 +949,10 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
                 "role": FULL_UNIVERSE_COMPANION_ROLE,
                 "not_primary_human_review_input": True,
                 "ordering": "TICKER_ASCENDING_DETERMINISTIC_LOOKUP_NOT_SAMPLING",
+                # Present only when encoded, so default-off manifest bytes are unchanged.
+                **({"record_encoding": CODEC_VERSION,
+                    "decode_with": "tools/extract_ai_ticker_context.py --bundle <this file> --ticker <TICKER>"}
+                   if full_universe_subtree_codec else {}),
             },
             "current_decision_cockpit_projection.json": {"bytes": len(projection_bytes), "sha256": _hash_bytes(projection_bytes), "projection_identity": projection["projection_identity"]},
         },

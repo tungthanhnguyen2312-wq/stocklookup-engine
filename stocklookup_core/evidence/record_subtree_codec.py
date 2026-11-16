@@ -36,63 +36,66 @@ def _leaf(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
-def _token(value: Any, memo: dict[int, tuple[bytes, int]]) -> tuple[bytes, int]:
+def _token(value: Any, memo: dict[int, tuple[bytes, int]], reserved: list[bool]) -> tuple[bytes, int]:
     """Unambiguous child token and approximate canonical length.
 
     Containers contribute their 32-byte structural digest; scalars contribute a
     type tag plus length-prefixed text (bool/int/float/None/str never collide;
     floats use repr, exactly as the canonical serializer does). The length only
-    gates the size threshold; equality is decided by the digest.
+    gates the size threshold; equality is decided by the digest. Exact-type
+    dispatch first (JSON-decoded values), isinstance fallback for subclasses.
     """
-    if isinstance(value, (dict, list)):
-        return b"c" + _digest(value, memo)[0], memo[id(value)][1]
-    if isinstance(value, str):
+    kind = type(value)
+    if kind is str:
         text = value.encode("utf-8", "surrogatepass")
         return b"s%d:" % len(text) + text, len(text) + 2
-    if value is None or isinstance(value, bool):
-        text = repr(value).encode()
-        return b"k" + text, 5
-    if isinstance(value, int):
+    if kind is dict or kind is list:
+        return b"c" + _digest(value, memo, reserved)[0], memo[id(value)][1]
+    if value is None or kind is bool:
+        return b"k" + repr(value).encode(), 5
+    if kind is int:
         text = str(value).encode()
         return b"i%d:" % len(text) + text, len(text)
-    if isinstance(value, float):
+    if kind is float:
         text = repr(value).encode()
         return b"f%d:" % len(text) + text, len(text)
+    if isinstance(value, (dict, list)):
+        return b"c" + _digest(value, memo, reserved)[0], memo[id(value)][1]
+    if isinstance(value, bool):
+        return b"k" + repr(bool(value)).encode(), 5
+    if isinstance(value, str):
+        return _token(str(value), memo, reserved)
     text = _leaf(value).encode("utf-8")
     return b"x%d:" % len(text) + text, len(text)
 
 
-def _digest(value: Any, memo: dict[int, tuple[bytes, int]]) -> tuple[bytes, int]:
-    """Structural sha256 and approximate canonical character length, bottom-up, O(n)."""
+def _digest(value: Any, memo: dict[int, tuple[bytes, int]], reserved: list[bool]) -> tuple[bytes, int]:
+    """Structural sha256 and approximate canonical length, bottom-up, O(n).
+
+    The same pass records whether any object uses a reserved codec key.
+    """
     cached = memo.get(id(value))
     if cached is not None:
         return cached
-    parts = []
     size = 2 + max(len(value) - 1, 0)
     if isinstance(value, dict):
-        parts.append(b"{")
+        if CODEC_KEY in value or REF_KEY in value:
+            reserved[0] = True
+        parts = [b"{"]
         for key in sorted(value):
-            child, child_size = _token(value[key], memo)
+            child, child_size = _token(value[key], memo, reserved)
             encoded_key = key.encode("utf-8", "surrogatepass")
             parts.append(b"%d:" % len(encoded_key) + encoded_key + child)
             size += len(encoded_key) + 3 + child_size
     else:
-        parts.append(b"[")
+        parts = [b"["]
         for item in value:
-            child, child_size = _token(item, memo)
+            child, child_size = _token(item, memo, reserved)
             parts.append(child)
             size += child_size
     result = (hashlib.sha256(b"".join(parts)).digest(), size)
     memo[id(value)] = result
     return result
-
-
-def _has_reserved(value: Any) -> bool:
-    if isinstance(value, dict):
-        return CODEC_KEY in value or REF_KEY in value or any(_has_reserved(v) for v in value.values())
-    if isinstance(value, list):
-        return any(_has_reserved(v) for v in value)
-    return False
 
 
 def encode_record(record: dict[str, Any], *, min_bytes: int = DEFAULT_MIN_BYTES) -> dict[str, Any]:
@@ -103,10 +106,11 @@ def encode_record(record: dict[str, Any], *, min_bytes: int = DEFAULT_MIN_BYTES)
     """
     if not isinstance(record, dict):
         raise RecordSubtreeCodecError("RECORD_SUBTREE_CODEC_RECORD_NOT_OBJECT")
-    if _has_reserved(record):
-        return copy.deepcopy(record)
     memo: dict[int, tuple[bytes, int]] = {}
-    _digest(record, memo)
+    reserved = [False]
+    _digest(record, memo, reserved)
+    if reserved[0]:
+        return copy.deepcopy(record)
     first: dict[bytes, str] = {}
     replaced = 0
 

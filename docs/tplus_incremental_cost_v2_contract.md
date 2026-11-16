@@ -119,3 +119,27 @@ D4a is PARTIAL: IID shares one file; the two delivery pairs are independent but
 byte-identical. The canonical Owner route omitted `reuse_immutable_delivery`
 when invoking the Producer. The release corrective passes the existing switch;
 new outputs use the existing immutable writer, legacy aliases remain untouched.
+
+## Full-universe NDJSON subtree codec (M3 candidate, default off)
+
+`stocklookup_core/evidence/record_subtree_codec.py` (`record_subtree_refs/v1`) stores later exact
+repeats (>= 1 KB canonical) of a container subtree inside one NDJSON record as an RFC 6901
+pointer to the first occurrence. `decode_record` restores the exact logical record; legacy rows
+pass through; records using a reserved key are never encoded; malformed pointers, unsupported
+versions and truncated rows refuse. Every Producer reader decodes: the Owner Daily M1 verifier
+(refusal `M1_AI_FULL_UNIVERSE_COMPANION_UNREADABLE`), the ticker extractor, the extract tool and
+market-gate decision quality. When encoded, the bundle manifest entry names `record_encoding`.
+The published AI handoff carries no NDJSON. `build_delivery(full_universe_subtree_codec=False)`
+is the only switch and no production caller enables it.
+
+Offline on the retained 11-16 file (1,683 records): 1,048,622,846 -> 392,036,587 bytes
+(allocated 1,048,625,152 -> 392,040,448); decoded stream sha256 equals the original
+`11976dda…`; encoded sha256 `7711d49a…` is reproduced across runs. Delivery write 72.9 -> 176.9 s,
+peak working set 66 -> 76 MB; full sequential decode 36.2 -> 56.3 s (65 -> 86 MB); extractor
+five-ticker lookup 13.6 -> 3.9 s. The codec is not on the T+ feedback path.
+
+Activation is a separate M3 admission: it needs an explicit Owner decision recorded in native
+state, a production caller passing the switch, and acceptance on a real Owner Daily (byte and
+identity parity, M1 verifier PASS, delivery runtime). Rollback is removing that caller; encoded
+retained sessions stay readable through `decode_record`. IID is out of scope: 22 modules read IID
+artifacts (7 through the shared loader) and T0 seals bind IID identities.

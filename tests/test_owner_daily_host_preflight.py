@@ -631,8 +631,10 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     added = "stocklookup_core/evidence/record_subtree_codec.py"
     assert codec["added_source_paths"] == [added] and added not in prior_receipt["source_sha256"]
     assert set(codec["prior_source_sha256_lf"]) == {
-        "ai_research_session_delivery.py", "stocklookup_core/research/ai_research_ticker_extractor.py",
-        "tools/extract_ai_ticker_context.py", "tools/run_market_gate_decision_quality.py"}
+        "ai_research_session_delivery.py", "config/daily_path_launchers.json",
+        "stocklookup_core/research/ai_research_ticker_extractor.py", "tools/extract_ai_ticker_context.py",
+        "tools/run_market_gate_decision_quality.py", "tools/run_owner_daily.py",
+        "tools/verify_retention_reader_transition.py"}
     for path, digest in codec["prior_source_sha256_lf"].items():
         old = subprocess.check_output(["git", "show", f"{codec['base_commit']}:{path}"], cwd=root)
         assert digest == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest()
