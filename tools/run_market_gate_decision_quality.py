@@ -23,6 +23,7 @@ import integrated_decision_prospective_feedback as feedback_bridge  # noqa: E402
 import prospective_decision_outcome_feedback as feedback  # noqa: E402
 import prospective_t0_seal_index as seal  # noqa: E402
 from retained_evidence_catalog import guard_path  # noqa: E402
+from stocklookup_core.evidence.record_subtree_codec import decode_record  # noqa: E402
 
 _T0_KEYS = ("ticker", "as_of_session", "decision_identity", "posture_condition_class", "tactical_phase", "trigger", "invalidation")
 
@@ -78,6 +79,7 @@ def _gated_t0_records(operation_dir: Path, tickers: set[str]) -> dict[str, dict]
         for line in stream:
             row = json.loads(line)
             if row.get("ticker") in tickers:
+                row = decode_record(row)
                 decision = row.get("integrated_decision_v1") or {}
                 if row["ticker"] in records:
                     raise ValueError("DUPLICATE_T0_DELIVERY_ROW:" + row["ticker"])
