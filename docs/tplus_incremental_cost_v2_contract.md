@@ -101,3 +101,21 @@ cost remains the native closeout gate.
 
 M2 source is delivered in PR213/242. The partial-scan tests cover withholding runway.
 Use the existing bounded ledger when a fresh inventory is needed.
+
+
+## November 16 retained acceptance (local verification)
+
+Released main `337590cdebc8f2a62939e3844d43ee8588e48f73` retains a genuine
+November 16 Daily from source `799243cc8ffb3e5e3189a93bcfb1252e0fbc52b1`.
+Guarded pre/post intervals were 327.124 / 560.542 seconds (887.666 combined);
+child builder intervals 319.394 / 547.553 seconds. Peaks were 1,272,004,608 /
+1,303,752,704 bytes. The post pass adds exactly the November 16 T0, reports
+INCREMENTAL, 44 fingerprint hits and zero streamed source SHA bytes. Both
+feedback raw hashes were independently verified. This session passes M1b's
+600/900-second and 2-GiB limits; repeatability and PR258 candidate acceptance
+remain separate, unclaimed gates. No new Daily or replay was run.
+
+D4a is PARTIAL: IID shares one file; the two delivery pairs are independent but
+byte-identical. The canonical Owner route omitted `reuse_immutable_delivery`
+when invoking the Producer. The release corrective passes the existing switch;
+new outputs use the existing immutable writer, legacy aliases remain untouched.

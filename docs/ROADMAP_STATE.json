@@ -39,7 +39,7 @@
       ],
       "checkpoint": null,
       "terminal_disposition": null,
-      "notes": "Owner 2026-11-03 approved D1 (STOCKLOOKUP_SUSTAINABILITY_PROGRAM_V1; reconcile OWNER_DAILY_16GB recovery after genuine Daily 2026-11-02 and 2026-11-03 PASS) and D2 (fingerprint-anchored T0 receipts in Daily, full SHA scrub outside Daily). Bounded scope: T+ incremental cost only; executor Grok Build; contract docs/tplus_incremental_cost_v2_contract.md; no push/merge/deploy without Owner."
+      "notes": "Owner 2026-11-03 approved D1 (STOCKLOOKUP_SUSTAINABILITY_PROGRAM_V1; reconcile OWNER_DAILY_16GB recovery after genuine Daily 2026-11-02 and 2026-11-03 PASS) and D2 (fingerprint-anchored T0 receipts in Daily, full SHA scrub outside Daily). Bounded scope: T+ incremental cost only; executor Grok Build; contract docs/tplus_incremental_cost_v2_contract.md; no push/merge/deploy without Owner. Owner 2026-11-16 approved release preparation (STOCKLOOKUP_20261116_VALIDATED_CHANGES_RELEASE_PREPARATION) of the D4a canonical-dispatch and reviewed-margin correctives on release/20261116-d4a-financial-research-corrective. T+ remains ACTIVE; merge, deploy, Daily, switch changes, sealed evidence/database mutation, source/financial authority promotion and policy change remain Owner-gated."
     },
     {
       "milestone_id": "OWNER_DAILY_16GB_HOST_AND_PIPELINE_MEMORY_RECOVERY_V1",

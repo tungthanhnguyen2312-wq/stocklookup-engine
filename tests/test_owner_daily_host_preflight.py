@@ -608,6 +608,23 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in (*paths, added):
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["reviewed_comparative_research_corrective"] = comparative
+    dispatch = live_receipt["canonical_d4a_dispatch_corrective"]
+    assert dispatch["scope"] == "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY"
+    assert dispatch["new_capacity_measurement"] is False
+    assert set(dispatch["prior_source_sha256_lf"]) == {"canonical_daily_operation.py", "tools/verify_retention_reader_transition.py", "config/daily_path_launchers.json"}
+    for path, digest in dispatch["prior_source_sha256_lf"].items():
+        old = subprocess.check_output(["git", "show", f"{dispatch['base_commit']}:{path}"], cwd=root)
+        assert digest == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest()
+        assert live_receipt["source_sha256"][path] == hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["canonical_d4a_dispatch_corrective"] = dispatch
+    profitability = live_receipt["reviewed_profitability_corrective"]
+    assert profitability["scope"] == "NON_VOTING_REVIEWED_REPORTED_PAT_MARGINS_AND_CASH_LABEL_ONLY"
+    assert profitability["new_capacity_measurement"] is False
+    path = "stocklookup_core/financial/interim_earnings_cash_research.py"
+    assert set(profitability["prior_source_sha256_lf"]) == {path}
+    old = subprocess.check_output(["git", "show", f"{profitability['base_commit']}:{path}"], cwd=root)
+    assert profitability["prior_source_sha256_lf"][path] == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["reviewed_profitability_corrective"] = profitability
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

@@ -75,3 +75,30 @@ def test_d4a_successor_rejects_tamper(tmp_path, tamper):
         pattern = "STORAGE_REUSE_D4A_SOURCE_TRANSITION_SCOPE_INVALID"
     with pytest.raises(ValueError, match=pattern):
         _tplus_real_corpus_prior_bytes(tmp_path, STORAGE_REUSE_D4A_SOURCE, live)
+
+
+@pytest.mark.parametrize("tamper", [None, "live", "archive", "scope"])
+def test_canonical_dispatch_transition_conserves_exact_prior_source(tmp_path, tamper):
+    from tools.verify_retention_reader_transition import D4A_CANONICAL_MANIFEST, _d4a_canonical_prior_bytes
+    spec = json.loads((ROOT / D4A_CANONICAL_MANIFEST).read_bytes())
+    relative = "canonical_daily_operation.py"
+    archive = spec["sources"][relative]["archive"]
+    for name in (D4A_CANONICAL_MANIFEST, relative, archive):
+        target = tmp_path / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / name, target)
+    active = _lf((tmp_path / relative).read_bytes())
+    if tamper == "live":
+        active += b"# unreviewed\n"
+    elif tamper == "archive":
+        (tmp_path / archive).write_bytes(b"bad")
+    elif tamper == "scope":
+        spec["scope"] = "UNBOUNDED"
+        (tmp_path / D4A_CANONICAL_MANIFEST).write_text(json.dumps(spec))
+    if tamper:
+        with pytest.raises(ValueError, match="D4A_CANONICAL_SOURCE_"):
+            _d4a_canonical_prior_bytes(tmp_path, relative, active)
+    else:
+        prior = _d4a_canonical_prior_bytes(tmp_path, relative, active)
+        assert prior == _lf((ROOT / archive).read_bytes())
+        assert hashlib.sha256(prior).hexdigest() == spec["sources"][relative]["prior_sha256_lf"]

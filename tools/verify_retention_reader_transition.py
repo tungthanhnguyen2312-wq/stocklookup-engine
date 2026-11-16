@@ -151,8 +151,34 @@ TACTICAL_SHADOW_SOURCES = ("canonical_daily_operation.py", "tools/run_owner_dail
 TACTICAL_SHADOW_PIPELINE = "daily_analysis_pipeline.py"  # E2/E3-pinned; peeled first in historical_bytes.
 
 
+D4A_CANONICAL_MANIFEST = "tests/fixtures/storage_reuse_d4a_canonical_source_transition_v1.json"
+
+
+def _d4a_canonical_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    manifest = root / D4A_CANONICAL_MANIFEST
+    if relative != "canonical_daily_operation.py" or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/storage_reuse_d4a_canonical_sources/canonical_daily_operation.py.txt"
+    if (set(spec) != {"base_commit", "scope", "release_authority", "sources"}
+            or spec.get("base_commit") != "337590cdebc8f2a62939e3844d43ee8588e48f73"
+            or spec.get("scope") != "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or set(spec.get("sources", {})) != {relative}):
+        raise ValueError("D4A_CANONICAL_SOURCE_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (row.get("archive") != archive
+            or hashlib.sha256(prior).hexdigest() != row.get("prior_sha256_lf")
+            or hashlib.sha256(active).hexdigest() != row.get("active_sha256_lf")
+            or prior == active):
+        raise ValueError("D4A_CANONICAL_SOURCE_BINDING_INVALID")
+    return prior
+
+
 def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve both historical source chains across the optional observer dispatch."""
+    active = _d4a_canonical_prior_bytes(root, relative, active)
     manifest = root / TACTICAL_SHADOW_MANIFEST
     if relative not in TACTICAL_SHADOW_SOURCES or not manifest.is_file():
         return active
