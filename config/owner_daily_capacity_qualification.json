@@ -844,7 +844,7 @@
     "stocklookup_core/evidence/raw_pit_authority_matrix.py": "9378964fda5404e0fcc1f971bd64d35d1b55cef9d0a5ff9254cd25f4a06a7a1c",
     "stocklookup_core/evidence/real_official_corporate_action_factor_evidence.py": "2a26f148fbe995a4914f9ee2e333481a7ad333f0aef5cb5fa18105150799871d",
     "stocklookup_core/evidence/record_artifact_loading.py": "8d8acab66cc0115ed6980b9a3576439592a81cc2e7a4afa92e7469290fa6d9ff",
-    "stocklookup_core/evidence/record_subtree_codec.py": "5baee2f0597f5ec558828e6c6f6a5d2edcaf9a9ef4feeb16977ad1af0d5a4f63",
+    "stocklookup_core/evidence/record_subtree_codec.py": "bbe237874a17cd642fb6aaffb8a9116895f4d88ec41ce2a598f520613df099ab",
     "stocklookup_core/evidence/research_output_fields.py": "24989b4036d13d543a0c6a00893d2639027e28895e44dd5033103352c0a7d315",
     "stocklookup_core/evidence/retained_evidence_quarantine.py": "ecf43bc232b4c496089555e4a0798d13604af5ae2570380bed58b6be00eb4bcf",
     "stocklookup_core/evidence/retained_official_route_ownership_evidence.py": "4fd0c2bb7144dce6a71ac55786831a71b143fa6fbf734bd1ada8ee71a49f5390",
