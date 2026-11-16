@@ -1,0 +1,12 @@
+{
+  "base_commit": "6c033c98837b2f816dd041460fbab60cdcf291d4",
+  "scope": "M1_FULL_UNIVERSE_SUBTREE_CODEC_DECODE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "tools/run_owner_daily.py": {
+      "archive": "tests/fixtures/ndjson_subtree_codec_launcher_sources/tools/run_owner_daily.py.txt",
+      "prior_sha256_lf": "01660b0311c0c9d36b4774eb39e3adbb9918262827ff0223fb59c195df4e0885",
+      "active_sha256_lf": "41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9"
+    }
+  }
+}
