@@ -7,8 +7,10 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
-[Scope](tplus_incremental_cost_v2_contract.md). 11-13 meets M1b targets; 11-11/12 combined
-runs exceed 900 s (open). PR213/242: M2 ledger + partial-scan suppression.
+[Scope](tplus_incremental_cost_v2_contract.md). 11-13 and 11-16 meet M1b targets;
+11-11/12 exceed 900 s. D4a 11-16 is partial; canonical-dispatch correction is in a release PR.
+PR258/267 remain drafts. Release PR holds the D4a dispatch and reviewed-margin correctives;
+merge, deploy, Daily and authority promotion stay Owner-gated.
 
 ## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`
 

@@ -20,7 +20,7 @@
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
     "canonical_daily_financial_v2_materialization.py": "7379bc3b3f7af098e16862df148e5a8357c4f8e77659007ecde24c4350c802c6",
-    "canonical_daily_operation.py": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337",
+    "canonical_daily_operation.py": "58b2df420365329f070eefec4411d243466b2a5fc34b5baab274d20f03a4685f",
     "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "13894ef6e7e99c40de158d79f2ed67609c860bbbf694509ad558e980c89a1845",
+    "config/daily_path_launchers.json": "ff7a956d2ae9abfa9385cb945dc5bdba895c28691d1021656ee106a4262eb980",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -1302,7 +1302,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "00614b09c6a8abe3470f5121cf0fe92bab78a3e0b7de20a7666e59c899d604f4",
+    "tools/verify_retention_reader_transition.py": "8f43e34945932cb47fdf395eaa80256c702f8b6400f8bb93901198557eb55ab6",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1734,5 +1734,15 @@
       "derived/financial-evidence-currency-refresh-v1/reviewed_comparative_column_observations_20261115.json"
     ],
     "new_capacity_measurement": false
+  },
+  "canonical_d4a_dispatch_corrective": {
+    "base_commit": "337590cdebc8f2a62939e3844d43ee8588e48f73",
+    "scope": "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY",
+    "new_capacity_measurement": false,
+    "prior_source_sha256_lf": {
+      "canonical_daily_operation.py": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337",
+      "tools/verify_retention_reader_transition.py": "00614b09c6a8abe3470f5121cf0fe92bab78a3e0b7de20a7666e59c899d604f4",
+      "config/daily_path_launchers.json": "13894ef6e7e99c40de158d79f2ed67609c860bbbf694509ad558e980c89a1845"
+    }
   }
 }

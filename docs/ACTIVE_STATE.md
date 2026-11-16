@@ -1,7 +1,7 @@
 # Stock Lookup — Active State
 
-11-13 Daily PASS, `READY_FOR_AI`; PIT capture on. [T+ M1b](tplus_incremental_cost_v2_contract.md) active.
-[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required. D4a ON 11-15; live check pending.
+11-16 retained Daily PASS / READY_FOR_AI; [T+ M1b](tplus_incremental_cost_v2_contract.md) meets this session's targets (887.666 s combined, 1.304 GB child peak). Native milestone remains active.
+[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required. D4a live check PARTIAL: IID shares; NDJSON/bundle do not. Canonical-dispatch corrective is in a release PR awaiting Owner merge; production unchanged.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

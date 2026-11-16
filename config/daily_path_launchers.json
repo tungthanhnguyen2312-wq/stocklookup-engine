@@ -10,7 +10,7 @@
       ]
     },
     "canonical_daily_operation.py": {
-      "ast_sha256": "a57ccc94c8b334e373101dd9c0c85838c7b223e713e0c409a4eaa5ccc110b5d1",
+      "ast_sha256": "0390a9166e3e3f1eeb7c254bbd76643e0ddc7ed4577627894da9fb798020dc66",
       "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID and post-seal allocation bounds only; subprocess argv remains macro_sync.py. CORE + AI defers the retained tactical shadow child.",
       "targets": [
         "macro_sync.py",
