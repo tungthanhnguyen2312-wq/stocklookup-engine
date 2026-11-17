@@ -9,6 +9,8 @@ import pytest
 from tools import qualify_e4_infrastructure as e4
 from tools.verify_retention_reader_transition import (
     THESIS_ARCHIVE, THESIS_MANIFEST, THESIS_SOURCE, VALUATION_MANIFEST, VALUATION_SOURCES,
+    DECISION_CONTEXT_ARCHIVE, DECISION_CONTEXT_MANIFEST, LEGACY_SUMMARY_ARCHIVE, LEGACY_SUMMARY_MANIFEST,
+    TPLUS_FEEDBACK_IO_ARCHIVE, TPLUS_FEEDBACK_IO_MANIFEST,
     active_thesis_evidence_identity, historical_bytes, legacy_source_identity,
 )
 
@@ -89,7 +91,10 @@ def _copy_domain(tmp_path: Path) -> None:
     m1b = "tests/fixtures/tplus_incremental_cost_v2_m1b_source_transition_v1.json"
     relatives.append(m1b)
     relatives.extend(row["archive"] for row in json.loads((ROOT / m1b).read_bytes())["sources"].values())
-    relatives.extend([THESIS_ROOT, "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"])
+    relatives.extend([THESIS_ROOT, "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt",
+                      DECISION_CONTEXT_MANIFEST, DECISION_CONTEXT_ARCHIVE,
+                      LEGACY_SUMMARY_MANIFEST, LEGACY_SUMMARY_ARCHIVE,
+                      TPLUS_FEEDBACK_IO_MANIFEST, TPLUS_FEEDBACK_IO_ARCHIVE])
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -134,7 +139,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert summary_fp["previous_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
     context_fp = json.loads((ROOT / "tests/fixtures/decision_context_premarket_source_transition_v1.json").read_bytes())
     assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == context_fp["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    feedback_io = json.loads((ROOT / TPLUS_FEEDBACK_IO_MANIFEST).read_bytes())
+    assert feedback_io["previous_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == feedback_io["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

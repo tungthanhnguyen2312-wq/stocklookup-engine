@@ -11,7 +11,7 @@ from tools import qualify_e4_infrastructure as e4
 from tools.verify_retention_reader_transition import (
     _velocity_projection_prior_bytes,
     STORAGE_REUSE_D4A_ARCHIVE, STORAGE_REUSE_D4A_BASE, STORAGE_REUSE_D4A_MANIFEST, STORAGE_REUSE_D4A_SOURCE,
-    TPLUS_M1B_MANIFEST, TPLUS_REAL_CORPUS_MANIFEST, _storage_reuse_d4a_prior_bytes, _tplus_real_corpus_prior_bytes,
+    TPLUS_FEEDBACK_IO_MANIFEST, TPLUS_M1B_MANIFEST, TPLUS_REAL_CORPUS_MANIFEST, _storage_reuse_d4a_prior_bytes, _tplus_real_corpus_prior_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,7 +49,9 @@ def test_d4a_does_not_change_the_e4_v2_digest():
     assert summary_fp["previous_e4_v2_digest"] == root_fix["active_e4_v2_digest"]
     context_fp = json.loads((ROOT / "tests/fixtures/decision_context_premarket_source_transition_v1.json").read_bytes())
     assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
-    assert e4.source_identity(ROOT, version="v2")["code_digest"] == context_fp["active_e4_v2_digest"]
+    feedback_io = json.loads((ROOT / TPLUS_FEEDBACK_IO_MANIFEST).read_bytes())
+    assert feedback_io["previous_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
+    assert e4.source_identity(ROOT, version="v2")["code_digest"] == feedback_io["active_e4_v2_digest"]
 
 
 def test_other_sources_pass_through():

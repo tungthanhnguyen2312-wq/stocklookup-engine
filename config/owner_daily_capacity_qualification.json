@@ -614,7 +614,7 @@
     "prospective_decision_outcome_feedback.py": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2",
     "prospective_decision_outcome_measurement.py": "1c2030769735a98b0d1fe7e14d7fa23189cec1b56002fec5a60ada5041853aa7",
     "prospective_decision_retention.py": "3e21a7e4456316e9890f43850eead4dd8429842aeaa02d24b93e9f2d26d9ab38",
-    "prospective_feedback_streaming.py": "d80f0194847bc7a96a5a0bbbf62f5bafef453027c7f9058ed2a427f8c37b3744",
+    "prospective_feedback_streaming.py": "75943fffa0f79ae66b2540e2a68d1be4f3a52847e4b3a9a377bf6a3597bfc58f",
     "prospective_market_evidence_retention.py": "9bf33abdd28233d8c71eb45d3dc46cb49170206107413275be614934f0a2c5c1",
     "prospective_market_snapshot_contract.py": "2c2f675c498edd8a1b5ce1006c83191c24005e0542094218a9ce1f803a0b7bbf",
     "prospective_pit_capture.py": "7aadc9731c7950451868c08b672e5de561fc52f716fda71b2b2f5fb4e395b2d4",
@@ -1303,7 +1303,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "57513680a73fbecd7f6ac26ea56d35d60c7377d1be310dfb9ae7f58de81af0b2",
+    "tools/verify_retention_reader_transition.py": "073ffafc3ca7a3d40145f03628a65f19ef6fdda718612b71dd009e39d39181dd",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1797,6 +1797,37 @@
       "warm_total_logical_read_bytes": 138144438,
       "original_nov13_output_file_sha256": "2ce59f758cc7bbc7e1247baccc90860b2a4a5234b529b277dc90386df95e2415",
       "cold_warm_output_file_sha256": "2ce59f758cc7bbc7e1247baccc90860b2a4a5234b529b277dc90386df95e2415"
+    }
+  },
+  "tplus_feedback_io_corrective": {
+    "base_commit": "c75cce1ec5d442476a083f4a2e3494464bebd525",
+    "scope": "TPLUS_SETTLED_READ_AND_ASSEMBLY_READBACK_ONLY",
+    "changed_source_paths": [
+      "prospective_feedback_streaming.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "source_transition": "tests/fixtures/tplus_feedback_io_source_transition_v1.json",
+    "new_capacity_measurement": true,
+    "whole_daily_requalification": false,
+    "retained_component_measurement": {
+      "through_session": "2026-11-12",
+      "partitions": 16,
+      "rows": 26928,
+      "settled_hits": 2000,
+      "output_bytes": 854844641,
+      "output_raw_sha256": "da743c90c2fdc4ec8e6f234c83577c8b1aa54d25a7bc41a83102cf421fe31227",
+      "baseline": {
+        "wall_seconds": 60.561,
+        "peak_process_bytes": 592506880
+      },
+      "candidate": {
+        "wall_seconds": 34.014,
+        "peak_process_bytes": 594432000
+      }
+    },
+    "prior_source_sha256_lf": {
+      "prospective_feedback_streaming.py": "d80f0194847bc7a96a5a0bbbf62f5bafef453027c7f9058ed2a427f8c37b3744",
+      "tools/verify_retention_reader_transition.py": "57513680a73fbecd7f6ac26ea56d35d60c7377d1be310dfb9ae7f58de81af0b2"
     }
   }
 }

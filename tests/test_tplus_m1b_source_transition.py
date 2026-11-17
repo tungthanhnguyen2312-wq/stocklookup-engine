@@ -9,7 +9,8 @@ import pytest
 
 from tools.verify_retention_reader_transition import (
     TPLUS_INCREMENTAL_MANIFEST, TPLUS_M1B_ARCHIVE, TPLUS_M1B_BASE, TPLUS_M1B_MANIFEST,
-    TPLUS_RESUME_SOURCE, _tplus_incremental_cost_prior_bytes, _tplus_m1b_prior_bytes,
+    TPLUS_FEEDBACK_IO_ARCHIVE, TPLUS_FEEDBACK_IO_BASE, TPLUS_FEEDBACK_IO_MANIFEST,
+    TPLUS_RESUME_SOURCE, _tplus_feedback_io_prior_bytes, _tplus_incremental_cost_prior_bytes, _tplus_m1b_prior_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,7 +31,8 @@ def test_m1b_peels_to_the_merged_incremental_active_source():
     assert row["prior_sha256_lf"] == incremental["sources"][TPLUS_RESUME_SOURCE]["active_sha256_lf"]
     assert spec["previous_e4_v2_digest"] == incremental["active_e4_v2_digest"]
     live = _lf((ROOT / TPLUS_RESUME_SOURCE).read_bytes())
-    assert hashlib.sha256(live).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]
+    m1b = _tplus_feedback_io_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live)
+    assert hashlib.sha256(m1b).hexdigest() == row["active_sha256_lf"] != row["prior_sha256_lf"]
     assert _tplus_m1b_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live) == prior
     assert _tplus_incremental_cost_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, prior) != prior
 
@@ -51,3 +53,22 @@ def test_m1b_successor_rejects_tamper(tmp_path, tamper):
         (tmp_path / TPLUS_M1B_MANIFEST).write_text(json.dumps(spec))
     with pytest.raises(ValueError, match="TPLUS_M1B_SOURCE_TRANSITION_"):
         _tplus_m1b_prior_bytes(tmp_path, TPLUS_RESUME_SOURCE, _lf((tmp_path / TPLUS_RESUME_SOURCE).read_bytes()))
+
+
+def test_feedback_io_peels_to_exact_released_bytes():
+    live = _lf((ROOT / TPLUS_RESUME_SOURCE).read_bytes())
+    prior = _tplus_feedback_io_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live)
+    assert prior == subprocess.check_output(
+        ["git", "show", f"{TPLUS_FEEDBACK_IO_BASE}:{TPLUS_RESUME_SOURCE}"], cwd=ROOT)
+    with pytest.raises(ValueError, match="TPLUS_FEEDBACK_IO_SOURCE_TRANSITION_BINDING_INVALID"):
+        _tplus_feedback_io_prior_bytes(ROOT, TPLUS_RESUME_SOURCE, live + b"# tampered")
+
+
+def test_feedback_io_rejects_tampered_archive(tmp_path):
+    for relative in (TPLUS_FEEDBACK_IO_ARCHIVE, TPLUS_FEEDBACK_IO_MANIFEST):
+        dest = tmp_path / relative
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, dest)
+    (tmp_path / TPLUS_FEEDBACK_IO_ARCHIVE).write_bytes(b"changed")
+    with pytest.raises(ValueError, match="TPLUS_FEEDBACK_IO_SOURCE_TRANSITION_BINDING_INVALID"):
+        _tplus_feedback_io_prior_bytes(tmp_path, TPLUS_RESUME_SOURCE, _lf((ROOT / TPLUS_RESUME_SOURCE).read_bytes()))
