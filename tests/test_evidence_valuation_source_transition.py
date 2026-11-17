@@ -67,6 +67,10 @@ def test_two_file_transition_checks_archive_and_active_bytes():
         if relative in tactical:
             assert tactical[relative]["prior_sha256_lf"] == expected_live
             expected_live = tactical[relative]["active_sha256_lf"]
+        dispatch = json.loads((ROOT / "tests/fixtures/storage_reuse_d4a_canonical_source_transition_v1.json").read_bytes())["sources"]
+        if relative in dispatch:
+            assert dispatch[relative]["prior_sha256_lf"] == expected_live
+            expected_live = dispatch[relative]["active_sha256_lf"]
         velocity_transition = json.loads((ROOT / "tests/fixtures/velocity_projection_and_producer_timing_v1.json").read_bytes())["sources"]
         if relative in velocity_transition:
             assert velocity_transition[relative]["predecessor_sha256_lf"] == expected_live

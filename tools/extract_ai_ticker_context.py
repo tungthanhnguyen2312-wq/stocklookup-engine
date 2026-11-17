@@ -5,6 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
+from stocklookup_core.evidence.record_subtree_codec import decode_record
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract one ticker from the AI full-universe delivery companion.")
@@ -16,6 +18,7 @@ def main() -> None:
     for line in args.bundle.read_text(encoding="utf-8").splitlines():
         row = json.loads(line)
         if row.get("ticker") == ticker:
+            row = decode_record(row)
             args.output.write_text(json.dumps(row, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
             print(args.output)
             return

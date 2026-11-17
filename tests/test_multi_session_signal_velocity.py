@@ -42,7 +42,7 @@ def test_projected_reader_rejects_invalid_immutable_content(tmp_path, defect):
     assert not valid
 
 
-@pytest.mark.parametrize("event", ["missing", "receipt-tamper", "edit", "replace",
+@pytest.mark.parametrize("event", ["missing", "receipt-tamper", "schema", "verifier", "edit", "replace",
                                    "restore", "uncertain", "interrupted"])
 def test_velocity_projection_receipt_fails_closed_and_falls_back(tmp_path, monkeypatch, event):
     import os
@@ -76,6 +76,14 @@ def test_velocity_projection_receipt_fails_closed_and_falls_back(tmp_path, monke
         value = json.loads(receipt.read_bytes())
         value["projection"]["records"].clear()
         receipt.write_text(json.dumps(value), encoding="utf-8")
+    elif event == "schema":
+        value = json.loads(receipt.read_bytes())
+        value.pop("receipt_sha256")
+        value["projection"]["contract_version"] = "unsupported"
+        value["receipt_sha256"] = velocity.hashlib.sha256(velocity._canon(value).encode("utf-8")).hexdigest()
+        receipt.write_text(json.dumps(value), encoding="utf-8")
+    elif event == "verifier":
+        monkeypatch.setattr(velocity, "_projection_verifier_sha", lambda: "updated")
     elif event == "edit":
         source.write_bytes(original.replace(b'"FPT"', b'"FPA"', 1))
         os.utime(source, ns=(mtime, mtime))

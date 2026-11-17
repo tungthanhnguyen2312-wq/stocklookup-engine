@@ -495,6 +495,7 @@ def test_production_call_shape_macro_refresh_and_load_run_once_before_producer(m
         order.append("daily_producer")
         captured["macro_presentation_context"] = kwargs.get("macro_presentation_context")
         kwargs["progress_callback"]({"subtask": "producer_seal_detail", "status": "BEGIN"})
+        kwargs["progress_callback"]({"subtask": "producer_seal_detail", "status": "END"})
         return _producer(tmp_path, SESSION)
 
     monkeypatch.setattr(cdo, "run_daily_producer", fake_run_daily_producer)
@@ -520,7 +521,8 @@ def test_production_call_shape_macro_refresh_and_load_run_once_before_producer(m
     assert seal_events == [
         ("producer_seal", "BEGIN"), ("producer_seal", "END"),
         ("producer_seal", "BEGIN"), ("producer_seal", "END"),
-        ("producer_seal", "BEGIN"), ("producer_seal_detail", "BEGIN"), ("producer_seal", "END"),
+        ("producer_seal", "BEGIN"), ("producer_seal_detail", "BEGIN"),
+        ("producer_seal_detail", "END"), ("producer_seal", "END"),
     ]
     assert len(refresh_calls) == 1, "macro refresh must run at most once per operation"
     assert len(load_calls) == 1

@@ -1,0 +1,12 @@
+{
+  "base_commit": "337590cdebc8f2a62939e3844d43ee8588e48f73",
+  "scope": "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "archive": "tests/fixtures/storage_reuse_d4a_canonical_sources/canonical_daily_operation.py.txt",
+      "prior_sha256_lf": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337",
+      "active_sha256_lf": "58b2df420365329f070eefec4411d243466b2a5fc34b5baab274d20f03a4685f"
+    }
+  }
+}

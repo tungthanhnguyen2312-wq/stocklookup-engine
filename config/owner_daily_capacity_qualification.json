@@ -7,7 +7,7 @@
   "source_byte_normalization": "CRLF_TO_LF",
   "source_sha256": {
     "ai_analyzer.py": "fda937cc914c27c64a88de16ea56e36ac4d407ba57bffbd68eb8138256e334f1",
-    "ai_research_session_delivery.py": "a40d3d739a1eff65ccf5f65c39a0df28230ba98483aa447c7b7873c4cc28629b",
+    "ai_research_session_delivery.py": "f67ec201ed9e9b063caee879234050f2e2d9d1876ce7057bcf18c4ea39afd055",
     "annual_financial_ocr_materialization.py": "8966fb81dbef6e43da2ccafed0471b669b66a8a65ae11d214a4a9d79571b9eba",
     "annual_provider_financial_recovery.py": "26458d4b77fe876c1dfa3231123030f4c2e1bd079fe287f596f4a7d6c1a594f5",
     "atomic_io.py": "87cdc583c1d3be4c2185cc8640beac6a9f8f5d9bb35733354605bcc6417f0a89",
@@ -20,7 +20,7 @@
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
     "canonical_daily_financial_v2_materialization.py": "7379bc3b3f7af098e16862df148e5a8357c4f8e77659007ecde24c4350c802c6",
-    "canonical_daily_operation.py": "74fca4de628548397fb38e72a757485964a62b6de80020a32e6faa57826bfbd3",
+    "canonical_daily_operation.py": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a",
     "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "07f9c0bb082fdf1f3cc1504e7ff496e605cce1250cbe48eb9adc17826feeea54",
+    "config/daily_path_launchers.json": "d2ca606182c20add5f84f092d3bd4a28abab872e503fe2c237cd64d91209858c",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -196,7 +196,7 @@
     "meta_sync.py": "4b0f1cacf1cbd4cd87f6d9def08f836e2f109a0d8de0d05e1843b969382a4972",
     "metadata_registry_export.py": "98570851904ac962b3f560bf98dd500ac009efcfc0d23562e9f5d5eb5384f379",
     "missing_payload_reconciliation.py": "4e1bd959e3dfe1a15d582e0b6c8ed0f1256148122b3a74363ea02ce57f57f8a5",
-    "multi_session_signal_velocity.py": "f2dd7fc0fbbaf28dc5f5065e0f77b5efa3187c4e092c27b00da6752385dbcdad",
+    "multi_session_signal_velocity.py": "0180a625eb6a24c0ed989b726893d94dc2e06a3097e70a52e2638ab34626ee0a",
     "multi_source_exact_session_resolver.py": "5305371e20a022204421d5f379e4026b82427cbeb112d56b1714296d104fb2a4",
     "multi_source_market_evidence_contract.py": "87fb222e35fbc603b47b1313320465cf400b79aeb90909dacaa717c8cc9827e5",
     "mva_daily_research_bundle.py": "138e925fdf29be722925a95af33b2e647307e2c5c208d3fae11a3ced6276a509",
@@ -844,6 +844,7 @@
     "stocklookup_core/evidence/raw_pit_authority_matrix.py": "9378964fda5404e0fcc1f971bd64d35d1b55cef9d0a5ff9254cd25f4a06a7a1c",
     "stocklookup_core/evidence/real_official_corporate_action_factor_evidence.py": "2a26f148fbe995a4914f9ee2e333481a7ad333f0aef5cb5fa18105150799871d",
     "stocklookup_core/evidence/record_artifact_loading.py": "8d8acab66cc0115ed6980b9a3576439592a81cc2e7a4afa92e7469290fa6d9ff",
+    "stocklookup_core/evidence/record_subtree_codec.py": "bbe237874a17cd642fb6aaffb8a9116895f4d88ec41ce2a598f520613df099ab",
     "stocklookup_core/evidence/research_output_fields.py": "24989b4036d13d543a0c6a00893d2639027e28895e44dd5033103352c0a7d315",
     "stocklookup_core/evidence/retained_evidence_quarantine.py": "ecf43bc232b4c496089555e4a0798d13604af5ae2570380bed58b6be00eb4bcf",
     "stocklookup_core/evidence/retained_official_route_ownership_evidence.py": "4fd0c2bb7144dce6a71ac55786831a71b143fa6fbf734bd1ada8ee71a49f5390",
@@ -896,7 +897,7 @@
     "stocklookup_core/financial/fundamental_research_readiness.py": "d8d235146f94a66090cedfcf67458626065be2c7445f6eed2816aea5b3e2b38f",
     "stocklookup_core/financial/fundamental_signal_consumption_contract.py": "c7a46b5a80c01437b73a93eddda7df72e6f89b67c1e6d595e98122c55b6eb041",
     "stocklookup_core/financial/fundamental_thesis_invalidation_precision.py": "c8965e76c2aa769db176157509092d237f66deb7d17f8ff1f1c132b7b9d444e1",
-    "stocklookup_core/financial/interim_earnings_cash_research.py": "503f7b2f34bb26bb7a779d791ac339a36f1d3a1d10fc7b28092e9cde0b9d7a22",
+    "stocklookup_core/financial/interim_earnings_cash_research.py": "a06b0d2fef354d7ecf39a2231578381cbed37f9eaccd4c9b46f590473d26a4b1",
     "stocklookup_core/financial/market_wide_calculation_readiness.py": "3c72a270f8b5fea97dd708282821cee1d95b3e4fc965c26773393b1d6396ff4f",
     "stocklookup_core/financial/market_wide_financial_analysis_v2_scaleout.py": "eddf4fb4f4d60c51ef7eef4a330b8039358edba98354725e129f6f31d79fe93a",
     "stocklookup_core/financial/market_wide_financial_coverage.py": "c70219d1063c9aeb55573c2ca3fc40870180399676d85595dc2105d8f8c993a7",
@@ -952,7 +953,7 @@
     "stocklookup_core/research/ai_handoff_publication.py": "0b31266e697b6ee391747e9f7042e3e74cfd9f609b209f6d5ca9b364b3fdaa31",
     "stocklookup_core/research/ai_handoff_source_freshness_matrix.py": "fd7e65eedd3c2fc65a15f11cd3fb218dffca07ceb0e95a17d7a46d8ce3e36633",
     "stocklookup_core/research/ai_research_analyst.py": "d5dbf44368fa5ae21f2b8d4b844867996383be92fcdfb26e7ccb4d17eb1af4ce",
-    "stocklookup_core/research/ai_research_ticker_extractor.py": "2391f5e1afdcb142435a72f0a9e946397cbb3798bda4c43f9bbd169eb57be1d3",
+    "stocklookup_core/research/ai_research_ticker_extractor.py": "18b208430804bfa93928b6020a39f443480a5549c006d749c9ba0d8a09bba53b",
     "stocklookup_core/research/analysis_lane_eligibility.py": "f249f59657179aa47af072ee35c0164b677cc7d2b34d16cdd3e8ca74fdfdaf9a",
     "stocklookup_core/research/analyst_research_workbench.py": "edf7440e29f56ee0645867629ada3a7eecc102f7a529eca075e80dc3d7888587",
     "stocklookup_core/research/asymmetric_dislocation_research.py": "2c4613baedc63344b0e585d174d8c1ea0a11042d9c7bb11290eff19b2138df71",
@@ -1101,7 +1102,7 @@
     "tools/emit_weekend_current_research.py": "068002627ad45e0e9d74ee2e06d941f88556325f97b56a181b200ab506cab199",
     "tools/enrich_current_foreign_flow.py": "ffef950ee6fe8e9e3e75b63cf38941342dd022112515f64975a264b321657229",
     "tools/extract_ai_research_tickers.py": "e71044401a539a4a7e099ffc135c3facf5b7de2582025e11f772bb620eb8bfd4",
-    "tools/extract_ai_ticker_context.py": "183294be7dfc35a0a7c64dc9ff992dc8bdb90b723b72f50c39343e92eab6dda9",
+    "tools/extract_ai_ticker_context.py": "071369910dd39a426c2b0b27cdae778e10acb0a6063ce7bb753127e8029f77b2",
     "tools/gate_check.py": "a9c74b91d4513ae0983d17b9a0ef3555c8ce023f37e55b3c25b5c6b02d4fbeb0",
     "tools/handoff.py": "bab5c31ea9d78297c55497b284aea688d814e392269eb2316f1a53baadb957f5",
     "tools/hash_manifest.py": "d3428ee0cfbaa61a2ec36a7f117f5f779fad0721d3ffa7cb01298439052ca740",
@@ -1223,7 +1224,7 @@
     "tools/run_liquidity_authority_closure.py": "fd59911c14dc1ed0c0db878f5efad11dbfc08e63cbfa8aa13e34a569930dc5df",
     "tools/run_liquidity_market_wide_operationalization.py": "eb42efc9dbb1cdd04941679a41dc0393c3f9bcd0cb7536fd11271dd20655e0d9",
     "tools/run_market_data_historical_series_failover.py": "0b3a534804a0139ff81f5e1a51c47870ff7fda430c6354c6d656d796880f740b",
-    "tools/run_market_gate_decision_quality.py": "a56bf52329c8a78c514b1a8ad072360e9216c0d89382fe2a43dd8ce642998334",
+    "tools/run_market_gate_decision_quality.py": "417976093726df6b97632864a764b29fd8a8d857bf1c840633e5c99914b38c6e",
     "tools/run_market_only_pit_acceptance.py": "adcb53f5ded0c01b5e2bc6971441ff573bf7bb195ed9bd9b213d02329f036b81",
     "tools/run_market_wide_current_corporate_intelligence.py": "3e493521df3ef508c69d668db0094557cde6f45a91043a3c8526fe42583b754c",
     "tools/run_market_wide_current_descriptive_research.py": "05363847997c219a8a5af33899272525fca2d96068520587cd4a76ccdb649b5f",
@@ -1243,7 +1244,7 @@
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
     "tools/run_owner_daily.cmd": "fd62709ebd133ed950ad204ea2aef115104d3b6d65ddafba9df8cc0b3df4602a",
     "tools/run_owner_daily.ps1": "371de90a4e7853a35f8c851c59f627c6b9e6212688331df3df1c1822df02aa6c",
-    "tools/run_owner_daily.py": "01660b0311c0c9d36b4774eb39e3adbb9918262827ff0223fb59c195df4e0885",
+    "tools/run_owner_daily.py": "41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9",
     "tools/run_p2_closeout_financial_panel.py": "d72a8f828f4a95a111c6bfd49ebd44669b5651256a294c966a9f33c63d191d93",
     "tools/run_p2c2_corporate_evidence_onboarding.py": "1ee8d15eca4ff404ebc5fc4741c56f04a42971e1aa497569a5bba648682c33f8",
     "tools/run_p2c_corporate_evidence_scale_out.py": "82901920dd779d156136afd4acd8353284a9d52f393a1321308356d8cb6404f3",
@@ -1302,7 +1303,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "161b52966d94ae5126d7948df292a8243a6e1bab8518301cec96fcc4c3e55a67",
+    "tools/verify_retention_reader_transition.py": "57513680a73fbecd7f6ac26ea56d35d60c7377d1be310dfb9ae7f58de81af0b2",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1735,18 +1736,53 @@
     ],
     "new_capacity_measurement": false
   },
+  "canonical_d4a_dispatch_corrective": {
+    "base_commit": "337590cdebc8f2a62939e3844d43ee8588e48f73",
+    "scope": "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY",
+    "new_capacity_measurement": false,
+    "prior_source_sha256_lf": {
+      "canonical_daily_operation.py": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337",
+      "tools/verify_retention_reader_transition.py": "00614b09c6a8abe3470f5121cf0fe92bab78a3e0b7de20a7666e59c899d604f4",
+      "config/daily_path_launchers.json": "13894ef6e7e99c40de158d79f2ed67609c860bbbf694509ad558e980c89a1845"
+    }
+  },
+  "reviewed_profitability_corrective": {
+    "base_commit": "337590cdebc8f2a62939e3844d43ee8588e48f73",
+    "scope": "NON_VOTING_REVIEWED_REPORTED_PAT_MARGINS_AND_CASH_LABEL_ONLY",
+    "new_capacity_measurement": false,
+    "prior_source_sha256_lf": {
+      "stocklookup_core/financial/interim_earnings_cash_research.py": "503f7b2f34bb26bb7a779d791ac339a36f1d3a1d10fc7b28092e9cde0b9d7a22"
+    }
+  },
+  "record_subtree_codec_candidate": {
+    "base_commit": "6c033c98837b2f816dd041460fbab60cdcf291d4",
+    "scope": "DEFAULT_OFF_FULL_UNIVERSE_SUBTREE_CODEC_AND_READER_DECODE_ONLY",
+    "new_capacity_measurement": false,
+    "prior_source_sha256_lf": {
+      "ai_research_session_delivery.py": "a40d3d739a1eff65ccf5f65c39a0df28230ba98483aa447c7b7873c4cc28629b",
+      "config/daily_path_launchers.json": "ff7a956d2ae9abfa9385cb945dc5bdba895c28691d1021656ee106a4262eb980",
+      "stocklookup_core/research/ai_research_ticker_extractor.py": "2391f5e1afdcb142435a72f0a9e946397cbb3798bda4c43f9bbd169eb57be1d3",
+      "tools/extract_ai_ticker_context.py": "183294be7dfc35a0a7c64dc9ff992dc8bdb90b723b72f50c39343e92eab6dda9",
+      "tools/run_market_gate_decision_quality.py": "a56bf52329c8a78c514b1a8ad072360e9216c0d89382fe2a43dd8ce642998334",
+      "tools/run_owner_daily.py": "01660b0311c0c9d36b4774eb39e3adbb9918262827ff0223fb59c195df4e0885",
+      "tools/verify_retention_reader_transition.py": "8f43e34945932cb47fdf395eaa80256c702f8b6400f8bb93901198557eb55ab6"
+    },
+    "added_source_paths": [
+      "stocklookup_core/evidence/record_subtree_codec.py"
+    ]
+  },
   "retained_t0_velocity_projection_corrective": {
-    "base_commit": "799243cc8ffb3e5e3189a93bcfb1252e0fbc52b1",
+    "base_commit": "c75cce1ec5d442476a083f4a2e3494464bebd525",
     "scope": "RETAINED_T0_VELOCITY_PROJECTION_AND_PRODUCER_SEAL_TELEMETRY_ONLY",
     "new_capacity_measurement": false,
     "whole_daily_requalification": false,
     "prior_source_sha256_lf": {
-      "canonical_daily_operation.py": "5e697aa6f83397bdc5e18dc545d10e291083f322a4d55ad1b7d0ed8da8418337",
+      "canonical_daily_operation.py": "58b2df420365329f070eefec4411d243466b2a5fc34b5baab274d20f03a4685f",
       "canonical_post_close_pipeline.py": "9b28211d34cd06c3a83305b012ec36179adcb25be484e656dd925b5dc7888712",
-      "config/daily_path_launchers.json": "13894ef6e7e99c40de158d79f2ed67609c860bbbf694509ad558e980c89a1845",
+      "config/daily_path_launchers.json": "6e93e83db4375686f8ffb6ecfd4db91bc4fdad36c7809fe85aa0c313b0a41b5a",
       "daily_producer_pipeline.py": "766f4e649a90c30d99b96c3a9456e056dce350e3a73ad0aef2270eb0e04c288e",
       "multi_session_signal_velocity.py": "5465705d828c636ed7291119a2d36b7e8477a3ebd32269203a32aa9515d0eddc",
-      "tools/verify_retention_reader_transition.py": "00614b09c6a8abe3470f5121cf0fe92bab78a3e0b7de20a7666e59c899d604f4"
+      "tools/verify_retention_reader_transition.py": "5d8ea5846828c756504ad70d47de2ff249809c1fbf2e581fa9c79508b365a34d"
     },
     "component_replay": {
       "registry_entries": 48,

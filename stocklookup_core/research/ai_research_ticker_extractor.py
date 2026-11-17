@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
+from stocklookup_core.evidence.record_subtree_codec import decode_record
 from stocklookup_core.research.owner_research_focus import owner_focus_tickers
 
 PACKET_CONTRACT = "ai_ticker_research_packet/v1"
@@ -98,7 +99,7 @@ def _lookup_ndjson(path: Path, wanted: set[str]) -> dict[str, dict[str, Any]]:
             row = json.loads(line)
             ticker = row.get("ticker")
             if ticker in wanted and ticker not in found:
-                found[str(ticker)] = row
+                found[str(ticker)] = decode_record(row)
                 if len(found) == len(wanted):
                     break
     return found

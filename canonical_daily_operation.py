@@ -72,6 +72,7 @@ from canonical_post_close_pipeline import (
     run_prospective_collection,
     run_tactical_reversal_shadow_collection,
     validate_and_freeze_completed_session,
+    storage_reuse_switches,
 )
 from canonical_trusted_subset_release import (
     CanonicalTrustedSubsetError,
@@ -1003,6 +1004,7 @@ def run_canonical_daily_operation(
             producer_head=producer_head or "UNKNOWN", consumer_head=consumer_head or "UNKNOWN",
             integrated_investment_decision_product=integrated_delivery, now=instant,
             macro_presentation_context=macro_presentation_context,
+            reuse_immutable_delivery=storage_reuse_switches()["reuse_immutable_delivery"],
             **macro_delivery,
             **({"daily_integrated_decision_brief_builder": preseal_brief_builder} if preseal_brief_builder is not None else {}),
         )

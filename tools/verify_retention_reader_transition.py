@@ -159,7 +159,7 @@ def _velocity_projection_prior_bytes(root: Path, relative: str, active: bytes) -
     if relative not in expected_sources or not manifest.is_file():
         return active
     spec = json.loads(manifest.read_bytes())
-    if (spec.get("base_commit") != "799243cc8ffb3e5e3189a93bcfb1252e0fbc52b1"
+    if (spec.get("base_commit") != "c75cce1ec5d442476a083f4a2e3494464bebd525"
             or tuple(spec.get("sources", {})) != expected_sources):
         raise ValueError("VELOCITY_PROJECTION_SOURCE_TRANSITION_SCOPE_INVALID")
     row = spec["sources"][relative]
@@ -173,9 +173,61 @@ def _velocity_projection_prior_bytes(root: Path, relative: str, active: bytes) -
     return prior
 
 
+D4A_CANONICAL_MANIFEST = "tests/fixtures/storage_reuse_d4a_canonical_source_transition_v1.json"
+
+SUBTREE_CODEC_LAUNCHER_MANIFEST = "tests/fixtures/ndjson_subtree_codec_launcher_source_transition_v1.json"
+
+
+def _subtree_codec_launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the M1 full-universe decode (newest transition) back to the reviewed launcher."""
+    manifest = root / SUBTREE_CODEC_LAUNCHER_MANIFEST
+    if relative != "tools/run_owner_daily.py" or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/ndjson_subtree_codec_launcher_sources/tools/run_owner_daily.py.txt"
+    if (set(spec) != {"base_commit", "scope", "release_authority", "sources"}
+            or spec.get("base_commit") != "6c033c98837b2f816dd041460fbab60cdcf291d4"
+            or spec.get("scope") != "M1_FULL_UNIVERSE_SUBTREE_CODEC_DECODE_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or set(spec.get("sources", {})) != {relative}):
+        raise ValueError("SUBTREE_CODEC_LAUNCHER_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (row.get("archive") != archive
+            or hashlib.sha256(prior).hexdigest() != row.get("prior_sha256_lf")
+            or hashlib.sha256(active).hexdigest() != row.get("active_sha256_lf")
+            or prior == active):
+        raise ValueError("SUBTREE_CODEC_LAUNCHER_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
+def _d4a_canonical_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    active = _subtree_codec_launcher_prior_bytes(root, relative, active)
+    manifest = root / D4A_CANONICAL_MANIFEST
+    if relative != "canonical_daily_operation.py" or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    archive = "tests/fixtures/storage_reuse_d4a_canonical_sources/canonical_daily_operation.py.txt"
+    if (set(spec) != {"base_commit", "scope", "release_authority", "sources"}
+            or spec.get("base_commit") != "337590cdebc8f2a62939e3844d43ee8588e48f73"
+            or spec.get("scope") != "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or set(spec.get("sources", {})) != {relative}):
+        raise ValueError("D4A_CANONICAL_SOURCE_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if (row.get("archive") != archive
+            or hashlib.sha256(prior).hexdigest() != row.get("prior_sha256_lf")
+            or hashlib.sha256(active).hexdigest() != row.get("active_sha256_lf")
+            or prior == active):
+        raise ValueError("D4A_CANONICAL_SOURCE_BINDING_INVALID")
+    return prior
+
+
 def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve both historical source chains across the optional observer dispatch."""
     active = _velocity_projection_prior_bytes(root, relative, active)
+    active = _d4a_canonical_prior_bytes(root, relative, active)
     manifest = root / TACTICAL_SHADOW_MANIFEST
     if relative not in TACTICAL_SHADOW_SOURCES or not manifest.is_file():
         return active

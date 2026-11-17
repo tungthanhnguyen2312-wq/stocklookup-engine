@@ -120,6 +120,7 @@ from governed_publication_completion import (  # noqa: E402
     verify_existing_publication_completion,
 )
 import stocklookup_core.acquisition.owner_daily_journal as journal  # noqa: E402
+from stocklookup_core.evidence.record_subtree_codec import RecordSubtreeCodecError, decode_record  # noqa: E402
 from owner_daily_progress import OwnerDailyProgress, PHASES, PROGRESS_PATH_ENV, safe_progress_path, recent_phase_estimates  # noqa: E402
 from owner_daily_progress import WORKFLOW_CORE_AI, WORKFLOW_FULL_PUBLISH  # noqa: E402
 from owner_daily_progress import RUN_ID_ENV, RUN_STARTED_AT_ENV, RUN_STARTED_MONOTONIC_ENV  # noqa: E402
@@ -1015,13 +1016,13 @@ def _verify_m1_ai_delivery(source: Path, session: str, authority: Mapping[str, A
                 if not line.strip():
                     continue
                 row = _load_strict_json(line)
-                row = row if isinstance(row, Mapping) else {}
+                row = decode_record(row) if isinstance(row, Mapping) else {}
                 ticker = row.get("ticker")
                 if ticker in seen:
                     raise _handoff_delivery_error(f"M1_AI_FULL_UNIVERSE_DUPLICATE_TICKER:{ticker}")
                 _verify_m1_projection("full_universe", ticker, row.get("integrated_decision_v1"), projections)
                 seen.add(ticker)
-    except (OSError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError, RecordSubtreeCodecError):
         raise _handoff_delivery_error("M1_AI_FULL_UNIVERSE_COMPANION_UNREADABLE") from None
     if seen != set(authority["full_universe"]):
         raise _handoff_delivery_error(f"M1_AI_FULL_UNIVERSE_INDEX_SET_MISMATCH:rows={len(seen)}"

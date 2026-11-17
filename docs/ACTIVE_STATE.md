@@ -1,7 +1,12 @@
 # Stock Lookup — Active State
 
-11-13 Daily PASS, `READY_FOR_AI`; PIT capture on. [T+ M1b](tplus_incremental_cost_v2_contract.md) active.
-[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required. D4a ON 11-15; live check pending.
+11-16 Daily PASS, `READY_FOR_AI`; [T+ M1b](tplus_incremental_cost_v2_contract.md) met (887.666 s, 1.304 GB peak).
+[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required. D4a 11-16 PARTIAL (NDJSON/bundle unshared); fix in PR268.
+
+T+ performance PR #267 qualifies retained T0 projection reuse and Producer seal progress on
+the #269 source baseline. Its scratch replay of a retained 91,489,054-byte T0 verified cold in
+2.115 s and reused an identical projection in 0.064 s with zero snapshot payload reads.
+Merge and Production sync require the November 17 Owner Daily and its live D4a acceptance.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.

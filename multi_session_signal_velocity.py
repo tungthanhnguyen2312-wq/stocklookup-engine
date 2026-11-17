@@ -251,7 +251,7 @@ def _read_state_json(path: Path) -> dict[str, Any] | None:
         if path.stat().st_size > _RECEIPT_MAX_BYTES:
             return None
         value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError, UnicodeError):
+    except (OSError, ValueError, RecursionError):
         return None
     return value if isinstance(value, dict) else None
 
@@ -304,12 +304,16 @@ def _cached_projection(path: Path, identity: str | None, session: str,
         raw_sha = receipt.get("source_sha256")
         try:
             if (isinstance(snap, dict) and snap.get("snapshot_identity") == identity
-                    and snap.get("session") == session and isinstance(raw_sha, str)
+                    and snap.get("session") == session
+                    and snap.get("contract_version") == retention.CONTRACT_VERSION
+                    and isinstance(snap.get("records"), dict)
+                    and isinstance(snap.get("source_integrated_decision_artifact"), dict)
+                    and isinstance(raw_sha, str)
                     and len(raw_sha) == 64 and all(ch in "0123456789abcdef" for ch in raw_sha)
                     and hashlib.sha256(_canon(receipt).encode("utf-8")).hexdigest() == receipt_digest
                     and _projection_fingerprint(path) == proof):
                 return snap, True
-        except (OSError, ValueError):
+        except (OSError, ValueError, RecursionError):
             pass
 
     raw_proof: dict[str, Any] = {}

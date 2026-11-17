@@ -184,3 +184,17 @@ def test_replay_after_a_hard_crash_leftover_stage_publishes_the_view(tmp_path):
     assert destination.read_bytes() == source.read_bytes()
     assert destination.stat().st_ino == source.stat().st_ino
     assert leftover.read_bytes() == source.read_bytes()  # inert extra name; never a consumer path
+
+
+@pytest.mark.parametrize("switch", [False, True])
+def test_owner_canonical_route_passes_the_delivery_switch(tmp_path, monkeypatch, switch):
+    import canonical_daily_operation as cdo
+    from tests.test_canonical_daily_operation import _run, _producer, SESSION as daily_session
+    seen = {}
+    monkeypatch.setattr(cdo, "storage_reuse_switches", lambda: {
+        "iid_working_view_hardlink": switch, "reuse_immutable_delivery": switch})
+    def produce(*args, **kwargs):
+        seen.update(kwargs)
+        return _producer(tmp_path, daily_session)
+    _run(tmp_path, monkeypatch, producer_fn=produce)
+    assert seen["reuse_immutable_delivery"] is switch
