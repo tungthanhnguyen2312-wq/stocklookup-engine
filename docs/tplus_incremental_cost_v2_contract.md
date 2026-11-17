@@ -125,7 +125,13 @@ sessions, 41 T0 files, 54,614,905,595 bytes, 40 qualified, 67,320 records):
 
 All three artifacts are identical
 (`53eb1ea77c000ffb1a0abcf24b4c6c3771e3b419853d167e3eb0bdeabc29973e`), and their
-records and validation equal the retained November 16 Production artifact. The
+records and validation equal the retained November 16 Production artifact
+(records SHA-256 `847d276ac82edec043b82381cec388af56fc84650a055c61a11bd0729b000a67`).
+Production's artifact identity (`c700775d…`) differs only through one extra
+inventory row: session 2026-10-26, `EXCLUDED`,
+`EXACT_HANDOFF_SNAPSHOT_NOT_RETAINED_OR_UNREADABLE`. That session exists only in
+Production's uncommitted pending input freeze, has no handoff or T0, and
+contributes no record. The 48 shared inventory rows are equal field by field. The
 one-time cold cost is 69.079 seconds (5.1 %) over the unchanged verifier; the
 earlier 1,983.592-second replay reflected host load, not the receipt path. One
 new 2.5 GB T0 verifies cold in about 69 seconds, so a warm Daily stage is about
