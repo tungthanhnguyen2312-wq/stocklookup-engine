@@ -1,7 +1,7 @@
 # Stock Lookup — Active State
 
-11-16 Daily PASS, `READY_FOR_AI`. [T+](tplus_incremental_cost_v2_contract.md) met M1b
-(887.666 s; 1.304 GB). D4a PARTIAL; PR268 fix awaits the 11-17 Owner Daily.
+11-17 Daily PASS, `READY_FOR_AI`; D4a live accepted. [T+](tplus_incremental_cost_v2_contract.md)
+missed M1b (1,128.614 s combined); PR258 needs an Owner seed.
 [Sync](producer_freeze_release_sync_contract.md) preserves the 10-26 freeze. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
