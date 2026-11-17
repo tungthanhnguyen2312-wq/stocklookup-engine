@@ -226,10 +226,13 @@ registry proofs outside the payload closure. Native payload SHA/fingerprint chec
 T0 verification, append-only receipts and the separate destination writer lock
 remain mandatory. Standalone Vault calls keep their existing locking behavior.
 
-## D4a storage reuse switches (2026-11-06, inactive)
+## D4a storage reuse switches (2026-11-06, Owner-activated 2026-11-15)
 
-`config/daily_storage_reuse.json` (`daily_storage_reuse/v1`) holds two Owner switches, both
-`false`. Absent file means off; a present malformed file refuses the enrichment stage.
+`config/daily_storage_reuse.json` (`daily_storage_reuse/v1`) holds two Owner switches. Both are
+`true` since the Owner-approved activation (config `4e6da55f`, capacity receipt `dae93f0f`; rollback
+restores both to `false` with receipt `8dfabcd8`). The first live session verifies three same-file
+pairs, SHA/identity bindings, the five delivery names and T+ fingerprint anchors; any discrepancy
+rolls back through the governed source path. Absent file means off; a present malformed file refuses the enrichment stage.
 Merging this change alters no Daily output. Turning a switch on is an Owner activation
 (config edit plus capacity source-pin refresh), separate from merge.
 

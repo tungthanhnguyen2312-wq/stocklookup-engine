@@ -1,6 +1,6 @@
 """Deterministic private-Git transport for already-authoritative daily AI artifacts."""
 from __future__ import annotations
-import hashlib, json, re, shutil, subprocess
+import hashlib, json, re, subprocess
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -13,7 +13,19 @@ QUEUE_NOT_DECLARED = "NOT_DECLARED_BY_SEALED_OPERATION"
 _ABSOLUTE_PATH = re.compile(r"^(?:[A-Za-z]:[\\/]|[\\/]{2}|/)")
 
 class HandoffPublicationError(ValueError): pass
-def sha(path: Path) -> str: return hashlib.sha256(path.read_bytes()).hexdigest()
+def sha(path: Path) -> str:
+    with path.open("rb") as handle:
+        return hashlib.file_digest(handle, "sha256").hexdigest()
+def _copy_verified(source: Path, destination: Path, expected_sha: str) -> None:
+    digest = hashlib.sha256()
+    with source.open("rb") as original, destination.open("xb") as copied:
+        while chunk := original.read(1024 * 1024):
+            digest.update(chunk)
+            copied.write(chunk)
+    if digest.hexdigest() != expected_sha:
+        raise HandoffPublicationError("HANDOFF_SOURCE_CHANGED_DURING_COPY:" + destination.name)
+
+
 def _git(repo: Path, *args: str) -> str:
     result=subprocess.run(["git","-C",str(repo),*args],capture_output=True,text=True,encoding="utf-8")
     if result.returncode: raise HandoffPublicationError("GIT_"+args[0].upper()+":"+(result.stderr.strip() or result.stdout.strip()))
@@ -53,8 +65,7 @@ def _unsafe_pointer(value: Any, pointer: str = "") -> str | None:
             if rejected is not None:
                 return rejected
     return None
-def _manifest_lineage(source: Path, producer_checkpoint: str) -> dict[str, Any]:
-    manifest=json.loads((source/"ai_research_bundle_manifest.json").read_text(encoding="utf-8"))
+def _manifest_lineage(manifest: Any, producer_checkpoint: str) -> dict[str, Any]:
     if not isinstance(manifest, Mapping): raise HandoffPublicationError("HANDOFF_MANIFEST_NOT_OBJECT")
     res = {"producer_checkpoint":producer_checkpoint,"producer_head":manifest.get("producer_head"),"operation_identity":manifest.get("operation_identity"),"daily_product_identity":manifest.get("daily_product_identity")}
     if manifest.get("integrated_investment_decision_product_identity"):
@@ -157,20 +168,26 @@ def build_package(source: Path, session: str, previous: Path|None=None, *, produ
                        ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
         ).encode("utf-8")
     parsed: dict[str, Any] = {}
-    for name,entry in files.items():
+    hashes: dict[str, str] = {}
+    for name, entry in files.items():
         if isinstance(entry, (bytes, bytearray)):
-            parsed[name] = json.loads(entry.decode("utf-8"))
+            raw = entry
         else:
-            if not entry.is_file(): raise HandoffPublicationError("HANDOFF_SOURCE_MISSING:"+name)
-            parsed[name]=json.loads(entry.read_text(encoding="utf-8"))
+            if not entry.is_file():
+                raise HandoffPublicationError("HANDOFF_SOURCE_MISSING:" + name)
+            raw = entry.read_bytes()
+        hashes[name] = hashlib.sha256(raw).hexdigest()
+        text = raw.decode("utf-8")
+        del raw
+        parsed[name] = json.loads(text)
+        del text
         rejected = _unsafe_pointer(parsed[name])
         if rejected is not None:
-            raise HandoffPublicationError("HANDOFF_ABSOLUTE_PATH_FORBIDDEN:"+name+":"+rejected)
+            raise HandoffPublicationError("HANDOFF_ABSOLUTE_PATH_FORBIDDEN:" + name + ":" + rejected)
     if queue["identity"] is not None and (parsed.get(OPPORTUNITY_QUEUE) or {}).get("artifact_identity") != queue["identity"]:
         raise HandoffPublicationError("HANDOFF_OPPORTUNITY_QUEUE_IDENTITY_MISMATCH")
-    hashes={name:(hashlib.sha256(entry).hexdigest() if isinstance(entry, (bytes, bytearray)) else sha(entry)) for name,entry in files.items()}
-    package_identity=_identity({"session":session,"files":hashes})
-    lineage=_manifest_lineage(source,producer_checkpoint)
+    package_identity = _identity({"session": session, "files": hashes})
+    lineage = _manifest_lineage(parsed["ai_research_bundle_manifest.json"], producer_checkpoint)
     financial_source_identity = _financial_lineage(parsed)
     if financial_source_identity is not None: lineage["financial_analysis_source_context_identity"] = financial_source_identity
     # Additive and only when absent, so queue-bearing builds keep their existing identity.
@@ -257,7 +274,8 @@ def publish(repo: Path, source: Path, session: str, *, previous: Path|None=None,
         (target/".gitattributes").write_bytes(b"* -text -filter -ident\n")
         for name,entry in files.items():
             if isinstance(entry, (bytes, bytearray)): (target/name).write_bytes(entry)
-            else: shutil.copyfile(entry,target/name)
+            else:
+                _copy_verified(entry, target / name, payload["files"][name])
         (target/"HANDOFF.md").write_text(f"# Stock Lookup AI handoff\n\nSession: {session}\n\nBuild: {payload['handoff_build_id']}\n\nStatus: READY_FOR_AI\n",encoding="utf-8")
         _git(repo,"add",immutable_session_path)
         _git(repo,"commit","-m",f"handoff: {session} build {payload['handoff_build_id']}")

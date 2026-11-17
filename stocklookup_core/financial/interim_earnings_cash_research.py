@@ -128,8 +128,16 @@ def _caution_refusals(prior: Mapping[str, Any], current: Mapping[str, Any],
     return refusals, labels
 
 
-def _comparisons(facts: Sequence[Mapping[str, Any]], cautions: Sequence[Mapping[str, Any]]):
+def _reported_transition(metric, old, new):
     from stocklookup_core.financial.financial_analysis_engine_v2 import sign_transition
+    transition = sign_transition(old, new, earnings=metric != "revenue")
+    if metric == "operating_cash_flow":
+        return {"LOSS_TO_PROFIT": "OUTFLOW_TO_INFLOW", "LOSS_NARROWED": "OUTFLOW_NARROWED",
+                "LOSS_WIDENED": "OUTFLOW_WIDENED", "PROFIT_TO_LOSS": "INFLOW_TO_OUTFLOW"}.get(transition, transition)
+    return transition
+
+
+def _comparisons(facts: Sequence[Mapping[str, Any]], cautions: Sequence[Mapping[str, Any]]):
     measured, refused = [], []
     groups: dict[tuple, list[Mapping[str, Any]]] = {}
     for fact in facts:
@@ -167,7 +175,7 @@ def _comparisons(facts: Sequence[Mapping[str, Any]], cautions: Sequence[Mapping[
                     "assurance": current["audit_or_review_status"], "change": delta,
                     "direction": "INCREASED" if delta > 0 else "DECREASED" if delta < 0 else "UNCHANGED",
                     "growth_ratio": delta / old if old > 0 else None,
-                    "semantic_transition": sign_transition(old, new, earnings=metric != "revenue"),
+                    "semantic_transition": _reported_transition(metric, old, new),
                     "basis_labels": sorted(labels), "method": COMPARISON_METHOD,
                     "limitations": ["REPORTED_CHANGE_NOT_BUSINESS_QUALITY", "RECURRENCE_UNKNOWN", "NON_VOTING"]})
     return measured, refused
@@ -183,6 +191,121 @@ def _relationship(profit: float, cash: float) -> str:
 
 def _period_text(bounds: Sequence[str]) -> str:
     return f"{bounds[0]}..{bounds[1]}"
+
+
+def _cash_conversion(label, metrics, metric):
+    cash = metrics["operating_cash_flow"]
+    profit, ocf = metrics[metric]["normalized_value"], cash["normalized_value"]
+    return label | {"profit_metric": metric, "profit": profit, "operating_cash_flow": ocf,
+        "operating_cash_minus_profit": ocf - profit,
+        "conversion_ratio": ocf / profit if profit > 0 else None,
+        "relationship": _relationship(profit, ocf), "assurance": cash["audit_or_review_status"],
+        "profit_citation_id": metrics[metric]["citation_id"], "cash_citation_id": cash["citation_id"],
+        "method": CONVERSION_METHOD,
+        "limitations": ["SINGLE_PERIOD_IS_NOT_A_TREND", "TIMING_AND_WORKING_CAPITAL_ATTRIBUTION_UNKNOWN",
+                        "NOT_FREE_CASH_FLOW", "NON_VOTING"]
+            + (["PARENT_PROFIT_EXCLUDES_NON_CONTROLLING_INTERESTS_OPERATING_CASH_IS_GROUP_WIDE"]
+               if metric == "attributable_net_income" else [])}
+
+
+def _reviewed_profitability(rows, comparisons):
+    """Reported PAT margins only; the reviewed loader owns fact and period qualification."""
+    groups = {}
+    for row in rows:
+        if row.get("canonical_metric") in ("revenue", *PROFIT_METRICS):
+            groups.setdefault(_set_key(row), {})[row["canonical_metric"]] = row
+    measurements, changes, blockers = [], [], []
+    for key, metrics in sorted(groups.items(), key=lambda item: str(item[0])):
+        label = {"document_sha256": key[0], "bounds": [key[1], key[2]], "statement_scope": key[3],
+                 "currency": key[4], "comparative_basis": key[5]}
+        revenue = metrics.get("revenue")
+        if revenue is None or revenue["normalized_value"] <= 0:
+            blockers.append(label | {"reason_codes": ["MISSING_OR_NON_POSITIVE_SAME_STATEMENT_REVENUE"]})
+            continue
+        for metric in PROFIT_METRICS:
+            profit = metrics.get(metric)
+            if profit is None:
+                blockers.append(label | {"profit_metric": metric,
+                    "reason_codes": ["MISSING_SAME_STATEMENT_PROFIT"]})
+                continue
+            measurements.append(label | {"profit_metric": metric,
+                "reporting_period": profit["reporting_period"], "assurance": profit["audit_or_review_status"],
+                "profit": profit["normalized_value"], "revenue": revenue["normalized_value"],
+                "margin_ratio": profit["normalized_value"] / revenue["normalized_value"],
+                "profit_citation_id": profit["citation_id"], "revenue_citation_id": revenue["citation_id"],
+                "method": "reported_profit_after_tax_over_net_revenue_same_statement_set/v1",
+                "limitations": ["REPORTED_NOT_NORMALIZED", "RECURRENCE_UNKNOWN", "NON_VOTING"]
+                    + (["PARENT_PROFIT_EXCLUDES_NON_CONTROLLING_INTERESTS"]
+                       if metric == "attributable_net_income" else [])})
+    admitted = {(p["metric"], p["prior_citation_id"], p["current_citation_id"]) for p in comparisons}
+    for current in measurements:
+        if current["comparative_basis"] != CURRENT_COLUMN:
+            continue
+        for prior in measurements:
+            if (prior["comparative_basis"] == CURRENT_COLUMN
+                    or prior["profit_metric"] != current["profit_metric"]):
+                continue
+            label = {"profit_metric": current["profit_metric"], "prior_period": prior["reporting_period"],
+                     "current_period": current["reporting_period"]}
+            if ((current["profit_metric"], prior["profit_citation_id"], current["profit_citation_id"]) not in admitted
+                    or ("revenue", prior["revenue_citation_id"], current["revenue_citation_id"]) not in admitted):
+                blockers.append(label | {"reason_codes": ["NO_QUALIFIED_LIKE_FOR_LIKE_MARGIN_PAIR"]})
+                continue
+            changes.append(label | {"prior_margin_ratio": prior["margin_ratio"],
+                "current_margin_ratio": current["margin_ratio"],
+                "change_percentage_points": 100 * (current["margin_ratio"] - prior["margin_ratio"]),
+                "prior_bounds": prior["bounds"], "current_bounds": current["bounds"],
+                "statement_scope": current["statement_scope"], "currency": current["currency"],
+                "assurance": current["assurance"], "document_sha256": current["document_sha256"],
+                "prior_profit_citation_id": prior["profit_citation_id"],
+                "current_profit_citation_id": current["profit_citation_id"],
+                "prior_revenue_citation_id": prior["revenue_citation_id"],
+                "current_revenue_citation_id": current["revenue_citation_id"],
+                "method": "reported_pat_margin_change_same_reviewed_comparative_basis/v1",
+                "limitations": ["PERCENTAGE_POINTS_NOT_PERCENT_GROWTH", "REPORTED_NOT_NORMALIZED", "NON_VOTING"]})
+    return {"measurements": measurements, "changes": changes, "blockers": blockers}
+
+
+def reviewed_comparative_research(ticker, cutoff, receipts):
+    """Calculate in the existing numerical owner from validated, non-overlay review receipts."""
+    try:
+        boundary = datetime.fromisoformat(str(cutoff).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if boundary.tzinfo is None:
+        return None
+    reports = []
+    for receipt in receipts:
+        if receipt["ticker"] != ticker or datetime.fromisoformat(receipt["reviewed_at"]) > boundary:
+            continue
+        rows = receipt["rows"]
+        compared = [row for row in rows if row.get("canonical_metric") in COMPARED_METRICS]
+        cautions = (load_issuer_gates().get("issuers", {}).get(ticker) or {}).get("comparability_cautions") or []
+        comparisons, refused = _comparisons(compared, cautions)
+        conflicts = {check["metric"] for check in receipt["original_comparative_checks"]
+                     if check["status"] == "DIFFERS_FROM_ORIGINAL"}
+        refused.extend({**row, "reason_codes": ["PRIOR_PERIOD_DIFFERS_IN_LATER_REPORT"]}
+                       for row in comparisons if row["metric"] in conflicts)
+        comparisons = [row for row in comparisons if row["metric"] not in conflicts]
+        measurements = []
+        for role in ("CURRENT_COLUMN", "PRESENTED_COMPARATIVE"):
+            metrics = {row["canonical_metric"]: row for row in compared if row["comparative_basis"] == role}
+            if "operating_cash_flow" in metrics and "net_income" in metrics:
+                cash = metrics["operating_cash_flow"]
+                measurements.append(_cash_conversion({"reporting_period": cash["reporting_period"],
+                    "comparative_basis": role, "currency": cash["currency"]}, metrics, "net_income"))
+        reports.append({"document": receipt["document"], "review_receipt": receipt["review_receipt"],
+            "reviewed_at": receipt["reviewed_at"], "facts": rows, "comparisons": comparisons,
+            "refused_comparisons": refused, "cash_conversion": measurements,
+            "profitability": _reviewed_profitability(rows, comparisons),
+            "original_comparative_checks": receipt["original_comparative_checks"],
+            "comparability_notes": receipt["comparability_notes"]})
+    if not reports:
+        return None
+    return {"contract_version": "comparative_column_observation/v1", "ticker": ticker, "cutoff": cutoff,
+            "use": "CONDITIONAL_NON_VOTING_RESEARCH_ONLY", "vote_effect": "NONE",
+            "strict_valuation_effect": "NONE", "ttm_effect": "NONE", "is_actionable": False,
+            "reports": reports}
 
 
 def interim_earnings_cash_research_context(record: Mapping[str, Any] | None, *, cutoff: str | None,
@@ -256,17 +379,7 @@ def interim_earnings_cash_research_context(record: Mapping[str, Any] | None, *, 
         for metric in profits:
             if cash is None:
                 continue
-            profit, ocf = metrics[metric]["normalized_value"], cash["normalized_value"]
-            conversions.append(label | {"profit_metric": metric, "profit": profit, "operating_cash_flow": ocf,
-                "operating_cash_minus_profit": ocf - profit,
-                "conversion_ratio": ocf / profit if profit > 0 else None,
-                "relationship": _relationship(profit, ocf), "assurance": cash["audit_or_review_status"],
-                "profit_citation_id": metrics[metric]["citation_id"], "cash_citation_id": cash["citation_id"],
-                "method": CONVERSION_METHOD,
-                "limitations": ["SINGLE_PERIOD_IS_NOT_A_TREND", "TIMING_AND_WORKING_CAPITAL_ATTRIBUTION_UNKNOWN",
-                                "NOT_FREE_CASH_FLOW", "NON_VOTING"]
-                    + (["PARENT_PROFIT_EXCLUDES_NON_CONTROLLING_INTERESTS_OPERATING_CASH_IS_GROUP_WIDE"]
-                       if metric == "attributable_net_income" else [])})
+            conversions.append(_cash_conversion(label, metrics, metric))
         if profits and cash is None and current["comparative_basis"] == CURRENT_COLUMN:
             conversion_blockers.append(label | {"reason_codes": ["NO_SAME_STATEMENT_SET_OPERATING_CASH_FLOW"]
                 + (["OPERATING_CASH_FLOW_ONLY_FOR_OTHER_PERIODS"] if ocf_periods else []),

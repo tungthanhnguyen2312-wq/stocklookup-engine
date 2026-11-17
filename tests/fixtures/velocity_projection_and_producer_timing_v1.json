@@ -1,0 +1,13 @@
+{
+  "base_commit": "c75cce1ec5d442476a083f4a2e3494464bebd525",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "predecessor_sha256_lf": "58b2df420365329f070eefec4411d243466b2a5fc34b5baab274d20f03a4685f",
+      "active_sha256_lf": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a"
+    },
+    "canonical_post_close_pipeline.py": {
+      "predecessor_sha256_lf": "9b28211d34cd06c3a83305b012ec36179adcb25be484e656dd925b5dc7888712",
+      "active_sha256_lf": "fa8915b1f8d1646c611f65e9a4c5b2950a46de0a8f6fd9cd54a63082d31c9d1a"
+    }
+  }
+}

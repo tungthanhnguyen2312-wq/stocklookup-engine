@@ -440,6 +440,18 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
     # Rebuild the current receipt using only the enumerated successor paths.
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    velocity = live_receipt["retained_t0_velocity_projection_corrective"]
+
+    dispatch = live_receipt["canonical_d4a_dispatch_corrective"]
+    profitability = live_receipt["reviewed_profitability_corrective"]
+    codec = live_receipt["record_subtree_codec_candidate"]
+
+    def successor_baseline_pin(path, *successors):
+        for entry in successors:
+            if path in entry["prior_source_sha256_lf"]:
+                return entry["prior_source_sha256_lf"][path]
+        return live_receipt["source_sha256"][path]
+
     corrective = live_receipt["core_ai_fast_path_corrective"]
     assert corrective["new_capacity_measurement"] is False
     assert corrective["changed_source_paths"] == [
@@ -447,7 +459,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         "tools/run_owner_daily.ps1", "tools/run_owner_daily.py", "tools/verify_retention_reader_transition.py"]
     for path in corrective["changed_source_paths"]:
         assert live_receipt["source_sha256"][path] != prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = live_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, dispatch, codec, velocity)
     prior_receipt["core_ai_fast_path_corrective"] = corrective
     tactical_shadow = live_receipt["tactical_shadow_deferral_corrective"]
     assert tactical_shadow["new_capacity_measurement"] is False
@@ -458,7 +470,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         "tools/verify_retention_reader_transition.py",
     ]
     for path in tactical_shadow["changed_source_paths"]:
-        prior_receipt["source_sha256"][path] = live_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, dispatch, codec, velocity)
     prior_receipt["tactical_shadow_deferral_corrective"] = tactical_shadow
     hnx = live_receipt["hnx_listed_listing_presence_corrective"]
     assert hnx["base_commit"] == "8b60f92ce7f7576c4b58a7c8c3454495bf995d88"
@@ -506,6 +518,166 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             assert b"sync_producer_release" not in (root / path).read_bytes()
     prior_receipt["source_sha256"][sync_path] = hashlib.sha256(new_sync).hexdigest()
     prior_receipt["freeze_inventory_rebaseline_corrective"] = rebaseline
+    scheduled = live_receipt["scheduled_capture_reliability_corrective"]
+    scheduler_path = "tools/run_scheduled_capture.py"
+    assert scheduled["changed_source_paths"] == [scheduler_path]
+    assert scheduled["scope"] == "SCHEDULED_CAPTURE_RETRY_BUDGET_EARLY_START_AND_STATUS_EVIDENCE_ONLY"
+    assert scheduled["new_capacity_measurement"] is False
+    assert scheduled["prior_source_sha256_lf"] == prior_receipt["source_sha256"][scheduler_path]
+    old_scheduler = subprocess.check_output(["git", "show", f"{scheduled['base_commit']}:{scheduler_path}"], cwd=root)
+    assert hashlib.sha256(old_scheduler.replace(b"\r\n", b"\n")).hexdigest() == scheduled["prior_source_sha256_lf"]
+    # The scheduler stays a separate operator: Daily never imports it, and the capture
+    # operator it launches (admission, writer lease, Job limits) keeps its qualified bytes.
+    assert module_name(scheduler_path) not in daily_reachable(root)
+    for operator in ("tools/run_capture_only.py", "tools/capture_writer_lease.py", "tools/run_scheduled_capture.cmd"):
+        assert live_receipt["source_sha256"][operator] == prior_receipt["source_sha256"][operator]
+    prior_receipt["source_sha256"][scheduler_path] = hashlib.sha256(
+        (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["scheduled_capture_reliability_corrective"] = scheduled
+
+    compact = live_receipt["compact_research_decision_scope_corrective"]
+    compact_command = "tools/build_owner_compact_research.py"
+    assert compact["changed_source_paths"] == [compact_command]
+    assert compact["new_capacity_measurement"] is False
+    previous_compact = subprocess.check_output(
+        ["git", "show", f"{compact['base_commit']}:{compact_command}"], cwd=root
+    )
+    assert hashlib.sha256(previous_compact).hexdigest() == compact["prior_source_sha256_lf"]
+    released_compact = subprocess.check_output(
+        ["git", "show", f"{live_receipt['fable_handoff_and_offline_research']['base_commit']}:{compact_command}"],
+        cwd=root,
+    )
+    prior_receipt["source_sha256"][compact_command] = hashlib.sha256(released_compact).hexdigest()
+    prior_receipt["compact_research_decision_scope_corrective"] = compact
+
+    fable = live_receipt["fable_handoff_and_offline_research"]
+    assert fable["scope"] == "HANDOFF_PACKAGE_VALIDATION_AND_OFFLINE_OWNER_REPORT"
+    assert fable["new_capacity_measurement"] is False
+    assert set(fable["prior_source_sha256_lf"]) == {
+        "stocklookup_core/research/ai_handoff_publication.py", compact_command,
+    }
+    for path, expected in fable["prior_source_sha256_lf"].items():
+        assert expected == prior_receipt["source_sha256"][path]
+        old = subprocess.check_output(["git", "show", f"{fable['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(old).hexdigest() == expected
+        prior_receipt["source_sha256"][path] = hashlib.sha256(
+            (root / path).read_bytes().replace(b"\r\n", b"\n")
+        ).hexdigest()
+    prior_receipt["fable_handoff_and_offline_research"] = fable
+    copy_corrective = live_receipt["immutable_delivery_copy_corrective"]
+    assert copy_corrective["scope"] == "BOUNDED_IMMUTABLE_DELIVERY_COPY_ONLY"
+    assert copy_corrective["new_capacity_measurement"] is False
+    copy_source = "stocklookup_core/acquisition/immutable_delivery.py"
+    assert set(copy_corrective["prior_source_sha256_lf"]) == {copy_source}
+    old = subprocess.check_output(["git", "show", f"{copy_corrective['base_commit']}:{copy_source}"], cwd=root)
+    assert (copy_corrective["prior_source_sha256_lf"][copy_source]
+            == hashlib.sha256(old).hexdigest() == prior_receipt["source_sha256"][copy_source])
+    prior_receipt["source_sha256"][copy_source] = hashlib.sha256(
+        (root / copy_source).read_bytes().replace(b"\r\n", b"\n")
+    ).hexdigest()
+    prior_receipt["immutable_delivery_copy_corrective"] = copy_corrective
+    # D4a Owner activation: only the storage-reuse config pin changes, from its exact predecessor bytes.
+    d4a_config = "config/daily_storage_reuse.json"
+    d4a_off = subprocess.check_output(["git", "show", f"514ee89ec538a0d6aafa208cf8df4e0ea8a2068d:{d4a_config}"], cwd=root)
+    assert (hashlib.sha256(d4a_off.replace(b"\r\n", b"\n")).hexdigest()
+            == prior_receipt["source_sha256"][d4a_config]
+            == "9ed88654a092977aec9cbe678c132695201c9e47bbc267eee332e82581b7bbf2")
+    d4a_on = (root / d4a_config).read_bytes().replace(b"\r\n", b"\n")
+    assert d4a_on == d4a_off.replace(b"\r\n", b"\n").replace(b": false", b": true")
+    prior_receipt["source_sha256"][d4a_config] = hashlib.sha256(d4a_on).hexdigest()
+    # Removals of unreferenced modules (any receipt entry carrying `removed_source_paths`, in
+    # receipt order): a pin disappears only for a file deleted from the tree, outside the Daily
+    # closure, whose base bytes match the pin, with no capacity measurement change. A further
+    # removal needs only a new receipt entry, not a new step here.
+    reachable = daily_reachable(root)
+    removals = [(key, value) for key, value in live_receipt.items()
+                if isinstance(value, dict) and "removed_source_paths" in value]
+    assert [key for key, _ in removals][:1] == ["unreachable_historical_runner_removal"]
+    for key, removal in removals:
+        assert removal["scope"].startswith("REMOVE_UNREFERENCED_")
+        assert removal["new_capacity_measurement"] is False
+        removed = removal["removed_source_paths"]
+        assert removed == sorted(set(removed))
+        assert all(path.startswith(("tools/", "stocklookup_core/")) and path.endswith(".py") for path in removed)
+        for path in removed:
+            assert not (root / path).exists()
+            assert module_name(path) not in reachable
+            old = subprocess.check_output(["git", "show", f"{removal['base_commit']}:{path}"], cwd=root)
+            assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"].pop(path)
+        prior_receipt[key] = removal
+    comparative = live_receipt["reviewed_comparative_research_corrective"]
+    assert comparative["scope"] == "NON_VOTING_REVIEWED_COMPARATIVES_ONLY"
+    assert comparative["new_capacity_measurement"] is False
+    paths = comparative["prior_source_sha256_lf"]
+    assert set(paths) == {"ai_research_session_delivery.py", "market_wide_current_fundamental_research.py",
+                          "stocklookup_core/financial/interim_earnings_cash_research.py",
+                          "stocklookup_core/financial/official_income_prior_period_pairing.py"}
+    added = "derived/financial-evidence-currency-refresh-v1/reviewed_comparative_column_observations_20261115.json"
+    assert comparative["added_source_paths"] == [added] and added not in prior_receipt["source_sha256"]
+    for path, digest in paths.items():
+        old = subprocess.check_output(["git", "show", f"{comparative['base_commit']}:{path}"], cwd=root)
+        assert digest == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+    for path in (*paths, added):
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, profitability, codec)
+    prior_receipt["reviewed_comparative_research_corrective"] = comparative
+    assert dispatch["scope"] == "CANONICAL_DAILY_D4A_DELIVERY_SWITCH_ONLY"
+    assert dispatch["new_capacity_measurement"] is False
+    assert set(dispatch["prior_source_sha256_lf"]) == {"canonical_daily_operation.py", "tools/verify_retention_reader_transition.py", "config/daily_path_launchers.json"}
+    for path, digest in dispatch["prior_source_sha256_lf"].items():
+        old = subprocess.check_output(["git", "show", f"{dispatch['base_commit']}:{path}"], cwd=root)
+        assert digest == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest()
+        assert digest == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, codec, velocity)
+    prior_receipt["canonical_d4a_dispatch_corrective"] = dispatch
+    assert profitability["scope"] == "NON_VOTING_REVIEWED_REPORTED_PAT_MARGINS_AND_CASH_LABEL_ONLY"
+    assert profitability["new_capacity_measurement"] is False
+    path = "stocklookup_core/financial/interim_earnings_cash_research.py"
+    assert set(profitability["prior_source_sha256_lf"]) == {path}
+    old = subprocess.check_output(["git", "show", f"{profitability['base_commit']}:{path}"], cwd=root)
+    assert profitability["prior_source_sha256_lf"][path] == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest()
+    assert profitability["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+    prior_receipt["source_sha256"][path] = successor_baseline_pin(path, codec, velocity)
+    prior_receipt["reviewed_profitability_corrective"] = profitability
+    assert codec["scope"] == "DEFAULT_OFF_FULL_UNIVERSE_SUBTREE_CODEC_AND_READER_DECODE_ONLY"
+    assert codec["new_capacity_measurement"] is False
+    added = "stocklookup_core/evidence/record_subtree_codec.py"
+    assert codec["added_source_paths"] == [added] and added not in prior_receipt["source_sha256"]
+    assert set(codec["prior_source_sha256_lf"]) == {
+        "ai_research_session_delivery.py", "config/daily_path_launchers.json",
+        "stocklookup_core/research/ai_research_ticker_extractor.py", "tools/extract_ai_ticker_context.py",
+        "tools/run_market_gate_decision_quality.py", "tools/run_owner_daily.py",
+        "tools/verify_retention_reader_transition.py"}
+    for path, digest in codec["prior_source_sha256_lf"].items():
+        old = subprocess.check_output(["git", "show", f"{codec['base_commit']}:{path}"], cwd=root)
+        assert digest == hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest()
+        assert digest == prior_receipt["source_sha256"][path]
+    for path in (*codec["prior_source_sha256_lf"], added):
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, velocity)
+    prior_receipt["record_subtree_codec_candidate"] = codec
+
+    assert velocity["scope"] == "RETAINED_T0_VELOCITY_PROJECTION_AND_PRODUCER_SEAL_TELEMETRY_ONLY"
+    assert velocity["new_capacity_measurement"] is False
+    assert velocity["whole_daily_requalification"] is False
+    paths = velocity["prior_source_sha256_lf"]
+    assert set(paths) == {"canonical_daily_operation.py", "canonical_post_close_pipeline.py",
+                          "config/daily_path_launchers.json", "daily_producer_pipeline.py", "multi_session_signal_velocity.py",
+                          "tools/verify_retention_reader_transition.py"}
+    replay = velocity["component_replay"]
+    assert replay["registry_entries"] == 48
+    assert 0 < replay["qualified_sessions"] <= replay["registry_entries"]
+    assert replay["records"] > 0 and replay["full_source_stream_bytes"] > 0
+    assert replay["warm_source_stream_bytes"] == 0
+    assert 0 < replay["warm_total_logical_read_bytes"] < replay["full_source_stream_bytes"]
+    assert 0 < replay["warm_observer_build_seconds"] < replay["full_source_verification_seconds"]
+    assert replay["cold_warm_output_file_sha256"] == replay["original_nov13_output_file_sha256"]
+    for path, digest in paths.items():
+        previous = subprocess.check_output(["git", "show", f"{velocity['base_commit']}:{path}"], cwd=root)
+        assert digest == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
+        assert digest == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(
+            path, live_receipt["tplus_feedback_io_corrective"]
+        )
+    prior_receipt["retained_t0_velocity_projection_corrective"] = velocity
 
     feedback_io = live_receipt["tplus_feedback_io_corrective"]
     feedback_paths = ["prospective_feedback_streaming.py", "tools/verify_retention_reader_transition.py"]
@@ -516,6 +688,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert transition["base_commit"] == feedback_io["base_commit"]
     assert transition["sources"][feedback_paths[0]]["prior_sha256_lf"] == prior_receipt["source_sha256"][feedback_paths[0]]
     for path in feedback_paths:
+        assert feedback_io["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         current = (root / path).read_bytes().replace(b"\r\n", b"\n")
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     for run in ("baseline", "candidate"):
@@ -532,7 +705,6 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert not {module_name(path) for path in offline}.intersection(daily_reachable(root))
     # Cover string-based import and launch registrations, including basename-only
     # dispatch. The compact research command is independently checked as offline-only.
-    compact_command = "tools/build_owner_compact_research.py"
     assert module_name(compact_command) not in daily_reachable(root)
     names = re.compile(rb"\b(?:" + b"|".join(re.escape(Path(path).stem.encode()) for path in sorted(offline)) + rb")\b")
     for path in preflight.capacity_source_paths(root):

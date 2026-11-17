@@ -456,7 +456,7 @@ def test_replay_recovers_committed_build_after_pointer_crash_without_rewriting(t
     target = next((r / "sessions" / "2026-10-13" / "builds").iterdir())
     before = {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in target.iterdir()}
     with monkeypatch.context() as resumed:
-        resumed.setattr(handoff.shutil, "copyfile", lambda *a, **k: pytest.fail("replay rewrote sealed build"))
+        resumed.setattr(handoff, "_copy_verified", lambda *a, **k: pytest.fail("replay rewrote sealed build"))
         result = publish(r, s, "2026-10-13", producer_checkpoint="released:test", push=False)
     assert result["immutable_handoff_commit"] == immutable_commit
     assert result["handoff_commit"] == actual_git(r, "rev-parse", "HEAD")
@@ -592,3 +592,22 @@ def test_publication_preserves_crlf_sealed_bytes_under_host_and_repository_text_
     fields = handoff._git(r, "ls-tree", "origin/main", "--", remote_name).split("\t", 1)[0].split()
     assert handoff._git_bytes(r, "cat-file", "blob", fields[2]) == original
     assert {p.name: p.read_bytes() for p in s.iterdir()} == source_before
+
+
+def test_publish_refuses_changed_source_before_any_git_commit(tmp_path, monkeypatch):
+    s, r = tmp_path / "source", tmp_path / "repo"
+    source(s)
+    repo(r)
+    original_build = handoff.build_package
+    head = handoff._git(r, "rev-parse", "HEAD")
+
+    def build_then_change(*args, **kwargs):
+        files, package = original_build(*args, **kwargs)
+        (s / "ai_research_session_bundle.json").write_text("{}", encoding="utf-8")
+        return files, package
+
+    monkeypatch.setattr(handoff, "build_package", build_then_change)
+    with pytest.raises(HandoffPublicationError, match="HANDOFF_SOURCE_CHANGED_DURING_COPY"):
+        publish(r, s, "2026-10-13", push=False)
+    assert handoff._git(r, "rev-parse", "HEAD") == head
+    assert not (r / "LATEST.json").exists()

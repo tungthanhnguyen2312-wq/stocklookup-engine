@@ -48,6 +48,10 @@ The command reads the retained Brief, product, Opportunity Queue, and available 
 and Thesis evidence. It emits `market.md`, one Markdown file per requested ticker, and
 `research.json` with input digests and source identities. Omit `--tickers` for a market-only
 projection. Up to 12 explicit ticker arguments are accepted.
+The Integrated Decision supplies the ticker's current research posture. The separate
+tactical card preserves its classifier labels, horizon and triggers even when they
+differ from that posture. The JSON tactical card identifies this scope alongside its
+retained fields.
 
 ```powershell
 python -B tools/build_owner_compact_research.py --operation-dir <sealed-operation-dir> --session YYYY-MM-DD --tickers HPG KBC FPT --output-dir <private-output-dir>

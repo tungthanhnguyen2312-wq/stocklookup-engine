@@ -31,6 +31,11 @@ from typing import Any, Iterable, Mapping, Sequence
 CONTRACT_VERSION = "official_income_prior_period_pairing/v1"
 COMPARATIVE_CONTRACT = "comparative_column_observation/v1"
 COMPARATIVE_PUBLIC_FILE = "comparative_column_observations.jsonl"
+REVIEWED_COMPARATIVE_FILE = "reviewed_comparative_column_observations_20261115.json"
+REVIEWED_COMPARATIVE_USE = "CONDITIONAL_NON_VOTING_RESEARCH_ONLY"
+COMPARATIVE_METRICS = {("income_statement", "10"): "revenue", ("income_statement", "60"): "net_income",
+                       ("income_statement", "61"): "attributable_net_income", ("cash_flow", "20"): "operating_cash_flow",
+                       ("cash_flow", "03"): "provision_charge_or_reversal_adjustment"}
 COMPARATIVE_GATE = "OWNER_GATE_COMPARATIVE_COLUMN_AS_PRIOR_PERIOD_FACT"
 UNREVIEWED_GATE = "OWNER_GATE_D1_UNREVIEWED_QUARTERLY_DIRECTION_PREVIEW"
 OWNER_GATES = (COMPARATIVE_GATE, UNREVIEWED_GATE)
@@ -234,20 +239,35 @@ def load_prior_period_inputs(*, runtime_root: Path | str | None, repo_root: Path
     except (OSError, ValueError, AttributeError, TypeError):
         observations = []
         loaded["load_blockers"] = sorted(set(loaded["load_blockers"]) | {"COMPARATIVE_COLUMN_OBSERVATIONS_UNREADABLE"})
-    return {"contract_version": CONTRACT_VERSION, "rows": loaded["rows"], "load_blockers": loaded["load_blockers"],
-            "comparative_observations": observations}
+    bundle = {"contract_version": CONTRACT_VERSION, "rows": loaded["rows"], "load_blockers": loaded["load_blockers"],
+              "comparative_observations": observations}
+    try:
+        receipts = load_reviewed_comparatives(public_root)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        bundle["load_blockers"] = sorted(set(loaded["load_blockers"]) | {"REVIEWED_COMPARATIVE_RECEIPTS_INVALID"})
+        receipts = []
+    if receipts:
+        bundle["reviewed_comparatives"] = receipts
+    return bundle
 
 
 def qualified_prior_inputs_at_cutoff(inputs: Mapping[str, Any], *, cutoff: str) -> dict[str, Any] | None:
     """Omit absent/unqualified/future prior inputs, preserving the no-input Daily identity."""
     boundary = _instant(cutoff)
-    if boundary is None or not any(
+    if boundary is None:
+        return None
+    receipts = [row for row in inputs.get("reviewed_comparatives") or []
+                if (known := _instant(row.get("reviewed_at"))) is not None and known <= boundary]
+    if not receipts and not any(
         row.get("admission_state") == "QUALIFIED_PRIOR_PERIOD_FACT" and not row.get("reason_codes")
         and (known := _instant(row.get("knowledge_available_at"))) is not None and known <= boundary
         for row in inputs.get("rows") or []
     ):
         return None
-    return copy.deepcopy(dict(inputs))
+    result = copy.deepcopy({k: v for k, v in inputs.items() if k != "reviewed_comparatives"})
+    if receipts:
+        result["reviewed_comparatives"] = copy.deepcopy(receipts)
+    return result
 
 
 def research_card_pairing(record: Mapping[str, Any] | None, income: Mapping[str, Any], *,
@@ -294,6 +314,79 @@ def load_comparative_column_observations(public_root: Path | str) -> list[dict[s
         if validate_comparative_observation(row):
             raise ValueError("COMPARATIVE_COLUMN_OBSERVATION_INVALID:" + str(row.get("observation_id")))
     return rows
+
+
+def load_reviewed_comparatives(public_root: Path | str) -> list[dict[str, Any]]:
+    """Read the scoped reviewed extension of comparative observations, outside the fact overlay."""
+    from stocklookup_core.evidence.financial_row_identity import resolve_reported_row_identity, row_label_supports_metric
+    from stocklookup_core.financial.canonical_financial_resolvers import period_bounds
+
+    path = Path(public_root) / REVIEWED_COMPARATIVE_FILE
+    if not path.is_file():
+        return []
+    if path.stat().st_size > 256 * 1024:
+        raise ValueError("REVIEWED_COMPARATIVE_RECEIPT_TOO_LARGE")
+    receipts = json.loads(path.read_bytes())
+    if not isinstance(receipts, list) or not 0 < len(receipts) <= 5:
+        raise ValueError("REVIEWED_COMPARATIVE_RECEIPT_COUNT_INVALID")
+    documents = set()
+    for receipt in receipts:
+        body = {k: v for k, v in receipt.items() if k != "review_receipt"}
+        document = receipt["document"]
+        sha, ticker = document["document_sha256"], receipt["ticker"]
+        observed, reviewed = _instant(document["observed_at"]), _instant(receipt["reviewed_at"])
+        assurance = document["audit_or_review_status"]
+        period = document["reporting_period"]
+        prior_period = str(int(period[:4]) - 1) + period[4:]
+        if (receipt["review_receipt"] != _hash(body) or receipt["contract_version"] != COMPARATIVE_CONTRACT
+                or receipt["use"] != REVIEWED_COMPARATIVE_USE or receipt["official_fact_admitted"] is not False
+                or ticker not in {"HPG", "PNJ", "FPT"} or ticker != document["ticker"]
+                or not re.fullmatch(r"[0-9a-f]{64}", sha) or sha in documents
+                or document["document_class"] not in APPROVED_DOCUMENT_CLASSES.get(assurance, ())
+                or document["source_identity"] != "issuer_ir" or not document["source_locator"].startswith("https://")
+                or not document["document_id"] or observed is None or reviewed is None or reviewed < observed):
+            raise ValueError("REVIEWED_COMPARATIVE_DOCUMENT_BINDING_INVALID")
+        documents.add(sha)
+        slots = set()
+        if not 0 < len(receipt["rows"]) <= 40:
+            raise ValueError("REVIEWED_COMPARATIVE_ROW_COUNT_INVALID")
+        for row in receipt["rows"]:
+            role = row["comparative_basis"]
+            family, code = row["statement_family"], row["line_code"]
+            slot = (family, code, role)
+            expected = period if role == "CURRENT_COLUMN" else prior_period
+            row_body = {k: v for k, v in row.items() if k != "citation_id"}
+            value = row["normalized_value"]
+            if type(value) is not int:
+                raise ValueError("REVIEWED_COMPARATIVE_ROW_BINDING_INVALID")
+            grouped = f"{abs(value):,}"
+            tokens = {str(abs(value)), grouped, grouped.replace(",", ".")}
+            if value < 0:
+                tokens = {f"({token})" for token in tokens}
+            bounds = period_bounds(expected.replace("-H1", "-Q2"), "cumulative_ytd")
+            metric = row["canonical_metric"]
+            if metric == "provision_charge_or_reversal_adjustment":
+                literal_identity = row_label_supports_metric(metric, row["line_label"])
+            elif metric is not None:
+                identity = resolve_reported_row_identity(family, code, row["line_label"])
+                literal_identity = identity["canonical_metric"] == metric and not identity["blockers"]
+            else:
+                literal_identity = bool(row["line_label"])
+            if (role not in {"CURRENT_COLUMN", "PRESENTED_COMPARATIVE"} or slot in slots
+                    or metric != COMPARATIVE_METRICS.get((family, code)) or not literal_identity
+                    or row["document_sha256"] != sha or row["ticker"] != ticker
+                    or row["source_identity"] != document["source_identity"]
+                    or row["audit_or_review_status"] != assurance or row["knowledge_available_at"] != receipt["reviewed_at"]
+                    or row["reporting_period"] != expected or any(row[key] != bounds[key] for key in bounds)
+                    or row["statement_scope"] != "consolidated" or row["currency"] != "VND" or row["unit_scale"] != 1
+                    or row["numeric_evidence_layer"] != "reviewed_visual_integer"
+                    or not row["line_label"] or not row["column_label"] or not row["period_evidence"]
+                    or type(row["source_page"]) is not int or not 1 <= row["source_page"] <= document["page_count"]
+                    or row["raw_token"] not in tokens
+                    or row["citation_id"] != _hash(row_body)):
+                raise ValueError("REVIEWED_COMPARATIVE_ROW_BINDING_INVALID")
+            slots.add(slot)
+    return receipts
 
 
 def _comparison(prior: Mapping[str, Any], current: Mapping[str, Any], *, entity: Any, prior_basis: str,
@@ -489,7 +582,7 @@ def official_income_prior_period_context(record: Mapping[str, Any] | None, *, pr
 
 def attach_prior_period_pairing(records: Mapping[str, Any], *, prior_rows: Sequence[Mapping[str, Any]],
                                 comparative_observations: Sequence[Mapping[str, Any]] = (), cutoff: str | None,
-                                load_blockers: Sequence[str] = ()) -> None:
+                                load_blockers: Sequence[str] = (), reviewed_comparatives: Sequence[Mapping[str, Any]] = ()) -> None:
     """Additive key inside each existing income context; the context's own fields stay untouched."""
     for ticker, record in records.items():
         income = record.get("official_income_research_context")
@@ -498,6 +591,11 @@ def attach_prior_period_pairing(records: Mapping[str, Any], *, prior_rows: Seque
         income["prior_period_pairing"] = official_income_prior_period_context(
             record, prior_rows=prior_rows, comparative_observations=comparative_observations, cutoff=cutoff,
             ticker=ticker, load_blockers=load_blockers)
+        if reviewed_comparatives and record.get("entity_class") == "corporate":
+            from stocklookup_core.financial.interim_earnings_cash_research import reviewed_comparative_research
+            reviewed = reviewed_comparative_research(ticker, cutoff, reviewed_comparatives)
+            if reviewed:
+                income["reviewed_comparative"] = reviewed
 
 
 __all__ = ["COMPARATIVE_GATE", "UNREVIEWED_GATE", "OWNER_GATES", "attach_prior_period_pairing",

@@ -181,17 +181,32 @@ attempt is one `run_capture_only.py --execute` child with that operator's own ad
 write scope and writer lease.
 
 - First attempt not before 15:35 Vietnam time; no attempt at or after 23:30, because listing
-  knowledge must be acquired on the session day. At most 12 attempts, 600 seconds apart.
-- One scheduler instance at a time. A busy writer lease (Owner Daily running) or a refused
-  admission is an attempt outcome and is retried; an existing capture record ends the run.
-- Weekends and a `NON_WORKING_DATE` attempt gate end the run as `NOT_A_MARKET_SESSION`.
+  knowledge must be acquired on the session day. Attempts are 600 seconds apart. At most 12
+  capture attempts (children that passed admission). Refusals that never reach acquisition
+  (busy writer lease while Owner Daily runs, refused admission) have their own limit of 48, so
+  a long Owner Daily cannot use up the capture attempts before the window closes.
+- One scheduler instance at a time. A busy writer lease or a refused admission is retried.
+  The capture record is checked before every attempt; once it exists (from this run, an
+  earlier run or Owner Daily) the run ends as `ALREADY_CAPTURED` without starting a child.
+- Weekends and a `NON_WORKING_DATE` attempt gate end the run as `NOT_A_MARKET_SESSION`. The
+  Windows task triggers Monday to Friday only; the session gate still decides holidays.
+- A run started more than 15 minutes before 15:35 (Task Scheduler catching up a missed run
+  after sleep, logon or a restart) ends at once as `BEFORE_CAPTURE_WINDOW`. It does not wait,
+  so the session's own 15:35 trigger is not suppressed by the task's `IgnoreNew` policy and no
+  run outlasts the task's nine-hour execution limit. The missed earlier session is not attempted.
 - Receipts go to `capture-receipts/<session>/attempt-NN-HHMMSS` beside the logs role. The state
-  after every attempt is `run-logs/pit_capture_<session>.status.json`.
+  after every attempt is `run-logs/pit_capture_<session>.status.json`. A refused admission
+  creates no receipt directory: that attempt's `receipt_dir` is null and `admission` keeps the
+  refusal reasons and the observed physical/commit bytes. A later run for the same session keeps
+  the earlier runs' states and attempts under `prior_runs` (last 10).
 - After a capture it publishes the readiness record through `daily_boundary` under the writer
   lease. It publishes nothing else, commits nothing and creates no T0.
-- Exit 0: captured, already captured, not a session, or another instance is running. Exit 4:
-  attempts exhausted or the same-day window closed without a record. Nothing is retried on a
-  later day and a missed session is never reconstructed.
+- Exit 0: captured, already captured, not a session, before the capture window, or another
+  instance is running. Exit 4: attempts exhausted or the same-day window closed without a
+  record. Exit 5: the wrapper itself failed (for example the production binding was refused);
+  the reason goes to the status file when the logs role is known. Exit 1 from the launcher:
+  the production Python was not found. Nothing is retried on a later day and a missed session
+  is never reconstructed.
 
 A record written by this operator has `t0_decision_snapshot_identity = null`. Owner Daily on the
 same session reuses the retained snapshot and bindings and seals its T0 through the seal index.

@@ -246,3 +246,30 @@ def test_native_scope_continuation_preserves_prior_completion_and_history(tmp_pa
     assert [m for m in continued["milestones"] if m["milestone_id"] != mid] == [m for m in state["milestones"] if m["milestone_id"] != mid]
     with pytest.raises(SystemExit):
         main(args)
+
+
+@pytest.mark.parametrize("fallback", ["legacy", "different_volume"])
+def test_alias_copy_uses_bounded_publisher_without_a_source_prehash(tmp_path, monkeypatch, fallback):
+    import hashlib
+
+    source = tmp_path / "operation" / "ai_research_full_universe.ndjson"
+    target = tmp_path / "run" / source.name
+    payload = b"retained evidence\n" * 100
+    publication.publish_bytes(source, payload, protect=fallback != "legacy")
+    expected_sha = hashlib.sha256(payload).hexdigest()
+    original_sha = publication.sha
+
+    def check_hash(path):
+        assert path != source, "new independent copies hash while streaming the source"
+        return original_sha(path)
+
+    with monkeypatch.context() as patch:
+        patch.setattr(publication, "sha", check_hash)
+        patch.setattr(Path, "read_bytes", lambda path: pytest.fail(f"unbounded read: {path}"))
+        result = publication.retain_alias(
+            source, target, expected_sha=expected_sha, expected_size=len(payload),
+            volume=lambda path: "source" if path == source else "target",
+        )
+    assert result == "PUBLISHED_IMMUTABLE"
+    assert not target.samefile(source) and publication.protected(target)
+    assert target.read_bytes() == source.read_bytes() == payload

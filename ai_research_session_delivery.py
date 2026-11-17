@@ -14,6 +14,7 @@ import json
 from typing import Any, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
+from stocklookup_core.evidence.record_subtree_codec import CODEC_VERSION, encode_record
 from stocklookup_core.decision.current_daily_decision_research_product import (
     ABSENT_OWNER_FOCUS_STATUS, INTEGRATED_PEER_VERDICTS, is_present_research_card, reconcile_card_peer_valuation,
 )
@@ -234,6 +235,11 @@ def financial_research_card(card: Mapping[str, Any], fundamental: Mapping[str, A
     pairing = research_card_pairing(fundamental, income, ticker=card.get("ticker"), cutoff=cutoff)
     if pairing is not None:
         income["prior_period_pairing"] = pairing
+    reviewed = ((fundamental or {}).get("official_income_research_context") or {}).get("reviewed_comparative")
+    if (isinstance(reviewed, Mapping) and reviewed.get("ticker") == card.get("ticker")
+            and reviewed.get("cutoff") == cutoff and reviewed.get("is_actionable") is False
+            and all(reviewed.get(key) == "NONE" for key in ("vote_effect", "strict_valuation_effect", "ttm_effect"))):
+        income["reviewed_comparative"] = copy.deepcopy(reviewed)
     return result
 
 
@@ -787,7 +793,7 @@ class _DeliveryRecordProjections(Mapping):
 
 def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, opportunity_comparison_request=None,
                    include_thesis_discovery: bool = False, retain_delivery_companions: bool = True,
-                   full_universe_stream=None) -> dict[str, Any]:
+                   full_universe_stream=None, full_universe_subtree_codec: bool = False) -> dict[str, Any]:
     """Return all five byte interfaces; internal materialization may spool NDJSON.
 
     With an explicit binary stream, ``full_universe`` is None and the manifest
@@ -890,7 +896,12 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
     def write_companion(companion):
         nonlocal full_size
         for ticker in universe:
-            row = (_canon(_compact_context(ticker, operation, inputs, financial_context, integrated_overlay)) + "\n").encode("utf-8")
+            context = _compact_context(ticker, operation, inputs, financial_context, integrated_overlay)
+            # Storage candidate, default off: lossless per-record subtree references
+            # (record_subtree_refs/v1). Readers expand with decode_record.
+            if full_universe_subtree_codec:
+                context = encode_record(context)
+            row = (_canon(context) + "\n").encode("utf-8")
             if companion.write(row) != len(row):
                 raise OSError("DELIVERY_COMPANION_SHORT_WRITE")
             full_hash.update(row)
@@ -938,6 +949,10 @@ def build_delivery(operation: Mapping[str, Any], inputs: Mapping[str, Any], *, o
                 "role": FULL_UNIVERSE_COMPANION_ROLE,
                 "not_primary_human_review_input": True,
                 "ordering": "TICKER_ASCENDING_DETERMINISTIC_LOOKUP_NOT_SAMPLING",
+                # Present only when encoded, so default-off manifest bytes are unchanged.
+                **({"record_encoding": CODEC_VERSION,
+                    "decode_with": "tools/extract_ai_ticker_context.py --bundle <this file> --ticker <TICKER>"}
+                   if full_universe_subtree_codec else {}),
             },
             "current_decision_cockpit_projection.json": {"bytes": len(projection_bytes), "sha256": _hash_bytes(projection_bytes), "projection_identity": projection["projection_identity"]},
         },

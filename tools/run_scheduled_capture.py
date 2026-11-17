@@ -12,9 +12,16 @@ what happened:
 
 * one scheduler instance at a time (kernel lock), and never while another writer holds
   the production lease - a busy lease is an attempt outcome, retried later;
-* a bounded number of attempts between the first attempt time and the same-day cutoff;
-* an existing complete capture record ends the run without acquiring anything;
-* a status file per session under the logs role, rewritten atomically after every attempt.
+* a bounded number of capture attempts between the first attempt time and the same-day
+  cutoff; refusals that never reach acquisition (busy writer lease, refused admission) have
+  their own bound so an Owner Daily holding the lease cannot use up the capture attempts;
+* an existing complete capture record ends the run without acquiring anything, checked again
+  before every attempt;
+* a start long before the first attempt time (Task Scheduler catching up a missed run after
+  sleep or logon) ends at once instead of waiting, so the session's own trigger is not
+  suppressed and the run cannot outlast the task's execution time limit;
+* a status file per session under the logs role, rewritten atomically after every attempt,
+  keeping earlier runs' attempts and each refusal's admission reasons.
 
 It publishes nothing, commits nothing, creates no decision and no T0, and never repairs,
 re-dates or reconstructs a missed session.
@@ -36,7 +43,10 @@ sys.path.insert(0, str(ROOT))
 FIRST_ATTEMPT = wall_time(15, 35)   # after the 15:30 safety floor of the attempt gate
 LAST_ATTEMPT = wall_time(23, 30)    # listing knowledge must be acquired on the session day
 INTERVAL_SECONDS = 600
-MAX_ATTEMPTS = 12
+MAX_ATTEMPTS = 12                   # capture children that passed admission
+MAX_REFUSALS = 48                   # lease-busy / not-admitted probes: (23:30 - 15:35) / 10 min
+EARLY_START_SECONDS = 900           # longest wait before the first attempt; earlier starts end
+MAX_PRIOR_RUNS = 10
 CHILD_GRACE_SECONDS = 300
 STORE_SESSIONS = Path("operations-review/prospective-pit-capture-v1/sessions")
 STATUS_CONTRACT = "scheduled_pit_capture_status/v1"
@@ -47,7 +57,10 @@ NOT_A_SESSION = "NOT_A_MARKET_SESSION"
 EXHAUSTED = "ATTEMPTS_EXHAUSTED"
 WINDOW_CLOSED = "SAME_DAY_WINDOW_CLOSED"
 ALREADY_RUNNING = "SCHEDULER_ALREADY_RUNNING"
-TERMINAL_OK = {CAPTURED, ALREADY_CAPTURED, NOT_A_SESSION, ALREADY_RUNNING}
+BEFORE_WINDOW = "BEFORE_CAPTURE_WINDOW"
+WRAPPER_FAILED = "SCHEDULER_WRAPPER_FAILED"
+REFUSALS = {"NOT_ADMITTED", "WRITER_LEASE_BUSY"}
+TERMINAL_OK = {CAPTURED, ALREADY_CAPTURED, NOT_A_SESSION, ALREADY_RUNNING, BEFORE_WINDOW}
 
 
 def vn_now() -> datetime:
@@ -77,6 +90,35 @@ def classify(exit_code: int | None, child: dict | None, stdout: str, stderr: str
         if marker in text:
             return "WRITER_LEASE_BUSY" if marker == "FEEDBACK_PUBLICATION_BUSY" else marker
     return "CHILD_EXIT_%s" % exit_code
+
+
+def refusal_evidence(stdout: str) -> dict | None:
+    """Keep why the capture operator refused admission; it creates no receipt in that case."""
+    for line in reversed(stdout.strip().splitlines()):
+        try:
+            value = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(value, dict) and value.get("status") == "NOT_ADMITTED":
+            observations = (value.get("host") or {}).get("observations") or {}
+            return {"reasons": list((value.get("admission") or {}).get("reasons") or []),
+                    "available_physical_bytes": observations.get("available_physical_bytes"),
+                    "available_commit_bytes": observations.get("available_commit_bytes"),
+                    "active_writer_count": len(observations.get("active_writers") or [])}
+    return None
+
+
+def prior_runs(path: Path, session: str) -> list:
+    """Earlier invocations for the same session, so a re-run never erases their evidence."""
+    try:
+        old = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(old, dict) or old.get("session") != session:
+        return []
+    earlier = [row for row in old.get("prior_runs") or [] if isinstance(row, dict)]
+    summary = {key: old.get(key) for key in ("state", "started_at", "finished_at", "attempts", "error")}
+    return (earlier + [summary])[-MAX_PRIOR_RUNS:]
 
 
 def run_child(python: str, session: str, directory: Path, timeout: float) -> tuple[int | None, dict | None, str, str]:
@@ -126,7 +168,7 @@ def retain_readiness(root: Path, retained: Path, session: str) -> dict:
 
 def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str,
         clock=vn_now, sleep=time.sleep, child=run_child, readiness=None,
-        interval: int = INTERVAL_SECONDS, max_attempts: int = MAX_ATTEMPTS,
+        interval: int = INTERVAL_SECONDS, max_attempts: int = MAX_ATTEMPTS, max_refusals: int = MAX_REFUSALS,
         first: wall_time = FIRST_ATTEMPT, last: wall_time = LAST_ATTEMPT, child_timeout: float | None = None) -> dict:
     from stocklookup_core.evidence.capture_only import DEADLINE_SECONDS, VN
     day = datetime.fromisoformat(session).date()
@@ -136,8 +178,12 @@ def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str
     status = {"contract_version": STATUS_CONTRACT, "session": session, "state": "STARTED",
               "authority_effect": "NONE / CAPTURE_COMPLETENESS_ONLY",
               "first_attempt_not_before": opens.isoformat(), "last_attempt_before": closes.isoformat(),
-              "max_attempts": max_attempts, "interval_seconds": interval,
+              "max_attempts": max_attempts, "max_refusals": max_refusals, "interval_seconds": interval,
               "started_at": clock().isoformat(), "attempts": [], "capture_record": None}
+    earlier = prior_runs(status_path, session)
+    if earlier:
+        status["prior_runs"] = earlier
+    counts = {"capture": 0, "refusal": 0}
 
     def finish(state: str) -> dict:
         target = record_path(retained, session)
@@ -149,12 +195,15 @@ def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str
 
     if day.weekday() >= 5:
         return finish(NOT_A_SESSION)
-    if record_path(retained, session).exists():
-        return finish(ALREADY_CAPTURED)
-    while len(status["attempts"]) < max_attempts:
+    while counts["capture"] < max_attempts and counts["refusal"] < max_refusals:
+        if record_path(retained, session).exists():  # Owner Daily or an earlier run captured it
+            return finish(ALREADY_CAPTURED)
         now = clock()
         if now >= closes:
             return finish(WINDOW_CLOSED)
+        if (opens - now).total_seconds() > EARLY_START_SECONDS:
+            status["next_attempt_at"] = opens.isoformat()
+            return finish(BEFORE_WINDOW)
         if now < opens:
             status.update(state="WAITING_FOR_FIRST_ATTEMPT", next_attempt_at=opens.isoformat())
             write_status(status_path, status)
@@ -169,9 +218,17 @@ def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str
         outcome = classify(code, result, out, err)
         if outcome in {CAPTURED, ALREADY_CAPTURED} and not record_path(retained, session).exists():
             outcome = "CAPTURE_RECORD_MISSING_AFTER_PASS"
-        status["attempts"].append({"number": number, "started_at": now.isoformat(), "finished_at": clock().isoformat(),
-                                   "exit_code": code, "outcome": outcome, "receipt_dir": str(directory),
-                                   "child_status": (result or {}).get("status"), "stderr_tail": err[-600:]})
+        counts["refusal" if outcome in REFUSALS else "capture"] += 1
+        attempt = {"number": number, "started_at": now.isoformat(), "finished_at": clock().isoformat(),
+                   "exit_code": code, "outcome": outcome,
+                   "receipt_dir": str(directory) if directory.exists() else None,
+                   "child_status": (result or {}).get("status"), "stderr_tail": err[-600:]}
+        refused = refusal_evidence(out)
+        if refused is not None:
+            attempt["admission"] = refused
+        elif not directory.exists():
+            attempt["stdout_tail"] = out[-600:]
+        status["attempts"].append(attempt)
         if outcome in {CAPTURED, ALREADY_CAPTURED}:
             if readiness is not None:
                 status["readiness"] = readiness(session)
@@ -179,14 +236,15 @@ def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str
         if outcome == NOT_A_SESSION:
             return finish(NOT_A_SESSION)
         upcoming = clock() + timedelta(seconds=interval)
-        if len(status["attempts"]) >= max_attempts or upcoming >= closes:
+        if counts["capture"] >= max_attempts or counts["refusal"] >= max_refusals or upcoming >= closes:
             break
         status.update(state="WAITING_TO_RETRY", next_attempt_at=upcoming.isoformat())
         write_status(status_path, status)
         sleep(interval)
     if record_path(retained, session).exists():  # Owner Daily captured it while this run waited
         return finish(ALREADY_CAPTURED)
-    return finish(EXHAUSTED if len(status["attempts"]) >= max_attempts else WINDOW_CLOSED)
+    exhausted = counts["capture"] >= max_attempts or counts["refusal"] >= max_refusals
+    return finish(EXHAUSTED if exhausted else WINDOW_CLOSED)
 
 
 def main(argv=None) -> int:
@@ -199,20 +257,39 @@ def main(argv=None) -> int:
         parser.error("attempts must be 1..%d and interval 60..3600 seconds" % MAX_ATTEMPTS)
     session = args.session or vn_now().date().isoformat()
     datetime.fromisoformat(session)
-    from tools.run_capture_only import binding
-    paths = binding()
-    receipts = Path(paths["logs"]).parent / "capture-receipts"
-    if any(receipts.resolve().is_relative_to(Path(paths[role]).resolve()) for role in ("producer", "runtime", "retained", "dashboard")):
-        raise ValueError("CAPTURE_RECEIPT_MUST_BE_EXTERNAL")
-    receipts.mkdir(parents=True, exist_ok=True)
-    from feedback_publication_lock import publication_lock
+    logs = None
     try:
-        with publication_lock(receipts / ".scheduled-capture", blocking=False):
-            status = run(session, retained=Path(paths["retained"]), logs=Path(paths["logs"]), receipts=receipts,
-                         python=sys.executable, interval=args.interval_seconds, max_attempts=args.max_attempts,
-                         readiness=lambda day: retain_readiness(ROOT, Path(paths["retained"]), day))
-    except BlockingIOError:
-        status = {"session": session, "state": ALREADY_RUNNING}
+        from tools.run_capture_only import binding
+        paths = binding()
+        logs = Path(paths["logs"])
+        receipts = logs.parent / "capture-receipts"
+        if any(receipts.resolve().is_relative_to(Path(paths[role]).resolve()) for role in ("producer", "runtime", "retained", "dashboard")):
+            raise ValueError("CAPTURE_RECEIPT_MUST_BE_EXTERNAL")
+        receipts.mkdir(parents=True, exist_ok=True)
+        from feedback_publication_lock import publication_lock
+        try:
+            with publication_lock(receipts / ".scheduled-capture", blocking=False):
+                status = run(session, retained=Path(paths["retained"]), logs=logs, receipts=receipts,
+                             python=sys.executable, interval=args.interval_seconds, max_attempts=args.max_attempts,
+                             readiness=lambda day: retain_readiness(ROOT, Path(paths["retained"]), day))
+        except BlockingIOError:
+            status = {"session": session, "state": ALREADY_RUNNING}
+    except BaseException as error:  # noqa: BLE001 - reported through the status file and exit code
+        # Task Scheduler keeps only the exit code; leave the reason where the Owner looks.
+        status = {"contract_version": STATUS_CONTRACT, "session": session, "state": WRAPPER_FAILED,
+                  "authority_effect": "NONE / CAPTURE_COMPLETENESS_ONLY",
+                  "error": "%s:%s" % (type(error).__name__, error), "finished_at": vn_now().isoformat()}
+        if logs is not None:
+            path = logs / ("pit_capture_%s.status.json" % session)
+            earlier = prior_runs(path, session)
+            if earlier:
+                status["prior_runs"] = earlier
+            try:
+                write_status(path, status)
+            except OSError:
+                pass
+        print(json.dumps(status, ensure_ascii=False))
+        return 5
     print(json.dumps({key: status.get(key) for key in ("session", "state", "capture_record", "readiness")}, ensure_ascii=False))
     return 0 if status["state"] in TERMINAL_OK else 4
 

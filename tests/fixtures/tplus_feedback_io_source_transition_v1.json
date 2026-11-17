@@ -1,5 +1,5 @@
 {
-  "base_commit": "6ddfcd57285a06fb7ed72e4623718095850559c0",
+  "base_commit": "c75cce1ec5d442476a083f4a2e3494464bebd525",
   "contract_version": "tplus_feedback_io_source_transition/v1",
   "scope": "SETTLED_READ_AND_ASSEMBLY_READBACK_ONLY",
   "release_authority": "NOT_GRANTED",

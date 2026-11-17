@@ -1,7 +1,14 @@
 # Stock Lookup — Active State
 
-11-13 Daily PASS, `READY_FOR_AI`; PIT capture on. [T+ M1b](tplus_incremental_cost_v2_contract.md) active.
-[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required.
+11-16 Daily PASS, `READY_FOR_AI`; [T+ M1b](tplus_incremental_cost_v2_contract.md) met (887.666 s, 1.304 GB peak).
+[Sync](producer_freeze_release_sync_contract.md) keeps the 10-26 freeze. Fresh preflight required. D4a 11-16 PARTIAL (NDJSON/bundle unshared); fix in PR268.
+
+T+ performance PR #267 qualifies retained T0 projection reuse and Producer seal progress on
+the #269 source baseline. Its scratch replay of a retained 91,489,054-byte T0 verified cold in
+2.115 s and reused an identical projection in 0.064 s with zero snapshot payload reads.
+Merge and Production sync require the November 17 Owner Daily and its live D4a acceptance.
+PR #258 builds on #267 and preserves the qualified feedback I/O, cold-resume and seeded-bootstrap
+paths. Release also requires [paired warm acceptance and the Owner seed operation](tplus_incremental_cost_v2_contract.md#integration-on-the-november-17-release-baseline).
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
 `git fetch origin main` / `git ls-remote origin refs/heads/main`; **local** remote-tracking refs may be stale.
@@ -30,10 +37,9 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 1. The operational gate
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
-- **Prior-period Daily integration:** [scope](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md), historical non-voting. [Reviewed financial cases](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md) remain offline.
+- **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.
 - **RELEASED:** PR145/146 source wave; exact historical acceptance remains in [SYSTEM_MAP](SYSTEM_MAP.md). No new source authority or production admission follows.
-- [Oct13](daily_20261013_handoff_route_recovery_contract.md).
 - **RELEASED — [financial intake](official_financial_quarterly_intake_contract.md):** PR137; candidates; source admission gated.
 - **RELEASED — [Wave 1 replay](SYSTEM_MAP.md#wave-1-historical-replay-relocation--2026-10-13):** PR139; `tools/replay/`: 34 modules; root 325 → 291; replay unchanged.
 - **RELEASED — [unlock/transport](current_financial_valuation_input_unlock_v1_contract.md):** PR133: six H1 ratios/proxy shares; PR140: present labels (bound AI session ≥2026-10-14), no new facts/ratios.

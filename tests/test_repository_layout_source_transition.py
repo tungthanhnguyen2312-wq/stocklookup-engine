@@ -115,6 +115,10 @@ def _copy_boundary(tmp_path: Path) -> None:
              "tests/fixtures/tplus_real_t0_corpus_v1_sources/canonical_post_close_pipeline.py.txt",
              "tests/fixtures/storage_reuse_d4a_source_transition_v1.json",
              "tests/fixtures/storage_reuse_d4a_sources/canonical_post_close_pipeline.py.txt",
+             "tests/fixtures/storage_reuse_d4a_canonical_source_transition_v1.json",
+             "tests/fixtures/storage_reuse_d4a_canonical_sources/canonical_daily_operation.py.txt",
+             "tests/fixtures/ndjson_subtree_codec_launcher_source_transition_v1.json",
+             "tests/fixtures/ndjson_subtree_codec_launcher_sources/tools/run_owner_daily.py.txt",
              *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in LAUNCHER_SOURCES),
              *("tests/fixtures/owner_daily_iid_runtime_memory_v1_sources/" + p + ".txt"
                for p in ("tools/run_owner_daily.py", "canonical_post_close_pipeline.py",
@@ -157,6 +161,10 @@ def _copy_boundary(tmp_path: Path) -> None:
     post_producer = "tests/fixtures/owner_daily_post_producer_source_transition_v1.json"
     paths.add(post_producer)
     paths.update(row["archive"] for row in json.loads((ROOT / post_producer).read_bytes())["sources"].values())
+    velocity = "tests/fixtures/velocity_projection_and_producer_timing_v1"
+    paths.add(velocity + ".json")
+    paths.update(velocity + "_sources/" + path + ".txt"
+                 for path in json.loads((ROOT / (velocity + ".json")).read_bytes())["sources"])
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)

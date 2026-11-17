@@ -3,6 +3,7 @@
 Only how equal bytes are stored may change. Paths, bytes, identities and failure
 behaviour must equal the copy path; switches are off unless the Owner turns them on.
 """
+import hashlib
 import json
 import os
 
@@ -31,8 +32,17 @@ def _config(tmp_path, value):
     return path
 
 
-def test_shipped_config_is_valid_and_every_switch_is_off():
-    assert pipeline.storage_reuse_switches() == {"iid_working_view_hardlink": False, "reuse_immutable_delivery": False}
+def test_shipped_config_is_the_owner_approved_d4a_activation():
+    # Owner-approved activation (2026-11-15): both switches on together, exact planned bytes.
+    raw = pipeline.STORAGE_REUSE_CONFIG.read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(raw).hexdigest() == "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68"
+    assert pipeline.storage_reuse_switches() == {"iid_working_view_hardlink": True, "reuse_immutable_delivery": True}
+
+
+def test_both_switches_off_is_still_honoured_for_rollback(tmp_path):
+    path = _config(tmp_path, {"schema": "daily_storage_reuse/v1", "iid_working_view_hardlink": False,
+                              "reuse_immutable_delivery": False})
+    assert set(pipeline.storage_reuse_switches(path).values()) == {False}
 
 
 def test_absent_config_means_off(tmp_path):
@@ -174,3 +184,17 @@ def test_replay_after_a_hard_crash_leftover_stage_publishes_the_view(tmp_path):
     assert destination.read_bytes() == source.read_bytes()
     assert destination.stat().st_ino == source.stat().st_ino
     assert leftover.read_bytes() == source.read_bytes()  # inert extra name; never a consumer path
+
+
+@pytest.mark.parametrize("switch", [False, True])
+def test_owner_canonical_route_passes_the_delivery_switch(tmp_path, monkeypatch, switch):
+    import canonical_daily_operation as cdo
+    from tests.test_canonical_daily_operation import _run, _producer, SESSION as daily_session
+    seen = {}
+    monkeypatch.setattr(cdo, "storage_reuse_switches", lambda: {
+        "iid_working_view_hardlink": switch, "reuse_immutable_delivery": switch})
+    def produce(*args, **kwargs):
+        seen.update(kwargs)
+        return _producer(tmp_path, daily_session)
+    _run(tmp_path, monkeypatch, producer_fn=produce)
+    assert seen["reuse_immutable_delivery"] is switch

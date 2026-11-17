@@ -29,6 +29,45 @@ def bundle(rows):
     return {"rows": rows, "load_blockers": [], "comparative_observations": []}
 
 
+def test_reviewed_comparatives_flow_only_after_review_and_leave_official_facts_unchanged():
+    receipts = pairing.load_reviewed_comparatives(PUBLIC)
+    assert len(receipts) == 5 and sum(len(row["rows"]) for row in receipts) == 86
+    inputs = bundle([]) | {"reviewed_comparatives": receipts}
+    assert pairing.qualified_prior_inputs_at_cutoff(inputs, cutoff="2026-11-13T15:00:00+07:00") is None
+    cutoff = "2026-11-16T15:00:00+07:00"
+    assert pairing.qualified_prior_inputs_at_cutoff(inputs, cutoff=cutoff)["reviewed_comparatives"] == receipts
+    source = baseline()
+    source["records"]["HPG"]["entity_class"] = "corporate"
+    source.update(fundamental.content_identity(source))
+    options = dict(baseline=source, official_rows=[], session="2026-11-16", cutoff=cutoff)
+    plain = fundamental.project_session(**options)["records"]["HPG"]
+    candidate = fundamental.project_session(**options, prior_period_inputs=inputs)["records"]["HPG"]
+    first = delivery.financial_research_card({"ticker": "HPG"}, plain, {}, cutoff=cutoff)
+    second = delivery.financial_research_card({"ticker": "HPG"}, candidate, {}, cutoff=cutoff)
+    income = second["fundamental_research_context"]["official_income"]
+    reviewed = income.pop("reviewed_comparative")
+    assert reviewed["use"] == "CONDITIONAL_NON_VOTING_RESEARCH_ONLY"
+    assert reviewed["is_actionable"] is False and reviewed["strict_valuation_effect"] == "NONE"
+    h1 = next(report for report in reviewed["reports"] if report["document"]["reporting_period"] == "2026-H1")
+    assert {row["metric"] for row in h1["comparisons"]} == {"revenue", "net_income", "attributable_net_income", "operating_cash_flow"}
+    assert h1["cash_conversion"][0]["operating_cash_flow"] == 12_641_697_117_285
+    assert h1["cash_conversion"][0]["profit_metric"] == "net_income"
+    income.pop("prior_period_pairing")
+    assert second == first
+
+
+def test_reviewed_comparatives_reject_numeric_tamper_even_with_new_receipt_hash(tmp_path):
+    receipts = pairing.load_reviewed_comparatives(PUBLIC)
+    receipt = receipts[0]
+    receipt["rows"][0]["normalized_value"] += 1
+    row = receipt["rows"][0]
+    row["citation_id"] = pairing._hash({k: v for k, v in row.items() if k != "citation_id"})
+    receipt["review_receipt"] = pairing._hash({k: v for k, v in receipt.items() if k != "review_receipt"})
+    _write_json(tmp_path / pairing.REVIEWED_COMPARATIVE_FILE, receipts)
+    with pytest.raises(ValueError, match="REVIEWED_COMPARATIVE_ROW_BINDING_INVALID"):
+        pairing.load_reviewed_comparatives(tmp_path)
+
+
 def daily_fixture(tmp_path, monkeypatch):
     paths = _independent_component_session_paths(tmp_path, SESSION)
     snapshot = _write_valid_p3f9b_snapshot(paths["exact_session_snapshot"], SESSION)
@@ -211,3 +250,60 @@ def test_all_daily_delivery_surfaces_keep_the_exact_historical_context():
     assert cockpit["decision_card_v1"]["AAA"]["fundamental"]["official_income_research_context"] == primary
     assert json.loads(output["full_universe"])["fundamental_research_context"]["official_income"] == primary
     assert (operation, inputs) == saved
+
+
+def test_reviewed_reported_margins_keep_source_periods_and_non_voting_boundary():
+    from stocklookup_core.financial.interim_earnings_cash_research import reviewed_comparative_research
+    receipts = pairing.load_reviewed_comparatives(PUBLIC)
+    saved = copy.deepcopy(receipts)
+    results = {ticker: reviewed_comparative_research(ticker, "2026-11-16T15:00:00+07:00", receipts)
+               for ticker in ("HPG", "PNJ", "FPT")}
+    reports = [r for result in results.values() for r in result["reports"]]
+    assert sum(len(r["profitability"]["measurements"]) for r in reports) == 20
+    assert sum(len(r["profitability"]["changes"]) for r in reports) == 10
+    for result in results.values():
+        assert all(result[k] == "NONE" for k in ("vote_effect", "strict_valuation_effect", "ttm_effect"))
+        assert result["is_actionable"] is False
+    for report in reports:
+        facts = {r["citation_id"]: r for r in report["facts"]}
+        for measurement in report["profitability"]["measurements"]:
+            profit, revenue = facts[measurement["profit_citation_id"]], facts[measurement["revenue_citation_id"]]
+            assert measurement["margin_ratio"] == profit["normalized_value"] / revenue["normalized_value"]
+            assert profit["document_sha256"] == revenue["document_sha256"] == measurement["document_sha256"]
+            assert measurement["bounds"] == [profit["period_start"], profit["period_end"]]
+        for change in report["profitability"]["changes"]:
+            assert change["change_percentage_points"] == 100 * (change["current_margin_ratio"] - change["prior_margin_ratio"])
+    assert reviewed_comparative_research("HPG", "2026-11-13T15:00:00+07:00", receipts) is None
+    assert receipts == saved
+
+
+def test_margin_change_refuses_a_restated_or_missing_comparison():
+    from stocklookup_core.financial.interim_earnings_cash_research import reviewed_comparative_research
+    receipts = pairing.load_reviewed_comparatives(PUBLIC)
+    receipt = next(r for r in receipts if r["ticker"] == "HPG")
+    receipt["original_comparative_checks"].append({"metric": "revenue", "status": "DIFFERS_FROM_ORIGINAL"})
+    report = reviewed_comparative_research("HPG", "2026-11-16T15:00:00+07:00", [receipt])["reports"][0]
+    assert report["profitability"]["measurements"]  # source-period margins still meaningful
+    assert not report["profitability"]["changes"]
+    assert all(b["reason_codes"] == ["NO_QUALIFIED_LIKE_FOR_LIKE_MARGIN_PAIR"] for b in report["profitability"]["blockers"])
+
+
+@pytest.mark.parametrize("revenue", [0, -1])
+def test_non_positive_revenue_never_yields_a_reported_margin(revenue):
+    from stocklookup_core.financial.interim_earnings_cash_research import reviewed_comparative_research
+    receipt = pairing.load_reviewed_comparatives(PUBLIC)[0]
+    for row in receipt["rows"]:
+        if row.get("canonical_metric") == "revenue":
+            row["normalized_value"] = revenue
+    report = reviewed_comparative_research(receipt["ticker"], "2026-11-16T15:00:00+07:00", [receipt])["reports"][0]
+    assert not report["profitability"]["measurements"] and not report["profitability"]["changes"]
+    assert all(b["reason_codes"] == ["MISSING_OR_NON_POSITIVE_SAME_STATEMENT_REVENUE"] for b in report["profitability"]["blockers"])
+
+
+def test_negative_cash_base_is_an_outflow_transition_not_earnings_growth():
+    from stocklookup_core.financial.interim_earnings_cash_research import reviewed_comparative_research
+    result = reviewed_comparative_research("PNJ", "2026-11-16T15:00:00+07:00", pairing.load_reviewed_comparatives(PUBLIC))
+    report = next(r for r in result["reports"] if r["document"]["reporting_period"] == "2026-H1")
+    cash = next(c for c in report["comparisons"] if c["metric"] == "operating_cash_flow")
+    assert cash["growth_ratio"] is None
+    assert cash["semantic_transition"] == "OUTFLOW_TO_INFLOW"
