@@ -18,6 +18,7 @@ from stocklookup_core.decision.daily_session_shadow_recommendation import DailyS
 from daily_research_session_operations import load_registry, resolve_inputs, run_session_operation, validate_coherence
 from canonical_current_product_projections import materialize_and_write_current_product_projections
 from field_temporal_contract import stable_id
+from owner_daily_progress import observe_canonical_failure, safe_callback
 from vn_time import VN_TZ, vn_now
 
 
@@ -306,6 +307,7 @@ def _relative_or_absolute(root: Path, path: Path) -> str:
         return str(path)
 
 
+@observe_canonical_failure
 def run_daily_producer(
     root: Path,
     *,
@@ -331,8 +333,15 @@ def run_daily_producer(
     now: datetime | None = None,
     reuse_immutable_delivery: bool = False,
     evaluated_valuation: Mapping[str, Any] | None = None,
+    progress_callback: Callable[[Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Run the one-command retained completed-session producer pipeline."""
+
+    def report(task_label: str, status: str) -> None:
+        safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "producer_seal_detail",
+            "progress_kind": "PIPELINE", "task_label": task_label, "status": status})
+
+    report("Giải quyết đầu vào và báo cáo shadow", "BEGIN")
     if bool(session) == bool(latest_completed_session):
         raise DailyProducerError("REFUSE_COMPLETED_SESSION_RUN:SELECT_EXACTLY_ONE_SESSION_MODE")
     registry = load_registry(root, registry_path)
@@ -373,6 +382,8 @@ def run_daily_producer(
     # the authoritative graph used by delivery and current-product projections.
     # Do not overlap two full valuation/fundamental universes while sealing it.
     del inputs
+    report("Giải quyết đầu vào và báo cáo shadow", "END")
+    report("Tạo sản phẩm phiên và gói bàn giao", "BEGIN")
     operation, operation_dir = run_session_operation(
         root,
         session=selected,
@@ -391,6 +402,8 @@ def run_daily_producer(
         daily_integrated_decision_brief_builder=daily_integrated_decision_brief_builder,
         **({"protect_delivery": True} if reuse_immutable_delivery else {}),
     )
+    report("Tạo sản phẩm phiên và gói bàn giao", "END")
+    report("Xác minh gói giao và tạo bản chiếu", "BEGIN")
     inputs = operation["inputs"]
     parity = _verify_delivery(operation, operation_dir)
     # Current-product projections (Investment Decision Workspace, Screener Master Projection):
@@ -408,6 +421,8 @@ def run_daily_producer(
         evaluated_valuation=evaluated_valuation,
         market_close_intelligence=(operation.get("product") or {}).get("market_close_intelligence"),
     )
+    report("Xác minh gói giao và tạo bản chiếu", "END")
+    report("Lưu gói giao và niêm phong manifest Producer", "BEGIN")
     run_identity = _run_identity(selected, producer_head, consumer_head, plan, operation["manifest"]["operation_identity"])
     run_dir = output_root / selected / run_identity.split(":", 1)[1]
     existing_run = (run_dir / "run_manifest.json").exists()
@@ -480,4 +495,5 @@ def run_daily_producer(
     pointer = {"schema_version": "daily_producer_latest_completed_navigation/v1", "navigation_only": True, "session": selected, "run_identity": run_identity, "daily_session_operation_identity": operation["manifest"]["operation_identity"], "relative_directory": str(run_dir.relative_to(output_root)).replace("\\", "/")}
     (output_root / "LATEST_COMPLETED_RUN.json").parent.mkdir(parents=True, exist_ok=True)
     (output_root / "LATEST_COMPLETED_RUN.json").write_bytes(_canon(pointer))
+    report("Lưu gói giao và niêm phong manifest Producer", "END")
     return {"status": "COMPLETED", "session": selected, "run_identity": run_identity, "run_dir": run_dir, "operation": operation, "operation_dir": operation_dir, "manifest": manifest, "gate": gate, "reused_existing_run": existing_run}

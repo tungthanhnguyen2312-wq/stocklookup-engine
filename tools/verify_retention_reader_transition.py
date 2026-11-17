@@ -151,6 +151,28 @@ TACTICAL_SHADOW_SOURCES = ("canonical_daily_operation.py", "tools/run_owner_dail
 TACTICAL_SHADOW_PIPELINE = "daily_analysis_pipeline.py"  # E2/E3-pinned; peeled first in historical_bytes.
 
 
+def _velocity_projection_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Conserve exact predecessor bytes across the Daily receipt and timing changes."""
+    name = "velocity_projection_and_producer_timing_v1"
+    expected_sources = ("canonical_daily_operation.py", "canonical_post_close_pipeline.py")
+    manifest = root / "tests/fixtures" / (name + ".json")
+    if relative not in expected_sources or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (spec.get("base_commit") != "c75cce1ec5d442476a083f4a2e3494464bebd525"
+            or tuple(spec.get("sources", {})) != expected_sources):
+        raise ValueError("VELOCITY_PROJECTION_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    archive = manifest.parent / (name + "_sources") / (relative + ".txt")
+    prior = archive.read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["predecessor_sha256_lf"]
+            or row["predecessor_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("VELOCITY_PROJECTION_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 D4A_CANONICAL_MANIFEST = "tests/fixtures/storage_reuse_d4a_canonical_source_transition_v1.json"
 
 SUBTREE_CODEC_LAUNCHER_MANIFEST = "tests/fixtures/ndjson_subtree_codec_launcher_source_transition_v1.json"
@@ -204,6 +226,7 @@ def _d4a_canonical_prior_bytes(root: Path, relative: str, active: bytes) -> byte
 
 def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve both historical source chains across the optional observer dispatch."""
+    active = _velocity_projection_prior_bytes(root, relative, active)
     active = _d4a_canonical_prior_bytes(root, relative, active)
     manifest = root / TACTICAL_SHADOW_MANIFEST
     if relative not in TACTICAL_SHADOW_SOURCES or not manifest.is_file():
@@ -364,6 +387,7 @@ def _storage_reuse_d4a_prior_bytes(root: Path, relative: str, active: bytes) -> 
     """
     if relative != STORAGE_REUSE_D4A_SOURCE:
         return active
+    active = _velocity_projection_prior_bytes(root, relative, active)
     manifest = root / STORAGE_REUSE_D4A_MANIFEST
     if not manifest.is_file():
         return active

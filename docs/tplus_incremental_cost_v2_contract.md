@@ -103,6 +103,45 @@ M2 source is delivered in PR213/242. The partial-scan tests cover withholding ru
 Use the existing bounded ledger when a fresh inventory is needed.
 
 
+## Verified T0 projections and Producer progress
+
+PR #267 reuses matching T0 projection receipts and adds Producer seal progress.
+A November 17 scratch replay of the retained September 16 T0 (91,489,054 bytes)
+verified cold in 2.115 seconds. Warm reuse took 0.064 seconds, read zero snapshot
+payload bytes and produced an identical projection
+(`8f0a1555c31eff4cbeb813cac5d13221da3d1cd3a411cedabd89c9f765780b6b`).
+No Production state was written. Merge and source sync require live D4a
+acceptance from the November 17 Owner Daily.
+
+Full retained corpus, same host and conditions (November 17, candidate
+`b7e048c9`, Production retained root read-only, scratch receipts; 48 registry
+sessions, 41 T0 files, 54,614,905,595 bytes, 40 qualified, 67,320 records):
+
+| Pass | Wall s | Peak commit B |
+|---|---:|---:|
+| Unchanged verifier, no receipts | 1,344.223 | 2,065,248,256 |
+| Candidate cold, writes receipts | 1,413.302 | 2,065,330,176 |
+| Candidate warm, 41 receipt hits | 17.160 | 2,145,533,952 |
+
+All three artifacts are identical
+(`53eb1ea77c000ffb1a0abcf24b4c6c3771e3b419853d167e3eb0bdeabc29973e`), and their
+records and validation equal the retained November 16 Production artifact
+(records SHA-256 `847d276ac82edec043b82381cec388af56fc84650a055c61a11bd0729b000a67`).
+Production's artifact identity (`c700775d…`) differs only through one extra
+inventory row: session 2026-10-26, `EXCLUDED`,
+`EXACT_HANDOFF_SNAPSHOT_NOT_RETAINED_OR_UNREADABLE`. That session exists only in
+Production's uncommitted pending input freeze, has no handoff or T0, and
+contributes no record. The 48 shared inventory rows are equal field by field. The
+one-time cold cost is 69.079 seconds (5.1 %) over the unchanged verifier; the
+earlier 1,983.592-second replay reflected host load, not the receipt path. One
+new 2.5 GB T0 verifies cold in about 69 seconds, so a warm Daily stage is about
+86 seconds against 1,260.047 seconds measured in the November 16 Daily. The 41
+receipts hold 138,563,362 bytes. A receipt binds the T0 file fingerprint and
+the verifier source digest, not its own location, so receipts built offline by
+the released source are valid in Production's receipt root. Placing them there
+is an optional Owner-authorized step; without it the first Daily pays the cold
+pass once.
+
 ## November 16 retained acceptance (local verification)
 
 Released main `337590cdebc8f2a62939e3844d43ee8588e48f73` retains a genuine
@@ -119,6 +158,22 @@ D4a is PARTIAL: IID shares one file; the two delivery pairs are independent but
 byte-identical. The canonical Owner route omitted `reuse_immutable_delivery`
 when invoking the Producer. The release corrective passes the existing switch;
 new outputs use the existing immutable writer, legacy aliases remain untouched.
+
+## November 17 retained acceptance
+
+The genuine Owner Daily ran on `c75cce1ec5d442476a083f4a2e3494464bebd525` and
+advanced the completed-session registry at `18b568820a3052a37b4cd23a6012f245b697ddea`.
+D4a returned `D4A_LIVE_ACCEPTED`. The IID, NDJSON and bundle shared physical
+file identity across their respective paths, with equal hashes and
+3,498,814,007 bytes of avoided allocation. Manifest and brief remained independent.
+The T0 fingerprint anchor, feedback hashes, operation/run linkage and remote AI
+handoff at `be9d449ea898c23523a53d3d511d049f1ea0cf58` verified. Codec remained off.
+
+Guarded pre/post feedback intervals were 353.125 / 775.489 s (1,128.614 s
+combined), with child builder peaks of 1,284,939,776 / 1,328,320,512 bytes.
+The T0 verification observer took 1,376.125 s. Both time targets were exceeded;
+the child memory target was met. The first Daily on PR267 uses the normal cold
+pass. PR258 still needs the governed Owner seed and a subsequent genuine warm Daily.
 
 ## Full-universe NDJSON subtree codec (M3 candidate, default off)
 

@@ -42,6 +42,95 @@ def test_projected_reader_rejects_invalid_immutable_content(tmp_path, defect):
     assert not valid
 
 
+@pytest.mark.parametrize("event", ["missing", "receipt-tamper", "schema", "verifier", "edit", "replace",
+                                   "restore", "uncertain", "interrupted"])
+def test_velocity_projection_receipt_fails_closed_and_falls_back(tmp_path, monkeypatch, event):
+    import os
+
+    session = "2026-01-02"
+    body = _snapshot(session, _decision(session))
+    identity = body["snapshot_identity"]
+    source = tmp_path / "snapshot.json"
+    receipt_root = tmp_path / "derived" / "receipts"
+    _write(source, body)
+    original = source.read_bytes()
+    mtime = source.stat().st_mtime_ns
+    verify = velocity._project_snapshot
+    calls = []
+
+    def track(path, **kwargs):
+        calls.append(path)
+        return verify(path, **kwargs)
+
+    monkeypatch.setattr(velocity, "_project_snapshot", track)
+    def read():
+        return velocity._cached_projection(source, identity, session, receipt_root)
+
+    baseline = read()
+    assert baseline[1]
+    assert read() == baseline and calls == [source]
+    receipt = next(receipt_root.iterdir())
+    if event == "missing":
+        receipt.unlink()
+    elif event == "receipt-tamper":
+        value = json.loads(receipt.read_bytes())
+        value["projection"]["records"].clear()
+        receipt.write_text(json.dumps(value), encoding="utf-8")
+    elif event == "schema":
+        value = json.loads(receipt.read_bytes())
+        value.pop("receipt_sha256")
+        value["projection"]["contract_version"] = "unsupported"
+        value["receipt_sha256"] = velocity.hashlib.sha256(velocity._canon(value).encode("utf-8")).hexdigest()
+        receipt.write_text(json.dumps(value), encoding="utf-8")
+    elif event == "verifier":
+        monkeypatch.setattr(velocity, "_projection_verifier_sha", lambda: "updated")
+    elif event == "edit":
+        source.write_bytes(original.replace(b'"FPT"', b'"FPA"', 1))
+        os.utime(source, ns=(mtime, mtime))
+    elif event in {"replace", "restore"}:
+        staged = tmp_path / "restored.json"
+        staged.write_bytes(original if event == "restore" else original.replace(b'"FPT"', b'"FPA"', 1))
+        os.utime(staged, ns=(mtime, mtime))
+        os.replace(staged, source)
+    elif event == "uncertain":
+        monkeypatch.setattr(velocity, "_projection_fingerprint", lambda path: None)
+    else:
+        receipt.unlink()
+        def interrupted(*_args, **_kwargs):
+            raise OSError("staged receipt publication interrupted")
+        monkeypatch.setattr(velocity, "_atomic_write_json", interrupted)
+
+    result = read()
+    assert calls == [source, source]
+    if event in {"edit", "replace"}:
+        assert not result[1]
+    else:
+        assert result == baseline
+    if event == "interrupted":
+        assert not receipt.exists()
+
+
+def test_velocity_receipt_reports_ntfs_change_time_even_with_same_mtime(tmp_path, monkeypatch):
+    session = "2026-01-02"
+    body = _snapshot(session, _decision(session))
+    source = tmp_path / "snapshot.json"
+    _write(source, body)
+    identity = body["snapshot_identity"]
+    directory = tmp_path / "derived"
+    before = velocity._projection_fingerprint(source)
+    assert before
+    assert velocity._cached_projection(source, identity, session, directory)[1]
+    verify = velocity._project_snapshot
+    monkeypatch.setattr(velocity, "_projection_fingerprint", lambda _: dict(before, change=before["change"]+1))
+    calls = []
+    def track(*args, **kwargs):
+        calls.append(args[0])
+        return verify(*args, **kwargs)
+    monkeypatch.setattr(velocity, "_project_snapshot", track)
+    assert velocity._cached_projection(source, identity, session, directory)[1]
+    assert calls == [source]
+
+
 def test_snapshot_warmup_is_refused_when_the_file_exceeds_available_memory():
     assert velocity._should_warm_snapshot(32 * 1024 * 1024, 32 * 1024 * 1024 + 512 * 1024 * 1024)
     assert not velocity._should_warm_snapshot(32 * 1024 * 1024 - 1, 2 * 1024 ** 3)

@@ -1,13 +1,15 @@
 """Retained-only multi-session velocity research; semantic corrective V1.1."""
 from __future__ import annotations
 from collections import Counter
-import hashlib, json
+from functools import lru_cache
+import hashlib, io, json
 import os
 import tempfile
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 import stocklookup_core.financial.fundamental_signal_consumption_contract as fundamental_signals
 import prospective_decision_retention as retention
+from stocklookup_core.evidence import source_file_fingerprint as native_fingerprint
 
 # v1.3 (CURRENT_RESEARCH_FUNDAMENTAL_PROMOTION_HARDENING_V1): a fundamental_trajectory change
 # between two records produced under different fundamental decision-policy epochs is
@@ -101,7 +103,7 @@ def _warm_sequential_cache(path: Path) -> None:
         return
 
 
-def _project_snapshot(path: Path) -> tuple[dict[str, Any] | None, bool]:
+def _project_snapshot(path: Path, *, raw_proof: dict | None = None) -> tuple[dict[str, Any] | None, bool]:
     """Verify the entire immutable source, retaining only the seven consumed axes.
 
     A projection is private to the observer, never a replacement T0. Full public
@@ -126,8 +128,10 @@ def _project_snapshot(path: Path) -> tuple[dict[str, Any] | None, bool]:
     root_digest = hashlib.sha256(b"{")
     metadata, first = {}, True
     try:
-        with path.open(encoding="utf-8") as source:
-            parser = ObjectStream(source)
+        source_stream = (path.open(encoding="utf-8") if raw_proof is None
+                         else _HashedStream(path))
+        with source_stream as source:
+            parser = ObjectStream(source if raw_proof is None else source.text)
             for key in parser.members():
                 included = key != "snapshot_identity"
                 if included:
@@ -163,6 +167,9 @@ def _project_snapshot(path: Path) -> tuple[dict[str, Any] | None, bool]:
                     value = parser.value(); metadata[key] = value
                     if included: root_digest.update(canonical_bytes(value))
             if parser.peek(): raise ValueError("ACCEPTANCE_TRAILING_JSON")
+            if raw_proof is not None:
+                raw_sha, read_bytes = source.finish()
+                raw_proof.update(sha256=raw_sha, size=read_bytes)
         root_digest.update(b"}")
         digest = root_digest.hexdigest()
     except (OSError, ValueError):
@@ -172,7 +179,164 @@ def _project_snapshot(path: Path) -> tuple[dict[str, Any] | None, bool]:
     return dict(metadata, records=records), valid
 
 
-def discover_retained_snapshots(root:str|Path, *, project_axes: bool = False, progress_callback=None)->dict[str,Any]:
+# Receipt I/O stays local and stdlib-only: this observer must not join the import component of the
+# T+ verifier modules (tests/test_e5_runtime_seams.py keeps that component's size exact).
+_RECEIPT_MAX_BYTES = 64 * 1024 * 1024
+
+
+class _HashingBinary(io.RawIOBase):
+    def __init__(self, path: Path):
+        self._file = open(path, "rb", buffering=0)
+        self.digest = hashlib.sha256()
+        self.bytes_read = 0
+
+    def readable(self) -> bool:
+        return True
+
+    def readinto(self, buffer) -> int:
+        count = self._file.readinto(buffer)
+        if count:
+            self.digest.update(memoryview(buffer)[:count])
+            self.bytes_read += count
+        return count
+
+    def close(self) -> None:
+        try:
+            self._file.close()
+        finally:
+            super().close()
+
+
+class _HashedStream:
+    """UTF-8 text view of a file whose raw bytes are hashed as they are read."""
+
+    def __init__(self, path: Path):
+        self.raw = _HashingBinary(path)
+        self.text = io.TextIOWrapper(io.BufferedReader(self.raw, buffer_size=1 << 20), encoding="utf-8")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.text.close()
+        return False
+
+    def finish(self) -> tuple[str, int]:
+        while self.raw.readinto(bytearray(1 << 20)):
+            pass
+        return self.raw.digest.hexdigest(), self.raw.bytes_read
+
+
+def _atomic_write_json(path: Path, value: Any, *, allow_nan: bool = True) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=allow_nan).encode("utf-8")
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".velocity-state-", suffix=".tmp", delete=False) as out:
+            temporary = Path(out.name)
+            out.write(payload)
+            out.flush()
+            os.fsync(out.fileno())
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+def _read_state_json(path: Path) -> dict[str, Any] | None:
+    try:
+        if path.stat().st_size > _RECEIPT_MAX_BYTES:
+            return None
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, RecursionError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+@lru_cache(maxsize=1)
+def _projection_verifier_sha() -> str:
+    import bounded_artifact_stream
+
+    digest = hashlib.sha256()
+    for module in (__file__, retention.__file__, bounded_artifact_stream.__file__,
+                   fundamental_signals.__file__, native_fingerprint.__file__):
+        digest.update(hashlib.sha256(Path(module).read_bytes()).digest())
+    return digest.hexdigest()
+
+
+def _projection_fingerprint(path: Path) -> dict | None:
+    if any(native_fingerprint.path_has_reparse_point(p) for p in (path, *path.parents)):
+        return None
+    proof = native_fingerprint.source_file_fingerprint(path)
+    if not proof or not all(proof.get(key) for key in ("volume", "file_id", "change")):
+        return None
+    return proof
+
+
+def _cached_projection(path: Path, identity: str | None, session: str,
+                       receipt_root: Path | None) -> tuple[dict | None, bool]:
+    """Reuse only a receipt created by this verifier for unchanged original bytes."""
+    prefix = retention.SNAPSHOT_PREFIX
+    if receipt_root is None or not isinstance(identity, str) or not identity.startswith(prefix):
+        return _project_snapshot(path)
+    token = identity[len(prefix):]
+    if len(token) != 64 or any(ch not in "0123456789abcdef" for ch in token):
+        return _project_snapshot(path)
+    receipt_path = receipt_root / (token + ".json")
+    try:
+        proof = _projection_fingerprint(path)
+        if (proof is None or
+                any(os.path.lexists(p) and native_fingerprint.path_has_reparse_point(p)
+                    for p in (receipt_path, *receipt_path.parents))):
+            return _project_snapshot(path)
+        binding = {"fingerprint": proof, "session": session, "snapshot_identity": identity,
+                   "verifier_sha256": _projection_verifier_sha()}
+    except OSError:
+        return _project_snapshot(path)
+
+    receipt = _read_state_json(receipt_path)
+    if receipt is not None and receipt.get("binding") == binding:
+        receipt_digest = receipt.pop("receipt_sha256", None)
+        snap = receipt.get("projection")
+        raw_sha = receipt.get("source_sha256")
+        try:
+            if (isinstance(snap, dict) and snap.get("snapshot_identity") == identity
+                    and snap.get("session") == session
+                    and snap.get("contract_version") == retention.CONTRACT_VERSION
+                    and isinstance(snap.get("records"), dict)
+                    and isinstance(snap.get("source_integrated_decision_artifact"), dict)
+                    and isinstance(raw_sha, str)
+                    and len(raw_sha) == 64 and all(ch in "0123456789abcdef" for ch in raw_sha)
+                    and hashlib.sha256(_canon(receipt).encode("utf-8")).hexdigest() == receipt_digest
+                    and _projection_fingerprint(path) == proof):
+                return snap, True
+        except (OSError, ValueError, RecursionError):
+            pass
+
+    raw_proof: dict[str, Any] = {}
+    snap, valid = _project_snapshot(path, raw_proof=raw_proof)
+    if not valid or snap is None or snap.get("session") != session or snap.get("snapshot_identity") != identity:
+        return snap, valid
+    after = _projection_fingerprint(path)
+    if (after is not None and after != proof) or raw_proof.get("size") != proof["size"]:
+        return snap, False
+    if after is None:
+        # The full verifier remains the authority when the native identity is unavailable.
+        return snap, valid
+    receipt = {"binding": binding, "projection": snap, "source_sha256": raw_proof["sha256"]}
+    try:
+        receipt["receipt_sha256"] = hashlib.sha256(_canon(receipt).encode("utf-8")).hexdigest()
+        _atomic_write_json(receipt_path, receipt, allow_nan=False)
+    except (OSError, ValueError):
+        pass  # Receipts are optional derived output.
+    return snap, valid
+
+
+def discover_retained_snapshots(root:str|Path, *, project_axes: bool = False, progress_callback=None,
+                                projection_receipt_root: Path | None = None)->dict[str,Any]:
     """Completed-session ledger -> exact handoff -> exact immutable snapshot only."""
     repo=Path(root); registry=_load(repo/"config"/"daily_research_session_input_registry.json") or {}; completed=registry.get("completed_sessions") or {}
     inventory=[]; qualified=[]
@@ -186,7 +350,8 @@ def discover_retained_snapshots(root:str|Path, *, project_axes: bool = False, pr
     for session in sessions:
         handoff_path=_evidence(repo,Path("operations-review")/"canonical-post-close-v1"/session/"session_handoff_bundle.json"); handoff=_load(handoff_path); declared=(handoff or {}).get("prospective_decision_snapshot") or {}; ident=declared.get("identity") if isinstance(declared,Mapping) else None
         digest=ident.removeprefix(retention.SNAPSHOT_PREFIX) if isinstance(ident,str) else ""; path=_evidence(repo,Path("operations-review")/"prospective-decision-retention-v1"/session/digest/"prospective_decision_snapshot.json")
-        snap, valid = _project_snapshot(path) if project_axes else (_load(path), None)
+        snap, valid = (_cached_projection(path, ident, session, projection_receipt_root)
+                       if project_axes else (_load(path), None))
         reasons=[]; operation=None
         if not snap: reasons.append("EXACT_HANDOFF_SNAPSHOT_NOT_RETAINED_OR_UNREADABLE")
         else:
@@ -284,8 +449,11 @@ def build_artifact(*,qualified_snapshots:Sequence[Mapping[str,Any]],source_inven
     latest=records[-1]["session"] if records else None; cohort=[r for r in records if r["session"]==latest]
     artifact={"schema_version":"1.2.0","contract_version":CONTRACT_VERSION,"supersedes":{"contract_version":"multi_session_signal_velocity/v1.1","status":"SUPERSEDED_FOR_CATEGORICAL_ACCELERATION_TERMINOLOGY","old_artifacts_immutable":True},"research_tier":RESEARCH_TIER,"source_inventory":list(source_inventory or []),"records":records,"validation":{"retained_session_count":len(qualified_snapshots),"retained_sessions":[x["snapshot"]["session"] for x in qualified_snapshots],"record_count":len(records),"latest_session":latest,"latest_session_cohort_counts":dict(sorted(Counter(r["overall_transition_state"] for r in cohort).items())),"lead_time_diagnostic":{"status":"NOT_EVALUABLE_NO_FORWARD_OUTCOME_CONTRACT"},"false_transition_diagnostic":{"status":"NOT_EVALUABLE_NO_FORWARD_OUTCOME_CONTRACT"},"limits":["NO_FUTURE_PRICE_OR_OUTCOME_DATA","NO_SCORE_OR_PROBABILITY","MISSING_OBSERVATIONS_NOT_INTERPOLATED","CATEGORICAL_ORDINAL_RANKS_NOT_CARDINAL_ACCELERATION"]},"authority_boundary":{"retained_t0_only":True,"no_provider_or_network":True,"no_historical_reconstruction":True,"no_score_probability_or_recommendation":True,"no_execution_or_sizing":True,"is_actionable":False}}
     return _identity(artifact)
-def build_from_retained_root(root:str|Path, *, progress_callback=None)->dict[str,Any]:
-    discovery=discover_retained_snapshots(root, project_axes=True, **({"progress_callback": progress_callback} if progress_callback is not None else {}));return build_artifact(qualified_snapshots=discovery["qualified_snapshots"],source_inventory=discovery["inventory"])
+def build_from_retained_root(root:str|Path, *, progress_callback=None,
+                             projection_receipt_root: Path | None = None)->dict[str,Any]:
+    discovery = discover_retained_snapshots(root, project_axes=True,
+        projection_receipt_root=projection_receipt_root, progress_callback=progress_callback)
+    return build_artifact(qualified_snapshots=discovery["qualified_snapshots"], source_inventory=discovery["inventory"])
 def write_immutable(path:str|Path,artifact:Mapping[str,Any])->Path:
     from stocklookup_core.acquisition.artifact_io import retain_immutable_file, AtomicWriteError
     destination = Path(path)

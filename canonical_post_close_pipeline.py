@@ -1585,7 +1585,14 @@ def run_multi_session_signal_velocity_shadow(root: Path, session: str, *, progre
 
     output = root / "operations-review" / "multi-session-signal-velocity-v1.2" / session / "multi_session_signal_velocity_artifact.json"
     try:
-        artifact = build_from_retained_root(root, **({"progress_callback": progress_callback} if progress_callback is not None else {}))
+        from stocklookup_core.evidence.evidence_roots import governed_evidence_roots
+
+        operation_root = governed_evidence_roots(root)[-1]
+        artifact = build_from_retained_root(
+            root, progress_callback=progress_callback,
+            projection_receipt_root=(operation_root / "operations-review"
+                                     / "multi-session-signal-velocity-v1.2" / "_projection_receipts"),
+        )
         if session not in artifact["validation"]["retained_sessions"]:
             return {"status": "UNAVAILABLE", "session": session, "reason": "CURRENT_SESSION_SNAPSHOT_NOT_QUALIFIED_AFTER_HANDOFF"}
         write_immutable(output, artifact)
