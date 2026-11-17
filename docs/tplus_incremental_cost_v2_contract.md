@@ -103,6 +103,16 @@ M2 source is delivered in PR213/242. The partial-scan tests cover withholding ru
 Use the existing bounded ledger when a fresh inventory is needed.
 
 
+## Verified T0 projections and Producer progress
+
+PR #267 reuses matching T0 projection receipts and adds Producer seal progress.
+A November 17 scratch replay of the retained September 16 T0 (91,489,054 bytes)
+verified cold in 2.115 seconds. Warm reuse took 0.064 seconds, read zero snapshot
+payload bytes and produced an identical projection
+(`8f0a1555c31eff4cbeb813cac5d13221da3d1cd3a411cedabd89c9f765780b6b`).
+No Production state was written. Merge and source sync require live D4a
+acceptance from the November 17 Owner Daily.
+
 ## November 16 retained acceptance (local verification)
 
 Released main `337590cdebc8f2a62939e3844d43ee8588e48f73` retains a genuine
