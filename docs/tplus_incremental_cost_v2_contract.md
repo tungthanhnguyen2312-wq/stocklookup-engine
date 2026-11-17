@@ -113,6 +113,29 @@ payload bytes and produced an identical projection
 No Production state was written. Merge and source sync require live D4a
 acceptance from the November 17 Owner Daily.
 
+Full retained corpus, same host and conditions (November 17, candidate
+`b7e048c9`, Production retained root read-only, scratch receipts; 48 registry
+sessions, 41 T0 files, 54,614,905,595 bytes, 40 qualified, 67,320 records):
+
+| Pass | Wall s | Peak commit B |
+|---|---:|---:|
+| Unchanged verifier, no receipts | 1,344.223 | 2,065,248,256 |
+| Candidate cold, writes receipts | 1,413.302 | 2,065,330,176 |
+| Candidate warm, 41 receipt hits | 17.160 | 2,145,533,952 |
+
+All three artifacts are identical
+(`53eb1ea77c000ffb1a0abcf24b4c6c3771e3b419853d167e3eb0bdeabc29973e`), and their
+records and validation equal the retained November 16 Production artifact. The
+one-time cold cost is 69.079 seconds (5.1 %) over the unchanged verifier; the
+earlier 1,983.592-second replay reflected host load, not the receipt path. One
+new 2.5 GB T0 verifies cold in about 69 seconds, so a warm Daily stage is about
+86 seconds against 1,260.047 seconds measured in the November 16 Daily. The 41
+receipts hold 138,563,362 bytes. A receipt binds the T0 file fingerprint and
+the verifier source digest, not its own location, so receipts built offline by
+the released source are valid in Production's receipt root. Placing them there
+is an optional Owner-authorized step; without it the first Daily pays the cold
+pass once.
+
 ## November 16 retained acceptance (local verification)
 
 Released main `337590cdebc8f2a62939e3844d43ee8588e48f73` retains a genuine
