@@ -7,8 +7,8 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
-[Scope](tplus_incremental_cost_v2_contract.md). 11-13 and 11-16 meet M1b targets;
-11-11/12 exceed 900 s. D4a dispatch fix: PR268. PR258/267 drafts.
+[Scope](tplus_incremental_cost_v2_contract.md). 11-17 D4a accepted; M1b exceeded
+both time targets. PR267 qualifies T0 receipts. PR258 requires an Owner seed.
 
 ## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`
 

@@ -159,6 +159,22 @@ byte-identical. The canonical Owner route omitted `reuse_immutable_delivery`
 when invoking the Producer. The release corrective passes the existing switch;
 new outputs use the existing immutable writer, legacy aliases remain untouched.
 
+## November 17 retained acceptance
+
+The genuine Owner Daily ran on `c75cce1ec5d442476a083f4a2e3494464bebd525` and
+advanced the completed-session registry at `18b568820a3052a37b4cd23a6012f245b697ddea`.
+D4a returned `D4A_LIVE_ACCEPTED`. The IID, NDJSON and bundle shared physical
+file identity across their respective paths, with equal hashes and
+3,498,814,007 bytes of avoided allocation. Manifest and brief remained independent.
+The T0 fingerprint anchor, feedback hashes, operation/run linkage and remote AI
+handoff at `be9d449ea898c23523a53d3d511d049f1ea0cf58` verified. Codec remained off.
+
+Guarded pre/post feedback intervals were 353.125 / 775.489 s (1,128.614 s
+combined), with child builder peaks of 1,284,939,776 / 1,328,320,512 bytes.
+The T0 verification observer took 1,376.125 s. Both time targets were exceeded;
+the child memory target was met. The first Daily on PR267 uses the normal cold
+pass. PR258 still needs the governed Owner seed and a subsequent genuine warm Daily.
+
 ## Full-universe NDJSON subtree codec (M3 candidate, default off)
 
 `stocklookup_core/evidence/record_subtree_codec.py` (`record_subtree_refs/v1`) stores later exact
