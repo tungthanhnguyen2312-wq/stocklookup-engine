@@ -103,6 +103,16 @@ M2 source is delivered in PR213/242. The partial-scan tests cover withholding ru
 Use the existing bounded ledger when a fresh inventory is needed.
 
 
+## Verified T0 projections and Producer progress
+
+PR #267 reuses matching T0 projection receipts and adds Producer seal progress.
+A November 17 scratch replay of the retained September 16 T0 (91,489,054 bytes)
+verified cold in 2.115 seconds. Warm reuse took 0.064 seconds, read zero snapshot
+payload bytes and produced an identical projection
+(`8f0a1555c31eff4cbeb813cac5d13221da3d1cd3a411cedabd89c9f765780b6b`).
+No Production state was written. Merge and source sync require live D4a
+acceptance from the November 17 Owner Daily.
+
 ## November 16 retained acceptance (local verification)
 
 Released main `337590cdebc8f2a62939e3844d43ee8588e48f73` retains a genuine
@@ -273,8 +283,11 @@ warm acceptance on the following session.
 ## Integration on the November 17 release baseline
 
 PR #258 is stacked on the independently recoverable PR #267 candidate. Apply
-#267 first and recheck #258 against the resulting main before any merge. The
-feedback evaluator bytes and E4 digests still match the offline qualification.
-The existing seed and new-T0 warm acceptance remain release gates. Grab the
-complete pre- and post-handoff boundaries from the next authorized Owner
-session when available so the paired stages can be qualified in scratch state.
+#267 first. After its squash merge, reconcile #258 with the actual main using
+the qualified #267 tree as the shared source baseline. Preserve any registry
+advancement from main and rerun capacity, launcher and CI checks on the result.
+The feedback evaluator bytes and E4 digests still match the offline qualification.
+
+The existing seed and new-T0 warm acceptance remain release gates. Preserve the
+complete pre- and post-handoff boundaries from an authorized Owner session for
+paired qualification in scratch state.
