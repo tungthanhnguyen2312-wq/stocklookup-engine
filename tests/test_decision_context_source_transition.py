@@ -10,7 +10,7 @@ import pytest
 from tools import qualify_e4_infrastructure as e4
 from tools.verify_retention_reader_transition import (
     DECISION_CONTEXT_ARCHIVE, DECISION_CONTEXT_BASE, DECISION_CONTEXT_MANIFEST, DECISION_CONTEXT_SOURCE,
-    _decision_context_prior_bytes,
+    TPLUS_FEEDBACK_IO_MANIFEST, _decision_context_prior_bytes,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,7 +28,9 @@ def test_archive_is_the_exact_base_source_and_binds_live_bytes():
     spec = json.loads((ROOT / DECISION_CONTEXT_MANIFEST).read_bytes())
     assert spec["release_authority"] == "NOT_GRANTED"
     assert tuple(spec["sources"]) == (DECISION_CONTEXT_SOURCE,)
-    assert spec["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    feedback_io = json.loads((ROOT / TPLUS_FEEDBACK_IO_MANIFEST).read_bytes())
+    assert spec["active_e4_v2_digest"] == feedback_io["previous_e4_v2_digest"]
+    assert feedback_io["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert spec["previous_e4_v2_digest"] != spec["active_e4_v2_digest"]
 
 
