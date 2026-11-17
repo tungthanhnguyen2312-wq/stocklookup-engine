@@ -13,6 +13,7 @@ from daily_producer_pipeline import (
     build_acquisition_plan,
     completed_session_gate,
     resolve_latest_registered_completed_session,
+    run_daily_producer,
 )
 from daily_research_session_operations import load_registry, resolve_inputs, validate_coherence
 from vn_time import VN_TZ
@@ -170,3 +171,15 @@ def test_immutable_resume_rejects_conflicting_partial_stage(tmp_path: Path):
     _write_immutable(path, b"one\n")
     with pytest.raises(DailyProducerError, match="IMMUTABLE_DAILY_PRODUCER_CONTENT_CONFLICT"):
         _write_immutable(path, b"two\n")
+
+
+def test_failed_producer_stage_emits_terminal_progress(tmp_path):
+    events = []
+    with pytest.raises(DailyProducerError, match="SELECT_EXACTLY_ONE_SESSION_MODE"):
+        run_daily_producer(tmp_path, session=None, latest_completed_session=False,
+                           producer_head="UNKNOWN", consumer_head="UNKNOWN",
+                           progress_callback=events.append)
+    begin, failed = events
+    assert begin["subtask"] == "producer_seal_detail"
+    assert begin["status"] == "BEGIN"
+    assert failed == dict(begin, status="FAILED")

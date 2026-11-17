@@ -1559,6 +1559,10 @@ def test_failed_real_boundary_never_claims_phase2_complete(tmp_path, monkeypatch
     assert events[-1]["status"] == "FAILED"
     assert events[-1]["checkpoint_percent"] < 100
     assert all(e.get("checkpoint_percent", 0) < 100 for e in events)
+    if failure == "producer":
+        seal = [(e["task_label"], e["status"]) for e in events if e.get("subtask") == "producer_seal"]
+        assert [status for _, status in seal] == ["BEGIN", "END", "BEGIN", "END", "BEGIN", "FAILED"]
+        assert [label for label, _ in seal[::2]] == [label for label, _ in seal[1::2]]
 
 
 def test_broken_progress_callback_does_not_change_canonical_record(tmp_path, monkeypatch):

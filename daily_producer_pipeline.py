@@ -18,6 +18,7 @@ from stocklookup_core.decision.daily_session_shadow_recommendation import DailyS
 from daily_research_session_operations import load_registry, resolve_inputs, run_session_operation, validate_coherence
 from canonical_current_product_projections import materialize_and_write_current_product_projections
 from field_temporal_contract import stable_id
+from owner_daily_progress import observe_canonical_failure, safe_callback
 from vn_time import VN_TZ, vn_now
 
 
@@ -306,6 +307,7 @@ def _relative_or_absolute(root: Path, path: Path) -> str:
         return str(path)
 
 
+@observe_canonical_failure
 def run_daily_producer(
     root: Path,
     *,
@@ -334,7 +336,6 @@ def run_daily_producer(
     progress_callback: Callable[[Mapping[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Run the one-command retained completed-session producer pipeline."""
-    from owner_daily_progress import safe_callback
 
     def report(task_label: str, status: str) -> None:
         safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "producer_seal_detail",

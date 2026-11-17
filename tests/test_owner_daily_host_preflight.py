@@ -661,7 +661,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     paths = velocity["prior_source_sha256_lf"]
     assert set(paths) == {"canonical_daily_operation.py", "canonical_post_close_pipeline.py",
                           "config/daily_path_launchers.json", "daily_producer_pipeline.py", "multi_session_signal_velocity.py",
-                          "tools/verify_retention_reader_transition.py"}
+                          "owner_daily_progress.py", "tools/verify_retention_reader_transition.py"}
     replay = velocity["component_replay"]
     assert replay["registry_entries"] == 48
     assert 0 < replay["qualified_sessions"] <= replay["registry_entries"]
