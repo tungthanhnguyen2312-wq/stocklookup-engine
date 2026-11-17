@@ -87,7 +87,7 @@
     "daily_analysis_pipeline.py": "89cd6f316e58f8ed516a254cd159ebdf1539b5835f536f5323dc003f251be031",
     "daily_execution_environment.py": "dd9a95a6ebe4cfedfb521d98f6f0809fd224599aabd647cb6069f7c865c18186",
     "daily_official_liquidity_rollforward.py": "3899c0fdeb14e00c3b318d89167b05936a73f7cf60f4a98f6235ed3d933a9640",
-    "daily_producer_pipeline.py": "1c687a27b4cd7aad4544b5f713becc9f3c9f6e851508218bdb1ab8f6c5f993cb",
+    "daily_producer_pipeline.py": "fa2d7c1a1c4b767e3b3b656e56ff7f336bcb30eb687ef3d8253fa186ec2f7135",
     "daily_recovery_eligibility_projection.py": "c7ddd40cd868b0137437405d95ea3a247bef524e242bee99b322b4146d7c75e4",
     "daily_research_session_operations.py": "426795c978e1b44df42084d8ef6457d3997f14cbbd32911f9f31dfb901f9fde4",
     "daily_session_level2_package.py": "7bfb48d66554918c2bddda4e446e03690adabe9a962e5caa26ac9a09cd1f1a05",
@@ -594,7 +594,7 @@
     "operations-review/vci-volume-composition-20260804/probe_observation.json": "311c97d01919a8445a41d656280f1246c987a6458e089c3b4a157ec1db88d685",
     "operations-review/vci-volume-composition-20260804/raw/vci_price_board_VCB_20260804T051433Z_b59c2965eee9f303.raw.json": "b59c2965eee9f303f493ce1e3f647ef06e08309bf57a89044867211317a77b6e",
     "operations-review/vnm-listing-discovery-20260804/pilot_run.json": "5f7e90cd252a8bbfeeaf70178d05cd1a91d02e2fb77c23b2e35cca2266b7d014",
-    "owner_daily_progress.py": "241455b755f6d2ff956c3d600fb7ebb6d0400a65f5bd8b09409786c80b4aed02",
+    "owner_daily_progress.py": "5152f6c1f2ecd3816142427bef6bb8d38b911a8180bd428e3014ccd5d309926f",
     "owner_focus_core_financial_panel_coverage.py": "ad926ec1f594e4ed28ad999781a8f1cdfb20963c7cb122b0483d0f152d164df9",
     "owner_research_focus.py": "f2e213808b259b93028d9268718ec8107649b8d628f88cfaf9a1daef09b451cb",
     "ownership_structure_sync.py": "f9c0e276eb9e76352dfe603c78f20aa10b6b2b4597f715fb28b69ed01c8bba8a",
@@ -1782,6 +1782,7 @@
       "config/daily_path_launchers.json": "6e93e83db4375686f8ffb6ecfd4db91bc4fdad36c7809fe85aa0c313b0a41b5a",
       "daily_producer_pipeline.py": "766f4e649a90c30d99b96c3a9456e056dce350e3a73ad0aef2270eb0e04c288e",
       "multi_session_signal_velocity.py": "5465705d828c636ed7291119a2d36b7e8477a3ebd32269203a32aa9515d0eddc",
+      "owner_daily_progress.py": "241455b755f6d2ff956c3d600fb7ebb6d0400a65f5bd8b09409786c80b4aed02",
       "tools/verify_retention_reader_transition.py": "5d8ea5846828c756504ad70d47de2ff249809c1fbf2e581fa9c79508b365a34d"
     },
     "component_replay": {

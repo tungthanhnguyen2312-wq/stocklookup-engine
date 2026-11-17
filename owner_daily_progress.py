@@ -101,15 +101,28 @@ def observe_canonical_failure(function):
         if callback is None:
             return function(*args, **kwargs)
         last = {}
+        open_producer_stages = {}
         observed_started = time.monotonic()
+
         def sink(payload):
-            if isinstance(payload, Mapping) and payload.get("progress_kind") == PIPELINE_CHECKPOINT_PROGRESS:
-                last.update(payload)
+            if isinstance(payload, Mapping):
+                if payload.get("progress_kind") == PIPELINE_CHECKPOINT_PROGRESS:
+                    last.update(payload)
+                elif payload.get("progress_kind") == "PIPELINE":
+                    subtask = payload.get("subtask")
+                    if subtask in ("producer_seal", "producer_seal_detail"):
+                        status = payload.get("status")
+                        if status == "BEGIN":
+                            open_producer_stages[subtask] = dict(payload)
+                        elif status in ("END", "FAILED"):
+                            open_producer_stages.pop(subtask, None)
             safe_callback(callback, payload)
         kwargs["progress_callback"] = sink
         try:
             return function(*args, **kwargs)
         except Exception:
+            for stage in reversed(open_producer_stages.values()):
+                safe_callback(callback, dict(stage, status="FAILED"))
             if last:
                 safe_callback(callback, dict(last, status="FAILED",
                     phase_elapsed_seconds=round(max(0, time.monotonic() - observed_started), 3)))
