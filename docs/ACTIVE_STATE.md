@@ -1,8 +1,6 @@
 # Stock Lookup — Active State
 
-11-18 Daily PASS / COMPLETE, `READY_FOR_AI`; [retained receipt reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md).
-[T+](tplus_incremental_cost_v2_contract.md) PR258 is released; both first-session feedback stages
-completed (1,561.522 s combined). Warm acceptance remains pending; T+ stays ACTIVE.
+11-18 Daily PASS, `READY_FOR_AI`; PR258 bootstrap complete, [T+](tplus_incremental_cost_v2_contract.md) warm gate open.
 [Sync](producer_freeze_release_sync_contract.md) preserves the 10-26 freeze. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
@@ -299,22 +297,15 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 8. Actual blockers right now
 
-1. Owner Daily 18/11 is complete; read-only health disposition
-   `NO_NEW_PRODUCTION_CORRECTIVE_REQUIRED`. The first PR258 session is not warm acceptance.
-   HPG/PAN Q3 research remains non-voting. Recovered original PDFs do not bypass official
-   source/document-type, metadata, period or knowledge gates. No official Q3 fact was admitted.
-   [Exact financial gaps and existing PAN work](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md).
+1. Daily 18/11 complete; `NO_NEW_PRODUCTION_CORRECTIVE_REQUIRED`. T+ warm acceptance open.
+   HPG/PAN Q3 stays non-voting; [official intake gaps](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md) remain.
 2. Launch Daily only with fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**.
    **AMBER or BLOCKED must not launch.**
 
 ## 9. Next action
 
-Complete the existing HPG official-intake admission evidence: exact document/column metadata,
-independent temporal proof and the existing source/document-type approval gates. The
-[financial intake contract](official_financial_quarterly_intake_contract.md) governs; this is
-not a new roadmap lane. The next genuine Owner session is a separate T+ warm-evidence gate.
-The earlier DNSE VN-Index / public Dashboard verification gate is not closed by this CORE_AI
-session or by this financial job; Dashboard publication was not requested.
+Complete HPG's [intake evidence](official_financial_quarterly_intake_contract.md).
+T+ warm and VN-Index/public Dashboard gates remain separate; no new lane.
 
 ## 10. Owner approvals that remain open
 

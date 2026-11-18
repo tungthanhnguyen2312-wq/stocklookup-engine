@@ -168,12 +168,7 @@ valuation peer verdicts retain their upstream scope. Default Daily behavior is u
 
 [Business updates](official_business_update_research_contract.md): PR135; news route blocked.
 [Intake](official_financial_quarterly_intake_contract.md): PR137; offline/source gate. HPG binding PR138 uses approved routes.
-The [November 18 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md)
-verifies all six Grokbot packages and four recovered originals. Candidate intake now
-rejects a multiple-grouped-amount review span even when it contains the requested period
-title. POW's exact issuer detail and live original SHA also bind its current observation;
-original first publication remains unproven. No official fact, canonical field or consumer
-eligibility is added.
+[Q3 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md): column gate fixed; no new official facts.
 HPG reviewed H1 OCR adds four qualified facts from the 2026-11-09 cutoff. Producer
 PR #235 and Dashboard PR #32 expose six HPG Q3 shadow research rows. The shadow
 tier has zero official Q3 admissions and no valuation eligibility. PAN has a
