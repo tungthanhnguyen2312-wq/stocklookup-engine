@@ -695,6 +695,25 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert 0 < feedback_io["retained_component_measurement"][run]["peak_process_bytes"] < 2 * 1024**3
     prior_receipt["tplus_feedback_io_corrective"] = feedback_io
 
+    intake = live_receipt["q3_intake_column_binding_corrective"]
+    intake_path = "stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py"
+    assert intake["scope"] == "EXISTING_CANDIDATE_ONLY_REVIEW_SPAN_COLUMN_ISOLATION"
+    assert intake["new_capacity_measurement"] is False
+    assert intake["whole_daily_requalification"] is False
+    assert intake["changed_source_paths"] == [intake_path]
+    old_intake = subprocess.check_output(["git", "show", f"{intake['base_commit']}:{intake_path}"], cwd=root)
+    assert intake["prior_source_sha256_lf"][intake_path] == prior_receipt["source_sha256"][intake_path]
+    assert hashlib.sha256(old_intake.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][intake_path]
+    current_intake = (root / intake_path).read_bytes().replace(b"\r\n", b"\n")
+    old_tree, current_tree = ast.parse(old_intake), ast.parse(current_intake)
+    for tree in (old_tree, current_tree):
+        tree.body = [node for node in tree.body if not (
+            isinstance(node, ast.FunctionDef) and node.name == "prepare_financial_intake_candidate")]
+    assert ast.dump(old_tree) == ast.dump(current_tree)
+    assert module_name(intake_path) not in daily_reachable(root)
+    prior_receipt["source_sha256"][intake_path] = hashlib.sha256(current_intake).hexdigest()
+    prior_receipt["q3_intake_column_binding_corrective"] = intake
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

@@ -7,8 +7,11 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 
 ## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
-[Scope](tplus_incremental_cost_v2_contract.md). 11-17 D4a accepted; M1b exceeded
-both time targets. PR267 merged for T0 receipts. PR258 requires an Owner seed.
+[Scope](tplus_incremental_cost_v2_contract.md). PR267 and PR258 are released. The 11-18
+Owner Daily completed both feedback stages; receipt reuse is operational. The first
+session cost was 883.910 + 677.612 = 1,561.522 s, not warm acceptance. Keep ACTIVE.
+[Read-only health and Q3 financial source corrective](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md):
+no new Production corrective, no new official admissions, no successor or new lane.
 
 ## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`
 
