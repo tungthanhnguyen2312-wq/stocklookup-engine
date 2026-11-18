@@ -170,6 +170,16 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         ("cash_flow", "20"): ("operating_cash_flow", "OPERATING_CASH_FLOW", ("operating activities", "hoat dong kinh doanh")),
         ("cash_flow", "02"): (None, "COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT", ("depreciation and amortisation", "khau hao")),
     }
+    if statement_family == "income_statement" and str(line_code) == "52":
+        # Corporate line 52 is often income tax. A securities template prints
+        # borrowing cost on the same code. The label chooses; neither becomes the other.
+        borrowing = any(term in folded for term in ("chi phi lai vay", "borrowing cost", "interest expense"))
+        tax = any(term in folded for term in ("thue thu nhap", "income tax", "chi phi thue"))
+        if borrowing and tax:
+            return dict(canonical_metric=None, accounting_identity="UNKNOWN",
+                        blockers=["BORROWING_COST_AND_TAX_IDENTITY_CONFLICT"])
+        if borrowing:
+            return dict(canonical_metric=None, accounting_identity="SECURITIES_FINANCE_BORROWING_COST", blockers=[])
     entry = entries.get((statement_family, str(line_code)))
     blockers = []
     if entry is None:

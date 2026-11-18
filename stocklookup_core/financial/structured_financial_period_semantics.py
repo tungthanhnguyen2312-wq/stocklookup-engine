@@ -64,22 +64,13 @@ REQUIRED_LINEAGE_FIELDS = ("ticker", "canonical_metric", "provider", "statement_
                            "reporting_period", "source_sha256", "source_file", "fact_id")
 
 
-def _cumulative_quarter_title(text: str, normalized: list[tuple[str, int]], distinct_quarters: set[tuple[str, int]]) -> dict[str, Any]:
-    """A cumulative title that names its end quarter is not that standalone quarter.
+def _quarter_token_inside_cumulative_phrase(text: str, start: int) -> bool:
+    window = text[max(0, start - 48):start]
+    return re.search(r"l[ũu]y\s*k[ếe]|từ\s+đầu\s+năm|cuối", window, re.IGNORECASE) is not None
 
-    ``Lũy kế từ đầu năm đến cuối Quý II`` is the six-month column. It does not
-    prove 1 January. A second quarter token outside that phrase stays ambiguous.
-    """
-    if not re.search(r"l[ũu]y\s*k[ếe]|từ\s+đầu\s+năm", text, re.IGNORECASE):
-        return {}
-    for match in re.finditer(
-            r"qu[ýy]\s*(IV|III|II|I|[1-4])(?:\s+n[ăa]m)?\s*(20\d{2})", text, re.IGNORECASE):
-        window = text[max(0, match.start() - 48):match.start()]
-        if not re.search(r"l[ũu]y\s*k[ếe]|từ\s+đầu\s+năm|cuối", window, re.IGNORECASE):
-            return {"blocker": "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS"}
-    if len(distinct_quarters) != 1:
-        return {"blocker": "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS"}
-    year, number = normalized[0]
+
+def _cumulative_identity(year: str, number: int) -> dict[str, Any]:
+    """Map the one quarter a cumulative phrase ends on. No 1 January is invented."""
     if number == 1:
         return {"reporting_period": f"{year}-Q1", "period_semantic_state": STANDALONE_QUARTER,
                 "reported_duration_months": 3}
@@ -90,6 +81,48 @@ def _cumulative_quarter_title(text: str, normalized: list[tuple[str, int]], dist
         return {"reporting_period": f"{year}-9M", "period_semantic_state": YTD_CUMULATIVE_INTERIM,
                 "reported_duration_months": 9}
     return {"reporting_period": year, "period_semantic_state": ANNUAL, "reported_duration_months": None}
+
+
+def _cumulative_quarter_title(text: str, normalized: list[tuple[str, int]], distinct_quarters: set[tuple[str, int]]) -> dict[str, Any]:
+    """A cumulative title that names its end quarter is not that standalone quarter.
+
+    ``Lũy kế từ đầu năm đến cuối Quý II`` is the six-month column. It does not
+    prove 1 January. A numbered quarter both inside and outside that phrase is
+    two columns. ``đến cuối quý này`` plus the statement title's one quarter,
+    or one printed period-end date, is the cumulative column through that quarter.
+    """
+    if not re.search(r"l[ũu]y\s*k[ếe]|từ\s+đầu\s+năm", text, re.IGNORECASE):
+        return {}
+    matches = list(re.finditer(
+        r"qu[ýy]\s*(IV|III|II|I|[1-4])(?:\s+n[ăa]m)?\s*(20\d{2})", text, re.IGNORECASE))
+    inside = [match for match in matches if _quarter_token_inside_cumulative_phrase(text, match.start())]
+    outside = [match for match in matches if match not in inside]
+    if inside and outside:
+        return {"blocker": "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS"}
+    if len(distinct_quarters) > 1:
+        return {"blocker": "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS"}
+    if len(distinct_quarters) == 1 and (inside or re.search(r"cuối\s+qu[ýy]\s+này", text, re.IGNORECASE)):
+        year, number = normalized[0]
+        return _cumulative_identity(year, number)
+    if len(distinct_quarters) == 1:
+        return {"blocker": "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS"}
+    if not re.search(r"cuối\s+qu[ýy]\s+này", text, re.IGNORECASE):
+        return {}
+    dates = {
+        (int(day), int(month), year)
+        for day, month, year in re.findall(
+            r"ng[àa]y\s+(\d{1,2})\s+th[áa]ng\s+(\d{1,2})\s+n[ăa]m\s+(20\d{2})", text, re.IGNORECASE)
+    }
+    if len(dates) != 1:
+        return {"blocker": "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS"} if dates else {}
+    day, month, year = dates.pop()
+    if (month, day) == (9, 30):
+        return _cumulative_identity(year, 3)
+    if (month, day) == (6, 30):
+        return _cumulative_identity(year, 2)
+    if (month, day) == (3, 31):
+        return _cumulative_identity(year, 1)
+    return {}
 
 
 def _vietnamese_flow_column(text: str) -> dict[str, Any]:

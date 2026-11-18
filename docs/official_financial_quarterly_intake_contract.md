@@ -100,6 +100,24 @@ multiple grouped amounts. A page-bound native numeric token also cannot select
 the column. A separately reviewed cell retains its own period and evidence layer;
 rejected candidates receive no consumer or admission eligibility.
 
+A securities income line 52 whose printed label is borrowing cost stays a named
+research concept. It is not corporate income tax and it has no industrial
+canonical metric. A blank bank line whose printed label is credit-loss expense
+stays that bank concept, including an explicit million-VND scale. Lease-inclusive
+loan lines stay lease-inclusive.
+
+``Lũy kế từ đầu năm đến cuối quý này`` together with the statement title's one
+quarter, or one printed period-end date, is the cumulative column through that
+quarter. A numbered quarter printed both inside and outside the cumulative
+phrase remains ambiguous. No 1 January start is created.
+
+The primary HPG consolidated PDF
+`22a4061c9816d11121816377ea78ae99cf68928a75aa8bdcb15e7ded1bbf5ec9` can support a
+current, non-voting research review after the retained bytes are observed.
+That review does not admit an official fact, open the HPG quarterly cohort,
+set publication time, or enable valuation. The alternate PDF remains a
+different document. Its nine-month operating-cash cell is not standalone Q3.
+
 Output separates schema_valid, semantic_valid, native_numeric_literal_proven,
 source_admission_eligible, knowledge_cutoff_eligible and their blockers. It carries
 original source identity, exact canonical candidate values/units, attribution,

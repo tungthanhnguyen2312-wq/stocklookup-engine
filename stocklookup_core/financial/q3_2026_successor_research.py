@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from datetime import datetime
 from typing import Any, Mapping
 from urllib.parse import urlsplit
 
@@ -286,6 +287,158 @@ def hpg_consolidated_statement_shadow(*, observed_at: str, alternate_pdf_bytes: 
             "new_shadow_rows": 0,
             "pdf_creation_is_not_a_pit_clock": True,
         },
+    }
+
+
+def _aware(value: str) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed.utcoffset() is not None else None
+
+
+def _review_field(row: Mapping[str, Any], *, meaning: str) -> dict[str, Any]:
+    return {
+        "line_code": row["line_code"],
+        "canonical_metric": row["canonical_metric"],
+        "accounting_identity": {
+            "10": "NET_REVENUE",
+            "60": "TOTAL_PROFIT_AFTER_TAX",
+            "61": "PARENT_PROFIT_AFTER_TAX",
+        }[row["line_code"]],
+        "reporting_period": row["reporting_period"],
+        "period_kind": row["period_kind"],
+        "value_vnd": row["value_vnd"],
+        "currency": "VND",
+        "unit_scale": 1,
+        "statement_scope": "consolidated",
+        "pdf_page": row["pdf_page"],
+        "evidence_layer": row["evidence_layer"],
+        "meaning": meaning,
+        "official_fact_admitted": False,
+        "valuation_use": "CLOSED",
+    }
+
+
+def hpg_primary_current_research_review(*, retained_bytes: bytes, observed_at: str, cutoff: str) -> dict[str, Any]:
+    """SHA-bound current research for the primary consolidated PDF.
+
+    Observation of the retained bytes opens a current-research window. It is
+    not publication time, not historical PIT, and not official-fact admission.
+    """
+    payload = bytes(retained_bytes or b"")
+    observed, limit = _aware(observed_at), _aware(cutoff)
+    reasons: list[str] = []
+    if _sha(payload) != HPG_CONSOLIDATED_Q3_SHA256 or len(payload) != HPG_CONSOLIDATED_Q3_BYTES:
+        reasons.append("PRIMARY_PDF_SHA_OR_LENGTH_MISMATCH")
+    if observed is None or limit is None:
+        reasons.append("EXACT_OBSERVATION_OR_CUTOFF_TIMESTAMP_UNKNOWN")
+    elif observed > limit:
+        reasons.append("AFTER_KNOWLEDGE_CUTOFF")
+    shadow = hpg_consolidated_statement_shadow(observed_at=observed_at) if not reasons else None
+    rows = list((shadow or {}).get("shadow_rows") or [])
+    meanings = {
+        ("10", "2026-Q3"): "Consolidated net revenue for the standalone third quarter.",
+        ("60", "2026-Q3"): "Consolidated total profit after tax for the standalone third quarter. Not parent profit.",
+        ("61", "2026-Q3"): "Profit after tax attributable to the parent for the standalone third quarter. Not total profit.",
+        ("10", "2026-9M"): "Consolidated net revenue for the nine-month cumulative column. Not the third quarter.",
+        ("60", "2026-9M"): "Consolidated total profit after tax for the nine-month cumulative column. Not the third quarter.",
+        ("61", "2026-9M"): "Parent profit after tax for the nine-month cumulative column. Not the third quarter.",
+    }
+    fields = [_review_field(row, meaning=meanings[(row["line_code"], row["reporting_period"])]) for row in rows]
+    eligible = not reasons and len(fields) == 6 and all(row["official_fact_admitted"] is False for row in rows)
+    return {
+        "contract_version": CONTRACT_VERSION,
+        "ticker": "HPG",
+        "document_role": "PRIMARY_CONSOLIDATED_Q3",
+        "source_url": HPG_CONSOLIDATED_Q3_URL,
+        "sha256": HPG_CONSOLIDATED_Q3_SHA256 if "PRIMARY_PDF_SHA_OR_LENGTH_MISMATCH" not in reasons else None,
+        "byte_length": HPG_CONSOLIDATED_Q3_BYTES if "PRIMARY_PDF_SHA_OR_LENGTH_MISMATCH" not in reasons else len(payload),
+        "current_nonvoting_research_eligible": eligible,
+        "official_fact_admitted": False,
+        "existing_consumer_usable": False,
+        "valuation_use": "CLOSED",
+        "historical_pit": "UNKNOWN",
+        "publication_time": None,
+        "knowledge_basis": "RETAINED_PRIMARY_BYTES_OBSERVED_NOT_PUBLICATION",
+        "knowledge_available_at": observed_at if observed else None,
+        "cutoff": cutoff,
+        "statement_scope": "consolidated",
+        "assurance": "unreviewed",
+        "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE",
+        "fields": fields if eligible else [],
+        "does_not_establish": [
+            "OFFICIAL_FACT",
+            "PUBLICATION_OR_HISTORICAL_PIT",
+            "PARENT_PROFIT_EQUALS_TOTAL_PROFIT",
+            "TTM_OR_ANNUALIZED_EARNINGS",
+            "CURRENT_SHARES_OR_VALUATION",
+            "STANDALONE_Q3_OPERATING_CASH_FLOW",
+        ],
+        "reason_codes": reasons,
+        "vote_effect": "NONE",
+        "is_actionable": False,
+    }
+
+
+# Alternate consolidated PDF, cash-flow printed page 6. Nine-month column only.
+# The title prints 01/01/2026 through 30/09/2026. Not the primary document.
+HPG_ALTERNATE_9M_OPERATING_CASH_FLOW_VND = 20936329304403
+
+
+def hpg_alternate_nine_month_operating_cash_review(*, retained_bytes: bytes, observed_at: str, cutoff: str) -> dict[str, Any]:
+    """One visual cash-flow cell on the alternate PDF. It is not standalone Q3."""
+    payload = bytes(retained_bytes or b"")
+    observed, limit = _aware(observed_at), _aware(cutoff)
+    reasons: list[str] = []
+    if _sha(payload) != HPG_ALTERNATE_Q3_SHA256 or len(payload) != HPG_ALTERNATE_Q3_BYTES:
+        reasons.append("ALTERNATE_PDF_SHA_OR_LENGTH_MISMATCH")
+    if observed is None or limit is None:
+        reasons.append("EXACT_OBSERVATION_OR_CUTOFF_TIMESTAMP_UNKNOWN")
+    elif observed > limit:
+        reasons.append("AFTER_KNOWLEDGE_CUTOFF")
+    eligible = not reasons
+    return {
+        "contract_version": CONTRACT_VERSION,
+        "ticker": "HPG",
+        "document_role": "ALTERNATE_CONSOLIDATED_Q3_NOT_PRIMARY",
+        "source_url": HPG_ALTERNATE_Q3_URL,
+        "sha256": HPG_ALTERNATE_Q3_SHA256 if eligible else None,
+        "replaces_primary": False,
+        "current_nonvoting_research_eligible": eligible,
+        "official_fact_admitted": False,
+        "existing_consumer_usable": False,
+        "valuation_use": "CLOSED",
+        "historical_pit": "UNKNOWN",
+        "publication_time": None,
+        "knowledge_basis": "RETAINED_ALTERNATE_BYTES_OBSERVED_NOT_PUBLICATION",
+        "knowledge_available_at": observed_at if observed else None,
+        "cutoff": cutoff,
+        "statement_scope": "consolidated",
+        "statement_family": "cash_flow",
+        "form": "B03-DN/HN",
+        "line_code": "20",
+        "accounting_identity": "OPERATING_CASH_FLOW",
+        "reporting_period": "2026-9M",
+        "period_start_printed": "2026-01-01",
+        "period_end_printed": "2026-09-30",
+        "value_vnd": HPG_ALTERNATE_9M_OPERATING_CASH_FLOW_VND if eligible else None,
+        "currency": "VND",
+        "unit_scale": 1,
+        "pdf_page": 7,
+        "printed_page": 6,
+        "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE",
+        "meaning": "Consolidated net operating cash flow for 1 January 2026 through 30 September 2026. Not a standalone third-quarter cash flow.",
+        "does_not_establish": [
+            "OFFICIAL_FACT",
+            "STANDALONE_Q3_CASH_FLOW",
+            "PRIMARY_DOCUMENT_IDENTITY",
+            "PUBLICATION_OR_HISTORICAL_PIT",
+        ],
+        "reason_codes": reasons,
+        "vote_effect": "NONE",
+        "is_actionable": False,
     }
 
 

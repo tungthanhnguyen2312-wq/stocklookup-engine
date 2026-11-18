@@ -564,6 +564,115 @@ def test_wave6_t30_creation_after_claimed_publication_is_not_rewritten():
     assert not result["official_fact_admitted"]
 
 
+def test_securities_borrowing_cost_is_not_industrial_tax_or_earnings():
+    borrowing = resolve_reported_row_identity("income_statement", "52", "Chi phí lãi vay")
+    tax = resolve_reported_row_identity("income_statement", "52", "Chi phí thuế thu nhập doanh nghiệp")
+    conflict = resolve_reported_row_identity("income_statement", "52", "Chi phí lãi vay và chi phí thuế thu nhập")
+    assert borrowing["canonical_metric"] is None
+    assert borrowing["accounting_identity"] == "SECURITIES_FINANCE_BORROWING_COST"
+    assert tax["accounting_identity"] == "UNKNOWN"
+    assert "BORROWING_COST_AND_TAX_IDENTITY_CONFLICT" in conflict["blockers"]
+    ytd = recognize_reported_column_period(
+        "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG HỢP NHẤT QUÝ 3 NĂM 2026 "
+        "Lũy kế từ đầu năm đến cuối quý này Năm nay "
+        "cho kỳ kế toán kết thúc ngày 30 tháng 9 năm 2026",
+        statement_family="income_statement")
+    quarter = recognize_reported_column_period(
+        "Quý 3 Năm nay QUÝ 3 NĂM 2026", statement_family="income_statement")
+    mixed = recognize_reported_column_period(
+        "Quý II năm 2026 Lũy kế từ đầu năm đến cuối Quý II năm 2026",
+        statement_family="income_statement")
+    assert ytd["reporting_period"] == "2026-9M" and ytd["period_semantic_state"] == "YTD_CUMULATIVE_INTERIM"
+    assert ytd["period_start"] is None
+    assert quarter["reporting_period"] == "2026-Q3" and quarter["period_semantic_state"] == "STANDALONE_QUARTER"
+    assert "QUARTER_CUMULATIVE_COLUMN_AMBIGUOUS" in mixed["blockers"]
+    row, doc, raw = inputs(code="52", label="Chi phí lãi vay", period=ytd["native_period_label"], value="2.369.337.866.416")
+    row["ticker"] = doc["ticker"] = doc["issuer_identity"] = "SSI"
+    result = prepared(row, doc, raw, cutoff="2026-11-18T15:00:00+00:00")
+    assert result["semantic_valid"]
+    assert result["candidate"]["accounting_identity"] == "SECURITIES_FINANCE_BORROWING_COST"
+    assert result["candidate"]["canonical_metric"] is None
+    assert result["candidate"]["reporting_period"] == "2026-9M"
+    assert result["candidate"]["normalized_value"] == 2369337866416
+    assert result["knowledge_cutoff_eligible"]
+    assert not result["source_admission_eligible"] and not result["official_fact_admitted"]
+    assert "SECURITIES_BORROWING_COST_IS_NOT_AN_INDUSTRIAL_EARNINGS_LINE" in result["valuation_blockers"]
+    assert "SOURCE_PUBLICATION_TIMESTAMP_UNKNOWN_NO_HISTORICAL_PIT" in result["publication_blockers"]
+
+
+def test_bank_credit_loss_keeps_million_scale_and_is_not_industrial_profit():
+    identity = resolve_reported_row_identity("income_statement", "", "Chi phí dự phòng rủi ro tín dụng")
+    assert identity["canonical_metric"] is None and identity["accounting_identity"] == "CREDIT_LOSS_PROVISION"
+    label = "Chi phí dự phòng rủi ro tín dụng"
+    row, doc, raw = inputs(code="", label=label, period="Lũy kế từ đầu năm Năm nay", value="(9.179.836)")
+    row["ticker"] = doc["ticker"] = doc["issuer_identity"] = "VCB"
+    row["unit_scale"] = doc["unit_scale"] = 1000000
+    row["native_period_label"] = (
+        "Lũy kế từ đầu năm đến cuối quý này cho kỳ kế toán kết thúc ngày 30 tháng 9 năm 2026"
+    )
+    row["source_span"]["text"] = f"{label} (9.179.836)"
+    raw = f"SYNTHETIC OFFLINE SOURCE. {row['source_span']['text']}".encode()
+    digest = hashlib.sha256(raw).hexdigest()
+    row["document_sha256"] = doc["sha256"] = row["source_span"]["document_sha256"] = digest
+    result = prepared(row, doc, raw, cutoff="2026-11-18T15:00:00+00:00")
+    assert result["semantic_valid"]
+    assert result["candidate"]["normalized_value"] == -9179836000000
+    assert result["candidate"]["reporting_period"] == "2026-9M"
+    assert result["knowledge_cutoff_eligible"] and not result["official_fact_admitted"]
+    assert "BANK_CREDIT_LOSS_IS_NOT_AN_INDUSTRIAL_EARNINGS_COMPONENT" in result["valuation_blockers"]
+
+
+def test_lease_inclusive_pow_balance_is_not_pure_borrowing():
+    label = "Vay và nợ thuê tài chính ngắn hạn"
+    row, doc, raw = inputs(family="balance_sheet", code="321", label=label, period="2026-09-30", value="19.438.289.505.077")
+    row["ticker"] = doc["ticker"] = doc["issuer_identity"] = "POW"
+    row["period_end"] = "2026-09-30"
+    row["native_period_label"] = "Tại ngày 30 tháng 09 năm 2026"
+    row["source_span"]["text"] = f"{label} 19.438.289.505.077"
+    row["period_bounds_evidence"] = {
+        "document_sha256": "pending", "source_page": 9, "text": "Tại ngày 30 tháng 09 năm 2026",
+    }
+    raw = f"SYNTHETIC OFFLINE SOURCE. {row['source_span']['text']}".encode()
+    digest = hashlib.sha256(raw).hexdigest()
+    row["document_sha256"] = doc["sha256"] = row["source_span"]["document_sha256"] = digest
+    row["period_bounds_evidence"]["document_sha256"] = digest
+    row["knowledge_available_at"] = doc["observed_at"] = "2026-11-18T12:14:16+00:00"
+    result = prepared(row, doc, raw, cutoff="2026-11-18T15:00:00+00:00")
+    assert result["semantic_valid"] and result["knowledge_cutoff_eligible"]
+    assert result["candidate"]["accounting_identity"] == "SHORT_TERM_LOANS_AND_FINANCE_LEASES"
+    assert result["candidate"]["canonical_metric"] is None
+    assert result["candidate"]["normalized_value"] == 19438289505077
+    assert result["candidate"]["reporting_period"] == "2026-09-30"
+    assert not result["official_fact_admitted"] and not result["source_admission_eligible"]
+    assert "LEASE_INCLUSIVE_LOANS_ARE_NOT_PURE_BORROWINGS" in result["valuation_blockers"]
+    assert "SOURCE_PUBLICATION_TIMESTAMP_UNKNOWN_NO_HISTORICAL_PIT" in result["publication_blockers"]
+
+
+def test_hpg_visual_total_profit_is_knowledge_eligible_without_source_admission():
+    label = "Lợi nhuận sau thuế TNDN"
+    row, doc, raw = inputs(code="60", label=label, period="Quý III năm 2026", value="8.265.460.462.966")
+    row["ticker"] = doc["ticker"] = doc["issuer_identity"] = "HPG"
+    row["numeric_evidence_layer"] = "reviewed_visual_integer"
+    row["source_span"]["text"] = f"{label} 8.265.460.462.966"
+    raw = f"SYNTHETIC OFFLINE SOURCE. {row['source_span']['text']}".encode()
+    digest = hashlib.sha256(raw).hexdigest()
+    row["document_sha256"] = doc["sha256"] = row["source_span"]["document_sha256"] = digest
+    row["knowledge_available_at"] = doc["observed_at"] = "2026-11-18T13:07:05+00:00"
+    result = prepared(row, doc, raw, cutoff="2026-11-18T15:00:00+00:00")
+    assert result["semantic_valid"] and result["knowledge_cutoff_eligible"]
+    assert result["candidate"]["canonical_metric"] == "net_income"
+    assert result["candidate"]["accounting_identity"] == "TOTAL_PROFIT_AFTER_TAX"
+    assert result["candidate"]["normalized_value"] == 8265460462966
+    assert result["candidate"]["reporting_period"] == "2026-Q3"
+    assert result["numeric_evidence_layer"] == "reviewed_visual_integer"
+    assert not result["native_numeric_literal_proven"]
+    assert not result["source_admission_eligible"] and not result["official_fact_admitted"]
+    assert not result["existing_consumer_usable"] and not result["strict_valuation_eligible"]
+    earlier = prepared(row, doc, raw, cutoff="2026-10-20T15:00:00+07:00")
+    assert not earlier["knowledge_cutoff_eligible"]
+    assert "AFTER_KNOWLEDGE_CUTOFF" in earlier["knowledge_blockers"]
+
+
 def test_wave6_t31_wrapped_bank_line_is_not_parent_profit():
     fragment = resolve_reported_row_identity("income_statement", "", "Ngân hàng")
     full = resolve_reported_row_identity("income_statement", "", "Lợi nhuận thuần của cổ đông của Ngân hàng")

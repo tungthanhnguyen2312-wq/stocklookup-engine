@@ -57,11 +57,43 @@ def _lines(profile: Mapping[str, Any]) -> list[str]:
     return lines
 
 
+def _current_financial_review(review: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Copy a SHA-bound non-voting review. An official-fact flag is refused."""
+    if review is None:
+        return None
+    if review.get("official_fact_admitted") is not False or review.get("valuation_use") != "CLOSED":
+        raise ValueError("CURRENT_RESEARCH_REVIEW_AUTHORITY_REFUSED")
+    if review.get("existing_consumer_usable") is not False or review.get("vote_effect") not in (None, "NONE"):
+        raise ValueError("CURRENT_RESEARCH_REVIEW_AUTHORITY_REFUSED")
+    return {
+        "ticker": review.get("ticker"),
+        "document_role": review.get("document_role"),
+        "sha256": review.get("sha256"),
+        "current_nonvoting_research_eligible": review.get("current_nonvoting_research_eligible") is True,
+        "knowledge_basis": review.get("knowledge_basis"),
+        "knowledge_available_at": review.get("knowledge_available_at"),
+        "publication_time": None,
+        "historical_pit": review.get("historical_pit", "UNKNOWN"),
+        "fields": list(review.get("fields") or []),
+        "statement_family": review.get("statement_family"),
+        "line_code": review.get("line_code"),
+        "reporting_period": review.get("reporting_period"),
+        "value_vnd": review.get("value_vnd"),
+        "meaning": review.get("meaning"),
+        "does_not_establish": list(review.get("does_not_establish") or []),
+        "reason_codes": list(review.get("reason_codes") or []),
+        "official_fact_admitted": False,
+        "valuation_use": "CLOSED",
+        "vote_effect": "NONE",
+    }
+
+
 def case_from_industrial_profile(
     profile: Mapping[str, Any],
     *,
     bridge: Mapping[str, Any] | None = None,
     missing: list[str] | None = None,
+    current_financial_review: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Turn one industrial research profile into a bounded investment case."""
     interim = _use(profile, "price_over_reported_interim_parent_profit")
@@ -92,6 +124,24 @@ def case_from_industrial_profile(
     ]
     if profile.get("incompatible_pre_dividend_market_cap"):
         counter.append("The pre-dividend share count under the post-trade price is unusable.")
+    review = _current_financial_review(current_financial_review)
+    if review and review["current_nonvoting_research_eligible"]:
+        for field in review["fields"]:
+            if field.get("line_code") == "60" and field.get("reporting_period") == "2026-Q3":
+                thesis.append(
+                    "The primary consolidated filing's standalone third-quarter total profit after tax "
+                    f"is {field.get('value_vnd')} VND. It is a visual research reading, not parent profit, "
+                    "not the nine-month total, and not an official fact."
+                )
+        if review.get("value_vnd") and review.get("reporting_period") == "2026-9M":
+            thesis.append(
+                "The alternate filing's nine-month operating cash flow is "
+                f"{review.get('value_vnd')} VND. It is not standalone third-quarter cash flow."
+            )
+        counter.append("Historical first availability of this filing remains unknown.")
+        counter.append("The reviewed figure does not open a valuation multiple or a vote.")
+    elif review:
+        counter.append("The supplied financial review is not eligible at this cutoff.")
     findings = list((bridge or {}).get("findings") or [])
     for item in findings:
         if item.get("name") == "CONSOLIDATED_PARENT_VERSUS_SEPARATE_PROFIT" and item.get("same_number") is False:
@@ -128,6 +178,7 @@ def case_from_industrial_profile(
         "thesis": thesis or ["No conditional capitalization is supported. Descriptive statement relations still stand."],
         "counter_thesis": counter,
         "reading_notes": _lines(profile),
+        "current_financial_review": review,
         "missing": gaps,
         "catalysts": ["NO_CATALYST_EVIDENCE_SUPPLIED"],
         "risks": [

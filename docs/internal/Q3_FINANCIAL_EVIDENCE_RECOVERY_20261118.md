@@ -151,7 +151,17 @@ bypass of grouped multi-column citation rejection. Source access and missing-ori
 blockers are now reconciled, and POW has a live original-source/observation binding;
 unknown original first publication remains unknown for all 20 proof rows.
 
-Highest-value next action: complete the existing HPG admission evidence and present its
-exact document/column metadata, independent temporal proof and source/document-type
-approval requirements for the existing admission owner. Warm T+ evidence remains a
-future genuine-session gate, not an engineering workload or automatic successor.
+Highest-value next action after the November 18 reconciliation was the HPG admission
+evidence. The follow-on capability job keeps T+ ACTIVE and does not promote source
+authority.
+
+What that follow-on verified and changed:
+
+- Primary HPG PDF re-hashed to `22a4061c9816d11121816377ea78ae99cf68928a75aa8bdcb15e7ded1bbf5ec9`, 7,200,670 bytes. Alternate `5e06426f…`, 20,317,398 bytes, stays a different document.
+- A retained-byte observation at or before the research cutoff can mark the primary visual income rows current-research eligible. `official_fact_admitted`, `existing_consumer_usable`, valuation and historical publication stay closed. Standalone Q3 total profit after tax is 8,265,460,462,966 VND; parent profit and the nine-month total stay separate. An observation after 20 October does not become an October-20 fact.
+- The alternate cash-flow page prints code 20 for 1 January 2026 through 30 September 2026 as 20,936,329,304,403 VND. That is nine-month operating cash flow, not standalone Q3, and it does not replace the primary PDF.
+- Securities income code 52 labeled `Chi phí lãi vay` is `SECURITIES_FINANCE_BORROWING_COST` with no canonical metric. The SSI YTD cell 2,369,337,866,416 is the cumulative column, not the quarter cell. A numbered quarter both inside and outside the cumulative phrase stays ambiguous.
+- VCB Roman X `Chi phí dự phòng rủi ro tín dụng` stays `CREDIT_LOSS_PROVISION`. The nine-month printed `(9.179.836)` at million-VND scale normalizes to -9,179,836,000,000 VND and is not industrial profit.
+- POW code 321 `Vay và nợ thuê tài chính ngắn hạn` stays lease-inclusive. The 18 November issuer observation can make the candidate knowledge-eligible for a later cutoff. It does not prove publication time or admit the fact.
+
+Official facts newly admitted: 0. The remaining Owner decision is still the SHA-bound source/cohort/document-class exception. Registry `document_type_not_declared_for_source` and `TICKER_NOT_IN_APPROVED_COHORT` are unchanged.

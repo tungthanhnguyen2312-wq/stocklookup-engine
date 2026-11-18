@@ -1,10 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from stocklookup_core.financial.q3_2026_successor_research import (
     FOOT_CODES, HPG_9M_2026_LINES, HPG_ALTERNATE_Q3_SHA256, HPG_CONSOLIDATED_Q3_SHA256,
     HPG_CONSOLIDATED_Q3_URL, HPG_Q3_2026_LINES, HPG_TEXT_LAYER_SNIPPET,
     PAN_SEPARATE_Q3_SHA256, POW_INCOME_COLUMNS, POW_OCF_COLUMNS, POW_Q3_SHA256,
-    hpg_consolidated_statement_shadow, income_cross_foot, issuer_blocker, operating_cash_flow_cross_foot,
+    hpg_alternate_nine_month_operating_cash_review, hpg_consolidated_statement_shadow,
+    hpg_primary_current_research_review, income_cross_foot, issuer_blocker, operating_cash_flow_cross_foot,
     EVF_INCOME_COLUMNS, evf_reviewed_page_research, evf_reviewed_statement_shadow,
     finance_company_income_cross_foot, pan_consolidated_statement_shadow,
     pow_consolidated_statement_shadow, pow_reviewed_page_research,
@@ -40,6 +43,49 @@ def test_hpg_shadow_cross_foots_and_admits_no_official_fact():
     assert q3_revenue["value_vnd"] != nine_revenue["value_vnd"]
     assert all(row["official_fact_admitted"] is False and row["evidence_layer"] == "VISUAL_READ_NOT_BYTE_NATIVE" for row in out["shadow_rows"])
     assert out["columns"]["2026-9M"]["nine_month_promoted_to_standalone_quarter"] is False
+
+
+def test_primary_review_refuses_the_wrong_pdf_and_an_earlier_cutoff():
+    refused = hpg_primary_current_research_review(
+        retained_bytes=b"%PDF-1.6 not-the-primary", observed_at=OBSERVED_AT, cutoff="2026-11-18T15:00:00+00:00")
+    assert refused["current_nonvoting_research_eligible"] is False
+    assert refused["fields"] == []
+    assert refused["official_fact_admitted"] is False
+    assert "PRIMARY_PDF_SHA_OR_LENGTH_MISMATCH" in refused["reason_codes"]
+    alternate = hpg_alternate_nine_month_operating_cash_review(
+        retained_bytes=b"%PDF-1.6 not-the-alternate", observed_at=OBSERVED_AT, cutoff="2026-11-18T15:00:00+00:00")
+    assert alternate["value_vnd"] is None and alternate["replaces_primary"] is False
+    assert "ALTERNATE_PDF_SHA_OR_LENGTH_MISMATCH" in alternate["reason_codes"]
+
+
+def test_primary_review_of_the_retained_pdf_is_current_research_only():
+    path = Path(r"T:\StockLookup\scratch\grok-weekend-continuation-20261107\hpg-q3-2026-consolidated.pdf")
+    if not path.is_file():
+        pytest.skip("retained HPG primary PDF is not on this machine")
+    observed = "2026-11-18T13:07:05+00:00"
+    review = hpg_primary_current_research_review(
+        retained_bytes=path.read_bytes(), observed_at=observed, cutoff="2026-11-18T15:00:00+00:00")
+    assert review["current_nonvoting_research_eligible"] is True
+    assert review["sha256"] == HPG_CONSOLIDATED_Q3_SHA256
+    assert review["official_fact_admitted"] is False and review["valuation_use"] == "CLOSED"
+    assert review["publication_time"] is None and review["historical_pit"] == "UNKNOWN"
+    total = next(row for row in review["fields"] if row["line_code"] == "60" and row["reporting_period"] == "2026-Q3")
+    parent = next(row for row in review["fields"] if row["line_code"] == "61" and row["reporting_period"] == "2026-Q3")
+    nine = next(row for row in review["fields"] if row["line_code"] == "60" and row["reporting_period"] == "2026-9M")
+    assert total["value_vnd"] == 8265460462966 and total["value_vnd"] != parent["value_vnd"] != nine["value_vnd"]
+    too_early = hpg_primary_current_research_review(
+        retained_bytes=path.read_bytes(), observed_at=observed, cutoff="2026-10-20T15:00:00+07:00")
+    assert too_early["current_nonvoting_research_eligible"] is False
+    assert too_early["fields"] == []
+    alternate_path = Path(
+        r"C:\Projects\StockLookup\.stocklookup\scratch\q3-financial-evidence-20261118"
+        r"\original_pdf_row_recovery_20261117_008\original_pdf_row_recovery_20261117_008\pdfs\HPG_Q3_2026_HN.pdf")
+    if alternate_path.is_file():
+        cash = hpg_alternate_nine_month_operating_cash_review(
+            retained_bytes=alternate_path.read_bytes(), observed_at=observed, cutoff="2026-11-18T15:00:00+00:00")
+        assert cash["current_nonvoting_research_eligible"] is True
+        assert cash["value_vnd"] == 20936329304403 and cash["reporting_period"] == "2026-9M"
+        assert cash["replaces_primary"] is False and cash["official_fact_admitted"] is False
 
 
 def test_nine_month_label_cannot_become_a_quarter():

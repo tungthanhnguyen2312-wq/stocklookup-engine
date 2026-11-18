@@ -36,6 +36,37 @@ def test_retained_hpg_kbc_fpt_cases_match_their_sources(request):
     assert fpt["strict_authority"]["target_price"] is None
 
 
+def test_sha_bound_review_is_explained_without_becoming_a_fact():
+    from stocklookup_core.research.conditional_investment_case import case_from_industrial_profile
+
+    review = {
+        "ticker": "HPG",
+        "document_role": "PRIMARY_CONSOLIDATED_Q3",
+        "sha256": "22a4061c9816d11121816377ea78ae99cf68928a75aa8bdcb15e7ded1bbf5ec9",
+        "current_nonvoting_research_eligible": True,
+        "official_fact_admitted": False,
+        "existing_consumer_usable": False,
+        "valuation_use": "CLOSED",
+        "vote_effect": "NONE",
+        "historical_pit": "UNKNOWN",
+        "knowledge_basis": "RETAINED_PRIMARY_BYTES_OBSERVED_NOT_PUBLICATION",
+        "knowledge_available_at": "2026-11-18T13:07:05+00:00",
+        "fields": [{
+            "line_code": "60", "reporting_period": "2026-Q3", "value_vnd": 8265460462966,
+            "canonical_metric": "net_income",
+        }],
+        "does_not_establish": ["OFFICIAL_FACT", "PUBLICATION_OR_HISTORICAL_PIT"],
+    }
+    case = case_from_industrial_profile({"ticker": "HPG"}, current_financial_review=review)
+    assert case["strict_authority"]["official_fact_admitted"] is False
+    assert case["current_financial_review"]["current_nonvoting_research_eligible"] is True
+    assert "8265460462966" in " ".join(case["thesis"])
+    assert "not an official fact" in " ".join(case["thesis"])
+    assert any("Historical first availability" in line for line in case["counter_thesis"])
+    with pytest.raises(ValueError, match="CURRENT_RESEARCH_REVIEW_AUTHORITY_REFUSED"):
+        case_from_industrial_profile({"ticker": "HPG"}, current_financial_review={**review, "official_fact_admitted": True})
+
+
 def test_interim_earnings_and_total_equity_are_not_strict_labels():
     interim = diagnose_conditional_multiple({
         "method_id": "P/E_TTM",

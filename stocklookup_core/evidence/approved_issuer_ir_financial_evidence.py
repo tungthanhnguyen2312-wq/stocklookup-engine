@@ -388,6 +388,10 @@ def prepare_financial_intake_candidate(candidate: Mapping[str, Any], *, document
         valuation_blocks.append("LEASE_INCLUSIVE_LOANS_ARE_NOT_PURE_BORROWINGS")
     if "LEASE_CONTENT_UNKNOWN" in identity["accounting_identity"]:
         valuation_blocks.append("LOAN_LEASE_CONTENT_UNKNOWN_NO_DEBT_TOTAL")
+    if identity["accounting_identity"] == "SECURITIES_FINANCE_BORROWING_COST":
+        valuation_blocks.append("SECURITIES_BORROWING_COST_IS_NOT_AN_INDUSTRIAL_EARNINGS_LINE")
+    if identity["accounting_identity"] == "CREDIT_LOSS_PROVISION":
+        valuation_blocks.append("BANK_CREDIT_LOSS_IS_NOT_AN_INDUSTRIAL_EARNINGS_COMPONENT")
     if quantity:
         valuation_blocks.append("EPS_SHARE_BASIS_IS_NOT_CURRENT_OUTSTANDING_SHARES")
     if identity["accounting_identity"] == "EPS_ORDINARY_SHAREHOLDER_PROFIT":
