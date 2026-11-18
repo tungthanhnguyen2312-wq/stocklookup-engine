@@ -171,7 +171,9 @@ valuation peer verdicts retain their upstream scope. Default Daily behavior is u
 The [November 18 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md)
 verifies all six Grokbot packages and four recovered originals. Candidate intake now
 rejects a multiple-grouped-amount review span even when it contains the requested period
-title. No official fact, canonical field or consumer eligibility is added.
+title. POW's exact issuer detail and live original SHA also bind its current observation;
+original first publication remains unproven. No official fact, canonical field or consumer
+eligibility is added.
 HPG reviewed H1 OCR adds four qualified facts from the 2026-11-09 cutoff. Producer
 PR #235 and Dashboard PR #32 expose six HPG Q3 shadow research rows. The shadow
 tier has zero official Q3 admissions and no valuation eligibility. PAN has a

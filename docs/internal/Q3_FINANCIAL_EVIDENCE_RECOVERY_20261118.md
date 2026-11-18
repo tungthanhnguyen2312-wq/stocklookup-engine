@@ -88,7 +88,7 @@ Recovered original document hashes and PDF page counts were independently recomp
 | Four missing originals, R17–R20 | DONE by package008; hashes/page counts match above. Earlier package006 missing-byte findings are superseded. Original numerical-layer, period, unit, assurance, restatement and knowledge gates remain independent. |
 | HPG | DONE: six existing Q3/9M shadow income rows; reused the November13 reviewed packet and existing successor module. The recovered alternate PDF is already named there and is not the primary `22a4061c…` PDF. R17 is 9M operating flow, not standalone Q3. ACTUAL BLOCKER: official cohort/document type, explicit qualified metadata and independent temporal proof. |
 | PAN | DONE LOCAL: separate funding and consolidated funding/earnings-quality research at `00de30c2`, `792bf9ec`, `1b3b6484`. NOT YET INTEGRATED into this main baseline: those commits' new consultation functions. Existing main consolidated/separate source bindings were reused; no duplicate PAN packet or cherry-pick. Local completion is not official admission or Production activation. |
-| POW | DONE: existing main has the separate HOSE-hosted `c423af37…` filing with cross-footed income/9M OCF context. Recovered issuer PDF `ec37fd3a…` is a different identity; it cannot replace that binding. R18 page6/code321 is loans **and finance leases**, with header on page5. ACTUAL BLOCKER: exact original-specific metadata/bounds and official source gates; no pure-borrowing alias. |
+| POW | DONE: existing main has the separate HOSE-hosted `c423af37…` filing with cross-footed income/9M OCF context. Recovered issuer PDF `ec37fd3a…` is a different identity; it cannot replace that binding. This job additionally verified the live issuer detail-to-PDF link and identical original SHA. R18 page6/code321 is loans **and finance leases**, with header on page5. Original page5's reviewed date proves the September30 balance instant; current direct acquisition proves observation time today. ACTUAL BLOCKER: qualified document metadata and official source/cohort/document-type gates; no pure-borrowing alias. |
 | SSI | R19 page10/code52 is YTD borrowing cost beside a distinct Q3 cell. ACTUAL BLOCKER: the intake row owner does not map code52 in the securities template; no industrial borrowing-cost alias was invented. Source/metadata/temporal gates also remain. |
 | VCB | R20 page7/Roman X is credit-loss expense in million VND, not an industrial earnings component or an unscaled VND amount. Existing row owner retains the named bank concept without a new canonical alias. ACTUAL BLOCKER: existing official source/cohort/metadata/temporal gates. |
 | EVF / VND | Package006 scope ambiguity is not resolved by parity. Main already has EVF reviewed 9M finance-company research, labelled separate with its own scope basis; that research claim does not independently qualify official consolidated/separate scope. VND still needs affirmative original scope/row binding. No bank/industrial substitution. |
@@ -99,19 +99,30 @@ The four recovered-source rows were replayed through the existing pure intake an
 registry admission functions, without forged observation times, metadata or assurance.
 All four registry requests return `document_type_not_declared_for_source`; all four
 intake results preserve `TICKER_NOT_IN_APPROVED_COHORT`, unqualified document metadata,
-unknown exact observation/knowledge and unknown publication. SSI retains
+unknown original publication. SSI retains
 `ROW_IDENTITY_NOT_MAPPED`; VCB retains a bank research concept without a canonical metric.
-POW's isolated replay deliberately supplies no manufactured balance-bound proof and
-retains `BALANCE_INSTANT_NOT_PROVEN`. These are truthful incomplete candidates, not
-exhaustive final qualification of every original page.
+HPG/SSI/VCB preserve unknown exact original observation/knowledge. POW's initial incomplete
+replay was completed using the original page5 date and today's independently measured
+direct acquisition: `semantic_valid=true`, `knowledge_cutoff_eligible=true` for today's
+cutoff, while `official_fact_admitted=false`, `existing_consumer_usable=false` and all
+source gates remain closed. This current observation does not reconstruct an earlier
+historical knowledge time. These are candidate results, not exhaustive final qualification
+of every original page.
 
 Bounded publication investigation used HPG's existing
 [financial index](https://www.hoaphat.com.vn/quan-he-co-dong/bao-cao-tai-chinh) and
 [disclosure index](https://www.hoaphat.com.vn/quan-he-co-dong/cong-bo-thong-tin).
 They provide date-level entries, not independent first-availability timestamps.
-POW's financial index variants and issuer home were inaccessible/timeout in this
-inspection. The retained issuer attachment remains identified; this is not a closure
-of the POW source family. Reopen temporal qualification with a legitimate, independently
+POW's financial index variants and issuer home were inaccessible/timeout. The exact
+[disclosure detail supplied by the existing package](https://pvpower.vn/vi/post/bao-cao-tai-chinh-hop-nhat-quy-3-nam-2026-7173.htm)
+was HTTP200 and directly linked the recovered original. Its CMS label is October30
+17:50, still not independent first availability. The retained detail HTML SHA is
+`2e93e4381fe11a848d5ef4f58e6a5dcf02fc0d0c8336cfe96c6a0013dfd3ff33`
+(40,786 bytes). A bounded direct attachment read at `2026-11-18T12:14:16.172742Z`
+returned HTTP200/application-pdf, 15,374,234 bytes, and the identical `ec37fd3a…` SHA.
+Thus the current issuer-source linkage and current observation gap are eliminated;
+historical publication is still unproven. This is not a closure of the POW source family.
+Reopen historical temporal qualification with a legitimate, independently
 retained disclosure receipt bound to the exact original hash and cutoff. CMS dates,
 signature dates, PDF CreationDate and HTTP Last-Modified are not substitutes.
 
@@ -137,7 +148,8 @@ ON_TRACK / VERIFIED, all five checks PASS, T+ ACTIVE and queue empty.
 New official-qualified facts: **0**. New canonical fields: **0**. Newly enabled
 financial/valuation consumers: **0**. Eliminated software blocker: the period-title
 bypass of grouped multi-column citation rejection. Source access and missing-original
-blockers are now reconciled; unknown publication remains unknown for all 20 proof rows.
+blockers are now reconciled, and POW has a live original-source/observation binding;
+unknown original first publication remains unknown for all 20 proof rows.
 
 Highest-value next action: complete the existing HPG admission evidence and present its
 exact document/column metadata, independent temporal proof and source/document-type
