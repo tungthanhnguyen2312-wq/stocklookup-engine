@@ -94,6 +94,12 @@ of them is rewritten into a publication timestamp. An index title that names
 one quarter cannot bind a file named for another quarter. A searchable copy is
 not the signed copy.
 
+The November 18 corrective closes a bypass in this existing column gate: the
+presence of the requested period title does not exempt a review span containing
+multiple grouped amounts. A page-bound native numeric token also cannot select
+the column. A separately reviewed cell retains its own period and evidence layer;
+rejected candidates receive no consumer or admission eligibility.
+
 Output separates schema_valid, semantic_valid, native_numeric_literal_proven,
 source_admission_eligible, knowledge_cutoff_eligible and their blockers. It carries
 original source identity, exact canonical candidate values/units, attribution,

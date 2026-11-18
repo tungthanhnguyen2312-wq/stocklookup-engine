@@ -1,7 +1,6 @@
 # Stock Lookup — Active State
 
-11-17 Daily PASS, `READY_FOR_AI`; D4a live accepted. [T+](tplus_incremental_cost_v2_contract.md)
-missed M1b (1,128.614 s combined); PR258 needs an Owner seed.
+11-18 Daily PASS, `READY_FOR_AI`; PR258 bootstrap complete, [T+](tplus_incremental_cost_v2_contract.md) warm gate open.
 [Sync](producer_freeze_release_sync_contract.md) preserves the 10-26 freeze. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
@@ -298,19 +297,15 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 8. Actual blockers right now
 
-1. Owner Daily 06/11 is sealed. HPG and PAN Q3 research is non-voting.
-   PAN's cross-date book illustration has no qualified comparator.
-   Live DNSE VN-Index verification awaits the next eligible close.
+1. Daily 18/11 complete; `NO_NEW_PRODUCTION_CORRECTIVE_REQUIRED`. T+ warm acceptance open.
+   HPG/PAN Q3 stays non-voting; [official intake gaps](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md) remain.
 2. Launch Daily only with fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**.
    **AMBER or BLOCKED must not launch.**
 
 ## 9. Next action
 
-After the 2026-11-09 close and a fresh READY preflight, verify DNSE VN-Index through the
-retained bar, Market Close, Home summary and GitHub Pages. See the
-[NSO CPI contract](nso_cpi_acquisition_parser_freshness_corrective_20261023_contract.md)
-for release freshness and the [financial intake contract](official_financial_quarterly_intake_contract.md)
-for source and Daily gates.
+Complete HPG's [intake evidence](official_financial_quarterly_intake_contract.md).
+T+ warm and VN-Index/public Dashboard gates remain separate; no new lane.
 
 ## 10. Owner approvals that remain open
 

@@ -96,6 +96,35 @@ def test_cash_flow_negative_and_nine_months_not_q3():
     assert "CASH_FLOW_QUARTER_DURATION_NOT_PROVEN" in wrong["semantic_blockers"]
 
 
+@pytest.mark.parametrize("period", ["2026-Q3", "2026-9M"])
+@pytest.mark.parametrize("layer", ["ocr_text", "reviewed_visual_integer", "native_text"])
+def test_period_label_does_not_bind_one_amount_in_a_four_column_review_span(period, layer):
+    # Recovered Q3 statements print current/prior quarter and current/prior YTD
+    # on the same row. Including a period title cannot select one of those cells.
+    row, doc, raw = inputs(code="60", label="Profit after tax", period=period, value="3,000,000")
+    row["numeric_evidence_layer"] = layer
+    row["source_span"]["text"] = (
+        f"{period} Profit after tax 1,000,000 2,000,000 3,000,000 4,000,000"
+    )
+    start = raw.index(b"3,000,000")
+    row["literal_byte_binding"] = dict(document_sha256=doc["sha256"], source_page=9,
+                                       byte_start=start, byte_end=start + len(b"3,000,000"))
+    result = prepared(row, doc, raw)
+    assert "REPORTED_COLUMN_NOT_ISOLATED_IN_REVIEW_SPAN" in result["citation_blockers"]
+    assert not result["semantic_valid"] and not result["native_numeric_literal_proven"]
+    assert not result["source_admission_eligible"] and not result["existing_consumer_usable"]
+    assert not result["official_fact_admitted"] and not result["strict_valuation_eligible"]
+
+    # A separately reviewed cell keeps its stated period and numeric layer.
+    row["source_span"]["text"] = f"{period} Profit after tax 3,000,000"
+    isolated = prepared(row, doc, raw)
+    assert isolated["semantic_valid"]
+    assert isolated["candidate"]["reporting_period"] == period
+    assert isolated["candidate"]["value"] == 3000000
+    assert isolated["native_numeric_literal_proven"] == (layer == "native_text")
+    assert not isolated["official_fact_admitted"]
+
+
 def test_equity_including_nci_and_lease_debt_stay_distinct():
     equity = prepared(family="balance_sheet", code="400", label="Owners' equity", period="2026-09-30")
     # Instant without an explicitly proven date remains blocked.

@@ -197,9 +197,10 @@ def prepare_financial_intake_candidate(candidate: Mapping[str, Any], *, document
     if "FULL_ACCOUNTING_ROW_LABEL_NOT_IN_SOURCE_SPAN" in identity["blockers"]:
         citation.append("FULL_ACCOUNTING_ROW_NOT_IN_REVIEW_SPAN")
     span_text = str(span.get("text") or "")
-    period_label = str(row.get("native_period_label") or "")
     column_tokens = re.findall(r"\(?\d{1,3}(?:[.,]\d{3})+\)?", span_text)
-    if period_label and period_label not in span_text and len(column_tokens) > 1:
+    # A title in a whole-row review span does not select one of its quarter/YTD
+    # cells. Even a byte-bound amount proves a token, not its reported column.
+    if len(column_tokens) > 1:
         citation.append("REPORTED_COLUMN_NOT_ISOLATED_IN_REVIEW_SPAN")
     semantic.extend(identity["blockers"])
     if row.get("canonical_metric") is not None and row["canonical_metric"] != identity["canonical_metric"]:

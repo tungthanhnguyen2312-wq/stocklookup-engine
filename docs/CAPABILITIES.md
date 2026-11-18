@@ -168,6 +168,7 @@ valuation peer verdicts retain their upstream scope. Default Daily behavior is u
 
 [Business updates](official_business_update_research_contract.md): PR135; news route blocked.
 [Intake](official_financial_quarterly_intake_contract.md): PR137; offline/source gate. HPG binding PR138 uses approved routes.
+[Q3 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md): column gate fixed; no new official facts.
 HPG reviewed H1 OCR adds four qualified facts from the 2026-11-09 cutoff. Producer
 PR #235 and Dashboard PR #32 expose six HPG Q3 shadow research rows. The shadow
 tier has zero official Q3 admissions and no valuation eligibility. PAN has a

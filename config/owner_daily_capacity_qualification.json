@@ -719,7 +719,7 @@
     "stocklookup_core/decision/velocity_flow_price_presentation_projection.py": "77c7f29faac88c8cc55cb162638ee1cfa5d759fca4f72e250cec4fa5500a39de",
     "stocklookup_core/decision/workspace_public_read_model.py": "53fbb6e150ec9681379d2eded462b0c5c67e71d19a07986257ea3e728f5b8075",
     "stocklookup_core/evidence/__init__.py": "06ee8b96c2f2843147dc98e432bd241fb28354a0c41ac2f3c9af409f269706d1",
-    "stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py": "b41f4357bcfb271daafd36b373cf2f05c4a614b8ab8b1dac5b27e1b77f23f455",
+    "stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py": "c93ddcd7a40c719eb357c355cd260a54cbe240248143115908cefa543526077f",
     "stocklookup_core/evidence/artifact_stream.py": "daede1215be5280059e1dce7d16181152a7e0d9dec862deaa63519a93640649d",
     "stocklookup_core/evidence/asof_query_ledger.py": "afc182f34c9755628aafd96063eb2166936598ae931ded6d7c4f7ab95f4c0602",
     "stocklookup_core/evidence/audit_opinion_evidence.py": "cba77fd49c88bcc2e5e06b924e4456e89fcbe9088bd6fca8da5eba093a659df5",
@@ -1829,5 +1829,19 @@
       "prospective_feedback_streaming.py": "d80f0194847bc7a96a5a0bbbf62f5bafef453027c7f9058ed2a427f8c37b3744",
       "tools/verify_retention_reader_transition.py": "57513680a73fbecd7f6ac26ea56d35d60c7377d1be310dfb9ae7f58de81af0b2"
     }
+  },
+  "q3_intake_column_binding_corrective": {
+    "scope": "EXISTING_CANDIDATE_ONLY_REVIEW_SPAN_COLUMN_ISOLATION",
+    "base_commit": "ef8e8fe5d1e87891fdc90c1cd3d4ce4377819aa5",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "changed_source_paths": [
+      "stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py"
+    ],
+    "prior_source_sha256_lf": {
+      "stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py": "b41f4357bcfb271daafd36b373cf2f05c4a614b8ab8b1dac5b27e1b77f23f455"
+    },
+    "authority_effect": "NONE_CANDIDATE_NEGATIVE_GATE_ONLY",
+    "daily_call_shape": "UNCHANGED_PREPARE_FINANCIAL_INTAKE_CANDIDATE_HAS_NO_DAILY_CALLER"
   }
 }
