@@ -714,6 +714,45 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][intake_path] = hashlib.sha256(current_intake).hexdigest()
     prior_receipt["q3_intake_column_binding_corrective"] = intake
 
+    identity = live_receipt["financial_evidence_research_identity_corrective"]
+    assert identity["scope"] == "CURRENT_RESEARCH_LABEL_AND_PERIOD_IDENTITY_ONLY"
+    assert identity["new_capacity_measurement"] is False
+    assert identity["whole_daily_requalification"] is False
+    assert identity["iid_bound_unchanged"] is True
+    assert identity["authority_effect"] == "NONE_NO_OFFICIAL_FACT_NO_VALUATION_NO_NEW_IMPORT"
+    identity_paths = [
+        "stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py",
+        "stocklookup_core/evidence/financial_row_identity.py",
+        "stocklookup_core/financial/q3_2026_successor_research.py",
+        "stocklookup_core/financial/structured_financial_period_semantics.py",
+    ]
+    assert identity["changed_source_paths"] == identity_paths
+    assert identity["daily_reachable_changed_paths"] == [identity_paths[1]]
+    reachable = set(daily_reachable(root))
+    for path in identity_paths:
+        previous = subprocess.check_output(["git", "show", f"{identity['base_commit']}:{path}"], cwd=root)
+        previous = previous.replace(b"\r\n", b"\n")
+        assert identity["prior_source_sha256_lf"][path] == hashlib.sha256(previous).hexdigest()
+        if path != intake_path:
+            assert identity["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        assert (module_name(path) in reachable) is (path in identity["daily_reachable_changed_paths"])
+    row_path = identity_paths[1]
+    previous_row = subprocess.check_output(
+        ["git", "show", f"{identity['base_commit']}:{row_path}"], cwd=root).replace(b"\r\n", b"\n")
+    current_row = (root / row_path).read_bytes().replace(b"\r\n", b"\n")
+
+    def _top_imports(source: bytes) -> list[str]:
+        tree = ast.parse(source)
+        return [ast.dump(node) for node in tree.body if isinstance(node, (ast.Import, ast.ImportFrom))]
+
+    assert _top_imports(previous_row) == _top_imports(current_row)
+    previous_names = {node.name for node in ast.parse(previous_row).body if isinstance(node, ast.FunctionDef)}
+    current_names = {node.name for node in ast.parse(current_row).body if isinstance(node, ast.FunctionDef)}
+    assert previous_names == current_names
+    prior_receipt["financial_evidence_research_identity_corrective"] = identity
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

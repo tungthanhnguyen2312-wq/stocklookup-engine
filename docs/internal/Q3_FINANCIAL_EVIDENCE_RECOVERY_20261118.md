@@ -164,4 +164,6 @@ What that follow-on verified and changed:
 - VCB Roman X `Chi phí dự phòng rủi ro tín dụng` stays `CREDIT_LOSS_PROVISION`. The nine-month printed `(9.179.836)` at million-VND scale normalizes to -9,179,836,000,000 VND and is not industrial profit.
 - POW code 321 `Vay và nợ thuê tài chính ngắn hạn` stays lease-inclusive. The 18 November issuer observation can make the candidate knowledge-eligible for a later cutoff. It does not prove publication time or admit the fact.
 
+The follow-on edits the existing capacity receipt hashes for the four changed runtime files. `financial_row_identity.py` was already inside the Daily import closure; the change adds no import and no function. The other three files stay outside that closure. No new capacity measurement, IID bound, threshold or runtime permission is claimed.
+
 Official facts newly admitted: 0. The remaining Owner decision is still the SHA-bound source/cohort/document-class exception. Registry `document_type_not_declared_for_source` and `TICKER_NOT_IN_APPROVED_COHORT` are unchanged.
