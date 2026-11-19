@@ -133,6 +133,7 @@ def test_statement_cohort_reaches_the_research_case_consumer(tmp_path):
     assert main(["--statement-cohort", "--out-json", str(out_json), "--out-md", str(out_md)]) == 0
     written = json.loads(out_json.read_text(encoding="utf-8"))
     assert written["cohort_identity"] == first["cohort_identity"]
+    assert first["cohort_identity"] == "current_statement_research_cohort:0b691549cd1638c0599b46a6f0456b7e0613cd8a71037acac5ba5aa5a7070dc6"
     text = out_md.read_text(encoding="utf-8")
     assert "Official facts: 0" in text
     assert "not a score or a valuation" in text
@@ -341,3 +342,236 @@ def test_reviewed_kbc_basis_and_cash_scope_gates(tmp_path, reviewed_packet):
     for changes in ({"statement_scope": "separate"}, {"months": 9}, {"currency": "USD"},
                     {"document_sha256": "0" * 64}, {"unit_scale": 1000}):
         assert printed_cash_to_earnings(annual_profit, {**annual_cash, **changes})["ratio"] is None
+
+
+def _structured_row(**overrides):
+    row = {
+        "ticker": "ZZZ",
+        "period_label": "9 tháng/2026",
+        "consolidation": "Hợp nhất",
+        "audit_status": "Chưa kiểm toán",
+        "unit": "Đơn vị tính: 1 VNĐ",
+        "item": "3. Doanh thu thuần về bán hàng và cung cấp dịch vụ",
+        "value": "1000",
+        "statement": "IS",
+        "source": "EXAMPLE_EXPORT",
+        "source_file": "example.xlsx",
+        "source_sha256": "a" * 64,
+        "period_year": "2026",
+        "period_kind": "9M",
+        "period_basis": "cumulative_ytd",
+        "vendor_publish_date": "2020-01-01",
+        "vendor_data_updated": "Ngày cập nhật: 16/11/2026",
+        "is_blank": "false",
+    }
+    row.update(overrides)
+    return row
+
+
+def _write_structured(path, rows):
+    path.write_text(json.dumps({"observations": rows}, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def _metric(packet, ticker, period, metric):
+    found = [row for row in packet["measures"] if row["ticker"] == ticker and row["period"] == period and row["metric"] == metric]
+    assert len(found) == 1, (ticker, period, metric, len(found))
+    return found[0]
+
+
+def test_structured_input_is_deterministic_and_keeps_conflict_and_templates(tmp_path):
+    from stocklookup_core.research.conditional_investment_case import build_structured_financial_research
+
+    industrial = "3. Doanh thu thuần về bán hàng và cung cấp dịch vụ"
+    gross = "5. Lợi nhuận gộp về bán hàng và cung cấp dịch vụ"
+    parent = "Lợi nhuận sau thuế của cổ đông của Công ty mẹ"
+    rows = [
+        _structured_row(item=industrial, value="1000"),
+        _structured_row(item=gross, value="400"),
+        _structured_row(item=parent, value="100"),
+        _structured_row(period_label="9 tháng/2025", period_year="2025", item=industrial, value="800"),
+        _structured_row(ticker="YYY", item=industrial, value="500", source_sha256="b" * 64),
+        _structured_row(ticker="YYY", item=gross, value="100", source_sha256="b" * 64),
+        _structured_row(ticker="YYY", item=parent, value="50", source_sha256="b" * 64),
+        _structured_row(ticker="QQQ", item="1.6. Doanh thu môi giới chứng khoán", value="10", source_sha256="c" * 64),
+        _structured_row(ticker="QQQ", item="Doanh thu thuần", value="70", source_sha256="c" * 64),
+        _structured_row(ticker="BBB", item="XV. Lợi nhuận sau thuế của cổ đông của Ngân hàng mẹ (XIII-XIV)", value="9", source_sha256="d" * 64),
+        _structured_row(ticker="BBB", item="I. Thu nhập lãi thuần (1-2)", value="20", source_sha256="d" * 64),
+        _structured_row(ticker="MIX", item=industrial, value="5", source_sha256="e" * 64),
+        _structured_row(ticker="MIX", item="XV. Lợi nhuận sau thuế của cổ đông của Ngân hàng mẹ (XIII-XIV)", value="6", source_sha256="e" * 64),
+        _structured_row(item="bad-row", value="not-a-number", statement="IS"),
+        _structured_row(ticker="BAD", consolidation="Khác", item=industrial, value="1"),
+    ]
+    for suffix, value in (("Q1", 1), ("Q2", 2), ("Q3", 3), ("Q4", 4)):
+        rows.append(_structured_row(
+            period_label=f"Quý {suffix[-1]}/2026", period_kind=suffix, period_basis="quarterly_discrete",
+            item=parent, value=str(value),
+        ))
+    path = _write_structured(tmp_path / "input.json", rows)
+    first = build_structured_financial_research(path)
+    second = build_structured_financial_research(path)
+    assert first == second
+    assert first["official_fact_admitted"] is False
+    assert first["coverage"]["official_fact_admitted_count"] == 0
+    assert first["coverage"]["valuation_measures_usable"] == 0
+    assert first["coverage"]["ttm_measures_usable"] == 0
+    assert first["publication_time"] is None
+    assert first["file_modification_time_used"] is False
+    assert first["consumers"]["ai_research_preview"]["daily_packet_activated"] is False
+    assert first["financial_v2_authority_unchanged"] == "2026-09-05.1"
+    margin = _metric(first, "ZZZ", "2026-9M", "parent_profit_margin")
+    assert margin["status"] == "USABLE"
+    assert margin["value"] == "0.100000"
+    assert margin["numerator"] == 100
+    assert margin["denominator"] == 1000
+    yoy = _metric(first, "ZZZ", "2026-9M_VS_2025-9M", "net_revenue_yoy")
+    assert yoy["status"] == "USABLE"
+    assert yoy["value"] == "25.00"
+    assert {row["ticker"] for row in first["comparisons"][0]["rows"]} >= {"YYY", "ZZZ"}
+    assert _metric(first, "QQQ", "UNSET", "industrial_profit_margin")["status"] == "NOT_APPLICABLE"
+    assert not any(row["ticker"] == "QQQ" and row["metric"] == "gross_margin" and row["status"] == "USABLE" for row in first["measures"])
+    securities_revenue = _metric(first, "QQQ", "2026-9M", "securities_net_revenue")
+    assert securities_revenue["original_label"] == "Doanh thu thuần"
+    assert securities_revenue["metric"] != "net_revenue"
+    assert _metric(first, "BBB", "UNSET", "industrial_profit_margin")["status"] == "NOT_APPLICABLE"
+    assert not any(row["ticker"] == "BBB" and row["metric"] == "gross_margin" for row in first["measures"])
+    assert first["families"]["MIXED_STATEMENT"] == ["MIX"]
+    assert not any(row["ticker"] == "MIX" and row["metric"] == "parent_profit_margin" and row["status"] == "USABLE" for row in first["measures"])
+    quarter_sum = _metric(first, "ZZZ", "2026-FOUR_DISCRETE_QUARTERS", "parent_profit_after_tax_four_discrete_quarter_sum")
+    assert quarter_sum["value"] == 10
+    assert quarter_sum["annualized"] is False
+    assert quarter_sum["ttm"] is False
+    assert _metric(first, "ZZZ", "TTM", "profit_after_tax_ttm")["status"] == "BLOCKED"
+    assert not any(row["value"] == 120 for row in first["measures"])
+    assert first["rejections"]["count"] == 2
+    source = open(
+        __import__("stocklookup_core.research.conditional_investment_case", fromlist=["build_structured_financial_research"]).build_structured_financial_research.__code__.co_filename,
+        encoding="utf-8",
+    ).read().split("def build_structured_financial_research", 1)[1]
+    for ticker in ("HPG", "PAN", "POW", "SSI", "EVF", "FPT", "VCB", "MBB", "VNM", "ZZZ"):
+        assert f'"{ticker}"' not in source
+        assert f"'{ticker}'" not in source
+
+
+def test_structured_conflict_cutoff_and_revision_do_not_overwrite(tmp_path):
+    import os
+    from stocklookup_core.research.conditional_investment_case import build_structured_financial_research
+
+    label = "3. Doanh thu thuần về bán hàng và cung cấp dịch vụ"
+    conflict = _write_structured(tmp_path / "conflict.json", [
+        _structured_row(item=label, value="100", source_sha256="a" * 64, source_file="first.xlsx"),
+        _structured_row(item=label, value="120", source_sha256="b" * 64, source_file="second.xlsx"),
+    ])
+    packet = build_structured_financial_research(conflict)
+    row = _metric(packet, "ZZZ", "2026-9M", "net_revenue")
+    assert row["status"] == "CONFLICT"
+    assert row["value"] is None
+    assert {item["value"] for item in row["retained_originals"]} == {100, 120}
+    assert row["official_fact_admitted"] is False
+
+    single = _write_structured(tmp_path / "single.json", [_structured_row(item=label, value="100")])
+    early = build_structured_financial_research(
+        single, knowledge_cutoff="2026-11-01T00:00:00+07:00", observed_at="2026-10-01T00:00:00+07:00",
+    )
+    usable = _metric(early, "ZZZ", "2026-9M", "net_revenue")
+    assert usable["status"] == "USABLE"
+    assert usable["publication_time"] is None
+    assert usable["available_at_cutoff"] is True
+    assert usable["vendor_supplied_dates"] == ["2020-01-01"]
+    late = build_structured_financial_research(
+        single, knowledge_cutoff="2026-11-01T00:00:00+07:00", observed_at="2026-11-02T00:00:00+07:00",
+    )
+    assert _metric(late, "ZZZ", "2026-9M", "net_revenue")["status"] == "BLOCKED"
+    assert _metric(late, "ZZZ", "2026-9M", "net_revenue")["value"] == 100
+    assert late["research_identity"] != early["research_identity"]
+    missing_clock = build_structured_financial_research(single, knowledge_cutoff="2026-11-01T00:00:00+07:00")
+    assert _metric(missing_clock, "ZZZ", "2026-9M", "net_revenue")["status"] == "BLOCKED"
+    assert missing_clock["temporal_status"] == "OBSERVATION_TIME_ABSENT"
+    before = build_structured_financial_research(single)
+    os.utime(single, (1_700_000_000, 1_700_000_000))
+    assert build_structured_financial_research(single) == before
+
+    revised = _write_structured(tmp_path / "revised.json", [_structured_row(item=label, value="130", source_sha256="c" * 64)])
+    out_json = tmp_path / "first.json"
+    out_md = tmp_path / "first.md"
+    assert main(["--structured-input", str(single), "--out-json", str(out_json), "--out-md", str(out_md)]) == 0
+    snapshot = out_json.read_bytes()
+    second_json = tmp_path / "second.json"
+    second_md = tmp_path / "second.md"
+    assert main(["--structured-input", str(revised), "--out-json", str(second_json), "--out-md", str(second_md)]) == 0
+    assert out_json.read_bytes() == snapshot
+    first_packet = json.loads(snapshot)
+    second_packet = json.loads(second_json.read_text(encoding="utf-8"))
+    assert first_packet["input_sha256"] != second_packet["input_sha256"]
+    assert first_packet["research_identity"] != second_packet["research_identity"]
+    assert _metric(second_packet, "ZZZ", "2026-9M", "net_revenue")["value"] == 130
+    with pytest.raises(SystemExit):
+        main(["--structured-input", str(tmp_path / "missing-header.csv"), "--out-json", str(tmp_path / "bad.json"), "--out-md", str(tmp_path / "bad.md")])
+
+
+def test_structured_malformed_header_is_rejected(tmp_path):
+    from stocklookup_core.research.conditional_investment_case import build_structured_financial_research
+
+    path = tmp_path / "broken.csv"
+    path.write_text("ticker,value\nZZZ,1\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="STRUCTURED_INPUT_HEADER_MISSING"):
+        build_structured_financial_research(path)
+    whole = _write_structured(tmp_path / "whole.json", [_structured_row(value="1000.0")])
+    accepted = build_structured_financial_research(whole)
+    assert _metric(accepted, "ZZZ", "2026-9M", "net_revenue")["value"] == 1000
+    assert _metric(accepted, "ZZZ", "2026-9M", "net_revenue")["native_representation"] == ["1000.0"]
+    fraction = _write_structured(tmp_path / "fraction.json", [_structured_row(value="1000.5")])
+    assert build_structured_financial_research(fraction)["rejections"]["count"] == 1
+
+
+def test_real_vietstock_export_reaches_research_without_issuer_constants():
+    import hashlib
+    from pathlib import Path
+    from stocklookup_core.research.conditional_investment_case import (
+        build_statement_research_cohort,
+        build_structured_financial_research,
+    )
+
+    path = Path(r"C:\Projects\StockLookup\.stocklookup\scratch\q3-financial-evidence-20261118\vietstock_expansion_20261116_002\expansion_20261116_002\normalized_long_dedup_v2.csv")
+    if not path.is_file():
+        pytest.skip("RETAINED_VIETSTOCK_EXPORT_ABSENT")
+    packet = build_structured_financial_research(path)
+    again = build_structured_financial_research(path)
+    assert packet == again
+    assert packet["input_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+    assert packet["official_fact_admitted"] is False
+    assert packet["coverage"]["valuation_measures_usable"] == 0
+    assert packet["coverage"]["ttm_measures_usable"] == 0
+    assert packet["coverage"]["issuer_count"] >= 13
+    assert packet["coverage"]["current_research_usable"] > 95
+    assert packet["publication_time"] is None
+    assert "FPT" in packet["families"]["INDUSTRIAL_STATEMENT"]
+    assert "VCB" in packet["families"]["BANK_STATEMENT"]
+    assert "SSI" in packet["families"]["SECURITIES_STATEMENT"]
+    assert "EVF" in packet["families"]["BANK_STATEMENT"]
+    cohort = build_statement_research_cohort()
+    vendor = _metric(packet, "HPG", "2026-Q3", "parent_profit_margin")
+    retained = next(row for row in cohort["measures"] if row["ticker"] == "HPG" and row["period"] == "2026-Q3" and row["metric"] == "parent_profit_margin")
+    assert vendor["status"] == "USABLE"
+    assert vendor["value"] == retained["value"]
+    assert vendor["numerator"] == retained["numerator"]
+    assert vendor["denominator"] == retained["denominator"]
+    assert vendor["statement_scope"] == "consolidated"
+    assert vendor["unit"] == "RATIO"
+    revenue = _metric(packet, "HPG", "2026-Q3", "net_revenue")
+    assert revenue["value"] == retained["denominator"]
+    assert revenue["official_fact_admitted"] is False
+    assert revenue["historical_pit"] == "UNKNOWN"
+    q3_yoy = _metric(packet, "HPG", "2026-Q3_VS_2025-Q3", "net_revenue_yoy")
+    assert q3_yoy["status"] == "BLOCKED"
+    assert "PRIOR_REPORTED_PERIOD_ABSENT" in q3_yoy["reason_codes"]
+    evf = _metric(packet, "EVF", "2026-9M", "group_profit_after_tax")
+    retained_evf = next(row for row in cohort["measures"] if row["ticker"] == "EVF" and row["metric"] == "net_income" and row["status"] == "USABLE")
+    assert evf["status"] == "USABLE"
+    assert evf["unit"] == "VND"
+    assert evf["unit_scale"] == 1
+    assert evf["statement_scope"] == "consolidated"
+    assert retained_evf["statement_scope"] == "separate"
+    assert evf["analysis_family"] == "BANK_STATEMENT"
+    assert not any(row["metric"] == "research_multiple" and row["status"] == "USABLE" for row in packet["measures"])
+    assert not any(row["annualized"] for row in packet["measures"])
