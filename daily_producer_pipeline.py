@@ -69,6 +69,122 @@ def refuse_competing_sealed_run(output_root: Path, session: str, run_identity: s
             raise DailyProducerError(f"SEALED_LATEST_COMPLETED_RUN_CONFLICT:{session}")
 
 
+def _read_sealed_json(path: Path, reason: str) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise DailyProducerError(reason) from exc
+    if not isinstance(payload, dict):
+        raise DailyProducerError(reason)
+    return payload
+
+
+def load_verified_sealed_producer(evidence_root: Path, session: str) -> dict[str, Any]:
+    """Return one verified sealed Producer result without recomputing its payload.
+
+    A same-day recovery that rebuilds the operation acquires a new macro artifact
+    and a new macro cutoff. Both enter the operation identity, so the rebuilt
+    payload cannot equal the sealed identity. Reusing the old Git heads does not
+    remove that difference. This loader returns the sealed run, operation, and
+    daily product. It does not acquire, write, or load the decision packet.
+    A recomputed run identity that disagrees with the sealed manifest fails closed.
+    """
+    session = _iso_date(session)
+    evidence_root = Path(evidence_root)
+    runs_root = evidence_root / "operations-review" / "daily-producer-runs-v1"
+    session_dir = runs_root / session
+    manifests = sorted(
+        path for path in session_dir.glob("*/run_manifest.json") if path.is_file()
+    ) if session_dir.is_dir() else []
+    if len(manifests) != 1:
+        raise DailyProducerError(f"SEALED_PRODUCER_RUN_AMBIGUOUS:{session}:{len(manifests)}")
+    run_path = manifests[0]
+    run_manifest = _read_sealed_json(run_path, f"SEALED_PRODUCER_RUN_UNREADABLE:{session}")
+    run_identity = run_manifest.get("run_identity")
+    operation_ref = run_manifest.get("daily_session_operation")
+    operation_identity = operation_ref.get("identity") if isinstance(operation_ref, dict) else None
+    producer_head = run_manifest.get("producer_head")
+    consumer_head = run_manifest.get("consumer_head")
+    plan = run_manifest.get("source_plan")
+    if (run_identity != "daily_producer_run:" + run_path.parent.name
+            or run_manifest.get("target_market_session") != session
+            or not isinstance(operation_identity, str)
+            or not operation_identity.startswith("daily_research_session_operation:")
+            or not isinstance(producer_head, str) or not producer_head
+            or not isinstance(consumer_head, str) or not consumer_head
+            or not isinstance(plan, dict)):
+        raise DailyProducerError(f"SEALED_PRODUCER_RUN_INVALID:{session}")
+    if _run_identity(session, producer_head, consumer_head, plan, operation_identity) != run_identity:
+        raise DailyProducerError(f"SEALED_PRODUCER_RUN_RECOMPUTE_MISMATCH:{session}")
+    operation_dir = (
+        evidence_root / "operations-review" / "daily-research-session-operations-v1"
+        / session / operation_identity.split(":", 1)[1]
+    )
+    operation_manifest = _read_sealed_json(
+        operation_dir / "run_manifest.json", f"SEALED_SESSION_OPERATION_UNREADABLE:{session}",
+    ) if (operation_dir / "run_manifest.json").is_file() else None
+    if operation_manifest is None:
+        raise DailyProducerError(f"SEALED_SESSION_OPERATION_MISSING:{session}")
+    outputs = operation_manifest.get("outputs")
+    product_identity = run_manifest.get("daily_product_identity")
+    if (operation_manifest.get("operation_identity") != operation_identity
+            or operation_manifest.get("market_session") != session
+            or operation_manifest.get("producer_head") != producer_head
+            or operation_manifest.get("consumer_head") != consumer_head
+            or not isinstance(outputs, dict)
+            or not isinstance(product_identity, str)
+            or outputs.get("daily_product") != product_identity):
+        raise DailyProducerError(f"SEALED_SESSION_OPERATION_MISMATCH:{session}")
+    product = _read_sealed_json(
+        operation_dir / "current_daily_decision_research_product_artifact.json",
+        f"SEALED_PRODUCER_PRODUCT_UNREADABLE:{session}",
+    )
+    if product.get("artifact_identity") != product_identity:
+        raise DailyProducerError(f"SEALED_PRODUCER_PRODUCT_IDENTITY_MISMATCH:{session}")
+    macro_inputs = operation_manifest.get("input_artifacts")
+    macro_ref = macro_inputs.get("macro") if isinstance(macro_inputs, dict) else None
+    macro_identity = macro_ref.get("artifact_identity") if isinstance(macro_ref, dict) else None
+    if isinstance(macro_identity, str):
+        macro = _read_sealed_json(
+            operation_dir / "current_macro_regime_artifact.json",
+            f"SEALED_PRODUCER_MACRO_UNREADABLE:{session}",
+        )
+        if macro.get("artifact_identity") != macro_identity:
+            raise DailyProducerError(f"SEALED_PRODUCER_MACRO_IDENTITY_MISMATCH:{session}")
+    shadow = run_manifest.get("daily_session_shadow_recommendation")
+    if not isinstance(shadow, dict) or shadow.get("session") != session:
+        raise DailyProducerError(f"SEALED_PRODUCER_SHADOW_MISMATCH:{session}")
+    packet_identity = outputs.get("canonical_decision_packet")
+    if packet_identity is not None and not isinstance(packet_identity, str):
+        raise DailyProducerError(f"SEALED_PRODUCER_PACKET_IDENTITY_MISMATCH:{session}")
+    t0_root = evidence_root / "operations-review" / "prospective-decision-retention-v1" / session
+    indexes = sorted(t0_root.glob("*/prospective_t0_seal_index.json")) if t0_root.is_dir() else []
+    if len(indexes) != 1:
+        raise DailyProducerError(f"SEALED_T0_INDEX_COUNT:{session}:{len(indexes)}")
+    index = _read_sealed_json(indexes[0], f"SEALED_T0_INDEX_UNREADABLE:{session}")
+    if (index.get("session") != session or index.get("operation_identity") != operation_identity
+            or index.get("snapshot_identity") != f"prospective_decision_snapshot:{indexes[0].parent.name}"):
+        raise DailyProducerError(f"SEALED_T0_INDEX_MISMATCH:{session}")
+    refuse_competing_sealed_run(runs_root, session, run_identity, operation_identity)
+    return {
+        "status": "COMPLETED",
+        "session": session,
+        "run_identity": run_identity,
+        "run_dir": run_path.parent,
+        "operation_dir": operation_dir,
+        "operation": {
+            "manifest": operation_manifest,
+            "product": product,
+            "opportunity": None,
+            "canonical_decision_packet": None,
+        },
+        "manifest": run_manifest,
+        "reused_existing_run": True,
+        "reused_sealed_producer": True,
+        "sealed_decision_packet_identity": packet_identity,
+    }
+
+
 def _canon(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 

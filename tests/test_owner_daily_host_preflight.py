@@ -677,6 +677,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = successor_baseline_pin(
             path, live_receipt["tplus_feedback_io_corrective"],
             live_receipt["observer_resident_record_release_corrective"],
+            live_receipt["sealed_producer_same_session_reuse"],
         )
     prior_receipt["retained_t0_velocity_projection_corrective"] = velocity
 
@@ -748,6 +749,18 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     current_lineage = (root / lineage_path).read_bytes().replace(b"\r\n", b"\n")
     prior_receipt["source_sha256"][lineage_path] = hashlib.sha256(current_lineage).hexdigest()
     prior_receipt["sealed_session_operation_identity_guard"] = lineage
+
+    reuse_path = "daily_producer_pipeline.py"
+    reuse = live_receipt["sealed_producer_same_session_reuse"]
+    assert reuse["scope"] == "EXACT_SEALED_PRODUCER_REUSE_WITHOUT_RECOMPUTE"
+    assert reuse["new_capacity_measurement"] is False
+    assert reuse["whole_daily_requalification"] is False
+    assert reuse["changed_source_paths"] == [reuse_path]
+    assert reuse["base_commit"] == "0307dfba81237fd05f760fdfa951a31c4cb2208a"
+    assert reuse["prior_source_sha256_lf"][reuse_path] == prior_receipt["source_sha256"][reuse_path]
+    current_reuse = (root / reuse_path).read_bytes().replace(b"\r\n", b"\n")
+    prior_receipt["source_sha256"][reuse_path] = hashlib.sha256(current_reuse).hexdigest()
+    prior_receipt["sealed_producer_same_session_reuse"] = reuse
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
