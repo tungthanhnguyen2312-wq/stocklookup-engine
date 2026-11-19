@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
 from stocklookup_core.research.conditional_investment_case import (
     build_statement_research_cohort,
     build_structured_financial_ai_research,
+    build_structured_financial_daily_context,
     build_structured_financial_research,
     case_from_annual_context,
     case_from_industrial_profile,
@@ -846,6 +847,21 @@ def render_structured_financial_markdown(packet: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_structured_financial_daily_markdown(artifact: Mapping[str, Any]) -> str:
+    lines = [
+        "# Structured financial daily context",
+        "",
+        "Post-session current research for an existing AI handoff. Not official, not PIT, not valuation, and not original T0 evidence.",
+        "",
+        f"Availability: {artifact.get('availability')}",
+        f"Issuers: {artifact.get('issuer_count')}",
+        f"Selected measures: {(artifact.get('coverage') or {}).get('selected_measures')}",
+        f"First eligible session: {artifact.get('first_eligible_session')}",
+        "",
+    ]
+    return "\n".join(lines) + "\n"
+
+
 def render_structured_financial_ai_markdown(artifact: Mapping[str, Any]) -> str:
     """Validated local draft. This is not a remote model response and not a vendor dump."""
     coverage = artifact["coverage"]
@@ -896,6 +912,10 @@ def main(argv: list[str] | None = None) -> int:
         "industrial_profitability", "earnings_quality", "balance_sheet_risk",
         "template_earnings_trends", "valuation_readiness", "company_thesis",
     ], help="Opt-in local AI research question. Requires --structured-input. Does not call a remote model.")
+    parser.add_argument("--daily-context", action="store_true",
+                        help="Write the compact post-session handoff context. Requires --structured-input and --eligible-from-session.")
+    parser.add_argument("--eligible-from-session",
+                        help="First YYYY-MM-DD session that may attach this context. Not a statement date and not historical availability.")
     parser.add_argument("--tickers", help="Comma-separated tickers for --ai-question. Company thesis needs one subject.")
     parser.add_argument("--observation-receipt", type=Path,
                         help="Hash-bound acquisition receipt. A caller --observed-at string is not a receipt.")
@@ -919,6 +939,16 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--ai-question requires --structured-input.")
     if args.ai_question is not None and args.observed_at:
         parser.error("A caller-supplied --observed-at string does not prove historical availability. Use --observation-receipt.")
+    if args.daily_context and args.ai_question:
+        parser.error("--daily-context cannot be combined with --ai-question.")
+    if args.daily_context and args.structured_input is None:
+        parser.error("--daily-context requires --structured-input.")
+    if args.daily_context and not args.eligible_from_session:
+        parser.error("--daily-context requires --eligible-from-session.")
+    if args.eligible_from_session and not args.daily_context:
+        parser.error("--eligible-from-session requires --daily-context.")
+    if args.daily_context and (args.knowledge_cutoff or args.observed_at):
+        parser.error("--daily-context does not accept a caller clock. Attachment is post-session current research.")
     if args.statement_cohort:
         if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--statement-cohort does not take intake, valuation, annual or reviewed-packet options.")
@@ -928,7 +958,13 @@ def main(argv: list[str] | None = None) -> int:
         if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--structured-input does not take intake, valuation, annual or reviewed-packet options.")
         try:
-            if args.ai_question is None:
+            if args.daily_context:
+                packet = build_structured_financial_research(args.structured_input)
+                packet = build_structured_financial_daily_context(
+                    packet, first_eligible_session=args.eligible_from_session,
+                )
+                markdown = render_structured_financial_daily_markdown(packet)
+            elif args.ai_question is None:
                 packet = build_structured_financial_research(
                     args.structured_input, knowledge_cutoff=args.knowledge_cutoff, observed_at=args.observed_at,
                 )

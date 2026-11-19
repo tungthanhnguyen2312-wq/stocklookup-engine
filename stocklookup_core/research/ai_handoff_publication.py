@@ -3,9 +3,13 @@ from __future__ import annotations
 import hashlib, json, re, subprocess
 from pathlib import Path
 from typing import Any, Mapping
+from stocklookup_core.evidence.field_identity import stable_id
 
 CONTRACT_VERSION = "stocklookup_ai_handoff_publication/v2"
 REQUIRED = ("ai_research_session_bundle.json", "daily_opportunity_decision_queue_artifact.json", "ai_research_bundle_manifest.json")
+STRUCTURED_FINANCIAL_CONTEXT = "structured_financial_research_context.json"
+_SESSION_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_STRUCTURED_FINANCIAL_CONTRACT = "structured_financial_daily_context/v1"
 OPPORTUNITY_QUEUE = "daily_opportunity_decision_queue_artifact.json"
 CORE_REQUIRED = tuple(name for name in REQUIRED if name != OPPORTUNITY_QUEUE)
 OPERATION_MANIFEST = "run_manifest.json"
@@ -84,6 +88,80 @@ def _financial_lineage(parsed: Mapping[str, Any]) -> str | None:
             or manifest.get("financial_analysis_source_context_identity") != source_identity):
         raise HandoffPublicationError("HANDOFF_FINANCIAL_ANALYSIS_IDENTITY_CHAIN_INVALID")
     return str(source_identity)
+def _unavailable_financial_context(reason: str) -> dict[str, Any]:
+    body = {
+        "availability": "UNAVAILABLE",
+        "attachment_role": "POST_SESSION_CURRENT_RESEARCH",
+        "contract_version": _STRUCTURED_FINANCIAL_CONTRACT,
+        "execution_eligible": False,
+        "financial_v2_authority_unchanged": "2026-09-05.1",
+        "historical_pit": "UNKNOWN",
+        "is_actionable": False,
+        "official_fact_admitted": False,
+        "reason_codes": [reason],
+        "sealed_session_evidence": False,
+        "valuation_use": "CLOSED",
+    }
+    body["context_sha256"] = stable_id({key: value for key, value in body.items() if key != "context_sha256"})
+    return body
+def _financial_context_rejection(payload: Mapping[str, Any]) -> str | None:
+    if payload.get("contract_version") != _STRUCTURED_FINANCIAL_CONTRACT:
+        return "STRUCTURED_FINANCIAL_CONTEXT_CONTRACT"
+    if payload.get("availability") != "AVAILABLE":
+        return "STRUCTURED_FINANCIAL_CONTEXT_NOT_AVAILABLE"
+    closed = (
+        payload.get("official_fact_admitted") is False
+        and payload.get("historical_pit") == "UNKNOWN"
+        and payload.get("valuation_use") == "CLOSED"
+        and payload.get("sealed_session_evidence") is False
+        and payload.get("attachment_role") == "POST_SESSION_CURRENT_RESEARCH"
+        and payload.get("is_actionable") is False
+        and payload.get("execution_eligible") is False
+        and payload.get("financial_v2_authority_unchanged") == "2026-09-05.1"
+    )
+    if not closed:
+        return "STRUCTURED_FINANCIAL_CONTEXT_AUTHORITY"
+    identity = payload.get("research_identity")
+    digest = payload.get("input_sha256")
+    if not isinstance(identity, str) or not identity.startswith("structured_financial_research:"):
+        return "STRUCTURED_FINANCIAL_CONTEXT_RESEARCH_IDENTITY"
+    if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        return "STRUCTURED_FINANCIAL_CONTEXT_INPUT_SHA"
+    issuers = payload.get("issuers")
+    if not isinstance(issuers, list) or not issuers:
+        return "STRUCTURED_FINANCIAL_CONTEXT_ISSUERS"
+    claimed = payload.get("context_sha256")
+    body = {key: value for key, value in payload.items() if key != "context_sha256"}
+    if claimed != stable_id(body):
+        return "STRUCTURED_FINANCIAL_CONTEXT_SHA"
+    return None
+def _qualify_structured_financial_context(payload: Any, session: str) -> dict[str, Any] | None:
+    """Omit the file for an ineligible session. An eligible unqualified file is UNAVAILABLE."""
+    if not isinstance(payload, Mapping):
+        return None
+    eligible = payload.get("first_eligible_session")
+    if not isinstance(eligible, str) or _SESSION_DATE.fullmatch(eligible) is None:
+        return None
+    if not isinstance(session, str) or _SESSION_DATE.fullmatch(session) is None or session < eligible:
+        return None
+    reason = _financial_context_rejection(payload)
+    if reason or _unsafe_pointer(payload) is not None:
+        return _unavailable_financial_context(reason or "STRUCTURED_FINANCIAL_CONTEXT_UNSAFE_PATH")
+    return dict(payload)
+def _load_structured_financial_context(source: Path, session: str) -> bytes | None:
+    local = source / STRUCTURED_FINANCIAL_CONTEXT
+    shared = source.parent.parent / STRUCTURED_FINANCIAL_CONTEXT
+    path = local if local.is_file() else shared if shared.is_file() else None
+    if path is None:
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None
+    qualified = _qualify_structured_financial_context(payload, session)
+    if qualified is None:
+        return None
+    return (json.dumps(qualified, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 def opportunity_queue_requirement(source: Path) -> dict[str, Any]:
     """Whether this operation's handoff must carry the opportunity decision queue.
 
@@ -167,6 +245,11 @@ def build_package(source: Path, session: str, previous: Path|None=None, *, produ
             json.dumps(_presentation_observer_payload(session, post_handoff_presentation),
                        ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
         ).encode("utf-8")
+    # Optional provider research. Absence leaves the package identical. An ineligible
+    # session also leaves it identical. An eligible unqualified file is UNAVAILABLE.
+    financial_context = _load_structured_financial_context(source, session)
+    if financial_context is not None:
+        files[STRUCTURED_FINANCIAL_CONTEXT] = financial_context
     parsed: dict[str, Any] = {}
     hashes: dict[str, str] = {}
     for name, entry in files.items():
@@ -210,6 +293,17 @@ def build_package(source: Path, session: str, previous: Path|None=None, *, produ
             "flow_price_divergence_shadow_status": (presentation_parsed.get("flow_price_divergence_shadow") or {}).get("status"),
             "post_handoff_prospective_decision_feedback_status": (presentation_parsed.get("post_handoff_prospective_decision_feedback") or {}).get("status"),
         }
+    if STRUCTURED_FINANCIAL_CONTEXT in parsed:
+        item = parsed[STRUCTURED_FINANCIAL_CONTEXT]
+        lineage["structured_financial_research"] = {
+            "availability": item.get("availability"),
+            "attachment_role": item.get("attachment_role"),
+            "context_sha256": item.get("context_sha256"),
+            "historical_pit": item.get("historical_pit"),
+            "input_sha256": item.get("input_sha256"),
+            "official_fact_admitted": item.get("official_fact_admitted"),
+            "research_identity": item.get("research_identity"),
+        }
     handoff_build_id="handoff_build_"+_identity({"session":session,"package_sha256":package_identity,"lineage":lineage})
     payload={"schema_version":CONTRACT_VERSION,"session":session,"status":"READY_FOR_AI","files":hashes,"package_sha256":package_identity,"lineage":lineage,"handoff_build_id":handoff_build_id}
     return files,payload
@@ -220,6 +314,8 @@ def _latest_payload(session: str, payload: Mapping[str, Any], *, immutable_sessi
         latest["decision_brief_sha256"]=payload["files"]["next_session_decision_brief.json"]
         latest["comparison_metadata"]=payload["lineage"].get("comparison_metadata")
     if "daily_integrated_decision_brief.json" in payload["files"]: latest["daily_integrated_decision_brief_sha256"]=payload["files"]["daily_integrated_decision_brief.json"]
+    if STRUCTURED_FINANCIAL_CONTEXT in payload["files"]:
+        latest["structured_financial_research_context_sha256"]=payload["files"][STRUCTURED_FINANCIAL_CONTEXT]
     return latest
 def publish(repo: Path, source: Path, session: str, *, previous: Path|None=None, producer_checkpoint: str="UNKNOWN", push: bool=True, local_only: bool=False, decision_brief: Path|None=None, daily_integrated_decision_brief: Path|None=None, post_handoff_presentation: Mapping[str, Any]|None=None) -> dict[str,Any]:
     """``local_only=True`` builds and validates the package (proving it is genuinely
