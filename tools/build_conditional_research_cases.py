@@ -21,6 +21,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from stocklookup_core.research.conditional_investment_case import (
+    build_statement_research_cohort,
     case_from_annual_context,
     case_from_industrial_profile,
     case_from_reviewed_evidence,
@@ -758,11 +759,54 @@ def _load_input_records(path: Path) -> list:
     return payload
 
 
+def render_statement_cohort_markdown(packet: Mapping[str, Any]) -> str:
+    """Owner-readable comparison. Numbers stay in the JSON."""
+    coverage = packet["coverage"]
+    comparison = packet["comparison"]
+    readings = packet["readings"]
+    lines = [
+        "# Current statement research cohort",
+        "",
+        "Use scope: CURRENT_RESEARCH. Attribution: SOURCE_ATTRIBUTED. Official facts: 0.",
+        "Industrial, securities and finance-company templates are not ranked together.",
+        "",
+        f"Records {coverage['issuer_period_metric_records']}. "
+        f"Current-research usable {coverage['current_research_usable']}. "
+        f"Blocked or not applicable {coverage['blocked_or_not_applicable']}.",
+        f"On one consolidated 2026-Q3 parent-profit margin, higher is {comparison['higher_on_this_ratio']} "
+        f"and lower is {comparison['lower_on_this_ratio']}. This is not a score or a valuation.",
+        "",
+        "## Readings",
+        "",
+        f"Parent-profit margins: {readings['industrial_q3_parent_profit_margin']}.",
+        f"Revenue year-over-year, where both columns exist: {readings['industrial_q3_revenue_yoy_percent']}.",
+        f"Parent-profit year-over-year, where both columns exist: {readings['industrial_q3_parent_profit_yoy_percent']}.",
+        f"POW nine-month operating cash flow over group profit: {readings['pow_nine_month_cash_conversion']}.",
+        f"POW prior nine-month cash conversion, group profit: {readings['pow_prior_nine_month_cash_conversion']}.",
+        f"POW nine-month operating-cash-flow change: {readings['pow_nine_month_operating_cash_flow_yoy']}.",
+        f"Identity residuals withheld rather than repaired: {readings['industrial_identity_residuals']}.",
+        f"PAN segment note versus the nine-month income line: {readings['pan_segment_versus_rejected_income_line']}.",
+        f"SSI component changes: {readings['ssi_q3_component_yoy_percent']}.",
+        f"EVF nine-month changes, million VND, separate statement: {readings['evf_nine_month_yoy_percent']}.",
+        "",
+        "## What this supports",
+        "",
+    ]
+    lines.extend(f"- {item}" for item in packet["thesis"])
+    lines.extend(["", "## What this does not support", ""])
+    lines.extend(f"- {item}" for item in packet["counter_thesis"])
+    lines.extend(["", "## Still unavailable", ""])
+    lines.extend(f"- {item}" for item in packet["unavailable"])
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build offline conditional research cases from retained evidence.")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--reviewed-packet", type=Path, help="Explicit reviewed financial evidence packet.")
     mode.add_argument("--inputs", type=Path, help="JSON list of {ticker, entity, inputs} for the supplied-input contract.")
+    mode.add_argument("--statement-cohort", action="store_true",
+                      help="Compare retained HPG, PAN, POW, SSI and EVF statement readings. No PDF and no official admission.")
     parser.add_argument("--packet-sha256", help="Exact reviewed packet SHA-256.")
     parser.add_argument("--source-map", type=Path, help="JSON map of document SHA-256 to local original file path.")
     parser.add_argument("--intake", type=Path, help="Retained quarterly intake for the HPG/KBC/FPT examples.")
@@ -774,7 +818,12 @@ def main(argv: list[str] | None = None) -> int:
     outputs = [args.out_json.resolve(), args.out_md.resolve()]
     if outputs[0] == outputs[1] or any(path.exists() for path in outputs):
         parser.error("Output files must be distinct and must not already exist.")
-    if args.reviewed_packet is not None:
+    if args.statement_cohort:
+        if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
+            parser.error("--statement-cohort does not take intake, valuation, annual or reviewed-packet options.")
+        packet = build_statement_research_cohort()
+        markdown = render_statement_cohort_markdown(packet)
+    elif args.reviewed_packet is not None:
         if not args.source_map or not args.packet_sha256 or any((args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--reviewed-packet requires --source-map and --packet-sha256, without retained example options.")
         try:

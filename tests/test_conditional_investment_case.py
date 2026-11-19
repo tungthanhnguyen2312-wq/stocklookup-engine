@@ -70,6 +70,74 @@ def test_interim_earnings_and_total_equity_are_not_strict_labels():
     assert plain["status"] == "UNKNOWN"
 
 
+def test_statement_cohort_reaches_the_research_case_consumer(tmp_path):
+    from stocklookup_core.research.conditional_investment_case import build_statement_research_cohort
+
+    first = build_statement_research_cohort()
+    second = build_statement_research_cohort()
+    assert first == second
+    assert first["official_fact_admitted"] is False
+    assert first["coverage"]["official_fact_admitted_count"] == 0
+    assert first["coverage"]["valuation_measures_usable"] == 0
+    assert first["coverage"]["ttm_measures_usable"] == 0
+    assert first["coverage"]["current_research_usable"] > 0
+    assert first["families"]["BANK"] == []
+    assert first["ordinal_rank"] is None
+    usable = {(row["ticker"], row["period"], row["metric"]) for row in first["measures"] if row["status"] == "USABLE"}
+    blocked = {(row["ticker"], row["period"], row["metric"]) for row in first["measures"] if row["status"] != "USABLE"}
+    assert ("HPG", "2026-Q3", "parent_profit_after_tax") in usable
+    assert ("HPG", "2026-9M", "parent_profit_after_tax") in usable
+    assert ("HPG", "2026-Q3_VS_2025-Q3", "net_revenue_yoy") in blocked
+    assert ("PAN", "2026-9M", "parent_profit_after_tax") in blocked
+    assert ("PAN", "2026-Q3", "parent_profit_after_tax") in usable
+    assert ("POW", "2026-9M", "operating_cash_flow") in usable
+    assert ("POW", "2026-Q3", "operating_cash_flow") not in usable
+    assert ("SSI", "2026-Q3", "industrial_profit_margin") in blocked
+    assert ("SSI", "2026-9M", "profit_after_tax") in blocked
+    assert ("EVF", "2026-Q3", "net_income") in blocked
+    assert ("EVF", "2026-9M", "net_income") in usable
+    hpg_parent = next(row for row in first["measures"]
+                      if row["ticker"] == "HPG" and row["period"] == "2026-Q3" and row["metric"] == "parent_profit_after_tax")
+    hpg_group = next(row for row in first["measures"]
+                     if row["ticker"] == "HPG" and row["period"] == "2026-Q3" and row["metric"] == "group_profit_after_tax")
+    assert hpg_parent["value"] != hpg_group["value"]
+    assert hpg_parent["official_fact_admitted"] is False
+    assert hpg_parent["use_scope"] == "CURRENT_RESEARCH"
+    evf = next(row for row in first["measures"] if row["ticker"] == "EVF" and row["metric"] == "net_income" and row["status"] == "USABLE")
+    assert evf["unit"] == "MILLION_VND"
+    assert evf["statement_scope"] == "separate"
+    assert {row["ticker"] for row in first["readings"]["industrial_q3_parent_profit_margin"]} == {"HPG", "PAN"}
+    assert "SSI" not in {row["ticker"] for row in first["readings"]["industrial_q3_parent_profit_margin"]}
+    assert "POW" not in {row["ticker"] for row in first["readings"]["industrial_q3_parent_profit_margin"]}
+    cash = first["readings"]["pow_nine_month_cash_conversion"]
+    assert cash["identity"] == "NINE_MONTH_OPERATING_CASH_FLOW_OVER_GROUP_PROFIT_AFTER_TAX"
+    assert cash["status"] == "NOT_COMPUTED"
+    assert cash["not_parent_cash_conversion"] is True
+    assert first["readings"]["pow_nine_month_operating_cash_flow_yoy"]["status"] == "COMPUTED"
+    assert first["readings"]["pow_prior_nine_month_cash_conversion"]["status"] == "COMPUTED"
+    assert first["readings"]["pow_prior_nine_month_cash_conversion"]["period"] == "2025-9M"
+    residuals = {(row["ticker"], row["period"]): row for row in first["readings"]["industrial_identity_residuals"]}
+    assert residuals["POW", "2026-Q3"]["group_minus_parent_and_nci_vnd"] == -1
+    assert residuals["POW", "2026-9M"]["group_minus_pretax_bridge_vnd"] == 1
+    assert residuals["PAN", "2026-9M"]["group_minus_parent_and_nci_vnd"] == 1
+    assert ("HPG", "2026-Q3") not in residuals
+    pan = first["readings"]["pan_segment_versus_rejected_income_line"]
+    assert pan["income_column_status"] == "REJECTED"
+    assert pan["difference_vnd"] != 0
+    evf_yoy = first["readings"]["evf_nine_month_yoy_percent"]
+    assert evf_yoy["net_income"] > 0
+    assert evf_yoy["pre_provision_profit"] < 0
+    assert evf_yoy["credit_loss_provision"] < 0
+    out_json = tmp_path / "cohort.json"
+    out_md = tmp_path / "cohort.md"
+    assert main(["--statement-cohort", "--out-json", str(out_json), "--out-md", str(out_md)]) == 0
+    written = json.loads(out_json.read_text(encoding="utf-8"))
+    assert written["cohort_identity"] == first["cohort_identity"]
+    text = out_md.read_text(encoding="utf-8")
+    assert "Official facts: 0" in text
+    assert "not a score or a valuation" in text
+
+
 def test_supplied_inputs_cover_a_future_issuer_without_strict_authority(tmp_path):
     source = tmp_path / "issuer-inputs.json"
     source.write_text(json.dumps({"records": [
