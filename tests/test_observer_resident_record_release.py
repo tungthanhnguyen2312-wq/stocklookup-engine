@@ -56,6 +56,88 @@ def test_observers_release_sealed_records_and_presentation_receives_them(tmp_pat
     assert sealed.read_bytes()  # the sealed file itself is not rewritten
 
 
+def test_feedback_keeps_records_released_until_presentation(tmp_path, monkeypatch):
+    from test_canonical_daily_operation import SESSION, _run
+
+    product = {
+        "contract_version": "integrated_investment_decision_product/v1",
+        "session": SESSION,
+        "artifact_identity": "integrated_investment_decision_product/v1:test",
+        "records": {"AAA": {"ticker": "AAA"}},
+    }
+    sealed = tmp_path / "integrated_investment_decision_product.json"
+    sealed.write_text(json.dumps(product), encoding="utf-8")
+    seen = {}
+
+    def enrichment(_root, session, **_kwargs):
+        return {"integrated_investment_decision_product": {
+            "status": "BUILT", "artifact": product, "path": sealed,
+        }}
+
+    def observers(*_args, **_kwargs):
+        seen["during"] = "records" not in product
+        return {"multi_session_signal_velocity": {"status": "UNAVAILABLE"},
+                "current_foreign_flow_enrichment": {"status": "UNAVAILABLE"},
+                "flow_price_divergence_shadow": {"status": "UNAVAILABLE"}}
+
+    def feedback(*_args, **_kwargs):
+        seen["feedback"] = "records" not in product
+        return {"status": "UNAVAILABLE"}
+
+    def presentation(*_args, **kwargs):
+        seen["presented"] = kwargs["integrated_investment_decision_product"]
+        return {"status": "UNAVAILABLE"}
+
+    _run(tmp_path, monkeypatch, enrichment_fn=enrichment,
+         post_handoff_observers_fn=observers, post_handoff_feedback_fn=feedback,
+         presentation_projection_fn=presentation)
+    assert seen == {"during": True, "feedback": True, "presented": product}
+    assert product["records"] == {"AAA": {"ticker": "AAA"}}
+
+
+def test_restore_uses_the_bounded_reader_and_a_smaller_peak(tmp_path, monkeypatch):
+    from canonical_daily_operation import _restore_resident_integrated_records
+
+    product = {
+        "contract_version": "integrated_investment_decision_product/v1",
+        "session": "2026-11-19",
+        "artifact_identity": "integrated_investment_decision_product/v1:peak",
+        "records": {f"T{index:05d}": {"ticker": f"T{index:05d}", "note": "n" * 60, "n": index} for index in range(12000)},
+    }
+    path = tmp_path / "integrated_investment_decision_product.json"
+    path.write_text(json.dumps(product, ensure_ascii=False), encoding="utf-8")
+    text_size = path.stat().st_size
+    assert text_size > 1_000_000
+
+    def peak(callback):
+        tracemalloc.start()
+        callback()
+        _current, high = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        return high
+
+    def naive():
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload["records"]["T00000"]["n"] == 0
+
+    def streamed():
+        artifact = {key: value for key, value in product.items() if key != "records"}
+        assert _restore_resident_integrated_records(artifact, path)
+        assert artifact["records"] == product["records"]
+
+    naive_peak = peak(naive)
+    streamed_peak = peak(streamed)
+    assert streamed_peak < naive_peak
+    assert naive_peak - streamed_peak > text_size // 2
+
+    def refuse_full_text(*_args, **_kwargs):
+        raise AssertionError("full-file read_text")
+
+    monkeypatch.setattr(Path, "read_text", refuse_full_text)
+    artifact = {key: value for key, value in product.items() if key != "records"}
+    assert _restore_resident_integrated_records(artifact, path) is True
+
+
 def test_identity_mismatch_does_not_present_a_stripped_record_map(tmp_path, monkeypatch):
     from test_canonical_daily_operation import SESSION, _run
 

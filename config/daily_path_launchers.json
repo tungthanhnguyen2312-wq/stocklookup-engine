@@ -10,8 +10,8 @@
       ]
     },
     "canonical_daily_operation.py": {
-      "ast_sha256": "681704955606de10904ca3cc0d124161c548029a1735968c71f2181a125cce8c",
-      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID and post-seal allocation bounds only; subprocess argv remains macro_sync.py. CORE + AI defers the retained tactical shadow child. 2026-11-19 observer-window record release: AST refresh drops and restores the sealed Integrated Decision record map only; resolved subprocess argv is unchanged.",
+      "ast_sha256": "75dd2ce94a2a9e3515e28acb3f8a74076ca960f5576c1ecc31e61350d6b92672",
+      "reason": "Macro argv resolved; release_orchestrator called in-process via import/parse_args, injected runner is bounded. 2026-10-21 review: AST refresh is the approved evaluated-valuation read only; resolved subprocess argv is unchanged from origin/main. 2026-10-25 repository layout transition: import lines retargeted to package owners only; invocation paths and argv references are identical to 92fe7612. Resident-IID and post-seal allocation bounds only; subprocess argv remains macro_sync.py. CORE + AI defers the retained tactical shadow child. 2026-11-19 observer-window record release: AST refresh drops the sealed Integrated Decision record map during observers and restores it through the bounded record reader only at presentation; resolved subprocess argv is unchanged.",
       "targets": [
         "macro_sync.py",
         "tools/release_orchestrator.py"

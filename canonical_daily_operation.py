@@ -631,9 +631,15 @@ def _release_resident_integrated_records(artifact: Mapping[str, Any]) -> bool:
 
 
 def _restore_resident_integrated_records(artifact: dict[str, Any], path: Path) -> bool:
-    """Put the sealed record map back without adopting a different product."""
+    """Put the sealed record map back without a second full-file string.
+
+    ``load_record_artifact`` is the existing bounded reader. It decodes one
+    record at a time, so the serialized file and the object graph are not
+    resident together. A different product is refused and left unloaded.
+    """
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+        payload = load_record_artifact(path)
     except (OSError, ValueError):
         return False
     records = payload.get("records") if isinstance(payload, dict) else None
@@ -643,6 +649,7 @@ def _restore_resident_integrated_records(artifact: dict[str, Any], path: Path) -
             or payload.get("contract_version") != artifact.get("contract_version")):
         return False
     artifact["records"] = records
+    payload.clear()
     del payload
     gc.collect()
     return True
@@ -1230,15 +1237,17 @@ def run_canonical_daily_operation(
         )
     finally:
         gc.collect()
-        integrated_records_restored = (
-            not released_integrated_records
-            or _restore_resident_integrated_records(integrated_delivery, sealed_integrated_path)
-        )
     checkpoints.finish()  # OBSERVERS_HANDLED
+    # Feedback does not read the record map. Keep it released until presentation,
+    # the first consumer that has to join the sealed product again.
     post_handoff_prospective_decision_feedback = run_post_handoff_prospective_outcome_feedback(
         root, resolved_session, output_root=operation_output_root,
     )
     checkpoints.finish()  # FEEDBACK_HANDLED
+    integrated_records_restored = (
+        not released_integrated_records
+        or _restore_resident_integrated_records(integrated_delivery, sealed_integrated_path)
+    )
     # CANONICAL_DAILY_OWNER_PUBLICATION_RESUME_AND_PRESENTATION_JOIN_V1: now that Signal
     # Velocity / Flow-Price exist for this exact session, additively re-join the current-product
     # projections (Workspace/Screener) with those now-available axes into a NEW artifact set --
