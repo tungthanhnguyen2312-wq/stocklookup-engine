@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
 
 from stocklookup_core.research.conditional_investment_case import (
     build_statement_research_cohort,
+    build_structured_financial_research,
     case_from_annual_context,
     case_from_industrial_profile,
     case_from_reviewed_evidence,
@@ -800,6 +801,50 @@ def render_statement_cohort_markdown(packet: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_structured_financial_markdown(packet: Mapping[str, Any]) -> str:
+    """Owner-readable view of a file-driven research packet. Numbers stay in the JSON."""
+    coverage = packet["coverage"]
+    lines = [
+        "# Structured financial research",
+        "",
+        "Use scope: CURRENT_RESEARCH. Official facts: 0. Valuation: closed. Historical PIT: UNKNOWN.",
+        "Publication time is not inferred from the export date or the file clock.",
+        f"Input SHA-256: {packet['input_sha256']}.",
+        f"Issuers {coverage['issuer_count']}. Records {coverage['issuer_period_metric_records']}. "
+        f"Current-research usable {coverage['current_research_usable']}. "
+        f"Blocked or not applicable {coverage['blocked_or_not_applicable']}. "
+        f"Conflicts {coverage['conflict_measures']}.",
+        f"Temporal status: {packet['temporal_status']}.",
+        "",
+        "## Families",
+        "",
+    ]
+    for family, tickers in packet["families"].items():
+        if tickers:
+            lines.append(f"{family}: {', '.join(tickers)}.")
+    lines.extend(["", "## Comparisons on one reported ratio", ""])
+    if not packet["comparisons"]:
+        lines.append("No same-template ratio has two issuers.")
+    else:
+        comparison = max(packet["comparisons"], key=lambda item: (len(item["rows"]), item["period"], item["question"]))
+        lines.append(
+            f"{comparison['question']} at {comparison['period']} ({comparison['analysis_family']}, "
+            f"{comparison['statement_scope']}): higher on this ratio is {comparison['higher_on_this_ratio']} "
+            f"and lower is {comparison['lower_on_this_ratio']}. This is not a score or a valuation."
+        )
+    lines.extend([
+        "",
+        "## Boundaries",
+        "",
+        "The statement cohort remains a separate regression control.",
+        "This packet is not fed to the AI research preview and does not activate Daily.",
+        "Financial V2 authority is unchanged.",
+        "",
+    ])
+    lines.extend(f"- {item}" for item in packet["restrictions"])
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build offline conditional research cases from retained evidence.")
     mode = parser.add_mutually_exclusive_group()
@@ -807,6 +852,10 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--inputs", type=Path, help="JSON list of {ticker, entity, inputs} for the supplied-input contract.")
     mode.add_argument("--statement-cohort", action="store_true",
                       help="Compare retained HPG, PAN, POW, SSI and EVF statement readings. No PDF and no official admission.")
+    mode.add_argument("--structured-input", type=Path,
+                      help="CSV or JSON structured financial export. No issuer constant and no official admission.")
+    parser.add_argument("--knowledge-cutoff", help="Timezone-aware cutoff. Requires --observed-at before a record can be treated as already available.")
+    parser.add_argument("--observed-at", help="Timezone-aware time the caller observed this file. Not a publication time.")
     parser.add_argument("--packet-sha256", help="Exact reviewed packet SHA-256.")
     parser.add_argument("--source-map", type=Path, help="JSON map of document SHA-256 to local original file path.")
     parser.add_argument("--intake", type=Path, help="Retained quarterly intake for the HPG/KBC/FPT examples.")
@@ -818,11 +867,24 @@ def main(argv: list[str] | None = None) -> int:
     outputs = [args.out_json.resolve(), args.out_md.resolve()]
     if outputs[0] == outputs[1] or any(path.exists() for path in outputs):
         parser.error("Output files must be distinct and must not already exist.")
+    if args.knowledge_cutoff or args.observed_at:
+        if args.structured_input is None:
+            parser.error("--knowledge-cutoff and --observed-at require --structured-input.")
     if args.statement_cohort:
         if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--statement-cohort does not take intake, valuation, annual or reviewed-packet options.")
         packet = build_statement_research_cohort()
         markdown = render_statement_cohort_markdown(packet)
+    elif args.structured_input is not None:
+        if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
+            parser.error("--structured-input does not take intake, valuation, annual or reviewed-packet options.")
+        try:
+            packet = build_structured_financial_research(
+                args.structured_input, knowledge_cutoff=args.knowledge_cutoff, observed_at=args.observed_at,
+            )
+        except (OSError, ValueError) as exc:
+            parser.error(str(exc))
+        markdown = render_structured_financial_markdown(packet)
     elif args.reviewed_packet is not None:
         if not args.source_map or not args.packet_sha256 or any((args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--reviewed-packet requires --source-map and --packet-sha256, without retained example options.")

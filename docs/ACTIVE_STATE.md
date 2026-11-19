@@ -304,8 +304,8 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 9. Next action
 
-Statement cohort is current research only. Official HPG admission stays blocked.
-T+ warm and VN-Index/public Dashboard gates remain separate; no new lane.
+Structured provider input and the Q3 statement cohort are current research only.
+Official HPG admission stays blocked. T+ warm and VN-Index/public Dashboard gates remain separate; no new lane.
 
 ## 10. Owner approvals that remain open
 
