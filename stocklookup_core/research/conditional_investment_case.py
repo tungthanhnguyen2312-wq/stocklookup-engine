@@ -346,3 +346,427 @@ def case_from_reviewed_evidence(
         },
     }
     return {**body, "case_identity": "conditional_investment_case:" + stable_id(body)}
+
+
+COHORT_CONTRACT = "current_statement_research_cohort/v1"
+_INDUSTRIAL_METRICS = (
+    ("10", "net_revenue"),
+    ("20", "gross_profit"),
+    ("50", "profit_before_tax"),
+    ("60", "group_profit_after_tax"),
+    ("61", "parent_profit_after_tax"),
+    ("62", "noncontrolling_profit"),
+)
+_YOY_PAIRS = (("2026-Q3", "2025-Q3"), ("2026-9M", "2025-9M"))
+
+
+def _ratio(numerator: int, denominator: int) -> dict[str, Any]:
+    if denominator == 0:
+        return {"status": "NOT_COMPUTED", "reason_codes": ["ZERO_DENOMINATOR"], "rounded_6dp": None}
+    return {
+        "status": "COMPUTED",
+        "numerator": numerator,
+        "denominator": denominator,
+        "rounded_6dp": format(round(numerator / denominator, 6), ".6f"),
+        "reason_codes": [],
+    }
+
+
+def _yoy(current: int, prior: int) -> dict[str, Any]:
+    if prior == 0:
+        return {"status": "NOT_COMPUTED", "reason_codes": ["ZERO_BASE"], "percent": None}
+    return {
+        "status": "COMPUTED",
+        "percent": round(100 * (current / prior - 1), 2),
+        "method": "SAME_SCOPE_REPORTED_COLUMN_OVER_PRIOR_COLUMN",
+        "reason_codes": [],
+    }
+
+
+def _measure(**fields: Any) -> dict[str, Any]:
+    return {
+        "official_fact_admitted": False,
+        "historical_pit": "UNKNOWN",
+        "valuation_use": "CLOSED",
+        "strict_consumer_usable": False,
+        "attribution": "SOURCE_ATTRIBUTED",
+        "annualized": False,
+        "ttm": False,
+        **fields,
+    }
+
+
+def _industrial_columns(source: Any) -> list[dict[str, Any]]:
+    """One issuer's already cross-footed income columns. A failed column emits nothing usable."""
+    measures: list[dict[str, Any]] = []
+    accepted: dict[str, Mapping[str, int]] = {}
+    for period, lines, kind in source["columns"]:
+        reasons = source["cross_foot"](lines)
+        common = {
+            "ticker": source["ticker"], "period": period, "period_kind": kind,
+            "analysis_family": "INDUSTRIAL", "statement_scope": "consolidated",
+            "unit": "VND", "unit_scale": 1, "currency": "VND",
+            "evidence_layer": source["evidence_layer"], "source_sha256": source["sha256"],
+            "source_url": source["source_url"], "audit_or_review_status": "unreviewed",
+        }
+        if reasons:
+            for _code, metric in _INDUSTRIAL_METRICS:
+                measures.append(_measure(
+                    **common, metric=metric, status="BLOCKED", value=None,
+                    use_scope="NOT_AVAILABLE", reason_codes=list(reasons),
+                ))
+            continue
+        accepted[period] = lines
+        for code, metric in _INDUSTRIAL_METRICS:
+            measures.append(_measure(
+                **common, metric=metric, status="USABLE", value=lines[code],
+                use_scope="CURRENT_RESEARCH", reason_codes=[],
+                statement_line=code,
+            ))
+        for metric, numerator, denominator in (
+            ("gross_margin", lines["20"], lines["10"]),
+            ("group_profit_margin", lines["60"], lines["10"]),
+            ("parent_profit_margin", lines["61"], lines["10"]),
+        ):
+            ratio = _ratio(numerator, denominator)
+            measures.append(_measure(
+                **common, metric=metric, status="USABLE" if ratio["status"] == "COMPUTED" else "BLOCKED",
+                value=ratio.get("rounded_6dp"), use_scope="CURRENT_RESEARCH" if ratio["status"] == "COMPUTED" else "NOT_AVAILABLE",
+                reason_codes=list(ratio["reason_codes"]), numerator=numerator, denominator=denominator,
+                identity=f"{metric.upper()}_OVER_NET_REVENUE",
+            ))
+    for current, prior in _YOY_PAIRS:
+        for _code, metric in _INDUSTRIAL_METRICS:
+            base = {
+                "ticker": source["ticker"], "period": f"{current}_VS_{prior}", "period_kind": "YEAR_OVER_YEAR",
+                "analysis_family": "INDUSTRIAL", "statement_scope": "consolidated", "unit": "PERCENT",
+                "unit_scale": 1, "currency": "VND", "metric": f"{metric}_yoy",
+                "evidence_layer": source["evidence_layer"], "source_sha256": source["sha256"],
+                "source_url": source["source_url"], "audit_or_review_status": "unreviewed",
+            }
+            if current not in accepted or prior not in accepted:
+                measures.append(_measure(
+                    **base, status="BLOCKED", value=None, use_scope="NOT_AVAILABLE",
+                    reason_codes=["PRIOR_OR_CURRENT_COLUMN_ABSENT_OR_REJECTED"],
+                ))
+                continue
+            change = _yoy(accepted[current][_code], accepted[prior][_code])
+            measures.append(_measure(
+                **base, status="USABLE" if change["status"] == "COMPUTED" else "BLOCKED",
+                value=change.get("percent"),
+                use_scope="CURRENT_RESEARCH" if change["status"] == "COMPUTED" else "NOT_AVAILABLE",
+                reason_codes=list(change["reason_codes"]), method=change.get("method"),
+            ))
+    return measures
+
+
+def _period_kind(period: str) -> str:
+    text = str(period)
+    if text.endswith("Q3"):
+        return "STANDALONE_QUARTER"
+    if text.endswith("9M"):
+        return "CUMULATIVE_NINE_MONTH"
+    return "REPORTED_PERIOD"
+
+
+def _named_rows(packet: Mapping[str, Any], *, family: str, scope: str, unit: str, scale: int) -> list[dict[str, Any]]:
+    measures = []
+    for row in packet.get("observations") or []:
+        measures.append(_measure(
+            ticker=packet["ticker"], period=row["period"], period_kind=_period_kind(str(row["period"])),
+            analysis_family=family, statement_scope=scope, unit=unit, unit_scale=scale,
+            currency="VND", metric=row["metric"], status="USABLE", value=row["value"],
+            use_scope="CURRENT_RESEARCH", reason_codes=[], evidence_layer=packet["evidence_layer"],
+            source_sha256=packet["sha256"], source_url=packet["source_url"],
+            audit_or_review_status=packet.get("audit_or_review_status"),
+        ))
+    return measures
+
+
+def build_statement_research_cohort() -> dict[str, Any]:
+    """Project retained statement readings into one current-research comparison.
+
+    The readings already live in ``q3_2026_successor_research``. This function does
+    not read a PDF, admit an official fact, annualize a nine-month column, or build
+    a second financial store. Banks are absent because no retained bank column is
+    cross-footed here. Securities and the finance company stay outside industrial ratios.
+    """
+    from stocklookup_core.financial import q3_2026_successor_research as source
+
+    hpg_columns = (
+        ("2026-Q3", source.HPG_Q3_2026_LINES, "STANDALONE_QUARTER"),
+        ("2026-9M", source.HPG_9M_2026_LINES, "CUMULATIVE_NINE_MONTH"),
+    )
+    pow_columns = tuple(
+        (period, dict(zip(source.FOOT_CODES, values, strict=True)),
+         "STANDALONE_QUARTER" if period.endswith("Q3") else "CUMULATIVE_NINE_MONTH")
+        for period, values in source.POW_INCOME_COLUMNS.items()
+    )
+    pan_columns = tuple(
+        (period, dict(zip(source.FOOT_CODES, values, strict=True)),
+         "STANDALONE_QUARTER" if period.endswith("Q3") else "CUMULATIVE_NINE_MONTH")
+        for period, values in source.PAN_INCOME_COLUMNS.items()
+    )
+    industrial_sources = (
+        {"ticker": "HPG", "columns": hpg_columns, "cross_foot": source.income_cross_foot,
+         "sha256": source.HPG_CONSOLIDATED_Q3_SHA256, "source_url": source.HPG_CONSOLIDATED_Q3_URL,
+         "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE"},
+        {"ticker": "POW", "columns": pow_columns, "cross_foot": source.income_cross_foot,
+         "sha256": source.POW_Q3_SHA256, "source_url": source.POW_Q3_URL,
+         "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE"},
+        {"ticker": "PAN", "columns": pan_columns, "cross_foot": source.income_cross_foot,
+         "sha256": source.PAN_Q3_SHA256, "source_url": source.PAN_Q3_URL,
+         "evidence_layer": "VISUAL_READ_NOT_BYTE_NATIVE"},
+    )
+    measures: list[dict[str, Any]] = []
+    for item in industrial_sources:
+        measures.extend(_industrial_columns(item))
+    for period, lines in source.POW_OCF_COLUMNS.items():
+        reasons = source.operating_cash_flow_cross_foot(lines)
+        measures.append(_measure(
+            ticker="POW", period=period, period_kind="CUMULATIVE_NINE_MONTH",
+            analysis_family="INDUSTRIAL", statement_scope="consolidated", unit="VND",
+            unit_scale=1, currency="VND", metric="operating_cash_flow",
+            status="USABLE" if not reasons else "BLOCKED",
+            value=lines["20"] if not reasons else None,
+            use_scope="CURRENT_RESEARCH" if not reasons else "NOT_AVAILABLE",
+            reason_codes=reasons, evidence_layer="VISUAL_READ_NOT_BYTE_NATIVE",
+            source_sha256=source.POW_Q3_SHA256, source_url=source.POW_Q3_URL,
+            audit_or_review_status="unreviewed", statement_line="20",
+            identity="INDIRECT_OPERATING_CASH_FLOW_NOT_A_QUARTER",
+        ))
+    measures.append(_measure(
+        ticker="POW", period="2026-9M", period_kind="CUMULATIVE_NINE_MONTH",
+        analysis_family="INDUSTRIAL", statement_scope="consolidated", unit="VND",
+        unit_scale=1, currency="VND", metric="interest_bearing_debt", status="BLOCKED",
+        value=None, use_scope="NOT_AVAILABLE",
+        reason_codes=["LEASE_INCLUSIVE_LINES_NOT_SEPARATED"],
+        evidence_layer="VISUAL_READ_NOT_BYTE_NATIVE", source_sha256=source.POW_Q3_SHA256,
+        source_url=source.POW_Q3_URL, audit_or_review_status="unreviewed",
+    ))
+    ssi = source.ssi_consolidated_page_research()
+    measures.extend(_named_rows(
+        ssi, family="SECURITIES", scope="consolidated", unit="VND", scale=1,
+    ))
+    measures.append(_measure(
+        ticker="SSI", period="2026-9M", period_kind="CUMULATIVE_NINE_MONTH",
+        analysis_family="SECURITIES", statement_scope="consolidated", unit="VND",
+        unit_scale=1, currency="VND", metric="profit_after_tax", status="BLOCKED",
+        value=None, use_scope="NOT_AVAILABLE", reason_codes=["OCR_DIGIT_AMBIGUOUS_NOT_EMITTED"],
+        evidence_layer=ssi["evidence_layer"], source_sha256=ssi["sha256"],
+        source_url=ssi["source_url"], audit_or_review_status="unreviewed",
+    ))
+    measures.append(_measure(
+        ticker="SSI", period="2026-Q3", period_kind="STANDALONE_QUARTER",
+        analysis_family="SECURITIES", statement_scope="consolidated", unit="RATIO",
+        unit_scale=1, currency="VND", metric="industrial_profit_margin", status="NOT_APPLICABLE",
+        value=None, use_scope="NOT_AVAILABLE", reason_codes=["SECURITIES_TEMPLATE_IS_NOT_INDUSTRIAL"],
+        evidence_layer=ssi["evidence_layer"], source_sha256=ssi["sha256"],
+        source_url=ssi["source_url"], audit_or_review_status="unreviewed",
+    ))
+    evf = source.evf_reviewed_page_research()
+    measures.extend(_named_rows(
+        evf, family="FINANCE_COMPANY", scope="separate", unit="MILLION_VND", scale=1000000,
+    ))
+    measures.append(_measure(
+        ticker="EVF", period="2026-Q3", period_kind="STANDALONE_QUARTER",
+        analysis_family="FINANCE_COMPANY", statement_scope="separate", unit="MILLION_VND",
+        unit_scale=1000000, currency="VND", metric="net_income", status="BLOCKED",
+        value=None, use_scope="NOT_AVAILABLE", reason_codes=["NO_STANDALONE_QUARTER_COLUMN"],
+        evidence_layer=evf["evidence_layer"], source_sha256=evf["sha256"],
+        source_url=evf["source_url"], audit_or_review_status="reviewed",
+    ))
+    for ticker in ("HPG", "POW", "PAN", "SSI", "EVF"):
+        measures.append(_measure(
+            ticker=ticker, period="TTM", period_kind="TRAILING_TWELVE_MONTHS",
+            analysis_family="UNSET", statement_scope="UNSET", unit="VND", unit_scale=1,
+            currency="VND", metric="profit_after_tax_ttm", status="BLOCKED", value=None,
+            use_scope="NOT_AVAILABLE", reason_codes=["NO_FOUR_COMPATIBLE_STANDALONE_QUARTERS"],
+            evidence_layer="NOT_DERIVED", source_sha256=None, source_url=None,
+            audit_or_review_status=None,
+        ))
+        measures.append(_measure(
+            ticker=ticker, period="CURRENT", period_kind="UNSET", analysis_family="UNSET",
+            statement_scope="UNSET", unit="MULTIPLE", unit_scale=1, currency="VND",
+            metric="research_multiple", status="BLOCKED", value=None, use_scope="NOT_AVAILABLE",
+            reason_codes=["VALUATION_CLOSED_NO_QUALIFIED_PRICE_AND_SHARE_BASE"],
+            evidence_layer="NOT_DERIVED", source_sha256=None, source_url=None,
+            audit_or_review_status=None,
+        ))
+
+    def _usable(ticker: str, period: str, metric: str) -> dict[str, Any] | None:
+        found = [row for row in measures if row["ticker"] == ticker and row["period"] == period
+                 and row["metric"] == metric and row["status"] == "USABLE"]
+        return found[0] if len(found) == 1 else None
+
+    margin_rows = []
+    for ticker in ("HPG", "PAN", "POW"):
+        row = _usable(ticker, "2026-Q3", "parent_profit_margin")
+        if row is not None:
+            margin_rows.append({"ticker": ticker, "rounded_6dp": row["value"],
+                                "numerator": row["numerator"], "denominator": row["denominator"]})
+    revenue_yoy = []
+    for ticker in ("HPG", "PAN", "POW"):
+        row = _usable(ticker, "2026-Q3_VS_2025-Q3", "net_revenue_yoy")
+        if row is not None:
+            revenue_yoy.append({"ticker": ticker, "percent": row["value"]})
+    parent_yoy = []
+    for ticker in ("HPG", "PAN", "POW"):
+        row = _usable(ticker, "2026-Q3_VS_2025-Q3", "parent_profit_after_tax_yoy")
+        if row is not None:
+            parent_yoy.append({"ticker": ticker, "percent": row["value"]})
+    pow_ocf = _usable("POW", "2026-9M", "operating_cash_flow")
+    pow_ocf_prior = _usable("POW", "2025-9M", "operating_cash_flow")
+    pow_profit = _usable("POW", "2026-9M", "group_profit_after_tax")
+    if pow_ocf and pow_profit and pow_profit["value"]:
+        cash_conversion = _ratio(pow_ocf["value"], pow_profit["value"])
+        cash_conversion["identity"] = "NINE_MONTH_OPERATING_CASH_FLOW_OVER_GROUP_PROFIT_AFTER_TAX"
+        cash_conversion["not_parent_cash_conversion"] = True
+    else:
+        cash_conversion = {
+            "status": "NOT_COMPUTED",
+            "identity": "NINE_MONTH_OPERATING_CASH_FLOW_OVER_GROUP_PROFIT_AFTER_TAX",
+            "not_parent_cash_conversion": True,
+            "reason_codes": ["GROUP_PROFIT_COLUMN_FAILED_IDENTITY" if pow_ocf else "OPERATING_CASH_FLOW_UNUSABLE"],
+            "operating_cash_flow_value_vnd": None if pow_ocf is None else pow_ocf["value"],
+        }
+    identity_residuals = []
+    residual_sources = (
+        ("HPG", {"2026-Q3": source.HPG_Q3_2026_LINES, "2026-9M": source.HPG_9M_2026_LINES}),
+        ("POW", {period: dict(zip(source.FOOT_CODES, values, strict=True))
+                 for period, values in source.POW_INCOME_COLUMNS.items()}),
+        ("PAN", {period: dict(zip(source.FOOT_CODES, values, strict=True))
+                 for period, values in source.PAN_INCOME_COLUMNS.items()}),
+    )
+    for ticker, columns in residual_sources:
+        for period, lines in columns.items():
+            reasons = source.income_cross_foot(lines)
+            if "LINE_60_DOES_NOT_FOOT_61_PLUS_62" in reasons or "LINE_60_DOES_NOT_FOOT_50_MINUS_51_MINUS_52" in reasons:
+                identity_residuals.append({
+                    "ticker": ticker,
+                    "period": period,
+                    "reason_codes": reasons,
+                    "group_minus_parent_and_nci_vnd": lines["60"] - (lines["61"] + lines["62"]),
+                    "group_minus_pretax_bridge_vnd": lines["60"] - (lines["50"] - lines["51"] - lines["52"]),
+                    "use": "COLUMN_WITHHELD_RESIDUAL_NOT_REPAIRED",
+                })
+    ocf_yoy = None
+    if pow_ocf and pow_ocf_prior:
+        ocf_yoy = _yoy(pow_ocf["value"], pow_ocf_prior["value"])
+        ocf_yoy["period"] = "2026-9M_VS_2025-9M"
+        ocf_yoy["identity"] = "CUMULATIVE_NINE_MONTH_OPERATING_CASH_FLOW"
+    pow_profit_prior = _usable("POW", "2025-9M", "group_profit_after_tax")
+    prior_cash_conversion = None
+    if pow_ocf_prior and pow_profit_prior and pow_profit_prior["value"]:
+        prior_cash_conversion = _ratio(pow_ocf_prior["value"], pow_profit_prior["value"])
+        prior_cash_conversion["identity"] = "NINE_MONTH_OPERATING_CASH_FLOW_OVER_GROUP_PROFIT_AFTER_TAX"
+        prior_cash_conversion["period"] = "2025-9M"
+        prior_cash_conversion["not_parent_cash_conversion"] = True
+    segment_sum = sum(value for _name, value in source.PAN_SEGMENT_EXTERNAL_REVENUE)
+    pan_line_10 = source.PAN_INCOME_COLUMNS["2026-9M"][source.FOOT_CODES.index("10")]
+    brokerage = _usable("SSI", "2026-Q3", "brokerage_revenue")
+    brokerage_prior = _usable("SSI", "2025-Q3", "brokerage_revenue")
+    interest = _usable("SSI", "2026-Q3", "interest_expense")
+    interest_prior = _usable("SSI", "2025-Q3", "interest_expense")
+    loan_interest = _usable("SSI", "2026-Q3", "loan_and_receivable_interest")
+    loan_interest_prior = _usable("SSI", "2025-Q3", "loan_and_receivable_interest")
+    readings = {
+        "industrial_q3_parent_profit_margin": margin_rows,
+        "industrial_q3_revenue_yoy_percent": revenue_yoy,
+        "industrial_q3_parent_profit_yoy_percent": parent_yoy,
+        "pow_nine_month_cash_conversion": cash_conversion,
+        "pow_prior_nine_month_cash_conversion": prior_cash_conversion,
+        "pow_nine_month_operating_cash_flow_yoy": ocf_yoy,
+        "industrial_identity_residuals": identity_residuals,
+        "pan_segment_versus_rejected_income_line": {
+            "segment_external_revenue_sum_vnd": segment_sum,
+            "printed_nine_month_line_10_vnd": pan_line_10,
+            "difference_vnd": pan_line_10 - segment_sum,
+            "income_column_status": "REJECTED" if not _usable("PAN", "2026-9M", "net_revenue") else "USABLE",
+            "use": "SEGMENT_NOTE_IS_NOT_A_REPLACEMENT_REVENUE",
+        },
+        "ssi_q3_component_yoy_percent": {
+            "brokerage_revenue": None if not brokerage or not brokerage_prior else _yoy(brokerage["value"], brokerage_prior["value"]),
+            "interest_expense": None if not interest or not interest_prior else _yoy(interest["value"], interest_prior["value"]),
+            "loan_and_receivable_interest": None if not loan_interest or not loan_interest_prior else _yoy(
+                loan_interest["value"], loan_interest_prior["value"]),
+        },
+        "evf_nine_month_yoy_percent": {
+            "net_income": evf["net_income_yoy_pct"],
+            "pre_provision_profit": evf["pre_provision_profit_yoy_pct"],
+            "credit_loss_provision": evf["credit_loss_provision_yoy_pct"],
+            "unit": "MILLION_VND",
+            "statement_scope": "separate",
+            "standalone_quarter": False,
+        },
+    }
+    usable = [row for row in measures if row["status"] == "USABLE"]
+    blocked = [row for row in measures if row["status"] != "USABLE"]
+    coverage = {
+        "issuer_period_metric_records": len(measures),
+        "source_identity_present": sum(bool(row.get("source_sha256")) and bool(row.get("ticker")) for row in measures),
+        "accounting_semantics_present": sum(
+            bool(row.get("period_kind")) and bool(row.get("statement_scope")) and bool(row.get("unit"))
+            for row in measures
+        ),
+        "current_research_usable": len(usable),
+        "blocked_or_not_applicable": len(blocked),
+        "official_fact_admitted_count": 0,
+        "companies_in_industrial_margin_comparison": len(margin_rows),
+        "valuation_measures_usable": sum(row["metric"] == "research_multiple" and row["status"] == "USABLE" for row in measures),
+        "ttm_measures_usable": sum(row["metric"] == "profit_after_tax_ttm" and row["status"] == "USABLE" for row in measures),
+    }
+    higher = max(margin_rows, key=lambda row: (row["numerator"] / row["denominator"], row["ticker"])) if margin_rows else None
+    lower = min(margin_rows, key=lambda row: (row["numerator"] / row["denominator"], row["ticker"])) if margin_rows else None
+    body = {
+        "contract_version": COHORT_CONTRACT,
+        "use_scope": "CURRENT_RESEARCH",
+        "attribution": "SOURCE_ATTRIBUTED",
+        "evidence_role": "RETAINED_STATEMENT_READING",
+        "not_provider_market_data": True,
+        "official_fact_admitted": False,
+        "historical_pit": "UNKNOWN",
+        "valuation_use": "CLOSED",
+        "execution_eligible": False,
+        "is_actionable": False,
+        "target_price": None,
+        "probability": None,
+        "ordinal_rank": None,
+        "financial_v2_authority_unchanged": "2026-09-05.1",
+        "issuers": ["EVF", "HPG", "PAN", "POW", "SSI"],
+        "families": {
+            "INDUSTRIAL": ["HPG", "PAN", "POW"],
+            "SECURITIES": ["SSI"],
+            "FINANCE_COMPANY": ["EVF"],
+            "BANK": [],
+        },
+        "measures": measures,
+        "readings": readings,
+        "coverage": coverage,
+        "comparison": {
+            "question": "CONSOLIDATED_STANDALONE_2026_Q3_PARENT_PROFIT_OVER_NET_REVENUE",
+            "higher_on_this_ratio": None if higher is None else higher["ticker"],
+            "lower_on_this_ratio": None if lower is None else lower["ticker"],
+            "does_not_establish": [
+                "OVERALL_FINANCIAL_STRENGTH", "PEER_RANK", "TARGET_PRICE", "OFFICIAL_FACT", "VALUATION",
+            ],
+        },
+        "thesis": [
+            "HPG, PAN and POW can be compared only on the consolidated industrial columns that cross-foot.",
+            "SSI brokerage, interest expense and loan interest are securities components, not industrial revenue or profit margins.",
+            "EVF nine-month profit moved differently from pre-provision profit; the change is not identified as spread expansion.",
+        ],
+        "counter_thesis": [
+            "A higher parent-profit margin on one unreviewed quarter is not a ranking and is not a valuation.",
+            "Nine-month figures are cumulative. They are not multiplied into a year and are not a trailing twelve months.",
+            "Group profit is not parent profit. Operating cash flow over group profit is not parent cash conversion.",
+            "PAN's nine-month income column stays out when it does not cross-foot. The segment note does not replace it.",
+            "No qualified price and share base is attached, so no P/E, P/B or EV multiple is computed.",
+            "These readings are not official facts and have no historical point-in-time clock.",
+        ],
+        "unavailable": [
+            "BANK_TEMPLATE", "INTEREST_BEARING_DEBT", "TTM", "RESEARCH_MULTIPLE",
+            "SSI_NINE_MONTH_PROFIT_AFTER_TAX", "EVF_STANDALONE_QUARTER", "PAN_NINE_MONTH_INCOME_WHEN_REJECTED",
+        ],
+    }
+    return {**body, "cohort_identity": "current_statement_research_cohort:" + stable_id(body)}

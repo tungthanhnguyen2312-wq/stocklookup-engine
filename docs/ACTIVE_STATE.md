@@ -304,7 +304,7 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 9. Next action
 
-Complete HPG's [intake evidence](official_financial_quarterly_intake_contract.md).
+Statement cohort is current research only. Official HPG admission stays blocked.
 T+ warm and VN-Index/public Dashboard gates remain separate; no new lane.
 
 ## 10. Owner approvals that remain open
