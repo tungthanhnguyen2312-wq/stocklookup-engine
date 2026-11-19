@@ -675,7 +675,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert digest == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert digest == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = successor_baseline_pin(
-            path, live_receipt["tplus_feedback_io_corrective"]
+            path, live_receipt["tplus_feedback_io_corrective"],
+            live_receipt["observer_resident_record_release_corrective"],
         )
     prior_receipt["retained_t0_velocity_projection_corrective"] = velocity
 
@@ -689,8 +690,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert transition["sources"][feedback_paths[0]]["prior_sha256_lf"] == prior_receipt["source_sha256"][feedback_paths[0]]
     for path in feedback_paths:
         assert feedback_io["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(
+            path, live_receipt["observer_resident_record_release_corrective"])
     for run in ("baseline", "candidate"):
         assert 0 < feedback_io["retained_component_measurement"][run]["peak_process_bytes"] < 2 * 1024**3
     prior_receipt["tplus_feedback_io_corrective"] = feedback_io
@@ -713,6 +714,27 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert module_name(intake_path) not in daily_reachable(root)
     prior_receipt["source_sha256"][intake_path] = hashlib.sha256(current_intake).hexdigest()
     prior_receipt["q3_intake_column_binding_corrective"] = intake
+
+    resident_release = live_receipt["observer_resident_record_release_corrective"]
+    release_paths = [
+        "canonical_daily_operation.py",
+        "flow_price_divergence_shadow.py",
+        "tools/verify_retention_reader_transition.py",
+    ]
+    assert resident_release["scope"] == "EXACT_OBSERVER_RESIDENT_RECORD_RELEASE_AND_STREAMED_IMMUTABLE_WRITE_ONLY"
+    assert resident_release["new_capacity_measurement"] is False
+    assert resident_release["whole_daily_requalification"] is False
+    assert resident_release["changed_source_paths"] == release_paths
+    assert resident_release["base_commit"] == "5c457bb07055d14550c1cb27c2550cea85379eca"
+    release_transition = json.loads((root / resident_release["source_transition"]).read_bytes())
+    assert release_transition["base_commit"] == resident_release["base_commit"]
+    assert release_transition["previous_e4_v2_digest"] == release_transition["active_e4_v2_digest"]
+    assert release_transition["sources"]["canonical_daily_operation.py"]["prior_sha256_lf"] == prior_receipt["source_sha256"]["canonical_daily_operation.py"]
+    for path in release_paths:
+        assert resident_release["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["observer_resident_record_release_corrective"] = resident_release
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

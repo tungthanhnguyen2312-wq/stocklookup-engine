@@ -607,6 +607,47 @@ def _integrated_delivery_for_session(enrichment: Mapping[str, Any], session: str
     return integrated
 
 
+def _sealed_integrated_product_path(enrichment: Mapping[str, Any]) -> Path | None:
+    """Path of the Integrated Decision file already written for this session."""
+    entry = enrichment.get("integrated_investment_decision_product")
+    if not isinstance(entry, Mapping) or entry.get("path") is None:
+        return None
+    path = Path(entry["path"])
+    return path if path.is_file() else None
+
+
+def _release_resident_integrated_records(artifact: Mapping[str, Any]) -> bool:
+    """Drop the sealed record map so later observers do not keep it resident.
+
+    The enrichment file already holds these records. The same dict is shared
+    with the producer result, so removing the key releases every alias.
+    Presentation restores the map from that file. A non-dict artifact is unchanged.
+    """
+    if not isinstance(artifact, dict) or "records" not in artifact:
+        return False
+    artifact.pop("records")
+    gc.collect()
+    return True
+
+
+def _restore_resident_integrated_records(artifact: dict[str, Any], path: Path) -> bool:
+    """Put the sealed record map back without adopting a different product."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    records = payload.get("records") if isinstance(payload, dict) else None
+    if (not isinstance(records, dict)
+            or payload.get("artifact_identity") != artifact.get("artifact_identity")
+            or payload.get("session") != artifact.get("session")
+            or payload.get("contract_version") != artifact.get("contract_version")):
+        return False
+    artifact["records"] = records
+    del payload
+    gc.collect()
+    return True
+
+
 def _previous_qualified_operation_source(
     root: Path, *, session: str, registry: Mapping[str, Any],
 ) -> tuple[str, Path] | None:
@@ -1173,11 +1214,26 @@ def run_canonical_daily_operation(
     # now enables the already-productionized current-foreign-flow collector for the exact
     # qualified session. Failure degrades in the observer itself and never revises the
     # already-completed Daily Producer result or blocks publication below.
-    post_handoff_observers = run_post_handoff_observers(
-        root, runtime_root, resolved_session, tiers,
-        enable_current_foreign_flow_live=NORMAL_DAILY_ENABLE_CURRENT_FOREIGN_FLOW_LIVE,
-        **({"progress_callback": progress_callback} if progress_callback is not None else {}),
+    # The sealed record map is the dominant resident graph at this boundary.
+    # Volume context then builds and writes another large artifact inside the
+    # same process. Keeping both crosses the per-process commit ceiling.
+    sealed_integrated_path = _sealed_integrated_product_path(enrichment)
+    released_integrated_records = (
+        sealed_integrated_path is not None
+        and _release_resident_integrated_records(integrated_delivery)
     )
+    try:
+        post_handoff_observers = run_post_handoff_observers(
+            root, runtime_root, resolved_session, tiers,
+            enable_current_foreign_flow_live=NORMAL_DAILY_ENABLE_CURRENT_FOREIGN_FLOW_LIVE,
+            **({"progress_callback": progress_callback} if progress_callback is not None else {}),
+        )
+    finally:
+        gc.collect()
+        integrated_records_restored = (
+            not released_integrated_records
+            or _restore_resident_integrated_records(integrated_delivery, sealed_integrated_path)
+        )
     checkpoints.finish()  # OBSERVERS_HANDLED
     post_handoff_prospective_decision_feedback = run_post_handoff_prospective_outcome_feedback(
         root, resolved_session, output_root=operation_output_root,
@@ -1191,7 +1247,9 @@ def run_canonical_daily_operation(
     post_handoff_presentation_projection = run_post_handoff_presentation_projection(
         root, runtime_root, resolved_session,
         producer_run_dir=producer_result.get("run_dir"), output_root=operation_output_root,
-        integrated_investment_decision_product=integrated_delivery,
+        integrated_investment_decision_product=(
+            integrated_delivery if integrated_records_restored else None
+        ),
         **({"current_corporate_knowledge_overlay": enrichment["current_corporate_knowledge_overlay"]["artifact"]}
            if not historical_compatibility and enrichment.get("current_corporate_knowledge_overlay") else {}),
     )

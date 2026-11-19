@@ -20,7 +20,7 @@
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
     "canonical_daily_financial_v2_materialization.py": "7379bc3b3f7af098e16862df148e5a8357c4f8e77659007ecde24c4350c802c6",
-    "canonical_daily_operation.py": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a",
+    "canonical_daily_operation.py": "330777f76b6503758eaa79436e2f3773d9248847279c3f369d5215f0bcf08fde",
     "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
@@ -158,7 +158,7 @@
     "financial_statement_template_recognizer.py": "50cfdcaa3530a94301ec9dbc3e380e63546d93ac6751338aba31909b9efe8c37",
     "financial_statement_unit_resolution.py": "cd2a40240bd52c18bfd708f90a334fa8edcaa3f8845b3edbd1b35f1f26c25a19",
     "first_real_session_acceptance.py": "493687bc594698f93802a943f58633f69f063cc3aa37f29811bb79cdd154abb6",
-    "flow_price_divergence_shadow.py": "46beeb38192b49e90dab8443f47043eda8889f45d2ca994a375beb91a0e203db",
+    "flow_price_divergence_shadow.py": "f5ec771c7b727b1b8daa4efb1b9edb147a1c54df3c6fd3fd0660ff40da4e57f6",
     "freshness_history.py": "ebf343fa663901573dd173839e98d4062e5daaec98f9c7811b0d51b54ebeb661",
     "full_universe_entry_candidate_triage.py": "95d9473d26b66b9f98332a27f54b38946245e90b553c48d3938b0cb034613af6",
     "generic_financial_canonicalizer.py": "61ee6137ed281a9a6ec61f46543de27a7c96cae1961d5d3983e6cbdbb1e9f709",
@@ -1303,7 +1303,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "073ffafc3ca7a3d40145f03628a65f19ef6fdda718612b71dd009e39d39181dd",
+    "tools/verify_retention_reader_transition.py": "30e992c5523fecccad431594fe18db319bf32e45486bf73b62cc1a968b7bf2db",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1843,5 +1843,24 @@
     },
     "authority_effect": "NONE_CANDIDATE_NEGATIVE_GATE_ONLY",
     "daily_call_shape": "UNCHANGED_PREPARE_FINANCIAL_INTAKE_CANDIDATE_HAS_NO_DAILY_CALLER"
+  },
+  "observer_resident_record_release_corrective": {
+    "base_commit": "5c457bb07055d14550c1cb27c2550cea85379eca",
+    "scope": "EXACT_OBSERVER_RESIDENT_RECORD_RELEASE_AND_STREAMED_IMMUTABLE_WRITE_ONLY",
+    "changed_source_paths": [
+      "canonical_daily_operation.py",
+      "flow_price_divergence_shadow.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "source_transition": "tests/fixtures/owner_daily_observer_resident_release_v1.json",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "stage_qualification": "RESIDENT_RECORD_MAP_RELEASED_DURING_OBSERVERS_AND_RESTORED_FROM_THE_SEALED_FILE; IMMUTABLE_JSON_BYTES_UNCHANGED; CEILINGS_UNCHANGED",
+    "compatibility": "The 2026-11-17 and 2026-11-18 observer peaks stayed under the 7 GiB process ceiling while the Integrated Decision graph remained resident. The 2026-11-19 child reached a successful private-commit high-water of 6243094528 bytes and then received JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT during volume-context serialization. Releasing that already-sealed record map for the observer window, then streaming the same canonical JSON, removes those two extra copies. Ceilings, reserves, and analytical outputs stay the same. This receipt records source compatibility; it is not a new whole-Daily performance qualification.",
+    "prior_source_sha256_lf": {
+      "canonical_daily_operation.py": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a",
+      "flow_price_divergence_shadow.py": "46beeb38192b49e90dab8443f47043eda8889f45d2ca994a375beb91a0e203db",
+      "tools/verify_retention_reader_transition.py": "073ffafc3ca7a3d40145f03628a65f19ef6fdda718612b71dd009e39d39181dd"
+    }
   }
 }

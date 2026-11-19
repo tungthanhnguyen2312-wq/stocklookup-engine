@@ -155,8 +155,55 @@ TACTICAL_SHADOW_SOURCES = ("canonical_daily_operation.py", "tools/run_owner_dail
 TACTICAL_SHADOW_PIPELINE = "daily_analysis_pipeline.py"  # E2/E3-pinned; peeled first in historical_bytes.
 
 
+OBSERVER_RESIDENT_RELEASE_MANIFEST = "tests/fixtures/owner_daily_observer_resident_release_v1.json"
+OBSERVER_RESIDENT_RELEASE_SOURCE = "canonical_daily_operation.py"
+OBSERVER_RESIDENT_RELEASE_ARCHIVE = (
+    "tests/fixtures/owner_daily_observer_resident_release_v1_sources/canonical_daily_operation.py.txt"
+)
+OBSERVER_RESIDENT_RELEASE_PRIOR = "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a"
+E4_V2_DIGEST = "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
+
+
+def _observer_resident_release_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the observer-window record release before the velocity source boundary.
+
+    A missing manifest or a hash that is not this successor returns the bytes unchanged,
+    so older checkouts and tampered inputs keep the existing fail-closed chain.
+    """
+    if relative != OBSERVER_RESIDENT_RELEASE_SOURCE:
+        return active
+    manifest = root / OBSERVER_RESIDENT_RELEASE_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "owner_daily_observer_resident_release_source_transition/v1"
+            or spec.get("base_commit") != "5c457bb07055d14550c1cb27c2550cea85379eca"
+            or spec.get("scope") != "EXACT_OBSERVER_RESIDENT_RECORD_RELEASE_ONLY"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("previous_e4_v2_digest") != E4_V2_DIGEST
+            or spec.get("active_e4_v2_digest") != E4_V2_DIGEST
+            or not isinstance(sources, dict) or tuple(sources) != (OBSERVER_RESIDENT_RELEASE_SOURCE,)):
+        raise ValueError("OBSERVER_RESIDENT_RELEASE_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != OBSERVER_RESIDENT_RELEASE_ARCHIVE
+            or row.get("prior_sha256_lf") != OBSERVER_RESIDENT_RELEASE_PRIOR):
+        raise ValueError("OBSERVER_RESIDENT_RELEASE_SOURCE_TRANSITION_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    prior = (root / OBSERVER_RESIDENT_RELEASE_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("OBSERVER_RESIDENT_RELEASE_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _velocity_projection_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve exact predecessor bytes across the Daily receipt and timing changes."""
+    active = _observer_resident_release_prior_bytes(root, relative, active)
     name = "velocity_projection_and_producer_timing_v1"
     expected_sources = ("canonical_daily_operation.py", "canonical_post_close_pipeline.py")
     manifest = root / "tests/fixtures" / (name + ".json")

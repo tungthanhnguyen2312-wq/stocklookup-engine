@@ -224,10 +224,41 @@ def build_artifact(*, reference_session: str, flow_series: Mapping[str, Mapping[
     artifact = {"schema_version": "1.0.0", "contract_version": CONTRACT_VERSION, "research_tier": RESEARCH_TIER, "reference_session": reference_session, "source_artifact_identities": {"signal_velocity": velocity_artifact.get("artifact_identity")}, "records": records, "validation": _validation(records, reference_session), "authority_boundary": {"qualified_foreign_value_only": True, "no_volume_or_room": True, "no_normalized_flow_ratio": True, "no_causality_or_intent": True, "no_score_probability_recommendation_or_execution": True, "is_actionable": False}, "limitations": ["FLOW_STATE_IS_DESCRIPTIVE_NOT_DIRECTIONAL_AUTHORITY", "NO_HISTORICAL_PRICE_RECONSTRUCTION", "NO_FORWARD_OUTCOME_CONTRACT"]}
     return _identity(artifact, prefix="flow_price_divergence_shadow:", field="artifact_identity")
 
+def _same_file_bytes(left: Path, right: Path) -> bool:
+    with left.open("rb") as first, right.open("rb") as second:
+        while True:
+            left_chunk = first.read(1024 * 1024)
+            right_chunk = second.read(1024 * 1024)
+            if left_chunk != right_chunk:
+                return False
+            if not left_chunk:
+                return True
+
+
 def write_immutable(path: str | Path, artifact: Mapping[str, Any]) -> Path:
-    destination = Path(path); text = json.dumps(artifact, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
-    if destination.exists() and destination.read_text(encoding="utf-8") != text: raise ValueError("IMMUTABLE_ARTIFACT_CONFLICT:" + str(destination))
-    destination.parent.mkdir(parents=True, exist_ok=True); destination.write_text(text, encoding="utf-8")
+    """Write canonical JSON without holding a second full copy of the artifact.
+
+    Existing non-empty bytes stay immutable. A zero-byte destination is an
+    interrupted write, not a sealed artifact, and may be replaced. Bytes match
+    ``Path.write_text(json.dumps(..., sort_keys=True, indent=2) + "\\n")``.
+    A crash while encoding leaves only the temporary file, so the next call can
+    still replace an empty or absent destination.
+    """
+    destination = Path(path)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_name(destination.name + ".partial")
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump(artifact, handle, ensure_ascii=False, sort_keys=True, indent=2)
+        handle.write("\n")
+    try:
+        if destination.exists() and destination.stat().st_size > 0:
+            if not _same_file_bytes(temporary, destination):
+                raise ValueError("IMMUTABLE_ARTIFACT_CONFLICT:" + str(destination))
+            return destination
+        temporary.replace(destination)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
     return destination
 
 def collect_from_retained_runtime(*, root: str | Path, runtime_root: str | Path, reference_session: str, velocity_artifact: Mapping[str, Any], series_builder: Callable[..., dict[str, Any]] = build_series) -> dict[str, Any]:

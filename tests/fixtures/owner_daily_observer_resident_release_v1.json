@@ -1,0 +1,15 @@
+{
+  "contract_version": "owner_daily_observer_resident_release_source_transition/v1",
+  "base_commit": "5c457bb07055d14550c1cb27c2550cea85379eca",
+  "scope": "EXACT_OBSERVER_RESIDENT_RECORD_RELEASE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576",
+  "active_e4_v2_digest": "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576",
+  "sources": {
+    "canonical_daily_operation.py": {
+      "archive": "tests/fixtures/owner_daily_observer_resident_release_v1_sources/canonical_daily_operation.py.txt",
+      "prior_sha256_lf": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a",
+      "active_sha256_lf": "330777f76b6503758eaa79436e2f3773d9248847279c3f369d5215f0bcf08fde"
+    }
+  }
+}

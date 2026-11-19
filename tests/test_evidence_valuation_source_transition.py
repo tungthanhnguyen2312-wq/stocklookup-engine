@@ -75,6 +75,10 @@ def test_two_file_transition_checks_archive_and_active_bytes():
         if relative in velocity_transition:
             assert velocity_transition[relative]["predecessor_sha256_lf"] == expected_live
             expected_live = velocity_transition[relative]["active_sha256_lf"]
+        observer_release = json.loads((ROOT / "tests/fixtures/owner_daily_observer_resident_release_v1.json").read_bytes())["sources"]
+        if relative in observer_release:
+            assert observer_release[relative]["prior_sha256_lf"] == expected_live
+            expected_live = observer_release[relative]["active_sha256_lf"]
         assert hashlib.sha256(active).hexdigest() == expected_live
         assert hashlib.sha256(active).hexdigest() != hashlib.sha256(historical).hexdigest()
     identity = active_valuation_orchestration_identity(ROOT)
