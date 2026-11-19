@@ -950,7 +950,7 @@
     "stocklookup_core/portfolio/vnm_execution_contract.py": "51cc7b0eda1ed85c42c0eba7f8a40febebabee903ee6eb6b89b89fe52e48699c",
     "stocklookup_core/portfolio/vnm_shadow_backtest.py": "8a2c4887f0dfa2fb2946fd66614a0d7bd5a7f1011f7c5b3e693132a706f9fb7f",
     "stocklookup_core/research/__init__.py": "b6a62d41ac1f5ce58844c3342486d7ced907aabc4ea622ea0072a1c2ac7175c5",
-    "stocklookup_core/research/ai_handoff_publication.py": "0b31266e697b6ee391747e9f7042e3e74cfd9f609b209f6d5ca9b364b3fdaa31",
+    "stocklookup_core/research/ai_handoff_publication.py": "39f3ce4054c97aee9290653a782dfb583a3db192e7cd453d03b1f3b0ec02a89f",
     "stocklookup_core/research/ai_handoff_source_freshness_matrix.py": "fd7e65eedd3c2fc65a15f11cd3fb218dffca07ceb0e95a17d7a46d8ce3e36633",
     "stocklookup_core/research/ai_research_analyst.py": "d5dbf44368fa5ae21f2b8d4b844867996383be92fcdfb26e7ccb4d17eb1af4ce",
     "stocklookup_core/research/ai_research_ticker_extractor.py": "18b208430804bfa93928b6020a39f443480a5549c006d749c9ba0d8a09bba53b",

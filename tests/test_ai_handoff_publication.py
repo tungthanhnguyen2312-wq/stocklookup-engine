@@ -611,3 +611,65 @@ def test_publish_refuses_changed_source_before_any_git_commit(tmp_path, monkeypa
         publish(r, s, "2026-10-13", push=False)
     assert handoff._git(r, "rev-parse", "HEAD") == head
     assert not (r / "LATEST.json").exists()
+
+
+def _financial_context():
+    from stocklookup_core.evidence.field_identity import stable_id
+    body = {
+        "availability": "AVAILABLE",
+        "attachment_role": "POST_SESSION_CURRENT_RESEARCH",
+        "contract_version": "structured_financial_daily_context/v1",
+        "execution_eligible": False,
+        "financial_v2_authority_unchanged": "2026-09-05.1",
+        "first_eligible_session": "2026-11-19",
+        "historical_pit": "UNKNOWN",
+        "input_sha256": "a" * 64,
+        "is_actionable": False,
+        "issuers": [{"analysis_family": "INDUSTRIAL_STATEMENT", "ticker": "AAA"}],
+        "official_fact_admitted": False,
+        "research_identity": "structured_financial_research:" + ("b" * 64),
+        "sealed_session_evidence": False,
+        "valuation_use": "CLOSED",
+    }
+    body["context_sha256"] = stable_id(body)
+    return body
+
+
+def test_structured_financial_context_is_absent_for_an_older_session_and_optional(tmp_path):
+    session = tmp_path / "2026-08-28" / "operation"
+    session.parent.mkdir(parents=True)
+    source(session)
+    plain = build_package(session, "2026-08-28", producer_checkpoint="abc")
+    assert handoff.STRUCTURED_FINANCIAL_CONTEXT not in plain[0]
+    (tmp_path / handoff.STRUCTURED_FINANCIAL_CONTEXT).write_text(
+        json.dumps(_financial_context()), encoding="utf-8")
+    older = build_package(session, "2026-08-28", producer_checkpoint="abc")
+    assert older[1]["handoff_build_id"] == plain[1]["handoff_build_id"]
+    assert handoff.STRUCTURED_FINANCIAL_CONTEXT not in older[0]
+    current = build_package(session, "2026-11-19", producer_checkpoint="abc")
+    name = handoff.STRUCTURED_FINANCIAL_CONTEXT
+    assert name in current[0]
+    parsed = json.loads(current[0][name])
+    assert parsed["official_fact_admitted"] is False
+    assert parsed["historical_pit"] == "UNKNOWN"
+    assert parsed["availability"] == "AVAILABLE"
+    assert current[1]["lineage"]["structured_financial_research"]["official_fact_admitted"] is False
+    assert current[1]["handoff_build_id"] != plain[1]["handoff_build_id"]
+
+
+def test_unqualified_structured_financial_context_fails_soft_for_an_eligible_session(tmp_path):
+    session = tmp_path / "2026-11-19" / "operation"
+    session.parent.mkdir(parents=True)
+    source(session)
+    bad = _financial_context()
+    bad["official_fact_admitted"] = True
+    (tmp_path / handoff.STRUCTURED_FINANCIAL_CONTEXT).write_text(json.dumps(bad), encoding="utf-8")
+    _files, payload = build_package(session, "2026-11-19", producer_checkpoint="abc")
+    parsed = json.loads(_files[handoff.STRUCTURED_FINANCIAL_CONTEXT])
+    assert parsed["availability"] == "UNAVAILABLE"
+    assert parsed["official_fact_admitted"] is False
+    assert "STRUCTURED_FINANCIAL_CONTEXT_AUTHORITY" in parsed["reason_codes"]
+    assert payload["lineage"]["structured_financial_research"]["availability"] == "UNAVAILABLE"
+    (tmp_path / handoff.STRUCTURED_FINANCIAL_CONTEXT).write_text("{", encoding="utf-8")
+    untouched = build_package(session, "2026-11-19", producer_checkpoint="abc")
+    assert handoff.STRUCTURED_FINANCIAL_CONTEXT not in untouched[0]

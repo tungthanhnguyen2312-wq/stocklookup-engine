@@ -304,8 +304,8 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 9. Next action
 
-Opt-in structured financial research reaches the local evidence-bound AI validator only.
-Remote disclosure and ordinary Daily stay off. Official admission, PIT and valuation stay closed.
+A retained structured financial context can attach to a future Daily handoff as post-session current research.
+A missing file does not fail Daily. Official admission, PIT and valuation stay closed.
 
 ## 10. Owner approvals that remain open
 

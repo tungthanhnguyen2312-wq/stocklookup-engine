@@ -2433,3 +2433,132 @@ def build_structured_financial_ai_research(
         "source_packet_consumers_unchanged": verified["consumers"]["ai_research_preview"],
     }
     return {**body, "ai_research_identity": "structured_financial_ai_research:" + stable_id(body)}
+
+
+DAILY_CONTEXT_CONTRACT = "structured_financial_daily_context/v1"
+_DAILY_FOCUS = {
+    "INDUSTRIAL_STATEMENT": (
+        "net_revenue", "gross_margin", "parent_profit_margin", "group_profit_margin",
+        "cash_conversion", "parent_profit_after_tax", "group_profit_after_tax", "operating_cash_flow",
+    ),
+    "BANK_STATEMENT": (
+        "net_interest_income", "pre_provision_profit", "credit_loss_provision",
+        "credit_provision_to_pre_provision", "parent_profit_after_tax", "group_profit_after_tax",
+    ),
+    "SECURITIES_STATEMENT": (
+        "brokerage_revenue", "loan_and_receivable_interest", "interest_expense",
+        "securities_net_revenue", "parent_profit_after_tax", "operating_cash_flow",
+    ),
+}
+_DAILY_ROW_KEYS = (
+    "ticker", "period", "period_kind", "analysis_family", "statement_scope", "unit", "currency",
+    "metric", "status", "value", "reason_codes", "use_scope", "normalization_method", "original_label",
+)
+
+
+def _daily_periods(measures: list[Any], ticker: str) -> set[str]:
+    found: list[tuple[str, str]] = []
+    for row in measures:
+        if row.get("ticker") != ticker or row.get("statement_scope") != "consolidated":
+            continue
+        period = str(row.get("period") or "")
+        if not (period.endswith("-Q3") or period.endswith("-9M")):
+            continue
+        year = period.split("-", 1)[0]
+        if year.isdigit():
+            found.append((year, period))
+    if not found:
+        return set()
+    latest = max(year for year, _period in found)
+    return {period for year, period in found if year == latest}
+
+
+def _daily_row(row: Mapping[str, Any]) -> dict[str, Any]:
+    projected = {key: row.get(key) for key in _DAILY_ROW_KEYS if key in row}
+    projected["official_fact_admitted"] = False
+    projected["historical_pit"] = "UNKNOWN"
+    return projected
+
+
+def build_structured_financial_daily_context(
+    packet: Mapping[str, Any], *, first_eligible_session: str,
+) -> dict[str, Any]:
+    """Compact post-session context for an existing Daily handoff.
+
+    The research packet stays unchanged, including its daily-activation flag.
+    This projection does not admit official facts, open valuation, or assign a
+    statement date as the time the file became available.
+    """
+    if not isinstance(first_eligible_session, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", first_eligible_session) is None:
+        raise ValueError("FIRST_ELIGIBLE_SESSION_REQUIRED")
+    verified = _verify_structured_research_packet(packet)
+    measures = list(verified["measures"])
+    selected: list[dict[str, Any]] = []
+    for ticker in verified["issuers"]:
+        family = _packet_family(verified, ticker)
+        periods = _daily_periods(measures, ticker)
+        focus = set(_DAILY_FOCUS.get(family, ()))
+        yoy = {metric + "_yoy" for metric in focus}
+        for row in measures:
+            if row.get("ticker") != ticker or row.get("statement_scope") != "consolidated":
+                continue
+            metric = row.get("metric")
+            period = row.get("period")
+            yoy_hit = isinstance(period, str) and any(period.startswith(item + "_VS_") for item in periods)
+            keep = (
+                metric in focus and period in periods
+                or metric in yoy and yoy_hit
+                or metric in {"research_multiple", "profit_after_tax_ttm"} and row.get("status") != "USABLE"
+                or row.get("status") == "CONFLICT" and period in periods
+            )
+            if keep:
+                selected.append(_daily_row(row))
+    selected.sort(key=lambda row: (str(row.get("ticker")), str(row.get("period")), str(row.get("metric")), str(row.get("status"))))
+    focus_periods = {row.get("period") for row in selected if isinstance(row.get("period"), str) and "_VS_" not in str(row.get("period"))}
+    comparisons = [
+        row for row in (verified.get("comparisons") or [])
+        if row.get("statement_scope") == "consolidated" and row.get("period") in focus_periods
+    ]
+    body = {
+        "contract_version": DAILY_CONTEXT_CONTRACT,
+        "availability": "AVAILABLE",
+        "attachment_role": "POST_SESSION_CURRENT_RESEARCH",
+        "first_eligible_session": first_eligible_session,
+        "sealed_session_evidence": False,
+        "not_original_t0_evidence": True,
+        "official_fact_admitted": False,
+        "historical_pit": "UNKNOWN",
+        "valuation_use": "CLOSED",
+        "execution_eligible": False,
+        "is_actionable": False,
+        "financial_v2_authority_unchanged": "2026-09-05.1",
+        "research_identity": verified["research_identity"],
+        "input_sha256": verified["input_sha256"],
+        "providers": list(verified.get("providers") or []),
+        "publication_time": None,
+        "file_modification_time_used": False,
+        "issuer_count": len(verified["issuers"]),
+        "issuers": [
+            {
+                "ticker": item["ticker"],
+                "analysis_family": item["analysis_family"],
+                "template_inference": item["template_inference"],
+                "usable_measures": item["usable_measures"],
+                "blocked_or_not_applicable": item["blocked_or_not_applicable"],
+            }
+            for item in verified["companies"]
+        ],
+        "selected_measures": selected,
+        "comparisons": comparisons,
+        "separate_scope_withheld_count": sum(1 for row in measures if row.get("statement_scope") == "separate"),
+        "coverage": {
+            "source_measure_records": verified["coverage"]["issuer_period_metric_records"],
+            "source_current_research_usable": verified["coverage"]["current_research_usable"],
+            "selected_measures": len(selected),
+            "official_fact_admitted_count": 0,
+        },
+        "restrictions": list(verified["restrictions"]),
+        "daily_packet_activated_on_research_packet": verified["consumers"]["ai_research_preview"]["daily_packet_activated"],
+    }
+    body["context_sha256"] = stable_id({key: value for key, value in body.items() if key != "context_sha256"})
+    return body

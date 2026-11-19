@@ -823,12 +823,51 @@ def test_structured_ai_research_is_local_bounded_and_fail_closed(tmp_path):
         ])
 
 
+def test_daily_context_is_compact_fail_closed_and_not_a_second_daily(tmp_path):
+    from stocklookup_core.research.conditional_investment_case import (
+        build_structured_financial_daily_context,
+        build_structured_financial_research,
+    )
+    from tools.build_conditional_research_cases import main
+
+    rows = [
+        _structured_row(item="3. Doanh thu thuần về bán hàng và cung cấp dịch vụ", value="1000"),
+        _structured_row(item="Lợi nhuận sau thuế của cổ đông của Công ty mẹ", value="100"),
+        _structured_row(ticker="BBB", item="XV. Lợi nhuận sau thuế của cổ đông của Ngân hàng mẹ (XIII-XIV)", value="9", source_sha256="d" * 64),
+        _structured_row(ticker="BBB", item="I. Thu nhập lãi thuần (1-2)", value="20", source_sha256="d" * 64),
+    ]
+    path = _write_structured(tmp_path / "input.json", rows)
+    packet = build_structured_financial_research(path)
+    with pytest.raises(ValueError, match="FIRST_ELIGIBLE_SESSION"):
+        build_structured_financial_daily_context(packet, first_eligible_session="16/11/2026")
+    context = build_structured_financial_daily_context(packet, first_eligible_session="2026-11-19")
+    assert context["official_fact_admitted"] is False
+    assert {item["analysis_family"] for item in context["issuers"]} >= {"INDUSTRIAL_STATEMENT", "BANK_STATEMENT"}
+    assert packet["consumers"]["ai_research_preview"]["daily_packet_activated"] is False
+    assert context["daily_packet_activated_on_research_packet"] is False
+    out_json, out_md = tmp_path / "daily.json", tmp_path / "daily.md"
+    assert main([
+        "--structured-input", str(path), "--daily-context", "--eligible-from-session", "2026-11-19",
+        "--out-json", str(out_json), "--out-md", str(out_md),
+    ]) == 0
+    written = json.loads(out_json.read_text(encoding="utf-8"))
+    assert written["context_sha256"] == context["context_sha256"]
+    assert "Not official, not PIT, not valuation" in out_md.read_text(encoding="utf-8")
+    with pytest.raises(SystemExit):
+        main([
+            "--structured-input", str(path), "--daily-context", "--eligible-from-session", "2026-11-19",
+            "--observed-at", "2026-11-01T00:00:00+07:00",
+            "--out-json", str(tmp_path / "clock.json"), "--out-md", str(tmp_path / "clock.md"),
+        ])
+
+
 def test_real_vietstock_ai_research_accepts_bounded_questions():
     import hashlib
     from pathlib import Path
     from stocklookup_core.research.conditional_investment_case import (
         build_statement_research_cohort,
         build_structured_financial_ai_research,
+        build_structured_financial_daily_context,
         build_structured_financial_research,
     )
 
@@ -897,3 +936,26 @@ def test_real_vietstock_ai_research_accepts_bounded_questions():
     assert not any(claim["claim_type"] == "FACT" for claim in withheld["deterministic_draft"]["claims"])
     assert packet["consumers"]["ai_research_preview"]["daily_packet_activated"] is False
     assert build_statement_research_cohort()["cohort_identity"] == cohort["cohort_identity"]
+    daily = build_structured_financial_daily_context(packet, first_eligible_session="2026-11-19")
+    assert daily["availability"] == "AVAILABLE"
+    assert daily["official_fact_admitted"] is False
+    assert daily["historical_pit"] == "UNKNOWN"
+    assert daily["valuation_use"] == "CLOSED"
+    assert daily["sealed_session_evidence"] is False
+    assert daily["not_original_t0_evidence"] is True
+    assert daily["daily_packet_activated_on_research_packet"] is False
+    assert daily["input_sha256"] == packet["input_sha256"]
+    assert daily["coverage"]["selected_measures"] < packet["coverage"]["issuer_period_metric_records"]
+    families = {item["ticker"]: item["analysis_family"] for item in daily["issuers"]}
+    assert families["HPG"] == "INDUSTRIAL_STATEMENT"
+    assert families["VCB"] == "BANK_STATEMENT"
+    assert families["SSI"] == "SECURITIES_STATEMENT"
+    selected = daily["selected_measures"]
+    assert any(row["ticker"] == "HPG" and row["metric"] == "parent_profit_margin" and row["period"] == "2026-Q3" and row["status"] == "USABLE" for row in selected)
+    assert any(row["ticker"] == "HPG" and row["metric"] == "cash_conversion" and row["period"] == "2026-9M" for row in selected)
+    assert any(row["ticker"] == "SSI" and row["metric"] == "brokerage_revenue" and row["status"] == "USABLE" for row in selected)
+    assert any(row["ticker"] == "VCB" and row["metric"] == "net_interest_income" and row["status"] == "USABLE" for row in selected)
+    assert not any(row.get("metric") == "gross_margin" and row.get("analysis_family") != "INDUSTRIAL_STATEMENT" for row in selected)
+    assert all(row["statement_scope"] == "consolidated" for row in selected if row["status"] == "USABLE")
+    assert all(row["status"] != "USABLE" for row in selected if row["metric"] in {"research_multiple", "profit_after_tax_ttm"})
+    assert ":\\" not in json.dumps(daily)
