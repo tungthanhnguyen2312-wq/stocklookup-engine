@@ -20,7 +20,7 @@
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
     "canonical_daily_financial_v2_materialization.py": "7379bc3b3f7af098e16862df148e5a8357c4f8e77659007ecde24c4350c802c6",
-    "canonical_daily_operation.py": "d1cbcfb2fb7a1c32c922215121842c4d71112bf8ce8a52e2cf316270c3c71734",
+    "canonical_daily_operation.py": "6a756a9e2396924856331be07d9742bce3922cd4a2cb071482f305f3396e91c6",
     "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "3e9e13dd4d32d97ae9c579fff6aec1afe4032d35b003bfe4393e8e8b3e2a03f6",
+    "config/daily_path_launchers.json": "3c9d95ca4fe1d8c0adc43b00f4ddf48d87bb5bfde9bfd554df21a09f030741f9",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -87,7 +87,7 @@
     "daily_analysis_pipeline.py": "89cd6f316e58f8ed516a254cd159ebdf1539b5835f536f5323dc003f251be031",
     "daily_execution_environment.py": "dd9a95a6ebe4cfedfb521d98f6f0809fd224599aabd647cb6069f7c865c18186",
     "daily_official_liquidity_rollforward.py": "3899c0fdeb14e00c3b318d89167b05936a73f7cf60f4a98f6235ed3d933a9640",
-    "daily_producer_pipeline.py": "fb68aaa50ac320272b2435441b4c2bd92b4097216092650a79436c4d39bc3623",
+    "daily_producer_pipeline.py": "6b6261e6c71aafe6d9093b4bc36db577b40573aaeb3f414343f199e9e095a04f",
     "daily_recovery_eligibility_projection.py": "c7ddd40cd868b0137437405d95ea3a247bef524e242bee99b322b4146d7c75e4",
     "daily_research_session_operations.py": "40d20abeb5c4d013e4ad2d761a5e9698e8d325ee77222dab5032c464f0a2e645",
     "daily_session_level2_package.py": "7bfb48d66554918c2bddda4e446e03690adabe9a962e5caa26ac9a09cd1f1a05",
@@ -1877,6 +1877,20 @@
     "compatibility": "A same-session rerun after the observer-release source change would otherwise hash a new operation identity and write a second directory. The guard runs after the identity is computed and before materialize. An absent seal proceeds. The one matching seal is reused by the existing immutable writer. A second or disagreeing identity is refused without creating a directory.",
     "prior_source_sha256_lf": {
       "daily_research_session_operations.py": "426795c978e1b44df42084d8ef6457d3997f14cbbd32911f9f31dfb901f9fde4"
+    }
+  },
+  "sealed_producer_same_session_reuse": {
+    "base_commit": "0307dfba81237fd05f760fdfa951a31c4cb2208a",
+    "scope": "EXACT_SEALED_PRODUCER_REUSE_WITHOUT_RECOMPUTE",
+    "changed_source_paths": [
+      "daily_producer_pipeline.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "stage_qualification": "ONE_VERIFIED_SEALED_PRODUCER_RETURNED_WITHOUT_MACRO_REACQUIRE_OR_NEW_IDENTITY; CEILINGS_UNCHANGED",
+    "compatibility": "The 2026-11-19 second attempt reused the sealed Git heads and then acquired a new same-day macro artifact and cutoff. Those fields changed the operation identity, so the existing refusal stopped before materialize. A verified seal is now returned as the Producer result. A recomputed run identity that does not match the sealed manifest still fails closed and writes nothing. canonical_daily_operation.py and config/daily_path_launchers.json changed in the same corrective; their receipt pins are the live bytes accepted by the observer-release peel. Ceilings and reserves are unchanged. This receipt is source compatibility, not a new whole-Daily measurement.",
+    "prior_source_sha256_lf": {
+      "daily_producer_pipeline.py": "fb68aaa50ac320272b2435441b4c2bd92b4097216092650a79436c4d39bc3623"
     }
   }
 }

@@ -101,7 +101,7 @@ from completed_market_session_gate import (
     resolve_latest_qualified_completed_session,
     retained_exact_session_resume_eligible,
 )
-from daily_producer_pipeline import DailyProducerError, run_daily_producer
+from daily_producer_pipeline import DailyProducerError, load_verified_sealed_producer, run_daily_producer
 from daily_research_session_operations import load_registry
 from governed_previous_operation import AVAILABLE as PREVIOUS_OPERATION_AVAILABLE
 from governed_previous_operation import resolve_governed_previous_operation
@@ -1093,73 +1093,102 @@ def run_canonical_daily_operation(
         safe_callback(progress_callback, {"component": "Canonical Daily", "subtask": "producer_seal",
             "progress_kind": "PIPELINE", "task_label": task_label, "status": status})
 
-    producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "BEGIN")
-    macro_refresh = dict((macro_refresh_fn or refresh_macro_snapshot)(root, runtime_root))
-    macro_presentation_context = dict(
-        (macro_presentation_context_fn or build_macro_presentation_context)(
-            root, runtime_root, macro_refresh=macro_refresh, generated_at=instant,
-        )
-    )
-    macro_delivery = prepare_macro_delivery(root, resolved_session, artifact_root=artifact_root, enrichment=enrichment, acquire_fn=macro_regime_acquirer, cutoff_fn=macro_cutoff_fn)
-
-    producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "END")
-    producer_progress("Chuẩn bị đầu vào Producer", "BEGIN")
     sealed_heads = _sealed_session_producer_heads(operation_output_root, resolved_session)
-    if sealed_heads is None:
-        producer_head, consumer_head = _git_head(root), _git_head(root.parent / "ai-core-private")
-    else:
+    # The production path resumes one verified seal. Rebuilding it would acquire a
+    # new same-day macro artifact and cutoff, then refuse that different identity.
+    # An injected producer remains a diagnostic seam and still receives the sealed heads.
+    if sealed_heads is not None and producer_fn is None:
         producer_head, consumer_head = sealed_heads
-    preseal_brief_builder = daily_integrated_decision_brief_builder
-    # Injected producer functions are test/diagnostic seams with their own
-    # declared contract.  The production producer always receives the canonical
-    # pre-seal builder; an injected seam may opt in explicitly.
-    if preseal_brief_builder is None and producer_fn is None:
-        registry_for_brief = load_registry(root)
-        preseal_brief_builder = lambda operation: _build_preseal_daily_integrated_brief(
-            retained_evidence_root, session=resolved_session, operation=operation, registry=registry_for_brief,
-        )
-    try:
-        producer_kwargs: dict[str, Any] = dict(
-            session=resolved_session, latest_completed_session=False,
-            producer_head=producer_head or "UNKNOWN", consumer_head=consumer_head or "UNKNOWN",
-            integrated_investment_decision_product=integrated_delivery, now=instant,
-            macro_presentation_context=macro_presentation_context,
-            reuse_immutable_delivery=storage_reuse_switches()["reuse_immutable_delivery"],
-            **macro_delivery,
-            **({"daily_integrated_decision_brief_builder": preseal_brief_builder} if preseal_brief_builder is not None else {}),
-        )
-        if producer_fn is None:
-            producer_kwargs["runtime_root_override"] = runtime_root
-            if progress_callback is not None:
-                producer_kwargs["progress_callback"] = progress_callback
-            from daily_session_level2_package import session_artifact_paths
-            from stocklookup_core.valuation.current_valuation_opportunity_integration import accept_evaluated_valuation
-            evaluated_path = session_artifact_paths(artifact_root, resolved_session)["current_valuation_evaluated"]
-            if evaluated_path.is_file():
-                try:
-                    from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
-                    producer_kwargs["evaluated_valuation"] = accept_evaluated_valuation(
-                        load_record_artifact(evaluated_path))
-                except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
-                    producer_kwargs["evaluated_valuation"] = None
-        if operation_output_root != root:
-            producer_kwargs.update(
-                output_root=operation_output_root / "operations-review" / "daily-producer-runs-v1",
-                operation_output_root=operation_output_root / "operations-review" / "daily-research-session-operations-v1",
-                shadow_artifact_output_root=operation_output_root / "operations-review" / "daily-session-shadow-recommendation-v1",
-            )
+        macro_refresh = {
+            "status": "SKIPPED_SEALED_PRODUCER_REUSE",
+            "reason_code": "SEALED_MACRO_AND_CUTOFF_RETAINED",
+        }
+        macro_presentation_context = {"status": "SKIPPED_SEALED_PRODUCER_REUSE"}
+        producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "BEGIN")
+        producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "END")
+        producer_progress("Chuẩn bị đầu vào Producer", "BEGIN")
         producer_progress("Chuẩn bị đầu vào Producer", "END")
         producer_progress("Chạy Producer", "BEGIN")
-        producer_result = produce(root, **producer_kwargs)
+        try:
+            producer_result = load_verified_sealed_producer(operation_output_root, resolved_session)
+        except DailyProducerError as exc:
+            raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, str(exc)) from exc
         producer_progress("Chạy Producer", "END")
-        # Producer/current-product consumers have finished with these arguments.
-        # Keep the returned operation and caller-owned evidence, but do not hold
-        # a separate evaluated-valuation universe through retention/feedback.
-        del producer_kwargs
-    except DailyProducerError as exc:
-        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, str(exc)) from exc
-    except CanonicalPostCloseError as exc:
-        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, str(exc)) from exc
+        sealed_iid = ((producer_result.get("operation") or {}).get("manifest") or {}).get("outputs", {}).get(
+            "integrated_investment_decision_product")
+        observed_iid = ((integrated_delivery or {}).get("artifact_identity") if isinstance(integrated_delivery, Mapping) else None)
+        if sealed_iid is not None and sealed_iid != observed_iid:
+            raise CanonicalDailyOperationError(
+                STAGE_BLOCKED_DAILY_PRODUCER,
+                f"SEALED_INTEGRATED_DECISION_DIVERGED:expected={sealed_iid}:observed={observed_iid}",
+            )
+    else:
+        producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "BEGIN")
+        macro_refresh = dict((macro_refresh_fn or refresh_macro_snapshot)(root, runtime_root))
+        macro_presentation_context = dict(
+            (macro_presentation_context_fn or build_macro_presentation_context)(
+                root, runtime_root, macro_refresh=macro_refresh, generated_at=instant,
+            )
+        )
+        macro_delivery = prepare_macro_delivery(root, resolved_session, artifact_root=artifact_root, enrichment=enrichment, acquire_fn=macro_regime_acquirer, cutoff_fn=macro_cutoff_fn)
+
+        producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "END")
+        producer_progress("Chuẩn bị đầu vào Producer", "BEGIN")
+        if sealed_heads is None:
+            producer_head, consumer_head = _git_head(root), _git_head(root.parent / "ai-core-private")
+        else:
+            producer_head, consumer_head = sealed_heads
+        preseal_brief_builder = daily_integrated_decision_brief_builder
+        # Injected producer functions are test/diagnostic seams with their own
+        # declared contract.  The production producer always receives the canonical
+        # pre-seal builder; an injected seam may opt in explicitly.
+        if preseal_brief_builder is None and producer_fn is None:
+            registry_for_brief = load_registry(root)
+            preseal_brief_builder = lambda operation: _build_preseal_daily_integrated_brief(
+                retained_evidence_root, session=resolved_session, operation=operation, registry=registry_for_brief,
+            )
+        try:
+            producer_kwargs: dict[str, Any] = dict(
+                session=resolved_session, latest_completed_session=False,
+                producer_head=producer_head or "UNKNOWN", consumer_head=consumer_head or "UNKNOWN",
+                integrated_investment_decision_product=integrated_delivery, now=instant,
+                macro_presentation_context=macro_presentation_context,
+                reuse_immutable_delivery=storage_reuse_switches()["reuse_immutable_delivery"],
+                **macro_delivery,
+                **({"daily_integrated_decision_brief_builder": preseal_brief_builder} if preseal_brief_builder is not None else {}),
+            )
+            if producer_fn is None:
+                producer_kwargs["runtime_root_override"] = runtime_root
+                if progress_callback is not None:
+                    producer_kwargs["progress_callback"] = progress_callback
+                from daily_session_level2_package import session_artifact_paths
+                from stocklookup_core.valuation.current_valuation_opportunity_integration import accept_evaluated_valuation
+                evaluated_path = session_artifact_paths(artifact_root, resolved_session)["current_valuation_evaluated"]
+                if evaluated_path.is_file():
+                    try:
+                        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+                        producer_kwargs["evaluated_valuation"] = accept_evaluated_valuation(
+                            load_record_artifact(evaluated_path))
+                    except (OSError, UnicodeError, json.JSONDecodeError, ValueError):
+                        producer_kwargs["evaluated_valuation"] = None
+            if operation_output_root != root:
+                producer_kwargs.update(
+                    output_root=operation_output_root / "operations-review" / "daily-producer-runs-v1",
+                    operation_output_root=operation_output_root / "operations-review" / "daily-research-session-operations-v1",
+                    shadow_artifact_output_root=operation_output_root / "operations-review" / "daily-session-shadow-recommendation-v1",
+                )
+            producer_progress("Chuẩn bị đầu vào Producer", "END")
+            producer_progress("Chạy Producer", "BEGIN")
+            producer_result = produce(root, **producer_kwargs)
+            producer_progress("Chạy Producer", "END")
+            # Producer/current-product consumers have finished with these arguments.
+            # Keep the returned operation and caller-owned evidence, but do not hold
+            # a separate evaluated-valuation universe through retention/feedback.
+            del producer_kwargs
+        except DailyProducerError as exc:
+            raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, str(exc)) from exc
+        except CanonicalPostCloseError as exc:
+            raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, str(exc)) from exc
 
     if not isinstance(producer_result, Mapping) or producer_result.get("status") not in {None, "COMPLETED", "PASS"}:
         status = None if not isinstance(producer_result, Mapping) else producer_result.get("status")
@@ -1245,11 +1274,26 @@ def run_canonical_daily_operation(
         t0_snapshot_identity=((prospective_decision_snapshot or {}).get("artifact") or {}).get("snapshot_identity"))
     checkpoints.finish()  # T0_CAPTURE_HANDLED (soft outcomes preserved)
     thesis_t0 = run_thesis_t0_sidecar(root,resolved_session,prospective_decision_snapshot,enrichment,output_root=operation_output_root)
-    decision_packet = build_decision_packet(
-        root, resolved_session, opportunity=operation.get("opportunity"), enrichment=enrichment,
-        artifact_root=artifact_root,
-        packet=operation.get("canonical_decision_packet"),
-    )
+    if producer_result.get("reused_sealed_producer"):
+        sealed_packet_identity = producer_result.get("sealed_decision_packet_identity")
+        if sealed_packet_identity is None:
+            decision_packet = None
+        elif not isinstance(sealed_packet_identity, str) or ":" not in sealed_packet_identity:
+            raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, "SEALED_DECISION_PACKET_IDENTITY_MISSING")
+        else:
+            # The sealed packet stays in the operation directory. Rebuilding it
+            # would replace the level-2 working copy with a later enrichment view.
+            decision_packet = {
+                "artifact_identity": sealed_packet_identity,
+                "research_session": resolved_session,
+                "reused_sealed_packet": True,
+            }
+    else:
+        decision_packet = build_decision_packet(
+            root, resolved_session, opportunity=operation.get("opportunity"), enrichment=enrichment,
+            artifact_root=artifact_root,
+            packet=operation.get("canonical_decision_packet"),
+        )
     checkpoints.finish()  # DECISION_PACKET_READY
     prospective_kwargs: dict[str, Any] = {}
     tier_kwargs: dict[str, Any] = {}
