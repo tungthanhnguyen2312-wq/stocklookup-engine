@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
 
 from stocklookup_core.research.conditional_investment_case import (
     build_statement_research_cohort,
+    build_structured_financial_ai_research,
     build_structured_financial_research,
     case_from_annual_context,
     case_from_industrial_profile,
@@ -845,6 +846,41 @@ def render_structured_financial_markdown(packet: Mapping[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def render_structured_financial_ai_markdown(artifact: Mapping[str, Any]) -> str:
+    """Validated local draft. This is not a remote model response and not a vendor dump."""
+    coverage = artifact["coverage"]
+    temporal = artifact["temporal"]
+    lines = [
+        "# Structured financial AI research",
+        "",
+        "Local evidence-bound validator only. No remote model call was made.",
+        "Licensed remote disclosure is not established. Daily is not activated.",
+        "Financial V2 authority is unchanged. Official admission and historical PIT stay closed.",
+        f"Question: {artifact['question']}. Tickers: {', '.join(artifact['selected_tickers']) or 'none'}.",
+        f"Temporal mode: {temporal['mode']}. Historical claim: {temporal['historical_claim']}.",
+        f"Source measure records: {coverage['source_measure_records']}. "
+        f"Source usable records: {coverage['source_current_research_usable']}. "
+        f"AI evidence: {coverage['ai_evidence_count']}. "
+        f"AI measures with values: {coverage['ai_measures_with_values']}.",
+        f"Validation: {artifact['validation']['validation_status']}. Human review remains required.",
+        "",
+        "## Claims",
+        "",
+    ]
+    for claim in artifact["deterministic_draft"]["claims"]:
+        lines.append(f"- [{claim['section']}] {claim['claim_type']}: {claim['claim_text']}")
+    lines.extend(["", "## Bounded evidence index", ""])
+    for item in artifact["ai_input"]["evidence"]:
+        if item.get("classification") == "RESEARCH_BOUNDARY":
+            continue
+        lines.append(
+            f"- {item.get('ticker')} {item.get('period')} {item.get('statement_scope')} "
+            f"{item.get('metric')} {item.get('authority')} {item.get('status')} value={item.get('value')}"
+        )
+    lines.append("")
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Build offline conditional research cases from retained evidence.")
     mode = parser.add_mutually_exclusive_group()
@@ -856,6 +892,13 @@ def main(argv: list[str] | None = None) -> int:
                       help="CSV or JSON structured financial export. No issuer constant and no official admission.")
     parser.add_argument("--knowledge-cutoff", help="Timezone-aware cutoff. Requires --observed-at before a record can be treated as already available.")
     parser.add_argument("--observed-at", help="Timezone-aware time the caller observed this file. Not a publication time.")
+    parser.add_argument("--ai-question", choices=[
+        "industrial_profitability", "earnings_quality", "balance_sheet_risk",
+        "template_earnings_trends", "valuation_readiness", "company_thesis",
+    ], help="Opt-in local AI research question. Requires --structured-input. Does not call a remote model.")
+    parser.add_argument("--tickers", help="Comma-separated tickers for --ai-question. Company thesis needs one subject.")
+    parser.add_argument("--observation-receipt", type=Path,
+                        help="Hash-bound acquisition receipt. A caller --observed-at string is not a receipt.")
     parser.add_argument("--packet-sha256", help="Exact reviewed packet SHA-256.")
     parser.add_argument("--source-map", type=Path, help="JSON map of document SHA-256 to local original file path.")
     parser.add_argument("--intake", type=Path, help="Retained quarterly intake for the HPG/KBC/FPT examples.")
@@ -870,6 +913,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.knowledge_cutoff or args.observed_at:
         if args.structured_input is None:
             parser.error("--knowledge-cutoff and --observed-at require --structured-input.")
+    if args.ai_question is None and (args.tickers or args.observation_receipt):
+        parser.error("--tickers and --observation-receipt require --ai-question.")
+    if args.ai_question is not None and args.structured_input is None:
+        parser.error("--ai-question requires --structured-input.")
+    if args.ai_question is not None and args.observed_at:
+        parser.error("A caller-supplied --observed-at string does not prove historical availability. Use --observation-receipt.")
     if args.statement_cohort:
         if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--statement-cohort does not take intake, valuation, annual or reviewed-packet options.")
@@ -879,12 +928,20 @@ def main(argv: list[str] | None = None) -> int:
         if any((args.source_map, args.packet_sha256, args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--structured-input does not take intake, valuation, annual or reviewed-packet options.")
         try:
-            packet = build_structured_financial_research(
-                args.structured_input, knowledge_cutoff=args.knowledge_cutoff, observed_at=args.observed_at,
-            )
+            if args.ai_question is None:
+                packet = build_structured_financial_research(
+                    args.structured_input, knowledge_cutoff=args.knowledge_cutoff, observed_at=args.observed_at,
+                )
+                markdown = render_structured_financial_markdown(packet)
+            else:
+                packet = build_structured_financial_research(args.structured_input)
+                packet = build_structured_financial_ai_research(
+                    packet, question=args.ai_question, tickers=args.tickers,
+                    knowledge_cutoff=args.knowledge_cutoff, observation_receipt=args.observation_receipt,
+                )
+                markdown = render_structured_financial_ai_markdown(packet)
         except (OSError, ValueError) as exc:
             parser.error(str(exc))
-        markdown = render_structured_financial_markdown(packet)
     elif args.reviewed_packet is not None:
         if not args.source_map or not args.packet_sha256 or any((args.intake, args.valuation_examples, args.fpt_annual)):
             parser.error("--reviewed-packet requires --source-map and --packet-sha256, without retained example options.")

@@ -1520,3 +1520,916 @@ def build_structured_financial_research(
         ],
     }
     return {**body, "research_identity": "structured_financial_research:" + stable_id(body)}
+
+
+AI_RESEARCH_CONTRACT = "structured_financial_ai_research/v1"
+OBSERVATION_RECEIPT_CONTRACT = "structured_financial_observation_receipt/v1"
+_AI_QUESTIONS = (
+    "industrial_profitability",
+    "earnings_quality",
+    "balance_sheet_risk",
+    "template_earnings_trends",
+    "valuation_readiness",
+    "company_thesis",
+)
+_AI_SELECTION_CAP = 500
+_REPORTED_METHOD = "EXACT_LABEL_MATCH_NO_UNIT_CONVERSION"
+_RATIO_METRICS = frozenset({
+    "parent_profit_margin", "gross_margin", "group_profit_margin", "cash_conversion",
+    "liabilities_to_total_assets", "cash_to_total_assets", "credit_provision_to_pre_provision",
+})
+_COMPARABLE_METRICS = frozenset({
+    "parent_profit_margin", "gross_margin", "cash_conversion",
+    "liabilities_to_total_assets", "cash_to_total_assets",
+})
+_QUESTION_METRICS = {
+    "industrial_profitability": frozenset({
+        "parent_profit_margin", "gross_margin", "net_revenue", "parent_profit_after_tax",
+        "net_revenue_yoy", "parent_profit_after_tax_yoy",
+    }),
+    "earnings_quality": frozenset({
+        "operating_cash_flow", "group_profit_after_tax", "cash_conversion",
+        "operating_cash_flow_yoy", "group_profit_after_tax_yoy",
+        "parent_profit_after_tax", "parent_profit_after_tax_yoy",
+    }),
+    "balance_sheet_risk": frozenset({
+        "total_assets", "total_liabilities", "cash_and_equivalents",
+        "liabilities_to_total_assets", "cash_to_total_assets", "interest_bearing_debt",
+    }),
+    "template_earnings_trends": frozenset({
+        "parent_profit_after_tax", "parent_profit_after_tax_yoy", "industrial_profit_margin",
+    }),
+    "valuation_readiness": frozenset({"research_multiple", "profit_after_tax_ttm"}),
+    "company_thesis": frozenset({
+        "parent_profit_after_tax", "parent_profit_after_tax_yoy", "parent_profit_margin",
+        "gross_margin", "net_revenue", "net_revenue_yoy", "operating_cash_flow",
+        "group_profit_after_tax", "cash_conversion", "liabilities_to_total_assets",
+        "cash_to_total_assets", "research_multiple", "profit_after_tax_ttm",
+        "interest_bearing_debt", "industrial_profit_margin", "pre_provision_profit",
+        "pre_provision_profit_yoy", "brokerage_revenue", "brokerage_revenue_yoy",
+        "group_profit_after_tax_yoy", "securities_net_revenue",
+    }),
+}
+_ALWAYS_PERIOD_METRICS = frozenset({
+    "research_multiple", "profit_after_tax_ttm", "industrial_profit_margin", "interest_bearing_debt",
+})
+_COUNTER_SECTIONS = frozenset({"NEGATIVE_EVIDENCE", "CONFLICTING_EVIDENCE", "UNKNOWN_OR_MISSING"})
+
+
+def _ai_validator():
+    from stocklookup_core.research.evidence_bound_ai_research_human_review import (
+        NUMBER_RE,
+        build_human_review_packet,
+        prompt_contract,
+        validate_ai_draft,
+    )
+    return NUMBER_RE, build_human_review_packet, prompt_contract, validate_ai_draft
+
+
+def _read_observation_receipt(receipt: str | Path | Mapping[str, Any] | None) -> dict[str, str] | None:
+    """A hash-bound acquisition receipt. A vendor date or a file clock is not one."""
+    if receipt is None:
+        return None
+    if isinstance(receipt, (str, Path)):
+        try:
+            payload = json.loads(Path(receipt).read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("OBSERVATION_RECEIPT_UNREADABLE") from exc
+    elif isinstance(receipt, Mapping):
+        payload = dict(receipt)
+    else:
+        raise ValueError("OBSERVATION_RECEIPT_SHAPE")
+    if not isinstance(payload, dict):
+        raise ValueError("OBSERVATION_RECEIPT_SHAPE")
+    if payload.get("contract_version") != OBSERVATION_RECEIPT_CONTRACT:
+        raise ValueError("OBSERVATION_RECEIPT_CONTRACT")
+    if payload.get("observation_basis") != "RETAINED_ACQUISITION_RECORD":
+        raise ValueError("OBSERVATION_RECEIPT_BASIS")
+    if any(payload.get(name) not in (None, "") for name in ("vendor_publish_date", "file_mtime", "publication_time", "vendor_data_updated")):
+        raise ValueError("OBSERVATION_RECEIPT_IS_NOT_PUBLICATION_OR_VENDOR_TIME")
+    digest = str(payload.get("input_sha256") or "").lower()
+    if _SHA256_TEXT.fullmatch(digest) is None:
+        raise ValueError("OBSERVATION_RECEIPT_HASH")
+    observed = _aware_instant(str(payload.get("observed_at") or ""), "OBSERVATION_RECEIPT_TIME")
+    if observed is None:
+        raise ValueError("OBSERVATION_RECEIPT_TIME")
+    return {
+        "input_sha256": digest,
+        "observed_at": str(payload["observed_at"]),
+        "observation_basis": "RETAINED_ACQUISITION_RECORD",
+    }
+
+
+def _ai_temporal_gate(packet: Mapping[str, Any], knowledge_cutoff: str | None, receipt: dict[str, str] | None) -> dict[str, Any]:
+    """Caller clocks on the research packet are not historical availability."""
+    cutoff_text = knowledge_cutoff or None
+    if cutoff_text is None and receipt is None:
+        return {
+            "mode": "PRESENT_DAY_DESCRIPTIVE",
+            "facts_eligible": True,
+            "historical_claim": False,
+            "historical_pit": "UNKNOWN",
+            "publication_time": None,
+            "sealed_t0": False,
+            "session_claim": False,
+            "knowledge_cutoff": None,
+            "receipt_matched": False,
+            "reason_codes": [],
+        }
+    if receipt is None:
+        _aware_instant(cutoff_text, "KNOWLEDGE_CUTOFF_INVALID")
+        return {
+            "mode": "HISTORICAL_AVAILABILITY_UNPROVEN",
+            "facts_eligible": False,
+            "historical_claim": False,
+            "historical_pit": "UNKNOWN",
+            "publication_time": None,
+            "sealed_t0": False,
+            "session_claim": False,
+            "knowledge_cutoff": cutoff_text,
+            "receipt_matched": False,
+            "reason_codes": ["MISSING_OBSERVATION_RECEIPT"],
+        }
+    if receipt["input_sha256"] != packet["input_sha256"]:
+        raise ValueError("SOURCE_INPUT_SHA_MISMATCH")
+    if cutoff_text is None:
+        return {
+            "mode": "PRESENT_DAY_DESCRIPTIVE",
+            "facts_eligible": True,
+            "historical_claim": False,
+            "historical_pit": "UNKNOWN",
+            "publication_time": None,
+            "sealed_t0": False,
+            "session_claim": False,
+            "knowledge_cutoff": None,
+            "receipt_matched": True,
+            "reason_codes": ["RECEIPT_WITHOUT_CUTOFF_IS_NOT_A_HISTORICAL_CLAIM"],
+        }
+    cutoff = _aware_instant(cutoff_text, "KNOWLEDGE_CUTOFF_INVALID")
+    observed = _aware_instant(receipt["observed_at"], "OBSERVATION_RECEIPT_TIME")
+    if cutoff is None or observed is None:
+        raise ValueError("KNOWLEDGE_CUTOFF_INVALID")
+    if observed > cutoff:
+        return {
+            "mode": "AFTER_KNOWLEDGE_CUTOFF",
+            "facts_eligible": False,
+            "historical_claim": False,
+            "historical_pit": "UNKNOWN",
+            "publication_time": None,
+            "sealed_t0": False,
+            "session_claim": False,
+            "knowledge_cutoff": cutoff_text,
+            "receipt_matched": True,
+            "reason_codes": ["AFTER_KNOWLEDGE_CUTOFF"],
+        }
+    return {
+        "mode": "OBSERVED_AT_OR_BEFORE_CUTOFF_PUBLICATION_UNPROVEN",
+        "facts_eligible": True,
+        "historical_claim": False,
+        "historical_pit": "UNKNOWN",
+        "publication_time": None,
+        "sealed_t0": False,
+        "session_claim": False,
+        "knowledge_cutoff": cutoff_text,
+        "receipt_matched": True,
+        "reason_codes": ["PUBLICATION_UNPROVEN"],
+    }
+
+
+def _verify_structured_research_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
+    if not isinstance(packet, Mapping):
+        raise ValueError("RESEARCH_PACKET_SHAPE")
+    if packet.get("contract_version") != STRUCTURED_INPUT_CONTRACT:
+        raise ValueError("RESEARCH_CONTRACT_MISMATCH")
+    if packet.get("official_fact_admitted") is not False:
+        raise ValueError("OFFICIAL_ADMISSION_ESCALATION")
+    if packet.get("historical_pit") != "UNKNOWN":
+        raise ValueError("HISTORICAL_PIT_ESCALATION")
+    if packet.get("valuation_use") != "CLOSED":
+        raise ValueError("VALUATION_AUTHORITY_ESCALATION")
+    measures = packet.get("measures")
+    if not isinstance(measures, list):
+        raise ValueError("RESEARCH_PACKET_SHAPE")
+    if any(isinstance(row, Mapping) and row.get("official_fact_admitted") is True for row in measures):
+        raise ValueError("OFFICIAL_ADMISSION_ESCALATION")
+    if any(isinstance(row, Mapping) and row.get("historical_pit") not in (None, "UNKNOWN") for row in measures):
+        raise ValueError("HISTORICAL_PIT_ESCALATION")
+    if any(isinstance(row, Mapping) and row.get("metric") == "research_multiple" and row.get("status") == "USABLE" for row in measures):
+        raise ValueError("VALUATION_AUTHORITY_ESCALATION")
+    if any(isinstance(row, Mapping) and (row.get("ttm") is True or row.get("annualized") is True) for row in measures):
+        raise ValueError("VALUATION_AUTHORITY_ESCALATION")
+    body = {key: value for key, value in packet.items() if key != "research_identity"}
+    expected = "structured_financial_research:" + stable_id(body)
+    if packet.get("research_identity") != expected:
+        raise ValueError("RESEARCH_IDENTITY_MISMATCH")
+    return dict(packet)
+
+
+def _packet_family(packet: Mapping[str, Any], ticker: str) -> str:
+    families = packet.get("families") or {}
+    for family, names in families.items():
+        if ticker in names:
+            return str(family)
+    return "UNKNOWN_STATEMENT"
+
+
+def _ai_tickers(tickers: str | list[str] | None) -> list[str] | None:
+    if tickers is None:
+        return None
+    if isinstance(tickers, str):
+        parts = [item.strip().upper() for item in tickers.split(",") if item.strip()]
+    else:
+        parts = [str(item).strip().upper() for item in tickers if str(item).strip()]
+    if not parts:
+        return None
+    for ticker in parts:
+        if re.fullmatch(r"[A-Z0-9]{1,12}", ticker) is None:
+            raise ValueError("TICKER_SHAPE")
+    return parts
+
+
+def _focus_periods(measures: list[Mapping[str, Any]], tickers: set[str], *, include_prior: bool) -> set[str]:
+    years: list[int] = []
+    for row in measures:
+        if row.get("ticker") not in tickers or row.get("status") != "USABLE":
+            continue
+        matched = re.fullmatch(r"(\d{4})-(Q3|9M)", str(row.get("period")))
+        if matched:
+            years.append(int(matched.group(1)))
+    if not years:
+        return set()
+    latest = max(years)
+    periods = {f"{latest}-Q3", f"{latest}-9M", f"{latest}-Q3_VS_{latest - 1}-Q3", f"{latest}-9M_VS_{latest - 1}-9M"}
+    if include_prior:
+        periods.update({f"{latest - 1}-Q3", f"{latest - 1}-9M"})
+    return periods
+
+
+def _selected_measures(packet: Mapping[str, Any], question: str, tickers: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Smallest measure selection for one question. Q3 stays apart from 9M."""
+    metrics = _QUESTION_METRICS[question]
+    ticker_set = set(tickers)
+    include_prior = question == "balance_sheet_risk"
+    focus = set() if question == "valuation_readiness" else _focus_periods(packet["measures"], ticker_set, include_prior=include_prior)
+    chosen: list[dict[str, Any]] = []
+    for row in packet["measures"]:
+        if row.get("ticker") not in ticker_set or row.get("metric") not in metrics:
+            continue
+        family = row.get("analysis_family")
+        if question == "industrial_profitability" and family != "INDUSTRIAL_STATEMENT":
+            continue
+        if question == "template_earnings_trends" and row.get("metric") in {"gross_margin", "net_revenue"}:
+            continue
+        if family in {"MIXED_STATEMENT", "UNKNOWN_STATEMENT"} and row.get("status") == "USABLE":
+            continue
+        period = str(row.get("period"))
+        if row.get("metric") not in _ALWAYS_PERIOD_METRICS and question != "valuation_readiness" and period not in focus:
+            continue
+        chosen.append(row)
+    consolidated = any(
+        row.get("statement_scope") == "consolidated" and row.get("status") == "USABLE"
+        and row.get("metric") not in _ALWAYS_PERIOD_METRICS
+        for row in chosen
+    )
+    withheld: list[dict[str, Any]] = []
+    if consolidated:
+        separate = [row for row in chosen if row.get("statement_scope") == "separate"]
+        if separate:
+            withheld.append({
+                "classification": "GAP",
+                "reason_codes": ["SEPARATE_SCOPE_WITHHELD_FROM_THIS_QUESTION"],
+                "statement_scope": "separate",
+                "withheld_count": len(separate),
+            })
+            chosen = [row for row in chosen if row.get("statement_scope") != "separate"]
+    if len(chosen) > _AI_SELECTION_CAP:
+        raise ValueError("AI_SELECTION_TOO_WIDE")
+    return chosen, withheld
+
+
+def _project_ai_evidence(
+    measures: list[Mapping[str, Any]],
+    *,
+    input_sha256: str,
+    facts_eligible: bool,
+    temporal_mode: str,
+) -> list[dict[str, Any]]:
+    evidence: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    prefix = input_sha256[:12]
+    for measure in measures:
+        if measure.get("official_fact_admitted") is True:
+            raise ValueError("OFFICIAL_ADMISSION_ESCALATION")
+        if measure.get("metric") == "research_multiple" and measure.get("status") == "USABLE":
+            raise ValueError("VALUATION_AUTHORITY_ESCALATION")
+        status = str(measure.get("status"))
+        reasons = list(measure.get("reason_codes") or [])
+        include_value = facts_eligible and status == "USABLE"
+        if not include_value and status == "USABLE":
+            status = "BLOCKED"
+            reasons = sorted(set([*reasons, temporal_mode]))
+        reported = measure.get("normalization_method") == _REPORTED_METHOD or measure.get("identity") == "REPORTED_LABEL"
+        if include_value and reported:
+            authority, section, classification = "PROVIDER_REPORTED", "POSITIVE_EVIDENCE", "REPORTED_CELL"
+        elif include_value:
+            authority = "DETERMINISTIC_INFERENCE"
+            classification = "YEAR_OVER_YEAR" if str(measure.get("metric", "")).endswith("_yoy") else "COMPUTED_RATIO"
+            negative_change = classification == "YEAR_OVER_YEAR" and isinstance(measure.get("value"), str) and str(measure.get("value")).startswith("-")
+            section = "NEGATIVE_EVIDENCE" if negative_change else "POSITIVE_EVIDENCE"
+        else:
+            authority, section, classification = "BLOCKED", "NEGATIVE_EVIDENCE", "LIMITATION"
+            if status == "CONFLICT":
+                classification = "CONFLICT"
+                reasons = sorted(set([*reasons, "VALUE_CONFLICT_RETAINED"]))
+            if status == "NOT_APPLICABLE":
+                classification = "TEMPLATE_GAP"
+        value = measure.get("value") if include_value else None
+        evidence_id = "fin:{prefix}:{ticker}:{period}:{metric}:{scope}:{unit}:{status}".format(
+            prefix=prefix,
+            ticker=measure.get("ticker"),
+            period=measure.get("period"),
+            metric=measure.get("metric"),
+            scope=measure.get("statement_scope"),
+            unit=measure.get("unit"),
+            status=status,
+        )
+        if evidence_id in seen:
+            evidence_id = evidence_id + ":" + str(len(seen))
+        seen.add(evidence_id)
+        evidence.append({
+            "evidence_id": evidence_id,
+            "authority": authority,
+            "section": section,
+            "classification": classification,
+            "ticker": measure.get("ticker"),
+            "period": measure.get("period"),
+            "period_kind": measure.get("period_kind"),
+            "metric": measure.get("metric"),
+            "statement_scope": measure.get("statement_scope"),
+            "unit": measure.get("unit"),
+            "unit_scale": measure.get("unit_scale") if include_value else None,
+            "currency": measure.get("currency"),
+            "analysis_family": measure.get("analysis_family"),
+            "status": status,
+            "value": value,
+            "numerator": measure.get("numerator") if include_value else None,
+            "denominator": measure.get("denominator") if include_value else None,
+            "reason_codes": reasons,
+            "source_sha256": measure.get("source_sha256"),
+            "provider": measure.get("source_name"),
+            "original_label": measure.get("original_label"),
+            "normalization_method": measure.get("normalization_method"),
+            "use_scope": "CURRENT_RESEARCH" if include_value else "NOT_AVAILABLE",
+            "attribution": "SOURCE_ATTRIBUTED",
+            "official_fact_admitted": False,
+            "historical_pit": "UNKNOWN",
+            "publication_time": None,
+            "input_sha256": input_sha256,
+            "temporal_mode": temporal_mode,
+            "historical_claim": False,
+            "available_for_requested_cutoff": (True if include_value else False) if temporal_mode != "PRESENT_DAY_DESCRIPTIVE" else None,
+        })
+    return evidence
+
+
+def _gap_evidence(evidence_id: str, **fields: Any) -> dict[str, Any]:
+    return {
+        "evidence_id": evidence_id,
+        "authority": fields.get("authority", "MISSING"),
+        "section": fields.get("section", "UNKNOWN_OR_MISSING"),
+        "classification": fields.get("classification", "GAP"),
+        "ticker": fields.get("ticker"),
+        "period": fields.get("period"),
+        "metric": fields.get("metric"),
+        "statement_scope": fields.get("statement_scope"),
+        "unit": fields.get("unit"),
+        "analysis_family": fields.get("analysis_family"),
+        "status": fields.get("status", "NOT_AVAILABLE"),
+        "value": None,
+        "reason_codes": list(fields.get("reason_codes") or []),
+        "official_fact_admitted": False,
+        "historical_pit": "UNKNOWN",
+        "publication_time": None,
+        "historical_claim": False,
+        "attribution": "SOURCE_ATTRIBUTED",
+        "use_scope": "NOT_AVAILABLE",
+    }
+
+
+def _ratio_order(rows: list[dict[str, Any]]) -> dict[str, Any] | None:
+    usable = [
+        row for row in rows
+        if isinstance(row.get("numerator"), int) and isinstance(row.get("denominator"), int) and row["denominator"] != 0
+    ]
+    tickers = {row["ticker"] for row in usable}
+    if len(tickers) < 2:
+        return None
+    scopes = {row["statement_scope"] for row in usable}
+    units = {row["unit"] for row in usable}
+    families = {row["analysis_family"] for row in usable}
+    periods = {row["period"] for row in usable}
+    currencies = {row["currency"] for row in usable}
+    if len(scopes) != 1 or len(units) != 1 or len(families) != 1 or len(periods) != 1 or len(currencies) != 1:
+        return None
+    if units.pop() != "RATIO" or rows[0].get("metric") not in _COMPARABLE_METRICS:
+        return None
+
+    def _sort_key(row: dict[str, Any]) -> tuple[Decimal, str]:
+        return (Decimal(row["numerator"]) / Decimal(row["denominator"]), str(row["ticker"]))
+
+    ordered = sorted(usable, key=_sort_key)
+    low, high = ordered[0], ordered[-1]
+    distinct = _sort_key(low)[0] != _sort_key(high)[0]
+    return {
+        "metric": high["metric"],
+        "period": high["period"],
+        "statement_scope": high["statement_scope"],
+        "unit": "RATIO",
+        "currency": high["currency"],
+        "analysis_family": high["analysis_family"],
+        "higher_on_this_ratio": high["ticker"] if distinct else None,
+        "lower_on_this_ratio": low["ticker"] if distinct else None,
+        "rows": [
+            {"ticker": row["ticker"], "value": row["value"], "evidence_id": row["evidence_id"]}
+            for row in ordered
+        ],
+        "does_not_establish": ["CAUSE", "PEER_SCORE", "VALUATION", "OFFICIAL_FACT", "HISTORICAL_PIT"],
+    }
+
+
+def _comparisons(evidence: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    groups: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    for row in evidence:
+        if row.get("metric") not in _COMPARABLE_METRICS or row.get("value") is None:
+            continue
+        if row.get("unit") != "RATIO" or row.get("authority") != "DETERMINISTIC_INFERENCE":
+            continue
+        key = (row["metric"], row["period"], row["statement_scope"], row["unit"], row.get("currency"), row["analysis_family"])
+        groups.setdefault(key, []).append(row)
+    results = []
+    for key in sorted(groups, key=lambda item: tuple(str(part) for part in item)):
+        comparison = _ratio_order(groups[key])
+        if comparison is not None:
+            results.append(comparison)
+    return results
+
+
+def _sign_and_leverage(evidence: list[dict[str, Any]], prefix: str) -> list[dict[str, Any]]:
+    extra: list[dict[str, Any]] = []
+    by_key: dict[tuple[Any, ...], dict[str, dict[str, Any]]] = {}
+    for row in evidence:
+        if row.get("value") is None or row.get("authority") not in {"PROVIDER_REPORTED", "DETERMINISTIC_INFERENCE"}:
+            continue
+        by_key.setdefault((row.get("ticker"), row.get("period"), row.get("statement_scope"), row.get("unit"), row.get("analysis_family")), {})[str(row.get("metric"))] = row
+    for index, (key, metrics) in enumerate(sorted(by_key.items(), key=lambda item: tuple(str(part) for part in item[0]))):
+        cash = metrics.get("operating_cash_flow")
+        profit = metrics.get("group_profit_after_tax")
+        if cash and profit and isinstance(cash.get("value"), int) and isinstance(profit.get("value"), int):
+            if profit["value"] < 0:
+                kind, reasons = "NEGATIVE_GROUP_PROFIT", ["NEGATIVE_GROUP_PROFIT"]
+            elif (cash["value"] > 0) != (profit["value"] > 0):
+                kind, reasons = "OPPOSITE_SIGNS", ["OPPOSITE_SIGNS_NO_CAUSE"]
+            elif profit["value"] > 0 and cash["value"] >= 0:
+                conversion = metrics.get("cash_conversion")
+                if conversion and conversion.get("value") is not None and Decimal(str(conversion["value"])) < 1:
+                    kind, reasons = "CASH_CONVERSION_BELOW_ONE", ["CASH_CONVERSION_BELOW_ONE"]
+                else:
+                    kind = None
+            else:
+                kind = None
+            if kind:
+                extra.append(_gap_evidence(
+                    f"fin:{prefix}:quality:{index}",
+                    authority="DETERMINISTIC_INFERENCE",
+                    section="CONFLICTING_EVIDENCE" if kind == "OPPOSITE_SIGNS" else "NEGATIVE_EVIDENCE",
+                    classification="SIGN_DIVERGENCE",
+                    ticker=key[0], period=key[1], statement_scope=key[2], unit=key[3], analysis_family=key[4],
+                    metric="earnings_quality_observation",
+                    status="USABLE",
+                    reason_codes=reasons,
+                ))
+                extra[-1]["related_evidence_ids"] = [cash["evidence_id"], profit["evidence_id"]]
+                extra[-1]["observation"] = kind
+    ratio_rows = [
+        row for row in evidence
+        if row.get("metric") in {"liabilities_to_total_assets", "cash_to_total_assets"} and row.get("value") is not None
+    ]
+    grouped: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+    for row in ratio_rows:
+        matched = re.fullmatch(r"(\d{4})-(Q3|9M)", str(row.get("period")))
+        if not matched:
+            continue
+        grouped.setdefault((row.get("ticker"), matched.group(2), row.get("statement_scope"), row.get("unit"), row.get("metric")), []).append(row)
+    change_index = 0
+    for key, rows in sorted(grouped.items(), key=lambda item: tuple(str(part) for part in item[0])):
+        ordered = sorted(rows, key=lambda row: str(row["period"]))
+        if len(ordered) < 2:
+            continue
+        earlier, later = ordered[-2], ordered[-1]
+        before, after = Decimal(str(earlier["value"])), Decimal(str(later["value"]))
+        if before == after:
+            continue
+        direction = "HIGHER" if after > before else "LOWER"
+        extra.append(_gap_evidence(
+            f"fin:{prefix}:ratio-change:{change_index}",
+            authority="DETERMINISTIC_INFERENCE",
+            section="NEGATIVE_EVIDENCE",
+            classification="RATIO_CHANGE",
+            ticker=key[0], period=later["period"], statement_scope=key[2], unit=key[3],
+            analysis_family=later.get("analysis_family"), metric=key[4], status="USABLE",
+            reason_codes=[f"SAME_SCOPE_RATIO_{direction}"],
+        ))
+        extra[-1]["related_evidence_ids"] = [earlier["evidence_id"], later["evidence_id"]]
+        extra[-1]["observation"] = direction
+        extra[-1]["earlier_period"] = earlier["period"]
+        change_index += 1
+    return extra
+
+
+def _claim(number_re: re.Pattern[str], claim_id: str, claim_type: str, section: str, text: str,
+           supporting: list[str], authority: str, *, numeric: list[str] | None = None) -> dict[str, Any]:
+    claim = {
+        "claim_id": claim_id,
+        "claim_type": claim_type,
+        "section": section,
+        "claim_text": text,
+        "supporting_evidence_ids": supporting,
+        "conflicting_evidence_ids": [],
+        "authority_class": authority,
+    }
+    if numeric:
+        claim["numeric_evidence_ids"] = numeric
+    elif number_re.search(text):
+        claim["numeric_evidence_ids"] = list(supporting)
+    return claim
+
+
+def _draft_from_evidence(
+    ai_input_identity: str,
+    evidence: list[dict[str, Any]],
+    comparisons: list[dict[str, Any]],
+    analytical: Mapping[str, Mapping[str, str]],
+    question: str,
+    temporal: Mapping[str, Any],
+) -> dict[str, Any]:
+    number_re, _, _, _ = _ai_validator()
+    by_id = {row["evidence_id"]: row for row in evidence}
+    claims: list[dict[str, Any]] = []
+    index = 1
+
+    def add(claim_type: str, section: str, text: str, supporting: list[str], authority: str, *, numeric: list[str] | None = None) -> None:
+        nonlocal index
+        if not supporting:
+            return
+        claims.append(_claim(number_re, f"c{index:04d}", claim_type, section, text, supporting, authority, numeric=numeric))
+        index += 1
+
+    context = [row["evidence_id"] for row in evidence if row["classification"] == "RESEARCH_BOUNDARY"]
+    add(
+        "INFERENCE", "RESEARCH_CONTEXT",
+        "This draft uses only the cited structured financial selection. Python remains the numerical authority. "
+        "The draft assigns no cause, no weight, no qualified price and no official status.",
+        context, "DETERMINISTIC_INFERENCE",
+    )
+    if temporal["facts_eligible"]:
+        add(
+            "DATA_WARNING", "RESEARCH_CONTEXT",
+            "Eligible figures are present-day descriptive research or receipt-bounded research with publication unproven. "
+            "They are not a sealed session claim and historical point-in-time status remains unknown.",
+            [row["evidence_id"] for row in evidence if row["metric"] == "publication_time"],
+            "MISSING",
+        )
+    else:
+        add(
+            "DATA_WARNING", "RESEARCH_CONTEXT",
+            "Reported figures are withheld for this time-bound request. A caller-supplied clock is not observation proof, "
+            "and a vendor date is not publication time.",
+            [row["evidence_id"] for row in evidence if row["metric"] == "publication_time"],
+            "MISSING",
+        )
+    for row in evidence:
+        if row["authority"] == "PROVIDER_REPORTED" and row["section"] == "POSITIVE_EVIDENCE":
+            add(
+                "FACT", "RESEARCH_CONTEXT",
+                f"{row['ticker']} {row['period']} {row['statement_scope']} {row['metric']} is {row['value']} {row['unit']}. "
+                "The figure is the provider-reported cell on the cited evidence. It is not an official admitted fact.",
+                [row["evidence_id"]], "PROVIDER_REPORTED",
+            )
+        elif row["authority"] == "DETERMINISTIC_INFERENCE" and row["classification"] in {"COMPUTED_RATIO", "YEAR_OVER_YEAR"}:
+            section = "COUNTER_THESIS" if row["section"] == "NEGATIVE_EVIDENCE" else "THESIS"
+            change = " The computed change is negative. No cause is assigned." if section == "COUNTER_THESIS" else " No cause is assigned."
+            add(
+                "INFERENCE", section,
+                f"{row['ticker']} {row['period']} {row['statement_scope']} {row['metric']} is {row['value']}. "
+                "The figure is computed from reported cells on one scope, period and unit." + change,
+                [row["evidence_id"]], "DETERMINISTIC_INFERENCE",
+            )
+    for comparison in comparisons:
+        ids = [row["evidence_id"] for row in comparison["rows"]]
+        listed = "; ".join(f"{row['ticker']} {row['value']}" for row in comparison["rows"])
+        higher = comparison["higher_on_this_ratio"]
+        lower = comparison["lower_on_this_ratio"]
+        if higher and lower:
+            order = f"Higher on this ratio is {higher}. Lower on this ratio is {lower}."
+        else:
+            order = "The cited ratios have no strict difference."
+        add(
+            "INFERENCE", "THESIS",
+            f"At {comparison['period']} {comparison['statement_scope']} {comparison['analysis_family']}, "
+            f"{comparison['metric']} stays inside one scope and one template. {listed}. {order} "
+            "This is not a valuation, a peer score, or an official fact. Q3 is not combined with 9M.",
+            ids, "DETERMINISTIC_INFERENCE",
+        )
+    for row in evidence:
+        if row["classification"] == "SIGN_DIVERGENCE":
+            observation = row.get("observation")
+            if observation == "OPPOSITE_SIGNS":
+                text = f"{row['ticker']} {row['period']} {row['statement_scope']} operating cash flow and group profit have opposite signs. No cause is assigned."
+            elif observation == "NEGATIVE_GROUP_PROFIT":
+                text = f"{row['ticker']} {row['period']} {row['statement_scope']} group profit is negative. The ratio is not described as weak conversion and no cause is assigned."
+            else:
+                text = f"{row['ticker']} {row['period']} {row['statement_scope']} cash conversion is below 1. The ratio is operating cash flow over group profit. No cause is assigned."
+            add("INFERENCE", "COUNTER_THESIS", text, [row["evidence_id"]], "DETERMINISTIC_INFERENCE",
+                numeric=list(row.get("related_evidence_ids") or [row["evidence_id"]]))
+        elif row["classification"] == "RATIO_CHANGE":
+            add(
+                "INFERENCE", "COUNTER_THESIS",
+                f"{row['ticker']} {row['metric']} is {row['observation']} at {row['period']} than at {row['earlier_period']} "
+                "on the same scope and unit. Interest-bearing debt is not filled in. No cause is assigned.",
+                [row["evidence_id"]], "DETERMINISTIC_INFERENCE",
+                numeric=list(row.get("related_evidence_ids") or [row["evidence_id"]]),
+            )
+        elif row["classification"] == "CONFLICT":
+            add(
+                "DATA_WARNING", "COUNTER_THESIS",
+                f"{row['ticker']} {row['period']} {row['metric']} has conflicting retained sources. No value is selected.",
+                [row["evidence_id"]], "BLOCKED",
+            )
+        elif row["classification"] == "TEMPLATE_GAP":
+            add(
+                "DATA_WARNING", "COUNTER_THESIS",
+                f"{row['ticker']} {row['analysis_family']} does not support an industrial margin comparison. No gross margin is produced for that template.",
+                [row["evidence_id"]], "BLOCKED",
+            )
+        elif row["authority"] == "BLOCKED" and row["classification"] == "LIMITATION":
+            add(
+                "DATA_WARNING", "COUNTER_THESIS",
+                f"{row['ticker']} {row['period']} {row['metric']} is {row['status']}. The blocked measure is not used as a fact.",
+                [row["evidence_id"]], "BLOCKED",
+            )
+    missing_ids = [row["evidence_id"] for row in evidence if row["authority"] == "MISSING"]
+    add(
+        "DATA_WARNING", "COUNTER_THESIS",
+        "Missing price, share count, publication time and any withheld scope stay unavailable. They are not estimated.",
+        missing_ids, "MISSING",
+    )
+    valuation_ids = [row["evidence_id"] for row in evidence if row["metric"] in {"research_multiple", "profit_after_tax_ttm"}]
+    price_ids = [row["evidence_id"] for row in evidence if row["metric"] in {"qualified_price", "share_count"}]
+    add(
+        "DATA_WARNING", "VALUATION_CONTEXT",
+        "Valuation is blocked. No qualified price, share count, trailing window, or research multiple is available. No multiple is computed.",
+        valuation_ids or price_ids,
+        "BLOCKED" if valuation_ids else "MISSING",
+    )
+    add(
+        "DATA_WARNING", "MARKET_CONTEXT",
+        "No market session and no traded price belong to this financial extract.",
+        price_ids, "MISSING",
+    )
+    add(
+        "HYPOTHESIS", "CATALYSTS",
+        "No catalyst is identified in the structured financial extract.",
+        [row["evidence_id"] for row in evidence if row["metric"] == "catalyst"],
+        "MISSING",
+    )
+    add(
+        "HYPOTHESIS", "SCENARIO_INTERPRETATION",
+        "No scenario weight is assigned. Competing readings stay beside the cited figures.",
+        context, "DETERMINISTIC_INFERENCE",
+    )
+    add(
+        "DATA_WARNING", "UNRESOLVED_QUESTIONS",
+        "Publication time is not established. A statement date, an export timestamp and a vendor label are not interchangeable with an observation receipt.",
+        [row["evidence_id"] for row in evidence if row["metric"] == "publication_time"],
+        "MISSING",
+    )
+    add(
+        "DATA_WARNING", "EVIDENCE_GAPS",
+        "Missing price, share count, separate-scope rows and unsupported templates stay gaps. They are not estimated.",
+        [row["evidence_id"] for row in evidence if row["authority"] == "MISSING"] or context,
+        "MISSING" if any(row["authority"] == "MISSING" for row in evidence) else "DETERMINISTIC_INFERENCE",
+    )
+    add(
+        "HYPOTHESIS", "WHAT_WOULD_CHANGE_THE_VIEW",
+        "A hash-bound observation receipt, a same-scope prior period, or a qualified price and share base would change which statements this review can make. No weight is assigned.",
+        context, "DETERMINISTIC_INFERENCE",
+    )
+    add(
+        "HYPOTHESIS", "HUMAN_REVIEW_REQUIRED",
+        "A person must review this draft before it is used as internal research.",
+        context, "DETERMINISTIC_INFERENCE",
+    )
+    risk_ids = [row["evidence_id"] for row in evidence if row["section"] in {"NEGATIVE_EVIDENCE", "CONFLICTING_EVIDENCE"}]
+    add(
+        "DATA_WARNING", "RISKS",
+        "Material limits include blocked measures, negative computed changes, template boundaries and missing valuation inputs. No cause is assigned from a ratio.",
+        risk_ids or context,
+        "BLOCKED" if risk_ids and all(by_id[item]["authority"] == "BLOCKED" for item in risk_ids) else (
+            "DETERMINISTIC_INFERENCE" if not risk_ids or any(by_id[item]["authority"] == "DETERMINISTIC_INFERENCE" for item in risk_ids) else "BLOCKED"
+        ),
+    )
+    if not any(claim["section"] == "THESIS" for claim in claims):
+        add(
+            "HYPOTHESIS", "THESIS",
+            "No positive financial thesis is available from eligible figures for this question.",
+            context, "DETERMINISTIC_INFERENCE",
+        )
+    sections: dict[str, list[str]] = {}
+    for claim in claims:
+        sections.setdefault(claim["section"], []).append(claim["claim_id"])
+    for name in (
+        "RESEARCH_CONTEXT", "THESIS", "COUNTER_THESIS", "CATALYSTS", "RISKS", "SCENARIO_INTERPRETATION",
+        "VALUATION_CONTEXT", "MARKET_CONTEXT", "UNRESOLVED_QUESTIONS", "EVIDENCE_GAPS",
+        "WHAT_WOULD_CHANGE_THE_VIEW", "HUMAN_REVIEW_REQUIRED",
+    ):
+        sections.setdefault(name, [])
+    body = {
+        "source_ai_input_identity": ai_input_identity,
+        "question": question,
+        "draft_role": "VALIDATOR_FIXTURE_NOT_A_MODEL_RESPONSE",
+        "claims": claims,
+        "sections": sections,
+        "dimension_interpretations": {name: item["eligibility"] for name, item in analytical.items()},
+        "human_review_required": True,
+    }
+    return {**body, "draft_identity": "structured_financial_ai_draft:" + stable_id(body)}
+
+
+def build_structured_financial_ai_research(
+    packet: Mapping[str, Any],
+    *,
+    question: str,
+    tickers: str | list[str] | None = None,
+    knowledge_cutoff: str | None = None,
+    observation_receipt: str | Path | Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Opt-in local AI input. This does not call a model, open Daily, or admit official facts.
+
+    A caller-supplied observed-at string on the research packet is ignored. A
+    time-bound request needs a separate receipt bound to the input SHA-256.
+    """
+    if question not in _AI_QUESTIONS:
+        raise ValueError("AI_QUESTION_UNSUPPORTED")
+    verified = _verify_structured_research_packet(packet)
+    receipt = _read_observation_receipt(observation_receipt)
+    temporal = _ai_temporal_gate(verified, knowledge_cutoff, receipt)
+    selected = _ai_tickers(tickers)
+    if question == "company_thesis" and (not selected or len(selected) < 1):
+        raise ValueError("COMPANY_THESIS_REQUIRES_ONE_SUBJECT")
+    if question == "industrial_profitability":
+        universe = list(verified["families"].get("INDUSTRIAL_STATEMENT") or [])
+    elif question == "company_thesis":
+        universe = list(selected or [])
+    else:
+        universe = [
+            ticker for ticker in verified["issuers"]
+            if _packet_family(verified, ticker) not in {"MIXED_STATEMENT", "UNKNOWN_STATEMENT"}
+        ]
+    if selected:
+        unknown = [ticker for ticker in selected if ticker not in set(verified["issuers"])]
+        if unknown:
+            raise ValueError("TICKER_NOT_IN_RESEARCH")
+        if question == "company_thesis":
+            subject_family = _packet_family(verified, selected[0])
+            if any(_packet_family(verified, ticker) != subject_family for ticker in selected[1:]):
+                raise ValueError("PEER_TEMPLATE_MISMATCH")
+            universe = list(selected)
+        else:
+            universe = list(selected)
+    measures, withheld = _selected_measures(verified, question, universe)
+    evidence = _project_ai_evidence(
+        measures,
+        input_sha256=verified["input_sha256"],
+        facts_eligible=temporal["facts_eligible"],
+        temporal_mode=temporal["mode"],
+    )
+    prefix = verified["input_sha256"][:12]
+    evidence.extend(_sign_and_leverage(evidence, prefix) if temporal["facts_eligible"] else [])
+    for ticker in universe:
+        family = _packet_family(verified, ticker)
+        if question == "industrial_profitability" and family != "INDUSTRIAL_STATEMENT":
+            evidence.append(_gap_evidence(
+                f"fin:{prefix}:template:{ticker}",
+                authority="BLOCKED", section="NEGATIVE_EVIDENCE", classification="TEMPLATE_GAP",
+                ticker=ticker, analysis_family=family, metric="industrial_profit_margin",
+                status="NOT_APPLICABLE", reason_codes=["STATEMENT_TEMPLATE_IS_NOT_INDUSTRIAL"],
+            ))
+        if family in {"MIXED_STATEMENT", "UNKNOWN_STATEMENT"}:
+            evidence.append(_gap_evidence(
+                f"fin:{prefix}:unsupported:{ticker}",
+                authority="BLOCKED", section="NEGATIVE_EVIDENCE", classification="TEMPLATE_GAP",
+                ticker=ticker, analysis_family=family, metric="statement_template",
+                status="NOT_APPLICABLE", reason_codes=["UNSUPPORTED_ACCOUNTING_TEMPLATE"],
+            ))
+    for item in withheld:
+        evidence.append(_gap_evidence(
+            f"fin:{prefix}:separate-scope-withheld",
+            authority="MISSING", classification="GAP", metric="separate_statement_scope",
+            statement_scope="separate", reason_codes=item["reason_codes"],
+        ))
+    evidence.extend([
+        _gap_evidence(
+            f"fin:{prefix}:context", authority="DETERMINISTIC_INFERENCE", section="POSITIVE_EVIDENCE",
+            classification="RESEARCH_BOUNDARY", metric="research_boundary", status="USABLE",
+            reason_codes=["LOCAL_VALIDATOR_ONLY"],
+        ),
+        _gap_evidence(f"fin:{prefix}:publication", metric="publication_time", reason_codes=["PUBLICATION_TIME_NOT_INFERRED"]),
+        _gap_evidence(f"fin:{prefix}:price", metric="qualified_price", reason_codes=["NO_QUALIFIED_PRICE"]),
+        _gap_evidence(f"fin:{prefix}:shares", metric="share_count", reason_codes=["NO_SHARE_COUNT"]),
+        _gap_evidence(f"fin:{prefix}:catalyst", metric="catalyst", reason_codes=["NO_CATALYST_IN_EXTRACT"]),
+    ])
+    evidence.sort(key=lambda row: row["evidence_id"])
+    if len(evidence) > _AI_SELECTION_CAP:
+        raise ValueError("AI_SELECTION_TOO_WIDE")
+    _, build_human_review_packet, prompt_contract, validate_ai_draft = _ai_validator()
+    analytical = {
+        "provider_reported_cells": {"eligibility": "ELIGIBLE" if temporal["facts_eligible"] else "BLOCKED"},
+        "deterministic_comparison": {"eligibility": "ELIGIBLE" if temporal["facts_eligible"] else "BLOCKED"},
+        "official_fact": {"eligibility": "BLOCKED"},
+        "historical_pit": {"eligibility": "UNKNOWN"},
+        "valuation": {"eligibility": "BLOCKED"},
+        "trailing_twelve_months": {"eligibility": "BLOCKED"},
+        "execution": {"eligibility": "NOT_APPLICABLE"},
+        "daily_handoff": {"eligibility": "NOT_APPLICABLE"},
+        "remote_model_disclosure": {"eligibility": "BLOCKED"},
+    }
+    blocked = {
+        name: item for name, item in analytical.items()
+        if item["eligibility"] in {"BLOCKED", "UNKNOWN", "NOT_APPLICABLE"}
+    }
+    mandatory = [row["evidence_id"] for row in evidence if row["section"] in _COUNTER_SECTIONS]
+    ticker_label = ",".join(universe) if universe else question
+    comparisons = _comparisons(evidence) if temporal["facts_eligible"] else []
+    ai_input = {
+        "schema_version": "1.0.0",
+        "contract_version": AI_RESEARCH_CONTRACT + "/ai_input",
+        "ticker": ticker_label,
+        "as_of": temporal["mode"],
+        "question": question,
+        "selected_tickers": universe,
+        "research_identity": verified["research_identity"],
+        "input_sha256": verified["input_sha256"],
+        "evidence": evidence,
+        "analytical_eligibility": analytical,
+        "blocked_dimensions": blocked,
+        "mandatory_counter_evidence_ids": mandatory,
+        "temporal": temporal,
+        "comparisons": comparisons,
+        "prompt_contract": prompt_contract(),
+        "authority_boundary": {
+            "ai_is_not_factual_or_numerical_authority": True,
+            "external_model_call": False,
+            "licensed_remote_disclosure": "NOT_ESTABLISHED",
+            "official_fact_admitted": False,
+            "historical_pit": "UNKNOWN",
+            "valuation_use": "CLOSED",
+            "daily_packet_activated": False,
+            "financial_v2_authority_unchanged": "2026-09-05.1",
+            "forbidden_outputs": ["BUY_SELL_HOLD", "TARGET_PRICE", "EXPECTED_RETURN", "SCENARIO_PROBABILITY", "POSITION_SIZE", "EXECUTION"],
+        },
+    }
+    ai_input["ai_input_sha256"] = stable_id(ai_input)
+    ai_input["ai_input_identity"] = "structured_financial_ai_input:" + ai_input["ai_input_sha256"]
+    draft = _draft_from_evidence(ai_input["ai_input_identity"], evidence, comparisons, analytical, question, temporal)
+    validation = validate_ai_draft(ai_input, draft)
+    if validation["validation_status"] != "VALID":
+        raise ValueError("AI_DRAFT_REJECTED:" + ",".join(validation["reason_codes"]))
+    review = build_human_review_packet(ai_input, draft, validation)
+    usable_values = sum(row.get("value") is not None for row in evidence)
+    body = {
+        "contract_version": AI_RESEARCH_CONTRACT,
+        "question": question,
+        "selected_tickers": universe,
+        "ai_input": ai_input,
+        "deterministic_draft": draft,
+        "validation": validation,
+        "human_review": review,
+        "comparisons": comparisons,
+        "external_model_call": False,
+        "licensed_remote_disclosure": "NOT_ESTABLISHED",
+        "daily_packet_activated": False,
+        "financial_v2_authority_unchanged": "2026-09-05.1",
+        "official_fact_admitted": False,
+        "historical_pit": "UNKNOWN",
+        "temporal": temporal,
+        "coverage": {
+            "source_measure_records": verified["coverage"]["issuer_period_metric_records"],
+            "source_current_research_usable": verified["coverage"]["current_research_usable"],
+            "selected_measure_records": len(measures),
+            "ai_evidence_count": len(evidence),
+            "ai_measures_with_values": usable_values,
+            "blocked_or_gap_evidence": sum(row.get("value") is None for row in evidence),
+        },
+        "source_packet_consumers_unchanged": verified["consumers"]["ai_research_preview"],
+    }
+    return {**body, "ai_research_identity": "structured_financial_ai_research:" + stable_id(body)}

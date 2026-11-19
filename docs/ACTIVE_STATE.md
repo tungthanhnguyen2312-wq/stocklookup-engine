@@ -304,8 +304,8 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 9. Next action
 
-Structured provider input and the Q3 statement cohort are current research only.
-Official HPG admission stays blocked. T+ warm and VN-Index/public Dashboard gates remain separate; no new lane.
+Opt-in structured financial research reaches the local evidence-bound AI validator only.
+Remote disclosure and ordinary Daily stay off. Official admission, PIT and valuation stay closed.
 
 ## 10. Owner approvals that remain open
 

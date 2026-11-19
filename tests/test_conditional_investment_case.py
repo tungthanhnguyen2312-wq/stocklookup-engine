@@ -575,3 +575,325 @@ def test_real_vietstock_export_reaches_research_without_issuer_constants():
     assert evf["analysis_family"] == "BANK_STATEMENT"
     assert not any(row["metric"] == "research_multiple" and row["status"] == "USABLE" for row in packet["measures"])
     assert not any(row["annualized"] for row in packet["measures"])
+
+
+def _ai_row(ticker, item, value, *, year="2026", kind="9M", scope="Hợp nhất", unit="Đơn vị tính: 1 VNĐ", sha="a" * 64, statement="IS"):
+    basis = "cumulative_ytd" if kind in {"6M", "9M", "FY"} else "quarterly_discrete"
+    label = f"Quý {kind[-1]}/{year}" if kind.startswith("Q") else f"{kind}/{year}"
+    return _structured_row(
+        ticker=ticker, item=item, value=str(value), period_label=label, period_year=str(year),
+        period_kind=kind, period_basis=basis, consolidation=scope, unit=unit, statement=statement,
+        source_sha256=sha, source_file="PRIVATE_BOX_EXPORT_TOKEN.xlsx",
+    )
+
+
+_REV = "3. Doanh thu thuần về bán hàng và cung cấp dịch vụ"
+_GROSS = "5. Lợi nhuận gộp về bán hàng và cung cấp dịch vụ"
+_PARENT = "Lợi nhuận sau thuế của cổ đông của Công ty mẹ"
+_GROUP = "18. Lợi nhuận sau thuế thu nhập doanh nghiệp"
+_OCF = "Lưu chuyển tiền thuần từ hoạt động kinh doanh"
+_ASSETS = "TỔNG CỘNG TÀI SẢN"
+_LIAB = "C. NỢ PHẢI TRẢ"
+_CASH = "I. Tiền và các khoản tương đương tiền"
+
+
+def _ai_packet(tmp_path):
+    from stocklookup_core.research.conditional_investment_case import build_structured_financial_research
+
+    rows = []
+    for ticker, parent, gross, cash in (("AAA", 100, 400, 40), ("BBB", 50, 100, -5)):
+        for year in ("2025", "2026"):
+            for kind in ("Q3", "9M"):
+                revenue = 1000 if ticker == "AAA" else 500
+                rows.extend([
+                    _ai_row(ticker, _REV, revenue, year=year, kind=kind),
+                    _ai_row(ticker, _GROSS, gross, year=year, kind=kind),
+                    _ai_row(ticker, _PARENT, parent, year=year, kind=kind),
+                    _ai_row(ticker, _GROUP, parent, year=year, kind=kind, statement="IS"),
+                    _ai_row(ticker, _OCF, cash, year=year, kind=kind, statement="CF"),
+                    _ai_row(ticker, _ASSETS, 1000, year=year, kind=kind, statement="BS"),
+                    _ai_row(ticker, _LIAB, 400 if year == "2025" else 700, year=year, kind=kind, statement="BS"),
+                    _ai_row(ticker, _CASH, 200, year=year, kind=kind, statement="BS"),
+                ])
+    rows.append(_ai_row("AAA", "11. Vay và nợ thuê tài chính ngắn hạn", 10, kind="Q3", statement="BS"))
+    rows.append(_ai_row("AAA", _PARENT, 999, kind="Q3", scope="Công ty mẹ"))
+    rows.append(_ai_row("AAA", _REV, 1000, kind="Q3", scope="Công ty mẹ"))
+    rows.append(_ai_row("CCC", "XV. Lợi nhuận sau thuế của cổ đông của Ngân hàng mẹ (XIII-XIV)", 9, kind="Q3", sha="d" * 64))
+    rows.append(_ai_row("CCC", "I. Thu nhập lãi thuần (1-2)", 20, kind="Q3", sha="d" * 64))
+    rows.append(_ai_row("QQQ", "1.6. Doanh thu môi giới chứng khoán", 10, kind="9M", sha="c" * 64))
+    rows.append(_ai_row("QQQ", "11.1. Lợi nhuận sau thuế phân bổ cho chủ sở hữu", 4, kind="9M", sha="c" * 64))
+    rows.append(_ai_row("MIX", _REV, 5, sha="e" * 64))
+    rows.append(_ai_row("MIX", "XV. Lợi nhuận sau thuế của cổ đông của Ngân hàng mẹ (XIII-XIV)", 6, sha="e" * 64))
+    rows.append(_ai_row("EEE", _REV, 100, sha="a" * 64))
+    rows.append(_ai_row("EEE", _REV, 120, sha="b" * 64))
+    rows.append(_ai_row("EEE", _REV, 80, kind="Q3", sha="a" * 64))
+    rows.append(_ai_row("EEE", _PARENT, 8, kind="Q3", sha="a" * 64))
+    rows.append(_ai_row("MMM", _REV, 10, unit="Đơn vị: 1.000.000 VNĐ", sha="f" * 64))
+    rows.append(_ai_row("MMM", _PARENT, 2, unit="Đơn vị: 1.000.000 VNĐ", sha="f" * 64))
+    path = _write_structured(tmp_path / "ai-input.json", rows)
+    return path, build_structured_financial_research(path)
+
+
+def _assert_ai_boundary(artifact):
+    assert artifact["validation"]["validation_status"] == "VALID"
+    assert artifact["human_review"]["review_state"] == "HUMAN_REVIEW_REQUIRED"
+    assert artifact["human_review"]["human_decision_required"] is True
+    assert artifact["external_model_call"] is False
+    assert artifact["licensed_remote_disclosure"] == "NOT_ESTABLISHED"
+    assert artifact["daily_packet_activated"] is False
+    assert artifact["official_fact_admitted"] is False
+    assert artifact["historical_pit"] == "UNKNOWN"
+    assert artifact["financial_v2_authority_unchanged"] == "2026-09-05.1"
+    assert artifact["temporal"]["historical_claim"] is False
+    assert artifact["temporal"]["sealed_t0"] is False
+    assert artifact["deterministic_draft"]["draft_role"] == "VALIDATOR_FIXTURE_NOT_A_MODEL_RESPONSE"
+    assert artifact["deterministic_draft"]["human_review_required"] is True
+    assert "measures" not in artifact
+    blob = json.dumps(artifact)
+    assert "PRIVATE_BOX_EXPORT_TOKEN" not in blob
+    assert "https://" not in blob
+    assert artifact["coverage"]["ai_evidence_count"] < artifact["coverage"]["source_measure_records"] or artifact["coverage"]["source_measure_records"] < 50
+
+
+def test_structured_ai_research_is_local_bounded_and_fail_closed(tmp_path):
+    import inspect
+    from stocklookup_core.research.conditional_investment_case import build_structured_financial_ai_research
+    from stocklookup_core.research.evidence_bound_ai_research_human_review import validate_ai_draft
+
+    path, packet = _ai_packet(tmp_path)
+    assert packet["consumers"]["ai_research_preview"]["status"] == "NOT_FED"
+    source = inspect.getsource(build_structured_financial_ai_research)
+    assert "urllib" not in source and "requests" not in source and "openai" not in source
+
+    industrial = build_structured_financial_ai_research(packet, question="industrial_profitability", tickers=["AAA", "BBB", "CCC"])
+    _assert_ai_boundary(industrial)
+    assert industrial["temporal"]["mode"] == "PRESENT_DAY_DESCRIPTIVE"
+    values = {(row["ticker"], row["period"], row["metric"]): row for row in industrial["ai_input"]["evidence"]}
+    assert values[("AAA", "2026-Q3", "parent_profit_margin")]["value"] == "0.100000"
+    assert values[("AAA", "2026-9M", "parent_profit_margin")]["value"] == "0.100000"
+    assert values[("AAA", "2026-Q3", "parent_profit_margin")]["statement_scope"] == "consolidated"
+    assert not any(row.get("value") == 999 for row in industrial["ai_input"]["evidence"])
+    assert not any(row.get("ticker") == "CCC" and row.get("metric") == "gross_margin" for row in industrial["ai_input"]["evidence"])
+    assert any(row.get("ticker") == "CCC" and "STATEMENT_TEMPLATE_IS_NOT_INDUSTRIAL" in row["reason_codes"] for row in industrial["ai_input"]["evidence"])
+    assert all(row["statement_scope"] == "consolidated" for row in industrial["comparisons"])
+    assert {row["period"] for row in industrial["comparisons"]} >= {"2026-Q3", "2026-9M"}
+    assert not any(row["metric"] == "net_revenue" for row in industrial["comparisons"])
+
+    quality = build_structured_financial_ai_research(packet, question="earnings_quality", tickers=["BBB"])
+    _assert_ai_boundary(quality)
+    quality_text = " ".join(claim["claim_text"] for claim in quality["deterministic_draft"]["claims"])
+    assert "opposite signs" in quality_text
+    assert "weak conversion" not in quality_text
+    assert "No cause is assigned" in quality_text
+
+    balance = build_structured_financial_ai_research(packet, question="balance_sheet_risk", tickers=["AAA"])
+    _assert_ai_boundary(balance)
+    assert any(row["classification"] == "RATIO_CHANGE" and row["observation"] == "HIGHER" for row in balance["ai_input"]["evidence"])
+    assert any(row["metric"] == "interest_bearing_debt" and row["status"] == "BLOCKED" for row in balance["ai_input"]["evidence"])
+    assert not any(claim["claim_type"] == "FACT" and "interest_bearing_debt" in claim["claim_text"] for claim in balance["deterministic_draft"]["claims"])
+
+    templates = build_structured_financial_ai_research(packet, question="template_earnings_trends")
+    _assert_ai_boundary(templates)
+    families = {row["ticker"]: row["analysis_family"] for row in templates["ai_input"]["evidence"] if row.get("analysis_family")}
+    assert families["CCC"] == "BANK_STATEMENT"
+    assert families["QQQ"] == "SECURITIES_STATEMENT"
+    assert not any(row.get("metric") == "gross_margin" and row.get("analysis_family") != "INDUSTRIAL_STATEMENT" for row in templates["ai_input"]["evidence"])
+
+    valuation = build_structured_financial_ai_research(packet, question="valuation_readiness", tickers=["AAA"])
+    _assert_ai_boundary(valuation)
+    assert any(row["metric"] == "research_multiple" and row["status"] == "BLOCKED" for row in valuation["ai_input"]["evidence"])
+    assert not any(claim["claim_type"] == "FACT" and claim.get("authority_class") == "BLOCKED" for claim in valuation["deterministic_draft"]["claims"])
+    assert all(claim["claim_type"] != "FACT" or "research_multiple" not in claim["claim_text"] for claim in valuation["deterministic_draft"]["claims"])
+    valuation_text = " ".join(claim["claim_text"] for claim in valuation["deterministic_draft"]["claims"])
+    assert "No multiple is computed" in valuation_text
+
+    thesis = build_structured_financial_ai_research(packet, question="company_thesis", tickers=["AAA"])
+    other = build_structured_financial_ai_research(packet, question="company_thesis", tickers=["QQQ"])
+    _assert_ai_boundary(thesis)
+    _assert_ai_boundary(other)
+    assert thesis["deterministic_draft"]["draft_identity"] != other["deterministic_draft"]["draft_identity"]
+    assert not any(row.get("metric") == "gross_margin" for row in other["ai_input"]["evidence"])
+    with pytest.raises(ValueError, match="PEER_TEMPLATE_MISMATCH"):
+        build_structured_financial_ai_research(packet, question="company_thesis", tickers=["AAA", "CCC"])
+
+    mismatched = build_structured_financial_ai_research(packet, question="industrial_profitability", tickers=["AAA", "MMM"])
+    units = {(row["ticker"], row["unit"]) for row in mismatched["ai_input"]["evidence"] if row.get("metric") == "net_revenue" and row.get("value") is not None}
+    assert ("AAA", "VND") in units and ("MMM", "MILLION_VND") in units
+    assert all(row["unit"] == "RATIO" for row in mismatched["comparisons"])
+
+    conflict = build_structured_financial_ai_research(packet, question="industrial_profitability", tickers=["EEE"])
+    assert any(row["classification"] == "CONFLICT" and row["period"] == "2026-9M" and row["value"] is None for row in conflict["ai_input"]["evidence"])
+    assert not any(
+        claim["claim_type"] == "FACT" and "2026-9M" in claim["claim_text"] and "net_revenue" in claim["claim_text"]
+        for claim in conflict["deterministic_draft"]["claims"]
+    )
+
+    unsupported = build_structured_financial_ai_research(packet, question="company_thesis", tickers=["MIX"])
+    _assert_ai_boundary(unsupported)
+    assert any("UNSUPPORTED_ACCOUNTING_TEMPLATE" in row["reason_codes"] for row in unsupported["ai_input"]["evidence"])
+    assert not any(row.get("metric") == "parent_profit_margin" and row.get("value") is not None for row in unsupported["ai_input"]["evidence"])
+
+    clocked = build_structured_financial_ai_research(
+        packet, question="industrial_profitability", tickers=["AAA"], knowledge_cutoff="2026-11-01T00:00:00+07:00",
+    )
+    assert clocked["temporal"]["mode"] == "HISTORICAL_AVAILABILITY_UNPROVEN"
+    assert not any(claim["claim_type"] == "FACT" for claim in clocked["deterministic_draft"]["claims"])
+    assert all(row.get("value") is None for row in clocked["ai_input"]["evidence"])
+    assert packet["caller_observed_at"] is None
+
+    receipt = {
+        "contract_version": "structured_financial_observation_receipt/v1",
+        "input_sha256": packet["input_sha256"],
+        "observed_at": "2026-11-02T00:00:00+07:00",
+        "observation_basis": "RETAINED_ACQUISITION_RECORD",
+    }
+    late = build_structured_financial_ai_research(
+        packet, question="industrial_profitability", tickers=["AAA"],
+        knowledge_cutoff="2026-11-01T00:00:00+07:00", observation_receipt=receipt,
+    )
+    assert late["temporal"]["mode"] == "AFTER_KNOWLEDGE_CUTOFF"
+    assert all(row.get("value") is None for row in late["ai_input"]["evidence"])
+    early_receipt = {**receipt, "observed_at": "2026-10-01T00:00:00+07:00"}
+    early = build_structured_financial_ai_research(
+        packet, question="company_thesis", tickers=["AAA"],
+        knowledge_cutoff="2026-11-01T00:00:00+07:00", observation_receipt=early_receipt,
+    )
+    assert early["temporal"]["mode"] == "OBSERVED_AT_OR_BEFORE_CUTOFF_PUBLICATION_UNPROVEN"
+    assert early["temporal"]["historical_pit"] == "UNKNOWN"
+    assert early["temporal"]["publication_time"] is None
+    assert any(claim["claim_type"] == "FACT" for claim in early["deterministic_draft"]["claims"])
+    with pytest.raises(ValueError, match="SOURCE_INPUT_SHA_MISMATCH"):
+        build_structured_financial_ai_research(
+            packet, question="company_thesis", tickers=["AAA"],
+            knowledge_cutoff="2026-11-01T00:00:00+07:00",
+            observation_receipt={**receipt, "input_sha256": "b" * 64},
+        )
+    with pytest.raises(ValueError, match="OBSERVATION_RECEIPT_IS_NOT_PUBLICATION_OR_VENDOR_TIME"):
+        build_structured_financial_ai_research(
+            packet, question="company_thesis", tickers=["AAA"],
+            observation_receipt={**receipt, "vendor_publish_date": "2026-10-30"},
+        )
+
+    tampered = json.loads(json.dumps(packet))
+    tampered["official_fact_admitted"] = True
+    with pytest.raises(ValueError, match="OFFICIAL_ADMISSION_ESCALATION"):
+        build_structured_financial_ai_research(tampered, question="valuation_readiness", tickers=["AAA"])
+    tampered = json.loads(json.dumps(packet))
+    tampered["measures"][0]["value"] = 1
+    with pytest.raises(ValueError, match="RESEARCH_IDENTITY_MISMATCH"):
+        build_structured_financial_ai_research(tampered, question="valuation_readiness", tickers=["AAA"])
+    bad_draft = json.loads(json.dumps(valuation["deterministic_draft"]))
+    blocked = next(row for row in valuation["ai_input"]["evidence"] if row["metric"] == "research_multiple")
+    bad_draft["claims"].append({
+        "claim_id": "bad-fact",
+        "claim_type": "FACT",
+        "section": "VALUATION_CONTEXT",
+        "claim_text": "The research multiple is 9.",
+        "supporting_evidence_ids": [blocked["evidence_id"]],
+        "conflicting_evidence_ids": [],
+        "authority_class": "PROVIDER_REPORTED",
+        "numeric_evidence_ids": [blocked["evidence_id"]],
+        "referenced_dimension": "valuation",
+    })
+    rejected = validate_ai_draft(valuation["ai_input"], bad_draft)
+    assert rejected["validation_status"] == "REJECTED"
+    assert "FACT_WITHOUT_QUALIFIED_EVIDENCE" in rejected["reason_codes"] or "AUTHORITY_ESCALATION_OR_UNSUPPORTED_CLAIM" in rejected["reason_codes"]
+
+    again = build_structured_financial_ai_research(packet, question="company_thesis", tickers=["AAA"])
+    assert again == thesis
+    out_json = tmp_path / "ai.json"
+    out_md = tmp_path / "ai.md"
+    assert main([
+        "--structured-input", str(path), "--ai-question", "company_thesis", "--tickers", "AAA",
+        "--out-json", str(out_json), "--out-md", str(out_md),
+    ]) == 0
+    written = json.loads(out_json.read_text(encoding="utf-8"))
+    assert written["external_model_call"] is False
+    assert "PRIVATE_BOX_EXPORT_TOKEN" not in out_json.read_text(encoding="utf-8")
+    assert "Local evidence-bound validator only" in out_md.read_text(encoding="utf-8")
+    plain_md = tmp_path / "plain.md"
+    plain_json = tmp_path / "plain.json"
+    assert main(["--structured-input", str(path), "--out-json", str(plain_json), "--out-md", str(plain_md)]) == 0
+    assert "not fed to the AI research preview" in plain_md.read_text(encoding="utf-8")
+    with pytest.raises(SystemExit):
+        main([
+            "--structured-input", str(path), "--ai-question", "company_thesis", "--tickers", "AAA",
+            "--observed-at", "2026-11-01T00:00:00+07:00",
+            "--out-json", str(tmp_path / "clock.json"), "--out-md", str(tmp_path / "clock.md"),
+        ])
+
+
+def test_real_vietstock_ai_research_accepts_bounded_questions():
+    import hashlib
+    from pathlib import Path
+    from stocklookup_core.research.conditional_investment_case import (
+        build_statement_research_cohort,
+        build_structured_financial_ai_research,
+        build_structured_financial_research,
+    )
+
+    path = Path(r"C:\Projects\StockLookup\.stocklookup\scratch\q3-financial-evidence-20261118\vietstock_expansion_20261116_002\expansion_20261116_002\normalized_long_dedup_v2.csv")
+    if not path.is_file():
+        pytest.skip("RETAINED_VIETSTOCK_EXPORT_ABSENT")
+    packet = build_structured_financial_research(path)
+    assert packet["input_sha256"] == "66112662d2423c5e7a244b796c5bd007e1455b0a26738f264d39e1072525f854"
+    assert packet["input_sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+    assert packet["research_identity"] == "structured_financial_research:75a5ff600f3204354dd60df83b7dcd1c51015ef318d00dbeca82f0986b4b3bad"
+    assert packet["coverage"]["issuer_count"] == 13
+    assert packet["coverage"]["issuer_period_metric_records"] == 2282
+    assert packet["coverage"]["current_research_usable"] == 1542
+    cohort = build_statement_research_cohort()
+    assert cohort["cohort_identity"] == "current_statement_research_cohort:0b691549cd1638c0599b46a6f0456b7e0613cd8a71037acac5ba5aa5a7070dc6"
+    retained = next(row for row in cohort["measures"] if row["ticker"] == "HPG" and row["period"] == "2026-Q3" and row["metric"] == "parent_profit_margin")
+    pan = next(row for row in cohort["measures"] if row["ticker"] == "PAN" and row["period"] == "2026-Q3" and row["metric"] == "parent_profit_margin")
+    industrial = build_structured_financial_ai_research(
+        packet, question="industrial_profitability", tickers=["HPG", "PAN", "FPT", "PNJ", "POW", "PVD", "VNM", "QNS"],
+    )
+    _assert_ai_boundary(industrial)
+    evidence = industrial["ai_input"]["evidence"]
+    hpg = next(row for row in evidence if row["ticker"] == "HPG" and row["period"] == "2026-Q3" and row["metric"] == "parent_profit_margin")
+    pan_row = next(row for row in evidence if row["ticker"] == "PAN" and row["period"] == "2026-Q3" and row["metric"] == "parent_profit_margin")
+    hpg_nine = next(row for row in evidence if row["ticker"] == "HPG" and row["period"] == "2026-9M" and row["metric"] == "parent_profit_margin")
+    assert hpg["value"] == retained["value"]
+    assert hpg["statement_scope"] == "consolidated"
+    assert pan_row["value"] == pan["value"]
+    assert hpg_nine["period"] == "2026-9M"
+    assert hpg["period"] != hpg_nine["period"]
+    q3_margin = next(
+        row for row in industrial["comparisons"]
+        if row["metric"] == "parent_profit_margin" and row["period"] == "2026-Q3" and row["statement_scope"] == "consolidated"
+    )
+    q3_values = {item["ticker"]: item["value"] for item in q3_margin["rows"]}
+    assert q3_values["HPG"] == hpg["value"]
+    assert q3_values["PAN"] == pan_row["value"]
+    assert q3_values["HPG"] > q3_values["PAN"]
+    assert industrial["coverage"]["ai_measures_with_values"] < packet["coverage"]["current_research_usable"]
+    assert industrial["coverage"]["ai_evidence_count"] < 500
+    quality = build_structured_financial_ai_research(packet, question="earnings_quality")
+    _assert_ai_boundary(quality)
+    assert any(row["metric"] == "cash_conversion" and row.get("value") for row in quality["ai_input"]["evidence"])
+    assert all("caused by" not in claim["claim_text"].lower() for claim in quality["deterministic_draft"]["claims"])
+    templates = build_structured_financial_ai_research(packet, question="template_earnings_trends")
+    _assert_ai_boundary(templates)
+    assert any(row.get("ticker") == "VCB" and row.get("analysis_family") == "BANK_STATEMENT" for row in templates["ai_input"]["evidence"])
+    assert any(row.get("ticker") == "EVF" and row.get("analysis_family") == "BANK_STATEMENT" for row in templates["ai_input"]["evidence"])
+    assert any(row.get("ticker") == "SSI" and row.get("analysis_family") == "SECURITIES_STATEMENT" for row in templates["ai_input"]["evidence"])
+    assert not any(row.get("metric") == "gross_margin" and row.get("analysis_family") in {"BANK_STATEMENT", "SECURITIES_STATEMENT"} for row in templates["ai_input"]["evidence"])
+    valuation = build_structured_financial_ai_research(packet, question="valuation_readiness")
+    _assert_ai_boundary(valuation)
+    assert valuation["coverage"]["ai_measures_with_values"] == 0
+    assert any(row["metric"] == "research_multiple" and row["value"] is None for row in valuation["ai_input"]["evidence"])
+    hpg_thesis = build_structured_financial_ai_research(packet, question="company_thesis", tickers=["HPG"])
+    ssi_thesis = build_structured_financial_ai_research(packet, question="company_thesis", tickers=["SSI"])
+    _assert_ai_boundary(hpg_thesis)
+    _assert_ai_boundary(ssi_thesis)
+    assert any(claim["section"] == "COUNTER_THESIS" for claim in hpg_thesis["deterministic_draft"]["claims"])
+    assert any(claim["section"] == "WHAT_WOULD_CHANGE_THE_VIEW" for claim in ssi_thesis["deterministic_draft"]["claims"])
+    assert not any(row.get("metric") == "gross_margin" for row in ssi_thesis["ai_input"]["evidence"])
+    withheld = build_structured_financial_ai_research(
+        packet, question="company_thesis", tickers=["HPG"], knowledge_cutoff="2026-10-20T15:00:00+07:00",
+    )
+    assert withheld["temporal"]["mode"] == "HISTORICAL_AVAILABILITY_UNPROVEN"
+    assert not any(claim["claim_type"] == "FACT" for claim in withheld["deterministic_draft"]["claims"])
+    assert packet["consumers"]["ai_research_preview"]["daily_packet_activated"] is False
+    assert build_statement_research_cohort()["cohort_identity"] == cohort["cohort_identity"]
