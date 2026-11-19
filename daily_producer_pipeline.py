@@ -36,6 +36,39 @@ class DailyProducerError(ValueError):
     """A deliberately concise operational refusal."""
 
 
+def refuse_competing_sealed_run(output_root: Path, session: str, run_identity: str, operation_identity: str) -> None:
+    """Reuse one sealed run and its latest pointer, or stop before either is replaced."""
+    session_dir = output_root / session
+    manifests = sorted(
+        path for path in session_dir.glob("*/run_manifest.json") if path.is_file()
+    ) if session_dir.is_dir() else []
+    if len(manifests) > 1:
+        raise DailyProducerError(f"SEALED_PRODUCER_RUN_AMBIGUOUS:{session}:{len(manifests)}")
+    if len(manifests) == 1:
+        expected = "daily_producer_run:" + manifests[0].parent.name
+        try:
+            payload = json.loads(manifests[0].read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise DailyProducerError(f"SEALED_PRODUCER_RUN_UNREADABLE:{session}") from exc
+        sealed_operation = payload.get("daily_session_operation") if isinstance(payload, dict) else None
+        sealed_operation_identity = sealed_operation.get("identity") if isinstance(sealed_operation, dict) else None
+        if (not isinstance(payload, dict) or payload.get("run_identity") != expected
+                or payload.get("target_market_session") != session):
+            raise DailyProducerError(f"SEALED_PRODUCER_RUN_INVALID:{session}")
+        if run_identity != expected or sealed_operation_identity != operation_identity:
+            raise DailyProducerError(f"SEALED_PRODUCER_RUN_IDENTITY_CONFLICT:{session}")
+    pointer_path = output_root / "LATEST_COMPLETED_RUN.json"
+    if pointer_path.is_file():
+        try:
+            pointer = json.loads(pointer_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise DailyProducerError("SEALED_LATEST_COMPLETED_RUN_UNREADABLE") from exc
+        if (isinstance(pointer, dict) and pointer.get("session") == session and (
+                pointer.get("run_identity") != run_identity
+                or pointer.get("daily_session_operation_identity") != operation_identity)):
+            raise DailyProducerError(f"SEALED_LATEST_COMPLETED_RUN_CONFLICT:{session}")
+
+
 def _canon(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
@@ -384,24 +417,29 @@ def run_daily_producer(
     del inputs
     report("Giải quyết đầu vào và báo cáo shadow", "END")
     report("Tạo sản phẩm phiên và gói bàn giao", "BEGIN")
-    operation, operation_dir = run_session_operation(
-        root,
-        session=selected,
-        producer_head=producer_head,
-        consumer_head=consumer_head,
-        output_root=operation_output_root,
-        registry_path=registry_path,
-        generation_context="DAILY_PRODUCER_RETAINED_COMPLETED_SESSION",
-        portfolio=portfolio,
-        macro=macro,
-        macro_presentation_context=macro_presentation_context,
-        macro_cutoff=macro_cutoff, decision_packet_inputs=decision_packet_inputs,
-        shadow_security_recommendation=resolved_shadow_security_recommendation,
-        integrated_investment_decision_product=integrated_investment_decision_product,
-        daily_integrated_decision_brief=daily_integrated_decision_brief,
-        daily_integrated_decision_brief_builder=daily_integrated_decision_brief_builder,
-        **({"protect_delivery": True} if reuse_immutable_delivery else {}),
-    )
+    try:
+        operation, operation_dir = run_session_operation(
+            root,
+            session=selected,
+            producer_head=producer_head,
+            consumer_head=consumer_head,
+            output_root=operation_output_root,
+            registry_path=registry_path,
+            generation_context="DAILY_PRODUCER_RETAINED_COMPLETED_SESSION",
+            portfolio=portfolio,
+            macro=macro,
+            macro_presentation_context=macro_presentation_context,
+            macro_cutoff=macro_cutoff, decision_packet_inputs=decision_packet_inputs,
+            shadow_security_recommendation=resolved_shadow_security_recommendation,
+            integrated_investment_decision_product=integrated_investment_decision_product,
+            daily_integrated_decision_brief=daily_integrated_decision_brief,
+            daily_integrated_decision_brief_builder=daily_integrated_decision_brief_builder,
+            **({"protect_delivery": True} if reuse_immutable_delivery else {}),
+        )
+    except ValueError as exc:
+        if str(exc).startswith("SEALED_SESSION_OPERATION_"):
+            raise DailyProducerError(str(exc)) from exc
+        raise
     report("Tạo sản phẩm phiên và gói bàn giao", "END")
     report("Xác minh gói giao và tạo bản chiếu", "BEGIN")
     inputs = operation["inputs"]
@@ -424,6 +462,9 @@ def run_daily_producer(
     report("Xác minh gói giao và tạo bản chiếu", "END")
     report("Lưu gói giao và niêm phong manifest Producer", "BEGIN")
     run_identity = _run_identity(selected, producer_head, consumer_head, plan, operation["manifest"]["operation_identity"])
+    refuse_competing_sealed_run(
+        output_root, selected, run_identity, operation["manifest"]["operation_identity"],
+    )
     run_dir = output_root / selected / run_identity.split(":", 1)[1]
     existing_run = (run_dir / "run_manifest.json").exists()
     copied = _retain_owner_delivery(operation_dir, run_dir, reuse_delivery=reuse_immutable_delivery)
