@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "d2ca606182c20add5f84f092d3bd4a28abab872e503fe2c237cd64d91209858c",
+    "config/daily_path_launchers.json": "e8a7395dfc5fe426b5127bc7962ee1008f5418cf7025b921ba04ed01ee1be237",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -1849,6 +1849,7 @@
     "scope": "EXACT_OBSERVER_RESIDENT_RECORD_RELEASE_AND_STREAMED_IMMUTABLE_WRITE_ONLY",
     "changed_source_paths": [
       "canonical_daily_operation.py",
+      "config/daily_path_launchers.json",
       "flow_price_divergence_shadow.py",
       "tools/verify_retention_reader_transition.py"
     ],
@@ -1859,6 +1860,7 @@
     "compatibility": "The 2026-11-17 and 2026-11-18 observer peaks stayed under the 7 GiB process ceiling while the Integrated Decision graph remained resident. The 2026-11-19 child reached a successful private-commit high-water of 6243094528 bytes and then received JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT during volume-context serialization. Releasing that already-sealed record map for the observer window, then streaming the same canonical JSON, removes those two extra copies. Ceilings, reserves, and analytical outputs stay the same. This receipt records source compatibility; it is not a new whole-Daily performance qualification.",
     "prior_source_sha256_lf": {
       "canonical_daily_operation.py": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a",
+      "config/daily_path_launchers.json": "d2ca606182c20add5f84f092d3bd4a28abab872e503fe2c237cd64d91209858c",
       "flow_price_divergence_shadow.py": "46beeb38192b49e90dab8443f47043eda8889f45d2ca994a375beb91a0e203db",
       "tools/verify_retention_reader_transition.py": "073ffafc3ca7a3d40145f03628a65f19ef6fdda718612b71dd009e39d39181dd"
     }

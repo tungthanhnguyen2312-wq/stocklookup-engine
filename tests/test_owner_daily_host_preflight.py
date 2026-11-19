@@ -718,6 +718,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     resident_release = live_receipt["observer_resident_record_release_corrective"]
     release_paths = [
         "canonical_daily_operation.py",
+        "config/daily_path_launchers.json",
         "flow_price_divergence_shadow.py",
         "tools/verify_retention_reader_transition.py",
     ]
