@@ -165,6 +165,10 @@ def _copy_boundary(tmp_path: Path) -> None:
     paths.add(velocity + ".json")
     paths.update(velocity + "_sources/" + path + ".txt"
                  for path in json.loads((ROOT / (velocity + ".json")).read_bytes())["sources"])
+    from tools.verify_retention_reader_transition import (
+        OBSERVER_RESIDENT_RELEASE_ARCHIVE, OBSERVER_RESIDENT_RELEASE_MANIFEST,
+    )
+    paths.update({OBSERVER_RESIDENT_RELEASE_MANIFEST, OBSERVER_RESIDENT_RELEASE_ARCHIVE})
     for relative in paths:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
