@@ -737,6 +737,18 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     prior_receipt["observer_resident_record_release_corrective"] = resident_release
 
+    lineage_path = "daily_research_session_operations.py"
+    lineage = live_receipt["sealed_session_operation_identity_guard"]
+    assert lineage["scope"] == "EXACT_SEALED_OPERATION_IDENTITY_REUSE_OR_REFUSAL"
+    assert lineage["new_capacity_measurement"] is False
+    assert lineage["whole_daily_requalification"] is False
+    assert lineage["changed_source_paths"] == [lineage_path]
+    assert lineage["base_commit"] == "cf2e472c59575004aab7b5794dc93701459d212f"
+    assert lineage["prior_source_sha256_lf"][lineage_path] == prior_receipt["source_sha256"][lineage_path]
+    current_lineage = (root / lineage_path).read_bytes().replace(b"\r\n", b"\n")
+    prior_receipt["source_sha256"][lineage_path] = hashlib.sha256(current_lineage).hexdigest()
+    prior_receipt["sealed_session_operation_identity_guard"] = lineage
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

@@ -237,6 +237,74 @@ def _git_head(path: Path) -> str | None:
         return None
 
 
+def _load_sealed_json(path: Path, reason: str) -> dict[str, Any]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, reason) from exc
+    if not isinstance(payload, dict):
+        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, reason)
+    return payload
+
+
+def _sealed_session_producer_heads(output_root: Path, session: str) -> tuple[str, str] | None:
+    """Return the one sealed Producer lineage, or refuse a second one.
+
+    No sealed run keeps the live git heads. One verified run manifest, the
+    matching operation manifest, and one matching T0 seal index return the
+    heads already inside those seals. A later execution then hashes the same
+    operation and run. A missing, unreadable, or disagreeing seal fails closed
+    before a new identity can be built. The snapshot body is not read.
+    """
+    runs_root = output_root / "operations-review" / "daily-producer-runs-v1" / session
+    if not runs_root.is_dir():
+        return None
+    manifests = sorted(path for path in runs_root.glob("*/run_manifest.json") if path.is_file())
+    if not manifests:
+        return None
+    if len(manifests) != 1:
+        raise CanonicalDailyOperationError(
+            STAGE_BLOCKED_DAILY_PRODUCER, f"SEALED_PRODUCER_RUN_AMBIGUOUS:{session}:{len(manifests)}",
+        )
+    run_manifest = _load_sealed_json(manifests[0], f"SEALED_PRODUCER_RUN_UNREADABLE:{session}")
+    producer_head = run_manifest.get("producer_head")
+    consumer_head = run_manifest.get("consumer_head")
+    operation = run_manifest.get("daily_session_operation")
+    operation_identity = operation.get("identity") if isinstance(operation, dict) else None
+    if (run_manifest.get("target_market_session") != session
+            or run_manifest.get("run_identity") != f"daily_producer_run:{manifests[0].parent.name}"
+            or not isinstance(producer_head, str) or not producer_head
+            or not isinstance(consumer_head, str) or not consumer_head
+            or not isinstance(operation_identity, str)
+            or not operation_identity.startswith("daily_research_session_operation:")):
+        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, f"SEALED_PRODUCER_RUN_INVALID:{session}")
+    operation_digest = operation_identity.split(":", 1)[1]
+    operation_path = (
+        output_root / "operations-review" / "daily-research-session-operations-v1"
+        / session / operation_digest / "run_manifest.json"
+    )
+    if not operation_path.is_file():
+        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, f"SEALED_SESSION_OPERATION_MISSING:{session}")
+    operation_manifest = _load_sealed_json(operation_path, f"SEALED_SESSION_OPERATION_UNREADABLE:{session}")
+    if (operation_manifest.get("operation_identity") != operation_identity
+            or operation_manifest.get("market_session") != session
+            or operation_manifest.get("producer_head") != producer_head
+            or operation_manifest.get("consumer_head") != consumer_head):
+        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, f"SEALED_SESSION_OPERATION_MISMATCH:{session}")
+    t0_root = output_root / "operations-review" / "prospective-decision-retention-v1" / session
+    indexes = sorted(t0_root.glob("*/prospective_t0_seal_index.json")) if t0_root.is_dir() else []
+    if len(indexes) != 1:
+        raise CanonicalDailyOperationError(
+            STAGE_BLOCKED_DAILY_PRODUCER, f"SEALED_T0_INDEX_COUNT:{session}:{len(indexes)}",
+        )
+    index = _load_sealed_json(indexes[0], f"SEALED_T0_INDEX_UNREADABLE:{session}")
+    if (index.get("session") != session
+            or index.get("operation_identity") != operation_identity
+            or index.get("snapshot_identity") != f"prospective_decision_snapshot:{indexes[0].parent.name}"):
+        raise CanonicalDailyOperationError(STAGE_BLOCKED_DAILY_PRODUCER, f"SEALED_T0_INDEX_MISMATCH:{session}")
+    return producer_head, consumer_head
+
+
 def _write_json(path: Path, value: Mapping[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
@@ -1036,7 +1104,11 @@ def run_canonical_daily_operation(
 
     producer_progress("Làm mới và chuẩn bị bối cảnh vĩ mô", "END")
     producer_progress("Chuẩn bị đầu vào Producer", "BEGIN")
-    producer_head, consumer_head = _git_head(root), _git_head(root.parent / "ai-core-private")
+    sealed_heads = _sealed_session_producer_heads(operation_output_root, resolved_session)
+    if sealed_heads is None:
+        producer_head, consumer_head = _git_head(root), _git_head(root.parent / "ai-core-private")
+    else:
+        producer_head, consumer_head = sealed_heads
     preseal_brief_builder = daily_integrated_decision_brief_builder
     # Injected producer functions are test/diagnostic seams with their own
     # declared contract.  The production producer always receives the canonical

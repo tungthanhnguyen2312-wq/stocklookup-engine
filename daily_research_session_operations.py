@@ -45,6 +45,28 @@ def _identity(value: Mapping[str, Any]) -> str:
     return "daily_research_session_operation:" + stable_id(payload)
 
 
+def refuse_competing_sealed_operation(output_root: Path, session: str, operation_identity: str) -> None:
+    """Reuse the one sealed operation identity, or stop before a second directory exists."""
+    session_dir = output_root / session
+    if not session_dir.is_dir():
+        return
+    manifests = sorted(path for path in session_dir.glob("*/run_manifest.json") if path.is_file())
+    if not manifests:
+        return
+    if len(manifests) != 1:
+        raise ValueError(f"SEALED_SESSION_OPERATION_AMBIGUOUS:{session}:{len(manifests)}")
+    expected = "daily_research_session_operation:" + manifests[0].parent.name
+    try:
+        payload = json.loads(manifests[0].read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"SEALED_SESSION_OPERATION_UNREADABLE:{session}") from exc
+    if (not isinstance(payload, dict) or payload.get("operation_identity") != expected
+            or payload.get("market_session") != session):
+        raise ValueError(f"SEALED_SESSION_OPERATION_INVALID:{session}")
+    if operation_identity != expected:
+        raise ValueError(f"SEALED_SESSION_OPERATION_IDENTITY_CONFLICT:{session}")
+
+
 # Compatibility: retain one callable for existing frozen/pinned consumers.
 from stocklookup_core.evidence.session_registry import load_registry
 
@@ -608,6 +630,7 @@ def run_session_operation(
         "consumer_contract": "current_daily_decision_research_contract",
     }
     operation["manifest"]["operation_identity"] = _identity(operation["manifest"])
+    refuse_competing_sealed_operation(output_root, session, operation["manifest"]["operation_identity"])
     output_dir = output_root / session / operation["manifest"]["operation_identity"].split(":", 1)[1]
     materialize(output_dir, operation, protect_delivery=protect_delivery)
     return operation, output_dir
