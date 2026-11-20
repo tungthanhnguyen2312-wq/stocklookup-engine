@@ -684,6 +684,64 @@ def _sealed_integrated_product_path(enrichment: Mapping[str, Any]) -> Path | Non
     return path if path.is_file() else None
 
 
+_RELEASE_INTEGRATED_AFTER_PRESENTATION = True
+
+
+def _release_post_handoff_producer_graphs(
+    producer_result: Mapping[str, Any] | None,
+    decision_packet: Mapping[str, Any] | None,
+    enrichment: Mapping[str, Any] | None = None,
+    prospective_decision_snapshot: Mapping[str, Any] | None = None,
+) -> bool:
+    """Drop already-sealed heavyweight in-memory graphs after HANDOFF_READY.
+
+    Every dropped map is already persisted on disk in the sealed Producer,
+    enrichment, or T0 directories; post-handoff observers, feedback,
+    presentation, restage, and final canonical record verification only read
+    lightweight identities/manifests (and ``integrated_delivery`` /
+    ``current_corporate_knowledge_overlay``). Releasing these maps before
+    observers and late-stage presentation prevents them from stacking with
+    restored Integrated Decision records and presentation projections under
+    the 7 GiB per-process commit ceiling.
+    """
+    released = False
+    if isinstance(producer_result, Mapping):
+        operation = producer_result.get("operation")
+        if isinstance(operation, dict):
+            for key in (
+                "inputs", "scenario", "strategy", "product",
+                "canonical_decision_packet", "peer_relative", "opportunity",
+            ):
+                if key in operation:
+                    operation.pop(key, None)
+                    released = True
+    if isinstance(decision_packet, dict):
+        for key in ("records", "securities", "packets"):
+            if key in decision_packet:
+                decision_packet.pop(key, None)
+                released = True
+    if isinstance(enrichment, Mapping):
+        for name, entry in enrichment.items():
+            if name in {"integrated_investment_decision_product", "current_corporate_knowledge_overlay"}:
+                continue
+            if not isinstance(entry, Mapping):
+                continue
+            artifact = entry.get("artifact")
+            if isinstance(artifact, dict):
+                for key in ("records", "ticker_contexts"):
+                    if key in artifact:
+                        artifact.pop(key, None)
+                        released = True
+    if isinstance(prospective_decision_snapshot, Mapping):
+        artifact = prospective_decision_snapshot.get("artifact")
+        if isinstance(artifact, dict) and "records" in artifact:
+            artifact.pop("records", None)
+            released = True
+    if released:
+        gc.collect()
+    return released
+
+
 def _release_resident_integrated_records(artifact: Mapping[str, Any]) -> bool:
     """Drop the sealed record map so later observers do not keep it resident.
 
@@ -1345,6 +1403,11 @@ def run_canonical_daily_operation(
         sealed_integrated_path is not None
         and _release_resident_integrated_records(integrated_delivery)
     )
+    _release_post_handoff_producer_graphs(
+        producer_result, decision_packet,
+        enrichment=enrichment,
+        prospective_decision_snapshot=prospective_decision_snapshot,
+    )
     try:
         post_handoff_observers = run_post_handoff_observers(
             root, runtime_root, resolved_session, tiers,
@@ -1369,15 +1432,19 @@ def run_canonical_daily_operation(
     # projections (Workspace/Screener) with those now-available axes into a NEW artifact set --
     # never the sealed Producer operation directory. Presentation-only: no IID recalculation, no
     # policy mutation. Non-blocking.
-    post_handoff_presentation_projection = run_post_handoff_presentation_projection(
-        root, runtime_root, resolved_session,
-        producer_run_dir=producer_result.get("run_dir"), output_root=operation_output_root,
-        integrated_investment_decision_product=(
-            integrated_delivery if integrated_records_restored else None
-        ),
-        **({"current_corporate_knowledge_overlay": enrichment["current_corporate_knowledge_overlay"]["artifact"]}
-           if not historical_compatibility and enrichment.get("current_corporate_knowledge_overlay") else {}),
-    )
+    try:
+        post_handoff_presentation_projection = run_post_handoff_presentation_projection(
+            root, runtime_root, resolved_session,
+            producer_run_dir=producer_result.get("run_dir"), output_root=operation_output_root,
+            integrated_investment_decision_product=(
+                integrated_delivery if integrated_records_restored else None
+            ),
+            **({"current_corporate_knowledge_overlay": enrichment["current_corporate_knowledge_overlay"]["artifact"]}
+               if not historical_compatibility and enrichment.get("current_corporate_knowledge_overlay") else {}),
+        )
+    finally:
+        if released_integrated_records and _RELEASE_INTEGRATED_AFTER_PRESENTATION:
+            _release_resident_integrated_records(integrated_delivery)
     # Overlay the already-promoted runtime-served Workspace/Screener bytes with the enriched
     # presentation projection above -- so the same-session Signal Velocity/Flow-Price that
     # normal Daily can now genuinely produce actually reaches the Dashboard/AI surfaces that

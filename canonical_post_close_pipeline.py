@@ -31,6 +31,7 @@ import hashlib
 import json
 import os
 import subprocess
+import gc
 import tempfile
 from owner_daily_progress import run_observed_subprocess
 import sys
@@ -1698,6 +1699,27 @@ def run_current_foreign_flow_enrichment(root: Path, runtime_root: Path, session:
     }
 
 
+def _load_workspace_metadata(path: Path) -> dict[str, Any] | None:
+    """Read top-level Workspace metadata without loading the full cards/records map."""
+    if not path.is_file():
+        return None
+    try:
+        from stocklookup_core.evidence.artifact_stream import ObjectStream
+
+        meta: dict[str, Any] = {}
+        with path.open(encoding="utf-8") as handle:
+            parser = ObjectStream(handle, sorted_required=False)
+            for key in parser.members():
+                if key in {"cards", "records"} and parser.peek() == "{":
+                    for _ticker in parser.members():
+                        parser.value()
+                else:
+                    meta[key] = parser.value()
+        return meta
+    except Exception:
+        return None
+
+
 def _sealed_workspace_lineage(root: Path, producer_run_dir: Path) -> dict[str, Any] | None:
     """Read-only: locate the SEALED (pre-handoff) Producer Workspace for lineage comparison.
 
@@ -1713,7 +1735,7 @@ def _sealed_workspace_lineage(root: Path, producer_run_dir: Path) -> dict[str, A
         if not isinstance(directory, str) or not directory:
             return None
         operation_dir = root / directory
-        sealed = _load(operation_dir / "investment_decision_workspace_projection.json")
+        sealed = _load_workspace_metadata(operation_dir / "investment_decision_workspace_projection.json")
         if not isinstance(sealed, Mapping):
             return None
         return {
@@ -1794,6 +1816,8 @@ def run_post_handoff_presentation_projection(
             **({"current_corporate_knowledge_overlay": current_corporate_knowledge_overlay}
                if current_corporate_knowledge_overlay is not None else {}),
         )
+        del registry_inputs, evaluated_valuation
+        gc.collect()
     except Exception as exc:
         return {"status": "UNAVAILABLE", "session": session, "reason": f"{type(exc).__name__}:{exc}"}
     if result.get("status") != "MATERIALIZED":
@@ -1801,8 +1825,12 @@ def run_post_handoff_presentation_projection(
                 "reason": result.get("reason_code") or "PRESENTATION_PROJECTION_NOT_MATERIALIZED"}
     workspace_summary = result.get("workspace") or {}
     workspace_path = presentation_dir / "investment_decision_workspace_projection.json"
-    new_workspace = _load(workspace_path) or {}
-    new_source_artifacts = dict(new_workspace.get("source_artifacts") or {})
+    summary_sources = workspace_summary.get("source_artifacts")
+    if isinstance(summary_sources, Mapping):
+        new_source_artifacts = dict(summary_sources)
+    else:
+        new_workspace = _load_workspace_metadata(workspace_path) or {}
+        new_source_artifacts = dict(new_workspace.get("source_artifacts") or {})
     lineage_status = "UNVERIFIED"
     if lineage is not None:
         matches = all(

@@ -70,6 +70,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import gc
 import tempfile
 from pathlib import Path
 from typing import Any, Mapping
@@ -622,6 +623,7 @@ def materialize_current_investment_decision_workspace(
         evaluated_valuation=evaluated_valuation,
         requested_at=requested_at,
     )
+    del projected_feature_store
     flow_research_cohort_tickers = resolve_flow_research_cohort_tickers()
     signal_velocity_artifact = supplementary.get("signal_velocity")
     # FLOW_PRICE_CANONICAL_SOURCE_BACKFILL_AND_PRESENTATION_CORRECTIVE_V1: Flow-Price is
@@ -666,6 +668,7 @@ def materialize_current_investment_decision_workspace(
         integrated_decision_artifact=integrated_investment_decision_product,
         integrated_scenario_binding=scenario_binding,
     )
+    del scenario_binding
     return {
         "opportunity_context": opportunity_and_decision["opportunity_context"],
         "security_decision_context": opportunity_and_decision["security_decision_context"],
@@ -849,6 +852,23 @@ def materialize_and_write_current_product_projections(
             "detail": str(exc),
         }
 
+    workspace_summary_meta = {
+        "path": str(workspace_path),
+        "as_of_session": workspace.get("as_of_session"),
+        "artifact_identity": workspace.get("artifact_identity"),
+        "ticker_denominator": (workspace.get("coverage") or {}).get("ticker_denominator"),
+        "source_artifacts": dict(workspace.get("source_artifacts") or {}),
+    }
+    screener_summary_meta = {
+        "json_path": str(screener_json_path),
+        "js_path": str(screener_js_path),
+        "as_of_session": screener_master.get("as_of_session"),
+        "artifact_identity": screener_master.get("artifact_identity"),
+        "denominator": screener_master.get("denominator"),
+    }
+    del workspace, screener_master
+    gc.collect()
+
     fundamental_feature_store_status: dict[str, Any] = {"status": feature_store_result.get("status")}
     if feature_store_artifact is not None:
         # Preserve the Feature Store's own scalable summary/records-payload representation
@@ -931,19 +951,8 @@ def materialize_and_write_current_product_projections(
         "status": "MATERIALIZED",
         "contract_version": CONTRACT_VERSION,
         "session": session,
-        "workspace": {
-            "path": str(workspace_path),
-            "as_of_session": workspace.get("as_of_session"),
-            "artifact_identity": workspace.get("artifact_identity"),
-            "ticker_denominator": (workspace.get("coverage") or {}).get("ticker_denominator"),
-        },
-        "screener_master_projection": {
-            "json_path": str(screener_json_path),
-            "js_path": str(screener_js_path),
-            "as_of_session": screener_master.get("as_of_session"),
-            "artifact_identity": screener_master.get("artifact_identity"),
-            "denominator": screener_master.get("denominator"),
-        },
+        "workspace": workspace_summary_meta,
+        "screener_master_projection": screener_summary_meta,
         "dashboard_home_summary": home_summary_status,
         "fundamental_feature_store": fundamental_feature_store_status,
         "tactical_behavior_context": tactical_behavior_status,

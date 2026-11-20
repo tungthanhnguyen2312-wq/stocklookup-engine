@@ -805,11 +805,30 @@ def _retained_presentation_home_summary(path: Path, derived: Mapping[str, Any]) 
     return path
 
 
-def _restore_runtime_bytes(backups: Mapping[Path, bytes | None]) -> None:
+def _load_workspace_header(path: Path) -> dict[str, Any]:
+    """Read top-level Workspace header fields without loading the full cards/records map."""
+    from stocklookup_core.evidence.artifact_stream import ObjectStream
+
+    header: dict[str, Any] = {}
+    with path.open(encoding="utf-8") as handle:
+        parser = ObjectStream(handle, sorted_required=False)
+        for key in parser.members():
+            if key in {"cards", "records"} and parser.peek() == "{":
+                for _ticker in parser.members():
+                    parser.value()
+            else:
+                header[key] = parser.value()
+    return header
+
+
+def _restore_runtime_bytes(backups: Mapping[Path, bytes | Path | None]) -> None:
     for target, data in backups.items():
         if data is None:
             if target.exists():
                 target.unlink()
+            continue
+        if isinstance(data, Path):
+            atomic_copy_file(data, target)
             continue
         tmp = target.with_name(target.name + ".restore.tmp")
         tmp.write_bytes(data)
@@ -859,10 +878,14 @@ def restage_runtime_with_presentation_projection(
         manifest_path = Path(runtime_root) / "bundle_manifest.json"
         if not source_workspace.is_file() or not target_workspace.is_file():
             return {"status": "SKIPPED", "reason": "SOURCE_OR_TARGET_WORKSPACE_MISSING"}
-        new_payload = json.loads(source_workspace.read_text(encoding="utf-8"))
-        current_target_payload = json.loads(target_workspace.read_text(encoding="utf-8"))
-        if (new_payload.get("as_of_session") != session
-                or current_target_payload.get("as_of_session") != session
+        from stocklookup_core.evidence.record_artifact_loading import load_record_artifact
+
+        current_target_payload = _load_workspace_header(target_workspace)
+        if current_target_payload.get("as_of_session") != session:
+            return {"status": "SKIPPED", "reason": "SESSION_OR_CONTRACT_MISMATCH"}
+        new_payload = load_record_artifact(source_workspace)
+        if (not isinstance(new_payload, Mapping)
+                or new_payload.get("as_of_session") != session
                 or new_payload.get("contract_version") != workspace_contract.CONTRACT_VERSION):
             return {"status": "SKIPPED", "reason": "SESSION_OR_CONTRACT_MISMATCH"}
         identity = workspace_contract.content_identity(new_payload)
@@ -904,52 +927,66 @@ def restage_runtime_with_presentation_projection(
             else:
                 home_summary_status = "ABSENT"
 
+        # Validation and optional home-summary derivation are complete; release the
+        # large workspace object graph before staging disk backups and promoting files.
+        del new_payload
+        import gc
+        gc.collect()
+
         touched = [target_workspace, manifest_path]
         if screener_status == "RESTAGED":
             touched.append(target_screener)
         if home_summary is not None:
             touched.append(target_home_summary)
-        backups = {target: (target.read_bytes() if target.is_file() else None) for target in touched}
-        try:
-            atomic_copy_file(source_workspace, target_workspace)
-            if screener_status == "RESTAGED":
-                atomic_copy_file(source_screener, target_screener)
-            if home_summary is not None:
-                if home_summary_twin is not None:
-                    atomic_copy_file(home_summary_twin, target_home_summary)
+        with tempfile.TemporaryDirectory(dir=Path(runtime_root), prefix=".restage-backup-") as backup_dir:
+            backups: dict[Path, Path | None] = {}
+            for idx, target in enumerate(touched):
+                if target.is_file():
+                    backup_path = Path(backup_dir) / f"backup_{idx}_{target.name}"
+                    shutil.copyfile(target, backup_path)
+                    backups[target] = backup_path
                 else:
-                    atomic_write_json(target_home_summary, home_summary)
-            # Every manifest path must name the exact bytes now served (M1_LIVE_ACCEPTANCE_CORRECTIVE_V1).
-            workspace_sha256 = _sha256(target_workspace)
-            if workspace_sha256 != _sha256(source_workspace):
-                raise _RestageRefused("RESTAGED_WORKSPACE_BYTES_DIVERGE_FROM_PRESENTATION_SOURCE")
-            screener_sha256 = _sha256(target_screener) if screener_status == "RESTAGED" else None
-            if screener_sha256 is not None and screener_sha256 != _sha256(source_screener):
-                raise _RestageRefused("RESTAGED_SCREENER_BYTES_DIVERGE_FROM_PRESENTATION_SOURCE")
-            home_summary_sha256 = _sha256(target_home_summary) if home_summary is not None else None
-            if home_summary_twin is not None and home_summary_sha256 != _sha256(home_summary_twin):
-                raise _RestageRefused("RESTAGED_HOME_SUMMARY_BYTES_DIVERGE_FROM_RETAINED_TWIN")
-            if home_summary_twin is not None:
-                home_summary_path, home_summary_path_root = _root_relative(root, home_summary_twin), None
-            else:
-                home_summary_path, home_summary_path_root = "data/dashboard_home_summary.json", RUNTIME_PATH_ROOT
-            manifest_status = _patch_runtime_manifest_after_restage(
-                manifest_path, session=session,
-                workspace_identity=identity, workspace_sha256=workspace_sha256,
-                workspace_path=_root_relative(root, source_workspace),
-                screener_identity=screener_identity, screener_sha256=screener_sha256,
-                screener_path=_root_relative(root, source_screener) if screener_sha256 is not None else None,
-                home_summary=home_summary, home_summary_sha256=home_summary_sha256,
-                home_summary_path=home_summary_path if home_summary is not None else None,
-                home_summary_path_root=home_summary_path_root,
-            )
-            if manifest_status != "PATCHED":
-                raise _RestageRefused(f"RUNTIME_MANIFEST_{manifest_status}")
-            _verify_runtime_manifest_coherence(runtime_root, root=root)
-        except BaseException as exc:
-            _restore_runtime_bytes(backups)
-            reason = str(exc) if isinstance(exc, (_RestageRefused, CanonicalRuntimeReleaseError)) else f"{type(exc).__name__}:{exc}"
-            return {"status": "SKIPPED", "reason": f"{reason}:RUNTIME_RESTORED"}
+                    backups[target] = None
+            try:
+                atomic_copy_file(source_workspace, target_workspace)
+                if screener_status == "RESTAGED":
+                    atomic_copy_file(source_screener, target_screener)
+                if home_summary is not None:
+                    if home_summary_twin is not None:
+                        atomic_copy_file(home_summary_twin, target_home_summary)
+                    else:
+                        atomic_write_json(target_home_summary, home_summary)
+                # Every manifest path must name the exact bytes now served (M1_LIVE_ACCEPTANCE_CORRECTIVE_V1).
+                workspace_sha256 = _sha256(target_workspace)
+                if workspace_sha256 != _sha256(source_workspace):
+                    raise _RestageRefused("RESTAGED_WORKSPACE_BYTES_DIVERGE_FROM_PRESENTATION_SOURCE")
+                screener_sha256 = _sha256(target_screener) if screener_status == "RESTAGED" else None
+                if screener_sha256 is not None and screener_sha256 != _sha256(source_screener):
+                    raise _RestageRefused("RESTAGED_SCREENER_BYTES_DIVERGE_FROM_PRESENTATION_SOURCE")
+                home_summary_sha256 = _sha256(target_home_summary) if home_summary is not None else None
+                if home_summary_twin is not None and home_summary_sha256 != _sha256(home_summary_twin):
+                    raise _RestageRefused("RESTAGED_HOME_SUMMARY_BYTES_DIVERGE_FROM_RETAINED_TWIN")
+                if home_summary_twin is not None:
+                    home_summary_path, home_summary_path_root = _root_relative(root, home_summary_twin), None
+                else:
+                    home_summary_path, home_summary_path_root = "data/dashboard_home_summary.json", RUNTIME_PATH_ROOT
+                manifest_status = _patch_runtime_manifest_after_restage(
+                    manifest_path, session=session,
+                    workspace_identity=identity, workspace_sha256=workspace_sha256,
+                    workspace_path=_root_relative(root, source_workspace),
+                    screener_identity=screener_identity, screener_sha256=screener_sha256,
+                    screener_path=_root_relative(root, source_screener) if screener_sha256 is not None else None,
+                    home_summary=home_summary, home_summary_sha256=home_summary_sha256,
+                    home_summary_path=home_summary_path if home_summary is not None else None,
+                    home_summary_path_root=home_summary_path_root,
+                )
+                if manifest_status != "PATCHED":
+                    raise _RestageRefused(f"RUNTIME_MANIFEST_{manifest_status}")
+                _verify_runtime_manifest_coherence(runtime_root, root=root)
+            except BaseException as exc:
+                _restore_runtime_bytes(backups)
+                reason = str(exc) if isinstance(exc, (_RestageRefused, CanonicalRuntimeReleaseError)) else f"{type(exc).__name__}:{exc}"
+                return {"status": "SKIPPED", "reason": f"{reason}:RUNTIME_RESTORED"}
         return {
             "status": "RESTAGED", "session": session,
             "workspace_artifact_identity": identity["artifact_identity"],
