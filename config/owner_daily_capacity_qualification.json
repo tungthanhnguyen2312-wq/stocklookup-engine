@@ -20,7 +20,7 @@
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "119b8a7895642ff50e759b33b0ec9ef449e7eb83716ce928f81b68f8b2908c76",
     "canonical_daily_financial_v2_materialization.py": "7379bc3b3f7af098e16862df148e5a8357c4f8e77659007ecde24c4350c802c6",
-    "canonical_daily_operation.py": "4ee8fd5f0c5b468089b1c234233394920d2c59bf3362b57c17062c73aaedca00",
+    "canonical_daily_operation.py": "c27cdf0cd3e35f7eaaa878154b814db397bac9f147b5ee04f3f0b522b10b7f59",
     "canonical_dashboard_runtime_release.py": "32f3e995d879df5475873c05ff64276d4278226fb6dcd0f59352e3766b23048f",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "742e25d5921538151bc2e83fa5a26532fd32bad73bbdc4a09c3ecae3b2271ee6",
+    "config/daily_path_launchers.json": "340bd76c06be22ba01b09e5455c987d2324c5cf803a55789b7cd70ee4e2ac6b8",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -1891,6 +1891,24 @@
     "compatibility": "The 2026-11-19 second attempt reused the sealed Git heads and then acquired a new same-day macro artifact and cutoff. Those fields changed the operation identity, so the existing refusal stopped before materialize. A verified seal is now returned as the Producer result. A recomputed run identity that does not match the sealed manifest still fails closed and writes nothing. canonical_daily_operation.py and config/daily_path_launchers.json changed in the same corrective; their receipt pins are the live bytes accepted by the observer-release peel. Ceilings and reserves are unchanged. This receipt is source compatibility, not a new whole-Daily measurement.",
     "prior_source_sha256_lf": {
       "daily_producer_pipeline.py": "fb68aaa50ac320272b2435441b4c2bd92b4097216092650a79436c4d39bc3623"
+    }
+  },
+  "late_stage_presentation_restage_capacity_corrective": {
+    "base_commit": "ca14839e2239f599b1900afaf369a838a98bb36e",
+    "scope": "EXACT_POST_HANDOFF_GRAPH_RELEASE_AND_BOUNDED_PRESENTATION_RESTAGE_ONLY",
+    "changed_source_paths": [
+      "canonical_current_product_projections.py",
+      "canonical_dashboard_runtime_release.py",
+      "canonical_post_close_pipeline.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "stage_qualification": "POST_HANDOFF_SEALED_GRAPHS_AND_POST_PRESENTATION_IID_RELEASED; BOUNDED_WORKSPACE_HEADER_READS_AND_DISK_RESTAGE_BACKUP; CEILINGS_UNCHANGED",
+    "compatibility": "The 2026-11-20 child reached checkpoint 13/13 (CANONICAL_RECORD_VERIFIED) and hit JOB_OBJECT_MSG_PROCESS_MEMORY_LIMIT at 7118557184 committed bytes while restoring Integrated Decision records, re-reading the 278.7 MB Workspace full-file, and holding restored records through runtime restage alongside two full Workspace payloads and an in-memory byte backup. Releasing already-sealed post-handoff graphs at HANDOFF_READY, dropping restored Integrated Decision records immediately after presentation before restage, reading Workspace metadata via ObjectStream/load_record_artifact, and staging restage rollback backups on disk reduces the measured late-stage peak from 5475201024 bytes to 3873288192 bytes with identical deterministic artifact identities. canonical_daily_operation.py and config/daily_path_launchers.json changed in the same corrective; their receipt pins are the live bytes accepted by the observer-release peel. Ceilings and reserves are unchanged.",
+    "prior_source_sha256_lf": {
+      "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
+      "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
+      "canonical_post_close_pipeline.py": "fa8915b1f8d1646c611f65e9a4c5b2950a46de0a8f6fd9cd54a63082d31c9d1a"
     }
   }
 }

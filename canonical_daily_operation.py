@@ -1403,11 +1403,12 @@ def run_canonical_daily_operation(
         sealed_integrated_path is not None
         and _release_resident_integrated_records(integrated_delivery)
     )
-    _release_post_handoff_producer_graphs(
-        producer_result, decision_packet,
-        enrichment=enrichment,
-        prospective_decision_snapshot=prospective_decision_snapshot,
-    )
+    if released_integrated_records:
+        _release_post_handoff_producer_graphs(
+            producer_result, decision_packet,
+            enrichment=enrichment,
+            prospective_decision_snapshot=prospective_decision_snapshot,
+        )
     try:
         post_handoff_observers = run_post_handoff_observers(
             root, runtime_root, resolved_session, tiers,

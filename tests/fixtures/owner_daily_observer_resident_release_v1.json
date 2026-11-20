@@ -9,7 +9,7 @@
     "canonical_daily_operation.py": {
       "archive": "tests/fixtures/owner_daily_observer_resident_release_v1_sources/canonical_daily_operation.py.txt",
       "prior_sha256_lf": "c03249a02f056136f7d4c0e7cef6e3fd15134251759616da30ab835d52758f0a",
-      "active_sha256_lf": "4ee8fd5f0c5b468089b1c234233394920d2c59bf3362b57c17062c73aaedca00"
+      "active_sha256_lf": "c27cdf0cd3e35f7eaaa878154b814db397bac9f147b5ee04f3f0b522b10b7f59"
     }
   }
 }

@@ -678,6 +678,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             path, live_receipt["tplus_feedback_io_corrective"],
             live_receipt["observer_resident_record_release_corrective"],
             live_receipt["sealed_producer_same_session_reuse"],
+            live_receipt["late_stage_presentation_restage_capacity_corrective"],
         )
     prior_receipt["retained_t0_velocity_projection_corrective"] = velocity
 
@@ -761,6 +762,23 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     current_reuse = (root / reuse_path).read_bytes().replace(b"\r\n", b"\n")
     prior_receipt["source_sha256"][reuse_path] = hashlib.sha256(current_reuse).hexdigest()
     prior_receipt["sealed_producer_same_session_reuse"] = reuse
+
+    late_stage = live_receipt["late_stage_presentation_restage_capacity_corrective"]
+    late_stage_paths = [
+        "canonical_current_product_projections.py",
+        "canonical_dashboard_runtime_release.py",
+        "canonical_post_close_pipeline.py",
+    ]
+    assert late_stage["scope"] == "EXACT_POST_HANDOFF_GRAPH_RELEASE_AND_BOUNDED_PRESENTATION_RESTAGE_ONLY"
+    assert late_stage["new_capacity_measurement"] is False
+    assert late_stage["whole_daily_requalification"] is False
+    assert late_stage["changed_source_paths"] == late_stage_paths
+    assert late_stage["base_commit"] == "ca14839e2239f599b1900afaf369a838a98bb36e"
+    for path in late_stage_paths:
+        assert late_stage["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        current_late = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current_late).hexdigest()
+    prior_receipt["late_stage_presentation_restage_capacity_corrective"] = late_stage
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
