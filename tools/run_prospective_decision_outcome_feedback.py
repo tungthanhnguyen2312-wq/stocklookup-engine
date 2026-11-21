@@ -84,7 +84,7 @@ def run_streaming(*, root: str | Path, output: str | Path, result: str | Path | 
 
 def _run_streaming(*, root: str | Path, output: str | Path, result: str | Path | None = None,
                   status: str | Path | None = None, state_root: str | Path | None = None,
-                  prior_result: str | Path | None = None) -> dict:
+                  prior_result: str | Path | None = None, pre_handoff_session: str | None = None) -> dict:
     """Resource-bounded builder: streams every source, publishes atomically, returns a small status (never the artifact)."""
     import traceback
     import stocklookup_core.acquisition.feedback_resource_guard as guard
@@ -108,7 +108,8 @@ def _run_streaming(*, root: str | Path, output: str | Path, result: str | Path |
         except (OSError, ValueError):
             prior_summary = None
     try:
-        built = streaming.build_streaming_feedback(root, output, state_root=state_root, prior_summary=prior_summary)
+        built = streaming.build_streaming_feedback(root, output, state_root=state_root, prior_summary=prior_summary,
+                                                   pre_handoff_session=pre_handoff_session)
         payload = {"status": "COMPLETED", **{k: v for k, v in built.items() if k != "contract_version"},
                    "contract_version": built["contract_version"]}
         return {"exit": finish(payload, guard.EXIT_OK), "payload": payload}
@@ -143,6 +144,7 @@ if __name__ == "__main__":
     parser.add_argument("--status", help="Shared status pointer, coordinated with immutable publication.")
     parser.add_argument("--state-root", help="Where derived caches/receipts live (default: --root).")
     parser.add_argument("--prior-result", help="Status sidecar of the earlier call, to report FEEDBACK_CALL_RELATION.")
+    parser.add_argument("--pre-handoff-session", help="Pre-handoff stage: read evidence as it stood before this session's own canonical handoff.")
     parser.add_argument("--scrub-sources", action="store_true",
                         help="Out of Daily: re-hash sources discovery admits, refresh verified_at, never publish.")
     parser.add_argument("--seed-state-only", action="store_true",
@@ -178,7 +180,8 @@ if __name__ == "__main__":
         sys.exit(0)
     if args.output is not None and args.evidence_dir is None and not args.legacy_in_memory:
         outcome = run_streaming(root=args.root, output=args.output, result=args.result, status=args.status,
-                                state_root=args.state_root, prior_result=args.prior_result)
+                                state_root=args.state_root, prior_result=args.prior_result,
+                                pre_handoff_session=args.pre_handoff_session)
         sys.exit(outcome["exit"])
     result = run(root=args.root, output=args.output, evidence_dir=args.evidence_dir)
     if args.output is None and args.evidence_dir is None:

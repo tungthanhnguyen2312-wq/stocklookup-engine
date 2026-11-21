@@ -1,0 +1,35 @@
+{
+  "contract_version": "tplus_retry_integrity_source_transition/v1",
+  "base_commit": "2beffc479289be5ea17062ebc883f94da61176a1",
+  "scope": "EXACT_TPLUS_RETRY_IDENTITY_PRE_HANDOFF_BOUNDARY_AND_INCREMENTAL_REUSE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "7c7423d0b013db392218878003a3179a9379e2b1bd6a7485e753a9de3c2bf851",
+  "active_e4_v2_digest": "1375eb72e7ce95aea3e658121d459b4fe95a75d1a5173f1bd87903f3592e66a3",
+  "sources": {
+    "prospective_feedback_streaming.py": {
+      "archive": "tests/fixtures/tplus_retry_integrity_v1_sources/prospective_feedback_streaming.py.txt",
+      "prior_sha256_lf": "75943fffa0f79ae66b2540e2a68d1be4f3a52847e4b3a9a377bf6a3597bfc58f",
+      "active_sha256_lf": "d2f7a2b64d7fd1bcbad6f5a51081e50612eff8d197f37a7f5e2dc85ff7e45067"
+    },
+    "prospective_decision_retention.py": {
+      "archive": "tests/fixtures/tplus_retry_integrity_v1_sources/prospective_decision_retention.py.txt",
+      "prior_sha256_lf": "3e21a7e4456316e9890f43850eead4dd8429842aeaa02d24b93e9f2d26d9ab38",
+      "active_sha256_lf": "dabd8e247eed85a912cfa5306d82f768c7f8627dcc9f6579d37d3e7d87409241"
+    },
+    "prospective_decision_outcome_feedback.py": {
+      "archive": "tests/fixtures/tplus_retry_integrity_v1_sources/prospective_decision_outcome_feedback.py.txt",
+      "prior_sha256_lf": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2",
+      "active_sha256_lf": "0ddb1a75c1755fdccea48c5d539062537886bb7341d371495d45ee023399d31c"
+    },
+    "canonical_post_close_pipeline.py": {
+      "archive": "tests/fixtures/tplus_retry_integrity_v1_sources/canonical_post_close_pipeline.py.txt",
+      "prior_sha256_lf": "643298bf3ee392d906a651acf781dbd1aec36b401e71a58ffb258f4f81a79bf6",
+      "active_sha256_lf": "6d682d9cee0359a3fa50ca39c8b4d02c8a83c1ad2ed7bac625ab709879435c37"
+    },
+    "integrated_decision_prospective_feedback.py": {
+      "archive": "tests/fixtures/tplus_retry_integrity_v1_sources/integrated_decision_prospective_feedback.py.txt",
+      "prior_sha256_lf": "8bf792f6b46d9e0d6028fb753254603b09f069d76ec0773e562fa2e157aee748",
+      "active_sha256_lf": "1b9a26d2c745d8ae997cec108a98b6613e232ffe74c0313a11f1ea53ad06979c"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # Stock Lookup — Active State
 
-11-18 Daily PASS, `READY_FOR_AI`; PR258 bootstrap complete, [T+](tplus_incremental_cost_v2_contract.md) warm gate open.
+11-20 Daily PASS; [T+](tplus_incremental_cost_v2_contract.md) retry fix local (unpushed); seed before deploy; warm gate open.
 [Sync](producer_freeze_release_sync_contract.md) preserves the 10-26 freeze. Fresh preflight required.
 
 Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024681 5/5 PASS; Codex native96.
@@ -297,7 +297,7 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 
 ## 8. Actual blockers right now
 
-1. Daily 18/11 complete; `NO_NEW_PRODUCTION_CORRECTIVE_REQUIRED`. T+ warm acceptance open.
+1. Daily 20/11 complete; retry T+ conflict fixed locally. Needs Owner merge, seed, genuine warm session.
    HPG/PAN Q3 stays non-voting; [official intake gaps](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md) remain.
 2. Launch Daily only with fresh `OWNER_DAILY_HOST_PREFLIGHT_V1` = **READY**.
    **AMBER or BLOCKED must not launch.**

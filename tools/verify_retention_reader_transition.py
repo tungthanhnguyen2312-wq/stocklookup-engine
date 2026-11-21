@@ -94,6 +94,13 @@ THESIS_ROOT_MANIFEST = "tests/fixtures/thesis_current_technical_root_source_tran
 THESIS_ROOT_BASE = "83897636e1813ad0b6a016c0a8d50b3f5430ea27"
 THESIS_ROOT_SCOPE = "EXACT_THESIS_CURRENT_STAGE_ENRICHMENT_ROOT_ONLY"
 THESIS_ROOT_ARCHIVE = "tests/fixtures/thesis_current_technical_root_sources/thesis_evidence_production.py.txt"
+TPLUS_RETRY_INTEGRITY_MANIFEST = "tests/fixtures/tplus_retry_integrity_source_transition_v1.json"
+TPLUS_RETRY_INTEGRITY_BASE = "2beffc479289be5ea17062ebc883f94da61176a1"
+TPLUS_RETRY_INTEGRITY_SCOPE = "EXACT_TPLUS_RETRY_IDENTITY_PRE_HANDOFF_BOUNDARY_AND_INCREMENTAL_REUSE_ONLY"
+TPLUS_RETRY_INTEGRITY_SOURCES = ("prospective_feedback_streaming.py", "prospective_decision_retention.py",
+                                 "prospective_decision_outcome_feedback.py", "canonical_post_close_pipeline.py",
+                                 "integrated_decision_prospective_feedback.py")
+TPLUS_RETRY_INTEGRITY_ARCHIVE_DIR = "tests/fixtures/tplus_retry_integrity_v1_sources/"
 LEGACY_SUMMARY_MANIFEST = "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json"
 LEGACY_SUMMARY_BASE = "58b42b664d8e5008bd1e8e16f7cb167b52b60d21"
 LEGACY_SUMMARY_SCOPE = "EXACT_TPLUS_LEGACY_SUMMARY_FINGERPRINT_REUSE_ONLY"
@@ -164,7 +171,43 @@ OBSERVER_RESIDENT_RELEASE_PRIOR = "c03249a02f056136f7d4c0e7cef6e3fd1513425175961
 E4_V2_DIGEST = "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
 
 
+def _tplus_retry_integrity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-21 T+ retry-integrity successor (newest layer) back to its base-commit bytes.
+
+    Idempotent and applied at every per-file chain entry: bytes that are not this layer's exact active
+    bytes pass through unchanged and are judged by the older layers. A missing manifest keeps older
+    checkouts valid.
+    """
+    if relative not in TPLUS_RETRY_INTEGRITY_SOURCES:
+        return active
+    manifest = root / TPLUS_RETRY_INTEGRITY_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_retry_integrity_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_RETRY_INTEGRITY_BASE
+            or spec.get("scope") != TPLUS_RETRY_INTEGRITY_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != TPLUS_RETRY_INTEGRITY_SOURCES):
+        raise ValueError("TPLUS_RETRY_INTEGRITY_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    archive = TPLUS_RETRY_INTEGRITY_ARCHIVE_DIR + relative + ".txt"
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != archive):
+        raise ValueError("TPLUS_RETRY_INTEGRITY_SOURCE_TRANSITION_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"] or row["prior_sha256_lf"] == row["active_sha256_lf"]:
+        raise ValueError("TPLUS_RETRY_INTEGRITY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _observer_resident_release_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    active = _tplus_retry_integrity_prior_bytes(root, relative, active)
     """Peel the observer-window record release before the velocity source boundary.
 
     A missing manifest or a hash that is not this successor returns the bytes unchanged,
@@ -436,6 +479,7 @@ def _storage_reuse_d4a_prior_bytes(root: Path, relative: str, active: bytes) -> 
     producer keyword). E4 v2 digest is unchanged. Bytes that are not the D4a active source
     pass through so older layers keep their own fail-closed checks.
     """
+    active = _tplus_retry_integrity_prior_bytes(root, relative, active)
     if relative != STORAGE_REUSE_D4A_SOURCE:
         return active
     active = _velocity_projection_prior_bytes(root, relative, active)
@@ -499,6 +543,7 @@ def _tplus_real_corpus_prior_bytes(root: Path, relative: str, active: bytes) -> 
 
 def _tplus_feedback_io_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve the released M1b bytes across the offline-verified I/O corrective."""
+    active = _tplus_retry_integrity_prior_bytes(root, relative, active)
     if relative != TPLUS_RESUME_SOURCE:
         return active
     manifest = root / TPLUS_FEEDBACK_IO_MANIFEST
@@ -890,6 +935,7 @@ def _financial_research_prior_bytes(root: Path, relative: str, active: bytes) ->
 
 def _storage_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve exact pre-storage sources without repinning either historical domain."""
+    active = _tplus_retry_integrity_prior_bytes(root, relative, active)
     if relative == TPLUS_RESUME_SOURCE:
         active = _tplus_m1b_prior_bytes(root, relative, active)
         active = _tplus_incremental_cost_prior_bytes(root, relative, active)
@@ -1097,6 +1143,7 @@ def _legacy_summary_fingerprint_prior_bytes(root: Path, relative: str, active: b
 
     Only ``prospective_decision_outcome_feedback.py`` changed. A missing manifest keeps older checkouts valid.
     """
+    active = _tplus_retry_integrity_prior_bytes(root, relative, active)
     if relative != LEGACY_SUMMARY_SOURCE:
         return active
     manifest = root / LEGACY_SUMMARY_MANIFEST
@@ -1162,6 +1209,7 @@ def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> b
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _tplus_retry_integrity_prior_bytes(root, relative, content)
     if relative == TACTICAL_SHADOW_PIPELINE:
         content = _tactical_shadow_prior_bytes(root, relative, content)
     content = _decision_context_prior_bytes(root, relative, content)
@@ -1332,6 +1380,18 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if feedback_io["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = feedback_io["active_e4_v2_digest"]
+    retry_manifest = root / TPLUS_RETRY_INTEGRITY_MANIFEST
+    if retry_manifest.is_file():
+        for relative in TPLUS_RETRY_INTEGRITY_SOURCES:
+            live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            row = json.loads(retry_manifest.read_bytes())["sources"][relative]
+            if hashlib.sha256(live).hexdigest() != row["active_sha256_lf"]:
+                raise ValueError("TPLUS_RETRY_INTEGRITY_SOURCE_TRANSITION_BINDING_INVALID")
+            _tplus_retry_integrity_prior_bytes(root, relative, live)
+        retry = json.loads(retry_manifest.read_bytes())
+        if retry["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = retry["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

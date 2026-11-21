@@ -693,7 +693,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in feedback_paths:
         assert feedback_io["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = successor_baseline_pin(
-            path, live_receipt["observer_resident_record_release_corrective"])
+            path, live_receipt["observer_resident_record_release_corrective"], live_receipt["tplus_retry_integrity_corrective"])
     for run in ("baseline", "candidate"):
         assert 0 < feedback_io["retained_component_measurement"][run]["peak_process_bytes"] < 2 * 1024**3
     prior_receipt["tplus_feedback_io_corrective"] = feedback_io
@@ -735,8 +735,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert release_transition["sources"]["canonical_daily_operation.py"]["prior_sha256_lf"] == prior_receipt["source_sha256"]["canonical_daily_operation.py"]
     for path in release_paths:
         assert resident_release["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, live_receipt["tplus_retry_integrity_corrective"])
     prior_receipt["observer_resident_record_release_corrective"] = resident_release
 
     lineage_path = "daily_research_session_operations.py"
@@ -776,9 +775,51 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert late_stage["base_commit"] == "ca14839e2239f599b1900afaf369a838a98bb36e"
     for path in late_stage_paths:
         assert late_stage["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        current_late = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current_late).hexdigest()
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path, live_receipt["tplus_retry_integrity_corrective"])
     prior_receipt["late_stage_presentation_restage_capacity_corrective"] = late_stage
+
+    retry = live_receipt["tplus_retry_integrity_corrective"]
+    retry_paths = [
+        "canonical_post_close_pipeline.py",
+        "integrated_decision_prospective_feedback.py",
+        "prospective_decision_outcome_feedback.py",
+        "prospective_decision_retention.py",
+        "prospective_feedback_streaming.py",
+        "tools/run_prospective_decision_outcome_feedback.py",
+        "tools/verify_retention_reader_transition.py",
+    ]
+    assert retry["scope"] == "TPLUS_RETRY_IDENTITY_PRE_HANDOFF_BOUNDARY_AND_REUSE_PROOF_MEMO_ONLY"
+    assert retry["new_capacity_measurement"] is True
+    assert retry["whole_daily_requalification"] is False
+    assert retry["changed_source_paths"] == retry_paths
+    assert retry["base_commit"] == "2beffc479289be5ea17062ebc883f94da61176a1"
+    retry_transition = json.loads((root / retry["source_transition"]).read_bytes())
+    assert retry_transition["base_commit"] == retry["base_commit"]
+    measured = retry["retained_component_measurement"]
+    assert measured["method"].endswith("NOT_A_GENUINE_SESSION")
+    for run in ("baseline", "candidate"):
+        assert 0 < measured[run]["peak_process_bytes"] < 2 * 1024**3
+    for path in retry_paths:
+        previous = subprocess.check_output(["git", "show", f"{retry['base_commit']}:{path}"], cwd=root)
+        assert retry["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["tplus_retry_integrity_corrective"] = retry
+
+    borrowing = live_receipt["securities_borrowing_cost_row_identity_corrective"]
+    borrowing_path = "stocklookup_core/evidence/financial_row_identity.py"
+    assert borrowing["scope"] == "OFFLINE_INTAKE_ROW_IDENTITY_ONLY_NO_DAILY_RUNTIME_EFFECT"
+    assert borrowing["new_capacity_measurement"] is False
+    assert borrowing["whole_daily_requalification"] is False
+    assert borrowing["changed_source_paths"] == [borrowing_path]
+    assert borrowing["base_commit"] == "2beffc479289be5ea17062ebc883f94da61176a1"
+    old_borrowing = subprocess.check_output(["git", "show", f"{borrowing['base_commit']}:{borrowing_path}"], cwd=root)
+    assert borrowing["prior_source_sha256_lf"][borrowing_path] == prior_receipt["source_sha256"][borrowing_path]
+    assert hashlib.sha256(old_borrowing.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][borrowing_path]
+    current_borrowing = (root / borrowing_path).read_bytes().replace(b"\r\n", b"\n")
+    prior_receipt["source_sha256"][borrowing_path] = hashlib.sha256(current_borrowing).hexdigest()
+    prior_receipt["securities_borrowing_cost_row_identity_corrective"] = borrowing
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

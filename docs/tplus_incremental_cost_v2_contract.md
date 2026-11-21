@@ -350,3 +350,61 @@ its qualified cold rebuild.
 The existing seed and new-T0 warm acceptance remain release gates. Preserve the
 complete pre- and post-handoff boundaries from an authorized Owner session for
 paired qualification in scratch state.
+
+## Retry integrity and incremental reuse (2026-11-21, local checkpoint)
+
+Root causes of the 2026-11-20 second-attempt `FEEDBACK_IMMUTABLE_OUTPUT_CONFLICT` (both stages),
+verified on code and retained artifacts:
+
+1. **Pre-handoff boundary.** K15 is defined as the view before the session's own canonical
+   handoff. The retry found the handoff written by attempt 1, admitted that session's T0 and saw
+   49 instead of 48 sessions. The session's capture record, decision artifact and enrichment
+   legitimately precede the handoff (all were visible to attempt 1), so the boundary hides exactly
+   that one `session_handoff_bundle.json` (`--pre-handoff-session`, passed only by the
+   pre-handoff stage). Identity records the boundary.
+2. **Future-chain identity.** `_future_chain_inputs` hashed `calendar-revisions/` (written on
+   every Daily attempt, never read by `load_chain`) and missed the calendar receipts `load_chain`
+   does read. It now hashes what the strict evaluator can observe: accepted capture records,
+   calendar components and disagreements at `as_of`, and the Vietnamese civil date.
+3. **Upfront refusal.** A changed input digest was refused before evaluation. Equivalence is now
+   decided by content: the stage rebuilds and `_publish` accepts only an equal artifact
+   identity (recorded under `equivalent_inputs`, original input lineage kept); different
+   content stays `IMMUTABLE_ARTIFACT_CONFLICT` and the COMPLETE artifact is untouched.
+4. The K19 retry also met a **genuine** change: the retry's Producer rewrote the session's
+   handoff through the sealed-T0 reuse path, so 11-20 rows carry
+   `QUALIFIED_ORIGINAL_T0_REUSE` proof codes instead of a direct binding. That conflict is
+   correct; the bounded result now names the retained prior-attempt artifact
+   (`retained_complete_artifact`) instead of implying none exists.
+
+Incremental cost (profiled on retained data): reused-T0 origination proofs re-streamed
+multi-GB snapshots on every run (memoized, positive-only, keyed by the fingerprint-proven raw
+hash, seal index/receipt and both operation identities); each settled hit opened one small file
+(~25 ms on the evidence volume, ~40 s per 1,600-row legacy partition: now one sequential pack per
+partition); strict partitions were rebuilt every day because their context includes the as-of
+date (now a replay proof of the exact chain answers and price sessions each partition read;
+matured rows no longer read the chain length, by an equivalent restructure); the exact-session
+price join rescanned every session per row (per-ticker memo).
+
+Isolated re-enactment on retained evidence (scratch state, fixed evidence clock; **not a
+genuine session**), final code:
+
+| Step | Wall s | Peak B | Result |
+|---|---:|---:|---|
+| Seed (`--seed-state-only`, receipts valid) | 2,243 | — | exit 33 |
+| 11-19 view, empty partitions/settled (post-seed bootstrap) | 331.4 | 1,400,975,360 | BUILT |
+| K15 11-20 @17:06 | 188.1 | 1,363,582,976 | `eb87bc1f…` = retained attempt-1 artifact |
+| K19 11-20 @17:32 (new T0) | 223.9 | 1,440,681,984 | `0fe6a659…`, 82,467 rows |
+| K15 retry @22:20 | 50.2 | 694,345,728 | ALREADY_COMPLETE |
+| K19 retry @22:45 | 51.8 | 696,442,880 | ALREADY_COMPLETE |
+
+Attempt 1 measured 416.084 / 951.404 s. K19's `0fe6a659…` equals what unchanged HEAD code
+builds on today's evidence; it differs from attempt-1 `33ac2c66…` only through the rewritten
+handoff (4). In this run the new T0's sidecar was pre-built by the seed; an earlier code variant
+that built it inline took 443.7 s for K19, so a conservative genuine estimate is ≈380 s
+post-handoff and ≈570 s combined. Warm acceptance remains a genuine-session gate.
+
+Rollout: `prospective_decision_retention.py` is a verifier unit, so Production T0 receipts are
+invalidated; partitions, settled entries and sidecars are keyed by the changed code. Run the
+existing Owner seed before the first Daily (expect receipts ≈2,250 s plus sidecars ≈2,240 s), or
+copy the qualified scratch derived state built here from the same retained root (Owner-authorized
+Production write). Without either, the first Daily's feedback stages are expected to time out.
