@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "340bd76c06be22ba01b09e5455c987d2324c5cf803a55789b7cd70ee4e2ac6b8",
+    "config/daily_path_launchers.json": "9c20aef944948095cecd48467aeece7adfb09b605a4a37ad06f17e35cdd5e9a7",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -1916,6 +1916,7 @@
     "scope": "TPLUS_RETRY_IDENTITY_PRE_HANDOFF_BOUNDARY_AND_REUSE_PROOF_MEMO_ONLY",
     "changed_source_paths": [
       "canonical_post_close_pipeline.py",
+      "config/daily_path_launchers.json",
       "integrated_decision_prospective_feedback.py",
       "prospective_decision_outcome_feedback.py",
       "prospective_decision_retention.py",
@@ -1964,6 +1965,7 @@
     },
     "prior_source_sha256_lf": {
       "canonical_post_close_pipeline.py": "643298bf3ee392d906a651acf781dbd1aec36b401e71a58ffb258f4f81a79bf6",
+      "config/daily_path_launchers.json": "340bd76c06be22ba01b09e5455c987d2324c5cf803a55789b7cd70ee4e2ac6b8",
       "integrated_decision_prospective_feedback.py": "8bf792f6b46d9e0d6028fb753254603b09f069d76ec0773e562fa2e157aee748",
       "prospective_decision_outcome_feedback.py": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2",
       "prospective_decision_retention.py": "3e21a7e4456316e9890f43850eead4dd8429842aeaa02d24b93e9f2d26d9ab38",

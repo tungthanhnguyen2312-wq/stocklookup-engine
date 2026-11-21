@@ -781,6 +781,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     retry = live_receipt["tplus_retry_integrity_corrective"]
     retry_paths = [
         "canonical_post_close_pipeline.py",
+        "config/daily_path_launchers.json",
         "integrated_decision_prospective_feedback.py",
         "prospective_decision_outcome_feedback.py",
         "prospective_decision_retention.py",
