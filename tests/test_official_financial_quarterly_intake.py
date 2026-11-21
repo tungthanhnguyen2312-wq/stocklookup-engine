@@ -590,3 +590,19 @@ def test_wave6_t31_wrapped_bank_line_is_not_parent_profit():
     assert cumulative["reporting_period"] == "2026-H1"
     assert cumulative["period_semantic_state"] == "UNKNOWN_DURATION"
     assert cumulative["period_start"] is None and cumulative["reported_duration_months"] == 6
+
+
+@pytest.mark.parametrize("label", ["Chi phí lãi vay", "Interest expense", "Borrowing costs"])
+def test_securities_code52_borrowing_cost_row_is_identified_without_a_canonical_alias(label):
+    row = resolve_reported_row_identity("income_statement", "52", label)
+    assert row == {"canonical_metric": None, "accounting_identity": "REPORTED_BORROWING_COSTS", "blockers": []}
+
+
+@pytest.mark.parametrize("label,blocker", [
+    ("Chi phí thuế thu nhập doanh nghiệp hoãn lại", "LITERAL_ROW_LABEL_MISMATCH"),  # industrial code 52
+    ("Deferred corporate income tax expense", "LITERAL_ROW_LABEL_MISMATCH"),
+    ("Chi phí lãi vay, lỗ từ các khoản cho vay và phải thu", "COMPOSITE_FINANCE_COST_ROW_NOT_PURE_BORROWING_COST"),
+])
+def test_code52_is_not_borrowing_cost_on_another_template_or_a_composite_line(label, blocker):
+    row = resolve_reported_row_identity("income_statement", "52", label)
+    assert row["canonical_metric"] is None and blocker in row["blockers"]

@@ -769,7 +769,7 @@
     "stocklookup_core/evidence/financial_filings_replay_adapter.py": "c06f796cc4c1f8824a1b9a01bc00f54782ac0447a339692de8739d967e761f08",
     "stocklookup_core/evidence/financial_identity.py": "950b51fe27e6d77e284af6ee13bcd850db9c3f2b63dd372bf902249d24e7da15",
     "stocklookup_core/evidence/financial_metadata_envelope.py": "58b0ba35616f4dab07d857a70ee35d3daaa8a7bfe3e0ef1f5c4f6c12ce342583",
-    "stocklookup_core/evidence/financial_row_identity.py": "2a1b0af9ba2a82a2cebaccbf20337a32f9548bc277e3d7536412d0c319780d63",
+    "stocklookup_core/evidence/financial_row_identity.py": "cae5a77c614407887836a18a80a7ae8c20abde015f51590b4ec1760fd1ada7fe",
     "stocklookup_core/evidence/freshness_history.py": "3b0f75554fe4b5d24798b729e6d653d2f0bdac30f28b401cbd12a1816fc2dec5",
     "stocklookup_core/evidence/fundamental_quality.py": "a3e0aceffb0d6709e767017e23aeef04155af66d54519269166224ed192a9496",
     "stocklookup_core/evidence/governed_trading_session_calendar.py": "618a464b05b5b49cf1ff9d09abd0d6a25f3d456925e722e1a2b40f0dde681754",
@@ -1970,6 +1970,18 @@
       "prospective_feedback_streaming.py": "75943fffa0f79ae66b2540e2a68d1be4f3a52847e4b3a9a377bf6a3597bfc58f",
       "tools/run_prospective_decision_outcome_feedback.py": "c9d317844a8eceb6944dd389a221d9c85ac867b1b288edf7fe400be4a7625e9a",
       "tools/verify_retention_reader_transition.py": "30e992c5523fecccad431594fe18db319bf32e45486bf73b62cc1a968b7bf2db"
+    }
+  },
+  "securities_borrowing_cost_row_identity_corrective": {
+    "base_commit": "2beffc479289be5ea17062ebc883f94da61176a1",
+    "scope": "OFFLINE_INTAKE_ROW_IDENTITY_ONLY_NO_DAILY_RUNTIME_EFFECT",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/financial_row_identity.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "prior_source_sha256_lf": {
+      "stocklookup_core/evidence/financial_row_identity.py": "2a1b0af9ba2a82a2cebaccbf20337a32f9548bc277e3d7536412d0c319780d63"
     }
   }
 }

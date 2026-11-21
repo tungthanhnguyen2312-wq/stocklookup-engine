@@ -807,6 +807,20 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     prior_receipt["tplus_retry_integrity_corrective"] = retry
 
+    borrowing = live_receipt["securities_borrowing_cost_row_identity_corrective"]
+    borrowing_path = "stocklookup_core/evidence/financial_row_identity.py"
+    assert borrowing["scope"] == "OFFLINE_INTAKE_ROW_IDENTITY_ONLY_NO_DAILY_RUNTIME_EFFECT"
+    assert borrowing["new_capacity_measurement"] is False
+    assert borrowing["whole_daily_requalification"] is False
+    assert borrowing["changed_source_paths"] == [borrowing_path]
+    assert borrowing["base_commit"] == "2beffc479289be5ea17062ebc883f94da61176a1"
+    old_borrowing = subprocess.check_output(["git", "show", f"{borrowing['base_commit']}:{borrowing_path}"], cwd=root)
+    assert borrowing["prior_source_sha256_lf"][borrowing_path] == prior_receipt["source_sha256"][borrowing_path]
+    assert hashlib.sha256(old_borrowing.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][borrowing_path]
+    current_borrowing = (root / borrowing_path).read_bytes().replace(b"\r\n", b"\n")
+    prior_receipt["source_sha256"][borrowing_path] = hashlib.sha256(current_borrowing).hexdigest()
+    prior_receipt["securities_borrowing_cost_row_identity_corrective"] = borrowing
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
