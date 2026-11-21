@@ -2026,7 +2026,8 @@ def run_post_handoff_prospective_outcome_feedback(
     if bounded["status"] != "COLLECTED":
         return {"status": "UNAVAILABLE", "session": session, "reason_code": bounded.get("reason_code"), "reason": bounded.get("reason"),
                 "stage": FEEDBACK_STAGE_POST_HANDOFF, "resource": bounded.get("resource"), "authority_boundary": boundary,
-                "interpretation": "RESOURCE_OR_DEFECT_STATUS_NOT_FEEDBACK_EVIDENCE"}
+                "interpretation": "RESOURCE_OR_DEFECT_STATUS_NOT_FEEDBACK_EVIDENCE",
+                "retained_complete_artifact": bounded.get("retained_complete_artifact")}
     return {
         "status": "COLLECTED", "session": session, "path": _rel(root, output), "artifact_identity": bounded["artifact_identity"],
         "stage": FEEDBACK_STAGE_POST_HANDOFF, "outcome": bounded.get("outcome"), "relation": bounded.get("relation"),
@@ -2350,6 +2351,10 @@ def run_bounded_prospective_feedback(
         command += ["--prior-result", str(prior_status_path)]
     if state_root is not None:  # offline rehearsal / tests: keep derived caches out of the evidence root
         command += ["--state-root", str(state_root)]
+    if stage == FEEDBACK_STAGE_PRE_HANDOFF:
+        # The Pre-handoff artifact is defined before this session's own handoff; a same-session retry
+        # finds that handoff already written and must still read the same boundary.
+        command += ["--pre-handoff-session", session]
     telemetry = None
     try:
         from owner_daily_progress import progress_from_environment
@@ -2390,8 +2395,22 @@ def run_bounded_prospective_feedback(
                    else run.get("reason_code") or child.get("reason_code") or guard.COMPUTATION_ERROR)
     if not child:
         record_unavailable(reason_code, run.get("outcome") or "", resource)
+    retained = None
+    if reason_code == guard.IMMUTABLE_CONFLICT:
+        # This attempt's inputs produced different content. The earlier attempt's COMPLETE artifact
+        # remains the session's immutable evidence; name it instead of implying nothing exists.
+        try:
+            import prospective_feedback_streaming as streaming
+            completion = streaming.read_completion(output) if output.is_file() else None
+            if completion:
+                retained = {"artifact_identity": completion.get("artifact_identity"), "path": str(output),
+                            "record_count": completion.get("record_count"), "input_digest": completion.get("input_digest"),
+                            "interpretation": "PRIOR_ATTEMPT_ARTIFACT_RETAINED_CURRENT_INPUT_PRODUCES_DIFFERENT_CONTENT"}
+        except Exception:  # noqa: BLE001 -- reporting must never break Daily
+            retained = None
     return {**base, "status": "UNAVAILABLE", "reason_code": reason_code, "resource": resource,
-            "reason": (run.get("stderr_tail") or str(child.get("detail") or run["outcome"]))[-1500:], "child_status": child.get("status")}
+            "reason": (run.get("stderr_tail") or str(child.get("detail") or run["outcome"]))[-1500:], "child_status": child.get("status"),
+            "retained_complete_artifact": retained}
 
 
 def run_prospective_collection(

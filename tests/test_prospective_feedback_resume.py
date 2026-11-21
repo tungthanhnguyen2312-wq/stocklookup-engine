@@ -139,8 +139,8 @@ def test_settled_contributions_persist_per_entry_and_are_reused_across_run_ident
     root, state, output = tmp_path / "evidence", tmp_path / "state", tmp_path / "out" / "feedback.json"
     _corpus(root, legacy=24, modern=2)  # longer than the 20-session horizon, so early rows settle
     first = _build(root, output, state)
-    store = state / streaming.SETTLED_STORE_DIR
-    persisted = sorted(store.rglob("*.json"))
+    # Settled contributions persist once per partition, in its pack (one sequential file).
+    persisted = sorted((state / streaming.PARTITION_DIR).rglob(streaming.SETTLED_PACK_NAME))
     assert persisted and not (state / "operations-review/prospective-decision-outcome-feedback-v1/_settled_cache.json").exists()
     monkeypatch.setattr(streaming, "code_digest", lambda: "1" * 64)  # forces a new run identity; rows are re-evaluated
     second = _build(root, output.with_name("again.json"), state)

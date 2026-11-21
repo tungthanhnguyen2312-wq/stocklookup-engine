@@ -295,7 +295,7 @@ def _handoff_bundles(root: Path, operations: Mapping[str, Mapping[str, Any]]) ->
     rows: list[dict[str, Any]] = []
     for path in historical_paths(root, "operations-review/canonical-post-close-v1", "*/session_handoff_bundle.json"):
         bundle = _load_json(path)
-        if not bundle:
+        if not bundle or retention.handoff_bundle_excluded(path, bundle):
             continue
         session = bundle.get("session")
         op_identity = bundle.get("daily_session_operation_identity")

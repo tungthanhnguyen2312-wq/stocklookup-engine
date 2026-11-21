@@ -68,6 +68,8 @@ PARTITION_VARIANTS = 3
 SETTLED_STORE_MAX_BYTES = 2 * 1024**3
 SETTLED_STORE_MAX_ENTRIES = 131072
 SETTLED_STORE_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_settled_store")
+SETTLED_PACK_NAME = "settled.pack.jsonl"
+SETTLED_PACK_MAX_BYTES = 512 * 1024**2
 EVALUATOR_INPUT_DIR = Path("operations-review/prospective-decision-outcome-feedback-v1/_evaluator_inputs")
 EVALUATOR_INPUT_CONTRACT = "prospective_feedback_evaluator_input/v3"
 EVALUATOR_INPUT_MAX_BYTES = 12 * 1024**3  # ~60 sessions of the deduplicated sidecar, with headroom
@@ -569,9 +571,50 @@ class _DiskSettledStore:
     def __init__(self, directory: Path, seed: Mapping[str, Any]):
         self.directory, self.seed = directory, seed
         self._last_read = None
+        self._pack: dict[str, Any] | None = None
+        self._collected: dict[str, Any] | None = None
+        self._pack_path: Path | None = None
+        self.written = 0
 
     def _path(self, key: str) -> Path:
         return self.directory / key[:2] / (key + ".json")
+
+    # -- partition packs ---------------------------------------------------------------------------
+    # The same self-validating entries, stored as one sequential file per partition. Opening one
+    # small file per row cost ~25 ms each on the evidence volume (~40 s per 1,600-row partition).
+    def begin_partition(self, pack_path: Path, metrics: dict[str, Any] | None = None) -> None:
+        self._pack, self._collected, self._pack_path = None, {}, pack_path
+        try:
+            if pack_path.is_file() and pack_path.stat().st_size <= SETTLED_PACK_MAX_BYTES:
+                pack: dict[str, Any] = {}
+                with pack_path.open("rb") as source:
+                    for line in source:
+                        item = json.loads(line)
+                        if not (isinstance(item, list) and len(item) == 2 and isinstance(item[0], str)
+                                and isinstance(item[1], dict)):
+                            raise ValueError("SETTLED_PACK_ROW")
+                        pack[item[0]] = item[1]
+                self._pack = pack
+                _metric(metrics, "settled_pack_hits")
+        except (OSError, ValueError, UnicodeError):
+            self._pack = None  # a torn or foreign pack is only a miss
+            _metric(metrics, "settled_pack_corrupt")
+
+    def end_partition(self) -> None:
+        collected, path = self._collected, self._pack_path
+        self._pack = self._collected = self._pack_path = None
+        if not collected or path is None:
+            return
+        temporary = path.with_name(f"{TEMP_PREFIX}settled-pack-{os.getpid()}.tmp")  # reaped by cleanup_incomplete
+        try:
+            with temporary.open("wb") as out:
+                for key in sorted(collected):
+                    out.write(_canon_bytes([key, collected[key]]) + b"\n")
+                out.flush()
+                os.fsync(out.fileno())
+            os.replace(temporary, path)
+        except (OSError, ValueError, TypeError):
+            temporary.unlink(missing_ok=True)  # only costs a later recomputation
 
     def get(self, key, default=None):
         value = self._read(key, default)
@@ -581,6 +624,10 @@ class _DiskSettledStore:
     def _read(self, key, default):
         if key in self.seed:
             return self.seed[key]
+        if self._pack is not None:
+            # The pack holds every entry the previous build of this partition retained; a key it
+            # lacks was not settled then, so the per-entry store has nothing newer for it.
+            return self._pack.get(key, default)
         try:
             path = self._path(key)
             if path.stat().st_size > 16 * 1024**2:
@@ -595,8 +642,12 @@ class _DiskSettledStore:
         # The evaluator just validated this exact object on a hit. Its
         # write-through retention call need not read the same file again.
         last_read, self._last_read = self._last_read, None
+        if self._collected is not None:
+            self._collected[key] = value  # persisted once, with the partition pack
+            return
         if last_read and last_read[0] == key and last_read[1] is value:
             return
+        self.written += 1
         try:
             _atomic_write_json(path, value, allow_nan=False)
         except OSError:
@@ -624,6 +675,166 @@ class _StreamSettledCache(fb.SettledFeedbackCache):
         return  # every contribution was persisted when it settled
 
 
+REPLAY_PROOF_CONTRACT = "prospective_feedback_strict_replay_proof/v1"
+
+
+class _ReplayLog:
+    """What one strict (future-chain) partition actually observed: chain answers and price sessions."""
+
+    def __init__(self):
+        self.chain: dict[tuple[str, str], list[Any]] = {}
+        self.sessions: set[str] = set()
+        self.unreplayable: str | None = None
+
+    def answer(self, op: str, args: list[Any], outcome: Mapping[str, Any]) -> None:
+        # Rows of one partition repeat the same few queries: hash each distinct answer once.
+        key = (op, repr(args))  # args are str/int/None lists: repr is exact and deterministic
+        if key not in self.chain:
+            self.chain[key] = [op, args, fb._settled_hash(outcome)]
+
+
+def _chain_answer(chain: Any, op: str, args: list[Any]) -> dict[str, Any]:
+    """Evaluate one recorded query; an exception is part of the answer, never swallowed silently."""
+    try:
+        if op == "contains":
+            value = args[0] in chain
+        elif op == "index":
+            value = chain.index(args[0])
+        elif op == "len":
+            value = len(chain)
+        elif op == "getitem":
+            value = chain[slice(*args[1:]) if args[0] == "slice" else args[1]]
+            value = list(value) if args[0] == "slice" else value
+        elif op == "iter":
+            value = list(chain)
+        elif op in {"next_n_sessions", "realized_prefix_after"}:
+            method = getattr(chain, op)
+            value = method(args[0], args[1]) if args[2] is None else method(args[0], args[1], as_of=args[2])
+        else:
+            raise FeedbackStreamError("FEEDBACK_REPLAY_OPERATION_UNKNOWN:" + str(op))
+    except (ValueError, IndexError, KeyError, TypeError) as exc:
+        return {"raises": type(exc).__name__}
+    return {"value": value}
+
+
+class _RecordingChain:
+    """Pass-through view of the strict chain that records every query the evaluator makes.
+
+    Only the surface the evaluator uses is recordable. Any other attribute marks the partition
+    unreplayable (it falls back to the exact context key).
+    """
+
+    def __init__(self, chain: Any, log: _ReplayLog):
+        self._chain, self._log = chain, log
+
+    @property
+    def contract_version(self):
+        return self._chain.contract_version  # a code constant, bound by the code digest
+
+    def _ask(self, op, args):
+        outcome = _chain_answer(self._chain, op, args)
+        self._log.answer(op, args, outcome)
+        if "raises" in outcome:
+            # Re-raise the same exception type the evaluator expects from the real chain.
+            _chain_answer_raise(self._chain, op, args)
+        return outcome["value"]
+
+    def __contains__(self, item):
+        return self._ask("contains", [item])
+
+    def index(self, item, *bounds):
+        if bounds:
+            self._log.unreplayable = "index_bounds"
+            return self._chain.index(item, *bounds)
+        return self._ask("index", [item])
+
+    def __len__(self):
+        return self._ask("len", [])
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return self._ask("getitem", ["slice", item.start, item.stop, item.step])
+        return self._ask("getitem", ["item", item])
+
+    def __iter__(self):
+        return iter(self._ask("iter", []))
+
+    def next_n_sessions(self, after, n, as_of=None):
+        return self._ask("next_n_sessions", [after, n, as_of])
+
+    def realized_prefix_after(self, after, n, as_of=None):
+        return self._ask("realized_prefix_after", [after, n, as_of])
+
+    def __getattr__(self, name):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        self._log.unreplayable = "attribute:" + name
+        return getattr(self._chain, name)
+
+
+def _chain_answer_raise(chain, op, args):
+    if op == "index":
+        chain.index(args[0])
+    elif op == "getitem":
+        chain[slice(*args[1:]) if args[0] == "slice" else args[1]]
+    elif op in {"next_n_sessions", "realized_prefix_after"}:
+        method = getattr(chain, op)
+        method(args[0], args[1]) if args[2] is None else method(args[0], args[1], as_of=args[2])
+    raise FeedbackStreamError("FEEDBACK_REPLAY_ANSWER_UNSTABLE:" + op)
+
+
+class _RecordingMapping(Mapping):
+    """Read-by-key view; enumerating keys or size marks the owning partition unreplayable."""
+
+    def __init__(self, raw: Mapping[str, Any], log: _ReplayLog):
+        self._raw, self._log = raw, log
+
+    def __getitem__(self, key):
+        self._log.sessions.add(key)
+        return self._raw[key]
+
+    def get(self, key, default=None):
+        self._log.sessions.add(key)
+        return self._raw.get(key, default)
+
+    def __contains__(self, key):
+        self._log.sessions.add(key)
+        return key in self._raw
+
+    def __iter__(self):
+        self._log.unreplayable = "enumerated_keys"
+        return iter(self._raw)
+
+    def __len__(self):
+        self._log.unreplayable = "enumerated_size"
+        return len(self._raw)
+
+
+class _RecordingSnapshots(_RecordingMapping):
+    def price_observations_for(self, ticker):
+        # Each returned observation for session s is taken only from snapshot s (exact-session join),
+        # so reading observation key s is a dependency on snapshot s alone.
+        return _RecordingMapping(forward_bridge.retained_session_price_observations(self._raw, ticker), self._log)
+
+
+class _IndexedSnapshots(dict):
+    """The builder's frozen session->snapshot map plus a per-ticker memo of the exact-session join.
+
+    Behaves as the plain dict for every other use. Each call returns fresh row copies, so a caller
+    can never alter a later row's inputs. The map is not mutated after evaluation starts.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._observations: dict[str, dict[str, Any]] = {}
+
+    def price_observations_for(self, ticker):
+        cached = self._observations.get(ticker)
+        if cached is None:
+            cached = self._observations[ticker] = forward_bridge.retained_session_price_observations_scan(dict(self), ticker)
+        return {session: dict(row) for session, row in cached.items()}
+
+
 class _PartitionDependencies:
     """Sufficient input identities after native discovery/qualification, never session labels alone.
 
@@ -632,11 +843,38 @@ class _PartitionDependencies:
     prospective chains fail closed to their full capture/calendar context (no sparse-prefix reuse).
     """
 
-    def __init__(self, sources, settled, marker, future_inputs, code, contracts):
+    def __init__(self, sources, settled, marker, future_inputs, code, contracts, future_settled=None):
         self.sources, self.settled, self.marker = sources, settled, marker
         self.price_hashes = {s: fb._settled_hash(v) for s, v in settled.snapshots.items()}
         self.context = {"chain": list(settled.chain), "prices": self.price_hashes}
         self.future_inputs, self.code, self.contracts = future_inputs, code, contracts
+        self.future_settled = future_settled
+
+    def recording(self, session):
+        """Context for building one strict partition: records exactly what its rows read."""
+        if not (self.future(session) and self.future_settled is not None):
+            return None
+        return _ReplayLog()
+
+    def replay_proof(self, log):
+        if log is None or log.unreplayable is not None:
+            return None
+        return {"contract": REPLAY_PROOF_CONTRACT, "chain": [log.chain[key] for key in sorted(log.chain)],
+                "sessions": {s: self.price_hashes.get(s) for s in sorted(log.sessions, key=str)}}
+
+    def replay_valid(self, proof):
+        """Every recorded chain answer and every read price session is unchanged: identical rows."""
+        if (self.future_settled is None or not isinstance(proof, dict) or proof.get("contract") != REPLAY_PROOF_CONTRACT
+                or not isinstance(proof.get("chain"), list) or not isinstance(proof.get("sessions"), dict)):
+            return False
+        chain = self.future_settled.chain
+        try:
+            for op, args, digest in proof["chain"]:
+                if fb._settled_hash(_chain_answer(chain, op, args)) != digest:
+                    return False
+        except (FeedbackStreamError, TypeError, ValueError):
+            return False
+        return all(self.price_hashes.get(s) == h for s, h in proof["sessions"].items())
 
     def future(self, session):
         return bool(self.marker) and session >= self.marker["session"]
@@ -784,7 +1022,9 @@ class _Partitions:
                         and proof == self.dependencies.proof(proof.get("through")))
             extension = (not exact and not terminal and not self.dependencies.future(session)
                          and self.dependencies.extension_valid(value.get("extension_proof")))
-            if not (exact or terminal or extension):
+            replay = (not exact and self.dependencies.future(session)
+                      and self.dependencies.replay_valid(value.get("replay_proof")))
+            if not (exact or terminal or extension or replay):
                 _metric(self.metrics, "partition_variants_invalidated")
                 continue
             stem = Path(str(path)[:-len(".partition.json")])
@@ -795,7 +1035,8 @@ class _Partitions:
             self.selected[session] = stem
             os.utime(path, None)
             _metric(self.metrics, "partitions_reused_exact" if exact else
-                    "partitions_reused_terminal" if terminal else "partitions_reused_extension")
+                    "partitions_reused_terminal" if terminal else
+                    "partitions_reused_extension" if extension else "partitions_reused_replay")
             return value
         if candidates:
             _metric(self.metrics, "partitions_invalidated")
@@ -811,6 +1052,16 @@ class _Partitions:
         spools = {kind: _Spool(directory, f"{context}-{kind}-{os.getpid()}") for kind in ("rows", "trigger")}
         through, terminal = None, not self.dependencies.future(session)
         window_through, bounded, conditions = None, not self.dependencies.future(session), []
+        log = self.dependencies.recording(session)
+        store = getattr(self.dependencies.settled, "entries", None)
+        packing = not self.dependencies.future(session) and isinstance(store, _DiskSettledStore)
+        if packing:
+            store.begin_partition(directory / SETTLED_PACK_NAME, self.metrics)
+        evaluator = self.dependencies.future_settled
+        saved = (evaluator.chain, evaluator.snapshots) if log is not None else None
+        if log is not None:
+            evaluator.chain = _RecordingChain(saved[0], log)
+            evaluator.snapshots = _RecordingSnapshots(saved[1], log)
         try:
             for row in rows:
                 spools["rows"].append(row)
@@ -835,7 +1086,8 @@ class _Partitions:
                      "context_key": context, "session": session, "row_count": spools["rows"].count,
                      "terminal_proof": self.dependencies.proof(through) if terminal and through else None,
                      "extension_proof": {"window": self.dependencies.proof(window_through), "conditions": conditions}
-                                        if bounded and window_through and not terminal else None}
+                                        if bounded and window_through and not terminal else None,
+                     "replay_proof": self.dependencies.replay_proof(log)}
             # A stale manifest must not survive replacement of either data file after a crash.
             manifest_path = Path(str(stem) + ".partition.json")
             manifest_path.unlink(missing_ok=True)
@@ -851,6 +1103,10 @@ class _Partitions:
             _atomic_write_json(manifest_path, entry, allow_nan=False)
             self.selected[session] = stem
         finally:
+            if packing:
+                store.end_partition()
+            if saved is not None:
+                evaluator.chain, evaluator.snapshots = saved
             for spool in spools.values():
                 spool.remove()
         _metric(self.metrics, "partitions_built")
@@ -1117,21 +1373,63 @@ def _json_file_digest(path: Path) -> str | None:
         return None
 
 
-def _future_chain_inputs(repository: Path, marker: Mapping[str, Any] | None, as_of: str) -> dict[str, Any]:
-    """Conservative identity of everything ``load_chain`` reads; includes the as-of *date* only."""
+FUTURE_CHAIN_IDENTITY_CONTRACT = "governed_future_chain_semantics/v1"
+
+
+def _vn_civil_date(as_of: str) -> str:
+    import prospective_market_snapshot_contract as market
+    return market._utc(as_of, "as_of").astimezone(market.VN_TZ).date().isoformat()
+
+
+def _future_chain_inputs(chain: Any, marker: Mapping[str, Any] | None, as_of: str) -> dict[str, Any]:
+    """Identity of exactly what the strict evaluator can observe through the loaded chain.
+
+    ``GovernedSessionChain`` answers ``next_n_sessions``/``realized_prefix_after``/``window_ending``
+    from (a) the accepted capture records (identity + completion time, already filtered at ``as_of``),
+    (b) the calendar coverage components and per-date revision disagreements at ``as_of``, and (c) the
+    Vietnamese civil date of ``as_of`` (``missed_sessions``). Receipt/revision *file* identities are not
+    observable: a second DNSE probe with equal working dates yields the same components and therefore
+    the same identity, while any changed date, gap or disagreement changes it. The previous identity
+    hashed ``calendar-revisions/`` (a log written on every Daily attempt, never read by ``load_chain``)
+    and missed the calendar receipts ``load_chain`` actually reads.
+    """
     if not marker:
         return {"marker": None}
-    import prospective_pit_capture_retention as store
-    base = repository / store.STORE
-    files = sorted((base / "sessions").glob("*.json")) if (base / "sessions").is_dir() else []
-    calendar_files = []
-    try:
-        calendar_files = [p for p in sorted(base.rglob("*.json")) if "calendar" in str(p).lower()]
-    except OSError:
-        pass
-    return {"marker": marker, "as_of_date": as_of[:10],
-            "capture_sessions": {p.name: _json_file_digest(p) for p in files},
-            "calendar_files": {str(p.relative_to(base)).replace("\\", "/"): _json_file_digest(p) for p in calendar_files}}
+    view: dict[str, Any] = {"contract": FUTURE_CHAIN_IDENTITY_CONTRACT, "marker": dict(marker),
+                            "vn_civil_date": _vn_civil_date(as_of)}
+    records, calendar = getattr(chain, "records", None), getattr(chain, "calendar", None)
+    if isinstance(records, Mapping) and calendar is not None and hasattr(calendar, "components"):
+        view["records"] = {day: [row.get("artifact_identity"), row.get("completion_known_at")]
+                           for day, row in sorted(records.items())}
+        view["first_complete_capture_session"] = getattr(chain, "first_complete_capture_session", None)
+        view["calendar_components"] = [[part["start"], part["end"], list(part["sessions"])] for part in calendar.components]
+        view["calendar_conflicts"] = list(calendar.conflicts)
+    else:  # test doubles and legacy list chains: their full observable surface is the session list
+        view["sessions"] = list(chain) if chain is not None else None
+    return view
+
+
+class _ReuseProofCache:
+    """Positive-only memo for origination proofs whose key already binds every proven byte identity."""
+
+    def __init__(self, state_root: Path, metrics: dict[str, Any] | None = None):
+        self.directory, self.metrics = state_root / STATE_DIR / "t0_reuse_proofs", metrics
+
+    def _path(self, key: Mapping[str, Any]) -> Path:
+        return self.directory / (_sha256_bytes(_canon_bytes({"code": code_digest(), "key": dict(key)})) + ".json")
+
+    def get(self, key):
+        value = _read_state_json(self._path(key))
+        hit = isinstance(value, dict) and value.get("key") == dict(key)
+        _metric(self.metrics, "t0_reuse_proof_hits" if hit else "t0_reuse_proof_misses")
+        return value.get("result") if hit else None
+
+    def put(self, key, result) -> None:
+        try:
+            self.directory.mkdir(parents=True, exist_ok=True)
+            _atomic_write_json(self._path(key), {"key": dict(key), "result": result}, allow_nan=False)
+        except OSError:
+            pass  # only costs a later re-stream
 
 
 def seed_feedback_state(root: str | Path, state_root: str | Path) -> dict[str, Any]:
@@ -1152,7 +1450,8 @@ def seed_feedback_state(root: str | Path, state_root: str | Path) -> dict[str, A
     modern_discovery = retention.discover_snapshots(
         root, payload_projection=lambda snapshot: snapshot,
         snapshot_loader=lambda path: load_snapshot_handle(path, state_root, metrics),
-        snapshot_validator=lambda snapshot: bool(snapshot.valid))
+        snapshot_validator=lambda snapshot: bool(snapshot.valid),
+        reuse_proof_cache=_ReuseProofCache(state_root, metrics))  # the first Daily must not re-stream reused T0s
     modern_genuine = modern_discovery["genuine_snapshots"]
     if not modern_genuine and not corpus["genuine_artifacts"]:
         raise T0CorpusEmpty(f"{REASON_T0_CORPUS_EMPTY}:root={root}:t0_inventory={len(modern_discovery['inventory'])}"
@@ -1171,13 +1470,14 @@ def build_streaming_feedback(root: str | Path, output: str | Path, **kwargs) -> 
     """Serialize the complete build/reuse transaction, including crash recovery."""
     from feedback_publication_lock import publication_lock
     # Different output paths share derived checkpoints. Hold their own lease through pruning/assembly.
-    with publication_lock(output), publication_lock(Path(kwargs.get("state_root") or root) / PARTITION_DIR):
+    with publication_lock(output), publication_lock(Path(kwargs.get("state_root") or root) / PARTITION_DIR), \
+            retention.pre_handoff_boundary(kwargs.get("pre_handoff_session")):
         return _build_streaming_feedback(root, output, **kwargs)
 
 
 def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_root: str | Path | None = None,
                              metrics: dict[str, Any] | None = None, prior_summary: Mapping[str, Any] | None = None,
-                             stale_temp_seconds: float = 6 * 3600) -> dict[str, Any]:
+                             stale_temp_seconds: float = 6 * 3600, pre_handoff_session: str | None = None) -> dict[str, Any]:
     """Build (or reuse) one feedback artifact. Returns a small structured result; never returns the artifact."""
     root, output = Path(root), Path(output)
     state_root = Path(state_root) if state_root is not None else root
@@ -1215,7 +1515,8 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     modern_discovery = retention.discover_snapshots(
         root, payload_projection=lambda snapshot: snapshot,
         snapshot_loader=_timed_t0,
-        snapshot_validator=lambda snapshot: bool(snapshot.valid))
+        snapshot_validator=lambda snapshot: bool(snapshot.valid),
+        reuse_proof_cache=_ReuseProofCache(state_root, metrics))
     phases["discovery_t0_s"] = clock() - t0_started
     metrics["discovery_legacy_loader_s"] = round(loader_seconds["legacy"], 3)
     metrics["discovery_t0_loader_s"] = round(loader_seconds["t0"], 3)
@@ -1254,6 +1555,7 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
         if loaded is not None:
             snapshots[session] = loaded
     snapshots.update(modern_prices)
+    snapshots = _IndexedSnapshots(snapshots)
     phases["price_index_s"] = clock() - t
 
     from prospective_pit_capture_retention import load_marker, load_chain, io_known_at
@@ -1291,8 +1593,12 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
         "handoff_inventory": modern_discovery["handoff_snapshot_inventory"],
         "price_sources": {s: [v["raw_sha256"], v["size"]] for s, v in sorted(prices.sources.items())},
         "modern_price_sessions": sorted(modern_prices),
-        "future_chain": _future_chain_inputs(root, marker, as_of),
+        "future_chain": _future_chain_inputs(future_chain, marker, as_of),
     }
+    if pre_handoff_session:
+        # Only present for the boundary-restricted stage, so unbounded identities keep their shape.
+        input_manifest["boundary"] = {"pre_handoff_session": pre_handoff_session,
+                                      "rule": "CURRENT_SESSION_CANONICAL_HANDOFF_EXCLUDED"}
     # Data identity only: the same retained inputs keep the same digest across code changes, so FEEDBACK_CALL_RELATION
     # reports what the *evidence* did. Reuse additionally requires an identical code digest (below).
     input_digest = _sha256_bytes(_canon_bytes(input_manifest))
@@ -1303,10 +1609,13 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     relation = relate(prior_summary, inputs_summary)
 
     # -- Terminal reuse -----------------------------------------------------------------------------
+    # A changed input identity is not by itself a conflict: an equal-content retry (another calendar
+    # receipt with equal dates, a later attempt clock) may produce byte-identical output. The rebuild
+    # below decides by artifact identity in ``_publish``: equal content is accepted and recorded as an
+    # equivalence; different content is IMMUTABLE_ARTIFACT_CONFLICT and the completed artifact and its
+    # original lineage stay untouched.
     existing = read_completion(output)
-    if existing and existing.get("input_digest") != input_digest:
-        raise ImmutableOutputConflict("IMMUTABLE_INPUT_CONFLICT:" + str(output))
-    if existing and existing.get("input_digest") == input_digest and existing.get("code_digest") == code:
+    if existing and existing.get("code_digest") == code and _input_proven(existing, input_digest, code):
         phases["total_s"] = clock() - started
         return _result(OUTCOME_ALREADY_COMPLETE, output, existing, inputs_summary, relation, metrics, phases)
 
@@ -1315,7 +1624,7 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
     sources_by_session = _sources_by_session(modern_genuine, corpus["genuine_artifacts"])
     sessions = sorted(sources_by_session)
     dependencies = _PartitionDependencies(sources_by_session, settled, marker, input_manifest["future_chain"],
-                                          code, input_manifest["contracts"])
+                                          code, input_manifest["contracts"], future_settled=future_settled)
     partitions = _Partitions(state_root, dependencies, metrics)
     partitions.prune_other_runs(stale_temp_seconds=stale_temp_seconds)
     _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
@@ -1342,8 +1651,9 @@ def _build_streaming_feedback(root: str | Path, output: str | Path, *, state_roo
         partitions.finish()
         _prune_evaluator_inputs(state_root, protected_inputs)
         _metric(metrics, "evaluator_input_store_bytes", _directory_bytes(state_root / EVALUATOR_INPUT_DIR))
-        _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
-                       max_entries=SETTLED_STORE_MAX_ENTRIES)
+        if settled.entries.written:  # unchanged since the pre-evaluation prune otherwise
+            _prune_derived(state_root / SETTLED_STORE_DIR, max_bytes=SETTLED_STORE_MAX_BYTES,
+                           max_entries=SETTLED_STORE_MAX_ENTRIES)
         phases["evaluate_s"] = clock() - t
         settled.finish()
         t = clock()
@@ -1871,11 +2181,14 @@ def _publish(final_tmp: Path, output: Path, identity: str, size: int, raw_sha: s
     if output.exists():
         completion = read_completion(output)
         if completion is not None and completion.get("artifact_identity") == identity:
-            if completion.get("input_digest") != input_digest or completion.get("code_digest") != code:
-                # Same proven content under new code or a changed-but-equivalent input set: refresh the manifest so the
-                # next identical call reuses the output instead of recomputing it forever.
+            if completion.get("input_digest") == input_digest and completion.get("code_digest") != code:
+                # Same inputs, same proven content under new code: refresh so the next identical call reuses.
                 _write_completion(output, identity, completion["artifact_size"], completion["artifact_raw_sha256"], record_count,
                                   input_digest, code, inputs_summary)
+            elif completion.get("input_digest") != input_digest and not _input_proven(completion, input_digest, code):
+                # Different input identity, byte-identical content: keep the original input lineage and append
+                # the proven equivalence so a further identical retry is terminal instead of a rebuild.
+                _record_equivalence(output, completion, input_digest, code)
             return OUTCOME_ALREADY_RETAINED_EQUAL
         existing_sha = bas.source_hash(output)
         equal = existing_sha == raw_sha
@@ -1903,6 +2216,25 @@ def _write_completion(output: Path, identity, size, raw_sha, record_count, input
     manifest = {"contract_version": COMPLETION_CONTRACT_VERSION, "artifact_identity": identity, "artifact_path": output.name,
                 "artifact_size": size, "artifact_raw_sha256": raw_sha, "record_count": record_count, "input_digest": input_digest,
                 "code_digest": code, "inputs_summary": dict(inputs_summary), "format": "canonical_compact_json"}
+    _atomic_write_json(completion_manifest_path(output), manifest, allow_nan=False)
+
+
+EQUIVALENCE_LIMIT = 16
+
+
+def _input_proven(manifest: Mapping[str, Any], input_digest: str, code: str) -> bool:
+    if manifest.get("input_digest") == input_digest:
+        return True
+    return any(isinstance(e, Mapping) and e.get("input_digest") == input_digest and e.get("code_digest") == code
+               for e in manifest.get("equivalent_inputs") or [])
+
+
+def _record_equivalence(output: Path, completion: Mapping[str, Any], input_digest: str, code: str) -> None:
+    manifest = dict(completion)
+    proofs = [e for e in manifest.get("equivalent_inputs") or [] if isinstance(e, Mapping)]
+    proofs.append({"input_digest": input_digest, "code_digest": code, "proven_at": _now_utc(),
+                   "proof": "REBUILT_EQUAL_ARTIFACT_IDENTITY"})
+    manifest["equivalent_inputs"] = proofs[-EQUIVALENCE_LIMIT:]
     _atomic_write_json(completion_manifest_path(output), manifest, allow_nan=False)
 
 

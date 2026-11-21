@@ -26,7 +26,7 @@
     "canonical_financial_bundle_section.py": "5efebfd2f0a9a9c8c72cde263a1fc88b8aed703079584c03291bc504a91af93d",
     "canonical_financial_qualification_policy.py": "89a2ca58547aa7c3283a564199184eaeabbfa046b667d1e7e193c7a2324d0dd3",
     "canonical_market_bars.py": "41fb1d38e571e08e3849bd5300c6308c5f0e61a42e8a3f9143fd8380e5e02754",
-    "canonical_post_close_pipeline.py": "643298bf3ee392d906a651acf781dbd1aec36b401e71a58ffb258f4f81a79bf6",
+    "canonical_post_close_pipeline.py": "6d682d9cee0359a3fa50ca39c8b4d02c8a83c1ad2ed7bac625ab709879435c37",
     "canonical_trusted_subset_release.py": "cee8f5e46103912297ee73cdeab97884f2433068f5fb86321f9c0250f5a9f817",
     "company_profile_sync.py": "e2f20f65e4c43ef1870815b0b36a011a4f8897be1e7305ac67f6629480c62a9a",
     "company_subsidiaries_sync.py": "fd8ac7a4c5f4ebfe66a159b712d3ce81dfb7a2f443f21c7d473de9ab0834c033",
@@ -172,7 +172,7 @@
     "index_constituents_sync.py": "6f1e096bf8e36b4b7e30c278b6a01cbe36ba924e29f594fb78c3226934a8a00a",
     "index_membership_history.py": "fda94edbc5d2c4b2590d58ffc6d5486b18a64488e1195a0cddbeff16e479de6c",
     "instrument_master_sync.py": "f89e5bbeee8385981f609d8dc3d6ea170fed9f90e70fd06249d1d8f694c2eafe",
-    "integrated_decision_prospective_feedback.py": "8bf792f6b46d9e0d6028fb753254603b09f069d76ec0773e562fa2e157aee748",
+    "integrated_decision_prospective_feedback.py": "1b9a26d2c745d8ae997cec108a98b6613e232ffe74c0313a11f1ea53ad06979c",
     "kbs_quarterly_financial_retention.py": "65fe1244f4fc757bfbbcd666442324bd3875317856a8626888cd39ba21d36452",
     "liquidity_authority_contract.py": "a7601efa255bb5ab421e46121d3c7e503ff94bd5b6213882369e03ebab4cf13a",
     "long_term_company_economics_evidence.py": "f6880bf05f5b45b91bf0f040ba8b7b14ba7a553fc6b68b7e34a68465c95f1ca6",
@@ -611,10 +611,10 @@
     "price_basis_feature_fitness.py": "827b317546509ca3d086cdd4c23de449a3ec124947b08e3cebed57676b4ce779",
     "price_structure_breakout_context.py": "8abe47134077cfdfc03bdea192374bc2a34092d64912bd9c67525e73e3155388",
     "prospective_daily_rollforward.py": "5c2fcaa33de9451db1f58fb7e5e991e6f5a86a7e5757422092f5b3ec0c4c7793",
-    "prospective_decision_outcome_feedback.py": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2",
+    "prospective_decision_outcome_feedback.py": "0ddb1a75c1755fdccea48c5d539062537886bb7341d371495d45ee023399d31c",
     "prospective_decision_outcome_measurement.py": "1c2030769735a98b0d1fe7e14d7fa23189cec1b56002fec5a60ada5041853aa7",
-    "prospective_decision_retention.py": "3e21a7e4456316e9890f43850eead4dd8429842aeaa02d24b93e9f2d26d9ab38",
-    "prospective_feedback_streaming.py": "75943fffa0f79ae66b2540e2a68d1be4f3a52847e4b3a9a377bf6a3597bfc58f",
+    "prospective_decision_retention.py": "dabd8e247eed85a912cfa5306d82f768c7f8627dcc9f6579d37d3e7d87409241",
+    "prospective_feedback_streaming.py": "d2f7a2b64d7fd1bcbad6f5a51081e50612eff8d197f37a7f5e2dc85ff7e45067",
     "prospective_market_evidence_retention.py": "9bf33abdd28233d8c71eb45d3dc46cb49170206107413275be614934f0a2c5c1",
     "prospective_market_snapshot_contract.py": "2c2f675c498edd8a1b5ce1006c83191c24005e0542094218a9ce1f803a0b7bbf",
     "prospective_pit_capture.py": "7aadc9731c7950451868c08b672e5de561fc52f716fda71b2b2f5fb4e395b2d4",
@@ -1256,7 +1256,7 @@
     "tools/run_p3f9b_market_wide_exact_session_scaleout.py": "f7a3d01c2fa9d5da6e2c056af4ac809aa01e305384f2a8dd37df2114b4794f11",
     "tools/run_portfolio_pit_execution_acceptance.py": "ee4ee392e428eeb7e305348cff6ae2a19b5b781b6f65e190312be5901e283f20",
     "tools/run_price_basis_semantics_diagnostic.py": "1410b0c56f31490b2cc08e74fa38057ad8cd0b1d4180cc1a3d3037ae0d5cd73c",
-    "tools/run_prospective_decision_outcome_feedback.py": "c9d317844a8eceb6944dd389a221d9c85ac867b1b288edf7fe400be4a7625e9a",
+    "tools/run_prospective_decision_outcome_feedback.py": "5ed98a9ff868605aa11c6c8838e7d0630e9f407a5f4ad1a591dc744cfebfc107",
     "tools/run_prospective_decision_retention_outcome_maturation.py": "50786f2ce76db1491c5a3107814b38ac4bfd3f830f716bf05894eb4a85fa3524",
     "tools/run_prospective_pit_capture_acceptance.py": "d9879d15763c8f6818c96bcbe72ba31f5036e035da2e6b87e16c65291985e453",
     "tools/run_prospective_raw_pit_authority.py": "e00767f99d53b4a9b4b89b596eca43ffb2efa109fc97b20462a2e8985f79a385",
@@ -1303,7 +1303,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "30e992c5523fecccad431594fe18db319bf32e45486bf73b62cc1a968b7bf2db",
+    "tools/verify_retention_reader_transition.py": "0ca2459b61440fc9e718a45f85b38d58a311d5907181049f391ea802b1dc2834",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1909,6 +1909,67 @@
       "canonical_current_product_projections.py": "95a1fd4c75a0434919dbdacbdf91c5a8ab981b5a75a581c904db054985e4035a",
       "canonical_dashboard_runtime_release.py": "5ee518485da5894e7c11907c53e2ec0f07016ce1c0460d7bc01caf33372f51ed",
       "canonical_post_close_pipeline.py": "fa8915b1f8d1646c611f65e9a4c5b2950a46de0a8f6fd9cd54a63082d31c9d1a"
+    }
+  },
+  "tplus_retry_integrity_corrective": {
+    "base_commit": "2beffc479289be5ea17062ebc883f94da61176a1",
+    "scope": "TPLUS_RETRY_IDENTITY_PRE_HANDOFF_BOUNDARY_AND_REUSE_PROOF_MEMO_ONLY",
+    "changed_source_paths": [
+      "canonical_post_close_pipeline.py",
+      "integrated_decision_prospective_feedback.py",
+      "prospective_decision_outcome_feedback.py",
+      "prospective_decision_retention.py",
+      "prospective_feedback_streaming.py",
+      "tools/run_prospective_decision_outcome_feedback.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "source_transition": "tests/fixtures/tplus_retry_integrity_source_transition_v1.json",
+    "new_capacity_measurement": true,
+    "whole_daily_requalification": false,
+    "retained_component_measurement": {
+      "method": "ISOLATED_RE_ENACTMENT_ON_RETAINED_EVIDENCE_FIXED_EVIDENCE_CLOCK_SCRATCH_STATE_NOT_A_GENUINE_SESSION",
+      "through_session": "2026-11-20",
+      "seed": {
+        "exit": 33,
+        "wall_seconds": 2243
+      },
+      "post_seed_bootstrap": {
+        "wall_seconds": 331.4,
+        "peak_process_bytes": 1400975360
+      },
+      "baseline": {
+        "source": "RETAINED_2026_11_20_ATTEMPT_1_STATUS",
+        "pre_wall_seconds": 416.084,
+        "post_wall_seconds": 951.404,
+        "wall_seconds": 1367.488,
+        "peak_process_bytes": 1395011584
+      },
+      "candidate": {
+        "pre_wall_seconds": 188.099,
+        "post_wall_seconds": 223.863,
+        "wall_seconds": 411.962,
+        "peak_process_bytes": 1440681984,
+        "pre_artifact_identity": "prospective_decision_outcome_feedback:eb87bc1f672238cbe52f36a3f5923bde2f92ee709bfa9bb6b031567617197f7b",
+        "post_artifact_identity": "prospective_decision_outcome_feedback:0fe6a659b07210017d980e4ec521f8954530eb6a803fe8cd15ae3ec38017f80d",
+        "post_records": 82467,
+        "post_output_bytes": 2088890792,
+        "post_output_raw_sha256": "b200be45c0c2c0b3cd3842446d612e503f50da0d195dbcf9b582a3d8b446fe9d"
+      },
+      "retry": {
+        "pre_outcome": "ALREADY_COMPLETE",
+        "pre_wall_seconds": 50.165,
+        "post_outcome": "ALREADY_COMPLETE",
+        "post_wall_seconds": 51.792
+      }
+    },
+    "prior_source_sha256_lf": {
+      "canonical_post_close_pipeline.py": "643298bf3ee392d906a651acf781dbd1aec36b401e71a58ffb258f4f81a79bf6",
+      "integrated_decision_prospective_feedback.py": "8bf792f6b46d9e0d6028fb753254603b09f069d76ec0773e562fa2e157aee748",
+      "prospective_decision_outcome_feedback.py": "9b3f0bc97cf86c6040d3dfd0a8f0db1af6189a58fea073e893fa1ab494422af2",
+      "prospective_decision_retention.py": "3e21a7e4456316e9890f43850eead4dd8429842aeaa02d24b93e9f2d26d9ab38",
+      "prospective_feedback_streaming.py": "75943fffa0f79ae66b2540e2a68d1be4f3a52847e4b3a9a377bf6a3597bfc58f",
+      "tools/run_prospective_decision_outcome_feedback.py": "c9d317844a8eceb6944dd389a221d9c85ac867b1b288edf7fe400be4a7625e9a",
+      "tools/verify_retention_reader_transition.py": "30e992c5523fecccad431594fe18db319bf32e45486bf73b62cc1a968b7bf2db"
     }
   }
 }
