@@ -51,7 +51,9 @@ def test_d4a_does_not_change_the_e4_v2_digest():
     assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
     feedback_io = json.loads((ROOT / TPLUS_FEEDBACK_IO_MANIFEST).read_bytes())
     assert feedback_io["previous_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
-    assert e4.source_identity(ROOT, version="v2")["code_digest"] == feedback_io["active_e4_v2_digest"]
+    retry = json.loads((ROOT / "tests/fixtures/tplus_retry_integrity_source_transition_v1.json").read_bytes())
+    assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
+    assert e4.source_identity(ROOT, version="v2")["code_digest"] == retry["active_e4_v2_digest"]
 
 
 def test_other_sources_pass_through():
@@ -63,7 +65,9 @@ def test_d4a_successor_rejects_tamper(tmp_path, tamper):
     for relative in (STORAGE_REUSE_D4A_SOURCE, STORAGE_REUSE_D4A_ARCHIVE, STORAGE_REUSE_D4A_MANIFEST,
                      TPLUS_REAL_CORPUS_MANIFEST, "tests/fixtures/tplus_real_t0_corpus_v1_sources/canonical_post_close_pipeline.py.txt",
                      "tests/fixtures/velocity_projection_and_producer_timing_v1.json",
-                     "tests/fixtures/velocity_projection_and_producer_timing_v1_sources/canonical_post_close_pipeline.py.txt"):
+                     "tests/fixtures/velocity_projection_and_producer_timing_v1_sources/canonical_post_close_pipeline.py.txt",
+                     "tests/fixtures/tplus_retry_integrity_source_transition_v1.json",
+                     "tests/fixtures/tplus_retry_integrity_v1_sources/canonical_post_close_pipeline.py.txt"):
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / relative, target)

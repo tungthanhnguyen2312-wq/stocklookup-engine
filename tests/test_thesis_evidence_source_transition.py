@@ -95,6 +95,9 @@ def _copy_domain(tmp_path: Path) -> None:
                       DECISION_CONTEXT_MANIFEST, DECISION_CONTEXT_ARCHIVE,
                       LEGACY_SUMMARY_MANIFEST, LEGACY_SUMMARY_ARCHIVE,
                       TPLUS_FEEDBACK_IO_MANIFEST, TPLUS_FEEDBACK_IO_ARCHIVE])
+    retry = "tests/fixtures/tplus_retry_integrity_source_transition_v1.json"
+    relatives.append(retry)
+    relatives.extend(row["archive"] for row in json.loads((ROOT / retry).read_bytes())["sources"].values())
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -141,7 +144,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
     feedback_io = json.loads((ROOT / TPLUS_FEEDBACK_IO_MANIFEST).read_bytes())
     assert feedback_io["previous_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == feedback_io["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    retry = json.loads((ROOT / "tests/fixtures/tplus_retry_integrity_source_transition_v1.json").read_bytes())
+    assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == retry["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

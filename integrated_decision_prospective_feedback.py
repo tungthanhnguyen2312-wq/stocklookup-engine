@@ -101,6 +101,18 @@ def retained_session_price_observations(
     explicit resolved-session identities.  It is not a historical series
     reconstruction and it never fills a missing session from another date.
     """
+    view = getattr(snapshots_by_session, "price_observations_for", None)
+    if callable(view):
+        # Streaming-builder view (dependency recording / per-ticker memo): the same values, built
+        # by ``retained_session_price_observations_scan`` over the same underlying snapshots.
+        return view(ticker)
+    return retained_session_price_observations_scan(snapshots_by_session, ticker)
+
+
+def retained_session_price_observations_scan(
+    snapshots_by_session: Mapping[str, Mapping[str, Any]] | None, ticker: str,
+) -> dict[str, Mapping[str, Any]]:
+    """The exact-session join itself (see ``retained_session_price_observations``)."""
     if not snapshots_by_session:
         return {}
     rows: dict[str, Mapping[str, Any]] = {}
@@ -181,11 +193,16 @@ def _forward_horizon(*, as_of_session: str, horizon_sessions: int, chain: Sequen
         if resolved["state"] != "COMPLETE":
             return {**base, "status": PENDING if resolved["state"] == "PROJECTED_ONLY" else resolved["state"],
                     "session_chain_contract": chain.contract_version, "session_window": resolved}
-    index = chain.index(as_of_session)
-    target_index = index + horizon_sessions
-    if target_index >= len(chain):
-        return {**base, "status": PENDING}
-    future_session = resolved["target"] if hasattr(chain, "next_n_sessions") else chain[target_index]
+        # COMPLETE proves the T0 and n later sessions are realized captures, so at least n chain
+        # sessions follow the T0 and the positional bound below can never fail. Not reading it keeps
+        # a matured row independent of the chain's total length (exactly the same result).
+        future_session = resolved["target"]
+    else:
+        index = chain.index(as_of_session)
+        target_index = index + horizon_sessions
+        if target_index >= len(chain):
+            return {**base, "status": PENDING}
+        future_session = chain[target_index]
     t0_row, future_row = start, observations.get(future_session)
     if t0_row is None or future_row is None:
         return {
@@ -250,24 +267,24 @@ def evaluate_decision_forward_outcome(*, decision_record: Mapping[str, Any], p3f
     """
     ticker, as_of_session = decision_record["ticker"], decision_record["as_of_session"]
     observations = retained_session_price_observations(retained_session_snapshots, ticker)
-    if not observations:
+    if p3f9b_snapshot and not observations:  # _price_observations of no snapshot is always empty
         observations = _price_observations(p3f9b_snapshot, ticker)
     if hasattr(governed_chain, "realized_prefix_after"):
         # All existing path consumers see the same strict realized prefix. Future
         # projections and later captures past a missed session cannot be skipped.
+        # Every consumer below reads by session key only, so selecting the prefix days by key
+        # equals filtering every retained session (same keys and values).
         days = [as_of_session] + governed_chain.realized_prefix_after(as_of_session, max(FORWARD_HORIZONS.values()))
-        observations = {d: r for d, r in observations.items() if d in days}
+        observations = {d: observations[d] for d in dict.fromkeys(days) if d in observations}
     horizons = {name: _forward_horizon(as_of_session=as_of_session, horizon_sessions=n, chain=governed_chain, observations=observations) for name, n in FORWARD_HORIZONS.items()}
     max_n = max(FORWARD_HORIZONS.values())
     index = governed_chain.index(as_of_session) if as_of_session in governed_chain else None
     t0_row = observations.get(as_of_session)
     close_path_returns: list[float] = []
     if index is not None and t0_row and isinstance(t0_row.get("close"), (int, float)) and t0_row["close"]:
-        for step in range(1, max_n + 1):
-            step_index = index + step
-            if step_index >= len(governed_chain):
-                break
-            step_row = observations.get(governed_chain[step_index])
+        # The next max_n chain positions, truncated at the chain end (the former length bound).
+        for step_session in governed_chain[index + 1:index + max_n + 1]:
+            step_row = observations.get(step_session)
             if step_row and _qualified_close(step_row.get("close")) and _compatible_close_series(t0_row, step_row):
                 close_path_returns.append(step_row["close"] / t0_row["close"] - 1)
     if index is None:

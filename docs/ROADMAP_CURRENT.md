@@ -8,7 +8,7 @@ Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md).
 ## NOW — TPLUS_INCREMENTAL_COST_V2 (ACTIVE)
 
 [Scope](tplus_incremental_cost_v2_contract.md). PR267/258 released; 11-18 bootstrap
-completed in 1,561.522 s. Warm acceptance pending; ACTIVE, no successor.
+completed in 1,561.522 s. 11-21 local retry fix: re-enactment 188/224 s; ACTIVE.
 [Health/Q3 evidence](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md).
 
 ## PRIOR — [16-GiB recovery](owner_daily_16gb_host_and_pipeline_memory_recovery_v1_contract.md) COMPLETE `f4347143`

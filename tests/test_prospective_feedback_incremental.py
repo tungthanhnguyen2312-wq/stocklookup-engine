@@ -168,6 +168,15 @@ def test_strict_future_context_change_never_uses_a_legacy_extension_proof(tmp_pa
     output = tmp_path / "changed.json"
     result = _build(root, output, state)
     assert result["metrics"]["partitions_reused_exact"] == 3  # before the marker: no dependency on the future context
-    assert result["metrics"]["partitions_built"] == len(sessions) - 3
+    # A relabelled context with identical chain answers and prices is proven by replay, never by extension.
+    assert result["metrics"]["partitions_reused_replay"] == len(sessions) - 3
     assert result["metrics"].get("partitions_reused_extension", 0) == 0
     _parity(root, result, output)
+    # A chain whose answers actually change (a later realized session) rebuilds the affected partitions.
+    monkeypatch.setattr(store, "load_chain", lambda r, as_of: _FutureChain([s for s in sessions if s >= marker] + ["2026-01-31"]))
+    grown_path = tmp_path / "grown.json"
+    grown = _build(root, grown_path, state)
+    assert grown["metrics"]["partitions_built"] > 0
+    assert grown["metrics"].get("partitions_reused_extension", 0) == 0
+    assert grown["artifact_identity"] != result["artifact_identity"]
+    _parity(root, grown, grown_path)

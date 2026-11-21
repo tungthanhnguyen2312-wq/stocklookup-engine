@@ -22,6 +22,8 @@ from retained_evidence_catalog import historical_paths, original_path
 from collections import Counter
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 
 CONTRACT_VERSION = "prospective_decision_snapshot/v1"
@@ -435,11 +437,40 @@ def _operation_manifests(root: Path) -> dict[str, dict[str, Any]]:
     return rows
 
 
+_EXCLUDED_HANDOFF_SESSIONS: ContextVar[frozenset[str]] = ContextVar("excluded_handoff_sessions", default=frozenset())
+
+
+@contextmanager
+def pre_handoff_boundary(session: str | None):
+    """Read retained evidence as it stood before ``session``'s own canonical handoff existed.
+
+    The Pre-handoff feedback stage is defined as what outcome feedback could see before this
+    session's handoff bound its T0. A retry of the same Daily finds that handoff already written by
+    the first attempt; hiding exactly that one bundle (never a date cutoff: the session's capture,
+    decision artifact and enrichment legitimately precede the handoff) keeps the stage boundary
+    deterministic. ``None`` is the unchanged full view used by the Post-handoff stage.
+    """
+    token = _EXCLUDED_HANDOFF_SESSIONS.set(frozenset({session}) if session else frozenset())
+    try:
+        yield
+    finally:
+        _EXCLUDED_HANDOFF_SESSIONS.reset(token)
+
+
+def handoff_bundle_excluded(path: Path, bundle: Mapping[str, Any] | None) -> bool:
+    excluded = _EXCLUDED_HANDOFF_SESSIONS.get()
+    if not excluded:
+        return False
+    return Path(path).parent.name in excluded or (isinstance(bundle, Mapping) and bundle.get("session") in excluded)
+
+
 def _handoff_by_snapshot(root: Path) -> dict[str, list[dict[str, Any]]]:
     result: dict[str, list[dict[str, Any]]] = {}
     base = root / "operations-review" / "canonical-post-close-v1"
     for path in historical_paths(root, "operations-review/canonical-post-close-v1", "*/session_handoff_bundle.json"):
         bundle = _load(path)
+        if handoff_bundle_excluded(path, bundle):
+            continue
         snapshot = (bundle or {}).get("prospective_decision_snapshot") or {}
         identity = snapshot.get("identity") if isinstance(snapshot, Mapping) else None
         if isinstance(identity, str) and identity:
@@ -468,7 +499,12 @@ def _verified_origination_operation(root, operation, *, identity, session, decis
                 (manifest.get("outputs") or {}).get("integrated_investment_decision_product") == decision)
 
 
-def _original_reuse_reasons(root, path, snapshot, handoff, operations):
+def raw_hash_matches(snapshot, index) -> bool:
+    raw = getattr(snapshot, "raw_sha256", None)
+    return isinstance(raw, str) and raw == index.get("snapshot_file_sha256")
+
+
+def _original_reuse_reasons(root, path, snapshot, handoff, operations, proof_cache=None):
     """Two independent operation proofs joined only by the verified original seal.
 
     Called only for explicit reuse/mismatches. Existing same-operation admission is
@@ -563,6 +599,18 @@ def _original_reuse_reasons(root, path, snapshot, handoff, operations):
             sealed = list(path.parent.parent.glob("*/prospective_t0_snapshot_write_receipt.json"))
             if len(sealed) != 1 or sealed[0].parent.resolve() != path.parent.resolve():
                 raise ValueError("AMBIGUOUS_ORIGINAL_T0_SEALS")
+        memo_key = None
+        if proof_cache is not None and not isinstance(snapshot.get("records"), Mapping):
+            # The record-level origination proof is a pure function of the exact snapshot bytes
+            # (already proven by the caller's fingerprint-anchored handle), the sealed index and
+            # receipt bytes, and the two operation/decision identities. Only a positive proof is
+            # memoized; any binding change is a different key and re-streams the snapshot.
+            memo_key = {"contract": "original_t0_reuse_record_proof/v1", "snapshot_raw_sha256": snapshot.raw_sha256,
+                        "snapshot_bytes": snapshot.size, "snapshot_identity": identity, "session": session,
+                        "index_sha256": index.get("artifact_sha256"), "receipt_identity": receipt.get("artifact_identity"),
+                        "original_operation": original, "decision": decision, "decision_count": snapshot.get("decision_count")}
+            if raw_hash_matches(snapshot, index) and proof_cache.get(memo_key) == {"verified_record_count": snapshot.get("decision_count")}:
+                return []
         count = 0
         def verify_record(ticker, row):
             nonlocal count
@@ -591,6 +639,8 @@ def _original_reuse_reasons(root, path, snapshot, handoff, operations):
             raise ValueError("ORIGINAL_WRITE_HASH_OR_STREAM_SOURCE_CHANGED")
         if count != snapshot.get("decision_count"):
             raise ValueError("SEALED_RECORD_COUNT")
+        if memo_key is not None:
+            proof_cache.put(memo_key, {"verified_record_count": count})
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         return ["ORIGINAL_T0_SEAL_OR_RECORD_PROOF_INVALID"]
     return []
@@ -601,6 +651,8 @@ def _handoff_snapshot_inventory(root: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for path in historical_paths(root, "operations-review/canonical-post-close-v1", "*/session_handoff_bundle.json"):
         bundle = _load(path) or {}
+        if handoff_bundle_excluded(path, bundle):
+            continue
         declared = bundle.get("prospective_decision_snapshot") or {}
         rows.append({
             "session": bundle.get("session"), "canonical_handoff_path": _relative(root, path),
@@ -613,7 +665,8 @@ def _handoff_snapshot_inventory(root: Path) -> list[dict[str, Any]]:
 
 def discover_snapshots(root: str | Path, *, payload_projection: Callable[[Mapping[str, Any]], Mapping[str, Any]] | None = None,
                        snapshot_loader: Callable[[Path], Mapping[str, Any] | None] | None = None,
-                       snapshot_validator: Callable[[Mapping[str, Any]], bool] | None = None) -> dict[str, Any]:
+                       snapshot_validator: Callable[[Mapping[str, Any]], bool] | None = None,
+                       reuse_proof_cache: Any = None) -> dict[str, Any]:
     """Inventory immutable snapshots and admit only canonical-operation-bound ones.
 
     ``snapshot_loader``/``snapshot_validator`` are resource-containment seams (header-only handle plus a
@@ -666,7 +719,7 @@ def discover_snapshots(root: str | Path, *, payload_projection: Callable[[Mappin
             if bundle.get("integrated_investment_decision_product_identity") != source.get("artifact_identity"):
                 mismatch.append("HANDOFF_SOURCE_DECISION_IDENTITY_MISMATCH")
             if mismatch or bound.get("retention") == "ORIGINAL_SESSION_T0_REUSED":
-                reuse_reasons = _original_reuse_reasons(repository, path, snapshot, handoff, operations)
+                reuse_reasons = _original_reuse_reasons(repository, path, snapshot, handoff, operations, reuse_proof_cache)
                 if reuse_reasons:
                     reasons.extend(mismatch + reuse_reasons)
                 else:

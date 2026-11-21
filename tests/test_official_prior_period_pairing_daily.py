@@ -222,8 +222,11 @@ def test_active_coupled_digest_refuses_both_prior_declared_and_main_receipts():
     assert context_fp["previous_e4_v2_digest"] == summary_fp["active_e4_v2_digest"]
     feedback_io = json.loads((ROOT / "tests/fixtures/tplus_feedback_io_source_transition_v1.json").read_bytes())
     assert feedback_io["previous_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
-    assert live["code_digest"] == feedback_io["active_e4_v2_digest"]
-    for old in (row["prior_declared_e4_v2_digest"], row["base_live_e4_v2_digest"], row["active_e4_v2_digest"]):
+    retry = json.loads((ROOT / "tests/fixtures/tplus_retry_integrity_source_transition_v1.json").read_bytes())
+    assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
+    assert live["code_digest"] == retry["active_e4_v2_digest"]
+    for old in (row["prior_declared_e4_v2_digest"], row["base_live_e4_v2_digest"], row["active_e4_v2_digest"],
+                feedback_io["active_e4_v2_digest"]):
         assert old != live["code_digest"]
         assert not e4.candidate_reuse_eligible({"source_version": "v2",
             "contract_version": "e4_infrastructure_source/v2", "code_digest": old,

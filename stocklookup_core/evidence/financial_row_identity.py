@@ -148,6 +148,10 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         ("income_statement", "01"): (None, "GROSS_REVENUE", ("revenue", "sales", "doanh thu")),
         ("income_statement", "02"): (None, "REVENUE_DEDUCTIONS", ("deductions", "giam tru")),
         ("income_statement", "24"): (None, "REPORTED_BORROWING_COSTS", ("borrowing costs", "chi phi lai vay")),
+        # Circular 334/2016 securities-company income statement: code 52 is borrowing cost inside
+        # financial expenses (the sector taxonomy's ``borrowing_costs``). The industrial form uses
+        # 52 for deferred income tax, which fails the literal label. No canonical metric/alias.
+        ("income_statement", "52"): (None, "REPORTED_BORROWING_COSTS", ("borrowing costs", "interest expense", "chi phi lai vay", "chi phi di vay")),
         ("income_statement", "60"): ("net_income", "TOTAL_PROFIT_AFTER_TAX", ("profit after tax", "profit after corporate income tax", "loi nhuan sau thue")),
         ("income_statement", "20"): ("gross_profit", "GROSS_PROFIT", ("gross profit", "loi nhuan gop")),
         ("income_statement", "50"): (None, "PROFIT_BEFORE_TAX", ("profit before tax", "loi nhuan truoc thue")),
@@ -186,6 +190,10 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         blockers.append("TOTAL_PARENT_PROFIT_IDENTITY_CONFLICT")
     if statement_family == "income_statement" and str(line_code) == "61" and any(term in folded for term in ("non-controlling", "non controlling", "khong kiem soat")):
         blockers.append("PARENT_NCI_PROFIT_IDENTITY_CONFLICT")
+    if (concept == "REPORTED_BORROWING_COSTS" and str(line_code) == "52"
+            and any(term in folded for term in ("cho vay", "phai thu", "loans and receivables", "receivable", "loss"))):
+        # A combined "borrowing cost and loan/receivable loss" line is not a pure borrowing cost.
+        blockers.append("COMPOSITE_FINANCE_COST_ROW_NOT_PURE_BORROWING_COST")
     if concept == "TOTAL_ASSETS" and any(term in folded for term in ("current assets", "non-current", "non current", "other assets")):
         blockers.append("SUBTOTAL_IS_NOT_TOTAL_ASSETS")
     if concept == "TOTAL_LIABILITIES" and any(term in folded for term in ("current liabilities", "non-current", "other liabilities")):
