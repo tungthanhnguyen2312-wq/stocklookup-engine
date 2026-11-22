@@ -335,6 +335,10 @@ def _financial_context_for_ticker(
     return dict(record)
 
 
+#: Additive valuation-summary fields the brief passes through when present.
+_VALUATION_BASIS_PASSTHROUGH = ("pe_basis", "ps_basis", "peer_relative_drivers", "peer_relative_qualifications")
+
+
 def _research_safe_valuation_methods(methods: Mapping[str, Any] | None) -> dict[str, Any]:
     """Keep valuation method fitness/context while excluding prohibited target/probability fields.
 
@@ -377,6 +381,10 @@ def build_watchlist_record(*, ticker: str, current: Mapping[str, Any] | None, ta
         "legacy_stance": legacy.get("legacy_stance"),
         "posture_transition": (posture_transition_row or {}).get("transition", "UNAVAILABLE"),
         "fundamental_state": current.get("fundamental_state"), "fundamental_support": current.get("fundamental_support"),
+        # The scope of the fundamental read, beside it: BALANCE_SHEET_ONLY names the statement
+        # families that did not vote (passthrough; absent on records that predate it).
+        **({"fundamental_evidence_scope": (current.get("financial_composite_context") or {})["evidence_scope"]}
+           if "evidence_scope" in (current.get("financial_composite_context") or {}) else {}),
         # The compact Financial V2 context contains only deterministic direction/state, feature
         # fitness, own-history context, blocker reasons, and lineage.  It is deliberately not a
         # raw statement export or an invitation for AI to recompute a metric.
@@ -391,6 +399,11 @@ def build_watchlist_record(*, ticker: str, current: Mapping[str, Any] | None, ta
             "ps_multiple": val.get("ps_multiple"), "ev_ebitda_multiple": val.get("ev_ebitda_multiple"),
             "peer_relative_state": val.get("peer_relative_state"),
             "own_history_state": val.get("own_history_state"),
+            # Which method, denominator period, scope, lineage, freshness and integrity each headline
+            # P/E / P/S is, and which same-method cohorts produced the peer verdict (passthrough).
+            # Emitted only when the Integrated Decision carries them, so an older record keeps its
+            # exact prior brief bytes.
+            **{key: val[key] for key in _VALUATION_BASIS_PASSTHROUGH if key in val},
         },
         # MARKET_WIDE_FUNDAMENTAL_VALUATION_ANALYTICAL_PRODUCT_V1 section 18: the AI-facing
         # product must expose the joined fundamental+valuation composite read alongside its own

@@ -1,0 +1,40 @@
+{
+  "contract_version": "valuation_output_truthfulness_source_transition/v1",
+  "base_commit": "f24956623666ce1b0e85637d159bd4153d435b02",
+  "scope": "EXACT_ADDITIVE_VALUATION_METHOD_BASIS_AND_FUNDAMENTAL_SCOPE_PRESENTATION_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "1375eb72e7ce95aea3e658121d459b4fe95a75d1a5173f1bd87903f3592e66a3",
+  "active_e4_v2_digest": "e13591775d31bab371b307889896a8e0735f788b90149e9e4cb101541735e644",
+  "sources": {
+    "ai_research_session_delivery.py": {
+      "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/ai_research_session_delivery.py.txt",
+      "prior_sha256_lf": "f67ec201ed9e9b063caee879234050f2e2d9d1876ce7057bcf18c4ea39afd055",
+      "active_sha256_lf": "7473ef1e7e2ad9f366bb3afa618e677d538564dbb23985d4fa6ae31481ee36fe"
+    },
+    "stocklookup_core/decision/daily_integrated_decision_brief.py": {
+      "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/decision/daily_integrated_decision_brief.py.txt",
+      "prior_sha256_lf": "2b158be454eb87cc29aeadd6b4c37f48160d946b24aec4d8fe4c148055caf6d7",
+      "active_sha256_lf": "a415d0569e6196829ee2819ad790d3ee5a862fe29db0fc68640c94b15f8e8803"
+    },
+    "stocklookup_core/decision/integrated_investment_decision_product.py": {
+      "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/decision/integrated_investment_decision_product.py.txt",
+      "prior_sha256_lf": "48b2d51d2cd261981f328a6fa17636f022ee10e208de1cd89f2af8ec73225299",
+      "active_sha256_lf": "c8701ceb8d9811f1b2f20aa41df9fed3f972f9f386b369e06309647ca11483d7"
+    },
+    "stocklookup_core/financial/fundamental_signal_consumption_contract.py": {
+      "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/financial/fundamental_signal_consumption_contract.py.txt",
+      "prior_sha256_lf": "c7a46b5a80c01437b73a93eddda7df72e6f89b67c1e6d595e98122c55b6eb041",
+      "active_sha256_lf": "8dbff6000d8d2b09b20c33d67e61c812573f8e1290315ceff0628358fcc89da4"
+    },
+    "stocklookup_core/research/asymmetric_dislocation_research.py": {
+      "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/research/asymmetric_dislocation_research.py.txt",
+      "prior_sha256_lf": "2c4613baedc63344b0e585d174d8c1ea0a11042d9c7bb11290eff19b2138df71",
+      "active_sha256_lf": "7c29bb5294205da40d020eb5c30cec5249a58e497ee9f95c0e8fcd05ebf6a6b4"
+    },
+    "stocklookup_core/valuation/current_research_valuation_context.py": {
+      "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/valuation/current_research_valuation_context.py.txt",
+      "prior_sha256_lf": "917945e45768f93e395ae20806af6d72ac0bf1ce96f31c18c435225d4d8ca52b",
+      "active_sha256_lf": "d4484af26e8304de55d93b056fd43cd9f0709830c908d82478afc2c00314b1ff"
+    }
+  }
+}

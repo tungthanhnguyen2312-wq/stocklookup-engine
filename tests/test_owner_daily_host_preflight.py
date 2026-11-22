@@ -447,7 +447,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     codec = live_receipt["record_subtree_codec_candidate"]
 
     def successor_baseline_pin(path, *successors):
-        for entry in successors:
+        # The newest corrective is every chain's last successor before the live pin.
+        for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"]):
             if path in entry["prior_source_sha256_lf"]:
                 return entry["prior_source_sha256_lf"][path]
         return live_receipt["source_sha256"][path]
@@ -804,8 +805,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{retry['base_commit']}:{path}"], cwd=root)
         assert retry["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path)
     prior_receipt["tplus_retry_integrity_corrective"] = retry
 
     borrowing = live_receipt["securities_borrowing_cost_row_identity_corrective"]
@@ -821,6 +821,32 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     current_borrowing = (root / borrowing_path).read_bytes().replace(b"\r\n", b"\n")
     prior_receipt["source_sha256"][borrowing_path] = hashlib.sha256(current_borrowing).hexdigest()
     prior_receipt["securities_borrowing_cost_row_identity_corrective"] = borrowing
+
+    truthfulness = live_receipt["valuation_output_truthfulness_corrective"]
+    truthfulness_paths = [
+        "ai_research_session_delivery.py",
+        "stocklookup_core/decision/daily_integrated_decision_brief.py",
+        "stocklookup_core/decision/integrated_investment_decision_product.py",
+        "stocklookup_core/financial/fundamental_signal_consumption_contract.py",
+        "stocklookup_core/research/asymmetric_dislocation_research.py",
+        "stocklookup_core/valuation/current_research_valuation_context.py",
+        "tools/verify_retention_reader_transition.py",
+    ]
+    assert truthfulness["scope"] == "ADDITIVE_VALUATION_METHOD_BASIS_AND_FUNDAMENTAL_SCOPE_PRESENTATION_ONLY"
+    assert truthfulness["new_capacity_measurement"] is False
+    assert truthfulness["whole_daily_requalification"] is False
+    assert truthfulness["policy_effect"] == "NONE_POSTURE_DECISION_IDENTITY_SUPPORTS_COUNTERS_UNCHANGED"
+    assert truthfulness["changed_source_paths"] == truthfulness_paths
+    assert truthfulness["base_commit"] == "f24956623666ce1b0e85637d159bd4153d435b02"
+    # The estimated IID growth stays inside the live requalification cap over the 2026-11-20 IID.
+    assert 2400019345 + truthfulness["iid_byte_delta_estimate"]["added_bytes"] < preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES
+    for path in truthfulness_paths:
+        previous = subprocess.check_output(["git", "show", f"{truthfulness['base_commit']}:{path}"], cwd=root)
+        assert truthfulness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["valuation_output_truthfulness_corrective"] = truthfulness
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
