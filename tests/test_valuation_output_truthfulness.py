@@ -189,6 +189,42 @@ def test_pan_total_equity_peer_verdict_is_qualified_not_changed():
         "ANNUAL_REPORTED_PERIOD_DENOMINATOR_COHORT", "PEER_COHORT_NOT_INDUSTRY_MATCHED"}
 
 
+def test_pan_total_npat_pe_is_labelled_not_parent_attributable_value_unchanged():
+    # Retained 2026-11-20 PAN P/E: market cap over FY2024 net_income 1,167,068,107,309 (code 60,
+    # profit after tax before NCI); parent-attributable FY2024 is ~594 bn. The value is kept as is.
+    summary, supports, counters, _ = _summary(pan())
+    assert summary["pe_multiple"] == 3.447360346069988
+    assert summary["pe_basis"]["earnings_attribution"] == "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI"
+    assert "EARNINGS_INCLUDE_NCI_NOT_PARENT_ATTRIBUTABLE" in summary["pe_basis"]["limitations"]
+    assert "earnings_attribution" not in summary["ps_basis"]
+    assert supports == ["ATTRACTIVE_RELATIVE_RESEARCH_PEER_VALUATION"] and counters == []
+
+
+def test_pe_peer_driver_over_total_npat_qualifies_the_verdict():
+    record = pan()
+    record["peer_relative"]["P/E"] = _peer(0.1, 6, "2024")
+    summary, *_ = _summary(record)
+    assert summary["peer_relative_state"] == "CHEAP_VS_PEERS"
+    drivers = {row["method"]: row for row in summary["peer_relative_drivers"]}
+    assert drivers["P/E"]["earnings_attribution"] == "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI"
+    assert "earnings_attribution" not in drivers["P/S"]
+    assert "TOTAL_EARNINGS_PE_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE" in summary["peer_relative_qualifications"]
+
+
+@pytest.mark.parametrize("metric, attribution, limit", [
+    ("attributable_net_income", "PARENT_ATTRIBUTABLE", None),
+    ("net_profit_parent", "PARENT_ATTRIBUTABLE", None),
+    ("operating_profit", "ATTRIBUTION_UNSPECIFIED", "EARNINGS_ATTRIBUTION_NOT_RETAINED"),
+])
+def test_pe_earnings_attribution_is_read_from_the_methods_own_metric(metric, attribution, limit):
+    record = hpg()
+    record["methods"]["P/E"] = _legacy("P/E", 14.0, metric)
+    basis = _summary(record)[0]["pe_basis"]
+    assert basis["earnings_attribution"] == attribution
+    assert "EARNINGS_INCLUDE_NCI_NOT_PARENT_ATTRIBUTABLE" not in basis["limitations"]
+    assert (limit in basis["limitations"]) if limit else True
+
+
 def test_verdict_resting_only_on_annual_cohorts_says_so_and_market_cap_never_drives():
     record = pan()
     del record["peer_relative"]["P/B_CURRENT_RESEARCH"]

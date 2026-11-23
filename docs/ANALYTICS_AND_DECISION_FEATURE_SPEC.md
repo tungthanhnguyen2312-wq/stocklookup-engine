@@ -591,6 +591,12 @@ as-of period, basis and `financial_period_freshness/v1` status. Rules that are n
   decision session (the price session never sets it), the denominator-integrity row, and the status
   of the other methods of the family. An annual denominator under a current price stays visible as
   qualified research context; it is never relabelled TTM and no value is recomputed.
+  `pe_basis.earnings_attribution` says whose earnings the denominator is, read from the method's
+  own metric: corporate `net_income` is total profit after tax including non-controlling interests
+  (`TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI`, limitation `EARNINGS_INCLUDE_NCI_NOT_PARENT_ATTRIBUTABLE`),
+  so it is not a parent-shareholder P/E where NCI is material. A P/E peer driver over it adds
+  `TOTAL_EARNINGS_PE_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE`. Switching the denominator
+  to parent-attributable earnings is a method change and is not made here.
 - **Peer verdicts name their cohorts.** `peer_relative_drivers` lists the same-method cohorts that
   produced `peer_relative_state` (producer thresholds, size context excluded) and
   `peer_relative_qualifications` what the verdict cannot claim: total-equity P/B with NCI not

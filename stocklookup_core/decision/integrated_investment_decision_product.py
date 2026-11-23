@@ -1111,6 +1111,11 @@ def _headline_multiple_basis(family: str, method_id: str | None, item: Mapping[s
         limitations.append(f"DENOMINATOR_PERIOD_{freshness_status}")
     if item.get("price_session") and periods and not is_ttm:
         limitations.append("CURRENT_PRICE_OVER_HISTORICAL_PERIOD_DENOMINATOR")
+    attribution = None
+    if family == "P/E":
+        attribution, attribution_limit = _earnings_attribution(item)
+        if attribution_limit:
+            limitations.append(attribution_limit)
     for code in item.get("limitations") or []:
         if code not in limitations:
             limitations.append(str(code))
@@ -1164,8 +1169,34 @@ def _headline_multiple_basis(family: str, method_id: str | None, item: Mapping[s
         "integrity": ({"status": integrity.get("status"), "strict_valuation_use": integrity.get("strict_valuation_use"),
                        "reason_codes": list(integrity.get("reason_codes") or [])} if integrity else None),
         "alternative_methods": alternatives,
+        **({"earnings_attribution": attribution} if attribution else {}),
         "limitations": limitations,
     }
+
+
+#: Earnings metrics that are profit after tax before deducting non-controlling interests (code 60).
+_TOTAL_EARNINGS_METRICS = frozenset({"net_income"})
+#: Earnings metrics attributable to the parent's shareholders (code 61 or a bank/securities equivalent).
+_PARENT_EARNINGS_METRICS = frozenset({"attributable_net_income", "net_income_attributable_to_parent",
+                                      "net_income_parent", "net_profit_parent", "profit_after_tax_parent"})
+
+
+def _earnings_attribution(item: Mapping[str, Any]) -> tuple[str, str | None]:
+    """Whose earnings a P/E-family denominator is, read from the method's own retained metric.
+
+    ``net_income`` is total profit after tax (it includes non-controlling interests), so a P/E over it
+    is not a parent-shareholder multiple for an issuer with material NCI. Labels only; never recomputes.
+    """
+    metrics = {str(row["canonical_metric"]) for row in (item.get("financial_inputs") or [])
+               if isinstance(row, Mapping) and row.get("canonical_metric")}
+    if not metrics:
+        earnings = (item.get("input_identities") or {}).get("earnings") or item.get("denominator_feature")
+        metrics = {str(earnings)} if earnings else set()
+    if metrics and metrics <= _PARENT_EARNINGS_METRICS:
+        return "PARENT_ATTRIBUTABLE", None
+    if metrics and metrics <= _TOTAL_EARNINGS_METRICS:
+        return "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI", "EARNINGS_INCLUDE_NCI_NOT_PARENT_ATTRIBUTABLE"
+    return "ATTRIBUTION_UNSPECIFIED", "EARNINGS_ATTRIBUTION_NOT_RETAINED"
 
 
 def _peer_relative_verdict_basis(val_rec: Mapping[str, Any], interpretation: str, *,
@@ -1186,17 +1217,22 @@ def _peer_relative_verdict_basis(val_rec: Mapping[str, Any], interpretation: str
             continue
         basis = detail.get("basis") or {}
         method = methods.get(method_id) if isinstance(methods.get(method_id), Mapping) else {}
-        drivers.append({
+        driver = {
             "method": method_id, "percentile": percentile, "peer_count": detail.get("peer_count"),
             "period_basis": basis.get("period_basis") or method.get("period_basis"),
             "compatibility_class": basis.get("compatibility_class"),
             "equity_definition": method.get("equity_definition"),
             "cohort_scope": ("SAME_METHOD_SAME_BASIS_COHORT_" + str(basis.get("cohort"))) if basis.get("cohort")
                             else "SAME_METHOD_SAME_BASIS_ENTITY_CLASS_COHORT_NOT_INDUSTRY_MATCHED",
-        })
+        }
+        if method_id.startswith("P/E"):
+            driver["earnings_attribution"] = _earnings_attribution(method)[0]
+        drivers.append(driver)
     qualifications: list[str] = []
     if any(row["equity_definition"] and "INCLUDES_NCI" in str(row["equity_definition"]) for row in drivers):
         qualifications.append("TOTAL_EQUITY_PB_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE")
+    if any(row.get("earnings_attribution") == "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI" for row in drivers):
+        qualifications.append("TOTAL_EARNINGS_PE_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE")
     stale = [row for row in drivers if str(row["period_basis"] or "") not in _NON_PERIOD_BASES
              and str(row["period_basis"]).isdigit()]
     if stale:

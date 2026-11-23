@@ -4,7 +4,7 @@
   "scope": "EXACT_ADDITIVE_VALUATION_METHOD_BASIS_AND_FUNDAMENTAL_SCOPE_PRESENTATION_ONLY",
   "release_authority": "NOT_GRANTED",
   "previous_e4_v2_digest": "1375eb72e7ce95aea3e658121d459b4fe95a75d1a5173f1bd87903f3592e66a3",
-  "active_e4_v2_digest": "e13591775d31bab371b307889896a8e0735f788b90149e9e4cb101541735e644",
+  "active_e4_v2_digest": "1d1cdbc9a04ef37b65e2818e62d91633376173a3e41eb3879292d4525a7b0e38",
   "sources": {
     "ai_research_session_delivery.py": {
       "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/ai_research_session_delivery.py.txt",
@@ -19,7 +19,7 @@
     "stocklookup_core/decision/integrated_investment_decision_product.py": {
       "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/decision/integrated_investment_decision_product.py.txt",
       "prior_sha256_lf": "48b2d51d2cd261981f328a6fa17636f022ee10e208de1cd89f2af8ec73225299",
-      "active_sha256_lf": "c8701ceb8d9811f1b2f20aa41df9fed3f972f9f386b369e06309647ca11483d7"
+      "active_sha256_lf": "4268e04cbdde4e4fa06516d93ecbea940f8c751b260feba0dc8d7ab56bf04b0b"
     },
     "stocklookup_core/financial/fundamental_signal_consumption_contract.py": {
       "archive": "tests/fixtures/valuation_output_truthfulness_v1_sources/stocklookup_core/financial/fundamental_signal_consumption_contract.py.txt",
