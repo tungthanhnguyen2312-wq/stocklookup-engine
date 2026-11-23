@@ -864,6 +864,20 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     prior_receipt["valuation_output_truthfulness_corrective"] = truthfulness
 
+    staleness = live_receipt["share_basis_official_event_staleness_corrective"]
+    staleness_paths = ["market_wide_current_shares_resolver.py", "tools/derive_market_wide_current_valuation_input_scaleout.py"]
+    assert staleness["scope"] == "VALUATION_SHARE_BASIS_STALE_FROM_RETAINED_OFFICIAL_EVENTS_AND_EXCHANGE_WITNESS_FAIL_CLOSED"
+    assert staleness["new_capacity_measurement"] is False and staleness["whole_daily_requalification"] is False
+    assert staleness["changed_source_paths"] == staleness_paths
+    assert staleness["component_observation"]["method"].endswith("NOT_A_GENUINE_SESSION")
+    assert 0 < staleness["component_observation"]["loader_python_heap_peak_bytes"] < 256 * 1024**2
+    for path in staleness_paths:
+        previous = subprocess.check_output(["git", "show", f"{staleness['base_commit']}:{path}"], cwd=root)
+        assert staleness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["share_basis_official_event_staleness_corrective"] = staleness
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
