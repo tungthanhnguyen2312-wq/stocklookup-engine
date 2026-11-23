@@ -63,7 +63,8 @@ def test_only_official_share_changing_events_known_by_the_session_are_kept(tmp_p
     _context(tmp_path, "2026-11-30", [_event("FUT", "BONUS", "2026-11-20")])  # acquired after the session
     found = shares.retained_official_share_events([tmp_path], "2026-11-23")
     assert found["status"] == "APPLIED" and found["context_sessions"] == ["2026-10-16"]
-    assert sorted(found["events"]) == ["AAA", "DHT", "PVS"]
+    assert sorted(found["events"]) == ["AAA", "BBB", "DHT", "PVS"]
+    assert found["events"]["BBB"][0]["ex_date"] is None
     assert found["events"]["DHT"] == [{"event_id": "DHT:BONUS:2026-10-05", "event_type": "BONUS", "ex_date": "2026-10-05",
                                        "source": "hnx_official_rights_event_index/v1", "first_retained_in_context": "2026-10-16"}]
 
@@ -73,6 +74,30 @@ def test_the_same_context_in_two_governed_roots_counts_once(tmp_path):
         _context(root, "2026-10-16", [_event("DHT", "BONUS", "2026-10-05")], identity="current_official_event_context:same")
     found = shares.retained_official_share_events([tmp_path / "checkout", tmp_path / "retained"], "2026-11-23")
     assert found["context_count"] == 1 and len(found["events"]["DHT"]) == 1
+
+
+@pytest.mark.parametrize("qualification,ex_date", [
+    ("MISSING_EX_DATE", "2026-10-05"),
+    (None, "2026-10-05"),
+    ("EX_DATE_OFFICIAL_QUALIFIED", None),
+    ("EX_DATE_OFFICIAL_QUALIFIED", "invalid"),
+])
+def test_official_event_without_qualified_date_makes_freshness_unverifiable(tmp_path, qualification, ex_date):
+    root = _runtime(tmp_path / "rt", [("DHT", 1000.0, "2026-08-14"), ("FUT", 2000.0, "2026-08-14")])
+    _context(tmp_path, "2026-10-16", [
+        _event("DHT", "BONUS", ex_date, qualification=qualification),
+        _event("DHT", "BONUS", "2026-08-01"),  # mixed dated/undated rows remain sortable
+        _event("FUT", "BONUS", "2026-12-01"),
+    ])
+    retained = shares.retained_official_share_events([tmp_path], "2026-11-23")
+    result = shares.resolve_market_wide_shares(root, "2026-11-23", official_events=retained["events"])
+    dht = result["tickers"]["DHT"]
+    assert dht["authority"] == "provider_reported_unverifiable_freshness"
+    assert dht["value"] is None
+    assert dht["undated_share_relevant_events"] == ["OFFICIAL_BONUS"]
+    assert result["tickers"]["FUT"]["authority"] == "provider_reported_lagged"
+    assert result["tickers"]["FUT"]["value"] == 2000
+    assert "FUT" not in retained["events"]
 
 
 def test_no_context_is_reported_and_an_unreadable_one_fails_closed(tmp_path):
@@ -170,6 +195,8 @@ def test_contradicting_exchange_observation_withholds_and_is_never_used_as_the_c
                "TCB": {"value": 7086240414, "field": "exchange_outstanding_volume"},  # equal: no evidence
                "TRS": {"value": 1009000, "field": "hnx_kllh_shares"},                # +0.9%: share semantics
                "LOW": {"value": 980000, "field": "hnx_kllh_shares"}}                 # -2%: contradicts too
+    for row in witness.values():
+        row["known_at"] = "2026-11-19T23:34:43Z"
     result = shares.resolve_market_wide_shares(root, "2026-11-23", exchange_observations=witness)
     gmd = result["tickers"]["GMD"]
     assert gmd["authority"] == "provider_reported_stale" and gmd["value"] is None
@@ -181,3 +208,22 @@ def test_contradicting_exchange_observation_withholds_and_is_never_used_as_the_c
         assert result["tickers"][ticker]["authority"] == "provider_reported_lagged"
         assert result["tickers"][ticker]["value"] == value
     assert result["exchange_share_witnesses"] == 4 and result["counts_reconcile"]
+
+
+@pytest.mark.parametrize("known_at,temporally_relevant", [
+    ("2026-08-13T10:00:00Z", False),
+    ("2026-08-14T10:00:00Z", True),
+    ("2026-11-19T23:34:43Z", True),
+    (None, False),
+    ("invalid", False),
+])
+def test_exchange_contradiction_requires_witness_on_or_after_provider_date(tmp_path, known_at, temporally_relevant):
+    root = _runtime(tmp_path / "rt", [("GMD", 1000.0, "2026-08-14 10:00")])
+    result = shares.resolve_market_wide_shares(root, "2026-11-23", exchange_observations={
+        "GMD": {"value": 1500, "field": "exchange_outstanding_volume", "known_at": known_at}})
+    gmd = result["tickers"]["GMD"]
+    assert gmd["exchange_share_observation"]["temporally_relevant"] is temporally_relevant
+    assert gmd["exchange_share_observation"]["used_as_share_count"] is False
+    assert gmd["exchange_share_observation"]["known_at"] == known_at
+    assert gmd["authority"] == ("provider_reported_stale" if temporally_relevant else "provider_reported_lagged")
+    assert gmd["value"] == (None if temporally_relevant else 1000)

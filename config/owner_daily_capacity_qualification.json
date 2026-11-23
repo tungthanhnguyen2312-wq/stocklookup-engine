@@ -189,7 +189,7 @@
     "market_wide_current_descriptive_research.py": "5b5608e42956ae23e2241a38a51edc6335a2c26bf235d38d56312ef07263e209",
     "market_wide_current_fundamental_research.py": "bce0d93a49825137503e6bfb93181468650c1cbd3f96f262c051f6bdc48704d7",
     "market_wide_current_liquidity_research.py": "cc178a0a99d32145da5094aea81bc58bb854299eb7c888ae9022f2155af5dece",
-    "market_wide_current_shares_resolver.py": "65d01a44e1f3a1e095ac91fc2e32f030143dad9d3cf4708e7fbfea3cc4e5b4e2",
+    "market_wide_current_shares_resolver.py": "2dd6338675df39d3f14d4b3153449a04ef70d4ee5ca1b1cd1eeb690ee3fde0fc",
     "market_wide_current_technical_coverage_scaleout.py": "d1ff39f394a46b9b2749dc9a206424cc121fd8f8c1a52cd6e16d20061dbd5a3c",
     "market_wide_historical_fundamentals_scaleout.py": "233f4d104124d61e06b4ce8147d8c4bc69cef42cd953a871524917511e72b53b",
     "market_wide_historical_research_context.py": "0cfef7d5f8b66cb01a721a3ae78d600133f4e8014b1f55c0a93f8c5af72ee502",

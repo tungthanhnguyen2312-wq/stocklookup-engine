@@ -319,7 +319,8 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
     Reads every retained ``current_official_event_context/v1`` artifact under the governed
     evidence roots whose own acquisition session is on or before ``session_date``. Keeps stock
     dividend, bonus and rights events whose ex-date is officially qualified and falls on or before
-    the session; a later ex-date has not changed the count at the session. Nothing is fetched.
+    the session, plus undated events whose freshness cannot be verified. A later qualified
+    ex-date has not changed the count at the session. Nothing is fetched.
     An unreadable context is raised, never skipped: silently resolving without it is the failure
     this exists to close.
     """
@@ -345,15 +346,15 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
                 event_type = str(row.get("event_type") or "").upper()
                 if event_type not in OFFICIAL_SHARE_CHANGING_EVENT_TYPES:
                     continue
-                if row.get("qualification") != _OFFICIAL_EX_DATE_QUALIFIED:
-                    continue
-                exright = _as_date(row.get("ex_date"))
+                exright = (_as_date(row.get("ex_date"))
+                           if row.get("qualification") == _OFFICIAL_EX_DATE_QUALIFIED else None)
                 ticker = str(row.get("ticker") or "").strip().upper()
-                if exright is None or exright > session or not ticker:
+                if (exright is not None and exright > session) or not ticker:
                     continue
-                key = str(row.get("event_id") or f"{event_type}:{exright.isoformat()}")
+                ex_date = exright.isoformat() if exright else None
+                key = str(row.get("event_id") or f"{event_type}:{ex_date}")
                 events.setdefault(ticker, {}).setdefault(key, {
-                    "event_id": key, "event_type": event_type, "ex_date": exright.isoformat(),
+                    "event_id": key, "event_type": event_type, "ex_date": ex_date,
                     "source": row.get("source"), "first_retained_in_context": acquired.isoformat()})
     return {
         "status": "APPLIED" if contexts else "NO_RETAINED_OFFICIAL_EVENT_CONTEXT",
@@ -361,7 +362,7 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
         "context_count": len(contexts),
         "context_sessions": sorted(set(contexts.values())),
         "tickers_with_events": len(events),
-        "events": {t: sorted(rows.values(), key=lambda r: (r["ex_date"], r["event_id"]))
+        "events": {t: sorted(rows.values(), key=lambda r: (r["ex_date"] or "", r["event_id"]))
                    for t, rows in sorted(events.items())},
     }
 
@@ -566,9 +567,12 @@ def resolve_effective_shares(ticker: str, runtime_root: Path | str, session_date
     witness = store.exchange_shares.get(t)
     if witness is not None:
         gap = (witness["value"] - value) / value
+        witness_on = _as_date(witness.get("known_at"))
+        temporally_relevant = witness_on is not None and witness_on >= observed_on
         extra["exchange_share_observation"] = {**witness, "relative_gap": round(gap, 6),
+                                               "temporally_relevant": temporally_relevant,
                                                "used_as_share_count": False}
-        if abs(gap) >= EXCHANGE_SHARE_DISAGREEMENT_TOLERANCE:
+        if temporally_relevant and abs(gap) >= EXCHANGE_SHARE_DISAGREEMENT_TOLERANCE:
             return _result(t, session, "provider_reported_stale", value=None,
                            status="provider_reported_stale",
                            reason="contradicted_by_official_exchange_share_observation", **extra)
@@ -624,7 +628,7 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
     for ticker, rows in (official_events or {}).items():
         for row in rows:
             exright = _as_date(row.get("ex_date"))
-            if exright is None or exright > _as_date(session):
+            if exright is not None and exright > _as_date(session):
                 continue
             store.events.setdefault(str(ticker).upper(), []).append({
                 "event_code": "OFFICIAL_" + str(row.get("event_type") or "SHARE_EVENT").upper(),
