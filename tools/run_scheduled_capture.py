@@ -21,7 +21,9 @@ what happened:
   sleep or logon) ends at once instead of waiting, so the session's own trigger is not
   suppressed and the run cannot outlast the task's execution time limit;
 * a status file per session under the logs role, rewritten atomically after every attempt,
-  keeping earlier runs' attempts and each refusal's admission reasons.
+  keeping earlier runs' attempts and each refusal's admission reasons; an attempt cut short by
+  an interruption is recorded as INTERRUPTED with its receipt directory before the run ends;
+* one progress line per attempt on stderr, so a console run shows why it is still waiting.
 
 It publishes nothing, commits nothing, creates no decision and no T0, and never repairs,
 re-dates or reconstructs a missed session.
@@ -59,6 +61,7 @@ WINDOW_CLOSED = "SAME_DAY_WINDOW_CLOSED"
 ALREADY_RUNNING = "SCHEDULER_ALREADY_RUNNING"
 BEFORE_WINDOW = "BEFORE_CAPTURE_WINDOW"
 WRAPPER_FAILED = "SCHEDULER_WRAPPER_FAILED"
+INTERRUPTED = "SCHEDULER_INTERRUPTED"      # Ctrl+C / console close / task stop; not a code failure
 REFUSALS = {"NOT_ADMITTED", "WRITER_LEASE_BUSY"}
 TERMINAL_OK = {CAPTURED, ALREADY_CAPTURED, NOT_A_SESSION, ALREADY_RUNNING, BEFORE_WINDOW}
 
@@ -101,10 +104,18 @@ def refusal_evidence(stdout: str) -> dict | None:
             continue
         if isinstance(value, dict) and value.get("status") == "NOT_ADMITTED":
             observations = (value.get("host") or {}).get("observations") or {}
-            return {"reasons": list((value.get("admission") or {}).get("reasons") or []),
-                    "available_physical_bytes": observations.get("available_physical_bytes"),
-                    "available_commit_bytes": observations.get("available_commit_bytes"),
-                    "active_writer_count": len(observations.get("active_writers") or [])}
+            admission = value.get("admission") or {}
+            observed = observations.get("writer_observation") == "OBSERVED"
+            evidence = {"reasons": list(admission.get("reasons") or []),
+                        "available_physical_bytes": observations.get("available_physical_bytes"),
+                        "available_commit_bytes": observations.get("available_commit_bytes"),
+                        # An empty list from an unobserved process inventory is not "no writer".
+                        "active_writer_count": len(observations.get("active_writers") or []) if observed else None,
+                        "writer_observation": observations.get("writer_observation") or "NOT_OBSERVED",
+                        "repository_writer_state_observed": (observations.get("repository") or {}).get("writer_state_observed")}
+            if admission.get("basis"):
+                evidence["basis"] = admission["basis"]
+            return evidence
     return None
 
 
@@ -137,6 +148,17 @@ def run_child(python: str, session: str, directory: Path, timeout: float) -> tup
     except (OSError, ValueError):
         pass
     return code, child if isinstance(child, dict) else None, out, err
+
+
+def progress(attempt: dict, next_at: str | None) -> None:
+    """One console line per attempt; the status file stays the record."""
+    admission = attempt.get("admission") or {}
+    detail = ",".join(admission.get("reasons") or []) or (attempt.get("child_status") or "")
+    physical = admission.get("available_physical_bytes")
+    memory = " available_physical=%.2fGiB" % (physical / 1024**3) if isinstance(physical, int) else ""
+    print("PIT_CAPTURE attempt %02d %s %s%s%s" % (attempt["number"], attempt["outcome"], detail, memory,
+                                                 " next=" + next_at[11:16] if next_at else ""),
+          file=sys.stderr, flush=True)
 
 
 def write_status(path: Path, value: dict) -> None:
@@ -212,9 +234,23 @@ def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str
         number = len(status["attempts"]) + 1
         directory = Path(receipts) / session / ("attempt-%02d-%s" % (number, now.strftime("%H%M%S")))
         directory.parent.mkdir(parents=True, exist_ok=True)
-        status.update(state="ATTEMPT_RUNNING", next_attempt_at=None)
+        status.update(state="ATTEMPT_RUNNING", next_attempt_at=None,
+                      current_attempt={"number": number, "started_at": now.isoformat(), "receipt_dir": str(directory)})
         write_status(status_path, status)
-        code, result, out, err = child(python, session, directory, child_timeout or DEADLINE_SECONDS + CHILD_GRACE_SECONDS)
+        try:
+            code, result, out, err = child(python, session, directory, child_timeout or DEADLINE_SECONDS + CHILD_GRACE_SECONDS)
+        except BaseException as error:
+            # Ctrl+C reaches the guarded capture tree too (its Job kills the tree); keep the
+            # cut-short attempt and its receipt directory instead of losing them with the run.
+            status.pop("current_attempt", None)
+            status["attempts"].append({"number": number, "started_at": now.isoformat(), "finished_at": clock().isoformat(),
+                                       "exit_code": None, "outcome": "INTERRUPTED", "error": type(error).__name__,
+                                       "receipt_dir": str(directory) if directory.exists() else None})
+            status.update(state=INTERRUPTED if isinstance(error, KeyboardInterrupt) else WRAPPER_FAILED,
+                          finished_at=clock().isoformat())
+            write_status(status_path, status)
+            raise
+        status.pop("current_attempt", None)
         outcome = classify(code, result, out, err)
         if outcome in {CAPTURED, ALREADY_CAPTURED} and not record_path(retained, session).exists():
             outcome = "CAPTURE_RECORD_MISSING_AFTER_PASS"
@@ -229,14 +265,17 @@ def run(session: str, *, retained: Path, logs: Path, receipts: Path, python: str
         elif not directory.exists():
             attempt["stdout_tail"] = out[-600:]
         status["attempts"].append(attempt)
+        upcoming = clock() + timedelta(seconds=interval)
+        retrying = (outcome not in {CAPTURED, ALREADY_CAPTURED, NOT_A_SESSION} and counts["capture"] < max_attempts
+                    and counts["refusal"] < max_refusals and upcoming < closes)
+        progress(attempt, upcoming.isoformat() if retrying else None)
         if outcome in {CAPTURED, ALREADY_CAPTURED}:
             if readiness is not None:
                 status["readiness"] = readiness(session)
             return finish(outcome)
         if outcome == NOT_A_SESSION:
             return finish(NOT_A_SESSION)
-        upcoming = clock() + timedelta(seconds=interval)
-        if counts["capture"] >= max_attempts or counts["refusal"] >= max_refusals or upcoming >= closes:
+        if not retrying:
             break
         status.update(state="WAITING_TO_RETRY", next_attempt_at=upcoming.isoformat())
         write_status(status_path, status)
@@ -276,7 +315,8 @@ def main(argv=None) -> int:
             status = {"session": session, "state": ALREADY_RUNNING}
     except BaseException as error:  # noqa: BLE001 - reported through the status file and exit code
         # Task Scheduler keeps only the exit code; leave the reason where the Owner looks.
-        status = {"contract_version": STATUS_CONTRACT, "session": session, "state": WRAPPER_FAILED,
+        stopped = isinstance(error, KeyboardInterrupt)
+        status = {"contract_version": STATUS_CONTRACT, "session": session, "state": INTERRUPTED if stopped else WRAPPER_FAILED,
                   "authority_effect": "NONE / CAPTURE_COMPLETENESS_ONLY",
                   "error": "%s:%s" % (type(error).__name__, error), "finished_at": vn_now().isoformat()}
         if logs is not None:

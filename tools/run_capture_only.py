@@ -106,6 +106,20 @@ def sha(path):
     return value.hexdigest()
 
 
+# Free physical memory and commit headroom a capture tree needs before it may start.
+MEMORY_FLOORS = (('available_physical_bytes', TREE_BYTES + 1024**3 + 1024**3//4),
+                 ('available_commit_bytes', TREE_BYTES + 2*1024**3))
+
+
+def memory_reasons(observations):
+    reasons = []
+    for key, floor in MEMORY_FLOORS:
+        value = observations.get(key)
+        if type(value) is not int or value < floor:
+            reasons.append(key.upper() + '_LOW')
+    return reasons
+
+
 def admission(host):
     observations = host.get('observations') or {}
     repo = observations.get('repository') or {}
@@ -116,11 +130,7 @@ def admission(host):
         reasons.append('CONCURRENT_WRITER_PRESENT')
     if (observations.get('capacity_qualification') or {}).get('source_matches') is not True:
         reasons.append('SOURCE_RECEIPT_MISMATCH')
-    for key, floor in [('available_physical_bytes', TREE_BYTES + 1024**3 + 1024**3//4),
-                       ('available_commit_bytes', TREE_BYTES + 2*1024**3)]:
-        value = observations.get(key)
-        if type(value) is not int or value < floor:
-            reasons.append(key.upper() + '_LOW')
+    reasons.extend(memory_reasons(observations))
     return {'admitted': not reasons, 'reasons': reasons, 'tree_bytes': TREE_BYTES,
             'ordinary_daily_qualification': False}
 
@@ -253,6 +263,17 @@ def main():
         return worker(args.session, directory)
     from tools.check_owner_daily_host_preflight import check, windows_memory
     from stocklookup_core.acquisition.feedback_resource_guard import run_capacity_guarded
+    # The full preflight hashes the tracked source surface and inventories processes and
+    # worktrees (tens of seconds, slower under memory pressure). A memory shortfall refuses
+    # admission whatever else it finds, so it is read first from one cheap system call and
+    # the full preflight runs only when the capture could actually be admitted.
+    memory = windows_memory()
+    short = memory_reasons(memory)
+    if short:
+        print(json.dumps({'status': 'NOT_ADMITTED', 'admission': {
+            'admitted': False, 'reasons': short, 'tree_bytes': TREE_BYTES, 'ordinary_daily_qualification': False,
+            'basis': 'MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT'}, 'host': {'observations': memory}}))
+        return 3
     with writer_lease(ROOT):
         host = check(ROOT, paths['retained'])
         admitted = admission(host)
