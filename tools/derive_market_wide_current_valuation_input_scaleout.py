@@ -22,7 +22,9 @@ from stocklookup_core.valuation.market_wide_current_valuation_input_scaleout imp
     content_identity,
     official_research_universe_tickers,
 )
-from market_wide_current_shares_resolver import resolve_market_wide_shares, retained_official_share_events
+from market_wide_current_shares_resolver import (
+    resolve_market_wide_shares, retained_exchange_share_observations, retained_official_share_events,
+)
 from stocklookup_core.evidence.evidence_roots import governed_evidence_roots
 from tools.run_p3f6_mva_provider_share_proxy import _metadata
 
@@ -97,7 +99,8 @@ def materialize(output: Path = DEFAULT_OUTPUT, *, price: Path,
                 fundamental: Path = DEFAULT_FUNDAMENTAL, shares: Path = DEFAULT_SHARES,
                 p3e: Path = DEFAULT_P3E, official_universe: Path | None = DEFAULT_OFFICIAL_UNIVERSE,
                 runtime_root: Path | None = None, report: Path = DEFAULT_REPORT,
-                expected_session: str | None = None, official_event_roots: list[Path] | None = None) -> dict:
+                expected_session: str | None = None, official_event_roots: list[Path] | None = None,
+                known_by=None) -> dict:
     if runtime_root is None:
         raise ValueError("RUNTIME_ROOT_REQUIRED_FOR_RETAINED_PROVIDER_SHARE_INVENTORY")
     _refuse_frozen_output(output)
@@ -111,9 +114,13 @@ def materialize(output: Path = DEFAULT_OUTPUT, *, price: Path,
         raise ValueError("VALUATION_PRICE_SNAPSHOT_SESSION_NOT_EXACT:" + session)
     # Retained official share-changing events (known by the session) withhold a provider count
     # observed before their ex-date. The governed roots are the ones Daily binds before any phase.
-    official = retained_official_share_events(
-        governed_evidence_roots(ROOT) if official_event_roots is None else official_event_roots, session)
-    safety = resolve_market_wide_shares(runtime_root, session, official_events=official["events"])
+    from datetime import datetime, timezone
+    roots = governed_evidence_roots(ROOT) if official_event_roots is None else official_event_roots
+    official = retained_official_share_events(roots, session)
+    # A first-party exchange share observation already retained and known now is a witness only.
+    exchange = retained_exchange_share_observations(roots, session, known_by=known_by or datetime.now(timezone.utc))
+    safety = resolve_market_wide_shares(runtime_root, session, official_events=official["events"],
+                                        exchange_observations=exchange["observations"])
     if safety.get("status") != "measured" or not safety.get("counts_reconcile"):
         raise ValueError("RETAINED_SHARE_INVENTORY_UNREADABLE_OR_NONRECONCILING")
     artifact = build_current_valuation_artifact(
@@ -137,6 +144,11 @@ def materialize(output: Path = DEFAULT_OUTPUT, *, price: Path,
         | {"events_applied": safety.get("official_share_events_applied", 0),
            "source_contract": "current_official_event_context/v1",
            "effect": "PROVIDER_COUNT_WITHHELD_AS_STALE_NEVER_ADJUSTED"},
+        "exchange_share_witness": {key: exchange.get(key) for key in (
+            "status", "artifact_identity", "knowledge_available_at")}
+        | {"witnesses": len(exchange["observations"]),
+           "tolerance": "RELATIVE_GAP_AT_LEAST_0.01",
+           "effect": "CONTRADICTED_PROVIDER_COUNT_WITHHELD_EXCHANGE_VALUE_NEVER_USED"},
     }
     artifact.update(content_identity(artifact))
     if content_identity(artifact)["artifact_sha256"] != artifact["artifact_sha256"]:

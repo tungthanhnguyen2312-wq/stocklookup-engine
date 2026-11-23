@@ -9,8 +9,10 @@ stale, never adjusted by the event ratio.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -110,13 +112,72 @@ def test_valuation_materializer_passes_retained_official_events_to_the_resolver(
     class Stop(Exception):
         pass
 
-    def resolver(runtime_root, session, *, official_events=None):
-        seen.update(session=session, events=official_events)
+    def resolver(runtime_root, session, *, official_events=None, exchange_observations=None):
+        seen.update(session=session, events=official_events, exchange=exchange_observations)
         raise Stop
 
     monkeypatch.setattr(runner, "resolve_market_wide_shares", resolver)
     with pytest.raises(Stop):
         runner.materialize(tmp_path / "out" / "a.json", price=Path("price"), fundamental=Path("f"), shares=Path("s"),
                            p3e=Path("p"), official_universe=None, runtime_root=tmp_path, report=tmp_path / "r.json",
-                           official_event_roots=[tmp_path / "retained"])
+                           official_event_roots=[tmp_path / "retained"],
+                           known_by=datetime(2026, 11, 23, 10, 30, tzinfo=timezone.utc))
     assert seen["session"] == "2026-11-23" and [e["ex_date"] for e in seen["events"]["DHT"]] == ["2026-10-05"]
+    assert seen["exchange"] == {}
+
+
+def _listing_sources(root: Path, known_at: str, rows) -> Path:
+    directory = root / "operations-review" / "prospective-universe-evidence-v1" / "listing-sources"
+    directory.mkdir(parents=True, exist_ok=True)
+    records = [{"knowledge_available_at": known_at, "current_universe_projection": {"ticker": t, "official_source": src},
+                "source_observation": obs} for t, src, obs in rows]
+    body = {"records": records, "known": known_at}
+    digest = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+    path = directory / (digest + ".json")
+    path.write_text(json.dumps({**body, "artifact_identity": "prospective_listing_source_observations:" + digest}), encoding="utf-8")
+    return path
+
+
+def test_latest_exchange_observation_known_by_the_cutoff_and_session_is_selected(tmp_path):
+    _listing_sources(tmp_path, "2026-11-19T23:34:43Z", [
+        ("TCB", "hose_public_stock_master/v1", {"exchange_outstanding_volume": "7,086,240,414"}),
+        ("PVS", "hnx_official_equity_universe/v1", {"hnx_kllh_shares": 613699317})])
+    _listing_sources(tmp_path, "2026-11-23T12:48:47Z", [   # captured after the 17:33 valuation
+        ("TCB", "hose_public_stock_master/v1", {"exchange_outstanding_volume": "10,629,355,539"})])
+    _listing_sources(tmp_path, "2026-11-24T08:00:00Z", [   # next session: never seen by a 11-23 replay
+        ("TCB", "hose_public_stock_master/v1", {"exchange_outstanding_volume": "1"})])
+    at_daily = shares.retained_exchange_share_observations(
+        [tmp_path], "2026-11-23", known_by=datetime(2026, 11, 23, 10, 33, tzinfo=timezone.utc))
+    assert at_daily["knowledge_available_at"] == "2026-11-19T23:34:43+00:00"
+    assert at_daily["observations"]["TCB"]["value"] == 7086240414
+    assert at_daily["observations"]["PVS"] == {"value": 613699317, "field": "hnx_kllh_shares",
+                                               "semantic": "HNX_KLLH_EXCHANGE_REPORTED_CIRCULATING_SHARES",
+                                               "source": "hnx_official_equity_universe/v1", "known_at": "2026-11-19T23:34:43Z"}
+    later = shares.retained_exchange_share_observations(
+        [tmp_path], "2026-11-23", known_by=datetime(2026, 11, 30, tzinfo=timezone.utc))
+    assert later["observations"]["TCB"]["value"] == 10629355539
+    with pytest.raises(ValueError):
+        shares.retained_exchange_share_observations([tmp_path], "2026-11-23", known_by=datetime(2026, 11, 23))
+    assert shares.retained_exchange_share_observations(
+        [tmp_path / "none"], "2026-11-23", known_by=datetime(2026, 11, 23, tzinfo=timezone.utc))["status"] == \
+        "NO_RETAINED_EXCHANGE_SHARE_OBSERVATION"
+
+
+def test_contradicting_exchange_observation_withholds_and_is_never_used_as_the_count(tmp_path):
+    root = _runtime(tmp_path / "rt", [("GMD", 432892509.0, "2026-08-14 10:00"), ("TCB", 7086240414.0, "2026-08-14 10:00"),
+                                     ("TRS", 1000000.0, "2026-08-14 10:00"), ("LOW", 1000000.0, "2026-08-14 10:00")])
+    witness = {"GMD": {"value": 649337392, "field": "exchange_outstanding_volume"},   # +50%: contradicts
+               "TCB": {"value": 7086240414, "field": "exchange_outstanding_volume"},  # equal: no evidence
+               "TRS": {"value": 1009000, "field": "hnx_kllh_shares"},                # +0.9%: share semantics
+               "LOW": {"value": 980000, "field": "hnx_kllh_shares"}}                 # -2%: contradicts too
+    result = shares.resolve_market_wide_shares(root, "2026-11-23", exchange_observations=witness)
+    gmd = result["tickers"]["GMD"]
+    assert gmd["authority"] == "provider_reported_stale" and gmd["value"] is None
+    assert gmd["reason"] == "contradicted_by_official_exchange_share_observation"
+    assert gmd["exchange_share_observation"]["used_as_share_count"] is False
+    assert gmd["exchange_share_observation"]["relative_gap"] == pytest.approx(0.5, abs=1e-4)
+    assert result["tickers"]["LOW"]["authority"] == "provider_reported_stale"
+    for ticker, value in (("TCB", 7086240414), ("TRS", 1000000)):
+        assert result["tickers"][ticker]["authority"] == "provider_reported_lagged"
+        assert result["tickers"][ticker]["value"] == value
+    assert result["exchange_share_witnesses"] == 4 and result["counts_reconcile"]

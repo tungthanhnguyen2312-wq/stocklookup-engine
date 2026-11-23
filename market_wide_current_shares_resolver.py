@@ -33,7 +33,10 @@ Authority lanes
     retained official HNX/HOSE event context (``current_official_event_context/v1``): a stock
     dividend, bonus or rights event with an officially qualified ex-date on or before the session,
     from a context acquired on or before the session. The provider count is never adjusted by the
-    event ratio; it is withheld.
+    event ratio; it is withheld. The same lane withholds a provider count that a retained official
+    same-day exchange observation (HOSE "Outstanding Volume", HNX "KLLH") contradicts by at least
+    ``EXCHANGE_SHARE_DISAGREEMENT_TOLERANCE``. The exchange figure is a witness only: it is listing
+    volume, not accounting common shares outstanding, and is never used as the count.
 ``provider_reported_unverifiable_freshness``
     A share-changing or unclassified event exists that cannot be positioned against the
     observation because it carries no ex-right date.
@@ -94,6 +97,15 @@ _OFFICIAL_EVENT_CONTEXT_CONTRACT = "current_official_event_context/v1"
 _OFFICIAL_EX_DATE_QUALIFIED = "EX_DATE_OFFICIAL_QUALIFIED"
 _OFFICIAL_EVENT_CONTEXT_GLOB = ("operations-review/current-official-event-context-integration-v1-*/"
                                 "current_official_event_context_artifact.json")
+
+#: Retained HNX/HOSE first-party listing observations (prospective_listing_source_observations).
+_LISTING_SOURCE_GLOB = "operations-review/prospective-universe-evidence-v1/listing-sources/*.json"
+_LISTING_SOURCE_KIND = "prospective_listing_source_observations"
+#: Below this relative gap a difference is treated as share-semantic (issued vs listed/treasury),
+#: not as evidence that the provider observation predates a share change.
+EXCHANGE_SHARE_DISAGREEMENT_TOLERANCE = 0.01
+_EXCHANGE_SHARE_FIELDS = (("hnx_kllh_shares", "HNX_KLLH_EXCHANGE_REPORTED_CIRCULATING_SHARES"),
+                          ("exchange_outstanding_volume", "HOSE_EXCHANGE_LISTING_OUTSTANDING_VOLUME"))
 
 
 class ShareStoreUnreadable(RuntimeError):
@@ -272,6 +284,7 @@ class _Store:
         self.metadata: dict[str, tuple[float | None, Any]] = {}
         self.events: dict[str, list[dict[str, Any]]] = {}
         self.ledger_coverage: dict[str, str] = {}
+        self.exchange_shares: dict[str, dict[str, Any]] = {}
 
         connection = _connect_ro(self.runtime_root / "vn_stock.db")
         try:
@@ -351,6 +364,76 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
         "events": {t: sorted(rows.values(), key=lambda r: (r["ex_date"], r["event_id"]))
                    for t, rows in sorted(events.items())},
     }
+
+
+def _exchange_count(raw: Any) -> int | None:
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, int):
+        return raw if raw > 0 else None
+    text = str(raw or "").replace(",", "").strip()
+    return int(text) if text.isdigit() and int(text) > 0 else None
+
+
+def retained_exchange_share_observations(evidence_roots: Iterable[Path | str], session_date: str, *,
+                                         known_by: datetime) -> dict[str, Any]:
+    """The latest retained first-party exchange share observation known by ``known_by``.
+
+    Selects, among retained listing-source artifacts, the one with the latest knowledge time that
+    is no later than ``known_by`` and falls on or before the session's Vietnam date, so a replay of
+    an older session never sees a later observation. Nothing is fetched. An unreadable artifact is
+    raised, never skipped.
+    """
+    from datetime import timedelta, timezone
+
+    session = _as_date(session_date)
+    if session is None:
+        raise ValueError(f"session_date must be an ISO date, got {session_date!r}")
+    if known_by.tzinfo is None:
+        raise ValueError("EXCHANGE_SHARE_KNOWN_BY_REQUIRES_TIMEZONE")
+    vietnam = timezone(timedelta(hours=7))
+    best: tuple[datetime, str, dict] | None = None
+    for root in evidence_roots:
+        for path in sorted(Path(root).glob(_LISTING_SOURCE_GLOB)):
+            try:
+                artifact = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as exc:
+                raise ShareStoreUnreadable(f"listing source observations unreadable: {path.name}: {exc}") from None
+            identity = str((artifact or {}).get("artifact_identity") or "")
+            if not identity.startswith(_LISTING_SOURCE_KIND + ":"):
+                continue
+            times = []
+            for row in artifact.get("records") or []:
+                try:
+                    times.append(datetime.fromisoformat(str(row["knowledge_available_at"]).replace("Z", "+00:00")))
+                except (KeyError, ValueError):
+                    times = []
+                    break
+            if not times or any(t.tzinfo is None for t in times):
+                continue
+            known = max(times)
+            if known > known_by or known.astimezone(vietnam).date() > session:
+                continue
+            if best is None or (known, identity) > (best[0], best[1]):
+                best = (known, identity, artifact)
+    if best is None:
+        return {"status": "NO_RETAINED_EXCHANGE_SHARE_OBSERVATION", "session_date": session.isoformat(),
+                "observations": {}}
+    known, identity, artifact = best
+    observations: dict[str, dict[str, Any]] = {}
+    for row in artifact.get("records") or []:
+        source = row.get("source_observation") or {}
+        projection = row.get("current_universe_projection") or {}
+        ticker = str(projection.get("ticker") or source.get("ticker") or "").strip().upper()
+        for field, semantic in _EXCHANGE_SHARE_FIELDS:
+            value = _exchange_count(source.get(field))
+            if ticker and value is not None:
+                observations[ticker] = {"value": value, "field": field, "semantic": semantic,
+                                        "source": projection.get("official_source"),
+                                        "known_at": row.get("knowledge_available_at")}
+                break
+    return {"status": "APPLIED", "session_date": session.isoformat(), "artifact_identity": identity,
+            "knowledge_available_at": known.isoformat(), "observations": observations}
 
 
 def _event_verdict(events: Iterable[Mapping[str, Any]], observed_on: date) -> dict[str, Any]:
@@ -480,6 +563,16 @@ def resolve_effective_shares(ticker: str, runtime_root: Path | str, session_date
                        status="provider_reported_unverifiable_freshness",
                        reason="missing_explicit_official_ex_date_on_share_relevant_event", **extra)
 
+    witness = store.exchange_shares.get(t)
+    if witness is not None:
+        gap = (witness["value"] - value) / value
+        extra["exchange_share_observation"] = {**witness, "relative_gap": round(gap, 6),
+                                               "used_as_share_count": False}
+        if abs(gap) >= EXCHANGE_SHARE_DISAGREEMENT_TOLERANCE:
+            return _result(t, session, "provider_reported_stale", value=None,
+                           status="provider_reported_stale",
+                           reason="contradicted_by_official_exchange_share_observation", **extra)
+
     lag = (session_on - observed_on).days if session_on else None
     if lag is not None and lag > 0:
         return _result(t, session, "provider_reported_lagged", value=value,
@@ -497,13 +590,16 @@ def resolve_effective_shares(ticker: str, runtime_root: Path | str, session_date
 
 def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
                                official_events: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
+                               exchange_observations: Mapping[str, Mapping[str, Any]] | None = None,
                                ) -> dict[str, Any]:
     """Authority counts across the retained active universe, for a stated session.
 
     Every count here is measured on the call. The lanes partition the universe exactly, and
     `counts_reconcile` states that as a checked fact rather than leaving the reader to add up.
     ``official_events`` (from `retained_official_share_events`) joins the retained ledger, so an
-    official ex-date after the provider observation withholds the count as stale.
+    official ex-date after the provider observation withholds the count as stale, and
+    ``exchange_observations`` (from `retained_exchange_share_observations`) withholds one that a
+    first-party exchange observation contradicts.
     """
     session = str(session_date).strip()
     if not _as_date(session):
@@ -537,6 +633,8 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
             })
             applied += 1
 
+    store.exchange_shares = {str(t).upper(): dict(row) for t, row in (exchange_observations or {}).items()}
+
     tickers: dict[str, dict[str, Any]] = {}
     counts: dict[str, int] = {}
     for t in store.universe():
@@ -560,5 +658,6 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
         "official_anchors_retained": len(store.anchors),
         "ledger_tickers_covered": len(store.events),
         "official_share_events_applied": applied,
+        "exchange_share_witnesses": len(store.exchange_shares),
         "tickers": tickers,
     }

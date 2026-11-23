@@ -189,7 +189,7 @@
     "market_wide_current_descriptive_research.py": "5b5608e42956ae23e2241a38a51edc6335a2c26bf235d38d56312ef07263e209",
     "market_wide_current_fundamental_research.py": "bce0d93a49825137503e6bfb93181468650c1cbd3f96f262c051f6bdc48704d7",
     "market_wide_current_liquidity_research.py": "cc178a0a99d32145da5094aea81bc58bb854299eb7c888ae9022f2155af5dece",
-    "market_wide_current_shares_resolver.py": "99a4561540e321de05b5c60c7bd61b6fe12f4994c4786ac93db145015cdc551f",
+    "market_wide_current_shares_resolver.py": "65d01a44e1f3a1e095ac91fc2e32f030143dad9d3cf4708e7fbfea3cc4e5b4e2",
     "market_wide_current_technical_coverage_scaleout.py": "d1ff39f394a46b9b2749dc9a206424cc121fd8f8c1a52cd6e16d20061dbd5a3c",
     "market_wide_historical_fundamentals_scaleout.py": "233f4d104124d61e06b4ce8147d8c4bc69cef42cd953a871524917511e72b53b",
     "market_wide_historical_research_context.py": "0cfef7d5f8b66cb01a721a3ae78d600133f4e8014b1f55c0a93f8c5af72ee502",
@@ -1089,7 +1089,7 @@
     "tools/derive_current_share_basis_capability_reconciliation.py": "d6d512ef485189e3032e7d5e8dfc5380a2696449ae4f9667047522dd6387a5f9",
     "tools/derive_dnse_trades_liquidity_basis.py": "7dce0aeaaa97790ac3f061a0907a8ed89aac8e504243157dbb40f67e87ecb8af",
     "tools/derive_market_state_and_candidates.py": "a16a17a8ac96ced705b37e517be85d32f4844858fb0b9a48d98601564b37579c",
-    "tools/derive_market_wide_current_valuation_input_scaleout.py": "e7887503e68a517ab146cb7b95f0a35450c2427ac74988309d6b46ef55ad41eb",
+    "tools/derive_market_wide_current_valuation_input_scaleout.py": "1ab225b936a33a7dbc9a6ba2713d3ab4d9ab0fd146d889d657ba21aad5e758b3",
     "tools/derive_provider_reported_current_valuation_proxy.py": "6d50bd6d678f02f417456cb5920d64970217bf8bc0c650169c3858dd75bad047",
     "tools/derive_qualified_liquidity_inputs_reconciliation.py": "8a38f8493e84f8b0b861b5869d8f7500b97123975b16c0e039ea89ddeaec7bc7",
     "tools/derive_research_intelligence_digest.py": "3e1c8c4dd020bcc537bd5b17f467f97c232cf00f920167d96ca2909ee6cf9e90",
@@ -1988,8 +1988,8 @@
   },
   "share_basis_official_event_staleness_corrective": {
     "base_commit": "888995be348870e130ae0ebd7ca53fe41ab3d9f7",
-    "scope": "VALUATION_SHARE_BASIS_STALE_FROM_RETAINED_OFFICIAL_EVENT_CONTEXT_FAIL_CLOSED",
-    "stage_qualification": "VALUATION_STAGE_READS_RETAINED_EVENT_CONTEXTS_NO_NETWORK_NO_NEW_OUTPUT_FAMILY",
+    "scope": "VALUATION_SHARE_BASIS_STALE_FROM_RETAINED_OFFICIAL_EVENTS_AND_EXCHANGE_WITNESS_FAIL_CLOSED",
+    "stage_qualification": "VALUATION_STAGE_READS_RETAINED_EVENT_CONTEXTS_AND_LISTING_SOURCES_NO_NETWORK_NO_NEW_OUTPUT_FAMILY",
     "changed_source_paths": [
       "market_wide_current_shares_resolver.py",
       "tools/derive_market_wide_current_valuation_input_scaleout.py"
@@ -2004,8 +2004,10 @@
       "method": "ISOLATED_READ_ONLY_ON_RETAINED_2026_11_23_EVIDENCE_NOT_A_GENUINE_SESSION",
       "official_event_contexts": 23,
       "official_events_loaded": 800,
-      "loader_python_heap_peak_bytes": 55296131,
-      "loader_wall_seconds": 2.24
+      "listing_source_artifacts": 21,
+      "exchange_witnesses": 1517,
+      "loader_python_heap_peak_bytes": 55295793,
+      "loader_wall_seconds": 2.6
     }
   }
 }

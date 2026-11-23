@@ -824,7 +824,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
 
     staleness = live_receipt["share_basis_official_event_staleness_corrective"]
     staleness_paths = ["market_wide_current_shares_resolver.py", "tools/derive_market_wide_current_valuation_input_scaleout.py"]
-    assert staleness["scope"] == "VALUATION_SHARE_BASIS_STALE_FROM_RETAINED_OFFICIAL_EVENT_CONTEXT_FAIL_CLOSED"
+    assert staleness["scope"] == "VALUATION_SHARE_BASIS_STALE_FROM_RETAINED_OFFICIAL_EVENTS_AND_EXCHANGE_WITNESS_FAIL_CLOSED"
     assert staleness["new_capacity_measurement"] is False and staleness["whole_daily_requalification"] is False
     assert staleness["changed_source_paths"] == staleness_paths
     assert staleness["component_observation"]["method"].endswith("NOT_A_GENUINE_SESSION")
