@@ -181,6 +181,7 @@ def evaluate_valuation_dislocation(integrated_record: Mapping[str, Any]) -> dict
         "pb_multiple": val.get("pb_multiple"),
         "pb_basis": val.get("pb_basis"),
         "ps_multiple": val.get("ps_multiple"),
+        **{key: val[key] for key in ("pe_basis", "ps_basis", "peer_relative_qualifications") if key in val},
         "ev_ebitda_multiple": val.get("ev_ebitda_multiple"),
         "limitations": list(val.get("limitations") or []),
         "no_fabricated_intrinsic_value_or_target": True,

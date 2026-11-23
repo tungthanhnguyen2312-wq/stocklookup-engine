@@ -1031,9 +1031,227 @@ def evaluate_tactical_phase(tactical_rec: Mapping[str, Any] | None) -> tuple[str
 
 # ── Valuation Context Interpreter ─────────────────────────────────────────────
 
+_USABLE_METHOD_STATUSES = frozenset({"RESEARCH_USABLE", "READY"})
+#: Headline method order per multiple family. A usable TTM method speaks first; a usable
+#: reported-period (for example annual) method is the fallback. A reported-duration method
+#: (single half-year/quarter, never annualized) is never a headline -- it stays an alternative.
+_HEADLINE_FAMILIES = {
+    "P/E": ("P/E_TTM", "P/E", "P/E_REPORTED_PERIOD"),
+    "P/S": ("P/S_TTM", "P/S", "P/S_REPORTED_PERIOD"),
+}
+#: The producer's own relative-state thresholds (current_research_valuation_context.
+#: attach_peer_relative). Used only to name which methods produced its verdict, never to re-derive it.
+_PRODUCER_ATTRACTIVE_PERCENTILE = 0.25
+_PRODUCER_EXPENSIVE_PERCENTILE = 0.75
+#: Value-free period markers a method uses when no financial reporting period is known.
+_NON_PERIOD_BASES = frozenset({"", "EXISTING_CURRENT_VALUATION_METHOD", "TTM_SUM", "POINT_IN_TIME_BALANCE_SHEET"})
+
+
+def _select_headline_method(methods: Mapping[str, Any], family: str) -> tuple[str | None, Mapping[str, Any]]:
+    """The first usable method of a family; otherwise the historical lookup order (no value)."""
+    ttm_id, reported_id, _duration_id = _HEADLINE_FAMILIES[family]
+    for method_id in (ttm_id, reported_id):
+        item = methods.get(method_id)
+        if isinstance(item, Mapping) and item.get("status") in _USABLE_METHOD_STATUSES and item.get("value") is not None:
+            return method_id, item
+    for method_id in (reported_id, ttm_id):
+        item = methods.get(method_id)
+        if isinstance(item, Mapping) and item:
+            return method_id, item
+    return None, {}
+
+
+def _headline_multiple_basis(family: str, method_id: str | None, item: Mapping[str, Any], *,
+                             value: Any, methods: Mapping[str, Any], val_rec: Mapping[str, Any],
+                             decision_session: str | None) -> dict[str, Any]:
+    """Which method a headline multiple is, with its denominator period, scope, lineage and limits.
+
+    Reads the selected method's own retained fields only. It never recomputes the multiple,
+    never relabels an annual or reported-period denominator as TTM, and never promotes a method.
+    """
+    if value is None:
+        return {"method": None, "claim": None}
+    if not methods or method_id is None or item.get("value") != value:
+        # Compact record without per-method detail, or a top-level value that is not the
+        # selected method's own value: the displayed value's method is not retained.
+        return {"method": "UNSPECIFIED_SOURCE", "claim": "METHOD_AND_DENOMINATOR_PERIOD_NOT_RETAINED",
+                "limitations": ["HEADLINE_METHOD_NOT_RETAINED", "DENOMINATOR_PERIOD_UNSPECIFIED"]}
+    from stocklookup_core.valuation.current_research_valuation_context import _metric_freshness
+
+    is_ttm = method_id.endswith("_TTM")
+    inputs = [row for row in (item.get("financial_inputs") or []) if isinstance(row, Mapping)]
+    if is_ttm:
+        periods = [str(p) for p in (item.get("ttm_periods") or item.get("input_periods") or [])]
+    else:
+        periods = sorted({str(row["reporting_period"]) for row in inputs if row.get("reporting_period")})
+        basis_period = str(item.get("period_basis") or "")
+        if not periods and basis_period not in _NON_PERIOD_BASES:
+            periods = [basis_period]
+    period_types = sorted({str(row["period_type"]) for row in inputs if row.get("period_type")})
+    period_ends = sorted({str(row["period_end"])[:10] for row in inputs if row.get("period_end")})
+    if is_ttm:
+        denominator_class = "TTM_SUM"
+    elif not periods:
+        denominator_class = "PERIOD_UNSPECIFIED"
+    elif period_types == ["annual"]:
+        denominator_class = "ANNUAL_REPORTED_PERIOD"
+    else:
+        denominator_class = "REPORTED_PERIOD_" + ("_".join(period_types).upper() or "TYPE_UNSPECIFIED")
+    freshness = (_metric_freshness(periods, decision_session=decision_session,
+                                   reporting_basis={"period_end": period_ends[-1] if period_ends else None,
+                                                    "price_session": item.get("price_session")})
+                 if decision_session else None)
+    freshness_status = (freshness or {}).get("freshness_status")
+
+    limitations: list[str] = []
+    if not is_ttm:
+        limitations.append("DENOMINATOR_NOT_TTM")
+    if not periods:
+        limitations.append("DENOMINATOR_PERIOD_UNSPECIFIED")
+    if freshness_status not in (None, "CURRENT"):
+        limitations.append(f"DENOMINATOR_PERIOD_{freshness_status}")
+    if item.get("price_session") and periods and not is_ttm:
+        limitations.append("CURRENT_PRICE_OVER_HISTORICAL_PERIOD_DENOMINATOR")
+    attribution = None
+    if family == "P/E":
+        attribution, attribution_limit = _earnings_attribution(item)
+        if attribution_limit:
+            limitations.append(attribution_limit)
+    for code in item.get("limitations") or []:
+        if code not in limitations:
+            limitations.append(str(code))
+    if is_ttm:
+        claim = "CURRENT_RESEARCH_TTM_MULTIPLE"
+    elif not periods:
+        claim = "DENOMINATOR_PERIOD_UNSPECIFIED_NOT_TTM"
+    elif freshness_status == "CURRENT":
+        claim = "REPORTED_PERIOD_DENOMINATOR_RESEARCH_CONTEXT_NOT_TTM"
+    else:
+        claim = "HISTORICAL_DENOMINATOR_RESEARCH_CONTEXT_NOT_CURRENT_TTM"
+
+    integrity = next((row for row in ((val_rec.get("denominator_integrity") or {}).get("multiples") or [])
+                      if isinstance(row, Mapping) and row.get("method_id") == method_id), None)
+    alternatives = {}
+    for alternative in _HEADLINE_FAMILIES[family]:
+        other = methods.get(alternative)
+        if alternative == method_id or not isinstance(other, Mapping):
+            continue
+        alternatives[alternative] = {
+            "status": other.get("status"), "period_basis": other.get("period_basis"),
+            "blocker_reason_codes": list(other.get("blocker_reason_codes") or []),
+        }
+    if is_ttm:
+        lineage = [{"feature_id": item.get("ttm_feature_id"), "provider": item.get("ttm_provider"),
+                    "source_context_identity": item.get("ttm_source_context_identity"),
+                    "input_source": item.get("ttm_input_source")}]
+    else:
+        lineage = [{
+            "canonical_metric": row.get("canonical_metric"), "reporting_period": row.get("reporting_period"),
+            "period_type": row.get("period_type"), "statement_scope": row.get("statement_scope"),
+            "provider": (row.get("source_lineage") or {}).get("provider"),
+            "evidence_id": (row.get("source_lineage") or {}).get("evidence_id"),
+        } for row in inputs]
+    return {
+        "method": method_id,
+        "claim": claim,
+        "formula": item.get("formula"),
+        "denominator_class": denominator_class,
+        "denominator_periods": periods,
+        "denominator_period_end": period_ends[-1] if period_ends else None,
+        "denominator_metrics": sorted({str(row["canonical_metric"]) for row in inputs if row.get("canonical_metric")})
+                               or ([str(item["denominator_feature"])] if item.get("denominator_feature") else []),
+        "statement_scopes": sorted({str(row["statement_scope"]) for row in inputs if row.get("statement_scope")}),
+        "price_session": item.get("price_session"),
+        "share_basis": item.get("share_basis"),
+        "source_lineage": lineage,
+        "denominator_freshness": ({key: freshness.get(key) for key in (
+            "freshness_status", "completed_quarter_lag", "financial_period_end", "reason_codes",
+            "price_session_does_not_set_financial_freshness")} if freshness else None),
+        "integrity": ({"status": integrity.get("status"), "strict_valuation_use": integrity.get("strict_valuation_use"),
+                       "reason_codes": list(integrity.get("reason_codes") or [])} if integrity else None),
+        "alternative_methods": alternatives,
+        **({"earnings_attribution": attribution} if attribution else {}),
+        "limitations": limitations,
+    }
+
+
+#: Earnings metrics that are profit after tax before deducting non-controlling interests (code 60).
+_TOTAL_EARNINGS_METRICS = frozenset({"net_income"})
+#: Earnings metrics attributable to the parent's shareholders (code 61 or a bank/securities equivalent).
+_PARENT_EARNINGS_METRICS = frozenset({"attributable_net_income", "net_income_attributable_to_parent",
+                                      "net_income_parent", "net_profit_parent", "profit_after_tax_parent"})
+
+
+def _earnings_attribution(item: Mapping[str, Any]) -> tuple[str, str | None]:
+    """Whose earnings a P/E-family denominator is, read from the method's own retained metric.
+
+    ``net_income`` is total profit after tax (it includes non-controlling interests), so a P/E over it
+    is not a parent-shareholder multiple for an issuer with material NCI. Labels only; never recomputes.
+    """
+    metrics = {str(row["canonical_metric"]) for row in (item.get("financial_inputs") or [])
+               if isinstance(row, Mapping) and row.get("canonical_metric")}
+    if not metrics:
+        earnings = (item.get("input_identities") or {}).get("earnings") or item.get("denominator_feature")
+        metrics = {str(earnings)} if earnings else set()
+    if metrics and metrics <= _PARENT_EARNINGS_METRICS:
+        return "PARENT_ATTRIBUTABLE", None
+    if metrics and metrics <= _TOTAL_EARNINGS_METRICS:
+        return "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI", "EARNINGS_INCLUDE_NCI_NOT_PARENT_ATTRIBUTABLE"
+    return "ATTRIBUTION_UNSPECIFIED", "EARNINGS_ATTRIBUTION_NOT_RETAINED"
+
+
+def _peer_relative_verdict_basis(val_rec: Mapping[str, Any], interpretation: str, *,
+                                 from_relative_state: bool) -> tuple[list[dict[str, Any]], list[str]]:
+    """Name the same-method cohorts that produced the producer's verdict and what they cannot claim."""
+    if interpretation == "NOT_APPLICABLE":
+        return [], []
+    methods = val_rec.get("methods") or {}
+    drivers = []
+    for method_id, detail in sorted((val_rec.get("peer_relative") or {}).items()):
+        if (not isinstance(detail, Mapping) or detail.get("status") != "READY_RESEARCH_ONLY"
+                or method_id in _SIZE_CONTEXT_METHODS or not isinstance(detail.get("percentile"), (int, float))):
+            continue
+        percentile = detail["percentile"]
+        if from_relative_state and interpretation == "CHEAP_VS_PEERS" and percentile > _PRODUCER_ATTRACTIVE_PERCENTILE:
+            continue
+        if from_relative_state and interpretation == "EXPENSIVE_VS_PEERS" and percentile < _PRODUCER_EXPENSIVE_PERCENTILE:
+            continue
+        basis = detail.get("basis") or {}
+        method = methods.get(method_id) if isinstance(methods.get(method_id), Mapping) else {}
+        driver = {
+            "method": method_id, "percentile": percentile, "peer_count": detail.get("peer_count"),
+            "period_basis": basis.get("period_basis") or method.get("period_basis"),
+            "compatibility_class": basis.get("compatibility_class"),
+            "equity_definition": method.get("equity_definition"),
+            "cohort_scope": ("SAME_METHOD_SAME_BASIS_COHORT_" + str(basis.get("cohort"))) if basis.get("cohort")
+                            else "SAME_METHOD_SAME_BASIS_ENTITY_CLASS_COHORT_NOT_INDUSTRY_MATCHED",
+        }
+        if method_id.startswith("P/E"):
+            driver["earnings_attribution"] = _earnings_attribution(method)[0]
+        drivers.append(driver)
+    qualifications: list[str] = []
+    if any(row["equity_definition"] and "INCLUDES_NCI" in str(row["equity_definition"]) for row in drivers):
+        qualifications.append("TOTAL_EQUITY_PB_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE")
+    if any(row.get("earnings_attribution") == "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI" for row in drivers):
+        qualifications.append("TOTAL_EARNINGS_PE_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE")
+    stale = [row for row in drivers if str(row["period_basis"] or "") not in _NON_PERIOD_BASES
+             and str(row["period_basis"]).isdigit()]
+    if stale:
+        qualifications.append("ANNUAL_REPORTED_PERIOD_DENOMINATOR_COHORT")
+        if len(stale) == len(drivers):
+            qualifications.append("VERDICT_RESTS_ONLY_ON_ANNUAL_REPORTED_PERIOD_DENOMINATORS")
+    if any(row["cohort_scope"].endswith("NOT_INDUSTRY_MATCHED") for row in drivers):
+        qualifications.append("PEER_COHORT_NOT_INDUSTRY_MATCHED")
+    if not drivers:
+        qualifications.append("VERDICT_DRIVER_METHODS_NOT_RETAINED")
+    return drivers, qualifications
+
+
 def evaluate_valuation_context(
     val_rec: Mapping[str, Any] | None,
     fa_context: Mapping[str, Any] | None,
+    *,
+    decision_session: str | None = None,
 ) -> tuple[dict[str, Any], list[str], list[str], list[str]]:
     """Interpret valuation multiples, peer comparisons, and own-history distributions."""
     val_rec = val_rec or {}
@@ -1043,11 +1261,14 @@ def evaluate_valuation_context(
     uncertainties: list[str] = []
 
     methods = val_rec.get("methods") or {}
-    pe_item = methods.get("P/E") or methods.get("P/E_TTM") or {}
+    # Headline P/E and P/S: a usable TTM method first, then a usable reported-period method.
+    # The former lookup (``methods.get("P/E") or methods.get("P/E_TTM")``) always took the
+    # existing method's dict, even when blocked, so a usable TTM method could never surface.
+    pe_method_id, pe_item = _select_headline_method(methods, "P/E")
     research_pb = methods.get("P/B_CURRENT_RESEARCH") or {}
     research_pb_used = research_pb.get("status") in {"RESEARCH_USABLE", "READY"}
     pb_item = research_pb if research_pb_used else (methods.get("P/B") or {})
-    ps_item = methods.get("P/S") or methods.get("P/S_TTM") or {}
+    ps_method_id, ps_item = _select_headline_method(methods, "P/S")
     # EV/EBITDA_CALC_READY (MARKET_WIDE_FUNDAMENTAL_VALUATION_ANALYTICAL_PRODUCT_V1) is the
     # genuinely computable EV/EBITDA method; the older "EV/EBITDA" method_id is retained for
     # its own always-blocked reason and is only a fallback here for a hypothetical future
@@ -1067,7 +1288,11 @@ def evaluate_valuation_context(
     # passed through, never re-thresholded here.
     peer_rel = (val_rec.get("peer_relative_context") or {})
     rel_state = peer_rel.get("relative_research_state") if peer_rel else val_rec.get("relative_research_state")
-    peer_pctl = peer_rel.get("peer_relative_percentile") or pe_item.get("peer_percentile") or pb_item.get("peer_percentile") or ps_item.get("peer_percentile")
+    # The peer-percentile fallback keeps the historical method lookup: choosing which method
+    # the headline shows must not change which percentile drives supports/counters.
+    legacy_pe_item = methods.get("P/E") or methods.get("P/E_TTM") or {}
+    legacy_ps_item = methods.get("P/S") or methods.get("P/S_TTM") or {}
+    peer_pctl = peer_rel.get("peer_relative_percentile") or legacy_pe_item.get("peer_percentile") or pb_item.get("peer_percentile") or legacy_ps_item.get("peer_percentile")
     peer_basis = {
         method_id: {"percentile": detail.get("percentile"), "peer_count": detail.get("peer_count")}
         for method_id, detail in sorted((val_rec.get("peer_relative") or {}).items())
@@ -1094,6 +1319,8 @@ def evaluate_valuation_context(
     elif rel_state == "IN_LINE_RELATIVE_RESEARCH":
         peer_interpretation = "MID_RANGE_VS_PEERS"
         supports.append("VALUATION_IN_LINE_WITH_PEERS")
+    peer_drivers, peer_qualifications = _peer_relative_verdict_basis(
+        val_rec, peer_interpretation, from_relative_state=not isinstance(peer_pctl, (int, float)))
 
     # Financial V2 history contains operating/balance-sheet ratios, not historical
     # price-to-fundamental multiples. Its percentiles cannot measure valuation
@@ -1182,6 +1409,17 @@ def evaluate_valuation_context(
                      {"method": (None if pb_val is None else "P/B" if (methods.get("P/B") or {}).get("value") == pb_val
                                  else "UNSPECIFIED_SOURCE"), "claim": None}),
         "ps_multiple": ps_val,
+        # Which method each headline P/E / P/S is: denominator period and class, statement
+        # scope, lineage, freshness against the decision session, denominator integrity, and the
+        # status of the other methods of the same family (OUTPUT_TRUTHFULNESS_CORRECTIVE).
+        "pe_basis": _headline_multiple_basis("P/E", pe_method_id, pe_item, value=pe_val, methods=methods,
+                                             val_rec=val_rec, decision_session=decision_session),
+        "ps_basis": _headline_multiple_basis("P/S", ps_method_id, ps_item, value=ps_val, methods=methods,
+                                             val_rec=val_rec, decision_session=decision_session),
+        # Which same-method cohorts produced ``peer_relative_state`` and what that verdict cannot
+        # claim. The verdict itself is the producer's, passed through unchanged.
+        "peer_relative_drivers": peer_drivers,
+        "peer_relative_qualifications": peer_qualifications,
         "ev_ebitda_multiple": ev_ebitda_val,
         "earnings_state": val_rec.get("earnings_state"),
         "size_context": {
@@ -1612,7 +1850,8 @@ def build_ticker_integrated_decision(
     tac_phase, tac_supp, tac_count = evaluate_tactical_phase(tactical)
 
     # 3. Valuation
-    val_summary, val_supp, val_count, val_uncert = evaluate_valuation_context(valuation, financial)
+    val_summary, val_supp, val_count, val_uncert = evaluate_valuation_context(
+        valuation, financial, decision_session=as_of_session)
 
     # 3b. Financial composite context (section 14): a pure join of 1 and 3 above, computed
     # from their own already-produced outputs. Additive only -- feeds nothing below.
@@ -1789,6 +2028,10 @@ def build_ticker_integrated_decision(
     evidence_axis_coherence = evaluate_evidence_axis_coherence(evidence_axes)
     financial_composite_context["evidence_basis"] = fundamental_signals.research_evidence_basis(
         evidence_axes["FUNDAMENTAL"].get("context"))
+    # The composite label's own scope, beside the label: a balance-sheet-only direction must not
+    # read as an income/cash-flow confirmation (OUTPUT_TRUTHFULNESS_CORRECTIVE). Descriptive only.
+    financial_composite_context["evidence_scope"] = fundamental_signals.headline_evidence_scope(
+        financial_composite_context["evidence_basis"])
     if financial_peer_context is not None:
         evidence_axes["FUNDAMENTAL"].setdefault("context", {})["financial_peer_context"] = copy.deepcopy(dict(financial_peer_context))
     if valuation_balance_sheet_divergence is not None:

@@ -121,7 +121,7 @@ def test_real_session_evidence_basis_and_all_retained_decision_fields_are_preser
         assert income["direction_status"] == "UNKNOWN"
         assert income["existing_income_research"]["metrics"] == fundamental["metrics"]
         assert enriched["fundamental_context"] == row["original_card_fundamental"]
-        assert context["composite"] | {"evidence_basis": None} == decision["financial_composite_context"] | {"evidence_basis": None}
+        assert context["composite"] | {"evidence_basis": None, "evidence_scope": None} == decision["financial_composite_context"] | {"evidence_basis": None, "evidence_scope": None}
         after = delivery.project_integrated_decision_for_ai_delivery(decision, source_session=day)
         assert before == after and row == saved
         assert basis["vote_ids"] == sorted(set(

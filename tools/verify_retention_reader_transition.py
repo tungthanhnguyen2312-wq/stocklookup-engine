@@ -101,6 +101,16 @@ TPLUS_RETRY_INTEGRITY_SOURCES = ("prospective_feedback_streaming.py", "prospecti
                                  "prospective_decision_outcome_feedback.py", "canonical_post_close_pipeline.py",
                                  "integrated_decision_prospective_feedback.py")
 TPLUS_RETRY_INTEGRITY_ARCHIVE_DIR = "tests/fixtures/tplus_retry_integrity_v1_sources/"
+VALUATION_TRUTHFULNESS_MANIFEST = "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json"
+VALUATION_TRUTHFULNESS_BASE = "f24956623666ce1b0e85637d159bd4153d435b02"
+VALUATION_TRUTHFULNESS_SCOPE = "EXACT_ADDITIVE_VALUATION_METHOD_BASIS_AND_FUNDAMENTAL_SCOPE_PRESENTATION_ONLY"
+VALUATION_TRUTHFULNESS_SOURCES = ("ai_research_session_delivery.py",
+                                  "stocklookup_core/decision/daily_integrated_decision_brief.py",
+                                  "stocklookup_core/decision/integrated_investment_decision_product.py",
+                                  "stocklookup_core/financial/fundamental_signal_consumption_contract.py",
+                                  "stocklookup_core/research/asymmetric_dislocation_research.py",
+                                  "stocklookup_core/valuation/current_research_valuation_context.py")
+VALUATION_TRUTHFULNESS_ARCHIVE_DIR = "tests/fixtures/valuation_output_truthfulness_v1_sources/"
 LEGACY_SUMMARY_MANIFEST = "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json"
 LEGACY_SUMMARY_BASE = "58b42b664d8e5008bd1e8e16f7cb167b52b60d21"
 LEGACY_SUMMARY_SCOPE = "EXACT_TPLUS_LEGACY_SUMMARY_FINGERPRINT_REUSE_ONLY"
@@ -171,13 +181,48 @@ OBSERVER_RESIDENT_RELEASE_PRIOR = "c03249a02f056136f7d4c0e7cef6e3fd1513425175961
 E4_V2_DIGEST = "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
 
 
+def _valuation_truthfulness_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-22 valuation output truthfulness successor (newest layer) to its base bytes.
+
+    Same shape and idempotence as the retry-integrity layer it succeeds: only this layer's exact active
+    bytes are replaced by the archived base-commit bytes; anything else passes through unchanged.
+    """
+    if relative not in VALUATION_TRUTHFULNESS_SOURCES:
+        return active
+    manifest = root / VALUATION_TRUTHFULNESS_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "valuation_output_truthfulness_source_transition/v1"
+            or spec.get("base_commit") != VALUATION_TRUTHFULNESS_BASE
+            or spec.get("scope") != VALUATION_TRUTHFULNESS_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != VALUATION_TRUTHFULNESS_SOURCES):
+        raise ValueError("VALUATION_TRUTHFULNESS_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    archive = VALUATION_TRUTHFULNESS_ARCHIVE_DIR + relative + ".txt"
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != archive):
+        raise ValueError("VALUATION_TRUTHFULNESS_SOURCE_TRANSITION_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"] or row["prior_sha256_lf"] == row["active_sha256_lf"]:
+        raise ValueError("VALUATION_TRUTHFULNESS_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _tplus_retry_integrity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
-    """Peel the 2026-11-21 T+ retry-integrity successor (newest layer) back to its base-commit bytes.
+    """Peel the 2026-11-21 T+ retry-integrity successor back to its base-commit bytes.
 
     Idempotent and applied at every per-file chain entry: bytes that are not this layer's exact active
     bytes pass through unchanged and are judged by the older layers. A missing manifest keeps older
-    checkouts valid.
+    checkouts valid. The newer valuation-truthfulness layer is peeled first.
     """
+    active = _valuation_truthfulness_prior_bytes(root, relative, active)
     if relative not in TPLUS_RETRY_INTEGRITY_SOURCES:
         return active
     manifest = root / TPLUS_RETRY_INTEGRITY_MANIFEST
@@ -1178,6 +1223,7 @@ def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> b
     evidence, so a session without them keeps its exact prior brief bytes. A missing manifest keeps older
     checkouts valid.
     """
+    active = _valuation_truthfulness_prior_bytes(root, relative, active)
     if relative != DECISION_CONTEXT_SOURCE:
         return active
     manifest = root / DECISION_CONTEXT_MANIFEST
@@ -1384,6 +1430,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
     if retry_manifest.is_file():
         for relative in TPLUS_RETRY_INTEGRITY_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _valuation_truthfulness_prior_bytes(root, relative, live)
             row = json.loads(retry_manifest.read_bytes())["sources"][relative]
             if hashlib.sha256(live).hexdigest() != row["active_sha256_lf"]:
                 raise ValueError("TPLUS_RETRY_INTEGRITY_SOURCE_TRANSITION_BINDING_INVALID")
@@ -1392,6 +1439,17 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if retry["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = retry["active_e4_v2_digest"]
+    truthfulness_manifest = root / VALUATION_TRUTHFULNESS_MANIFEST
+    if truthfulness_manifest.is_file():
+        truthfulness = json.loads(truthfulness_manifest.read_bytes())
+        for relative in VALUATION_TRUTHFULNESS_SOURCES:
+            live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            if hashlib.sha256(live).hexdigest() != truthfulness["sources"][relative]["active_sha256_lf"]:
+                raise ValueError("VALUATION_TRUTHFULNESS_SOURCE_TRANSITION_BINDING_INVALID")
+            _valuation_truthfulness_prior_bytes(root, relative, live)
+        if truthfulness["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = truthfulness["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

@@ -447,7 +447,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     codec = live_receipt["record_subtree_codec_candidate"]
 
     def successor_baseline_pin(path, *successors):
-        for entry in successors:
+        # The newest corrective is every chain's last successor before the live pin.
+        for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"]):
             if path in entry["prior_source_sha256_lf"]:
                 return entry["prior_source_sha256_lf"][path]
         return live_receipt["source_sha256"][path]
@@ -529,10 +530,12 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     # The scheduler stays a separate operator: Daily never imports it, and the capture
     # operator it launches (admission, writer lease, Job limits) keeps its qualified bytes.
     assert module_name(scheduler_path) not in daily_reachable(root)
+    later_capture = live_receipt["pit_capture_admission_precheck_corrective"]["prior_source_sha256_lf"]
     for operator in ("tools/run_capture_only.py", "tools/capture_writer_lease.py", "tools/run_scheduled_capture.cmd"):
-        assert live_receipt["source_sha256"][operator] == prior_receipt["source_sha256"][operator]
-    prior_receipt["source_sha256"][scheduler_path] = hashlib.sha256(
-        (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        live_at_step = later_capture.get(operator, live_receipt["source_sha256"][operator])
+        assert live_at_step == prior_receipt["source_sha256"][operator]
+    prior_receipt["source_sha256"][scheduler_path] = later_capture.get(scheduler_path, hashlib.sha256(
+        (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     prior_receipt["scheduled_capture_reliability_corrective"] = scheduled
 
     compact = live_receipt["compact_research_decision_scope_corrective"]
@@ -804,8 +807,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{retry['base_commit']}:{path}"], cwd=root)
         assert retry["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = successor_baseline_pin(path)
     prior_receipt["tplus_retry_integrity_corrective"] = retry
 
     borrowing = live_receipt["securities_borrowing_cost_row_identity_corrective"]
@@ -821,6 +823,46 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     current_borrowing = (root / borrowing_path).read_bytes().replace(b"\r\n", b"\n")
     prior_receipt["source_sha256"][borrowing_path] = hashlib.sha256(current_borrowing).hexdigest()
     prior_receipt["securities_borrowing_cost_row_identity_corrective"] = borrowing
+
+    precheck = live_receipt["pit_capture_admission_precheck_corrective"]
+    capture_paths = ["tools/run_capture_only.py", "tools/run_scheduled_capture.py"]
+    assert precheck["scope"] == "CAPTURE_MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT_AND_SCHEDULER_STATUS_EVIDENCE_ONLY"
+    assert precheck["new_capacity_measurement"] is False and precheck["whole_daily_requalification"] is False
+    assert precheck["changed_source_paths"] == capture_paths
+    for path in capture_paths:
+        # Neither the scheduler nor the capture operator is reachable from Daily.
+        assert module_name(path) not in daily_reachable(root)
+        assert precheck["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        old_capture = subprocess.check_output(["git", "show", f"{precheck['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(old_capture.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["pit_capture_admission_precheck_corrective"] = precheck
+
+    truthfulness = live_receipt["valuation_output_truthfulness_corrective"]
+    truthfulness_paths = [
+        "ai_research_session_delivery.py",
+        "stocklookup_core/decision/daily_integrated_decision_brief.py",
+        "stocklookup_core/decision/integrated_investment_decision_product.py",
+        "stocklookup_core/financial/fundamental_signal_consumption_contract.py",
+        "stocklookup_core/research/asymmetric_dislocation_research.py",
+        "stocklookup_core/valuation/current_research_valuation_context.py",
+        "tools/verify_retention_reader_transition.py",
+    ]
+    assert truthfulness["scope"] == "ADDITIVE_VALUATION_METHOD_BASIS_AND_FUNDAMENTAL_SCOPE_PRESENTATION_ONLY"
+    assert truthfulness["new_capacity_measurement"] is False
+    assert truthfulness["whole_daily_requalification"] is False
+    assert truthfulness["policy_effect"] == "NONE_POSTURE_DECISION_IDENTITY_SUPPORTS_COUNTERS_UNCHANGED"
+    assert truthfulness["changed_source_paths"] == truthfulness_paths
+    assert truthfulness["base_commit"] == "f24956623666ce1b0e85637d159bd4153d435b02"
+    # The estimated IID growth stays inside the live requalification cap over the 2026-11-20 IID.
+    assert 2400019345 + truthfulness["iid_byte_delta_estimate"]["added_bytes"] < preflight.LIVE_REQUALIFICATION_MAX_IID_BYTES
+    for path in truthfulness_paths:
+        previous = subprocess.check_output(["git", "show", f"{truthfulness['base_commit']}:{path}"], cwd=root)
+        assert truthfulness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["valuation_output_truthfulness_corrective"] = truthfulness
 
     staleness = live_receipt["share_basis_official_event_staleness_corrective"]
     staleness_paths = ["market_wide_current_shares_resolver.py", "tools/derive_market_wide_current_valuation_input_scaleout.py"]
