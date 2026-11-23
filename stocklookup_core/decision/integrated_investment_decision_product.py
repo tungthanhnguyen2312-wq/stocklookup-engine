@@ -1071,8 +1071,9 @@ def _headline_multiple_basis(family: str, method_id: str | None, item: Mapping[s
     """
     if value is None:
         return {"method": None, "claim": None}
-    if not methods or method_id is None:
-        # Compact record without per-method detail: the value's method is not retained.
+    if not methods or method_id is None or item.get("value") != value:
+        # Compact record without per-method detail, or a top-level value that is not the
+        # selected method's own value: the displayed value's method is not retained.
         return {"method": "UNSPECIFIED_SOURCE", "claim": "METHOD_AND_DENOMINATOR_PERIOD_NOT_RETAINED",
                 "limitations": ["HEADLINE_METHOD_NOT_RETAINED", "DENOMINATOR_PERIOD_UNSPECIFIED"]}
     from stocklookup_core.valuation.current_research_valuation_context import _metric_freshness
@@ -1287,7 +1288,11 @@ def evaluate_valuation_context(
     # passed through, never re-thresholded here.
     peer_rel = (val_rec.get("peer_relative_context") or {})
     rel_state = peer_rel.get("relative_research_state") if peer_rel else val_rec.get("relative_research_state")
-    peer_pctl = peer_rel.get("peer_relative_percentile") or pe_item.get("peer_percentile") or pb_item.get("peer_percentile") or ps_item.get("peer_percentile")
+    # The peer-percentile fallback keeps the historical method lookup: choosing which method
+    # the headline shows must not change which percentile drives supports/counters.
+    legacy_pe_item = methods.get("P/E") or methods.get("P/E_TTM") or {}
+    legacy_ps_item = methods.get("P/S") or methods.get("P/S_TTM") or {}
+    peer_pctl = peer_rel.get("peer_relative_percentile") or legacy_pe_item.get("peer_percentile") or pb_item.get("peer_percentile") or legacy_ps_item.get("peer_percentile")
     peer_basis = {
         method_id: {"percentile": detail.get("percentile"), "peer_count": detail.get("peer_count")}
         for method_id, detail in sorted((val_rec.get("peer_relative") or {}).items())

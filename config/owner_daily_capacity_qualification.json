@@ -702,7 +702,7 @@
     "stocklookup_core/decision/human_ai_decision_evidence_packet.py": "53d94121a63858d5e8520a81740a47deafb4f95a35027fd3f6487e1c1d30db95",
     "stocklookup_core/decision/indicator_metric_availability.py": "ee7ce2346e3b8da0922ac557be9bcf8f0a25380240c35c6fac9a72888135a65c",
     "stocklookup_core/decision/indicator_metric_display_state.py": "658e7f1593968818fc7fac2766f32a6c12ca7df139546b5c3267a578ec205a05",
-    "stocklookup_core/decision/integrated_investment_decision_product.py": "4268e04cbdde4e4fa06516d93ecbea940f8c751b260feba0dc8d7ab56bf04b0b",
+    "stocklookup_core/decision/integrated_investment_decision_product.py": "cbf9e109bcdbc4ec3c6f159de14c00a0e4f4b00768619829f9c76408a77d41a4",
     "stocklookup_core/decision/investment_decision_workspace_projection.py": "95c27b00b90aad8cedd0f2fb2808d0217297890082ecf24dccc8074afea73379",
     "stocklookup_core/decision/macro_market_regime_decision_context.py": "70151e45eb01f6f28e594896b1d22658175d34de80a66ff4ce0ae7bb2b83d0fb",
     "stocklookup_core/decision/market_close_current_research.py": "826776076f38c186b238253953a817566ceeee7f8152c6c1783d5016a935e33c",

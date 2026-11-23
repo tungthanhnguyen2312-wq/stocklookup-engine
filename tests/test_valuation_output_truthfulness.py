@@ -315,3 +315,30 @@ def test_inputs_are_not_mutated():
     snapshot = copy.deepcopy(record)
     _summary(record)
     assert record == snapshot
+
+
+def test_top_level_value_not_from_the_selected_method_never_borrows_its_basis():
+    # A record-level annual P/E must not be shown under a usable TTM method's provenance.
+    record = hpg()
+    record["pe"] = 14.0
+    record["methods"]["P/E_TTM"] = _usable_ttm("P/E_TTM", 9.5)
+    summary, *_ = _summary(record)
+    assert summary["pe_multiple"] == 14.0
+    assert summary["pe_basis"]["method"] == "UNSPECIFIED_SOURCE"
+    assert summary["pe_basis"]["claim"] == "METHOD_AND_DENOMINATOR_PERIOD_NOT_RETAINED"
+
+
+def test_headline_selection_does_not_change_which_percentile_drives_policy_codes():
+    # Annual P/E at the 20th peer percentile, usable TTM P/E at the 80th, no wrapped verdict:
+    # the policy codes keep the historical P/E-first lookup.
+    def build(with_ttm: bool) -> dict:
+        record = hpg()
+        record.pop("peer_relative_context", None)
+        record["methods"]["P/E"] = dict(record["methods"]["P/E"], status="RESEARCH_USABLE", peer_percentile=0.20)
+        if with_ttm:
+            record["methods"]["P/E_TTM"] = dict(_usable_ttm("P/E_TTM", 9.5), peer_percentile=0.80)
+        return record
+    _, base_supports, base_counters, *_ = _summary(build(False))
+    _, supports, counters, *_ = _summary(build(True))
+    assert supports == base_supports and counters == base_counters
+    assert not any("EXPENSIVE_VS_PEERS" in code for code in counters)
