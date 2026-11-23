@@ -28,7 +28,12 @@ Authority lanes
     recorded after it. Carries the lag in days. Absence of a recorded event is not proof that
     none occurred, and `freshness_proof` says so.
 ``provider_reported_stale``
-    A share-changing official event carries an ex-right date after the observation.
+    A share-changing official event carries an ex-right date after the observation. Events come
+    from ``vn_stock.db -> corporate_event_records`` and, when the caller passes them, from the
+    retained official HNX/HOSE event context (``current_official_event_context/v1``): a stock
+    dividend, bonus or rights event with an officially qualified ex-date on or before the session,
+    from a context acquired on or before the session. The provider count is never adjusted by the
+    event ratio; it is withheld.
 ``provider_reported_unverifiable_freshness``
     A share-changing or unclassified event exists that cannot be positioned against the
     observation because it carries no ex-right date.
@@ -81,6 +86,14 @@ _PERIOD_END_IDENTITY = "period_end_shares_outstanding"
 _EVENT_IDENTITY = "current_shares_outstanding_after_event"
 
 _ANCHOR_IDENTITY_TYPES = frozenset({_PERIOD_END_IDENTITY, _EVENT_IDENTITY})
+
+#: Share-changing types in the retained official event context, the same set
+#: `current_common_shares_authority.SHARE_CHANGING_OFFICIAL_TYPES` treats as share changing.
+OFFICIAL_SHARE_CHANGING_EVENT_TYPES = frozenset({"STOCK_DIVIDEND", "BONUS", "RIGHTS"})
+_OFFICIAL_EVENT_CONTEXT_CONTRACT = "current_official_event_context/v1"
+_OFFICIAL_EX_DATE_QUALIFIED = "EX_DATE_OFFICIAL_QUALIFIED"
+_OFFICIAL_EVENT_CONTEXT_GLOB = ("operations-review/current-official-event-context-integration-v1-*/"
+                                "current_official_event_context_artifact.json")
 
 
 class ShareStoreUnreadable(RuntimeError):
@@ -287,6 +300,59 @@ class _Store:
         return sorted(self.metadata)
 
 
+def retained_official_share_events(evidence_roots: Iterable[Path | str], session_date: str) -> dict[str, Any]:
+    """Share-changing official events already retained and known by the session.
+
+    Reads every retained ``current_official_event_context/v1`` artifact under the governed
+    evidence roots whose own acquisition session is on or before ``session_date``. Keeps stock
+    dividend, bonus and rights events whose ex-date is officially qualified and falls on or before
+    the session; a later ex-date has not changed the count at the session. Nothing is fetched.
+    An unreadable context is raised, never skipped: silently resolving without it is the failure
+    this exists to close.
+    """
+    session = _as_date(session_date)
+    if session is None:
+        raise ValueError(f"session_date must be an ISO date, got {session_date!r}")
+    contexts: dict[str, str] = {}
+    events: dict[str, dict[str, dict[str, Any]]] = {}
+    for root in evidence_roots:
+        for path in sorted(Path(root).glob(_OFFICIAL_EVENT_CONTEXT_GLOB)):
+            try:
+                artifact = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as exc:
+                raise ShareStoreUnreadable(f"official event context unreadable: {path.parent.name}: {exc}") from None
+            if not isinstance(artifact, dict) or artifact.get("contract_version") != _OFFICIAL_EVENT_CONTEXT_CONTRACT:
+                continue
+            acquired = _as_date(artifact.get("research_session"))
+            identity = str(artifact.get("artifact_identity") or "")
+            if acquired is None or acquired > session or not identity or identity in contexts:
+                continue
+            contexts[identity] = acquired.isoformat()
+            for row in artifact.get("all_current_universe_event_records") or []:
+                event_type = str(row.get("event_type") or "").upper()
+                if event_type not in OFFICIAL_SHARE_CHANGING_EVENT_TYPES:
+                    continue
+                if row.get("qualification") != _OFFICIAL_EX_DATE_QUALIFIED:
+                    continue
+                exright = _as_date(row.get("ex_date"))
+                ticker = str(row.get("ticker") or "").strip().upper()
+                if exright is None or exright > session or not ticker:
+                    continue
+                key = str(row.get("event_id") or f"{event_type}:{exright.isoformat()}")
+                events.setdefault(ticker, {}).setdefault(key, {
+                    "event_id": key, "event_type": event_type, "ex_date": exright.isoformat(),
+                    "source": row.get("source"), "first_retained_in_context": acquired.isoformat()})
+    return {
+        "status": "APPLIED" if contexts else "NO_RETAINED_OFFICIAL_EVENT_CONTEXT",
+        "session_date": session.isoformat(),
+        "context_count": len(contexts),
+        "context_sessions": sorted(set(contexts.values())),
+        "tickers_with_events": len(events),
+        "events": {t: sorted(rows.values(), key=lambda r: (r["ex_date"], r["event_id"]))
+                   for t, rows in sorted(events.items())},
+    }
+
+
 def _event_verdict(events: Iterable[Mapping[str, Any]], observed_on: date) -> dict[str, Any]:
     """Position the retained events against the observation date.
 
@@ -429,11 +495,15 @@ def resolve_effective_shares(ticker: str, runtime_root: Path | str, session_date
                                     else "absent_no_ledger_coverage"), **extra)
 
 
-def resolve_market_wide_shares(runtime_root: Path | str, session_date: str) -> dict[str, Any]:
+def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
+                               official_events: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
+                               ) -> dict[str, Any]:
     """Authority counts across the retained active universe, for a stated session.
 
     Every count here is measured on the call. The lanes partition the universe exactly, and
     `counts_reconcile` states that as a checked fact rather than leaving the reader to add up.
+    ``official_events`` (from `retained_official_share_events`) joins the retained ledger, so an
+    official ex-date after the provider observation withholds the count as stale.
     """
     session = str(session_date).strip()
     if not _as_date(session):
@@ -453,6 +523,19 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str) -> d
             "counts": None,
             "tickers": {},
         }
+
+    applied = 0
+    for ticker, rows in (official_events or {}).items():
+        for row in rows:
+            exright = _as_date(row.get("ex_date"))
+            if exright is None or exright > _as_date(session):
+                continue
+            store.events.setdefault(str(ticker).upper(), []).append({
+                "event_code": "OFFICIAL_" + str(row.get("event_type") or "SHARE_EVENT").upper(),
+                "event_class": "share_changing",
+                "exright_date": exright,
+            })
+            applied += 1
 
     tickers: dict[str, dict[str, Any]] = {}
     counts: dict[str, int] = {}
@@ -476,5 +559,6 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str) -> d
         "counts_reconcile": sum(counts.values()) == universe,
         "official_anchors_retained": len(store.anchors),
         "ledger_tickers_covered": len(store.events),
+        "official_share_events_applied": applied,
         "tickers": tickers,
     }
