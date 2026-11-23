@@ -529,10 +529,12 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     # The scheduler stays a separate operator: Daily never imports it, and the capture
     # operator it launches (admission, writer lease, Job limits) keeps its qualified bytes.
     assert module_name(scheduler_path) not in daily_reachable(root)
+    later_capture = live_receipt["pit_capture_admission_precheck_corrective"]["prior_source_sha256_lf"]
     for operator in ("tools/run_capture_only.py", "tools/capture_writer_lease.py", "tools/run_scheduled_capture.cmd"):
-        assert live_receipt["source_sha256"][operator] == prior_receipt["source_sha256"][operator]
-    prior_receipt["source_sha256"][scheduler_path] = hashlib.sha256(
-        (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        live_at_step = later_capture.get(operator, live_receipt["source_sha256"][operator])
+        assert live_at_step == prior_receipt["source_sha256"][operator]
+    prior_receipt["source_sha256"][scheduler_path] = later_capture.get(scheduler_path, hashlib.sha256(
+        (root / scheduler_path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     prior_receipt["scheduled_capture_reliability_corrective"] = scheduled
 
     compact = live_receipt["compact_research_decision_scope_corrective"]
@@ -821,6 +823,20 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     current_borrowing = (root / borrowing_path).read_bytes().replace(b"\r\n", b"\n")
     prior_receipt["source_sha256"][borrowing_path] = hashlib.sha256(current_borrowing).hexdigest()
     prior_receipt["securities_borrowing_cost_row_identity_corrective"] = borrowing
+
+    precheck = live_receipt["pit_capture_admission_precheck_corrective"]
+    capture_paths = ["tools/run_capture_only.py", "tools/run_scheduled_capture.py"]
+    assert precheck["scope"] == "CAPTURE_MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT_AND_SCHEDULER_STATUS_EVIDENCE_ONLY"
+    assert precheck["new_capacity_measurement"] is False and precheck["whole_daily_requalification"] is False
+    assert precheck["changed_source_paths"] == capture_paths
+    for path in capture_paths:
+        # Neither the scheduler nor the capture operator is reachable from Daily.
+        assert module_name(path) not in daily_reachable(root)
+        assert precheck["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        old_capture = subprocess.check_output(["git", "show", f"{precheck['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(old_capture.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["pit_capture_admission_precheck_corrective"] = precheck
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
