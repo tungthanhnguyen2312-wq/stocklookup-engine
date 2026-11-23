@@ -158,7 +158,9 @@ def test_exact_merged_archives_and_feedback_dependencies():
     assert feedback_io["previous_e4_v2_digest"] == context_fp["active_e4_v2_digest"]
     retry = json.loads((ROOT / "tests/fixtures/tplus_retry_integrity_source_transition_v1.json").read_bytes())
     assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
-    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == retry["active_e4_v2_digest"]
+    truthfulness = json.loads((ROOT / "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json").read_bytes())
+    assert truthfulness["previous_e4_v2_digest"] == retry["active_e4_v2_digest"]
+    assert active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == truthfulness["active_e4_v2_digest"]
 
 
 @pytest.mark.parametrize("tamper", ["live", "archive", "scope", "forged_prior"])

@@ -1082,6 +1082,9 @@ def attach_peer_relative(rows: Mapping[str, Mapping[str, Any]], *,
                     "share_basis": method.get("share_basis"), "period_basis": method.get("period_basis"),
                     "compatibility_class": method.get("ttm_compatibility_class"),
                     "ttm_method": method.get("ttm_method"),
+                    # The industry/sector cohort when one keyed this comparison; absent means the
+                    # cohort is the same-method entity-class pool, not industry peers.
+                    **({"cohort": cohort_by_ticker.get(ticker)} if cohort_by_ticker is not None else {}),
                 },
                 "minimum_peer_count": MIN_COHORT_MEMBERS,
                 "percentile_formula": "(below + 0.5 * equal) / n",

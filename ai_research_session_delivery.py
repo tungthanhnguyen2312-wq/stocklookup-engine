@@ -206,12 +206,14 @@ def project_integrated_decision_for_ai_delivery(record: Any, *, integrated_ident
 
 def financial_research_composite(record: Mapping[str, Any]) -> Any:
     """Scope the existing verdict without changing state, votes or identity."""
-    from stocklookup_core.financial.fundamental_signal_consumption_contract import research_evidence_basis
+    from stocklookup_core.financial.fundamental_signal_consumption_contract import (
+        headline_evidence_scope, research_evidence_basis)
     composite = copy.deepcopy(record.get("financial_composite_context"))
     if isinstance(composite, dict):
         context = ((record.get("evidence_axes") or {}).get("FUNDAMENTAL") or {}).get("context")
         if isinstance(context, Mapping) and context.get("synthesis_contract"):
             composite["evidence_basis"] = research_evidence_basis(context)
+            composite["evidence_scope"] = headline_evidence_scope(composite["evidence_basis"])
     return composite
 
 

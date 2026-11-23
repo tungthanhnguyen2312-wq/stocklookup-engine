@@ -580,6 +580,34 @@ as-of period, basis and `financial_period_freshness/v1` status. Rules that are n
   limitation `P_B_IS_RESEARCH_TOTAL_EQUITY_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER`; the value is
   unchanged and exact P/B stays blocked. The Daily brief and the dislocation product pass `pb_basis`
   with the multiple.
+- **Headline P/E and P/S name their method and denominator period** (valuation output truthfulness
+  corrective, 2026-11-22). The headline is the first *usable* method of its family (`P/E_TTM`, then
+  the existing reported-period `P/E`; likewise P/S); a blocked existing method no longer masks a
+  usable TTM method, and a single-period reported-duration multiple is never the headline.
+  `pe_basis` / `ps_basis` carry the method, claim (`CURRENT_RESEARCH_TTM_MULTIPLE`,
+  `HISTORICAL_DENOMINATOR_RESEARCH_CONTEXT_NOT_CURRENT_TTM`, `REPORTED_PERIOD_DENOMINATOR_RESEARCH_CONTEXT_NOT_TTM`
+  or `DENOMINATOR_PERIOD_UNSPECIFIED_NOT_TTM`), denominator class, periods and period end, metric,
+  statement scope, price session, share basis, input lineage, denominator freshness against the
+  decision session (the price session never sets it), the denominator-integrity row, and the status
+  of the other methods of the family. An annual denominator under a current price stays visible as
+  qualified research context; it is never relabelled TTM and no value is recomputed.
+  `pe_basis.earnings_attribution` says whose earnings the denominator is, read from the method's
+  own metric: corporate `net_income` is total profit after tax including non-controlling interests
+  (`TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI`, limitation `EARNINGS_INCLUDE_NCI_NOT_PARENT_ATTRIBUTABLE`),
+  so it is not a parent-shareholder P/E where NCI is material. A P/E peer driver over it adds
+  `TOTAL_EARNINGS_PE_NCI_NOT_DEDUCTED_NOT_COMMON_SHAREHOLDER_RELATIVE`. Switching the denominator
+  to parent-attributable earnings is a method change and is not made here.
+- **Peer verdicts name their cohorts.** `peer_relative_drivers` lists the same-method cohorts that
+  produced `peer_relative_state` (producer thresholds, size context excluded) and
+  `peer_relative_qualifications` what the verdict cannot claim: total-equity P/B with NCI not
+  deducted, annual reported-period denominators (or a verdict resting only on them), and a cohort
+  that is the same-method entity-class pool rather than industry peers. The verdict, supports,
+  counters and posture are unchanged.
+- **Fundamental scope sits beside the composite label.** `financial_composite_context.evidence_scope`
+  (and the Daily brief's `fundamental_evidence_scope`) repeat `evidence_basis.scope`
+  (`BALANCE_SHEET_ONLY` etc.) with the represented and unrepresented statement families, so a
+  balance-sheet-only `FUNDAMENTALS_IMPROVING` never reads as an income or cash-flow confirmation.
+  Descriptive only; no vote changes.
 
 ---
 

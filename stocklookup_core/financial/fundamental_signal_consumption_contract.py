@@ -106,6 +106,30 @@ def research_evidence_basis(context: Mapping[str, Any] | None) -> dict[str, Any]
         "is_actionable": False, "vote_effect": "NONE"}
 
 
+#: Statement family a vote dimension reads. Income and cash-flow dimensions are named so that a
+#: label resting only on balance-sheet votes says which families did not vote.
+_DIMENSION_STATEMENT_FAMILY = {
+    "CAPITAL_STRUCTURE": "BALANCE_SHEET", "SHORT_TERM_LIQUIDITY": "BALANCE_SHEET", "WORKING_CAPITAL": "BALANCE_SHEET",
+    "GROWTH": "INCOME_STATEMENT", "MARGINS": "INCOME_STATEMENT", "PROFITABILITY": "INCOME_STATEMENT",
+    "CASH_QUALITY": "CASH_FLOW",
+}
+_GENERAL_STATEMENT_FAMILIES = ("BALANCE_SHEET", "INCOME_STATEMENT", "CASH_FLOW")
+
+
+def headline_evidence_scope(basis: Mapping[str, Any] | None) -> dict[str, Any]:
+    """The scope of a composite label, for display beside it. Never a vote or a new verdict."""
+    basis = basis or {}
+    dimensions = list(basis.get("represented_vote_dimensions") or [])
+    families = sorted({_DIMENSION_STATEMENT_FAMILY[d] for d in dimensions if d in _DIMENSION_STATEMENT_FAMILY})
+    general = bool(dimensions) and all(d in _DIMENSION_STATEMENT_FAMILY for d in dimensions)
+    return {"scope": basis.get("scope"), "represented_vote_dimensions": dimensions,
+            "represented_statement_families": families,
+            "unrepresented_statement_families": ([f for f in _GENERAL_STATEMENT_FAMILIES if f not in families]
+                                                 if general else []),
+            "source_periods": list(basis.get("source_periods") or []),
+            "limitations": list(basis.get("limitations") or []), "vote_effect": "NONE"}
+
+
 def official_research_row_reasons(row: Mapping[str, Any], *, boundary: Any, entity: Any, ticker: str | None,
                                   statement_family: str) -> list[str]:
     """The one admission gate for official exact-field research rows (D-1, tier, entity, cutoff)."""
