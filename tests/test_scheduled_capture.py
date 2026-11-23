@@ -112,7 +112,8 @@ def test_refusal_keeps_the_admission_reasons_and_points_at_no_missing_receipt(tm
     first = status["attempts"][0]
     assert first["outcome"] == "NOT_ADMITTED" and first["receipt_dir"] is None
     assert first["admission"] == {"reasons": ["AVAILABLE_PHYSICAL_BYTES_LOW"], "available_physical_bytes": 3 * 1024**3,
-                                  "available_commit_bytes": 9 * 1024**3, "active_writer_count": 0}
+                                  "available_commit_bytes": 9 * 1024**3, "active_writer_count": None,
+                                  "writer_observation": "NOT_OBSERVED", "repository_writer_state_observed": None}
     unexplained, _ = _run(tmp_path / "other", Clock(DAY + "T15:40:00"), [(1, None, "launcher said no", ""), "PASS"])
     assert unexplained["attempts"][0]["stdout_tail"] == "launcher said no"
 
@@ -197,7 +198,71 @@ def test_interrupted_run_is_recorded_by_the_next_run(tmp_path):
         scheduled.run(DAY, retained=tmp_path / "retained", logs=tmp_path / "logs", receipts=tmp_path / "r",
                       python=sys.executable, clock=Clock(DAY + "T15:40:00"), child=child)
     status, calls = _run(tmp_path, Clock(DAY + "T16:00:00"), ["PASS"])
-    assert status["state"] == scheduled.CAPTURED and status["prior_runs"][0]["state"] == "ATTEMPT_RUNNING"
+    assert status["state"] == scheduled.CAPTURED and status["prior_runs"][0]["state"] == scheduled.INTERRUPTED
+    assert status["prior_runs"][0]["attempts"][0]["outcome"] == "INTERRUPTED"
+
+
+def test_interrupted_admitted_attempt_keeps_its_receipt_directory(tmp_path):
+    """2026-11-23: Ctrl+C during the first admitted attempt lost that attempt from the status file."""
+    refused = json.dumps({"status": "NOT_ADMITTED", "admission": {"reasons": ["AVAILABLE_PHYSICAL_BYTES_LOW"]},
+                          "host": {"observations": {"available_physical_bytes": 2 * 1024**3}}})
+    calls = []
+
+    def child(python, session, directory, timeout):
+        calls.append(directory)
+        if len(calls) == 1:
+            return 3, None, refused + "\n", ""
+        directory.mkdir()  # admitted: the operator created its receipt directory
+        raise KeyboardInterrupt
+
+    clock = Clock(DAY + "T15:40:00")
+    with pytest.raises(KeyboardInterrupt):
+        scheduled.run(DAY, retained=tmp_path / "retained", logs=tmp_path / "logs", receipts=tmp_path / "r",
+                      python=sys.executable, clock=clock, sleep=clock.sleep, child=child)
+    written = json.loads((tmp_path / "logs" / f"pit_capture_{DAY}.status.json").read_text(encoding="utf-8"))
+    assert written["state"] == scheduled.INTERRUPTED and "current_attempt" not in written
+    assert [a["outcome"] for a in written["attempts"]] == ["NOT_ADMITTED", "INTERRUPTED"]
+    assert written["attempts"][1]["receipt_dir"] == str(calls[1]) and written["attempts"][1]["error"] == "KeyboardInterrupt"
+
+
+def test_running_attempt_is_visible_in_the_status_file_while_the_child_runs(tmp_path):
+    seen = []
+
+    def child(python, session, directory, timeout):
+        seen.append(json.loads((tmp_path / "logs" / f"pit_capture_{DAY}.status.json").read_text(encoding="utf-8")))
+        target = scheduled.record_path(tmp_path / "retained", session)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("{}")
+        return 0, {"status": "PASS"}, "", ""
+
+    status = scheduled.run(DAY, retained=tmp_path / "retained", logs=tmp_path / "logs", receipts=tmp_path / "r",
+                           python=sys.executable, clock=Clock(DAY + "T15:40:00"), child=child)
+    assert seen[0]["state"] == "ATTEMPT_RUNNING" and seen[0]["current_attempt"]["number"] == 1
+    assert status["state"] == scheduled.CAPTURED and "current_attempt" not in status
+
+
+def test_unobserved_writer_state_is_not_reported_as_zero_writers(tmp_path):
+    refused = json.dumps({"status": "NOT_ADMITTED", "admission": {"reasons": ["WRITER_STATE_UNKNOWN"]},
+                          "host": {"observations": {"writer_observation": "UNKNOWN", "active_writers": [],
+                                                    "repository": {"writer_state_observed": True}}}})
+    observed = json.dumps({"status": "NOT_ADMITTED", "admission": {"reasons": ["CONCURRENT_WRITER_PRESENT"]},
+                           "host": {"observations": {"writer_observation": "OBSERVED", "active_writers": [{"pid": 7}],
+                                                     "repository": {"writer_state_observed": True}}}})
+    status, _ = _run(tmp_path, Clock(DAY + "T15:40:00"), [(3, None, refused, ""), (3, None, observed, ""), "PASS"])
+    unknown, busy = status["attempts"][0]["admission"], status["attempts"][1]["admission"]
+    assert unknown["active_writer_count"] is None and unknown["writer_observation"] == "UNKNOWN"
+    assert busy["active_writer_count"] == 1 and busy["writer_observation"] == "OBSERVED"
+
+
+def test_each_attempt_prints_one_progress_line_on_stderr(tmp_path, capsys):
+    refused = json.dumps({"status": "NOT_ADMITTED", "admission": {"reasons": ["AVAILABLE_PHYSICAL_BYTES_LOW"],
+                                                                  "basis": "MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT"},
+                          "host": {"observations": {"available_physical_bytes": 2 * 1024**3}}})
+    status, _ = _run(tmp_path, Clock(DAY + "T15:40:00"), [(3, None, refused, ""), "PASS"])
+    lines = capsys.readouterr().err.strip().splitlines()
+    assert lines[0].startswith("PIT_CAPTURE attempt 01 NOT_ADMITTED AVAILABLE_PHYSICAL_BYTES_LOW available_physical=2.00GiB next=")
+    assert lines[1].startswith("PIT_CAPTURE attempt 02 CAPTURED") and "next=" not in lines[1]
+    assert status["attempts"][0]["admission"]["basis"] == "MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT"
 
 
 def test_child_timeout_is_a_bounded_capture_attempt(tmp_path):
@@ -237,6 +302,10 @@ def test_wrapper_failure_is_reported_with_its_own_exit_code(monkeypatch, tmp_pat
     assert _main_with(monkeypatch, tmp_path, lambda: paths) == 5
     written = json.loads((paths["logs"] / f"pit_capture_{DAY}.status.json").read_text(encoding="utf-8"))
     assert written["state"] == scheduled.WRAPPER_FAILED and "T: not mounted" in written["error"]
+    monkeypatch.setattr(scheduled, "run", lambda *a, **k: (_ for _ in ()).throw(KeyboardInterrupt()))
+    assert _main_with(monkeypatch, tmp_path, lambda: paths) == 5
+    written = json.loads((paths["logs"] / f"pit_capture_{DAY}.status.json").read_text(encoding="utf-8"))
+    assert written["state"] == scheduled.INTERRUPTED and written["prior_runs"][-1]["state"] == scheduled.WRAPPER_FAILED
 
 
 def test_second_scheduler_instance_is_refused_by_the_kernel_lock(monkeypatch, tmp_path, capsys):

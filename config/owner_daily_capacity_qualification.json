@@ -1196,7 +1196,7 @@
     "tools/retain_current_official_universe_evidence.py": "1014f0d80e7a68549cfde8b11ca0b6d3fcfdb17c4196e02f3470010dcd2e1e6d",
     "tools/run_asymmetric_dislocation_research.py": "b5abd0db12c448c61ac8e0fa59e964b6c98ad65987449ba298f7af0a722c8105",
     "tools/run_capability_first_eod_operation.py": "09f6c966d2bb39188dd026b6de6e3406794e9220d61586b6bbb1db024901a61e",
-    "tools/run_capture_only.py": "5c320acf16f269f179b23def38beae4f79a719ab79863b41bbdcfc235a5f9a84",
+    "tools/run_capture_only.py": "52cc498f7da6ad657a1c284159304751764c31ba3ba8aeffc95aa392ca0296e8",
     "tools/run_comparative_column_observations.py": "eb9dee2630a61fed40679264aa7cf7460717ff6ea494664f68a89d9c52573de5",
     "tools/run_contextual_technical_acceptance.py": "9bd9b178b9956c2f5d0f205a324829e9b050fec8cc74bab3ccb5bdb5e851ca98",
     "tools/run_core_daily_decision_coherence_replay.py": "2a7a980fd009751706c5e6ba8fe2c128655078273fb6d7b9543d3e6da6a349cd",
@@ -1272,7 +1272,7 @@
     "tools/run_retained_official_financial_pdf_scaleout_v1.py": "6bdc0383b0625c9b06ec469e1a1eb7642e67ce6aabb9e7b7afb388b60a30ecfe",
     "tools/run_reviewed_interim_canonical_ingress.py": "4b29aaa210a4b078d67709d0e59f6c558d71df379310f948428fb2b2f4276e27",
     "tools/run_scheduled_capture.cmd": "8088912b8369d8b0818822438ae4483d10be0ba2d517def67031f1070963eac1",
-    "tools/run_scheduled_capture.py": "e7f785d1d1a5895b60fd54f3d65253959a7b4a5efeed108cdec1690be4eebc22",
+    "tools/run_scheduled_capture.py": "c9b85fa06fe38e6589efbb35c3945f7fae9c6ddb4c45b17892b06ca8da50c48f",
     "tools/run_screener_master_projection.py": "b0eb8a07a1d15e95491bd5f8402e4ed893727f3499af3f648b3f9f60407b0309",
     "tools/run_sector_aware_relative_research.py": "a163fb332c7d4865ccd7ec493ab16c1846256874fb9ec784e47305bd14ecb452",
     "tools/run_shadow_security_recommendation.py": "b065df4385f4a930b6bc145dc1a9ce2598aed311b6f28d4ac59a386f4cb6da18",
@@ -2016,5 +2016,20 @@
       "stocklookup_core/valuation/current_research_valuation_context.py": "917945e45768f93e395ae20806af6d72ac0bf1ce96f31c18c435225d4d8ca52b",
       "tools/verify_retention_reader_transition.py": "0ca2459b61440fc9e718a45f85b38d58a311d5907181049f391ea802b1dc2834"
     }
+  },
+  "pit_capture_admission_precheck_corrective": {
+    "base_commit": "888995be348870e130ae0ebd7ca53fe41ab3d9f7",
+    "scope": "CAPTURE_MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT_AND_SCHEDULER_STATUS_EVIDENCE_ONLY",
+    "stage_qualification": "ADMISSION_FLOORS_WRITER_LEASE_AND_JOB_LIMITS_UNCHANGED; MODULES_OUTSIDE_DAILY_IMPORT_CLOSURE",
+    "changed_source_paths": [
+      "tools/run_capture_only.py",
+      "tools/run_scheduled_capture.py"
+    ],
+    "prior_source_sha256_lf": {
+      "tools/run_capture_only.py": "5c320acf16f269f179b23def38beae4f79a719ab79863b41bbdcfc235a5f9a84",
+      "tools/run_scheduled_capture.py": "e7f785d1d1a5895b60fd54f3d65253959a7b4a5efeed108cdec1690be4eebc22"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false
   }
 }

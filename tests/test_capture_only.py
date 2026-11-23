@@ -306,3 +306,29 @@ def test_source_backup_is_bounded_and_hash_verified(tmp_path,monkeypatch,disk_ok
     assert not (receipts/'before/older-session').exists()
     # A later adapter failure leaves the verified backup and prior original intact.
     assert original.read_bytes()==b'original-qualified-input'
+
+
+def test_memory_shortfall_refuses_before_the_full_preflight_and_lease(monkeypatch, tmp_path, capsys):
+    """2026-11-23: eight refusals each ran a ~1 min full preflight only to refuse on physical memory."""
+    import contextlib
+    import sys as _sys
+    import tools.run_capture_only as operator
+    import tools.check_owner_daily_host_preflight as preflight
+    floor = dict(operator.MEMORY_FLOORS)
+    calls = []
+    monkeypatch.setattr(operator, 'check_window', lambda *a: None)
+    monkeypatch.setattr(operator, 'binding', lambda: {r: tmp_path / r for r in ('producer', 'runtime', 'retained', 'dashboard')})
+    monkeypatch.setattr(preflight, 'check', lambda *a: calls.append('check') or {'observations': {}})
+    monkeypatch.setattr(operator, 'writer_lease', lambda root: calls.append('lease') or contextlib.nullcontext())
+    monkeypatch.setattr(_sys, 'argv', ['x', '--session', '2026-11-23', '--execute', '--receipt-dir', str(tmp_path / 'out' / 'a1')])
+    low = {'available_physical_bytes': floor['available_physical_bytes'] - 1,
+           'available_commit_bytes': floor['available_commit_bytes'] + 1}
+    monkeypatch.setattr(preflight, 'windows_memory', lambda: dict(low))
+    assert operator.main() == 3 and calls == []
+    refused = json.loads(capsys.readouterr().out.strip().splitlines()[-1])
+    assert refused['status'] == 'NOT_ADMITTED' and refused['admission']['reasons'] == ['AVAILABLE_PHYSICAL_BYTES_LOW']
+    assert refused['admission']['basis'] == 'MEMORY_PRECHECK_BEFORE_FULL_PREFLIGHT'
+    assert not (tmp_path / 'out').exists()
+    monkeypatch.setattr(preflight, 'windows_memory', lambda: dict(floor))
+    assert operator.main() == 3 and calls == ['lease', 'check']  # the full preflight still decides admission
+    assert json.loads(capsys.readouterr().out.strip().splitlines()[-1])['status'] == 'NOT_ADMITTED'
