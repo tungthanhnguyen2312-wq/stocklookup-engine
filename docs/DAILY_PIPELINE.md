@@ -1,51 +1,16 @@
 # Stock Lookup — Canonical Daily Pipeline
 
-Canonical Daily order, including the Macro V1 corrective. Code governs this view.
-Current-state facts: [ACTIVE_STATE.md](ACTIVE_STATE.md). Authority per output: [AUTHORITY.md](AUTHORITY.md).
+Canonical Daily order (with Macro V1 corrective); code governs. Facts: [ACTIVE_STATE.md](ACTIVE_STATE.md); authority: [AUTHORITY.md](AUTHORITY.md).
 
-[Capacity](capacity_recovery_phase1_contract.md): adapter offline; delivery reuse disabled.
-[Coherence V2](scenario_and_opportunity_cost_decision_coherence_v2_contract.md): offline
-opt-in, released PR101; original scenario build/stage order. No Daily/deploy.
-Optional [Action Center cases](action_center_opportunity_cost_cases_consumer_v1_contract.md)
-are private/offline; the ordinary phase-8 resolver supplies no opt-in input.
+Offline opt-ins (no Daily/deploy): [Capacity](capacity_recovery_phase1_contract.md) (adapter offline; delivery reuse disabled); [Coherence V2](scenario_and_opportunity_cost_decision_coherence_v2_contract.md) (PR101; original scenario/stage order); [Action Center cases](action_center_opportunity_cost_cases_consumer_v1_contract.md) (private; phase-8 supplies none); [Long-term company economics evidence](long_term_company_economics_evidence_contract.md) (no Daily stage/consumer). Oct 8 Macro live acceptance is independently verified (identities in ACTIVE_STATE).
 
-[Long-term company economics evidence](long_term_company_economics_evidence_contract.md)
-is offline opt-in only; it adds no Daily stage or consumer. October 8 Macro live
-acceptance is independently verified; exact identities are in ACTIVE_STATE.
+Oct-7 release extends K2's fundamental builder with a session projection of the immutable annual baseline and qualified overlay. [Prior pairing](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) loads qualified originals only for new projections; historical cards never vote. USD income fields stay currency-preserving context (excluded from VND citations/valuation). Disposal/audited annual provision components follow the [earnings contract](reported_earnings_component_context_contract.md) (descriptive flags, explicit period, recurrence UNKNOWN, no normalized EPS; future runs only). CI, valuation, downstream research, opportunity and K6 event context receive the frozen/attempt binding; completed locks are immutable. AI context preserves exact citations/event identity; Dashboard manifests carry bindings. No production Daily/publish for this checkpoint ([Offline proof](internal/CURRENT_OFFICIAL_EVIDENCE_PROJECTION_INTEGRATION_20261007.md)).
 
-Released October-7 integration extends K2's existing fundamental builder with a
-new session projection of the immutable annual baseline and qualified retained overlay.
-[Prior pairing](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md)
-loads existing qualified originals only for new projections; historical cards never vote.
-Reviewed USD income fields remain currency-preserving context and are excluded from VND
-canonical citations/valuation inputs. Reported disposal components and an audited annual
-provision component follow the
-[earnings contract](reported_earnings_component_context_contract.md): descriptive flags,
-explicit period, recurrence UNKNOWN, no normalized EPS. This changes future construction only.
-CI, valuation and downstream research receive that projection; corporate selection is
-carried from the same frozen/attempt input binding into opportunity and K6 event context.
-Completed locks cannot be replaced. AI context preserves exact-field citations and event
-identity; Dashboard input manifests carry the bindings. No production Daily or publication
-was performed for this checkpoint. [Offline proof](internal/CURRENT_OFFICIAL_EVIDENCE_PROJECTION_INTEGRATION_20261007.md).
+Phase C (2026-10-06) preserves run order and output identities: streamed IID identity, copied writable binding spine, buffered UTF-8 delivery rows, velocity-only T0 hash projection, record-bounded hashing/pretty-write, exact native immutable bytes. Held-live Canonical heavy path: 4.03 GiB private; separate Owner completion/handoff: 5.51 GiB after Canonical exit. No new child boundary, production GC, production Daily, or threshold change ([Measurements and limits](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md)).
 
-Phase C resource architecture (released 2026-10-06) preserves this run order and all output identities.
-IID identity is streamed, the writable binding spine is copied, and delivery UTF-8 rows are buffered.
-T0 root/record hashes are verified while projecting only velocity axes; hashing and pretty writing
-are record-bounded and immutable writers retain exact native bytes. Held-live Canonical heavy
-path completed at 4.03 GiB private; actual Owner completion/handoff at 5.51 GiB in its separate
-lifetime after Canonical exit. No new child boundary or production GC is required by measured
-release behavior. No production Daily was run for this release and no host/feedback threshold changed.
-[Whole measurements, ownership map and limits](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md).
+**One workflow, two front doors:** `stocklookup.ps1 daily` and Desktop one-click both call `tools.run_owner_daily.run_workflow` (never run two writers; [OWNER_DAILY_ONE_CLICK.md](OWNER_DAILY_ONE_CLICK.md)). First-real evening target: ~16:00 Asia/Ho_Chi_Minh ([Monday contract](monday_live_readiness_closeout_contract.md)).
 
-**One production workflow, two front doors:** `stocklookup.ps1 daily` and the Desktop one-click both call
-`tools.run_owner_daily.run_workflow`. Never run two writers at once. Runbook:
-[OWNER_DAILY_ONE_CLICK.md](OWNER_DAILY_ONE_CLICK.md). Evening target for the first real session: ~16:00
-Asia/Ho_Chi_Minh ([Monday contract](monday_live_readiness_closeout_contract.md)).
-
-Legend — **Block**: failure stops the run at that stage. **Soft**: failure is component-local
-`UNAVAILABLE`/`WARN`; the sealed Producer result, capture, marker and T0 keep their validity.
-**Parent/child**: the Owner parent process, the Daily child (`daily_analysis_pipeline.py
---canonical-post-close`, runs the kernel), or a retained-only/tool subprocess (grandchild).
+Legend — **Block**: stops run. **Soft**: component-local `UNAVAILABLE`/`WARN`; sealed Producer, capture, marker and T0 stay valid. **Process**: Owner parent, Daily child (`daily_analysis_pipeline.py --canonical-post-close`), or tool grandchild.
 
 ## A. Owner launcher (parent, 9 phases; FULL = `--full-publish`; default: CORE + AI)
 
@@ -90,17 +55,12 @@ ACTIVE_STATE §3).
 | K19 | **Post-handoff outcome feedback #2** | Second feedback child (`INCREMENTAL` over #1) | Soft | tool child | `prospective-decision-outcome-feedback-post-handoff-v1` | `NON_VOTING` | `ALREADY_COMPLETE` reuse; resource/reap statuses are never evidence |
 | K20 | Presentation projection + runtime restage | Re-join Workspace/Screener with the now-available axes into a **new** artifact set (never the sealed Producer dir) | Soft | child | `post-handoff-presentation-projection-v1` | `SCOPED` presentation | falls back to sealed bytes |
 
-Heavy children (Thesis, feedback) are blocking calls that return only after the process is reaped, so
-no two heavy children overlap. Feedback and Thesis run **after** capture, marker, T0 and seal; they can
-never revise them.
+Heavy children (Thesis, feedback) block until reaped (no overlap) and run **after** capture, marker, T0 and seal (never revise them).
 
 ## C. Resume and replay
 
-- Completed-session verified replay: `tools/run_owner_daily.py --replay-completed-session SESSION`
-  (or the shared launcher `tools/run_owner_daily.ps1 -ReplayCompletedSession SESSION`); it publishes from retained evidence, runs
-  zero analytical Daily calls, and cannot rebuild T0.
-- Read-only post-Daily acceptance: `python tools/run_first_real_session_acceptance.py` (see Monday
-  contract; writes only a diagnostic report). Dry run: `--dry-run --session 2026-10-05 --cutoff … --output <scratch>`.
-- Registration of an original calendar receipt (explicit, offline, owner-gated): `tools/register_working_dates_receipt.py`.
+- Completed-session replay: `tools/run_owner_daily.py --replay-completed-session SESSION` (`tools/run_owner_daily.ps1 -ReplayCompletedSession SESSION`); publishes from retained evidence, zero analytical Daily calls, cannot rebuild T0.
+- Read-only post-Daily acceptance: `python tools/run_first_real_session_acceptance.py` (Monday contract; diagnostic report only). Dry run: `--dry-run --session 2026-10-05 --cutoff … --output <scratch>`.
+- Original calendar receipt registration (offline, owner-gated): `tools/register_working_dates_receipt.py`.
 
 [Explicit Producer release sync](producer_freeze_release_sync_contract.md) preserves an admitted pending freeze before Daily preflight.

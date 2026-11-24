@@ -186,6 +186,40 @@ OBSERVER_RESIDENT_RELEASE_PRIOR = "c03249a02f056136f7d4c0e7cef6e3fd1513425175961
 E4_V2_DIGEST = "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
 
 
+PARENT_PE_MANIFEST = "tests/fixtures/parent_attributable_pe_source_transition_v1.json"
+PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.py",
+                     "stocklookup_core/decision/integrated_investment_decision_product.py",
+                     "stocklookup_core/valuation/current_research_valuation_context.py",
+                     "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py",
+                     "stocklookup_core/valuation/p3f_current_market_valuation.py")
+
+
+def _parent_pe_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Exact Owner Decision 1 source successor; historical receipts remain frozen."""
+    manifest = root / PARENT_PE_MANIFEST
+    if relative not in PARENT_PE_SOURCES or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "parent_attributable_pe_source_transition/v1"
+            or spec.get("base_commit") != "5b09040ef49239dd5e5ca3d41d1f649015e10e16"
+            or spec.get("scope") != "OWNER_DECISION_1_20261124_PARENT_HEADLINE_PE"
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(spec.get("sources"), dict) or tuple(spec["sources"]) != PARENT_PE_SOURCES):
+        raise ValueError("PARENT_PE_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    archive = "tests/fixtures/parent_attributable_pe_v1_sources/" + relative + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row.get("archive") != archive:
+        raise ValueError("PARENT_PE_SOURCE_TRANSITION_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"] or row["prior_sha256_lf"] == row["active_sha256_lf"]:
+        raise ValueError("PARENT_PE_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _tplus_taxonomy_direction_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel the 2026-11-22 T+ taxonomy downside-confirmation successor (newest layer) to its base bytes.
 
@@ -226,6 +260,7 @@ def _valuation_truthfulness_prior_bytes(root: Path, relative: str, active: bytes
     Same shape and idempotence as the retry-integrity layer it succeeds: only this layer's exact active
     bytes are replaced by the archived base-commit bytes; anything else passes through unchanged.
     """
+    active = _parent_pe_prior_bytes(root, relative, active)
     if relative not in VALUATION_TRUTHFULNESS_SOURCES:
         return active
     manifest = root / VALUATION_TRUTHFULNESS_MANIFEST
@@ -1485,6 +1520,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         truthfulness = json.loads(truthfulness_manifest.read_bytes())
         for relative in VALUATION_TRUTHFULNESS_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _parent_pe_prior_bytes(root, relative, live)
             if hashlib.sha256(live).hexdigest() != truthfulness["sources"][relative]["active_sha256_lf"]:
                 raise ValueError("VALUATION_TRUTHFULNESS_SOURCE_TRANSITION_BINDING_INVALID")
             _valuation_truthfulness_prior_bytes(root, relative, live)
@@ -1502,6 +1538,17 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if direction["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = direction["active_e4_v2_digest"]
+    parent_pe_manifest = root / PARENT_PE_MANIFEST
+    if parent_pe_manifest.is_file():
+        parent_pe = json.loads(parent_pe_manifest.read_bytes())
+        for relative in PARENT_PE_SOURCES:
+            live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            if hashlib.sha256(live).hexdigest() != parent_pe["sources"][relative]["active_sha256_lf"]:
+                raise ValueError("PARENT_PE_SOURCE_TRANSITION_BINDING_INVALID")
+            _parent_pe_prior_bytes(root, relative, live)
+        if parent_pe["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = parent_pe["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

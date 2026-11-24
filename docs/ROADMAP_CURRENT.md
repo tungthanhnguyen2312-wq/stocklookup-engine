@@ -35,57 +35,28 @@ No successor; SBV UNKNOWN. [Contract](macro_market_regime_decision_context_contr
 
 ## PRIOR — retained financial evidence checkpoints (COMPLETE)
 
-Retained financial qualification and blockers remain in ACTIVE_STATE and the linked
-checkpoint record. Strict shares/valuation remain zero; completed sessions immutable.
-The campaign authorizes no Daily; October 8 Owner completion is recorded separately.
-[Campaign and exact blockers](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md).
-[Exact prior checkpoint facts](long_term_company_economics_evidence_contract.md#retained-prior-checkpoint-detail).
+Qualification/blockers remain in ACTIVE_STATE and [campaign record](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md) ([prior checkpoint detail](long_term_company_economics_evidence_contract.md#retained-prior-checkpoint-detail)). Strict shares/valuation stay zero; completed sessions immutable; campaign authorizes no Daily (Oct 8 Owner completion recorded separately).
 
-The prior operational gate `FIRST_REAL_POST_RELEASE_CAPTURE_ACCEPTANCE` remains RECORDED
-for October 5; the new analytical checkpoint does not reopen that gate.
+`FIRST_REAL_POST_RELEASE_CAPTURE_ACCEPTANCE` stays RECORDED for Oct 5 (not reopened). Non-voting research foundations (decision-intelligence closure, portfolio workbench, evidence packet V2, outcome review, historical panel, freshness contract) are indexed in ACTIVE_STATE; none starts a successor or supplies capital decisions. Forex idea bank is not a roadmap entry.
 
-Completed research foundations remain non-voting; authority, measurements and their retained
-contracts are indexed in ACTIVE_STATE: decision-intelligence closure, portfolio workbench,
-evidence packet V2, outcome review, historical panel and freshness contract.
-None starts a successor or supplies capital decisions.
+**2026-10-06 Phase C:** `3231616022213aac7f8c75e164c1f403566ee12c`, `RESIDUAL_PEAK_CORRECTIVE_READY`. Heavy path 4.03 GiB private; separate Owner completion/handoff 5.51 GiB (< 7-GiB guard), exact semantic parity, no authority effect. Disk READY required; Depth2 `DEPTH_PENDING`. [Whole model](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md); [V1 proof](internal/POST_FIRST_REAL_DAILY_PHASE_C_RESOURCE_SIMPLIFICATION_20261006.md). Oct 5 identities and 10.23-GiB peak stay in ACTIVE_STATE; `official_verification` conditional, RAW/CA closed, journal COMPLETE.
 
-The Forex idea bank is not a roadmap entry.
-
-**2026-10-06 Phase C release:** reviewed candidate `3231616022213aac7f8c75e164c1f403566ee12c`,
-`RESIDUAL_PEAK_CORRECTIVE_READY`. Heavy path peaked at 4.03 GiB private; separate Owner
-completion/handoff at 5.51 GiB, both under the unchanged 7-GiB guard, with exact semantic
-parity and no authority effect. Disk must be READY before Daily. Depth2 stays `DEPTH_PENDING`.
-[Whole model and review](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md);
-[V1 proof](internal/POST_FIRST_REAL_DAILY_PHASE_C_RESOURCE_SIMPLIFICATION_20261006.md).
-October 5 capture/marker/T0 identities and 10.23-GiB historical peak remain unchanged in
-ACTIVE_STATE; `official_verification` stays conditional, RAW/CA closed, journal COMPLETE.
-[Exact historical release and acceptance detail](long_term_company_economics_evidence_contract.md#retained-prior-checkpoint-detail).
-
-The next ordinary Daily is the next completed market session after a fresh READY host preflight.
-It is not a new milestone. `queued_next` stays empty.
+Next ordinary Daily = next completed market session after fresh READY host preflight (not a milestone; `queued_next` empty).
 
 ## NEXT EVIDENCE GATE — time-driven, not milestones
 
-These advance by accumulating real sessions, not by implementation:
-- First live DNSE VN-Index capture and Market Close publication after the 2026-11-09 close,
-  subject to a fresh READY Owner Daily preflight. See [Active State](ACTIVE_STATE.md).
-- Contiguous governed capture depth at 20 / 21 / 50 / 60 / 120 / 250 sessions
-  (`READY_FOR_BOUNDED_EVALUATION` is an invitation to a separately governed review, never authorization).
-- Outcome maturity: T+20 / T+60 decisions mature only after their windows; foreign-flow 10 / 20-session cohorts.
-- Calendar forward coverage: `CALENDAR_REFRESH_NEEDED` when known forward coverage drops below the
-  60-session maximum outcome horizon (no invented refresh schedule).
+Advance via real sessions only:
+- First live DNSE VN-Index capture + Market Close publication after 2026-11-09 close (fresh READY preflight; [Active State](ACTIVE_STATE.md)).
+- Contiguous capture depth at 20 / 21 / 50 / 60 / 120 / 250 sessions (`READY_FOR_BOUNDED_EVALUATION` invites governed review, never authorizes).
+- Outcome maturity: T+20 / T+60; foreign-flow 10 / 20-session cohorts.
+- Calendar: `CALENDAR_REFRESH_NEEDED` when forward coverage < 60-session max outcome horizon (no invented schedule).
 - Later official verification of prospective RAW from exact retained ledgers.
 
 ## AFTER FIRST-REAL ACCEPTANCE — candidates, bounded admission required
 
-1. **Record the first-real result** — done in this control plane (docs only; no runtime change). Phase C resource architecture is released above.
-2. **Control-plane simplification Phase B** (admitted in the current Codex source closeout): reduce obsolete bootstrap context and duplicate live audits; use explicit coordinator/lane handoffs. Preserve historical files, markers, parser output/error shape and native roadmap contracts; measure the effective reading footprint.
-3. **Simplification Phase C** (released): measured allocation causes and immutable
-   session sizes remain in the linked acceptance and
-   [host preflight](owner_daily_host_preflight_contract.md) /
-   [feedback containment](owner_daily_feedback_resource_containment_contract.md)
-   contracts. Further runtime work needs measured justification; historical
-   instruction attribution is unavailable.
+1. **Record first-real result** — done in control plane (docs only; Phase C released above).
+2. **Control-plane simplification Phase B** (admitted in Codex source closeout): cut obsolete bootstrap context/duplicate audits; explicit coordinator/lane handoffs. Preserve historical files, markers, parser output/error shape and native roadmap contracts; measure reading footprint.
+3. **Simplification Phase C** (released): allocation causes and immutable session sizes remain in acceptance, [host preflight](owner_daily_host_preflight_contract.md) and [feedback containment](owner_daily_feedback_resource_containment_contract.md) contracts. Further runtime work needs measured justification; historical instruction attribution unavailable.
 
 ## LATER — blocked on evidence or an owner decision
 

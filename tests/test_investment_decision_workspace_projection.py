@@ -14,6 +14,7 @@ import stocklookup_core.decision.investment_decision_workspace_projection as _wo
 from _integrated_decision_fixture import integrated_decision as _integrated_decision, minimal_integrated_record
 
 DECISION = "2026-08-28"
+_UNSET = object()
 
 
 def build_artifacts(**kwargs):
@@ -56,13 +57,20 @@ def _feature(status, value=None, state=None, periods=None):
 
 
 def feature_record(ticker, *, profit="PROFITABLE", ni=100.0, ttm_ni=400.0, ttm_rev=4000.0,
-                    periods=("2025-Q4", "2026-Q1")):
+                    periods=("2025-Q4", "2026-Q1"), ttm_parent_ni=_UNSET):
     blocked = _feature("BLOCKED")
     features = {
         "net_income_ttm_sum": _feature("READY_RESEARCH_PROXY", ttm_ni, periods=periods) if ttm_ni is not None else blocked,
         "revenue_ttm_sum": _feature("READY_RESEARCH_PROXY", ttm_rev, periods=periods) if ttm_rev is not None else blocked,
         "profit_state": _feature("READY_RESEARCH_PROXY", ni, state=profit, periods=[periods[-1]]),
     }
+    parent_value = ttm_ni if ttm_parent_ni is _UNSET else ttm_parent_ni
+    features["attributable_net_income_ttm_sum"] = {
+        **(_feature("READY_RESEARCH_PROXY", parent_value, periods=periods) if parent_value is not None else blocked),
+        "statement_scope": "consolidated",
+    }
+    for name in ("net_income_ttm_sum", "attributable_net_income_ttm_sum", "revenue_ttm_sum"):
+        features[name] = {**features[name], "currency": "VND", "scale": "units", "method": "TTM_SUM_PROXY"}
     return {
         "ticker": ticker, "entity_type": "corporate", "entity_applicability": "GENERIC_RESEARCH_PRIMITIVES_ALLOWED",
         "fundamental_feature_context": {
@@ -83,10 +91,18 @@ def valuation_record(ticker, *, market_cap=8000.0, pe=10.0):
 
     return {
         "ticker": ticker, "entity_class": "corporate", "share_basis_input": share,
-        "price_input": {"status": "PRICE_READY", "value": 8.0, "session": DECISION},
+        "price_input": {"status": "PRICE_READY", "value": 8.0, "session": DECISION,
+                        "price_unit": "vnd_per_share", "price_representation": {
+                            "contract_id": "DNSE:ohlc_1D:VN_LISTED_EQUITY:kvnd_to_vnd/v1",
+                            "canonical_unit": "vnd_per_share"}},
         "metrics": {
             "market_cap": metric("RESEARCH_USABLE", market_cap),
-            "P/E": metric("RESEARCH_USABLE" if pe is not None else "BLOCKED", pe),
+            "P/E": {**metric("RESEARCH_USABLE" if pe is not None else "BLOCKED", pe),
+                    "financial_period": "2024", "financial_inputs": [{
+                        "canonical_metric": "attributable_net_income", "value": market_cap / pe if pe else 0,
+                        "qualification_state": "QUALIFIED", "statement_scope": "consolidated",
+                        "reporting_period": "2024", "period_type": "annual", "currency": "VND", "unit_scale": 1,
+                    }] if pe is not None else []},
             "P/B": metric("BLOCKED"), "P/S": metric("BLOCKED"),
             "EV/Sales": metric("BLOCKED"), "EV/EBITDA": metric("BLOCKED"),
         },

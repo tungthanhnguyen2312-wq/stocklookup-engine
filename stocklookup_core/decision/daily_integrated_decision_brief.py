@@ -336,7 +336,7 @@ def _financial_context_for_ticker(
 
 
 #: Additive valuation-summary fields the brief passes through when present.
-_VALUATION_BASIS_PASSTHROUGH = ("pe_basis", "ps_basis", "peer_relative_drivers", "peer_relative_qualifications")
+_VALUATION_BASIS_PASSTHROUGH = ("pe_basis", "pe_supplementary", "ps_basis", "peer_relative_drivers", "peer_relative_qualifications")
 
 
 def _research_safe_valuation_methods(methods: Mapping[str, Any] | None) -> dict[str, Any]:
