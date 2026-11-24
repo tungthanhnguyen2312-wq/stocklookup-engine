@@ -29,6 +29,15 @@ Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
+- **LOCAL / OFFLINE — retained income operand corrective (HL-20261124-HOL-02C):**
+  parent-label admission now shares the existing joined-word rule; TT43 parent labels
+  and JV code 27 are recognized, industrial interest is code 23 and JV share code 24.
+  Crossed 60/61 and NCI guards remain. Annual replay keeps its conservative
+  qualification-time knowledge floor (never backdated). Retained HPG H1/2026 layout-proof
+  replay admits parent profit; no overlay was published. Full PDF rerun, PNJ annual
+  locator diagnosis and VRE annual registration remain blocked by missing PDF/OCR
+  Python dependencies in the prescribed executor environment. HPG FY2025 numeric
+  ambiguity and VRE H1/2026 damaged parent-label letter remain blocked.
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.

@@ -211,7 +211,7 @@
     "official_document_acquisition.py": "f114c6d9abdbe18f575fafef72a1136405c373b359a22194741d4bffcd350275",
     "official_evidence.py": "67ac2a632e412d041c618ad57e67121ec8edf6f0bbd099615d5bff3baa2bb400",
     "official_financial_assurance_evidence.py": "4b362d3a731beaabf2233fde60a9b78444ccdc1e6ca24ce6fc9cac53c9a8c9c2",
-    "official_financial_filing_evidence.py": "fa4300ad97c09b9fe195d9063aacbef7db54040988dc0bbaf1c27b3eb00a533a",
+    "official_financial_filing_evidence.py": "faf132914b487180775781715b1f11447c9630d05e75d583a44702aa6fd60c94",
     "official_financial_ocr_table_evidence.py": "8d619c33ccd893ac1a9e2bf2b2aa1068d2210d50cb50e6310adc645480d6ed9a",
     "official_financial_pdf_page_evidence.py": "eb78b5c412ec2ca1ee6ec629e1dc50f6f75ef93d81631c01d9ad54e07bca18de",
     "official_financial_period_identity.py": "7ff8c108be863ebab2c4ac817476c52fd76981b16d77a991a110b396418564fd",
@@ -769,7 +769,7 @@
     "stocklookup_core/evidence/financial_filings_replay_adapter.py": "c06f796cc4c1f8824a1b9a01bc00f54782ac0447a339692de8739d967e761f08",
     "stocklookup_core/evidence/financial_identity.py": "950b51fe27e6d77e284af6ee13bcd850db9c3f2b63dd372bf902249d24e7da15",
     "stocklookup_core/evidence/financial_metadata_envelope.py": "58b0ba35616f4dab07d857a70ee35d3daaa8a7bfe3e0ef1f5c4f6c12ce342583",
-    "stocklookup_core/evidence/financial_row_identity.py": "cae5a77c614407887836a18a80a7ae8c20abde015f51590b4ec1760fd1ada7fe",
+    "stocklookup_core/evidence/financial_row_identity.py": "d795c4ee5332e848f875096c8b3d075caee2c60634917a4afdbc019351c2209d",
     "stocklookup_core/evidence/freshness_history.py": "3b0f75554fe4b5d24798b729e6d653d2f0bdac30f28b401cbd12a1816fc2dec5",
     "stocklookup_core/evidence/fundamental_quality.py": "a3e0aceffb0d6709e767017e23aeef04155af66d54519269166224ed192a9496",
     "stocklookup_core/evidence/governed_trading_session_calendar.py": "618a464b05b5b49cf1ff9d09abd0d6a25f3d456925e722e1a2b40f0dde681754",
@@ -2055,5 +2055,21 @@
       "loader_python_heap_peak_bytes": 55295793,
       "loader_wall_seconds": 2.6
     }
+  },
+  "retained_income_operand_qualification_corrective": {
+    "base_commit": "7ea5b514ddc53a8ec8f8fd9630863be5a743f4ff",
+    "scope": "RETAINED_INCOME_LITERAL_ROW_IDENTITY_ONLY",
+    "changed_source_paths": [
+      "official_financial_filing_evidence.py",
+      "stocklookup_core/evidence/financial_row_identity.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "prior_source_sha256_lf": {
+      "official_financial_filing_evidence.py": "fa4300ad97c09b9fe195d9063aacbef7db54040988dc0bbaf1c27b3eb00a533a",
+      "stocklookup_core/evidence/financial_row_identity.py": "cae5a77c614407887836a18a80a7ae8c20abde015f51590b4ec1760fd1ada7fe"
+    },
+    "e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+    "compatibility": "Parent-label admission shares the existing joined-word predicate; TT43 and legacy JV/interest row labels remain guarded. The annual replay keeps its conservative qualification-time knowledge floor (unchanged). No Daily launch, resource measurement or artifact publication."
   }
 }

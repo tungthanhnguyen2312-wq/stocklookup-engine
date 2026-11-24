@@ -86,6 +86,7 @@ def _label_only_bank_identity(statement_family: str, folded: str) -> dict | None
         ("du phong rui ro tin dung", None, "CREDIT_LOSS_PROVISION"),
         ("loi nhuan thuan cua co dong", None, "PARENT_PROFIT_AFTER_TAX"),
         ("loi nhuan sau thue cua co dong", None, "PARENT_PROFIT_AFTER_TAX"),
+        ("loi nhuan sau thue cua cong ty me", None, "PARENT_PROFIT_AFTER_TAX"),
         ("loi nhuan sau thue cua chu so huu", None, "PARENT_PROFIT_AFTER_TAX"),
         ("profit after tax of the parent", None, "PARENT_PROFIT_AFTER_TAX"),
         ("von chu so huu cua co dong", None, "PARENT_BOOK_EQUITY_PRINTED_NOT_DERIVED"),
@@ -147,7 +148,11 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         ("income_statement", "10"): ("revenue", "NET_REVENUE", ("net sales", "net revenue", "doanh thu thuan")),
         ("income_statement", "01"): (None, "GROSS_REVENUE", ("revenue", "sales", "doanh thu")),
         ("income_statement", "02"): (None, "REVENUE_DEDUCTIONS", ("deductions", "giam tru")),
-        ("income_statement", "24"): (None, "REPORTED_BORROWING_COSTS", ("borrowing costs", "chi phi lai vay")),
+        # Industrial TT200/202: interest is 23; JV/associate share is 24.
+        # TT43 retains the parent/NCI codes and moves the JV share to 27.
+        ("income_statement", "23"): (None, "REPORTED_BORROWING_COSTS", ("borrowing costs", "interest expense", "chi phi lai vay")),
+        ("income_statement", "24"): (None, "SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT", ("phan lai", "phan lo", "lai/(lo)", "lai (lo)", "share of profit", "share of loss")),
+        ("income_statement", "27"): (None, "SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT", ("phan lai", "phan lo", "lai/(lo)", "lai (lo)", "share of profit", "share of loss")),
         # Circular 334/2016 securities-company income statement: code 52 is borrowing cost inside
         # financial expenses (the sector taxonomy's ``borrowing_costs``). The industrial form uses
         # 52 for deferred income tax, which fails the literal label. No canonical metric/alias.
@@ -190,6 +195,9 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         blockers.append("TOTAL_PARENT_PROFIT_IDENTITY_CONFLICT")
     if statement_family == "income_statement" and str(line_code) == "61" and any(term in folded for term in ("non-controlling", "non controlling", "khong kiem soat")):
         blockers.append("PARENT_NCI_PROFIT_IDENTITY_CONFLICT")
+    if concept == "SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT" and not any(
+            term in folded for term in ("lien doanh", "lien ket", "associate", "joint venture")):
+        blockers.append("JV_ASSOCIATE_ENTITY_LABEL_MISSING")
     if (concept == "REPORTED_BORROWING_COSTS" and str(line_code) == "52"
             and any(term in folded for term in ("cho vay", "phai thu", "loans and receivables", "receivable", "loss"))):
         # A combined "borrowing cost and loan/receivable loss" line is not a pure borrowing cost.

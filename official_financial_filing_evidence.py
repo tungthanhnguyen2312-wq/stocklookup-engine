@@ -236,7 +236,12 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     else:
         spec = GENERIC_METRIC_RULES.get("cash_and_equivalents" if metric == "cash_and_cash_equivalents" else metric)
         if spec:
-            if (not any(anchor in _normalize_text(str(label)) for anchor in spec["label_anchors"])
+            normalized_label = _normalize_text(str(label))
+            # The shared row owner already permits joined OCR words. Keep the
+            # parent template check consistent, without repairing any letters.
+            parent_label = (metric == "attributable_net_income"
+                            and row_label_supports_metric(metric, str(label)))
+            if ((not parent_label and not any(anchor in normalized_label for anchor in spec["label_anchors"]))
                     or row.get("statement_family") != str(spec["statement_type"])):
                 reasons.append("METRIC_STATEMENT_IDENTITY_MISMATCH")
         elif metric not in {"investment_property_disposal_result", "provision_charge_or_reversal_adjustment"}:

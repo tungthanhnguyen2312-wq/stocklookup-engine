@@ -820,8 +820,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     old_borrowing = subprocess.check_output(["git", "show", f"{borrowing['base_commit']}:{borrowing_path}"], cwd=root)
     assert borrowing["prior_source_sha256_lf"][borrowing_path] == prior_receipt["source_sha256"][borrowing_path]
     assert hashlib.sha256(old_borrowing.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][borrowing_path]
-    current_borrowing = (root / borrowing_path).read_bytes().replace(b"\r\n", b"\n")
-    prior_receipt["source_sha256"][borrowing_path] = hashlib.sha256(current_borrowing).hexdigest()
+    prior_receipt["source_sha256"][borrowing_path] = live_receipt["retained_income_operand_qualification_corrective"]["prior_source_sha256_lf"][borrowing_path]
     prior_receipt["securities_borrowing_cost_row_identity_corrective"] = borrowing
 
     precheck = live_receipt["pit_capture_admission_precheck_corrective"]
@@ -877,6 +876,23 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["share_basis_official_event_staleness_corrective"] = staleness
+
+    income = live_receipt["retained_income_operand_qualification_corrective"]
+    income_paths = ["official_financial_filing_evidence.py",
+                    "stocklookup_core/evidence/financial_row_identity.py"]
+    assert income["scope"] == "RETAINED_INCOME_LITERAL_ROW_IDENTITY_ONLY"
+    assert income["new_capacity_measurement"] is False
+    assert income["whole_daily_requalification"] is False
+    assert income["changed_source_paths"] == income_paths
+    assert set(income["prior_source_sha256_lf"]) == set(income_paths)
+    for path in income_paths:
+        previous = subprocess.check_output(["git", "show", f"{income['base_commit']}:{path}"], cwd=root)
+        assert income["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
+        assert income["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    from tools.qualify_e4_infrastructure import source_identity
+    assert income["e4_v2_code_digest"] == source_identity(root, version="v2")["code_digest"]
+    prior_receipt["retained_income_operand_qualification_corrective"] = income
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
