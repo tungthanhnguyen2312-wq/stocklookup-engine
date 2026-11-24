@@ -38,7 +38,7 @@ def _price():
             "price_namespace": "CURRENT_MARKET", "raw_as_traded": "NOT_PROMOTED", "payload_identity": "price-payload"}
 
 
-def _issuer(entity="corporate"):
+def _issuer(entity="corporate", *, include_parent_profit=True):
     facts = [{"canonical_metric": "net_income", "value": 1000, "qualification_state": "QUALIFIED", "reporting_period": "2024", "observed_at": "2025-01-01"},
              {"canonical_metric": "shareholders_equity", "value": 10_000, "qualification_state": "QUALIFIED", "reporting_period": "2024", "observed_at": "2025-01-01"},
              {"canonical_metric": "revenue", "value": 20_000, "qualification_state": "QUALIFIED", "reporting_period": "2024", "observed_at": "2025-01-01"},
@@ -47,6 +47,12 @@ def _issuer(entity="corporate"):
     if entity == "bank":
         facts = [{"canonical_metric": "net_profit_parent", "value": 1000, "qualification_state": "QUALIFIED", "reporting_period": "2024", "observed_at": "2025-01-01"},
                  {"canonical_metric": "total_equity", "value": 10_000, "qualification_state": "QUALIFIED", "reporting_period": "2024", "observed_at": "2025-01-01"}]
+    if entity == "corporate" and include_parent_profit:
+        facts.append({**facts[0], "canonical_metric": "attributable_net_income", "line_code": "61"})
+    for fact in facts:
+        fact.update(statement_scope="consolidated", currency="VND", unit_scale=1)
+        if fact["canonical_metric"] == "net_income":
+            fact["line_code"] = "60"
     return {"issuer_identity": {"ticker": "ABC", "entity_type": entity}, "facts": facts}
 
 
@@ -77,6 +83,15 @@ class ProxyPolicyTests(unittest.TestCase):
         self.assertNotIn("market_cap", row)
         self.assertEqual("MVA_PROXY_READY", row["methods"]["P/E"]["status"])
         self.assertEqual(direct["methods"]["P/E"]["value"], row["methods"]["P/E"]["value"])
+
+    def test_total_code60_cannot_supply_missing_parent_profit(self):
+        proxy = m.qualify_provider_issued_shares_proxy(_instrument(), _observation(),
+            valuation_date="2026-08-19", safety_state={"authority": "provider_reported_lagged"}, envelope=_envelope())
+        row = m.evaluate_mva_proxy_issuer(_issuer(include_parent_profit=False),
+            price=_price(), proxy=proxy, envelope=_envelope())
+        self.assertIsNone(row["methods"]["P/E"]["value"])
+        self.assertIn("PARENT_PROFIT_NOT_QUALIFIED", row["methods"]["P/E"]["blockers"])
+        self.assertNotEqual("MVA_PROXY_READY", row["methods"]["P/E"]["status"])
 
     def test_sector_gating_is_preserved(self):
         share_proxy = m.qualify_provider_issued_shares_proxy(_instrument(), _observation(), valuation_date="2026-08-19", safety_state={"authority": "provider_reported_lagged"}, envelope=_envelope())
