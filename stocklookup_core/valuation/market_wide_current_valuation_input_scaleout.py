@@ -96,7 +96,7 @@ RESEARCH_LABELS = (
     "NOT_FOR_VALUE_STRATEGY",
 )
 EARNINGS_IDENTITY_BY_ENTITY = {
-    "corporate": "net_income",
+    "corporate": "attributable_net_income",
     "bank": "net_profit_parent",
     "securities": "profit_after_tax_parent",
 }
@@ -595,7 +595,10 @@ def _map_p3f_method(metric: str, method: Mapping[str, Any], *, research: bool, a
         "p3f_method_status": p3f_status,
         "price_representation": price.get("price_representation"),
         "monetary_compatibility": monetary_compatibility,
+        **{key: method[key] for key in ("earnings_attribution", "display_label", "headline_pe_policy") if key in method},
     }
+    if metric in {"P/E", "P/E_TOTAL_INCLUDING_NCI"} and len(financial_inputs) == 1:
+        extra["input_identities"]["earnings"] = financial_inputs[0].get("canonical_metric")
     return _metric_shell(metric, status=status, applicability=applicability, value=value,
                          blockers=blockers, price=price, extra=extra)
 
@@ -747,6 +750,11 @@ def _build_metrics(*, entity: str, price: Mapping[str, Any], share: Mapping[str,
                 metric, formula_row["methods"][p3f_name], research=research, authoritative=authoritative,
                 applicability=applicability, price=price, share=share, entity=entity,
             )
+        supplementary = formula_row["methods"].get("P/E_TOTAL_INCLUDING_NCI")
+        if supplementary:
+            metrics["P/E_TOTAL_INCLUDING_NCI"] = _map_p3f_method(
+                "P/E_TOTAL_INCLUDING_NCI", supplementary, research=research, authoritative=authoritative,
+                applicability="APPLICABLE", price=price, share=share, entity=entity)
     return metrics
 
 

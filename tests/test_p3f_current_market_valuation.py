@@ -23,7 +23,7 @@ def _fact(name: str, value: int, period: str = "2024") -> dict:
 
 def _issuer(ticker="HPG", entity="corporate", facts=None) -> dict:
     return {"issuer_identity": {"ticker": ticker, "entity_type": entity}, "facts": facts or [
-        _fact("net_income", 10), _fact("shareholders_equity", 100), _fact("revenue", 200),
+        _fact("net_income", 10), _fact("attributable_net_income", 10), _fact("shareholders_equity", 100), _fact("revenue", 200),
         _fact("cash_and_equivalents", 20), _fact("total_interest_bearing_debt", 50),
     ]}
 
@@ -77,7 +77,7 @@ class P3FMethodTests(unittest.TestCase):
 
     def test_bank_pe_requires_parent_profit_not_total_profit_alias(self):
         row = m._evaluate_issuer(_issuer("VCB", "bank", [_fact("net_profit_total", 20), _fact("total_equity", 200)]), price=_price(), shares=_shares())
-        self.assertIn("FINANCIAL_IDENTITY_MISSING:net_profit_parent", row["methods"]["P/E"]["blockers"])
+        self.assertIn("PARENT_PROFIT_NOT_QUALIFIED", row["methods"]["P/E"]["blockers"])
         self.assertEqual("VALUATION_READY", row["methods"]["P/B"]["status"])
 
     def test_all_outputs_are_non_actionable_and_non_pit(self):

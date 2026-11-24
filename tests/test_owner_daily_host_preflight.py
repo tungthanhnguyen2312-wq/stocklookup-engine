@@ -862,9 +862,10 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert truthfulness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = live_receipt[
-            "tplus_taxonomy_direction_corrective"]["prior_source_sha256_lf"].get(
-                path, hashlib.sha256(current).hexdigest())
+        direction_prior = live_receipt["tplus_taxonomy_direction_corrective"]["prior_source_sha256_lf"]
+        parent_prior = live_receipt["parent_attributable_headline_pe_corrective"]["prior_source_sha256_lf"]
+        prior_receipt["source_sha256"][path] = direction_prior.get(
+            path, parent_prior.get(path, hashlib.sha256(current).hexdigest()))
     prior_receipt["valuation_output_truthfulness_corrective"] = truthfulness
 
     staleness = live_receipt["share_basis_official_event_staleness_corrective"]
@@ -892,12 +893,14 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert direction_transition["base_commit"] == direction["base_commit"]
     assert (direction_transition["sources"][direction_paths[0]]["prior_sha256_lf"]
             == direction["prior_source_sha256_lf"][direction_paths[0]])
+    parent_pe = live_receipt["parent_attributable_headline_pe_corrective"]
+    parent_prior = parent_pe["prior_source_sha256_lf"]
     for path in direction_paths:
         previous = subprocess.check_output(["git", "show", f"{direction['base_commit']}:{path}"], cwd=root)
         assert direction["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = parent_prior.get(path, hashlib.sha256(current).hexdigest())
     prior_receipt["tplus_taxonomy_direction_corrective"] = direction
 
     lane_scope = live_receipt["native_lane_scope_amendment_corrective"]
@@ -915,6 +918,16 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         current = (root / path).read_bytes().replace(b"\r\n", b"\n")
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     prior_receipt["native_lane_scope_amendment_corrective"] = lane_scope
+
+    assert parent_pe["owner_decision"] == "OWNER_DECISION_1_20261124"
+    assert parent_pe["new_capacity_measurement"] is False and parent_pe["whole_daily_requalification"] is False
+    assert parent_pe["release_authority"] == "NOT_GRANTED"
+    for path in parent_pe["changed_source_paths"]:
+        assert parent_pe["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        previous = subprocess.check_output(["git", "show", f"{parent_pe['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["parent_attributable_headline_pe_corrective"] = parent_pe
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

@@ -21,6 +21,7 @@ from sector_relative_research_context import MIN_COHORT_MEMBERS
 from stocklookup_core.decision.security_decision_context import infer_research_stance
 
 DECISION = "2026-08-28"
+_UNSET = object()
 
 
 def _identity(kind: str) -> str:
@@ -43,7 +44,8 @@ def _blocked(reason="MISSING"):
 
 
 def feature_record(ticker, *, entity="corporate", profit="PROFITABLE", ni=100.0, ttm_ni=400.0, ttm_rev=4000.0,
-                   margin=0.1, equity=0.5, yoy=0.2, periods=("2025-Q2", "2025-Q3", "2025-Q4", "2026-Q1")):
+                   margin=0.1, equity=0.5, yoy=0.2, periods=("2025-Q2", "2025-Q3", "2025-Q4", "2026-Q1"),
+                   ttm_parent_ni=_UNSET):
     ttm_status = "READY_RESEARCH_PROXY" if ttm_ni is not None else "BLOCKED"
     features = {
         "net_income_ttm_sum": _feature(ttm_status, ttm_ni, periods=periods, method="TTM_SUM_PROXY") if ttm_ni is not None else _blocked("MISSING_CONSECUTIVE_STANDALONE_QUARTER_INPUTS"),
@@ -61,6 +63,15 @@ def feature_record(ticker, *, entity="corporate", profit="PROFITABLE", ni=100.0,
     # remain UNKNOWN and blocked in the real replay.
     for name in ("net_income_ttm_sum", "revenue_ttm_sum"):
         features[name]["scale"] = "units"
+    parent_metric = {"corporate": "attributable_net_income", "bank": "net_profit_parent",
+                     "securities": "profit_after_tax_parent"}.get(entity)
+    if parent_metric:
+        parent_value = ttm_ni if ttm_parent_ni is _UNSET else ttm_parent_ni
+        features[parent_metric + "_ttm_sum"] = {
+            **(_feature("READY_RESEARCH_PROXY", parent_value, periods=periods, method="TTM_SUM_PROXY")
+               if parent_value is not None else _blocked("MISSING_PARENT_PROFIT_TTM_INPUTS")),
+            "scale": "units", "statement_scope": "consolidated",
+        }
     ready = [item for item in features.values() if item["status"] in {"READY_RESEARCH", "READY_RESEARCH_PROXY", "PARTIAL_RESEARCH"}]
     return {
         "ticker": ticker, "entity_type": entity,
@@ -105,7 +116,14 @@ def valuation_record(ticker, *, entity="corporate", market_cap=8000.0, pe=None, 
         "metrics": {
             "market_cap": metric("RESEARCH_USABLE" if market_cap is not None else "BLOCKED", market_cap,
                                  [] if market_cap is not None else ["SHARE_AUTHORITY_OR_PROXY_UNAVAILABLE"]),
-            "P/E": metric("RESEARCH_USABLE" if pe is not None else "BLOCKED", pe, [] if pe is not None else ["PROVIDER_RESEARCH_NOT_AUTHORIZED_FOR_ABSOLUTE_VALUATION_INPUTS"]),
+            "P/E": {**metric("RESEARCH_USABLE" if pe is not None else "BLOCKED", pe, [] if pe is not None else ["PROVIDER_RESEARCH_NOT_AUTHORIZED_FOR_ABSOLUTE_VALUATION_INPUTS"]),
+                    "financial_period": "2024", "financial_inputs": [{
+                        "canonical_metric": {"corporate": "attributable_net_income", "bank": "net_profit_parent",
+                                             "securities": "profit_after_tax_parent"}.get(entity),
+                        "value": market_cap / pe if market_cap is not None and pe else 0,
+                        "qualification_state": "QUALIFIED", "statement_scope": "consolidated",
+                        "reporting_period": "2024", "period_type": "annual", "currency": "VND", "unit_scale": 1,
+                    }] if pe is not None else []},
             "P/B": metric("RESEARCH_USABLE" if pb is not None else "BLOCKED", pb),
             "P/S": metric("NOT_APPLICABLE" if na == "NOT_APPLICABLE" else ("RESEARCH_USABLE" if ps is not None else "BLOCKED"),
                           ps, ["SECTOR_ENTITY_METHOD_NOT_SUPPORTED"] if na == "NOT_APPLICABLE" else [], na),
@@ -222,7 +240,7 @@ def test_compatible_ttm_valuation_and_share_basis_proxy_explicit():
 
 def test_unproven_ttm_monetary_basis_remains_blocked_with_typed_market_cap():
     features = feature_record("AAA")
-    features["features"]["net_income_ttm_sum"]["scale"] = "UNKNOWN"
+    features["features"]["attributable_net_income_ttm_sum"]["scale"] = "UNKNOWN"
     features["features"]["revenue_ttm_sum"]["scale"] = "UNKNOWN"
     row = evaluate_ticker_valuation(ticker="AAA", feature_record=features,
                                     valuation_record=valuation_record("AAA"))
@@ -232,8 +250,43 @@ def test_unproven_ttm_monetary_basis_remains_blocked_with_typed_market_cap():
     assert row["methods"][PS_TTM]["value"] is None
 
 
+def test_parent_ttm_denominator_is_distinct_from_total_and_total_only_is_withheld():
+    parent = evaluate_ticker_valuation(ticker="AAA",
+        feature_record=feature_record("AAA", ttm_ni=400, ttm_parent_ni=100),
+        valuation_record=valuation_record("AAA"))
+    assert parent["methods"][PE_TTM]["value"] == pytest.approx(80)
+    total_only = evaluate_ticker_valuation(ticker="AAA",
+        feature_record=feature_record("AAA", ttm_ni=400, ttm_parent_ni=None),
+        valuation_record=valuation_record("AAA"))
+    assert total_only["methods"][PE_TTM]["status"] == INPUT_BLOCKED
+    assert total_only["methods"][PE_TTM]["value"] is None
+    assert "PARENT_PROFIT_NOT_QUALIFIED" in total_only["methods"][PE_TTM]["blocker_reason_codes"]
+    assert total_only["methods"][PS_TTM]["status"] == "RESEARCH_USABLE"
+
+
+@pytest.mark.parametrize("field,value", [("currency", "USD"), ("scale", "THOUSAND")])
+def test_parent_ttm_monetary_mismatch_cannot_fall_back_to_compatible_total(field, value):
+    features = feature_record("AAA")
+    features["features"]["attributable_net_income_ttm_sum"][field] = value
+    row = evaluate_ticker_valuation(ticker="AAA", feature_record=features,
+                                    valuation_record=valuation_record("AAA"))
+    assert row["methods"][PE_TTM]["status"] == INPUT_BLOCKED
+    assert row["methods"][PE_TTM]["value"] is None
+    assert row["methods"][PS_TTM]["status"] == "RESEARCH_USABLE"
+
+
+def test_code60_annual_input_cannot_restore_parent_headline():
+    valuation = valuation_record("AAA", pe=20)
+    valuation["metrics"]["P/E"]["financial_inputs"][0].update(canonical_metric="net_income", line_code="60")
+    row = evaluate_ticker_valuation(ticker="AAA", feature_record=feature_record("AAA", ttm_parent_ni=None),
+                                    valuation_record=valuation)
+    assert row["methods"]["P/E"]["status"] == INPUT_BLOCKED
+    assert row["methods"]["P/E"]["value"] is None
+    assert row["methods"]["P/E_TOTAL_INCLUDING_NCI"]["value"] == 20
+
+
 def test_qualified_ttm_is_preferred_with_lineage_and_conflict_retained():
-    qualified = {"features": {"net_income_ttm": {"fitness": "READY", "value": 500, "method": "four_consecutive_compatible_standalone_quarters/v2", "period_identity": ["2025-Q1", "2025-Q2", "2025-Q3", "2025-Q4"], "provider_source_provenance": [{"provider": "KBS"}], "currency": "VND", "scale": "units", "reason_codes": []}, "revenue_ttm": {"fitness": "READY", "value": 4000, "method": "four_consecutive_compatible_standalone_quarters/v2", "period_identity": ["2025-Q1", "2025-Q2", "2025-Q3", "2025-Q4"], "provider_source_provenance": [{"provider": "KBS"}], "currency": "VND", "scale": "units", "reason_codes": []}}}
+    qualified = {"features": {"attributable_net_income_ttm": {"fitness": "READY", "value": 500, "method": "four_consecutive_compatible_standalone_quarters/v2", "period_identity": ["2025-Q1", "2025-Q2", "2025-Q3", "2025-Q4"], "provider_source_provenance": [{"provider": "KBS"}], "currency": "VND", "scale": "units", "reason_codes": []}, "revenue_ttm": {"fitness": "READY", "value": 4000, "method": "four_consecutive_compatible_standalone_quarters/v2", "period_identity": ["2025-Q1", "2025-Q2", "2025-Q3", "2025-Q4"], "provider_source_provenance": [{"provider": "KBS"}], "currency": "VND", "scale": "units", "reason_codes": []}}}
     row = evaluate_ticker_valuation(ticker="AAA", feature_record=feature_record("AAA", ttm_ni=400), valuation_record=valuation_record("AAA"), financial_analysis_record=qualified, financial_analysis_context_identity="fa:1")
     method = row["methods"][PE_TTM]
     assert method["status"] == "RESEARCH_USABLE" and method["value"] == pytest.approx(16)
@@ -242,7 +295,7 @@ def test_qualified_ttm_is_preferred_with_lineage_and_conflict_retained():
 
 
 def test_new_ttm_scale_or_currency_mismatch_is_blocked_and_old_fallback_remains_explicit():
-    qualified = {"features": {"net_income_ttm": {"fitness": "READY", "value": 400, "method": "four_consecutive_compatible_standalone_quarters/v2", "period_identity": ["2025-Q1"] * 4, "provider_source_provenance": [{"provider": "KBS"}], "currency": "USD", "scale": "THOUSAND", "reason_codes": []}}}
+    qualified = {"features": {"attributable_net_income_ttm": {"fitness": "READY", "value": 400, "method": "four_consecutive_compatible_standalone_quarters/v2", "period_identity": ["2025-Q1"] * 4, "provider_source_provenance": [{"provider": "KBS"}], "currency": "USD", "scale": "THOUSAND", "reason_codes": []}}}
     blocked = evaluate_ticker_valuation(ticker="AAA", feature_record=feature_record("AAA"), valuation_record=valuation_record("AAA"), financial_analysis_record=qualified, financial_analysis_context_identity="fa:1")
     assert blocked["methods"][PE_TTM]["status"] == INPUT_BLOCKED
     assert "TTM_MARKET_CAP_MONETARY_BASIS_INCOMPATIBLE" in blocked["methods"][PE_TTM]["blocker_reason_codes"]
@@ -323,6 +376,22 @@ def test_incompatible_valuation_basis_excluded_from_peers():
     attached = attach_peer_relative({"HPG": exact, "AAA": proxy, "BBB": copy.deepcopy(proxy), "CCC": copy.deepcopy(proxy), "DDD": copy.deepcopy(proxy)})
     assert attached["HPG"]["peer_relative"][PE_TTM]["status"] == "INSUFFICIENT_PEER_COUNT"
     assert attached["AAA"]["peer_relative"][PE_TTM]["peer_count"] == 4 or attached["AAA"]["peer_relative"][PE_TTM]["status"] == "INSUFFICIENT_PEER_COUNT"
+
+
+def test_parent_and_standalone_profit_do_not_combine_to_meet_peer_minimum():
+    rows = {}
+    for index in range(5):
+        ticker = f"P{index}"
+        features = feature_record(ticker)
+        if index == 4:
+            features["features"]["net_income_ttm_sum"]["statement_scope"] = "standalone"
+        rows[ticker] = evaluate_ticker_valuation(ticker=ticker, feature_record=features,
+                                                valuation_record=valuation_record(ticker))
+    assert rows["P4"]["methods"][PE_TTM]["earnings_attribution"] == "STANDALONE_TOTAL_EQUALS_PARENT"
+    attach_peer_relative(rows)
+    assert rows["P0"]["peer_relative"][PE_TTM]["peer_count"] == 4
+    assert rows["P4"]["peer_relative"][PE_TTM]["peer_count"] == 1
+    assert all(row["peer_relative"][PE_TTM]["status"] == "INSUFFICIENT_PEER_COUNT" for row in rows.values())
 
 
 def test_fundamental_peer_method_compatibility_excludes_blocked_roe_proxy():

@@ -1050,6 +1050,10 @@ _NON_PERIOD_BASES = frozenset({"", "EXISTING_CURRENT_VALUATION_METHOD", "TTM_SUM
 def _select_headline_method(methods: Mapping[str, Any], family: str) -> tuple[str | None, Mapping[str, Any]]:
     """The first usable method of a family; otherwise the historical lookup order (no value)."""
     ttm_id, reported_id, _duration_id = _HEADLINE_FAMILIES[family]
+    ttm = methods.get(ttm_id) or {}
+    if (family == "P/E" and ttm.get("headline_pe_policy") == "OWNER_DECISION_1_20261124"
+            and ttm.get("status") == "PE_NOT_MEANINGFUL"):
+        return ttm_id, ttm
     for method_id in (ttm_id, reported_id):
         item = methods.get(method_id)
         if isinstance(item, Mapping) and item.get("status") in _USABLE_METHOD_STATUSES and item.get("value") is not None:
@@ -1070,6 +1074,11 @@ def _headline_multiple_basis(family: str, method_id: str | None, item: Mapping[s
     never relabels an annual or reported-period denominator as TTM, and never promotes a method.
     """
     if value is None:
+        if family == "P/E" and item.get("headline_pe_policy") == "OWNER_DECISION_1_20261124":
+            return {"method": method_id, "claim": "WITHHELD", "status": item.get("status"),
+                    "blocker_reason_codes": list(item.get("blocker_reason_codes") or []),
+                    "display_label": item.get("display_label"),
+                    "earnings_attribution": item.get("earnings_attribution")}
         return {"method": None, "claim": None}
     if not methods or method_id is None or item.get("value") != value:
         # Compact record without per-method detail, or a top-level value that is not the
@@ -1153,6 +1162,7 @@ def _headline_multiple_basis(family: str, method_id: str | None, item: Mapping[s
         } for row in inputs]
     return {
         "method": method_id,
+        **({"display_label": item["display_label"]} if item.get("display_label") else {}),
         "claim": claim,
         "formula": item.get("formula"),
         "denominator_class": denominator_class,
@@ -1188,6 +1198,8 @@ def _earnings_attribution(item: Mapping[str, Any]) -> tuple[str, str | None]:
     ``net_income`` is total profit after tax (it includes non-controlling interests), so a P/E over it
     is not a parent-shareholder multiple for an issuer with material NCI. Labels only; never recomputes.
     """
+    if item.get("headline_pe_policy") == "OWNER_DECISION_1_20261124":
+        return item.get("earnings_attribution") or "ATTRIBUTION_UNSPECIFIED", None
     metrics = {str(row["canonical_metric"]) for row in (item.get("financial_inputs") or [])
                if isinstance(row, Mapping) and row.get("canonical_metric")}
     if not metrics:
@@ -1275,7 +1287,10 @@ def evaluate_valuation_context(
     # session where it becomes usable.
     ev_ebitda_item = methods.get("EV/EBITDA_CALC_READY") or methods.get("EV/EBITDA") or {}
 
-    pe_val = val_rec.get("pe") or pe_item.get("value")
+    # Owner Decision 1, 2026-11-24: the producer-selected parent method is sole
+    # headline authority. A legacy record-level total multiple cannot override it.
+    parent_policy = pe_item.get("headline_pe_policy") == "OWNER_DECISION_1_20261124"
+    pe_val = (pe_item.get("value") if pe_item.get("status") in _USABLE_METHOD_STATUSES else None) if parent_policy else val_rec.get("pe") or pe_item.get("value")
     pb_val = val_rec.get("pb") or pb_item.get("value")
     ps_val = val_rec.get("ps") or ps_item.get("value")
     ev_ebitda_val = ev_ebitda_item.get("value") if ev_ebitda_item.get("status") in {"RESEARCH_USABLE", "READY"} else None
@@ -1290,7 +1305,7 @@ def evaluate_valuation_context(
     rel_state = peer_rel.get("relative_research_state") if peer_rel else val_rec.get("relative_research_state")
     # The peer-percentile fallback keeps the historical method lookup: choosing which method
     # the headline shows must not change which percentile drives supports/counters.
-    legacy_pe_item = methods.get("P/E") or methods.get("P/E_TTM") or {}
+    legacy_pe_item = (pe_item if pe_val is not None else {}) if parent_policy else methods.get("P/E") or methods.get("P/E_TTM") or {}
     legacy_ps_item = methods.get("P/S") or methods.get("P/S_TTM") or {}
     peer_pctl = peer_rel.get("peer_relative_percentile") or legacy_pe_item.get("peer_percentile") or pb_item.get("peer_percentile") or legacy_ps_item.get("peer_percentile")
     peer_basis = {
@@ -1400,6 +1415,8 @@ def evaluate_valuation_context(
         "peer_relative_basis": peer_basis,
         "share_basis": share_basis,
         "pe_multiple": pe_val,
+        **({"pe_supplementary": dict(methods["P/E_TOTAL_INCLUDING_NCI"])}
+           if "P/E_TOTAL_INCLUDING_NCI" in methods else {}),
         "pb_multiple": pb_val,
         # Which P/B ``pb_multiple`` is, with that method's own limitations carried verbatim.
         "pb_basis": ({"method": "P/B_CURRENT_RESEARCH", "equity_definition": research_pb.get("equity_definition"),

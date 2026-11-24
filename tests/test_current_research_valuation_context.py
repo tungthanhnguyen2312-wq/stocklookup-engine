@@ -46,7 +46,7 @@ def qualified_feature(value, *, currency="VND", scale="units", provider="KBS",
 def financial_analysis_record(*, net_income=None, revenue=None):
     features = {}
     if net_income is not None:
-        features["net_income_ttm"] = net_income
+        features["attributable_net_income_ttm"] = net_income
     if revenue is not None:
         features["revenue_ttm"] = revenue
     return {"features": features}

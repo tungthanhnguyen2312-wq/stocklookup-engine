@@ -19,9 +19,9 @@ PROSPECTIVE_20260821 = "prospective_research_snapshot:d227f98bfc0f9d79ae20ae0d68
 def _corporate_facts():
     return [
         {"canonical_metric": name, "value": value, "qualification_state": "QUALIFIED",
-         "reporting_period": "2025", "observed_at": "2026-01-01"}
+         "reporting_period": "2025", "observed_at": "2026-01-01", "statement_scope": "consolidated"}
         for name, value in (
-            ("net_income", 10), ("shareholders_equity", 100), ("revenue", 200),
+            ("net_income", 10), ("attributable_net_income", 10), ("shareholders_equity", 100), ("revenue", 200),
             ("cash_and_equivalents", 20), ("total_interest_bearing_debt", 50),
         )
     ]
@@ -30,7 +30,7 @@ def _corporate_facts():
 def _bank_facts():
     return [
         {"canonical_metric": name, "value": value, "qualification_state": "QUALIFIED",
-         "reporting_period": "2025", "observed_at": "2026-01-01"}
+         "reporting_period": "2025", "observed_at": "2026-01-01", "statement_scope": "consolidated"}
         for name, value in (("net_profit_parent", 30), ("net_profit_total", 40), ("total_equity", 300),
                             ("parent_equity", 250), ("total_liabilities", 900))
     ]
@@ -39,7 +39,7 @@ def _bank_facts():
 def _securities_facts():
     return [
         {"canonical_metric": name, "value": value, "qualification_state": "QUALIFIED",
-         "reporting_period": "2025", "observed_at": "2026-01-01"}
+         "reporting_period": "2025", "observed_at": "2026-01-01", "statement_scope": "consolidated"}
         for name, value in (("profit_after_tax_parent", 8), ("profit_after_tax_total", 9),
                             ("total_equity", 80), ("total_operating_revenue", 50))
     ]
@@ -100,7 +100,7 @@ def test_deterministic_and_lagged_shares_are_research_usable_not_ready():
     assert aaa["metrics"]["market_cap"]["value"] == 10_000 * 1_000 * 100
     assert aaa["metrics"]["P/E"]["status"] == "RESEARCH_USABLE"
     assert "NOT_COMMON_OUTSTANDING_SHARE_BASIS" in aaa["metrics"]["P/E"]["labels"]
-    assert aaa["metrics"]["P/E"]["input_identities"]["earnings"] == "net_income"
+    assert aaa["metrics"]["P/E"]["input_identities"]["earnings"] == "attributable_net_income"
     assert aaa["metrics"]["P/B"]["input_identities"]["equity"] == "shareholders_equity"
     assert aaa["metrics"]["EV/EBITDA"]["status"] == "BLOCKED"
     assert "EXACT_EBITDA_COMPARABILITY_NOT_RETAINED" in aaa["metrics"]["EV/EBITDA"]["blocked_reasons"]
