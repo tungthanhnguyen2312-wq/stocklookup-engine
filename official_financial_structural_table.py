@@ -1151,10 +1151,29 @@ def match_geometry_table_row(
                             and token not in vas_notes]
         if any(any(ch.isalpha() for ch in str(token["text"])) for token in candidate_tokens):
             candidates.append((candidate_band, candidate_tokens))
-    # Explicit alphabetic labels on both sides are ambiguous. Never select one by
-    # its financial meaning or manufacture a label from a neighbouring row.
+    # The midpoint envelope can contain an off-row margin annotation on the
+    # opposite side of the code. Resolve sidedness only when exactly one side
+    # has an alphabetic token vertically overlapping the actual code token.
+    # This is geometric evidence, never a choice by financial meaning. Keep all
+    # wrapped fragments on that side; competing labels on the code row still block.
     if len(candidates) > 1:
-        return None
+        code_tokens = [token for token in line["tokens"]
+                       if _in_band(token, bands["line_code"])
+                       and str(token["text"]).strip() == str(line_code)]
+        if len(code_tokens) != 1:
+            return None
+        code_token = code_tokens[0]
+        def on_code_row(token):
+            overlap = min(float(token["bottom"]), float(code_token["bottom"])) - max(float(token["top"]), float(code_token["top"]))
+            # Both boxes must share at least half their height: a tall gutter
+            # glyph spanning several rows cannot establish a competing label.
+            height = max(float(token["bottom"]) - float(token["top"]), float(code_token["bottom"]) - float(code_token["top"]))
+            return height > 0 and overlap / height >= 0.5
+        candidates = [(band, selected) for band, selected in candidates
+                      if any(any(ch.isalpha() for ch in str(token["text"])) and on_code_row(token)
+                             for token in selected)]
+        if len(candidates) != 1:
+            return None
     label_band, label_tokens = candidates[0] if candidates else (candidate_label_bands[1], [])
     label_binding = {"contract": "physical_midpoint_label/v1"}
     # TSV hierarchy binds a wrapped label to its own code line through the next

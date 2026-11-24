@@ -879,8 +879,11 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
 
     income = live_receipt["retained_income_operand_qualification_corrective"]
     income_paths = ["official_financial_filing_evidence.py",
-                    "stocklookup_core/evidence/financial_row_identity.py"]
-    assert income["scope"] == "RETAINED_INCOME_LITERAL_ROW_IDENTITY_ONLY"
+                    "stocklookup_core/evidence/financial_row_identity.py",
+                    "official_financial_structural_table.py",
+                    "stocklookup_core/evidence/official_document_acquisition.py",
+                    "tools/run_retained_audited_annual_context.py"]
+    assert income["scope"] == "RETAINED_INCOME_LITERAL_ROW_IDENTITY_LOCATOR_AND_BOUNDED_ACQUISITION"
     assert income["new_capacity_measurement"] is False
     assert income["whole_daily_requalification"] is False
     assert income["changed_source_paths"] == income_paths

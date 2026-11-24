@@ -34,10 +34,16 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
   and JV code 27 are recognized, industrial interest is code 23 and JV share code 24.
   Crossed 60/61 and NCI guards remain. Annual replay keeps its conservative
   qualification-time knowledge floor (never backdated). Retained HPG H1/2026 layout-proof
-  replay admits parent profit; no overlay was published. Full PDF rerun, PNJ annual
-  locator diagnosis and VRE annual registration remain blocked by missing PDF/OCR
-  Python dependencies in the prescribed executor environment. HPG FY2025 numeric
-  ambiguity and VRE H1/2026 damaged parent-label letter remain blocked.
+  replay admits parent profit; no overlay was published. HOL-02F completed offline
+  PNJ/VRE FY2025 OCR replay with the supplied dependencies. PNJ income is page 10;
+  code-row overlap resolves off-row gutter label competition, but revenue has a
+  competing comparative token, total profit has superscript digits and parent
+  profit has a split amount and damaged label. VRE is registered for explicit annual
+  subset replay; its assurance wording, code 60 geometry and code 61 damaged label
+  remain blocked. No new income fact was admitted or published. Owner approval
+  2026-11-24 adds only 2025-H1/2025-Q3/2026-Q3 to the bounded acquisition period list;
+  no downloads were run. HPG FY2025 numeric ambiguity and VRE H1/2026 damaged
+  parent-label letter remain blocked.
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.

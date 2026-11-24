@@ -1,5 +1,6 @@
 """Synthetic admission controls and retained-token regressions for HOL-02C."""
 import json
+import copy
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,62 @@ from stocklookup_core.evidence.financial_row_identity import (
 )
 from official_financial_filing_evidence import admit_official_financial_fact
 from tests.test_official_financial_source_integrity import proved_fixture
+
+
+def annual_income_page():
+    from official_financial_ocr_table_evidence import _pages_by_statement_family
+    path = Path(__file__).parent / 'fixtures/retained_interim_geometry/PNJ_FY25_income.json'
+    return _pages_by_statement_family(json.loads(path.read_text(encoding='utf8')))['income_statement'][0]
+
+
+def test_annual_locator_excludes_off_row_gutter_without_repairing_amount():
+    from official_financial_structural_table import match_geometry_table_row
+    from annual_financial_ocr_materialization import parse_accounting_integer
+    page = annual_income_page()
+    original = copy.deepcopy(page)
+    row = match_geometry_table_row(page, line_code='60', target_period='2025')
+    assert row['page'] == 10
+    assert row['current_raw'] == '².8²8.497.46².890'
+    assert 'I' not in row['row_object']['raw_label_fragments']
+    with pytest.raises(ValueError, match='OCR_NUMERIC_AMBIGUITY'):
+        parse_accounting_integer(row['current_raw'])
+    assert page == original
+    # A competing comparative token and a split current amount remain blocked.
+    assert match_geometry_table_row(page, line_code='10', target_period='2025') is None
+    assert match_geometry_table_row(page, line_code='61', target_period='2025') is None
+
+
+@pytest.mark.parametrize('top,bottom,expected', [(1880, 1910, False), (1850, 1950, True), (1951, 1980, True)])
+def test_label_side_requires_overlap_of_both_boxes(top, bottom, expected):
+    from official_financial_structural_table import match_geometry_table_row
+    page = annual_income_page()
+    gutter = next(t for t in page['positioned_tokens'] if t['text'] == 'I' and t['x0'] < 100 and t['top'] == 1951)
+    gutter.update(top=top, bottom=bottom)
+    # Synthetic geometry perturbation: aligned competing labels must still block;
+    # tall annotations cannot borrow a short code's entire height as row proof.
+    found = match_geometry_table_row(page, line_code='60', target_period='2025')
+    assert (found is not None) == expected
+
+
+@pytest.mark.parametrize('tickers,expected', [([], ['HPG', 'PNJ', 'PVD']), (['VRE'], ['VRE'])])
+def test_annual_document_list_registers_vre_without_widening_default_batch(monkeypatch, capsys, tickers, expected):
+    from tools import run_retained_audited_annual_context as annual
+    calls = []
+    def run(**kwargs):
+        calls.append(kwargs)
+        return {'report': {}}
+    monkeypatch.setattr(annual, 'run', run)
+    monkeypatch.setattr('sys.argv', ['annual'] + (['--tickers'] + tickers if tickers else []))
+    assert annual.main() == 0
+    capsys.readouterr()
+    kwargs = calls[0]
+    assert [s['ticker'] for s in kwargs['document_specs']] == expected
+    assert kwargs['reporting_period'] == '2025' and kwargs['allow_audited_annual_context']
+    assert len(kwargs['document_specs']) <= 3
+    assert sum(6 + len(s['pages']) for s in kwargs['document_specs']) <= 40
+    if tickers:
+        assert kwargs['document_specs'][0]['sha256'] == '85b250e9bd3b87aac9a1f650363f7063b2a830f6f4f1dda07eb6eecd09063a3e'
+        assert kwargs['document_specs'][0]['pages'] == (7, 8, 9, 10, 11, 12)
 
 
 @pytest.mark.parametrize('label', [

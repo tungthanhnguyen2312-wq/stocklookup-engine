@@ -33,8 +33,9 @@ DOCUMENT_CLASSES = ("audited_annual_financial_statements", "reviewed_interim_fin
 # Annual evidence is retained only for explicitly reviewed reporting periods.  FY2022 is
 # required by the targeted multi-period issuer-document pilot; keeping this finite set
 # preserves the acquisition boundary while allowing the immediately preceding comparison
-# year to be requested.
-PERIODS = frozenset({"2022", "2023", "2024", "2025", "2026", "2026-H1", "2026-Q2"})
+# year to be requested. Owner approval 2026-11-24 (HL-20261124-HOL-02F) adds
+# only H1/2025, Q3/2025 and Q3/2026 for missing official-statement acquisition.
+PERIODS = frozenset({"2022", "2023", "2024", "2025", "2026", "2025-H1", "2025-Q3", "2026-H1", "2026-Q2", "2026-Q3"})
 # The Novaland FY2024 audited consolidated PDF is 23,761,801 bytes.  The bounded
 # 32 MiB ceiling admits that known issuer filing without opening unbounded retention.
 CONNECT_TIMEOUT_SECONDS, READ_TIMEOUT_SECONDS, MAX_RESPONSE_BYTES = 5, 15, 32 * 1024 * 1024

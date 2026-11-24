@@ -118,6 +118,15 @@ class AcquisitionTests(unittest.TestCase):
   self.assertEqual(future["outcomes"][0]["state"],"unsupported_request")
  def test_index_observed_dtp_is_a_finite_supported_ticker(self):
   self.assertIn("DTP",TICKERS)
+ def test_owner_approved_statement_periods_remain_a_finite_allowlist(self):
+  for period in ("2025-H1", "2025-Q3", "2026-Q3"):
+   with self.subTest(period=period):
+    result=acquire([self.spec(reporting_period=period, document_class="reviewed_interim_financial_statements",
+                             canonical_url=f"https://issuer.example/{period}.pdf")],self.root,fetcher=self.fetch)
+    self.assertEqual(result["outcomes"][0]["state"],"retained")
+  denied=acquire([self.spec(reporting_period="2024-H1", document_class="reviewed_interim_financial_statements")],
+                 self.root,fetcher=lambda *_a,**_k:self.fail("unlisted period reached HTTP"))
+  self.assertEqual(denied["outcomes"][0]["state"],"unsupported_request")
  def test_explicit_bounded_additional_ticker_is_admitted_without_widening_default_scope(self):
   denied=acquire([self.spec(ticker="VBB")],self.root,fetcher=self.fetch)
   admitted=acquire([self.spec(ticker="VBB")],self.root,fetcher=self.fetch,additional_allowed_tickers=("VBB",))
