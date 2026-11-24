@@ -75,9 +75,14 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
         allow_audited_annual_context: bool = False, annual_context_known_at: str | None = None,
         resolve_cash_flow_code_cells: bool = False, evidence_subdir: str = EVIDENCE_SUBDIR,
         front_matter_pages=FRONT_MATTER_PAGES, allow_unqualified_native_fallback: bool = False,
-        interim_qualified_at: str | None = None, normalize_superscript_digits: bool = False) -> dict[str, Any]:
+        interim_qualified_at: str | None = None, normalize_superscript_digits: bool = False,
+        allow_prior_h1_operands: bool = False) -> dict[str, Any]:
     from financial_evidence_currency_contract import COHORT, TARGET_PERIODS
-    if (reporting_period not in TARGET_PERIODS or len(document_specs) > 3
+    from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+    prior_h1 = (allow_prior_h1_operands and reporting_period == "2025-H1"
+                and all((layout_for(s["sha256"]) or {}).get("reporting_period") == "2025-H1"
+                        and (layout_for(s["sha256"]) or {}).get("ticker") == s["ticker"] for s in document_specs))
+    if ((reporting_period not in TARGET_PERIODS and not prior_h1) or len(document_specs) > 3
             or any(s["ticker"] not in COHORT for s in document_specs)
             or not 1 <= len(front_matter_pages) <= 8
             or len(set(front_matter_pages)) != len(front_matter_pages)
@@ -96,6 +101,9 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
         if record.get("reporting_period") != reporting_period:
             raise ValueError("RETAINED_DOCUMENT_PERIOD_BINDING_MISMATCH")
         known_at = record["observed_at"]
+        if prior_h1:
+            known_at = max((known_at, datetime.now(timezone.utc).isoformat()),
+                           key=lambda value: datetime.fromisoformat(value.replace("Z", "+00:00")))
         if interim_qualified_at is not None:
             # A rule admitted after the document was first observed makes its facts
             # later-known: qualification time is the floor, never the retained date.
@@ -133,7 +141,7 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
                 "title_span", "opinion_evidence", "materialization_id", "page_text_sha256")},
             "candidate_facts": [{"metric": fact["canonical_metric"], "value": fact["value"], "currency": fact["currency"],
                                  "source_unit_scale": fact["unit_scale"], "source_page": fact["source_lineage"]["source_page"],
-                                 "line_code": fact["source_lineage"]["line_code"]} for fact in qualification["qualified_facts"]],
+                                 "line_code": fact["source_lineage"].get("line_code")} for fact in qualification["qualified_facts"]],
             "blocked_candidates": qualification["blocked_candidates"],
             "canonical_facts": [], "ingress_blocked": [],
         }

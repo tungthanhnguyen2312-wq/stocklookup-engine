@@ -448,7 +448,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
 
     def successor_baseline_pin(path, *successors):
         # The newest corrective is every chain's last successor before the live pin.
-        for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"]):
+        for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"],
+                      live_receipt["retained_baseline_two_h1_ttm_corrective"]):
             if path in entry["prior_source_sha256_lf"]:
                 return entry["prior_source_sha256_lf"][path]
         return live_receipt["source_sha256"][path]
@@ -878,6 +879,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["share_basis_official_event_staleness_corrective"] = staleness
 
     income = live_receipt["retained_income_operand_qualification_corrective"]
+    glyph = live_receipt["retained_baseline_two_h1_ttm_corrective"]
     income_paths = ["official_financial_filing_evidence.py",
                     "stocklookup_core/evidence/financial_row_identity.py",
                     "official_financial_structural_table.py",
@@ -892,10 +894,25 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{income['base_commit']}:{path}"], cwd=root)
         assert income["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert income["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = glyph["prior_source_sha256_lf"].get(
+            path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     from tools.qualify_e4_infrastructure import source_identity
-    assert income["e4_v2_code_digest"] == source_identity(root, version="v2")["code_digest"]
+    assert income["e4_v2_code_digest"] == glyph["prior_e4_v2_code_digest"]
     prior_receipt["retained_income_operand_qualification_corrective"] = income
+
+    assert glyph["scope"] == "RETAINED_BASELINE_U00B2_GEOMETRY_AND_OFFLINE_H1_TTM_ONLY"
+    assert glyph["new_capacity_measurement"] is False and glyph["whole_daily_requalification"] is False
+    assert glyph["changed_source_paths"] == ["official_financial_filing_evidence.py",
+        "official_financial_ocr_table_evidence.py", "stocklookup_core/evidence/official_ocr_layout_proof.py",
+        "stocklookup_core/financial/financial_analysis_engine_v2.py", "tools/run_reviewed_interim_canonical_ingress.py"]
+    assert set(glyph["prior_source_sha256_lf"]) == set(glyph["changed_source_paths"])
+    for path in glyph["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{glyph['base_commit']}:{path}"], cwd=root)
+        assert glyph["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
+        assert glyph["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    assert glyph["e4_v2_code_digest"] == source_identity(root, version="v2")["code_digest"]
+    prior_receipt["retained_baseline_two_h1_ttm_corrective"] = glyph
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

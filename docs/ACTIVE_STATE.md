@@ -29,6 +29,18 @@ Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
+- **LOCAL / OFFLINE — HOL-08 retained numeric proof and H1 TTM replay:**
+  U+00B2 may be interpreted as 2 only with same-render character boxes whose top,
+  bottom and height match ASCII digit medians within 10% of median digit height.
+  Raw tokens and full proof remain retained; other numeric characters and damaged
+  parent labels are not repaired. The explicit offline V2 H1 bridge replays all
+  three operands through common admission at the decision cutoff. Table-qualified
+  values remain unusable where document metadata, issuer, period or assurance
+  admission fails. The 17 requested operands improve from 5 to 8 table-qualified;
+  zero new facts are admitted. Both November 23/25 cutoff replays keep P/E TTM
+  blocked for all 13 names; P/S TTM is blocked (SSI/VCB not applicable).
+  No overlay, Daily inputs or headline selection change.
+  Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge).
 - **LOCAL / OFFLINE — retained income operand corrective (HL-20261124-HOL-02C):**
   parent-label admission now shares the existing joined-word rule; TT43 parent labels
   and JV code 27 are recognized, industrial interest is code 23 and JV share code 24.
@@ -42,8 +54,9 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
   subset replay; its assurance wording, code 60 geometry and code 61 damaged label
   remain blocked. No new income fact was admitted or published. Owner approval
   2026-11-24 adds only 2025-H1/2025-Q3/2026-Q3 to the bounded acquisition period list;
-  no downloads were run. HPG FY2025 numeric ambiguity and VRE H1/2026 damaged
-  parent-label letter remain blocked.
+  no downloads were run. HOL-08 above supersedes the numeric-blocker subset of
+  this earlier diagnosis; canonical admission and VRE H1/2026 damaged parent-label
+  letter remain blocked.
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.

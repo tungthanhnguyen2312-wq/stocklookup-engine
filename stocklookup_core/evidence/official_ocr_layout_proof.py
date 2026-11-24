@@ -16,13 +16,16 @@ whitelist) the two checks are replaced by proofs that are at least as strict:
   in the line-code band on the value's row, no second amount in the current band on that row, a
   distinct comparative amount in the comparative band, exact raw text and sign.
 
-Nothing here infers or repairs a value; ambiguous OCR stays blocked by the existing numeric policy.
+Ambiguous OCR stays blocked. HOL-08 adds only same-render baseline U+00B2 geometry proof;
+raw tokens remain unchanged and no other numeric character is interpreted differently.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import re
+import math
+from statistics import median
 from typing import Any, Iterable, Mapping
 
 CONTRACT_VERSION = "official_ocr_layout_proof/v1"
@@ -45,7 +48,103 @@ LAYOUT_PROOFS: dict[str, dict[str, Any]] = {
     },
 }
 
+# HOL-08: exact retained originals authorized for bounded operand replay. No source-family
+# wildcard and no claim that an existing (possibly unqualified) text layer is absent.
+for _sha, _ticker, _period, _pages in (
+    ("f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07", "HPG", "2025", (7, 8, 9, 10, 11, 12)),
+    ("309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d", "PNJ", "2025", (7, 8, 9, 10, 11)),
+    ("ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9", "HPG", "2025-H1", (10,)),
+    ("12c40161cdb31ef603256892dbe70a2bba6a906c5b2e033ed281cb321466601c", "PNJ", "2025-H1", (10,)),
+    ("eba4fad322c0a634f156a0f4345d72b47b6962842cadee55607cdd278fcdd577", "VRE", "2025-H1", (11,)),
+):
+    LAYOUT_PROOFS[_sha] = {
+        "ticker": _ticker, "reporting_period": _period, "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
+        "statement_pages": _pages, "current_headers": ("Kỳ này", "Năm nay", "2025", "30.6.2025"),
+        "comparative_headers": ("Kỳ trước", "Năm trước", "2024", "30.6.2024"),
+        "metric_line_codes": {"revenue": "10", "net_income": "60", "attributable_net_income": "61",
+                              "total_assets": "270", "shareholders_equity": "400", "operating_cash_flow": "20"},
+        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay",
+    }
+
 _AMOUNT = re.compile(r"^\(?-?\d{1,3}(?:\.\d{3})+\)?$")
+
+BASELINE_TWO_CONTRACT = "ocr_baseline_u00b2_geometry/v1"
+BASELINE_TWO_TOLERANCE = 0.10
+
+
+def baseline_two_value(token: Mapping[str, Any], rendered_image_sha256: str) -> tuple[str, dict | None]:
+    """Only U+00B2, proven at baseline against other ASCII digits of this exact token.
+
+    Coordinates are top-origin pixels of the same retained render. Raw text is never changed.
+    Missing, malformed, raised, small or mixed-damage character evidence fails closed.
+    """
+    raw = str(token.get("text") or "")
+    if "²" not in raw:
+        return raw, None
+    evidence = token.get("glyph_evidence") or {}
+    if not isinstance(evidence, Mapping):
+        return raw, None
+    boxes = evidence.get("boxes") or []
+    if not isinstance(boxes, list) or not all(isinstance(b, Mapping) for b in boxes):
+        return raw, None
+    if (not re.fullmatch(r"\(?-?[0-9²]{1,3}(?:[.,][0-9²]{3})+\)?", raw)
+            or not re.fullmatch(r"[0-9a-f]{64}", str(rendered_image_sha256))
+            or evidence.get("rendered_image_sha256") != rendered_image_sha256
+            or evidence.get("contract_version") != "tesseract_makebox_same_render/v1"
+            or not evidence.get("engine_version") or not evidence.get("config")
+            or "".join(str(b.get("text", "")) for b in boxes) != raw):
+        return raw, None
+    try:
+        for b in boxes:
+            if not all(math.isfinite(float(b[k])) for k in ("x0", "x1", "top", "bottom")):
+                return raw, None
+            if not (float(token["x0"]) - 1 <= float(b["x0"]) < float(b["x1"]) <= float(token["x1"]) + 1
+                    and float(token["top"]) - 1 <= float(b["top"]) < float(b["bottom"]) <= float(token["bottom"]) + 1):
+                return raw, None
+        digits = [b for b in boxes if b["text"] in "0123456789"]
+        if len(digits) < 3 or any(float(a["x1"]) > float(b["x0"]) + 1 for a, b in zip(boxes, boxes[1:])):
+            return raw, None
+        reference = {"top": median(float(b["top"]) for b in digits),
+                     "bottom": median(float(b["bottom"]) for b in digits),
+                     "height": median(float(b["bottom"]) - float(b["top"]) for b in digits)}
+        tolerance = reference["height"] * BASELINE_TWO_TOLERANCE
+        for b in boxes:
+            if b["text"] == "²" and any(abs(v - reference[k]) > tolerance for k, v in (
+                    ("top", float(b["top"])), ("bottom", float(b["bottom"])),
+                    ("height", float(b["bottom"]) - float(b["top"])))):
+                return raw, None
+    except (KeyError, TypeError, ValueError):
+        return raw, None
+    normalized = raw.replace("²", "2")
+    return normalized, {"contract_version": BASELINE_TWO_CONTRACT, "raw_value": raw,
+        "normalized_value_text": normalized, "token_id": token.get("token_id"),
+        "median_ascii_digit_box": reference, "tolerance_fraction": BASELINE_TWO_TOLERANCE,
+        "tolerance_pixels": tolerance, "glyph_evidence": evidence,
+        "rendered_image_sha256": rendered_image_sha256}
+
+
+def numeric_token_value(raw: str, tokens: Iterable[Mapping[str, Any]], image_sha: str,
+                        bbox: Mapping[str, Any]) -> tuple[str, dict | None]:
+    try:
+        matches = [t for t in tokens if t.get("text") == raw
+                   and all(abs(float(t.get(k, -99999)) - float(bbox.get(k, -999))) <= 1
+                           for k in ("x0", "x1", "top", "bottom"))]
+    except (TypeError, ValueError):
+        return raw, None
+    return baseline_two_value(matches[0], image_sha) if len(matches) == 1 else (raw, None)
+
+
+def bound_numeric_value(row: Mapping[str, Any], proof: Mapping[str, Any] | None) -> str:
+    raw = str(row.get("raw_value_text") or "")
+    ref = row.get("ocr_layout_proof") or {}
+    if not proof or not ref.get("proof_sha256") or verify_proof_identity(
+            proof, document_sha256=row.get("document_sha256"), proof_sha256=ref["proof_sha256"]):
+        return raw
+    page_number = row.get("source_page") or (row.get("source_lineage") or {}).get("source_page")
+    page = (proof.get("pages") or {}).get(str(page_number)) or {}
+    return numeric_token_value(raw, page.get("tokens") or [], page.get("rendered_image_sha256"),
+        (row.get("ocr_row_object") or {}).get("current_value_bbox") or {})[0]
 
 
 def canonical_json(value: Any) -> str:
@@ -78,12 +177,17 @@ def build_ocr_proof(*, document_sha256: str, materializations: Iterable[Mapping[
                 "rendered_image_sha256": image.get("rendered_image_sha256"),
                 "ocr_adapters": page.get("ocr_adapters") or {},
                 "tokens": [{k: t.get(k) for k in ("token_id", "raw_token_order", "text", "x0", "x1", "top", "bottom",
-                                                    "tsv_hierarchy", "source_text")} for t in ocr["tokens"]],
+                                                    "tsv_hierarchy", "source_text", "glyph_evidence")
+                            if k != "glyph_evidence" or k in t} for t in ocr["tokens"]],
             }
     if len(engine) != 1 or len(config) != 1:
         raise ValueError("OCR_PROOF_ENGINE_OR_CONFIG_NOT_UNIQUE")
     body = {"contract_version": CONTRACT_VERSION, "document_sha256": document_sha256, "layout": layout["layout"],
             "engine_version": engine.pop(), "ocr_config": json.loads(config.pop()), "pages": pages}
+    if any(t.get("glyph_evidence") for p in pages.values() for t in p["tokens"]):
+        body["numeric_glyph_policy"] = {"contract_version": BASELINE_TWO_CONTRACT,
+            "tolerance_fraction": BASELINE_TWO_TOLERANCE, "minimum_ascii_reference_digits": 3,
+            "coordinate_tolerance_pixels": 1, "normalized_characters": {"²": "2"}}
     return {**body, "proof_sha256": hashlib.sha256(canonical_json(body).encode("utf-8")).hexdigest()}
 
 
@@ -97,6 +201,13 @@ def verify_proof_identity(proof: Mapping[str, Any], *, document_sha256: str, pro
         reasons.append("OCR_PROOF_DOCUMENT_OR_LAYOUT_MISMATCH")
     if proof.get("contract_version") != CONTRACT_VERSION:
         reasons.append("OCR_PROOF_CONTRACT_MISMATCH")
+    for page in (proof.get("pages") or {}).values():
+        for token in page.get("tokens") or []:
+            glyph = token.get("glyph_evidence")
+            if glyph and (not isinstance(glyph, Mapping)
+                          or glyph.get("engine_version") != proof.get("engine_version")
+                          or glyph.get("config") != proof.get("ocr_config")):
+                reasons.append("OCR_GLYPH_ENGINE_OR_CONFIG_MISMATCH")
     return reasons
 
 
@@ -223,10 +334,13 @@ def verify_row(row_object: Mapping[str, Any] | None, proof: Mapping[str, Any], *
     if len(codes) != 1:
         reasons.append("LINE_CODE_NOT_ON_VALUE_ROW")
     # No second amount in the current column on that row; a distinct comparative amount present.
-    current_amounts = [t for t in on_row if _in_band(t, cur_band) and _AMOUNT.match(str(t["text"]))]
+    image_sha = ((proof.get("pages") or {}).get(str(source_page)) or {}).get("rendered_image_sha256")
+    current_amounts = [t for t in on_row if _in_band(t, cur_band)
+                       and _AMOUNT.match(baseline_two_value(t, image_sha)[0])]
     if len(current_amounts) != 1:
         reasons.append("ADJACENT_AMOUNT_AMBIGUITY")
-    comparative = [t for t in on_row if _in_band(t, cmp_band) and _AMOUNT.match(str(t["text"]))]
+    comparative = [t for t in on_row if _in_band(t, cmp_band)
+                   and _AMOUNT.match(baseline_two_value(t, image_sha)[0])]
     if len(comparative) != 1 or comparative[0]["text"] != row.get("comparative_raw_value"):
         reasons.append("COMPARATIVE_COLUMN_NOT_PROVEN")
     # Label tokens: exact fragments, label band, inside the row box, and one of them on the value's line band.
@@ -244,7 +358,8 @@ def verify_row(row_object: Mapping[str, Any] | None, proof: Mapping[str, Any], *
             reasons.append("VALUE_OUTSIDE_ROW_BASELINE")
     # Exact amount and sign.
     try:
-        if parse_amount(raw_value) * int(unit_scale) != int(value):
+        numeric_raw, _ = baseline_two_value(token, image_sha)
+        if parse_amount(numeric_raw) * int(unit_scale) != int(value):
             reasons.append("VALUE_PARSE_MISMATCH")
         if (raw_value.startswith("(") and raw_value.endswith(")")) != (int(value) < 0):
             reasons.append("VALUE_SIGN_MISMATCH")

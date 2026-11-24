@@ -211,8 +211,8 @@
     "official_document_acquisition.py": "f114c6d9abdbe18f575fafef72a1136405c373b359a22194741d4bffcd350275",
     "official_evidence.py": "67ac2a632e412d041c618ad57e67121ec8edf6f0bbd099615d5bff3baa2bb400",
     "official_financial_assurance_evidence.py": "4b362d3a731beaabf2233fde60a9b78444ccdc1e6ca24ce6fc9cac53c9a8c9c2",
-    "official_financial_filing_evidence.py": "faf132914b487180775781715b1f11447c9630d05e75d583a44702aa6fd60c94",
-    "official_financial_ocr_table_evidence.py": "8d619c33ccd893ac1a9e2bf2b2aa1068d2210d50cb50e6310adc645480d6ed9a",
+    "official_financial_filing_evidence.py": "75c2b86d60c1346d0e17a63b8ed6a6fb6a9a9ef5b91f379200fbca050da8d79f",
+    "official_financial_ocr_table_evidence.py": "5a451bf4c5eda1f315e429b85a47fe95ee1c66f53f3856a4ac12024373e6dea7",
     "official_financial_pdf_page_evidence.py": "eb78b5c412ec2ca1ee6ec629e1dc50f6f75ef93d81631c01d9ad54e07bca18de",
     "official_financial_period_identity.py": "7ff8c108be863ebab2c4ac817476c52fd76981b16d77a991a110b396418564fd",
     "official_financial_structural_table.py": "0e430af70a111a79dbd32b199cb65397d39d1724b0625a52907f890224eac0d5",
@@ -816,7 +816,7 @@
     "stocklookup_core/evidence/official_financial_source_route_discovery.py": "78d9ae3d39b4b9d6734b329b6c9a098e54c833be473c8f73aec2cb2baca65a6c",
     "stocklookup_core/evidence/official_issuer_disclosure_registry.py": "324a2fcda18844093fe28deb2de225d5ee945da11d3b8c9632456dd09c2546cb",
     "stocklookup_core/evidence/official_listing_page_parser.py": "017437c31ead0db6391cf4b3b4b54aaaf15349f1090e98ba02e8014cc1f3b0ce",
-    "stocklookup_core/evidence/official_ocr_layout_proof.py": "f25956af6f56fbc55cbca4b452aec051657991c2fe192cb0e9b9fa52d970df09",
+    "stocklookup_core/evidence/official_ocr_layout_proof.py": "10936e5718fa4530b8d23ca81af54f3343fb5acdd765347db62748e420fc79d3",
     "stocklookup_core/evidence/official_route_ownership_evidence.py": "2b0a1d317d935afc1d1d5fbe8984224be1cffbb06432834f54c0a8a1c1b27c65",
     "stocklookup_core/evidence/official_source_registry.py": "a68cac26c67d7827ad79368ea68377d259e0eef74d7bfe8700587eb712835d2f",
     "stocklookup_core/evidence/official_source_registry_owner_promotion.py": "91a81dbc2bb081359932bcc71b7a39392a285747ec4ee7c273a2685e186faae8",
@@ -881,7 +881,7 @@
     "stocklookup_core/financial/entity_classification_scaleout.py": "433c47037958b02b9340e049c2cb3d1c65c997ae8e0c9d0836fe57a9887d1242",
     "stocklookup_core/financial/evidence_backed_entity_classifier.py": "4d4b0133a1f652537167b8476d73fe9a191573cada92b7faa1a32a0646b37109",
     "stocklookup_core/financial/financial_analysis_context_v2.py": "3c1b45894b7878feaea72b4b4fd3982f594d587e4f930023663805dc9645c50f",
-    "stocklookup_core/financial/financial_analysis_engine_v2.py": "959d1018168a4c8b81ad10e157ccbae04f706fa0237c9c5d80e028df284b31a0",
+    "stocklookup_core/financial/financial_analysis_engine_v2.py": "9bcd0d8daa75621196f648cdbf0bc2dae2207912368a3e490761e537a3919e64",
     "stocklookup_core/financial/financial_analysis_product_projection.py": "b557b87168a53121542b2091404d2ca09333834a11e55b1f1c1e6135e5fac35f",
     "stocklookup_core/financial/financial_canonicalization.py": "88d3f875e2ce7afe869bd4945dedbe225fcbc9f6bd63a6603ac2648e970f3d2d",
     "stocklookup_core/financial/financial_entity_applicability.py": "df78493c281b9de98f770346dc986f3c53142a8075cb2cfcf5558c9a9b219a35",
@@ -1270,7 +1270,7 @@
     "tools/run_retained_audited_annual_context.py": "823a1a4090f41ef45517b808d1bcdb79d3b58463e59b6496240a91e91ed950d3",
     "tools/run_retained_h1_component_context.py": "a8e2d7e3f8a77a2f45eb723cb1a6fdd5edbbee18b635a9ffeb66ca17ea81ef77",
     "tools/run_retained_official_financial_pdf_scaleout_v1.py": "6bdc0383b0625c9b06ec469e1a1eb7642e67ce6aabb9e7b7afb388b60a30ecfe",
-    "tools/run_reviewed_interim_canonical_ingress.py": "4b29aaa210a4b078d67709d0e59f6c558d71df379310f948428fb2b2f4276e27",
+    "tools/run_reviewed_interim_canonical_ingress.py": "929594fa661bbb52721bc38e9f93b8d35efe3fabff26751bc3bf7cb8d1ef164e",
     "tools/run_scheduled_capture.cmd": "8088912b8369d8b0818822438ae4483d10be0ba2d517def67031f1070963eac1",
     "tools/run_scheduled_capture.py": "c9b85fa06fe38e6589efbb35c3945f7fae9c6ddb4c45b17892b06ca8da50c48f",
     "tools/run_screener_master_projection.py": "b0eb8a07a1d15e95491bd5f8402e4ed893727f3499af3f648b3f9f60407b0309",
@@ -2077,5 +2077,28 @@
     },
     "e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
     "compatibility": "HOL-02C row-identity corrective retained. HOL-02F resolves label sidedness by code-row geometry, registers VRE annual subset replay, and adds only Owner-approved 2025-H1/2025-Q3/2026-Q3 acquisition periods (2026-11-24). OCR amounts/letters, admission owners, batch/rate/size/time limits and annual qualification-time knowledge floor remain guarded. No Daily, capacity measurement, downloads or publication."
+  },
+  "retained_baseline_two_h1_ttm_corrective": {
+    "base_commit": "01787598adf4230d13648b709cdc3916f4654ebb",
+    "scope": "RETAINED_BASELINE_U00B2_GEOMETRY_AND_OFFLINE_H1_TTM_ONLY",
+    "changed_source_paths": [
+      "official_financial_filing_evidence.py",
+      "official_financial_ocr_table_evidence.py",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py",
+      "stocklookup_core/financial/financial_analysis_engine_v2.py",
+      "tools/run_reviewed_interim_canonical_ingress.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "prior_source_sha256_lf": {
+      "official_financial_filing_evidence.py": "faf132914b487180775781715b1f11447c9630d05e75d583a44702aa6fd60c94",
+      "official_financial_ocr_table_evidence.py": "8d619c33ccd893ac1a9e2bf2b2aa1068d2210d50cb50e6310adc645480d6ed9a",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "f25956af6f56fbc55cbca4b452aec051657991c2fe192cb0e9b9fa52d970df09",
+      "stocklookup_core/financial/financial_analysis_engine_v2.py": "959d1018168a4c8b81ad10e157ccbae04f706fa0237c9c5d80e028df284b31a0",
+      "tools/run_reviewed_interim_canonical_ingress.py": "4b29aaa210a4b078d67709d0e59f6c558d71df379310f948428fb2b2f4276e27"
+    },
+    "prior_e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+    "e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+    "compatibility": "HOL-08: retain exact raw tokens and same-render character boxes; only geometrically proven baseline U+00B2 can be interpreted as 2. Exact prior H1 document replay and offline V2 per-code H1 TTM require full retained admission at cutoff. No quarterly TTM, letter repair, headline selection, Daily launch or artifact publication."
   }
 }

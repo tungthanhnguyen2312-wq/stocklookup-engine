@@ -211,7 +211,12 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     if row.get("metadata_qualification") in {"BLOCKED", "UNQUALIFIED", METADATA_BLOCKED} or row.get("qualification_status") in {"BLOCKED", "OFFICIAL_FACT_CANDIDATE_BLOCKED"}:
         reasons.append("FACT_QUALIFICATION_BLOCKED")
     period = str(row.get("reporting_period") or "")
-    if period not in TARGET_PERIODS:
+    from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+    prior_h1_layout = layout_for(sha) or {}
+    bounded_prior_h1 = (period == "2025-H1" and row.get("ocr_layout_proof") is not None
+                        and prior_h1_layout.get("reporting_period") == period
+                        and prior_h1_layout.get("ticker") == row.get("ticker"))
+    if period not in TARGET_PERIODS and not bounded_prior_h1:
         reasons.append("SOURCE_PERIOD_NOT_ADMITTED")
     else:
         start, end = period_bounds(period)
@@ -269,7 +274,11 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             missing.append("LITERAL_VALUE_PROOF_MISSING")
         if isinstance(value, bool) or not isinstance(scale, int) or isinstance(scale, bool) or scale <= 0:
             raise ValueError()
-        if raw is not None and parse_accounting_integer(raw) * scale != value:
+        numeric_raw = raw
+        if raw is not None and "²" in str(raw):
+            from stocklookup_core.evidence.official_ocr_layout_proof import bound_numeric_value
+            numeric_raw = bound_numeric_value(row, ocr_layout_proof)
+        if raw is not None and parse_accounting_integer(numeric_raw) * scale != value:
             raise ValueError()
         if raw is not None and isinstance(span, Mapping) and str(raw) not in str(span.get("text") or ""):
             raise ValueError()

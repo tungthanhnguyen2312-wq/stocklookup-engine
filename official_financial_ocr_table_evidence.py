@@ -190,6 +190,37 @@ def _normalize_glyph_digits(tokens: list[dict[str, Any]]) -> int:
     return changed
 
 
+def retain_numeric_glyph_boxes(tokens, *, image_bytes, image_sha256, image_height, engine, engine_version):
+    """Character boxes from the identical full page/config; never from a resized cell crop."""
+    if not any("²" in t["text"] and _AMOUNT_TOKEN.fullmatch(t["text"]) for t in tokens):
+        return
+    result = subprocess.run([str(engine), "stdin", "stdout", "-l", OCR_CONFIG["language"],
+                             "--psm", str(OCR_CONFIG["psm"]), "makebox"],
+                            input=image_bytes, capture_output=True)
+    if result.returncode:
+        return  # no evidence means the existing numeric gate still blocks
+    boxes = []
+    for line in result.stdout.decode("utf-8").splitlines():
+        fields = line.rsplit(" ", 5)
+        if len(fields) != 6:
+            continue
+        try:
+            char, left, bottom, right, top, _ = fields
+            boxes.append(dict(text=char, x0=int(left), x1=int(right),
+                              top=image_height-int(top), bottom=image_height-int(bottom)))
+        except ValueError:
+            return
+    for token in tokens:
+        if "²" not in token["text"] or not _AMOUNT_TOKEN.fullmatch(token["text"]):
+            continue
+        selected = [b for b in boxes if token["x0"] <= (b["x0"]+b["x1"])/2 <= token["x1"]
+                    and token["top"] <= (b["top"]+b["bottom"])/2 <= token["bottom"]]
+        if "".join(b["text"] for b in selected) == token["text"]:
+            token["glyph_evidence"] = {"contract_version": "tesseract_makebox_same_render/v1",
+                "rendered_image_sha256": image_sha256, "engine_version": engine_version,
+                "config": dict(OCR_CONFIG), "boxes": selected}
+
+
 def materialize_tsv_pages(record: Mapping[str, Any], *, evidence_root: Path, pages: Sequence[int], engine: Path = DEFAULT_ENGINE,
                           allow_unqualified_native_fallback: bool = False, detect_orientation: bool = False,
                           normalize_superscript_digits: bool = False) -> dict[str, Any]:
@@ -239,6 +270,11 @@ def materialize_tsv_pages(record: Mapping[str, Any], *, evidence_root: Path, pag
         image_sha256 = orientation["corrected_image_sha256"] if orientation else render["rendered_image_sha256"]
         result = subprocess.run([str(engine), "stdin", "stdout", "-l", OCR_CONFIG["language"], "--psm", str(OCR_CONFIG["psm"]), "tsv"], input=image_bytes, capture_output=True, check=True)
         tokens = _parse_tsv(result.stdout, page_number=number, image_sha256=image_sha256)
+        # Same-render character evidence is retained only for U+00B2 amount tokens.
+        import PIL.Image
+        retain_numeric_glyph_boxes(tokens, image_bytes=image_bytes, image_sha256=image_sha256,
+                                   image_height=PIL.Image.open(BytesIO(image_bytes)).height,
+                                   engine=engine, engine_version=version)
         adapters = {}
         if orientation:
             adapters["orientation_correction"] = orientation
@@ -591,8 +627,13 @@ def qualify_table_facts(materialization: Mapping[str, Any], *, ticker: str, repo
             blocked.append({"canonical_metric": metric, "line_code": code, "statement_family": family,
                             "state": "BLOCKED", "reason": "STATEMENT_SCOPE_BLOCKED", "scope_resolution": scope})
             return None
+        source_page = next(page for page in pages_by_family[family] if page["page_number"] == match["page"])
+        from stocklookup_core.evidence.official_ocr_layout_proof import numeric_token_value
+        numeric_raw, numeric_proof = numeric_token_value(match["current_raw"], source_page.get("positioned_tokens") or [],
+            (source_page.get("source_image_evidence") or {}).get("rendered_image_sha256"),
+            match["row_object"].get("current_value_bbox") or {})
         try:
-            value = parse_accounting_integer(match["current_raw"])[0] * int(unit["unit_scale"])
+            value = parse_accounting_integer(numeric_raw)[0] * int(unit["unit_scale"])
         except ValueError:
             blocked.append({"canonical_metric": metric, "line_code": code, "statement_family": family, "state": "BLOCKED", "reason": "OCR_NUMERIC_AMBIGUITY", "raw_value": match["current_raw"]})
             return None
@@ -608,6 +649,8 @@ def qualify_table_facts(materialization: Mapping[str, Any], *, ticker: str, repo
                    "row_object": match["row_object"], "source_image_evidence": next(page["source_image_evidence"] for page in pages_by_family[family] if page["page_number"] == match["page"]),
                    "ocr_derived_text_evidence": {"materialization_id": materialization["materialization_id"], "current_raw": match["current_raw"], "comparative_raw": match["comparative_raw"]},
                    "table_id": table_id, "unit_evidence": unit, "statement_scope_evidence": scope}
+        if numeric_proof:
+            lineage["ocr_derived_text_evidence"]["numeric_glyph_proof"] = numeric_proof
         if source_page.get("native_failure_evidence"):
             lineage["native_failure_evidence"] = source_page["native_failure_evidence"]
         if cell_evidence:

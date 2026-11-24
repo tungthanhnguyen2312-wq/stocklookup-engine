@@ -30,6 +30,13 @@ or recommend. Read-only inspection released PR116; [scope](research_inspection_i
 Macro V1: Daily/AI/cockpit wired; October 8 live acceptance verified (`MACRO_REGIME_20261008_LIVE_ACCEPTED`;
 exact retained identities in ACTIVE_STATE). Source authority unchanged.
 
+### Retained numeric glyph proof and offline H1 TTM (HOL-08)
+- Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge)
+- Runtime: `EXPERIMENTAL` · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`
+- Input: exact retained FY2025/H1 originals; same-render baseline U+00B2 proof only.
+- Blocker: unadmitted operands stay blocked independently for codes 10/60/61.
+- Next trigger: original-document metadata/assurance and geometry evidence, without letter repair.
+
 ### Long-term company economics evidence
 - Contract: [long_term_company_economics_evidence_contract.md](long_term_company_economics_evidence_contract.md)
 - Runtime: `EXPERIMENTAL` (opt-in library) · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`

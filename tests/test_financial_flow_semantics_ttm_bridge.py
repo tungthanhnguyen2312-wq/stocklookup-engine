@@ -3,6 +3,70 @@ from __future__ import annotations
 import stocklookup_core.financial.financial_flow_semantics_ttm_bridge as bridge
 
 
+def _official_operands():
+    rows = []
+    for period, start, end, assurance, value in (
+        ("2025", "2025-01-01", "2025-12-31", "audited", 100),
+        ("2026-H1", "2026-01-01", "2026-06-30", "reviewed", 60),
+        ("2025-H1", "2025-01-01", "2025-06-30", "reviewed", 40),
+    ):
+        for metric, code in (("revenue", "10"), ("net_income", "60"), ("attributable_net_income", "61")):
+            rows.append(dict(ticker="AAA", canonical_metric=metric, line_code=code, reporting_period=period,
+                period_start=start, period_end=end, audit_or_review_status=assurance,
+                normalized_value=value if code != "61" else value-5, currency="VND", unit_scale=1,
+                source_unit_scale=1, source_page=10, citation_id=period+code, document_sha256="a"*64,
+                qualification_state="QUALIFIED", statement_scope="consolidated",
+                knowledge_available_at="2026-11-24T09:00:00+07:00"))
+    return rows
+
+
+def test_official_h1_ttm_requires_every_operand_at_system_knowledge_cutoff(monkeypatch):
+    from datetime import datetime
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    import stocklookup_core.evidence.official_document_qualification as admission
+    def admit(row, *, cutoff, **kw):
+        return ({"state": "ADMITTED", "reason_codes": []} if datetime.fromisoformat(row["knowledge_available_at"]) <= datetime.fromisoformat(cutoff)
+                else {"state": "BLOCKED", "reason_codes": ["AFTER_KNOWLEDGE_CUTOFF"]})
+    monkeypatch.setattr(admission, "admit_retained_financial_fact", admit)
+    rows = _official_operands()
+    early = official_h1_ttm_features(ticker="AAA", rows=rows, cutoff="2026-11-23T15:00:00+07:00", evidence_root=None)
+    assert all(f["value"] is None and f["fitness"] == "BLOCKED_BY_EVIDENCE" for f in early.values())
+    assert all("AFTER_KNOWLEDGE_CUTOFF" in f["reason_codes"] for f in early.values())
+    late = official_h1_ttm_features(ticker="AAA", rows=rows, cutoff="2026-11-25T15:00:00+07:00", evidence_root=None)
+    assert late["net_income_ttm"]["value"] == 120
+    assert late["attributable_net_income_ttm"]["value"] == 115
+    assert late["net_income_ttm"]["earnings_attribution"] == "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI"
+    assert late["attributable_net_income_ttm"]["earnings_attribution"] == "PARENT_ATTRIBUTABLE"
+    assert late["net_income_ttm"]["knowledge_available_at"] == "2026-11-24T09:00:00+07:00"
+    assert [p["citation_id"] for p in late["net_income_ttm"]["provider_source_provenance"]] == ["202560", "2026-H160", "2025-H160"]
+    from stocklookup_core.valuation.current_research_valuation_context import _qualified_ttm, _ttm_method, _ttm_monetary_basis
+    ttm = _qualified_ttm("net_income_ttm", {"features": late}, "synthetic")
+    cap = {"status": "RESEARCH_USABLE", "value": 1200, "currency": "VND", "scale": 1,
+           "monetary_basis": _ttm_monetary_basis(currency="VND", scale=1, feature_id="market_cap", provider="synthetic")}
+    ratio = _ttm_method(method_id="P/E_TTM", metric="net_income_ttm", ttm=ttm, market_cap=cap,
+                        share_class="CURRENT_OUTSTANDING_SHARES", entity="corporate", earnings_state=None)
+    assert ratio["status"] == "RESEARCH_USABLE" and ratio["value"] == 10
+
+
+def test_official_h1_ttm_never_borrows_other_code_quarter_or_unadmitted_value(monkeypatch):
+    import copy
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    import stocklookup_core.evidence.official_document_qualification as admission
+    monkeypatch.setattr(admission, "admit_retained_financial_fact", lambda *a, **kw: {"state": "ADMITTED", "reason_codes": []})
+    def run(rows):
+        return official_h1_ttm_features(ticker="AAA", rows=rows, cutoff="2026-11-25T15:00:00+07:00", evidence_root=None)
+    for change in ({"qualification_state": "TABLE_ONLY"}, {"line_code": "61"}, {"period_end": "2025-09-30"},
+                   {"evidence_tier": "UNREVIEWED_QUARTERLY"}, {"currency": "USD"}, {"statement_scope": "separate"}):
+        rows = _official_operands(); rows[1].update(change)
+        result = run(rows)
+        assert result["net_income_ttm"]["fitness"] == "BLOCKED_BY_EVIDENCE"
+        assert result["attributable_net_income_ttm"]["fitness"] == "READY"
+    rows = _official_operands(); conflicting = copy.deepcopy(rows[1]); conflicting["normalized_value"] += 1
+    assert "OFFICIAL_H1_OPERAND_CONFLICT:2025" in run(rows+[conflicting])["net_income_ttm"]["reason_codes"]
+    monkeypatch.setattr(admission, "admit_retained_financial_fact", lambda *a, **kw: {"state": "BLOCKED", "reason_codes": ["SOURCE_PROOF_MISSING"]})
+    assert all(f["value"] is None for f in run(_official_operands()).values())
+
+
 def _fact(period: str, value: float, *, provider: str = "KBS", metric: str = "revenue",
           basis: str | None = None, family: str = "income_statement", qualified: bool = False) -> dict:
     fact = {

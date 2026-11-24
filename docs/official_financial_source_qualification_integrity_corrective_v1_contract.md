@@ -57,6 +57,45 @@ No production refresh, Daily, deployment, source activation, provider substituti
 private/runtime data repair, or writes to the 27-row overlay. Default production call
 shapes and completed Daily artifacts are preserved. No second repository writer.
 
+## HOL-08 retained baseline digit proof and offline H1 bridge
+
+Owner task `HL-20261124-HOL-08` authorizes this bounded offline extension.
+The OCR numeric gate may interpret **only U+00B2** as ASCII `2` when the same
+retained page render supplies character boxes for the complete, unchanged numeric
+token. Tesseract makebox uses the same full-page image, language, PSM and engine
+as TSV. Character sequence must exactly equal the raw token; boxes must be finite,
+positive, ordered and contained in the exact TSV token (one pixel coordinate
+tolerance). At least three unaffected ASCII digit glyphs in that token supply
+independent medians for top, bottom and height. Each `²` must match all three
+medians within **10% of median ASCII digit height**, inclusive. No minimum pixel
+allowance is added. Raised/smaller superscripts, missing boxes, render mismatch,
+competing tokens and mixed character damage remain blocked. No other numeric
+character is normalized. Arithmetic identities never supply digits or waive
+geometry, labels, metadata or assurance.
+
+Raw text stays unchanged. The proof/citation retains every character box,
+reference medians, fractional and pixel tolerance, raw and interpreted token,
+page-render SHA-256, engine and configuration. The content-addressed layout proof
+freezes those boxes; admission replays proof identity and numeric geometry.
+Only the five exact HPG/PNJ FY2025 and HPG/PNJ/VRE H1/2025 originals listed in
+`official_ocr_layout_proof.LAYOUT_PROOFS` join the existing scoped registry.
+H1/2025 ingress requires explicit opt-in and exact registered document identity.
+Registration alone is never admission.
+
+The explicit offline V2 builder `official_h1_ttm_features` computes each of codes
+10, 60 and 61 independently as FY2025 + H1/2026 - H1/2025. It requires common-owner
+admitted, QUALIFIED, consolidated VND operands with explicit period bounds, source
+normalization and audited FY/reviewed H1 assurance. It replays retained admission
+at a timezone-aware cutoff, rejects conflicts and never borrows code 60 for 61.
+Knowledge time is the system retention/qualification clock; new prior-H1 and
+annual requalifications have a qualification-time floor, never issuer publication
+time. Total profit includes NCI; parent profit carries `PARENT_ATTRIBUTABLE`.
+Both remain distinct through V2 features and the existing valuation evaluator.
+Default headline selection, Daily inputs and policy stay unchanged. This
+task-specific offline bridge extends the older no-TTM interim boundary only for
+this use. Unreviewed quarterly documents cannot enter the bridge. No overlay,
+runtime or production artifact is written by this task.
+
 ## Existing HPG attachment-host compatibility
 
 The source-only `HPG_EXISTING_ISSUER_ATTACHMENT_BINDING_CORRECTIVE_V1` correction binds
