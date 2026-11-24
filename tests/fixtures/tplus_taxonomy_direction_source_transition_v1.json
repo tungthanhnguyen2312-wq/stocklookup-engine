@@ -1,0 +1,15 @@
+{
+  "contract_version": "tplus_taxonomy_direction_source_transition/v1",
+  "base_commit": "7ea5b514ddc53a8ec8f8fd9630863be5a743f4ff",
+  "scope": "EXACT_TPLUS_TAXONOMY_DOWNSIDE_CONFIRMATION_DIRECTION_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+  "active_e4_v2_digest": "1ea18eb0835490c832ae684a154407ba304a795ba5009682d0f46a7b9d7952c0",
+  "sources": {
+    "prospective_decision_outcome_feedback.py": {
+      "archive": "tests/fixtures/tplus_taxonomy_direction_v1_sources/prospective_decision_outcome_feedback.py.txt",
+      "prior_sha256_lf": "0ddb1a75c1755fdccea48c5d539062537886bb7341d371495d45ee023399d31c",
+      "active_sha256_lf": "a50bf914185bb0225d0cfb243e592b01311b0a8b0f8fa46565dc895e59767157"
+    }
+  }
+}

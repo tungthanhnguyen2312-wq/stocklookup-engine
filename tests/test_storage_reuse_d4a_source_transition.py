@@ -55,7 +55,9 @@ def test_d4a_does_not_change_the_e4_v2_digest():
     assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
     truthfulness = json.loads((ROOT / "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json").read_bytes())
     assert truthfulness["previous_e4_v2_digest"] == retry["active_e4_v2_digest"]
-    assert e4.source_identity(ROOT, version="v2")["code_digest"] == truthfulness["active_e4_v2_digest"]
+    direction = json.loads((ROOT / "tests/fixtures/tplus_taxonomy_direction_source_transition_v1.json").read_bytes())
+    assert direction["previous_e4_v2_digest"] == truthfulness["active_e4_v2_digest"]
+    assert e4.source_identity(ROOT, version="v2")["code_digest"] == direction["active_e4_v2_digest"]
 
 
 def test_other_sources_pass_through():
