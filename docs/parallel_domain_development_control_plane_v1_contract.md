@@ -153,6 +153,47 @@ event plus one event per transferred lane, and adds an `integration_owner_succes
 chain entry. Validation then requires every in-flight leased lane to belong to the
 current owner.
 
+## Exact lane scope amendment
+
+`--amend-lane-scope --scope-spec <owner-reviewed-spec>` amends only `base_sha`,
+`allowed_paths`, and `shared_paths` for a single in-flight lane in `ADMITTED`,
+`ACTIVE`, or `PAUSED` state. It uses the same bound coordinator worktree/branch,
+bound integration owner (`--agent`), explicit Owner directive (`--owner-override`
+and `--scope-note`), OS lock, byte CAS, and fsynced atomic writer as other lane
+mutations. `--amend-lane-declarations` remains declaration-only (`provides`,
+`consumes`, `dependencies`).
+
+The spec schema is `stocklookup_lane_scope_amendment/1` with exact keys:
+`schema`, `expected_revision`, `coordinator_head`, `milestone_id`, `lane_head`,
+`before`, and `after`, where `before` and `after` are exact objects with keys
+`base_sha`, `allowed_paths`, and `shared_paths`. The command refuses without
+writing anything unless all of the following hold:
+
+- structural development-control state is valid, `expected_revision` matches the
+  current revision, `--agent` equals `integration_agent`, and the coordinator
+  worktree is tracked-clean at exactly `coordinator_head`;
+- the target lane exists in `ADMITTED`, `ACTIVE`, or `PAUSED` state, `before`
+  matches its current three fields exactly (order-sensitive lists), and `after`
+  differs from `before`;
+- `lane_head` equals the live lane worktree HEAD, `after.base_sha` is a valid
+  40-hex commit SHA, any new `base_sha` is a forward descendant of
+  `before.base_sha`, and `after.base_sha` is an ancestor of (or equal to) the
+  live lane HEAD;
+- `after.allowed_paths` and `after.shared_paths` pass `_scope_path` rules with
+  no duplicates, no protected paths, exact-file `shared_paths` subset of
+  `allowed_paths`, and a non-empty existing `lease_note` whenever `shared_paths`
+  is non-empty;
+- the amended state passes `validate_development_control` (including cross-lane
+  overlap and shared-lease ownership checks) and `check_lane` for the target
+  lane (all actual committed/worktree changes fit inside the new scope).
+
+A successful amendment appends one lane history entry and one control history
+entry with operation `LANE_SCOPE_AMENDMENT`, exact `before`/`after` values,
+observed heads, and `owner_note`. Responsible agent, state, checkpoint,
+dependencies, provides/consumes, required checks, and unrelated lanes remain
+unchanged. This operation grants no merge, release, or runtime authority
+(`authority_effect: NONE`, `merge_authorized: false`, `runtime_authorized: false`).
+
 ## Integration planning
 
 `--integration-plan --main-sha <observed-main> [--candidate-lane ID]` reads

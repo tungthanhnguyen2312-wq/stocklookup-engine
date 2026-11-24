@@ -987,6 +987,112 @@ def prepare_integration_owner_transfer(state: Mapping[str, Any], spec: Any, *, r
                      "successor_lanes": lanes}
 
 
+SCOPE_AMENDABLE_LANE_STATES = {"ADMITTED", "ACTIVE", "PAUSED"}
+
+
+def prepare_lane_scope_amendment(
+    state: Mapping[str, Any], spec: Any, *, repo: Path, agent: str,
+) -> tuple[dict, dict]:
+    """Prepare one exact, CAS-guarded lane scope amendment; never write state.
+
+    Amends only ``base_sha``, ``allowed_paths``, and ``shared_paths`` for an
+    in-flight lane in ``ADMITTED``, ``ACTIVE``, or ``PAUSED`` state. Responsible
+    agent, state, checkpoint, dependencies, provides/consumes, required_checks,
+    lease_note, and authority remain unchanged; grants no merge or runtime
+    authority.
+    """
+    import copy
+    keys = {"schema", "expected_revision", "coordinator_head", "milestone_id", "lane_head", "before", "after"}
+    scope_keys = {"base_sha", "allowed_paths", "shared_paths"}
+    if (not isinstance(spec, dict) or set(spec) != keys
+            or spec.get("schema") != "stocklookup_lane_scope_amendment/1"
+            or not isinstance(spec.get("expected_revision"), int) or isinstance(spec["expected_revision"], bool)
+            or not all(isinstance(spec.get(k), str) and spec[k].strip()
+                       for k in ("coordinator_head", "milestone_id", "lane_head"))
+            or any(not isinstance(spec.get(k), dict) or set(spec[k]) != scope_keys
+                   or not isinstance(spec[k].get("base_sha"), str)
+                   or not isinstance(spec[k].get("allowed_paths"), list)
+                   or not isinstance(spec[k].get("shared_paths"), list)
+                   for k in ("before", "after"))):
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_EXACT_SPEC_REQUIRED")
+    errors = validate_development_control(state)
+    if errors:
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_STATE_INVALID:" + ";".join(errors))
+    control = state.get("development_control")
+    if not isinstance(control, dict):
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_COORDINATOR_NOT_INITIALIZED")
+    if spec["expected_revision"] != control.get("revision"):
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_REVISION_CHANGED_RELOAD_REQUIRED")
+    if not isinstance(agent, str) or not agent.strip() or agent != control.get("integration_agent"):
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_INTEGRATION_OWNER_REQUIRED")
+    code, status, _ = git_run(repo, "status", "--porcelain", "--untracked-files=no")
+    if git_head(repo) != spec["coordinator_head"] or code != 0 or status.strip():
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_EXACT_CLEAN_COORDINATOR_HEAD_REQUIRED")
+    mid = spec["milestone_id"]
+    by_id = {l["milestone_id"]: l for l in control["lanes"]}
+    if mid not in by_id:
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_UNKNOWN_LANE:{mid}")
+    lane = by_id[mid]
+    if lane["state"] not in SCOPE_AMENDABLE_LANE_STATES:
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_STATE_NOT_AMENDABLE:{mid}:{lane['state']}")
+    current_scope = {
+        "base_sha": lane["base_sha"],
+        "allowed_paths": lane["allowed_paths"],
+        "shared_paths": lane["shared_paths"],
+    }
+    if spec["before"] != current_scope:
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_BEFORE_MISMATCH:{mid}")
+    if spec["after"] == spec["before"]:
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_NO_CHANGE:{mid}")
+    wt = Path(lane["worktree"])
+    live_head = git_head(wt) if wt.is_dir() else None
+    if not live_head or not _full_sha(repo, spec["lane_head"]) or live_head != spec["lane_head"]:
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_LANE_HEAD_MISMATCH:{mid}")
+    after_base = spec["after"]["base_sha"]
+    if not _full_sha(repo, after_base):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_BASE_SHA_INVALID:{mid}")
+    if after_base != spec["before"]["base_sha"] and not git_is_ancestor(repo, spec["before"]["base_sha"], after_base):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_BASE_NOT_FORWARD:{mid}")
+    if not git_is_ancestor(repo, after_base, live_head):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_BASE_NOT_ANCESTOR_OF_HEAD:{mid}")
+    after_allowed = spec["after"]["allowed_paths"]
+    after_shared = spec["after"]["shared_paths"]
+    if not after_allowed or not all(_scope_path(p) for p in after_allowed):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_ALLOWED_PATHS_INVALID:{mid}")
+    if len({p.casefold() for p in after_allowed}) != len(after_allowed):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_DUPLICATE_ALLOWED_PATHS:{mid}")
+    if not all(_scope_path(p) and not p.endswith("/") for p in after_shared):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_SHARED_PATHS_INVALID:{mid}")
+    if len({p.casefold() for p in after_shared}) != len(after_shared):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_DUPLICATE_SHARED_PATHS:{mid}")
+    for path in after_allowed:
+        if any(scope_overlap(path, p) for p in PROTECTED_PATHS):
+            raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_PROTECTED_PATH:{mid}:{path}")
+    if not all(p in after_allowed for p in after_shared):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_SHARED_NOT_IN_ALLOWED:{mid}")
+    if after_shared and not (isinstance(lane.get("lease_note"), str) and lane["lease_note"].strip()):
+        raise RoadmapStateError(f"LANE_SCOPE_AMENDMENT_LEASE_NOTE_REQUIRED:{mid}")
+    updated = copy.deepcopy(state)
+    updated_lane = next(l for l in updated["development_control"]["lanes"] if l["milestone_id"] == mid)
+    updated_lane["base_sha"] = after_base
+    updated_lane["allowed_paths"] = list(after_allowed)
+    updated_lane["shared_paths"] = list(after_shared)
+    validation_errors = validate_development_control(updated)
+    if validation_errors:
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_VALIDATION_FAILED:" + ";".join(validation_errors))
+    checked = check_lane(updated, mid, repo=repo)
+    if checked["errors"]:
+        raise RoadmapStateError("LANE_SCOPE_AMENDMENT_CHECK_LANE_FAILED:" + ";".join(checked["errors"]))
+    return updated, {
+        "milestone_id": mid,
+        "expected_revision": spec["expected_revision"],
+        "coordinator_head": spec["coordinator_head"],
+        "lane_head": spec["lane_head"],
+        "before": copy.deepcopy(spec["before"]),
+        "after": copy.deepcopy(spec["after"]),
+    }
+
+
 def coordinator_host_available(state: Mapping[str, Any], repo: Path) -> bool:
     """Clone/CI metadata validation cannot certify another host's live worktrees."""
     control = state.get("development_control") if isinstance(state.get("development_control"), dict) else {}

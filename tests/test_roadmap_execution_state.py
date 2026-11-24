@@ -709,3 +709,364 @@ def test_local_closeout_refuses_invalid_gate_without_writing(git_repo,tmp_path,f
     if failure == 'offline': args[3] = str(tmp_path/'missing')
     with pytest.raises(SystemExit): cli.main(args)
     assert path.read_bytes() == stable
+
+
+# ---------------------------------------------------------------------------
+# Exact CAS-guarded lane scope amendment
+# ---------------------------------------------------------------------------
+
+def _lane_world(tmp_path):
+    """Hermetic coordinator repo with initialized native development_control."""
+    coord = tmp_path / "coordinator"
+    _init_repo(coord)
+    _git(coord, "checkout", "-q", "-b", "main")
+    (coord / "README.md").write_text("root\n", encoding="utf-8")
+    base_sha = _commit_all(coord, "initial main")
+    state_path = coord / "docs" / "ROADMAP_STATE.json"
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state = _state([], current={}, queued_next=[], lineage_head=base_sha)
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def run(*cli_args):
+        return cli.main(["--repo", str(coord), "--state-file", str(state_path), "--json", *cli_args])
+
+    assert run("--init-lanes", "--owner-override", "--scope-note", "init coordinator", "--agent", "Claude") == 0
+    return coord, base_sha, state_path, run
+
+
+def _admit_lane(world, mid, allowed_paths, *, agent="Claude", shared_paths=None, lease_note=None, base_sha=None):
+    coord, default_base, _, run = world
+    base = base_sha or default_base
+    wt = coord.parent / mid
+    _git(coord, "worktree", "add", "-q", "-b", "feature/" + mid, str(wt), base)
+    spec = {
+        "milestone_id": mid,
+        "responsible_agent": agent,
+        "branch": "feature/" + mid,
+        "worktree": str(wt),
+        "base_sha": base,
+        "domain": mid,
+        "mode": "IMPLEMENTATION",
+        "allowed_paths": list(allowed_paths),
+        "shared_paths": list(shared_paths or []),
+        "dependencies": [],
+        "provides": {},
+        "consumes": {},
+        "required_checks": ["unit-tests"],
+    }
+    if lease_note is not None:
+        spec["lease_note"] = lease_note
+    spec_file = coord.parent / f"{mid}-spec.json"
+    spec_file.write_text(json.dumps(spec), encoding="utf-8")
+    rc = run("--admit-lane", mid, "--lane-spec", str(spec_file),
+             "--owner-override", "--scope-note", f"admit {mid}", "--agent", "Claude")
+    return wt, rc
+
+
+def _scope_spec(world, mid, *, after_base=None, after_allowed=None, after_shared=None):
+    coord, _, state_path, _ = world
+    state = res.load_state(state_path)
+    control = state["development_control"]
+    lane = res.lane_by_id(state, mid)
+    wt = Path(lane["worktree"])
+    before = {
+        "base_sha": lane["base_sha"],
+        "allowed_paths": list(lane["allowed_paths"]),
+        "shared_paths": list(lane["shared_paths"]),
+    }
+    after = {
+        "base_sha": after_base if after_base is not None else before["base_sha"],
+        "allowed_paths": list(after_allowed) if after_allowed is not None else list(before["allowed_paths"]),
+        "shared_paths": list(after_shared) if after_shared is not None else list(before["shared_paths"]),
+    }
+    return {
+        "schema": "stocklookup_lane_scope_amendment/1",
+        "expected_revision": control["revision"],
+        "coordinator_head": _git(coord, "rev-parse", "HEAD").strip(),
+        "milestone_id": mid,
+        "lane_head": _git(wt, "rev-parse", "HEAD").strip(),
+        "before": before,
+        "after": after,
+    }
+
+
+def _amend_scope(world, spec, *, agent="Claude", owner=True, note="Owner exact scope correction"):
+    coord, _, _, run = world
+    spec_file = coord.parent / "scope-amendment.json"
+    spec_file.write_text(json.dumps(spec), encoding="utf-8")
+    extra = ["--owner-override"] if owner else []
+    return run("--amend-lane-scope", "--scope-spec", str(spec_file),
+               "--agent", agent, "--scope-note", note, *extra)
+
+
+def test_lane_scope_amendment_shrink_frees_lease_for_second_lane(tmp_path, capsys):
+    world = _lane_world(tmp_path)
+    coord, base_sha, state_path, run = world
+    wt_a, rc = _admit_lane(
+        world, "LANE_A",
+        ["stocklookup_core/alpha/", "config/shared_a.json"],
+        agent="Claude",
+        shared_paths=["config/shared_a.json"],
+        lease_note="Owner exact temporary lease",
+    )
+    assert rc == 0
+    assert run("--transition-lane", "LANE_A", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "activate A", "--agent", "Claude") == 0
+
+    # A second lane requesting config/shared_a.json is blocked by overlap before shrinking LANE_A.
+    wt_b = coord.parent / "LANE_B"
+    _git(coord, "worktree", "add", "-q", "-b", "feature/LANE_B", str(wt_b), base_sha)
+    lane_b_spec = {
+        "milestone_id": "LANE_B", "responsible_agent": "Claude",
+        "branch": "feature/LANE_B", "worktree": str(wt_b), "base_sha": base_sha,
+        "domain": "LANE_B", "mode": "IMPLEMENTATION",
+        "allowed_paths": ["config/shared_a.json"], "shared_paths": ["config/shared_a.json"],
+        "lease_note": "Owner exact lease for B",
+        "dependencies": [], "provides": {}, "consumes": {}, "required_checks": ["unit-tests"],
+    }
+    lane_b_file = coord.parent / "LANE_B-spec.json"
+    lane_b_file.write_text(json.dumps(lane_b_spec), encoding="utf-8")
+    capsys.readouterr()
+    assert run("--admit-lane", "LANE_B", "--lane-spec", str(lane_b_file),
+               "--owner-override", "--scope-note", "admit B", "--agent", "Claude") == 2
+    assert "LANE_OWNERSHIP_OVERLAP" in capsys.readouterr().err
+
+    # Shrink LANE_A to release config/shared_a.json.
+    before_bytes = state_path.read_bytes()
+    before_state = res.load_state(state_path)
+    spec = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"], after_shared=[])
+    capsys.readouterr()
+    assert _amend_scope(world, spec, note="Release unused shared lease") == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["authority_effect"] == "NONE"
+    assert payload["merge_authorized"] is False
+    assert payload["runtime_authorized"] is False
+    assert payload["operation"]["operation"] == "LANE_SCOPE_AMENDMENT"
+
+    after_state = res.load_state(state_path)
+    old_ctrl, new_ctrl = before_state["development_control"], after_state["development_control"]
+    assert new_ctrl["revision"] == old_ctrl["revision"] + 1
+    assert new_ctrl["history"][:-1] == old_ctrl["history"]
+    assert new_ctrl["history"][-1]["operation"] == "LANE_SCOPE_AMENDMENT"
+    assert new_ctrl["history"][-1]["owner_note"] == "Release unused shared lease"
+    assert new_ctrl["history"][-1]["before"] == spec["before"]
+    assert new_ctrl["history"][-1]["after"] == spec["after"]
+    assert new_ctrl["history"][-1]["coordinator_head"] == spec["coordinator_head"]
+    assert new_ctrl["history"][-1]["lane_head"] == spec["lane_head"]
+
+    old_lane = res.lane_by_id(before_state, "LANE_A")
+    new_lane = res.lane_by_id(after_state, "LANE_A")
+    assert new_lane["allowed_paths"] == ["stocklookup_core/alpha/"]
+    assert new_lane["shared_paths"] == []
+    assert new_lane["history"][:-1] == old_lane["history"]
+    assert new_lane["history"][-1]["operation"] == "LANE_SCOPE_AMENDMENT"
+    assert new_lane["history"][-1]["owner_note"] == "Release unused shared lease"
+    for unchanged in ("responsible_agent", "state", "checkpoint", "dependencies",
+                      "provides", "consumes", "required_checks", "branch", "worktree", "domain", "mode"):
+        assert new_lane[unchanged] == old_lane[unchanged]
+    marker = b'  "development_control": '
+    assert before_bytes.split(marker)[0] == state_path.read_bytes().split(marker)[0]
+
+    # Now LANE_B admission succeeds because the lease was freed.
+    assert run("--admit-lane", "LANE_B", "--lane-spec", str(lane_b_file),
+               "--owner-override", "--scope-note", "admit B", "--agent", "Claude") == 0
+    assert res.evaluate(res.load_state(state_path), repo=coord).overall == "ON_TRACK"
+
+
+def test_lane_scope_amendment_advances_base_after_merging_new_main(tmp_path):
+    world = _lane_world(tmp_path)
+    coord, _, state_path, run = world
+    wt, rc = _admit_lane(world, "LANE_MAIN", ["stocklookup_core/beta/"])
+    assert rc == 0
+    assert run("--transition-lane", "LANE_MAIN", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "activate", "--agent", "Claude") == 0
+
+    # Lane makes an in-scope commit.
+    (wt / "stocklookup_core" / "beta").mkdir(parents=True, exist_ok=True)
+    (wt / "stocklookup_core" / "beta" / "work.py").write_text("x = 1\n", encoding="utf-8")
+    _commit_all(wt, "lane work")
+
+    # Main advances with an unrelated commit (e.g. merged PR) and lane merges main.
+    (coord / "docs" / "other_pr.md").write_text("merged PR\n", encoding="utf-8")
+    _git(coord, "add", "docs/other_pr.md")
+    _git(coord, "commit", "-q", "-m", "PR merged on main")
+    new_main = _git(coord, "rev-parse", "HEAD").strip()
+    _git(wt, "merge", "--no-edit", new_main)
+
+    # Before amendment, check_lane fails because docs/other_pr.md is in old_base..HEAD.
+    pre_check = res.check_lane(res.load_state(state_path), "LANE_MAIN", repo=coord)
+    assert any("LANE_PROHIBITED_CHANGE:docs/other_pr.md" in e for e in pre_check["errors"])
+
+    # Amend base_sha forward to new_main.
+    spec = _scope_spec(world, "LANE_MAIN", after_base=new_main)
+    assert _amend_scope(world, spec, note="Advance base_sha after merging new main") == 0
+
+    post_state = res.load_state(state_path)
+    post_check = res.check_lane(post_state, "LANE_MAIN", repo=coord)
+    assert post_check["errors"] == []
+    assert post_check["paths"] == ["stocklookup_core/beta/work.py"]
+    assert res.evaluate(post_state, repo=coord).overall == "ON_TRACK"
+
+
+def test_lane_scope_amendment_refusals(tmp_path):
+    world = _lane_world(tmp_path)
+    coord, base_sha, state_path, run = world
+    wt_a, rc = _admit_lane(
+        world, "LANE_A",
+        ["stocklookup_core/alpha/", "stocklookup_core/extra/"],
+        agent="Claude",
+        lease_note="Owner lease note",
+    )
+    assert rc == 0
+    assert run("--transition-lane", "LANE_A", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "activate A", "--agent", "Claude") == 0
+    wt_b, rc_b = _admit_lane(world, "LANE_B", ["stocklookup_core/gamma/"], agent="Codex")
+    assert rc_b == 0
+    assert run("--transition-lane", "LANE_B", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "activate B", "--agent", "Claude") == 0
+
+    # Create a real change in LANE_A under stocklookup_core/alpha/.
+    (wt_a / "stocklookup_core" / "alpha").mkdir(parents=True, exist_ok=True)
+    (wt_a / "stocklookup_core" / "alpha" / "mod.py").write_text("v = 1\n", encoding="utf-8")
+    lane_a_head = _commit_all(wt_a, "alpha change")
+
+    # Create an unrelated root commit (not a descendant of base_sha) without touching coord's worktree.
+    tree_sha = _git(coord, "rev-parse", "HEAD^{tree}").strip()
+    orphan_sha = _git(coord, "commit-tree", tree_sha, "-m", "unrelated orphan commit").strip()
+
+    # Advance main by one commit (add only main_step.txt so docs/ROADMAP_STATE.json stays untracked),
+    # merge into LANE_A, then amend base_sha forward so we can test backward base_sha.
+    (coord / "main_step.txt").write_text("step\n", encoding="utf-8")
+    _git(coord, "add", "main_step.txt")
+    _git(coord, "commit", "-q", "-m", "main step")
+    main_step = _git(coord, "rev-parse", "HEAD").strip()
+    _git(wt_a, "merge", "--no-edit", main_step)
+    assert _amend_scope(world, _scope_spec(world, "LANE_A", after_base=main_step)) == 0
+
+    state = res.load_state(state_path)
+    valid_spec = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"])
+    snapshot = state_path.read_bytes()
+
+    # 1. Stale revision
+    bad = json.loads(json.dumps(valid_spec))
+    bad["expected_revision"] -= 1
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_REVISION_CHANGED"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 2. Wrong agent
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_INTEGRATION_OWNER_REQUIRED"):
+        res.prepare_lane_scope_amendment(state, valid_spec, repo=coord, agent="Codex")
+
+    # 3. Different coordinator head
+    bad = json.loads(json.dumps(valid_spec))
+    bad["coordinator_head"] = base_sha
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_EXACT_CLEAN_COORDINATOR_HEAD_REQUIRED"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 3b. Dirty coordinator worktree
+    (coord / "README.md").write_text("dirty\n", encoding="utf-8")
+    try:
+        with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_EXACT_CLEAN_COORDINATOR_HEAD_REQUIRED"):
+            res.prepare_lane_scope_amendment(state, valid_spec, repo=coord, agent="Claude")
+    finally:
+        _git(coord, "checkout", "--", "README.md")
+
+    # 4. Before mismatch (including order-sensitive list check)
+    bad = json.loads(json.dumps(valid_spec))
+    bad["before"]["allowed_paths"] = list(reversed(bad["before"]["allowed_paths"]))
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_BEFORE_MISMATCH"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 5a. Backward base_sha (base_sha is an ancestor of current main_step, not descendant)
+    bad = json.loads(json.dumps(valid_spec))
+    bad["after"]["base_sha"] = base_sha
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_BASE_NOT_FORWARD"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 5b. Unrelated base_sha
+    bad = json.loads(json.dumps(valid_spec))
+    bad["after"]["base_sha"] = orphan_sha
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_BASE_NOT_FORWARD"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 6. Base is forward of before.base_sha but not an ancestor of live lane HEAD
+    (coord / "unmerged_main.txt").write_text("unmerged\n", encoding="utf-8")
+    _git(coord, "add", "unmerged_main.txt")
+    _git(coord, "commit", "-q", "-m", "unmerged main")
+    unmerged_main = _git(coord, "rev-parse", "HEAD").strip()
+    bad = _scope_spec(world, "LANE_A", after_base=unmerged_main)
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_BASE_NOT_ANCESTOR_OF_HEAD"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 7. lane_head mismatch
+    bad = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"])
+    bad["lane_head"] = lane_a_head  # pre-merge head
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_LANE_HEAD_MISMATCH"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 8. Protected path
+    bad = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/", "data/"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_PROTECTED_PATH"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 9. shared_paths not subset of allowed_paths
+    bad = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"], after_shared=["config/x.json"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_SHARED_NOT_IN_ALLOWED"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 10. Overlap with another active lane (LANE_B owns stocklookup_core/gamma/)
+    bad = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/", "stocklookup_core/gamma/sub.py"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_VALIDATION_FAILED:.*LANE_OWNERSHIP_OVERLAP"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 11. Lane's real changes outside new scope (LANE_A modified stocklookup_core/alpha/mod.py)
+    bad = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/extra/"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_CHECK_LANE_FAILED:.*LANE_PROHIBITED_CHANGE"):
+        res.prepare_lane_scope_amendment(state, bad, repo=coord, agent="Claude")
+
+    # 12. Extra / missing spec keys
+    bad_extra = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"])
+    bad_extra["extra_key"] = True
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_EXACT_SPEC_REQUIRED"):
+        res.prepare_lane_scope_amendment(state, bad_extra, repo=coord, agent="Claude")
+    bad_missing = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"])
+    del bad_missing["lane_head"]
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_EXACT_SPEC_REQUIRED"):
+        res.prepare_lane_scope_amendment(state, bad_missing, repo=coord, agent="Claude")
+
+    # 12b. Duplicate paths, no-op amendment, and missing lease_note for shared_paths
+    bad_dup = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/", "stocklookup_core/alpha/"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_DUPLICATE_ALLOWED_PATHS"):
+        res.prepare_lane_scope_amendment(state, bad_dup, repo=coord, agent="Claude")
+    bad_noop = _scope_spec(world, "LANE_A")
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_NO_CHANGE"):
+        res.prepare_lane_scope_amendment(state, bad_noop, repo=coord, agent="Claude")
+    bad_lease = _scope_spec(world, "LANE_B", after_allowed=["stocklookup_core/gamma/", "config/new.json"],
+                            after_shared=["config/new.json"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_LEASE_NOTE_REQUIRED"):
+        res.prepare_lane_scope_amendment(state, bad_lease, repo=coord, agent="Claude")
+
+    # 13. Non-amendable states: COMPLETE_LOCAL and ABANDONED (terminal)
+    wt_a_head = _git(wt_a, "rev-parse", "HEAD").strip()
+    assert run("--transition-lane", "LANE_A", "--lane-state", "REVIEW_READY",
+               "--checkpoint-at", wt_a_head, "--owner-override", "--scope-note", "review", "--agent", "Claude") == 0
+    assert run("--transition-lane", "LANE_A", "--lane-state", "COMPLETE_LOCAL",
+               "--checkpoint-at", wt_a_head, "--owner-override", "--scope-note", "complete", "--agent", "Claude") == 0
+    complete_spec = _scope_spec(world, "LANE_A", after_allowed=["stocklookup_core/alpha/"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_STATE_NOT_AMENDABLE:LANE_A:COMPLETE_LOCAL"):
+        res.prepare_lane_scope_amendment(res.load_state(state_path), complete_spec, repo=coord, agent="Claude")
+    assert _amend_scope(world, complete_spec) == 2
+
+    assert run("--transition-lane", "LANE_B", "--lane-state", "ABANDONED",
+               "--owner-override", "--scope-note", "abandon B", "--agent", "Claude") == 0
+    abandoned_spec = _scope_spec(world, "LANE_B", after_allowed=["stocklookup_core/gamma/", "stocklookup_core/delta/"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_SCOPE_AMENDMENT_STATE_NOT_AMENDABLE:LANE_B:ABANDONED"):
+        res.prepare_lane_scope_amendment(res.load_state(state_path), abandoned_spec, repo=coord, agent="Claude")
+
+    # Confirm CLI refusal leaves disk unchanged and requires --owner-override.
+    frozen = state_path.read_bytes()
+    assert _amend_scope(world, abandoned_spec) == 2
+    assert _amend_scope(world, abandoned_spec, owner=False) == 2
+    assert state_path.read_bytes() == frozen
+    assert snapshot != b""
+

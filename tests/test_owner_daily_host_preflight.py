@@ -900,6 +900,22 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     prior_receipt["tplus_taxonomy_direction_corrective"] = direction
 
+    lane_scope = live_receipt["native_lane_scope_amendment_corrective"]
+    lane_scope_paths = ["roadmap_execution_state.py", "tools/stocklookup_roadmap.py"]
+    assert lane_scope["scope"] == "OWNER_CONTROL_PLANE_LANE_SCOPE_AMENDMENT_CLI_ONLY"
+    assert lane_scope["new_capacity_measurement"] is False
+    assert lane_scope["whole_daily_requalification"] is False
+    assert lane_scope["authority_effect"] == "NONE_OWNER_CONTROL_PLANE_ONLY"
+    assert lane_scope["changed_source_paths"] == lane_scope_paths
+    assert lane_scope["base_commit"] == "2233dc22322c5c5cfa106864f0df5be22742760f"
+    for path in lane_scope_paths:
+        previous = subprocess.check_output(["git", "show", f"{lane_scope['base_commit']}:{path}"], cwd=root)
+        assert lane_scope["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["native_lane_scope_amendment_corrective"] = lane_scope
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
