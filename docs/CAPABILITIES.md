@@ -193,6 +193,11 @@ HOSE Q3 locator, with filing-type admission and session share continuity still o
 [CI extension](CI_AND_DEPENDENCY_TIERS.md): G2/business/quarterly mandatory; 367 files nonblocking; release via native lanes.
 
 ### 12. Current financial evidence
+- Decision 2 [dual-reader transcription](dual_reader_reviewed_transcription_v1_contract.md): local
+  retained-byte qualification and H1 bridge integration are implemented with synthetic end-to-end
+  tests. Two different model families, precomparison raw retention, explicit source rights and
+  completion-time knowledge floor are required. Tier: `DUAL_READER_REVIEWED_TRANSCRIPTION`,
+  `OFFLINE_RESEARCH_ONLY`; no real issuer admission or Production/PIT authority is claimed.
 - PR168/169 local: tainted KBS periods blocked; six unreviewed research rows remain separate. Authority unchanged; [release gate](ACTIVE_STATE.md).
 - Frozen August-23 baseline. PNJ/VRE H1 fields and PVD USD context retain [currency](currency_preserving_interim_context_contract.md) and [earnings](reported_earnings_component_context_contract.md) limits.
 - [Reviewed HPG/KBC/FPT financial cases](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md) are OFFLINE_ONLY / NON_VOTING.

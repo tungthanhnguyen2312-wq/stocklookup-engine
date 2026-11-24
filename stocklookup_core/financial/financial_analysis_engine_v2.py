@@ -379,7 +379,7 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
                     continue
                 admission = admit_retained_financial_fact(row, evidence_root=evidence_root, cutoff=cutoff)
                 if admission["state"] == "ADMITTED":
-                    admitted.append(row)
+                    admitted.append({**row, "_retained_admission": admission})
                 else:
                     blockers.extend(admission["reason_codes"])
             if not admitted:
@@ -398,7 +398,10 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
                 provider_source_provenance=[{"provider": "official_issuer_ir", "source_sha256": r["document_sha256"],
                     "fact_id": r.get("fact_id") or r["citation_id"], "citation_id": r["citation_id"],
                     "source_page": r["source_page"], "reporting_period": r["reporting_period"],
-                    "knowledge_available_at": r["knowledge_available_at"]} for r in inputs])
+                    "knowledge_available_at": r["knowledge_available_at"],
+                    "admission_basis": r["_retained_admission"].get("admission_basis"),
+                    "evidence_tier": r["_retained_admission"].get("evidence_tier"),
+                    "evidence_classification": r["_retained_admission"].get("evidence_classification")} for r in inputs])
         feature.update(canonical_metric=metric, line_code=code, cutoff=cutoff,
                        operand_periods=list(periods), earnings_attribution=attribution,
                        authority_effect="OFFLINE_RESEARCH_ONLY", pit_backtest_eligible=False)

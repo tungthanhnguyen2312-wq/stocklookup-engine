@@ -343,6 +343,9 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
         return admit_official_financial_fact(row, **kwargs)
     pages = None
     layout_proof = None
+    if row.get("dual_reader_transcription") is not None:
+        from stocklookup_core.evidence.dual_reader_transcription import load_retained_dual_reader_proof
+        kwargs["dual_reader_proof"] = load_retained_dual_reader_proof(row, landing)
     ref = row.get("ocr_layout_proof")
     if isinstance(ref, Mapping):
         try:

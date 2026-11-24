@@ -75,7 +75,8 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         retained_bytes: bytes | None = None, registry: Mapping[str, Any] | None = None,
         document_pages: Mapping[int, str] | None = None,
         cutoff: str | None = None, intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY",
-        ocr_layout_proof: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        ocr_layout_proof: Mapping[str, Any] | None = None,
+        dual_reader_proof: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Pure common admission. Retained bytes and registry arrive independently of row claims.
 
     An overlay seal, SHA string or caller boolean cannot replace the retained source.
@@ -90,6 +91,16 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     from financial_evidence_currency_contract import TARGET_PERIODS
 
     reasons, missing = [], []
+    dual = None
+    if row.get("dual_reader_transcription") is not None:
+        from stocklookup_core.evidence.dual_reader_transcription import verify_dual_reader_transcription
+        from financial_statement_unit_resolution import parse_explicit_unit_declaration
+        dual = verify_dual_reader_transcription(row, dual_reader_proof, source_record=source_record,
+            retained_bytes=retained_bytes, parse_amount=parse_accounting_integer,
+            parse_unit=parse_explicit_unit_declaration, recognize_period=recognize_statement_period,
+            recognize_scope=recognize_scope)
+        reasons.extend(dual["reason_codes"])
+    dual_valid = dual is not None and dual["valid"]
     sha = str(row.get("document_sha256") or "")
     metadata = row.get("document_metadata")
     if not isinstance(metadata, Mapping):
@@ -226,6 +237,9 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     bounded_prior_h1 = (period == "2025-H1" and row.get("ocr_layout_proof") is not None
                         and prior_h1_layout.get("reporting_period") == period
                         and prior_h1_layout.get("ticker") == row.get("ticker"))
+    # Decision 2 includes the approved H1 bridge operand, with its original
+    # period, reviewed assurance and all retained-source gates still required.
+    bounded_prior_h1 = bounded_prior_h1 or (period == "2025-H1" and dual_valid)
     if period not in TARGET_PERIODS and not bounded_prior_h1:
         reasons.append("SOURCE_PERIOD_NOT_ADMITTED")
     else:
@@ -270,7 +284,7 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             reasons.append("METRIC_LITERAL_NOT_IN_CITED_SPAN")
         if document_pages is not None:
             page = document_pages.get(span.get("source_page"), "")
-            if not span_text or span_text not in " ".join(page.split()):
+            if not dual_valid and (not span_text or span_text not in " ".join(page.split())):
                 reasons.append("VALUE_SPAN_NOT_IN_RETAINED_DOCUMENT")
     try:
         value = row.get("normalized_value", row.get("parsed_numeric_value"))
@@ -292,7 +306,8 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             raise ValueError()
         if raw is not None and isinstance(span, Mapping) and str(raw) not in str(span.get("text") or ""):
             raise ValueError()
-        if raw is not None and document_pages is not None and str(raw) not in " ".join(document_pages.values()):
+        if (not dual_valid and raw is not None and document_pages is not None
+                and str(raw) not in " ".join(document_pages.values())):
             raise ValueError()
     except (ValueError, TypeError):
         reasons.append("LITERAL_VALUE_NORMALIZATION_NOT_BOUND")
@@ -346,6 +361,12 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         pin = _legacy_row_admission()["pin"]
         result.update(admission_basis=pin["admission_basis"], legacy_row_sha256=legacy["row_sha256"],
                       evidence_classification=dict(pin["evidence_classification"]))
+    elif state == "ADMITTED" and dual_valid:
+        result.update(admission_basis="DUAL_READER_REVIEWED_TRANSCRIPTION",
+            evidence_tier=dual["evidence_tier"], evidence_classification={
+                "authority_effect": dual["authority_effect"], "pit_backtest_eligible": False,
+                "knowledge_floor": dual["knowledge_floor"], "model_families": dual["model_families"],
+                "proof_sha256": dual["proof_sha256"], "raw_sha256": dual["raw_sha256"]})
     elif state == "ADMITTED":
         result["admission_basis"] = "RETAINED_SOURCE_REPLAY"
     result["admission_id"] = stable_id({**result, "row": {k: v for k, v in row.items() if k != "admission"}, "cutoff": cutoff})
