@@ -1191,6 +1191,7 @@
     "tools/replay_forward_driver_context.py": "d9c6537dace4a9ed9163929293c45fb2e66672ac6164359ad6515f3d6466f114",
     "tools/replay_fundamental_cohort_scaleout_downstream_v1.py": "c8a58197b636c5d3a5e106cea4406cfe451cdebeac3bd83b72833388137edd6a",
     "tools/replay_intrinsic_scenario_valuation.py": "d71550cd4df194b567a2e61e4c837adfa9df0415c92bd01626cbf293b9def52d",
+    "tools/replay_parent_attributable_headline_pe.py": "b52b69498c95113691869111577511fd879ecc745ef9c25c11d829121f5a72d8",
     "tools/replay_vn30_financial_valuation_research_scaleout.py": "bfcfd0d6086348b3bfe63a12e11203952f48ccd55735b70364694ed6a154f6cf",
     "tools/report_market_wide_readiness.py": "4e39058871a6176593c566a258294ebe03c99a871450353e525ff68956232d08",
     "tools/retain_current_official_universe_evidence.py": "1014f0d80e7a68549cfde8b11ca0b6d3fcfdb17c4196e02f3470010dcd2e1e6d",
@@ -2101,6 +2102,9 @@
       "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py",
       "stocklookup_core/valuation/p3f_current_market_valuation.py",
       "tools/verify_retention_reader_transition.py"
+    ],
+    "added_source_paths": [
+      "tools/replay_parent_attributable_headline_pe.py"
     ],
     "prior_source_sha256_lf": {
       "stocklookup_core/decision/daily_integrated_decision_brief.py": "a415d0569e6196829ee2819ad790d3ee5a862fe29db0fc68640c94b15f8e8803",

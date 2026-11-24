@@ -927,6 +927,11 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{parent_pe['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    assert parent_pe["added_source_paths"] == ["tools/replay_parent_attributable_headline_pe.py"]
+    for path in parent_pe["added_source_paths"]:
+        assert path not in prior_receipt["source_sha256"]
+        assert subprocess.run(["git", "cat-file", "-e", f"{parent_pe['base_commit']}:{path}"], cwd=root).returncode != 0
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["parent_attributable_headline_pe_corrective"] = parent_pe
 
     assert live_receipt == prior_receipt
