@@ -1610,6 +1610,57 @@ def parse_retained_vsdc_registration(document: Mapping[str, Any], payload: bytes
             "source_url": url, "content_sha256": digest, "retrieved_at": document.get("observed_at")}
 
 
+def _latest_complete_vsdc_records(manifest, documents, diagnostics):
+    """Resolve append-only same-URL revisions; verify even the superseded bytes."""
+    from stocklookup_core.evidence.official_document_acquisition import vsdc_notice_body_complete
+
+    candidates, by_id, passthrough = [], {}, []
+    for document in documents:
+        if document.get("source_id") != "vsdc" or document.get("document_class") not in {"last_registration_date_notice", "corporate_action_notice"}:
+            continue
+        if not re.fullmatch(r"https://vsdc\.vn/vi/ad/[0-9]+", str(document.get("canonical_url") or "")):
+            passthrough.append(document)
+            continue
+        path = (manifest.parent / str(document.get("relative_path") or "")).resolve()
+        if not path.is_relative_to(manifest.parent.resolve()):
+            raise ValueError("VSDC_NOTICE_PATH_OUTSIDE_RETAINED_ROOT")
+        payload = path.read_bytes()
+        if hashlib.sha256(payload).hexdigest() != document.get("sha256"):
+            raise ValueError("VSDC_NOTICE_HASH_MISMATCH")
+        identity = document.get("document_id")
+        if not identity or identity in by_id:
+            raise ValueError("VSDC_NOTICE_DUPLICATE_OR_MISSING_IDENTITY")
+        item = (document, vsdc_notice_body_complete(payload))
+        candidates.append(item)
+        by_id[identity] = item
+    superseded = {}
+    latest = {}
+    for document, complete in candidates:
+        key = (document.get("ticker"), document.get("canonical_url"), document.get("document_class"))
+        parent = document.get("supersedes_document_id")
+        previous = latest.get(key)
+        if parent:
+            if not complete or previous != parent:
+                raise ValueError("VSDC_NOTICE_SUPERSESSION_INVALID")
+            superseded[parent] = document["document_id"]
+        elif previous:
+            raise ValueError("VSDC_NOTICE_SUPERSESSION_LINK_REQUIRED")
+        latest[key] = document["document_id"]
+    selected = []
+    for document, complete in candidates:
+        identity = document["document_id"]
+        if identity in superseded:
+            diagnostics.append({"artifact_identity": identity,
+                "canonical_url": document["canonical_url"],
+                "reason": "SUPERSEDED_VSDC_NOTICE" if complete else "SUPERSEDED_BODYLESS_VSDC_NOTICE",
+                "superseded_by_document_id": superseded[identity]})
+        elif not complete:
+            raise ValueError("VSDC_NOTICE_BODY_INCOMPLETE")
+        else:
+            selected.append(document)
+    return passthrough + selected
+
+
 def retained_vsdc_share_events(evidence_roots, *, session_date: str, known_by) -> dict[str, Any]:
     """Read existing acquirer receipts only; never crawl, acquire, or promote authority."""
     from datetime import datetime, date
@@ -1626,7 +1677,8 @@ def retained_vsdc_share_events(evidence_roots, *, session_date: str, known_by) -
         for manifest in (root / MANIFEST, root / "data" / "official-evidence" / MANIFEST):
             if not manifest.exists():
                 continue
-            for document in json.loads(manifest.read_text(encoding="utf-8")).get("records", []):
+            documents = json.loads(manifest.read_text(encoding="utf-8")).get("records", [])
+            for document in _latest_complete_vsdc_records(manifest, documents, diagnostics):
                 if document.get("source_id") != "vsdc" or document.get("document_class") not in {"last_registration_date_notice", "corporate_action_notice"}:
                     continue
                 identity = str(document.get("document_id") or document.get("sha256") or "")

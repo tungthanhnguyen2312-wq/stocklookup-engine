@@ -2,6 +2,35 @@
 
 ## VSDC finite operator notice scope (HL-20261124-HOL-05)
 
+### Body completeness and append-only repair (HL-20261124-HOL-09)
+
+For source `vsdc`, both notice classes at `https://vsdc.vn/vi/ad/<digits>`
+must contain a `Mã chứng khoán:` field in `content-category` and exactly one
+valid `Cập nhật ngày dd/mm/yyyy - hh:mm:ss` timestamp in the notice column
+(`col-lg-8`, `time-newstcph`). Related-news timestamps do not count. Standalone
+notices may put the timestamp directly in `content-category`. This is a structural
+check only; ticker, class, counts, venue and publication authority still require
+the existing strict loader. HTTP 200 shells fail with the registry's existing
+`empty_or_truncated_document`; downloaded temporary bytes are removed and no
+document or record is retained.
+
+Operator repair: supply a finite CSV containing the affected exact URLs and their
+original ticker/class through the same retention CLI. A hash-valid cached shell
+is not a cache hit. Only a later complete response appends a new hash-addressed
+document and receipt, with `supersedes_document_id` naming the previous receipt
+for that ticker/URL. Failed re-fetches leave existing bytes and receipts intact.
+No manual manifest edit, deletion, alternate importer or loader exception is needed.
+Run the normal dry-run first; actual network retrieval remains operator-authorized.
+
+The enabled loader verifies hashes and retained-root paths for all versions,
+requires an ordered explicit same-ticker/URL/class supersession chain, and selects
+its latest complete version. Each old shell is reported as
+`SUPERSEDED_BODYLESS_VSDC_NOTICE` with its identity, canonical URL and replacement
+document ID; complete predecessors use `SUPERSEDED_VSDC_NOTICE`. An unreplaced
+incomplete notice or invalid link fails closed. Revision selection does not grant
+historical/PIT authority; the selected notice still passes existing knowledge-time
+and semantic checks. Flag-OFF behavior remains unchanged.
+
 Owner decision 2026-11-24 admits VSDC as the official source for registered-securities
 counts and share-changing events, market-wide where supported. Registered shares remain
 distinct from listed shares and outstanding shares excluding treasury; publication time,

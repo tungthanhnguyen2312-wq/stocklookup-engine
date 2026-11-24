@@ -23,13 +23,103 @@ def spec(ticker="ZZZ", **overrides):
                 document_class="corporate_action_notice", reporting_period="2026") | overrides
 
 
+def _legacy_shell(root, row):
+    """Model a pre-HOL-09 receipt without using the now-strict acquirer."""
+    import hashlib
+    from stocklookup_core.evidence.official_document_acquisition import _document_id
+    payload = b'<html><body>empty shell</body></html>'
+    digest = hashlib.sha256(payload).hexdigest()
+    document = dict(row, document_id=_document_id(row['ticker'], row['canonical_url'], digest),
+                    sha256=digest, relative_path='shell.html', acquisition_status='retained',
+                    observed_at='2026-11-01T00:00:00Z', supersedes_document_id=None)
+    root.mkdir(parents=True, exist_ok=True)
+    (root / 'shell.html').write_bytes(payload)
+    (root / MANIFEST).write_text(json.dumps({'schema_version': '1.2.0', 'records': [document]}), encoding='utf8')
+    return document, payload
+
+
+@pytest.mark.parametrize('kind', ['corporate_action_notice', 'last_registration_date_notice'])
+@pytest.mark.parametrize('mode', ['shell', 'missing_field', 'missing_stamp', 'duplicate_stamp', 'bad_date', 'outside_stamp', 'truncated'])
+@pytest.mark.parametrize('operator_scope', [False, True])
+def test_bodyless_or_ambiguous_notice_refused_without_retention(tmp_path, kind, mode, operator_scope):
+    stamp = 'Cập nhật ngày 02/11/2026 - 15:05:00'
+    field = 'Mã chứng khoán: BMI'
+    body = f'<div class="col-lg-8"><div class="time-newstcph">{stamp}</div><div class="content-category">{field}</div></div>'
+    if mode == 'shell':
+        body = ''
+    elif mode == 'missing_field':
+        body = body.replace(field, '')
+    elif mode == 'missing_stamp':
+        body = body.replace(stamp, '')
+    elif mode == 'duplicate_stamp':
+        body = body.replace(stamp, stamp + ' ' + stamp)
+    elif mode == 'bad_date':
+        body = body.replace('02/11/2026', '31/02/2026')
+    elif mode == 'outside_stamp':
+        body = f'<div class="time-newstcph">{stamp}</div><div class="col-lg-8"><div class="content-category">{field}</div></div>'
+    elif mode == 'truncated':
+        body = body[:-6]
+    row = spec('BMI', document_class=kind)
+    payload = ('<html>' + body + '</html>').encode()
+    result = acquire([row], tmp_path, vsdc_operator_notice_list=operator_scope,
+        additional_allowed_tickers=None if operator_scope else ['BMI'],
+        fetcher=lambda *a, **kw: (200, {'Content-Type': 'text/html'}, payload))
+    assert result['outcomes'][0]['state'] == 'empty_or_truncated_document'
+    assert json.loads((tmp_path / MANIFEST).read_text())['records'] == []
+    assert list(tmp_path.iterdir()) == [tmp_path / MANIFEST]
+
+
+@pytest.mark.parametrize('kind', ['corporate_action_notice', 'last_registration_date_notice'])
+def test_shell_supersession_append_only_and_loader_diagnostics(tmp_path, kind):
+    from test_vsdc_hose_share_events import _load
+    from market_wide_current_shares_resolver import ShareStoreUnreadable
+    root = tmp_path / 'notices'
+    row = spec('BMI', document_class=kind)
+    if kind == 'corporate_action_notice':
+        row = spec('VDS', canonical_url='https://vsdc.vn/vi/ad/203041')
+    original, shell = _legacy_shell(root, row)
+    off = _load(root, enabled=False)
+    with pytest.raises(ShareStoreUnreadable, match='VSDC_NOTICE_BODY_INCOMPLETE'):
+        _load(root)
+    # A second empty HTTP 200 neither changes the receipt nor creates a revision.
+    before = (root / MANIFEST).read_bytes()
+    failed = acquire([row], root, vsdc_operator_notice_list=True,
+        fetcher=lambda *a, **kw: (200, {'Content-Type': 'text/html'}, shell))
+    assert failed['outcomes'][0]['state'] == 'empty_or_truncated_document'
+    assert (root / MANIFEST).read_bytes() == before
+    payload = (FIXTURES / 'bmi_202076_retained_20261124.html').read_bytes()
+    if kind == 'corporate_action_notice':
+        payload = (FIXTURES / 'vds_203041_registration_retained_20261124.html').read_bytes()
+    result = acquire([row], root, vsdc_operator_notice_list=True, observed_at='2026-11-23T08:00:00Z',
+        fetcher=lambda *a, **kw: (200, {'Content-Type': 'text/html'}, payload))
+    assert result['outcomes'][0]['state'] == 'retained'
+    records = json.loads((root / MANIFEST).read_text())['records']
+    assert records[0] == original and len(records) == 2
+    assert records[1]['supersedes_document_id'] == original['document_id']
+    assert (root / 'shell.html').read_bytes() == shell
+    on = _load(root)
+    assert on['events']
+    assert any(d['reason'] == 'SUPERSEDED_BODYLESS_VSDC_NOTICE'
+               and d['artifact_identity'] == original['document_id']
+               and d['superseded_by_document_id'] == records[1]['document_id'] for d in on['diagnostics'])
+    assert _load(root, enabled=False) == off
+    before = (root / MANIFEST).read_bytes()
+    assert acquire([row], root, vsdc_operator_notice_list=True,
+        fetcher=lambda *a, **k: pytest.fail('complete cache must not fetch'))['outcomes'][0]['state'] == 'cached_valid'
+    assert (root / MANIFEST).read_bytes() == before
+    records[1]['supersedes_document_id'] = 'unrelated'
+    (root / MANIFEST).write_text(json.dumps({'schema_version': '1.2.0', 'records': records}))
+    with pytest.raises(ShareStoreUnreadable, match='SUPERSESSION_INVALID'):
+        _load(root)
+
+
 def test_market_wide_list_cache_provenance_and_interval(tmp_path):
     calls, waits = [], []
     rows = [spec(ticker=t, canonical_url=f"https://vsdc.vn/vi/ad/{i}")
             for i, t in enumerate(("VDS", "SSB", "AAA", "ZZZ"), 1)]
     def fetch(url, **kwargs):
         calls.append(url)
-        return 200, {"Content-Type": "text/html"}, b"<html>retained</html>", url
+        return 200, {"Content-Type": "text/html"}, (FIXTURES / "bmi_202076_synthetic.html").read_bytes(), url
     result = acquire(iter(rows), tmp_path, vsdc_operator_notice_list=True, fetcher=fetch,
                      clock=lambda: 0, sleep=waits.append)
     assert len(calls) == 4 and waits == [15, 15, 15]
@@ -39,6 +129,51 @@ def test_market_wide_list_cache_provenance_and_interval(tmp_path):
                     fetcher=lambda *a, **k: pytest.fail("cached request"))
     assert all(r["state"] == "cached_valid" for r in again["outcomes"])
     assert (tmp_path / MANIFEST).read_bytes() == manifest
+
+
+@pytest.mark.parametrize('damage', [None, 'hash', 'unlinked', 'cross_url', 'cross_class', 'reverse_order'])
+def test_loader_latest_complete_revision_and_chain_integrity(tmp_path, damage):
+    import hashlib
+    from stocklookup_core.evidence.corporate_action_events import retained_vsdc_share_events
+    from stocklookup_core.evidence.official_document_acquisition import _document_id
+    from test_vsdc_hose_share_events import URL
+    row = spec('BMI', canonical_url=URL, document_class='last_registration_date_notice')
+    shell, _ = _legacy_shell(tmp_path, row)
+    payload = (FIXTURES / 'bmi_202076_synthetic.html').read_bytes()
+    acquire([row], tmp_path, vsdc_operator_notice_list=True, observed_at='2026-11-02T08:10:00Z',
+        fetcher=lambda *a, **kw: (200, {'Content-Type': 'text/html'}, payload))
+    data = json.loads((tmp_path / MANIFEST).read_text())
+    previous = data['records'][-1]
+    revised = payload.replace(b'10:1', b'10:2')
+    digest = hashlib.sha256(revised).hexdigest()
+    document = previous | {'sha256': digest, 'document_id': _document_id('BMI', URL, digest),
+        'relative_path': 'revision.html', 'supersedes_document_id': previous['document_id']}
+    (tmp_path / 'revision.html').write_bytes(revised)
+    data['records'].append(document)
+    if damage == 'hash':
+        (tmp_path / 'shell.html').write_bytes(b'tampered old shell')
+    elif damage == 'unlinked':
+        document['supersedes_document_id'] = None
+    elif damage == 'cross_url':
+        document['canonical_url'] = 'https://vsdc.vn/vi/ad/999'
+    elif damage == 'cross_class':
+        document['document_class'] = 'corporate_action_notice'
+    elif damage == 'reverse_order':
+        data['records'].reverse()
+    (tmp_path / MANIFEST).write_text(json.dumps(data))
+    def load():
+        return retained_vsdc_share_events([tmp_path], session_date='2026-11-23', known_by=CUTOFF)
+    if damage:
+        with pytest.raises(ValueError, match='VSDC_NOTICE_(HASH_MISMATCH|SUPERSESSION_LINK_REQUIRED|SUPERSESSION_INVALID)'):
+            load()
+        return
+    result = load()
+    assert len(result['events']['BMI']) == 1
+    assert result['events']['BMI'][0]['content_sha256'] == digest
+    assert result['events']['BMI'][0]['notice']['ratio_terms'] == '10:2'
+    assert [(d['artifact_identity'], d['reason']) for d in result['diagnostics']] == [
+        (shell['document_id'], 'SUPERSEDED_BODYLESS_VSDC_NOTICE'),
+        (previous['document_id'], 'SUPERSEDED_VSDC_NOTICE')]
 
 
 @pytest.mark.parametrize("override", [

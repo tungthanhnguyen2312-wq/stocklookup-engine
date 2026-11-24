@@ -895,7 +895,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in registration["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{registration['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == registration["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = live_receipt["vsdc_notice_body_completeness_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     prior_receipt["vsdc_registration_shares_corrective"] = registration
 
     retention = live_receipt["vsdc_market_wide_retention_corrective"]
@@ -905,7 +905,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in retention["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{retention['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == retention["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = live_receipt["vsdc_notice_body_completeness_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     assert retention["added_source_paths"] == ["tools/retain_vsdc_share_notices.py", "tools/replay_vsdc_valuation_impact.py"]
     for path in retention["added_source_paths"]:
         assert path not in prior_receipt["source_sha256"]
@@ -921,6 +921,17 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == valuation["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["vsdc_registered_share_valuation_corrective"] = valuation
+
+    completeness = live_receipt["vsdc_notice_body_completeness_corrective"]
+    assert completeness["scope"] == "VSDC_BODY_COMPLETENESS_APPEND_ONLY_SUPERSESSION_FLAG_OFF"
+    assert completeness["new_capacity_measurement"] is False
+    assert completeness["whole_daily_requalification"] is False
+    assert completeness["changed_source_paths"] == ["stocklookup_core/evidence/official_document_acquisition.py", "stocklookup_core/evidence/corporate_action_events.py"]
+    for path in completeness["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{completeness['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == completeness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["vsdc_notice_body_completeness_corrective"] = completeness
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

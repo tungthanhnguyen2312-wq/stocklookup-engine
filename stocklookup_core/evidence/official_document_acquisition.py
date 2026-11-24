@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from html.parser import HTMLParser
 import json
 import os
 import re
@@ -45,6 +46,77 @@ BOUNDED_ADDITIONAL_TICKER_SCOPE_EXCEEDED = "BOUNDED_ADDITIONAL_TICKER_SCOPE_EXCE
 _TICKER_IDENTITY = re.compile(r"[A-Z][A-Z0-9]{0,9}")
 VSDC_SHARE_NOTICE_CLASSES = frozenset({"corporate_action_notice", "last_registration_date_notice"})
 _VSDC_NOTICE_URL = re.compile(r"https://vsdc\.vn/vi/ad/[0-9]+")
+
+
+def _vsdc_notice_whitespace(raw: str) -> str:
+    return re.sub(r"\s+", " ", raw).strip()
+
+
+class _VsdcNoticeContainer(HTMLParser):
+    """Capture a VSDC notice body without its navigation or related-news sidebar."""
+    def __init__(self, container_class: str = "content-category", *, parent_class: str | None = None) -> None:
+        super().__init__(convert_charrefs=True)
+        self.container_class = container_class
+        self.parent_class = parent_class
+        self._ancestors: list[tuple[str, list[str]]] = []
+        self.depth = 0
+        self.text: list[str] = []
+        self._open_tags: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        classes = dict(attrs).get("class", "") or ""
+        eligible = self.parent_class is None or any(self.parent_class in c for _, c in self._ancestors)
+        if tag not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "wbr"}:
+            self._ancestors.append((tag, classes.split()))
+        if self.depth:
+            if tag not in {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "wbr"}:
+                self.depth += 1
+                self._open_tags.append(tag)
+        elif tag == "div" and self.container_class in classes.split() and eligible:
+            self.depth = 1
+            self._open_tags.append(tag)
+
+    def handle_startendtag(self, _tag: str, _attrs: list[tuple[str, str | None]]) -> None:
+        """A self-closing HTML tag does not close the scoped notice body."""
+
+    def handle_endtag(self, tag: str) -> None:
+        if self._ancestors and self._ancestors[-1][0] == tag:
+            self._ancestors.pop()
+        if self.depth and self._open_tags and self._open_tags[-1] == tag:
+            self._open_tags.pop()
+            self.depth -= 1
+
+    def handle_data(self, data: str) -> None:
+        if self.depth:
+            self.text.append(data)
+
+
+def vsdc_notice_body_complete(payload: bytes) -> bool:
+    """Structural retention check only; never qualifies ticker, terms or authority."""
+    from datetime import datetime
+    try:
+        page = payload.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return False
+    body = _VsdcNoticeContainer()
+    body.feed(page)
+    container = _VsdcNoticeContainer("col-lg-8")
+    container.feed(page)
+    timestamp = _VsdcNoticeContainer("time-newstcph", parent_class="col-lg-8")
+    timestamp.feed(page)
+    # The live timestamp is beside content-category inside the notice column.
+    # Standalone synthetic notices may use content-category as their container.
+    text = _vsdc_notice_whitespace(" ".join(timestamp.text if container.text else body.text))
+    if container.text and (not text or text not in _vsdc_notice_whitespace(" ".join(container.text))):
+        return False
+    stamps = re.findall(r"Cập nhật ngày\s+(\d{2}/\d{2}/\d{4})\s*-\s*(\d{2}:\d{2}:\d{2})(?![\d:])", text)
+    if len(stamps) != 1 or not re.search(r"Mã chứng khoán\s*:", _vsdc_notice_whitespace(" ".join(body.text))):
+        return False
+    try:
+        datetime.strptime(" ".join(stamps[0]), "%d/%m/%Y %H:%M:%S")
+    except ValueError:
+        return False
+    return body.depth == 0 and container.depth == 0
 
 
 def validate_vsdc_notice_list(requests_: Iterable[Mapping[str, Any]], *,
@@ -369,6 +441,11 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
         try: ticker, document_class, period, url, source_id = _validate_spec(spec, allowed_types, allowed_tickers=allowed_tickers)
         except ValueError as exc: outcomes.append({"state": str(exc), "ticker": str(spec.get("ticker", "")).upper()}); continue
         cached = _cached(root, records, ticker, url)
+        vsdc_notice = (source_id == "vsdc" and document_class in VSDC_SHARE_NOTICE_CLASSES
+                       and _VSDC_NOTICE_URL.fullmatch(url) is not None)
+        if vsdc_notice:
+            if cached and not vsdc_notice_body_complete((root / cached["relative_path"]).read_bytes()):
+                cached = None
         if cached and spec.get("require_complete_pdf") is True:
             proof = cached.get("document_completeness") or {}
             try:
@@ -441,6 +518,11 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
                                  "state": "redirect_refused_by_source_registry", "reason": landing["reason"],
                                  "detail": landing["detail"], "http_status": status})
                 continue
+        if vsdc_notice and not vsdc_notice_body_complete(temporary.read_bytes()):
+            temporary.unlink(missing_ok=True)
+            outcomes.append({"ticker": ticker, "canonical_url": url,
+                             "state": "empty_or_truncated_document", "http_status": status})
+            continue
         raw_ct = _content_type(headers)
         detected_ct, detection_rationale = _sniff_media_type(raw_ct, prefix)
         sha256 = _sha_file(temporary)
