@@ -448,7 +448,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
 
     def successor_baseline_pin(path, *successors):
         # The newest corrective is every chain's last successor before the live pin.
-        for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"]):
+        for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"],
+                      live_receipt["tplus_taxonomy_direction_corrective"]):
             if path in entry["prior_source_sha256_lf"]:
                 return entry["prior_source_sha256_lf"][path]
         return live_receipt["source_sha256"][path]
@@ -861,7 +862,9 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert truthfulness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = live_receipt[
+            "tplus_taxonomy_direction_corrective"]["prior_source_sha256_lf"].get(
+                path, hashlib.sha256(current).hexdigest())
     prior_receipt["valuation_output_truthfulness_corrective"] = truthfulness
 
     staleness = live_receipt["share_basis_official_event_staleness_corrective"]
@@ -877,6 +880,25 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["share_basis_official_event_staleness_corrective"] = staleness
+
+    direction = live_receipt["tplus_taxonomy_direction_corrective"]
+    direction_paths = ["prospective_decision_outcome_feedback.py", "tools/verify_retention_reader_transition.py"]
+    assert direction["scope"] == "TPLUS_TAXONOMY_DOWNSIDE_CONFIRMATION_DIRECTION_LABEL_ONLY"
+    assert direction["new_capacity_measurement"] is False
+    assert direction["whole_daily_requalification"] is False
+    assert direction["changed_source_paths"] == direction_paths
+    assert direction["base_commit"] == "7ea5b514ddc53a8ec8f8fd9630863be5a743f4ff"
+    direction_transition = json.loads((root / direction["source_transition"]).read_bytes())
+    assert direction_transition["base_commit"] == direction["base_commit"]
+    assert (direction_transition["sources"][direction_paths[0]]["prior_sha256_lf"]
+            == direction["prior_source_sha256_lf"][direction_paths[0]])
+    for path in direction_paths:
+        previous = subprocess.check_output(["git", "show", f"{direction['base_commit']}:{path}"], cwd=root)
+        assert direction["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["tplus_taxonomy_direction_corrective"] = direction
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

@@ -111,6 +111,11 @@ VALUATION_TRUTHFULNESS_SOURCES = ("ai_research_session_delivery.py",
                                   "stocklookup_core/research/asymmetric_dislocation_research.py",
                                   "stocklookup_core/valuation/current_research_valuation_context.py")
 VALUATION_TRUTHFULNESS_ARCHIVE_DIR = "tests/fixtures/valuation_output_truthfulness_v1_sources/"
+TPLUS_TAXONOMY_DIRECTION_MANIFEST = "tests/fixtures/tplus_taxonomy_direction_source_transition_v1.json"
+TPLUS_TAXONOMY_DIRECTION_BASE = "7ea5b514ddc53a8ec8f8fd9630863be5a743f4ff"
+TPLUS_TAXONOMY_DIRECTION_SCOPE = "EXACT_TPLUS_TAXONOMY_DOWNSIDE_CONFIRMATION_DIRECTION_ONLY"
+TPLUS_TAXONOMY_DIRECTION_SOURCES = ("prospective_decision_outcome_feedback.py",)
+TPLUS_TAXONOMY_DIRECTION_ARCHIVE_DIR = "tests/fixtures/tplus_taxonomy_direction_v1_sources/"
 LEGACY_SUMMARY_MANIFEST = "tests/fixtures/tplus_legacy_summary_fingerprint_source_transition_v1.json"
 LEGACY_SUMMARY_BASE = "58b42b664d8e5008bd1e8e16f7cb167b52b60d21"
 LEGACY_SUMMARY_SCOPE = "EXACT_TPLUS_LEGACY_SUMMARY_FINGERPRINT_REUSE_ONLY"
@@ -181,6 +186,40 @@ OBSERVER_RESIDENT_RELEASE_PRIOR = "c03249a02f056136f7d4c0e7cef6e3fd1513425175961
 E4_V2_DIGEST = "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
 
 
+def _tplus_taxonomy_direction_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the 2026-11-22 T+ taxonomy downside-confirmation successor (newest layer) to its base bytes.
+
+    Same shape and idempotence as the retry-integrity layer it succeeds: only this layer's exact active
+    bytes are replaced by the archived base-commit bytes; anything else passes through unchanged.
+    """
+    if relative not in TPLUS_TAXONOMY_DIRECTION_SOURCES:
+        return active
+    manifest = root / TPLUS_TAXONOMY_DIRECTION_MANIFEST
+    if not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    sources = spec.get("sources")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources",
+                      "previous_e4_v2_digest", "active_e4_v2_digest"}
+            or spec.get("contract_version") != "tplus_taxonomy_direction_source_transition/v1"
+            or spec.get("base_commit") != TPLUS_TAXONOMY_DIRECTION_BASE
+            or spec.get("scope") != TPLUS_TAXONOMY_DIRECTION_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or not isinstance(sources, dict) or tuple(sources) != TPLUS_TAXONOMY_DIRECTION_SOURCES):
+        raise ValueError("TPLUS_TAXONOMY_DIRECTION_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = sources[relative]
+    archive = TPLUS_TAXONOMY_DIRECTION_ARCHIVE_DIR + relative + ".txt"
+    if (not isinstance(row, dict) or set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"}
+            or row.get("archive") != archive):
+        raise ValueError("TPLUS_TAXONOMY_DIRECTION_SOURCE_TRANSITION_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]:
+        return active
+    prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
+    if hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"] or row["prior_sha256_lf"] == row["active_sha256_lf"]:
+        raise ValueError("TPLUS_TAXONOMY_DIRECTION_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def _valuation_truthfulness_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel the 2026-11-22 valuation output truthfulness successor (newest layer) to its base bytes.
 
@@ -220,8 +259,9 @@ def _tplus_retry_integrity_prior_bytes(root: Path, relative: str, active: bytes)
 
     Idempotent and applied at every per-file chain entry: bytes that are not this layer's exact active
     bytes pass through unchanged and are judged by the older layers. A missing manifest keeps older
-    checkouts valid. The newer valuation-truthfulness layer is peeled first.
+    checkouts valid. Taxonomy direction is peeled before valuation truthfulness.
     """
+    active = _tplus_taxonomy_direction_prior_bytes(root, relative, active)
     active = _valuation_truthfulness_prior_bytes(root, relative, active)
     if relative not in TPLUS_RETRY_INTEGRITY_SOURCES:
         return active
@@ -1154,8 +1194,8 @@ def _ocr_recognition_prior_bytes(root: Path, relative: str, active: bytes) -> by
     """Peel the 2026-11-07 OCR recognition successor (Owner approved "fix the parser").
 
     Only two recognizers changed: an OCR glyph variant of a bare unit-label line ("Bon vi:" /
-    "Don vj:" + one explicit currency) and the VAS phrase "kỳ hoạt động 6 tháng kết thúc ngày
-    30 tháng 6 năm YYYY". A missing manifest keeps older checkouts valid; other bytes pass through.
+    "Don vj:" + one explicit currency) and the VAS phrase "ká»³ hoáº¡t Ä‘á»™ng 6 thÃ¡ng káº¿t thÃºc ngÃ y
+    30 thÃ¡ng 6 nÄƒm YYYY". A missing manifest keeps older checkouts valid; other bytes pass through.
     """
     if relative not in OCR_RECOGNITION_SOURCES:
         return active
@@ -1430,6 +1470,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
     if retry_manifest.is_file():
         for relative in TPLUS_RETRY_INTEGRITY_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _tplus_taxonomy_direction_prior_bytes(root, relative, live)
             live = _valuation_truthfulness_prior_bytes(root, relative, live)
             row = json.loads(retry_manifest.read_bytes())["sources"][relative]
             if hashlib.sha256(live).hexdigest() != row["active_sha256_lf"]:
@@ -1450,6 +1491,17 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         if truthfulness["previous_e4_v2_digest"] != expected_execution:
             raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
         expected_execution = truthfulness["active_e4_v2_digest"]
+    direction_manifest = root / TPLUS_TAXONOMY_DIRECTION_MANIFEST
+    if direction_manifest.is_file():
+        direction = json.loads(direction_manifest.read_bytes())
+        for relative in TPLUS_TAXONOMY_DIRECTION_SOURCES:
+            live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            if hashlib.sha256(live).hexdigest() != direction["sources"][relative]["active_sha256_lf"]:
+                raise ValueError("TPLUS_TAXONOMY_DIRECTION_SOURCE_TRANSITION_BINDING_INVALID")
+            _tplus_taxonomy_direction_prior_bytes(root, relative, live)
+        if direction["previous_e4_v2_digest"] != expected_execution:
+            raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
+        expected_execution = direction["active_e4_v2_digest"]
     if execution["code_digest"] != expected_execution or execution["code_digest"] == historical["code_digest"]:
         raise ValueError("THESIS_SOURCE_ACTIVE_DIGEST_MISMATCH")
     if spec["rejected_mixed_digest"] in {execution["code_digest"], historical["code_digest"]}:

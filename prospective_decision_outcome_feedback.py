@@ -686,6 +686,23 @@ def feedback_diagnostics(record, *, chain, snapshots, horizon_sessions=5):
             "basis_horizon": f"T{horizon_sessions}", "completed_session_window": list(prefix[prefix.index(start)+1:]) if start in prefix else []}
 
 
+DOWNSIDE_BOUNDARY_CONFIRMED = "DOWNSIDE_BOUNDARY_CONFIRMED"
+
+
+def taxonomy_confirmation(confirmation: Mapping[str, Any], record: Mapping[str, Any]) -> dict[str, Any]:
+    """Confirmation as the shared taxonomy may read it.
+
+    A satisfied downside trigger (serialized operator ``<``, e.g. a breakdown-extension boundary)
+    confirms the bearish case a defensive posture expected. It is not the "confirmed favorable
+    contract condition" a defensive false negative requires, nor an early-watch confirmation, so it
+    never reaches the taxonomy as ``CONFIRMED``. The stored diagnostics keep the raw event.
+    """
+    operator = ((record.get("trigger") or {}).get("condition") or {}).get("operator")
+    if confirmation.get("status") == "CONFIRMED" and operator == "<":
+        return {**confirmation, "status": DOWNSIDE_BOUNDARY_CONFIRMED}
+    return dict(confirmation)
+
+
 def _feedback_record(*, artifact: Mapping[str, Any], source_path: str, temporal: Mapping[str, Any], record: Mapping[str, Any],
                      snapshots: Mapping[str, Mapping[str, Any]], chain: Sequence[str],
                      t0_snapshot: Mapping[str, Any] | None = None, t0_snapshot_record: Mapping[str, Any] | None = None) -> dict[str, Any]:
@@ -746,6 +763,7 @@ def _feedback_record(*, artifact: Mapping[str, Any], source_path: str, temporal:
     shim = {"research_action_posture_at_t0": feedback["research_action_posture"], "research_stance_at_t0": FIELD_NOT_RETAINED,
             "horizons": {"T5": {"status": t5.get("status"), "return": t5.get("return")}},
             **feedback["feedback_diagnostics"],
+            "confirmation": taxonomy_confirmation(feedback["feedback_diagnostics"]["confirmation"], record),
             "qualified_tactical_signal_at_t0": isinstance(signal, Mapping) and signal.get("status") == "CONFIRMED" and bool(signal.get("source_identity"))}
     feedback["feedback_taxonomy"] = outcome_measurement.classify_feedback_taxonomy(shim)
     feedback["outcome_classification"] = _outcome_label(record, outcome)  # legacy descriptive price label, never a false-negative verdict

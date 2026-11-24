@@ -452,3 +452,55 @@ def test_structural_non_machine_conditions_settle_with_terminal_horizons(tmp_pat
     assert all(h["status"] == bridge.MATURE for h in row["forward_outcomes"]["horizons"].values())
     assert row["trigger_invalidation_outcome"]["trigger"]["status"] == "NOT_MACHINE_EVALUABLE"
     assert len(cache.retained) == 1
+
+
+def _directional_row(*, posture: str, operator: str, level: float, closes: list[float]):
+    import prospective_decision_retention as retention
+    chain = [f"2026-01-{n:02d}" for n in range(1, len(closes) + 1)]
+    snapshots = {s: _snapshot(s, close) for s, close in zip(chain, closes)}
+    record = _record(chain[0], posture=posture)
+    record["trigger"]["condition"] = retention.serialize_boundary_condition(
+        {"status": "READY", "source_metric": "support" if operator.startswith("FUTURE_CLOSE_LT") else "resistance",
+         "baseline_value": level, "comparison_operator": operator, "boundary_type": "BREAKDOWN_EXTENSION_CONFIRMATION"
+         if operator.startswith("FUTURE_CLOSE_LT") else "BREAKOUT_EXTENSION_CONFIRMATION"},
+        role="trigger", source_strategy_identity="s")
+    record["invalidation"]["condition"] = retention.serialize_boundary_condition({}, role="invalidation", source_strategy_identity=None)
+    row = feedback._feedback_record(artifact={"session": chain[0]}, source_path="a", temporal={}, record=record,
+                                    chain=chain, snapshots=snapshots)
+    return row
+
+
+def test_satisfied_downside_trigger_is_not_a_missed_breakout_or_false_negative():
+    # AVOID expected a breakdown; the next close extended it (94 < 95), then price bounced +4% by T5.
+    row = _directional_row(posture="AVOID", operator="FUTURE_CLOSE_LT_SUPPORT_LEVEL", level=95, closes=[100, 94, 97, 100, 102, 104])
+    assert row["forward_outcomes"]["horizons"]["forward_close_return_5"]["return"] == pytest.approx(0.04)
+    assert row["feedback_diagnostics"]["confirmation"]["status"] == "CONFIRMED"  # raw retained event unchanged
+    taxonomy = row["feedback_taxonomy"]
+    assert taxonomy["label"] == "INSUFFICIENT_OUTCOME_EVIDENCE"
+    assert taxonomy["confirmation_status"] == feedback.DOWNSIDE_BOUNDARY_CONFIRMED
+    assert feedback._false_negatives([row]) == []
+
+
+def test_satisfied_upside_trigger_keeps_the_existing_missed_breakout_label():
+    row = _directional_row(posture="AVOID", operator="FUTURE_CLOSE_GT_RESISTANCE_LEVEL", level=101, closes=[100, 102, 103, 103, 104, 104])
+    assert row["feedback_taxonomy"]["label"] == "MISSED_BREAKOUT"
+    assert row["feedback_taxonomy"]["confirmation_status"] == "CONFIRMED"
+    assert [case["ticker"] for case in feedback._false_negatives([row])] == ["FPT"]
+
+
+def test_satisfied_downside_trigger_never_marks_an_early_watch_good():
+    up = _directional_row(posture="EARLY_WATCH", operator="FUTURE_CLOSE_GT_RESISTANCE_LEVEL", level=101, closes=[100, 102, 103, 103, 104, 104])
+    down = _directional_row(posture="EARLY_WATCH", operator="FUTURE_CLOSE_LT_SUPPORT_LEVEL", level=95, closes=[100, 94, 97, 100, 102, 104])
+    assert up["feedback_taxonomy"]["label"] == "GOOD_EARLY_WATCH"
+    assert down["feedback_taxonomy"]["label"] == "INSUFFICIENT_OUTCOME_EVIDENCE"
+
+
+def test_taxonomy_confirmation_only_reclassifies_a_confirmed_downside_trigger():
+    downside = {"trigger": {"condition": {"operator": "<"}}}
+    upside = {"trigger": {"condition": {"operator": ">"}}}
+    confirmed = {"status": "CONFIRMED", "event_session": "2026-01-02"}
+    assert feedback.taxonomy_confirmation(confirmed, downside) == {**confirmed, "status": feedback.DOWNSIDE_BOUNDARY_CONFIRMED}
+    assert feedback.taxonomy_confirmation(confirmed, upside) == confirmed
+    assert feedback.taxonomy_confirmation(confirmed, {"trigger": {"trigger_state": "TRIGGERED"}}) == confirmed  # legacy: no operator
+    for status in ("NOT_CONFIRMED_YET", "BOUNDARY_NOT_EVALUABLE"):
+        assert feedback.taxonomy_confirmation({"status": status}, downside) == {"status": status}
