@@ -536,3 +536,51 @@ def test_bare_vnd_mapping_is_single_and_delegates_otherwise():
     for literal in ('Đơn vị: VND', 'Đơn vị: Triệu VND', 'Nghìn VND', 'VNĐ triệu', 'vnd'):
         assert dual._unit(literal, parse) == parse(literal)
     assert dual._unit('Đơn vị: VND', parse)['unit_scale'] == 1
+
+
+# --- Form reference dash variants (Head Leader decision): identity matching only ----------------
+def _set_form(directory, row, proof, forms):
+    for index in (0, 1):
+        _change_reader(directory, row, proof,
+                       lambda raw, i=index: raw['table'].update(form_reference_literal=forms[i]), index=index)
+    row['form_reference_literal'] = forms[0]
+
+
+@pytest.mark.parametrize('form', ['Mẫu số B 02 – DN/HN', 'Mẫu số B 02 — DN/HN', 'Mẫu số B 02a‐DN/HN',
+                                  'MẪU SỐ B 02a ‑ DN/HN'])
+def test_form_reference_dash_variants_match_and_are_recorded(tmp_path, form):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof)
+    _set_form(directory, row, proof, (form, form))
+    result = admit_retained_financial_fact(row, evidence_root=tmp_path, registry=context['registry'])
+    assert result['state'] == 'ADMITTED', result
+    recorded = [n for n in result['evidence_classification']['literal_normalizations']
+                if n['rule'] == 'FORM_REFERENCE_DASH_VARIANT']
+    assert recorded == [{'field': 'form_reference_literal', 'agreed': form,
+                         'matched_as': recorded[0]['matched_as'], 'rule': 'FORM_REFERENCE_DASH_VARIANT'}]
+    assert '-DN/HN' in recorded[0]['matched_as']
+
+
+def test_ascii_form_records_no_dash_normalization(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'))
+    _set_form(directory, row, proof, ('Mẫu số B 02 - DN/HN', 'Mẫu số B 02 - DN/HN'))
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED' and 'literal_normalizations' not in result['evidence_classification'], result
+
+
+@pytest.mark.parametrize('form', ['Mẫu số B 03 – DN/HN', 'Mẫu số B 02 – DN', 'Mẫu số B 02 – TCTD/HN',
+                                  'Mẫu số B 02b – DN/HN', 'Mẫu số B 02 ~ DN/HN', 'Mẫu số B 02 − DN/HN',
+                                  'Mẫu số B 02 DN/HN'])
+def test_wrong_form_letters_codes_or_other_marks_stay_blocked(tmp_path, form):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'))
+    _set_form(directory, row, proof, (form, form))
+    assert 'DUAL_READER_ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED' in _pure(row, context, directory)['reason_codes']
+
+
+def test_reader_form_literals_must_still_agree_exactly(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'))
+    _set_form(directory, row, proof, ('Mẫu số B 02 – DN/HN', 'Mẫu số B 02 - DN/HN'))
+    assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']

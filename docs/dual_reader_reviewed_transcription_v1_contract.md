@@ -160,6 +160,15 @@ Three bounded rules. Nothing else is widened.
    existing unit parser does not accept a bare `VND`. Every other literal keeps
    the existing parser handling, including `Triệu VND`, `Nghìn VND` and
    `Đơn vị: VND`.
+4. **Form reference dash variants.** This rule applies only to the
+   accounting-form identity match. U+2010, U+2011, U+2013 (en dash) and U+2014
+   (em dash) are treated as ASCII `-`, and whitespace is ignored, as it already
+   was. So `Mẫu số B 02 – DN/HN` matches `B02-DN/HN`.
+   - Both readers' raw literals are untouched and must still agree exactly.
+   - The match is recorded as `FORM_REFERENCE_DASH_VARIANT` in
+     `literal_normalizations`.
+   - No other form leniency applies: B 02 vs B 02a, DN/HN vs DN, and the
+     TCTD/CTCK templates are unchanged.
 
 ## First real admission (HPG 2025-H1, 2026-11-24)
 

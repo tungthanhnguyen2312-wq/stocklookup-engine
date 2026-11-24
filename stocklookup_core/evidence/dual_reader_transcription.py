@@ -63,6 +63,20 @@ def _agreed_column_label(first: str, second: str, unit_literal: str) -> tuple[st
     return None, None
 
 
+# Head Leader decision 2026-11-24: for accounting-form identity only, these dashes match ASCII '-'.
+_FORM_DASH_VARIANTS = {"\u2010": "-", "\u2011": "-", "\u2013": "-", "\u2014": "-"}
+
+
+def _form_identity_text(literal: str) -> tuple[str, bool]:
+    """Matching key for the printed form reference; the agreed literal itself is never changed.
+
+    Whitespace is ignored (as before) and only the four dash variants map to '-'.
+    """
+    text = re.sub(r"\s+", "", str(literal))
+    keyed = text.translate(str.maketrans(_FORM_DASH_VARIANTS))
+    return keyed.upper(), keyed != text
+
+
 def _label_period(label: str, recognize_period) -> str | None:
     """Owner-approved PNJ rule 2: a column label states its own period (recognizer, or a bare year)."""
     recognized = recognize_period(label)["period"]
@@ -266,10 +280,11 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or caption_period != row["reporting_period"]
                 or recognize_scope(agreed["scope_literal"])["statement_scope"] != row["statement_scope"]):
             return fail("SEMANTIC_BINDING_MISMATCH")
+        form_key, form_dash_variant = _form_identity_text(agreed["form_reference_literal"])
         if (row.get("statement_family") != "income_statement"
                 or {"revenue": "10", "net_income": "60", "attributable_net_income": "61"}.get(
                     row.get("canonical_metric")) != str(row.get("line_code"))
-                or not re.search(r"B02A?-DN/HN\b", re.sub(r"\s+", "", agreed["form_reference_literal"]).upper())):
+                or not re.search(r"B02A?-DN/HN\b", form_key)):
             return fail("ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED")
         if cell.get("uncertainty") != []:
             return fail("UNRESOLVED_CELL_UNCERTAINTY")
@@ -282,6 +297,13 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         if (raw != row["raw_value_text"] or cell["sign_literal"] != sign
                 or parse_amount(raw) * unit["unit_scale"] != row["normalized_value"]):
             return fail("VALUE_OR_SIGN_MISMATCH")
+        normalizations = []
+        if label_normalization:
+            normalizations.append({"field": "column.label_literal", "column_id": row["column_id"],
+                                   "reader_literals": labels, "agreed": agreed_label, "rule": label_normalization})
+        if form_dash_variant:
+            normalizations.append({"field": "form_reference_literal", "agreed": agreed["form_reference_literal"],
+                                   "matched_as": form_key, "rule": "FORM_REFERENCE_DASH_VARIANT"})
         floor = max(*times, completion)
         if _time(row["knowledge_available_at"]) < floor:
             return fail("KNOWLEDGE_PRECEDES_COMPLETION")
@@ -289,8 +311,6 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 "evidence_tier": EVIDENCE_TIER, "proof_sha256": ref["proof_sha256"],
                 "raw_sha256": [r["sha256"] for r in refs], "model_families": families,
                 "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False,
-                **({"literal_normalizations": [{"field": "column.label_literal", "column_id": row["column_id"],
-                    "reader_literals": labels, "agreed": agreed_label, "rule": label_normalization}]}
-                   if label_normalization else {})}
+                **({"literal_normalizations": normalizations} if normalizations else {})}
     except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):
         return fail("MALFORMED_RETAINED_PROOF")
