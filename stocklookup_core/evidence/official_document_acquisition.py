@@ -43,6 +43,33 @@ REQUEST_HEADERS = {"Accept": "application/pdf,text/html;q=0.9", "User-Agent": "S
 DISCOVERY_RSS_MEDIA_TYPE = "application/rss+xml"
 BOUNDED_ADDITIONAL_TICKER_SCOPE_EXCEEDED = "BOUNDED_ADDITIONAL_TICKER_SCOPE_EXCEEDED"
 _TICKER_IDENTITY = re.compile(r"[A-Z][A-Z0-9]{0,9}")
+VSDC_SHARE_NOTICE_CLASSES = frozenset({"corporate_action_notice", "last_registration_date_notice"})
+_VSDC_NOTICE_URL = re.compile(r"https://vsdc\.vn/vi/ad/[0-9]+")
+
+
+def validate_vsdc_notice_list(requests_: Iterable[Mapping[str, Any]], *,
+                              registry: Mapping[str, Any] | None = None) -> tuple[Mapping[str, Any], ...]:
+    """Validate the entire finite operator list before storage or HTTP side effects.
+
+    Owner decision 2026-11-24: market-wide VSDC registered counts/share events.
+    This retention scope supplies no listed/outstanding or effective-time authority.
+    """
+    rows = tuple(requests_)
+    if not rows:
+        raise ValueError("VSDC_NOTICE_LIST_EMPTY")
+    registry = load_registry() if registry is None else registry
+    for index, row in enumerate(rows, 1):
+        ticker = str(row.get("ticker", "")).upper()
+        if (row.get("source_id") != "vsdc"
+                or row.get("document_class") not in VSDC_SHARE_NOTICE_CLASSES
+                or not _TICKER_IDENTITY.fullmatch(ticker)
+                or not _VSDC_NOTICE_URL.fullmatch(str(row.get("canonical_url", "")))):
+            raise ValueError(f"VSDC_NOTICE_LIST_ROW_{index}_OUT_OF_SCOPE")
+        _validate_spec(row, declared_document_types(registry), allowed_tickers=frozenset({ticker}))
+        decision = admit("vsdc", str(row["canonical_url"]), str(row["document_class"]), registry=registry)
+        if decision["decision"] != ADMITTED:
+            raise ValueError(f"VSDC_NOTICE_LIST_ROW_{index}_REGISTRY_REFUSED:{decision['reason']}")
+    return rows
 
 
 def canonical_url(url: str) -> str:
@@ -310,6 +337,7 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
             max_response_bytes: int = MAX_RESPONSE_BYTES, registry: Mapping[str, Any] | None = None,
             clock: Callable[[], float] = time.monotonic,
             additional_allowed_tickers: Iterable[str] | None = None,
+            vsdc_operator_notice_list: bool = False,
             refresh_index_pages: bool = False) -> dict[str, Any]:
     """Retain official documents, one request at a time, each admitted by the source registry.
 
@@ -320,9 +348,15 @@ def acquire(requests_: Iterable[Mapping[str, Any]], destination: Path, *, fetche
     """
     if not 1 <= timeout_seconds <= 30 or not 1 <= max_attempts <= 2 or max_response_bytes < 1024: raise ValueError("bounded_retry_or_timeout_invalid")
     registry = registry if registry is not None else load_registry()
+    if vsdc_operator_notice_list:
+        if additional_allowed_tickers is not None:
+            raise ValueError("VSDC_NOTICE_LIST_SCOPE_MUST_BE_EXCLUSIVE")
+        requests_ = validate_vsdc_notice_list(requests_, registry=registry)
     allowed_types = declared_document_types(registry)
     additional_scope = _bounded_additional_ticker_scope(additional_allowed_tickers)
     allowed_tickers = frozenset({*TICKERS, *additional_scope})
+    if vsdc_operator_notice_list:
+        allowed_tickers = frozenset(str(row["ticker"]).upper() for row in requests_)
     last_request_at: dict[str, float] = {}
     root = Path(destination); root.mkdir(parents=True, exist_ok=True); manifest_path = root / MANIFEST; records = _load(manifest_path)["records"]; outcomes = []
     initial_record_count = len(records)

@@ -802,7 +802,7 @@
     "stocklookup_core/evidence/ocr_sidecar_encoding.py": "729ce240636323a0583e89e56fcbb30b082c4224fc4f59e7fa993f9bb583aec6",
     "stocklookup_core/evidence/official_authority_candidates.py": "74f075019d380e88f933a23935362d11747cde867b91fdb1a988ba39098adfa6",
     "stocklookup_core/evidence/official_corporate_action_ledger.py": "295820d6658276f41a667de9d94a96a06ba7308588ad00281f007cef10f54422",
-    "stocklookup_core/evidence/official_document_acquisition.py": "a9666a6f09e5ba7102537d389554c996a2f6efe2ccac9b6df08ecd744b828afd",
+    "stocklookup_core/evidence/official_document_acquisition.py": "5ec50011ab6d07fa83bd5219f3c08ae2bd8f1c08ee183759193e78be32d6612f",
     "stocklookup_core/evidence/official_document_canonical_activation.py": "c6ee5494c8a762d1bf930c132e2ed1b6a3f09ce523368251706f885b0b86f903",
     "stocklookup_core/evidence/official_document_discovery.py": "e3b1290e5ca397748f56cd9aad7fcf880d9eb444d8b36c05493efdc1843d1d18",
     "stocklookup_core/evidence/official_document_downstream_shadow.py": "1db6fa9b69d0fda1db1a9f25ed1e10fd819be29cc2c5b88e3370f182b7c59e10",
@@ -1192,8 +1192,10 @@
     "tools/replay_fundamental_cohort_scaleout_downstream_v1.py": "c8a58197b636c5d3a5e106cea4406cfe451cdebeac3bd83b72833388137edd6a",
     "tools/replay_intrinsic_scenario_valuation.py": "d71550cd4df194b567a2e61e4c837adfa9df0415c92bd01626cbf293b9def52d",
     "tools/replay_vn30_financial_valuation_research_scaleout.py": "bfcfd0d6086348b3bfe63a12e11203952f48ccd55735b70364694ed6a154f6cf",
+    "tools/replay_vsdc_valuation_impact.py": "1605e9959101277189268791f53023f2d8bc1fbd1092abf91c4405a2faf8ab54",
     "tools/report_market_wide_readiness.py": "4e39058871a6176593c566a258294ebe03c99a871450353e525ff68956232d08",
     "tools/retain_current_official_universe_evidence.py": "1014f0d80e7a68549cfde8b11ca0b6d3fcfdb17c4196e02f3470010dcd2e1e6d",
+    "tools/retain_vsdc_share_notices.py": "f3442e01b7d863518e5787b1b21474fec4fff8f8cf6e67b571f97afb7e836468",
     "tools/run_asymmetric_dislocation_research.py": "b5abd0db12c448c61ac8e0fa59e964b6c98ad65987449ba298f7af0a722c8105",
     "tools/run_capability_first_eod_operation.py": "09f6c966d2bb39188dd026b6de6e3406794e9220d61586b6bbb1db024901a61e",
     "tools/run_capture_only.py": "52cc498f7da6ad657a1c284159304751764c31ba3ba8aeffc95aa392ca0296e8",
@@ -2089,5 +2091,21 @@
     },
     "new_capacity_measurement": false,
     "whole_daily_requalification": false
+  },
+  "vsdc_market_wide_retention_corrective": {
+    "base_commit": "6883f8b9ec06974f85160e04e371b25807b0fa0b",
+    "scope": "FINITE_OPERATOR_VSDC_NOTICE_RETENTION_ONLY_NO_VALUATION_AUTHORITY_CHANGE",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/official_document_acquisition.py"
+    ],
+    "prior_source_sha256_lf": {
+      "stocklookup_core/evidence/official_document_acquisition.py": "a9666a6f09e5ba7102537d389554c996a2f6efe2ccac9b6df08ecd744b828afd"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "added_source_paths": [
+      "tools/retain_vsdc_share_notices.py",
+      "tools/replay_vsdc_valuation_impact.py"
+    ]
   }
 }

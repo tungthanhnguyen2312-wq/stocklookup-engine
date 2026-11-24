@@ -306,6 +306,13 @@ SSI/POW: [receipt-forward CA facts and limits](official_ssi_pow_corporate_action
 
 ### Local VSDC dated registered-share prototype (HL-20261124-HOL-04)
 
+HL-20261124-HOL-05: Owner decision 2026-11-24 admits official VSDC registered counts
+and share-changing events, market-wide where supported. A finite operator CSV can now
+retain both registration and record-date notices beyond the financial-statement cohort;
+[retention and offline comparison contract](official_document_acquisition_pilot.md#vsdc-finite-operator-notice-scope-hl-20261124-hol-05).
+The default flag remains OFF. Existing valuation code does not accept the registered-share
+tier; OFF/ON replay reports that blocker without widening valuation authority.
+
 Default OFF under `vsdc_hose_share_staleness_prototype`. Retained registration-change
 notices supply dated `ISSUED_SHARES` only when enabled, published by the run cutoff,
 newer than the provider observation date, and linked to another retained VSDC HOSE

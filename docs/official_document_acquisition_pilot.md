@@ -1,5 +1,51 @@
 # Official corporate document acquisition pilot
 
+## VSDC finite operator notice scope (HL-20261124-HOL-05)
+
+Owner decision 2026-11-24 admits VSDC as the official source for registered-securities
+counts and share-changing events, market-wide where supported. Registered shares remain
+distinct from listed shares and outstanding shares excluding treasury; publication time,
+record date and effective/listing date remain separate.
+
+`acquire(..., vsdc_operator_notice_list=True)` accepts any well-formed ticker only
+when **every** request in the finite operator list names source `vsdc`, class
+`corporate_action_notice` or `last_registration_date_notice`, and an exact URL
+`https://vsdc.vn/vi/ad/<digits>` (no query, fragment, port or trailing slash).
+The entire list is validated before storage or HTTP. Registry admission, host/redirect
+checks, declared 15-second interval, periods, timeout/retry/size bounds, hash-addressed
+storage and manifest format are unchanged. This scope cannot combine with the bounded
+three-ticker extension. Financial statements retain the existing cohort.
+
+`tools/retain_vsdc_share_notices.py --urls <csv> --destination <scratch-dir> --dry-run`
+validates all CSV rows and prints rejection reasons, planned requests and minimum spacing
+time without HTTP or destination writes. Required columns are `ticker,notice_kind,url,published,title,venue_from_crawl`;
+notice kinds are `registration_change` and `record_date_notice`, dates `DD/MM/YYYY`.
+Remove `--dry-run` only for an operator-authorized download. Any rejected row prevents
+the whole download. Crawl title/date/venue stay discovery provenance, never publication
+time or venue authority. Retained notice bodies and same-ISIN witnesses govern extraction.
+
+`tools/replay_vsdc_valuation_impact.py` is offline and takes repeatable `--evidence-root`,
+read-only `--runtime-root`, aware `--known-by`, `--price`, `--fundamental`, `--shares`,
+`--p3e`, optional `--official-universe`, and a new `--output` JSON path. These are the
+same input artifacts used by `derive_market_wide_current_valuation_input_scaleout.py`,
+with self-identities verified. `--expected-session` defaults to `2026-11-23`.
+Bind the retained exact-session source inputs, rather than using the financial-analysis
+or integrated-decision product as substitute inputs. Pass all applicable retained event
+roots for the baseline as well as the new VSDC retention root. Both passes use the same
+roots, provider inventory, prices and financial inputs, changing only the prototype flag.
+The registry flag remains OFF. Run on a stable retained inventory; this tool does not
+create a historical snapshot of a mutable runtime. It never opens integrated-decision artifacts.
+
+The output covers every changed resolver basis, with raw provider count, registered count,
+notice URL/publication time, authority before/after and existing-builder metric values,
+statuses, blockers and percentage changes. Missing/blocked values and zero baselines
+produce null percentage changes. A ticker outside the valuation universe remains in the
+report with `NOT_IN_VALUATION_UNIVERSE` metrics. **Current gap:** the valuation builder
+does not admit `official_registered_shares` as a research share tier. Enabling the resolver
+can therefore block metrics; this replay does not relabel registered shares as outstanding
+or expand valuation eligibility. Numeric registered-share sensitivities require a separately
+reviewed valuation-use boundary. No production, Daily, PIT or factor authority changes.
+
 The bounded FY2024 annual-evidence cohort extends the explicit ticker vocabulary to PNJ and FPT.
 Their requests remain finite operator-supplied URLs; the registry admits only issuer-attributed
 hosts (`www.pnj.com.vn` -> `cdn.pnj.io`, and `fpt.com` -> the specifically linked FPT storage
