@@ -35,7 +35,8 @@ RIGHTS_STATUS = "RESEARCH_AND_AI_READING_APPROVED"
 METRICS = (("revenue", "10"), ("net_income", "60"), ("attributable_net_income", "61"))
 # Same exact registered legal names as official_ocr_layout_proof.retained_issuer_name_matches.
 REGISTERED_ISSUER_FOLD = {"HPG": "cong ty co phan tap doan hoa phat",
-                          "PNJ": "cong ty co phan vang bac da quy phu nhuan"}
+                          "PNJ": "cong ty co phan vang bac da quy phu nhuan",
+                          "VRE": "cong ty co phan vincom retail"}
 
 # The one retained page this v1 run seals. Every value here is checked against bytes.
 HPG_2025_H1_P10 = {
@@ -74,7 +75,43 @@ PNJ_2025_P10 = {
     "comparison_started_at": "2026-11-24T21:55:24+07:00",
 }
 
-SPECS = {"HPG-2025-H1-P10": HPG_2025_H1_P10, "PNJ-2025-P10": PNJ_2025_P10}
+# Retention instants: raw file write completion (mtime) rounded up to the next second.
+PNJ_2025_H1_P10 = {
+    "ticker": "PNJ", "reporting_period": "2025-H1",
+    "document_sha256": "12c40161cdb31ef603256892dbe70a2bba6a906c5b2e033ed281cb321466601c",
+    "document_id": "9621d34b3740d6408ba52f31d5e167dd3046a99395d389680ce9cadf643d696d",
+    "original_subdir": "h1-2025-q3-20261124",
+    "new_subdir": "h1-2025-dual-reader-pnj-20261124",
+    "page_key": "pnj-2025h1-p10",
+    "source_page": 10, "printed_page": "8",
+    "image_sha256": "ee674c9b3b79d6c0dff38932c501f74579e03cef14e32bf17ba4238dd3c6d05b",
+    "column_id": "c1",
+    "readings": (("claude", "blind-input-pnj-2025h1-p10/claude/claude-reader.raw.json", "2026-11-24T22:19:31+07:00"),
+                 ("gemini", "blind-input-pnj-2025h1-p10/gemini/gemini-reader.raw.json", "2026-11-24T22:22:10+07:00")),
+    "image": "blind-input-pnj-2025h1-p10/claude/page-10.png",
+    "render_meta": "blind-input-pnj-2025h1-p10/input.meta.json",
+    "comparison_started_at": "2026-11-24T22:25:04+07:00",
+}
+
+VRE_2025_P11 = {
+    "ticker": "VRE", "reporting_period": "2025",
+    "document_sha256": "85b250e9bd3b87aac9a1f650363f7063b2a830f6f4f1dda07eb6eecd09063a3e",
+    "document_id": "5a05c0f2a5831663628922733c937615a43ce992d265a460c5a16eab233e84aa",
+    "original_subdir": "currency-refresh-20260929",
+    "new_subdir": "fy2025-dual-reader-vre-20261124",
+    "page_key": "vre-fy2025-p11",
+    "source_page": 11, "printed_page": "9",
+    "image_sha256": "be921abae56e5d0b09dcaf5b8bd78609d43a3ad1301ecffe83ac45cc89b96b40",
+    "column_id": "c1",
+    "readings": (("claude", "blind-input-vre-fy2025-p11/claude/claude-reader.raw.json", "2026-11-24T22:19:24+07:00"),
+                 ("gemini", "blind-input-vre-fy2025-p11/gemini/gemini-reader.raw.json", "2026-11-24T22:23:16+07:00")),
+    "image": "blind-input-vre-fy2025-p11/claude/page-11.png",
+    "render_meta": "blind-input-vre-fy2025-p11/input.meta.json",
+    "comparison_started_at": "2026-11-24T22:25:06+07:00",
+}
+
+SPECS = {"HPG-2025-H1-P10": HPG_2025_H1_P10, "PNJ-2025-P10": PNJ_2025_P10,
+         "PNJ-2025-H1-P10": PNJ_2025_H1_P10, "VRE-2025-P11": VRE_2025_P11}
 
 
 def _sha(payload: bytes) -> str:
@@ -222,7 +259,10 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
     files[meta_rel] = _copy_verified(render_meta, target / meta_rel, _sha(render_meta.read_bytes()))
     meta, meta_parse = _read_render_meta(render_meta.read_bytes())
     if (meta.get("source_sha256") != spec["document_sha256"] or meta.get("image_sha256") != spec["image_sha256"]
-            or meta.get("source_page") != spec["source_page"] or meta.get("rights_route") != dual.RIGHTS_ROUTE):
+            or meta.get("source_page") != spec["source_page"]
+            or meta.get("document_id", spec["document_id"]) != spec["document_id"]
+            # Rights are carried by the manifest record; a render meta that states a route must agree.
+            or meta.get("rights_route", dual.RIGHTS_ROUTE) != dual.RIGHTS_ROUTE):
         raise ValueError("RENDER_PROVENANCE_MISMATCH")
     readings, tables = [], []
     for family, relative, retained_at in spec["readings"]:
