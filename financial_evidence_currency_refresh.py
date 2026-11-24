@@ -413,6 +413,14 @@ def _metadata_from_pages(pages_text: str | Mapping[int, str], document: Mapping[
     front = {number: text for number, text in pages.items() if 1 <= number <= 8}
     sha = str(document.get("sha256") or "")
     recognized = [(number, recognize_statement_period(text)) for number,text in sorted(front.items())]
+    from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+    layout = layout_for(sha)
+    if layout and not any(claim.get('period') or claim.get('status') == 'CONFLICT' for _, claim in recognized):
+        # Registered statements can carry the literal period when front matter is
+        # damaged. Read only the heading, never numeric/comparative table cells.
+        recognized += [(number, recognize_statement_period(text.split('Don vi:')[0][:650]))
+                       for number, text in sorted(pages.items())
+                       if number in layout['statement_pages'] and number > 8]
     periods = {claim["period"] for _,claim in recognized if claim.get("period")}
     period_blocked = len(periods) != 1 or any(claim["status"] in {"CONFLICT", "OUT_OF_SCOPE_Q3_2026"} for _,claim in recognized)
     metadata = {}

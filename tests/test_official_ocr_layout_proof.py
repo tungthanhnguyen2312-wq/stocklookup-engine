@@ -259,3 +259,55 @@ def test_baseline_two_layout_row_and_admission_parse_are_bound_to_proof():
     assert lp.bound_numeric_value(row, proof) == "108.059.749.601.254"
     token["glyph_evidence"]["boxes"][14]["top"] -= 12
     assert lp.bound_numeric_value(row, proof) == raw  # changed boxes invalidate proof hash
+
+
+def test_retained_zero_native_candidate_replay_requires_every_source_binding(tmp_path, monkeypatch):
+    """Modern retained replay cannot trust a caller's zero-candidate assertion."""
+    import hashlib
+    import json
+    import pypdf
+    import official_financial_filing_evidence as filing
+    import official_financial_pdf_page_evidence as native_owner
+    from official_financial_ocr_table_evidence import _hash
+    from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
+    payload = b'%PDF synthetic zero-candidate fixture'
+    sha = hashlib.sha256(payload).hexdigest()
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, sha, dict(lp.LAYOUT_PROOFS[SHA]))
+    record = dict(sha256=sha, relative_path='original.pdf', ticker='HPG',
+                  canonical_url='https://file.hoaphat.com.vn/synthetic.pdf', observed_at='2026-11-24T01:00:00Z')
+    (tmp_path/'original.pdf').write_bytes(payload)
+    (tmp_path/'official_document_acquisition_manifest.json').write_text(json.dumps({'records': [record]}))
+    class Page:
+        def extract_text(self):
+            return 'unusable native font map'
+    class Reader:
+        def __init__(self, *args):
+            self.pages = [Page()]
+    monkeypatch.setattr(pypdf, 'PdfReader', Reader)
+    artifact = dict(artifact_identity='native-zero', fact_candidates=[], p3f13_panel_facts=[],
+                    page_evidence=[dict(page_number=1, page_text=Page().extract_text())])
+    monkeypatch.setattr(native_owner, 'build_artifact', lambda **kw: artifact)
+    monkeypatch.setattr(filing, 'admit_official_financial_fact', lambda row, **kw: kw['document_pages'])
+    failure = dict(document_sha256=sha, native_artifact_identity='native-zero', candidate_count=0,
+        trigger='EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES',
+        native_page_text_sha256={'1': _hash(Page().extract_text())})
+    base = dict(contract_version=lp.CONTRACT_VERSION, document_sha256=sha, pages={'1': dict(
+        tokens=[tok(1, 'retained OCR literal', 0, 10, 0, 10, 1)], native_failure_evidence=failure)})
+    def replay(body):
+        proof = dict(body, proof_sha256=hashlib.sha256(lp.canonical_json(body).encode()).hexdigest())
+        ref = lp.proof_reference(proof)
+        path = tmp_path/ref['relative_path'];path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(proof))
+        row = dict(document_sha256=sha, ocr_layout_proof=ref, document_metadata={'metadata_claims': {}},
+                   assurance_evidence={'page_number': 1}, source_span={'source_page': 1})
+        return admit_retained_financial_fact(row, evidence_root=tmp_path, registry={})
+    assert replay(base) == {1: 'retained OCR literal'}
+    for change in ({'native_artifact_identity': 'forged'}, {'candidate_count': 1},
+                   {'native_page_text_sha256': {'1': 'wrong'}}, {'document_sha256': 'f'*64},
+                   {'trigger': 'caller asserted'}):
+        bad = copy.deepcopy(base);bad['pages']['1']['native_failure_evidence'].update(change)
+        assert replay(bad) == {1: Page().extract_text()}
+    bad = copy.deepcopy(base);bad['pages']['1'].pop('native_failure_evidence')
+    assert replay(bad) == {1: Page().extract_text()}
+    artifact['fact_candidates'] = [{'native': 'candidate exists'}]
+    assert replay(base) == {1: Page().extract_text()}

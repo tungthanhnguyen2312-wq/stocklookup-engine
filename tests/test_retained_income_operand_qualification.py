@@ -107,7 +107,7 @@ def test_admission_keeps_crossed_nci_and_damaged_letter_guards(metric, code, lab
 @pytest.mark.parametrize('label', ['Phần lãi hoặc lỗ trong công ty liên doanh, liên kết',
     'Share of profit of associates and joint ventures'])
 def test_legacy_and_tt43_jv_share_codes_keep_literal_identity(code, label):
-    row = identity('income_statement', code, label)
+    row = identity('income_statement', code, label, form_reference='TT43/2026' if code == '27' else 'TT202/2014')
     assert row == dict(canonical_metric=None, accounting_identity='SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT', blockers=[])
 
 
@@ -154,3 +154,48 @@ def test_annual_runner_never_backdates_knowledge_to_retention_time(monkeypatch, 
     doc=result['report']['documents'][0]
     assert datetime.fromisoformat(doc['knowledge_available_at'].replace('Z','+00:00'))>=start
     assert doc['observed_at']==record['observed_at']
+
+
+@pytest.mark.parametrize('reference,start,code,label,concept', [
+    ('202/2014/TT-BTC', '2026-01-01', '23', 'Chi phí lãi vay', 'REPORTED_BORROWING_COSTS'),
+    ('TT200/2014', None, '22', 'Chi phí tài chính', 'FINANCIAL_EXPENSE'),
+    ('TT43/2026', '2025-01-01', '23', 'Chi phí tài chính', 'FINANCIAL_EXPENSE'),
+    ('Kèm theo TT43/2026', None, '24', 'Trong đó: Chi phí đi vay', 'REPORTED_BORROWING_COSTS'),
+    ('99/2025/TT-BTC', None, '22', 'Doanh thu hoạt động tài chính', 'FINANCIAL_INCOME'),
+    ('', '2026-01-01', '24', 'Trong đó: Chi phí đi vay', 'REPORTED_BORROWING_COSTS'),
+    ('', '2025-01-01', '24', 'Phần lãi công ty liên kết', 'SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT'),
+])
+def test_form_scoped_income_codes(reference, start, code, label, concept):
+    row = identity('income_statement', code, label, form_reference=reference, fiscal_period_start=start)
+    assert row['accounting_identity'] == concept and not row['blockers']
+
+
+@pytest.mark.parametrize('reference,code,label', [
+    ('TT43/2026','23','Chi phí lãi vay'), ('TT43/2026','24','Phần lãi công ty liên kết'),
+    ('TT202/2014','24','Trong đó: Chi phí đi vay'), ('TT202/2014','27','Phần lãi công ty liên kết'),
+    ('TT43/2026 TT202/2014','24','Trong đó: Chi phí đi vay'),
+    ('TT999/2026','23','Chi phí tài chính'),
+])
+def test_form_and_final_literal_guards_cannot_cross(reference, code, label):
+    assert identity('income_statement', code, label, form_reference=reference)['blockers']
+
+
+def test_other_matters_never_establishes_current_document_period():
+    from official_financial_period_identity import recognize_statement_period as period
+    assert period('BÁO CÁO SOÁT XÉT\nVén đề khác\nGiữa niên độ cho kỳ 6 tháng kết thúc ngày 30 tháng 6 năm 2024')['period'] is None
+    text = 'Cho nam tai chinh két thúc ngay 31 thang 12 nam 2025'
+    assert period(text)['period'] == '2025'
+    assert period(text)['evidence'] == text[4:]
+    assert period(text.replace('2025','²0²5'))['period'] is None
+
+
+def test_exact_legal_name_requires_registered_hash_bound_ocr_proof():
+    from stocklookup_core.evidence import official_ocr_layout_proof as lp
+    from tests.test_official_ocr_layout_proof import make_proof, SHA
+    proof = make_proof()
+    row = dict(ticker='HPG', document_sha256=SHA, ocr_layout_proof=lp.proof_reference(proof))
+    assert lp.retained_issuer_name_matches(row, proof, 'CÔNG TY CỔ PHẦN TẬP ĐOÀN HÒA PHÁT')
+    assert not lp.retained_issuer_name_matches(row, proof, 'CONG TY CO PHAN TAP DOAN H0A PHAT')
+    assert not lp.retained_issuer_name_matches(dict(row, ticker='PNJ'), proof, 'CONG TY CO PHAN TAP DOAN HOA PHAT')
+    proof['pages']['12']['tokens'][0]['text'] = 'changed'
+    assert not lp.retained_issuer_name_matches(row, proof, 'CONG TY CO PHAN TAP DOAN HOA PHAT')

@@ -96,6 +96,45 @@ task-specific offline bridge extends the older no-TTM interim boundary only for
 this use. Unreviewed quarterly documents cannot enter the bridge. No overlay,
 runtime or production artifact is written by this task.
 
+## HOL-10 retained metadata and form-aware identity
+
+Task `HL-20261124-HOL-10` corrects the existing ingress and admission owners offline.
+Explicit registered prior-H1 replay defaults to the `h1-2025-q3-20261124` manifest
+root; ordinary H1/annual routing retains `currency-refresh-20260929`. Exact issuer,
+period, bytes, source class and host admission are still required.
+
+Period recognition accepts literal mixed Vietnamese accents by NFD accent folding,
+preserves the original evidence span and never folds superscript digits. Other-matters
+paragraphs cannot supply the current period. Only exact registered layouts may use
+a statement heading when front matter supplies no period; conflicting claims block.
+The original full legal names for registered HPG/PNJ/VRE documents may establish
+issuer identity instead of a printed ticker, with valid content-addressed OCR proof.
+No fuzzy spelling, letter repair, host inference or caller label establishes identity.
+PNJ's already-admitted `cdn.pnj.io` attachment relationship (source registry's retained
+IR linkage) joins the existing issuer binding; each URL still needs registry admission.
+
+Assurance text replays the existing document assurance owner, including an immediately
+adjacent opinion page. Missing/damaged wording stays blocked. The retained OCR proof
+now also freezes native-failure evidence. A nonempty unusable native layer may replay
+OCR only when rebuilding the native artifact yields zero candidates and matches its
+original artifact identity, document SHA, explicit trigger and every recorded page hash.
+Missing/altered proof or any native candidate keeps the native path. Row geometry,
+comparative columns, literal labels and the HOL-08 digit gate are unchanged.
+
+Income row identity uses printed TT200/202 (2014) or TT99/2025/TT43/2026 references;
+only an absent reference permits the fiscal-start fallback at 2026-01-01. Printed
+unknown/conflicting references fail closed for the form-sensitive codes. Legacy codes
+21/22/23/24 mean financial income/expense/interest/JV; modern codes 21/22/23/24/27
+mean investment-property disposal/financial income/expense/borrowing costs/JV.
+Literal guards remain mandatory, as do crossed 60/61 and parent/NCI guards.
+
+The offline H1 bridge emits the existing monetary contract's `units` label only after
+all three operands prove normalized VND unit scale 1. No magnitude-based unit inference,
+quarterly input, headline selection, overlay publication or Daily activation is added.
+HPG P/E remains blocked by prior-H1 comparative geometry and parent label; VRE annual
+assurance remains blocked. HPG revenue TTM and P/S are usable only after the newly
+qualified prior-H1 operand's retention/qualification clock.
+
 ## Existing HPG attachment-host compatibility
 
 The source-only `HPG_EXISTING_ISSUER_ATTACHMENT_BINDING_CORRECTIVE_V1` correction binds

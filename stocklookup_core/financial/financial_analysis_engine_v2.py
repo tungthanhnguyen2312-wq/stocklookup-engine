@@ -391,7 +391,7 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
         feature = _blocked(fid, *sorted(set(blockers)), method="official_fy_plus_h1_minus_prior_h1/v2", growth_basis="TTM")
         if not blockers and len(inputs) == 3:
             feature.update(value=inputs[0]["normalized_value"] + inputs[1]["normalized_value"] - inputs[2]["normalized_value"],
-                fitness="READY", currency="VND", scale=1, scope=["consolidated"],
+                fitness="READY", currency="VND", scale=basis_contract.BASE_UNIT_SCALE_LABEL, scope=["consolidated"],
                 period_identity=list(periods), period_semantics=["FULL_YEAR", "CUMULATIVE_H1"],
                 knowledge_available_at=max((r["knowledge_available_at"] for r in inputs),
                     key=lambda v: datetime.fromisoformat(v.replace("Z", "+00:00"))),

@@ -29,6 +29,21 @@ Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
+- **LOCAL / OFFLINE — HOL-10 retained operand metadata and form identity:**
+  Common-owner replay admits seven income rows: HPG FY2025 10/60/61,
+  HPG H1/2025 10, and VRE H1/2025 10/60/61. Exact manifest root routing,
+  literal mixed-accent period headings, registered legal issuer names and the
+  existing assurance owner are used; nonempty unusable native text requires
+  replay of the retained zero-candidate artifact and page hashes. No gate is waived.
+  At November 25 cutoff HPG revenue TTM is 190,643,650,555,249 VND and
+  research P/S TTM is 0.9034472205413704 using the retained market-cap snapshot.
+  November 23 remains blocked. Both P/E codes remain blocked: prior-H1 code 60
+  has overlapping comparative glyph boxes; code 61 has a damaged label.
+  PNJ annual layout proof and VRE annual assurance remain blocked. Printed
+  TT200/202 versus TT99/43 form references govern financial income/expense,
+  borrowing costs and JV rows; absent references use the fiscal start date.
+  No overlay, headline, Daily or production change.
+  Contract: [HOL-10 corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-10-retained-metadata-and-form-aware-identity).
 - **LOCAL / OFFLINE — HOL-08 retained numeric proof and H1 TTM replay:**
   U+00B2 may be interpreted as 2 only with same-render character boxes whose top,
   bottom and height match ASCII digit medians within 10% of median digit height.
@@ -37,8 +52,9 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
   three operands through common admission at the decision cutoff. Table-qualified
   values remain unusable where document metadata, issuer, period or assurance
   admission fails. The 17 requested operands improve from 5 to 8 table-qualified;
-  zero new facts are admitted. Both November 23/25 cutoff replays keep P/E TTM
-  blocked for all 13 names; P/S TTM is blocked (SSI/VCB not applicable).
+  zero new facts were admitted by HOL-08. Its November 23/25 cutoff replays kept P/E TTM
+  blocked for all 13 names; P/S TTM was blocked (SSI/VCB not applicable).
+  HOL-10 above supersedes the metadata and HPG P/S subset of this diagnosis.
   No overlay, Daily inputs or headline selection change.
   Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge).
 - **LOCAL / OFFLINE — retained income operand corrective (HL-20261124-HOL-02C):**

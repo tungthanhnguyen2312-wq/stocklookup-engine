@@ -155,6 +155,25 @@ def layout_for(document_sha256: str | None) -> dict[str, Any] | None:
     return LAYOUT_PROOFS.get(str(document_sha256 or ""))
 
 
+def retained_issuer_name_matches(row, proof, text: str) -> bool:
+    """Exact registered originals may print their full legal name instead of ticker.
+
+    No fuzzy letters, abbreviation, host or caller-selected issuer establishes this.
+    The original bytes, source manifest and issuer host remain separately required.
+    """
+    from stocklookup_core.evidence.financial_row_identity import _identity_fold
+    names = {'HPG': 'cong ty co phan tap doan hoa phat',
+             'PNJ': 'cong ty co phan vang bac da quy phu nhuan',
+             'VRE': 'cong ty co phan vincom retail'}
+    sha = row.get('document_sha256')
+    layout = layout_for(sha) or {}
+    ref = row.get('ocr_layout_proof') or {}
+    ticker = row.get('ticker')
+    return bool(proof and ticker in names and layout.get('ticker') == ticker
+                and not verify_proof_identity(proof, document_sha256=sha, proof_sha256=ref.get('proof_sha256'))
+                and re.search(r'\b'+re.escape(names[ticker])+r'\b', _identity_fold(text)))
+
+
 def build_ocr_proof(*, document_sha256: str, materializations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     """Freeze the OCR tokens actually used for admission. Pages outside the registered layout are kept
     only for front-matter literals (period, scope, assurance, issuer)."""
@@ -176,6 +195,8 @@ def build_ocr_proof(*, document_sha256: str, materializations: Iterable[Mapping[
             pages[str(page["page_number"])] = {
                 "rendered_image_sha256": image.get("rendered_image_sha256"),
                 "ocr_adapters": page.get("ocr_adapters") or {},
+                **({'native_failure_evidence': page['native_failure_evidence']}
+                   if page.get('native_failure_evidence') else {}),
                 "tokens": [{k: t.get(k) for k in ("token_id", "raw_token_order", "text", "x0", "x1", "top", "bottom",
                                                     "tsv_hierarchy", "source_text", "glyph_evidence")
                             if k != "glyph_evidence" or k in t} for t in ocr["tokens"]],

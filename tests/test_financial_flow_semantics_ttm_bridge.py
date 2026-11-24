@@ -41,8 +41,10 @@ def test_official_h1_ttm_requires_every_operand_at_system_knowledge_cutoff(monke
     assert [p["citation_id"] for p in late["net_income_ttm"]["provider_source_provenance"]] == ["202560", "2026-H160", "2025-H160"]
     from stocklookup_core.valuation.current_research_valuation_context import _qualified_ttm, _ttm_method, _ttm_monetary_basis
     ttm = _qualified_ttm("net_income_ttm", {"features": late}, "synthetic")
-    cap = {"status": "RESEARCH_USABLE", "value": 1200, "currency": "VND", "scale": 1,
-           "monetary_basis": _ttm_monetary_basis(currency="VND", scale=1, feature_id="market_cap", provider="synthetic")}
+    # Real market-cap envelopes use the contract's base-unit label, not integer 1.
+    assert late['net_income_ttm']['scale'] == 'units'
+    cap = {"status": "RESEARCH_USABLE", "value": 1200, "currency": "VND", "scale": 'units',
+           "monetary_basis": _ttm_monetary_basis(currency="VND", scale='units', feature_id="market_cap", provider="synthetic")}
     ratio = _ttm_method(method_id="P/E_TTM", metric="net_income_ttm", ttm=ttm, market_cap=cap,
                         share_class="CURRENT_OUTSTANDING_SHARES", entity="corporate", earnings_state=None)
     assert ratio["status"] == "RESEARCH_USABLE" and ratio["value"] == 10

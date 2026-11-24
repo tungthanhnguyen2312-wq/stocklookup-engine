@@ -33,6 +33,7 @@ from reviewed_interim_canonical_ingress import (  # noqa: E402
 PERIOD = "2026-H1"
 REPORT_NAME = "reviewed_interim_canonical_ingress_report.json"
 EVIDENCE_SUBDIR = "currency-refresh-20260929"
+PRIOR_H1_EVIDENCE_SUBDIR = "h1-2025-q3-20261124"
 FRONT_MATTER_PAGES = (1, 2, 3, 4, 5, 6)
 # Statement pages already identified by the prior geometry milestone; HPG is intentionally
 # excluded (its unit blocker is not resolved by retained evidence).
@@ -73,7 +74,7 @@ def _record(evidence_root: Path, sha256: str) -> dict[str, Any]:
 
 def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str = PERIOD,
         allow_audited_annual_context: bool = False, annual_context_known_at: str | None = None,
-        resolve_cash_flow_code_cells: bool = False, evidence_subdir: str = EVIDENCE_SUBDIR,
+        resolve_cash_flow_code_cells: bool = False, evidence_subdir: str | None = None,
         front_matter_pages=FRONT_MATTER_PAGES, allow_unqualified_native_fallback: bool = False,
         interim_qualified_at: str | None = None, normalize_superscript_digits: bool = False,
         allow_prior_h1_operands: bool = False) -> dict[str, Any]:
@@ -82,6 +83,7 @@ def run(*, landing_root: Path, document_specs=DOCUMENTS, reporting_period: str =
     prior_h1 = (allow_prior_h1_operands and reporting_period == "2025-H1"
                 and all((layout_for(s["sha256"]) or {}).get("reporting_period") == "2025-H1"
                         and (layout_for(s["sha256"]) or {}).get("ticker") == s["ticker"] for s in document_specs))
+    evidence_subdir = evidence_subdir or (PRIOR_H1_EVIDENCE_SUBDIR if prior_h1 else EVIDENCE_SUBDIR)
     if ((reporting_period not in TARGET_PERIODS and not prior_h1) or len(document_specs) > 3
             or any(s["ticker"] not in COHORT for s in document_specs)
             or not 1 <= len(front_matter_pages) <= 8
@@ -236,7 +238,7 @@ def _registered_layout_metadata(record, spec, front, statements, metadata, front
     from stocklookup_core.evidence.financial_metadata_envelope import qualify_document_metadata
     proof = build_ocr_proof(document_sha256=spec["sha256"], materializations=(front, statements))
     claims = dict(metadata.get("metadata_claims") or {})
-    if (claims.get("currency") or {}).get("value") is not None or (claims.get("unit_scale") or {}).get("value") is not None:
+    if all((claims.get(name) or {}).get("value") is not None for name in ("currency", "unit_scale")):
         return proof, metadata
     from financial_statement_unit_resolution import parse_explicit_unit_declaration
     unit = statement_unit_metadata_claims(proof, front_matter_pages, parse_explicit_unit_declaration)

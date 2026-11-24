@@ -122,7 +122,29 @@ def _label_only_bank_identity(statement_family: str, folded: str) -> dict | None
     return None
 
 
-def resolve_reported_row_identity(statement_family: str, line_code: str, label: str) -> dict:
+def income_statement_form(*, form_reference: str = '', fiscal_period_start: str | None = None) -> str:
+    """Printed circular wins; fiscal start is used only without a printed reference."""
+    import re
+    text = _identity_fold(form_reference)
+    modern = re.search(r'(?:tt\s*(?:43\s*/\s*2026|99\s*/\s*2025)|(?:43\s*/\s*2026|99\s*/\s*2025)\s*/\s*tt)', text)
+    legacy = re.search(r'(?:tt\s*(?:200|202)\s*/\s*2014|(?:200|202)\s*/\s*2014\s*/\s*tt)', text)
+    if modern and legacy:
+        return 'CONFLICT'
+    if modern:
+        return 'TT43'
+    if legacy:
+        return 'TT200'
+    if form_reference.strip():
+        return 'UNKNOWN'
+    from datetime import date
+    try:
+        return 'TT43' if date.fromisoformat(str(fiscal_period_start)) >= date(2026, 1, 1) else 'TT200'
+    except ValueError:
+        return 'TT200'  # Compatibility for callers without period/form context.
+
+
+def resolve_reported_row_identity(statement_family: str, line_code: str, label: str, *,
+                                  form_reference: str = '', fiscal_period_start: str | None = None) -> dict:
     """Candidate-only literal row mapping; never changes standing fact admission.
 
     Codes are scoped to the statement. Total equity and lease-inclusive debt keep
@@ -152,7 +174,6 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         # TT43 retains the parent/NCI codes and moves the JV share to 27.
         ("income_statement", "23"): (None, "REPORTED_BORROWING_COSTS", ("borrowing costs", "interest expense", "chi phi lai vay")),
         ("income_statement", "24"): (None, "SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT", ("phan lai", "phan lo", "lai/(lo)", "lai (lo)", "share of profit", "share of loss")),
-        ("income_statement", "27"): (None, "SHARE_OF_JOINT_VENTURE_ASSOCIATE_PROFIT", ("phan lai", "phan lo", "lai/(lo)", "lai (lo)", "share of profit", "share of loss")),
         # Circular 334/2016 securities-company income statement: code 52 is borrowing cost inside
         # financial expenses (the sector taxonomy's ``borrowing_costs``). The industrial form uses
         # 52 for deferred income tax, which fails the literal label. No canonical metric/alias.
@@ -179,6 +200,18 @@ def resolve_reported_row_identity(statement_family: str, line_code: str, label: 
         ("cash_flow", "20"): ("operating_cash_flow", "OPERATING_CASH_FLOW", ("operating activities", "hoat dong kinh doanh")),
         ("cash_flow", "02"): (None, "COMPOSITE_CASH_FLOW_DEPRECIATION_ADJUSTMENT", ("depreciation and amortisation", "khau hao")),
     }
+    if statement_family == 'income_statement':
+        form = income_statement_form(form_reference=form_reference, fiscal_period_start=fiscal_period_start)
+        finance_income = (None, 'FINANCIAL_INCOME', ('doanh thu hoat dong tai chinh', 'financial income', 'finance income'))
+        finance_expense = (None, 'FINANCIAL_EXPENSE', ('chi phi tai chinh', 'financial expenses', 'finance costs', 'financial expense'))
+        borrowing = (None, 'REPORTED_BORROWING_COSTS', ('borrowing costs', 'interest expense', 'chi phi lai vay', 'chi phi di vay'))
+        jv = entries[('income_statement', '24')]
+        for code in ('21', '22', '23', '24', '27'):
+            entries.pop(('income_statement', code), None)
+        mapping = {'21': finance_income, '22': finance_expense, '23': borrowing, '24': jv} if form == 'TT200' else {
+            '21': (None, 'INVESTMENT_PROPERTY_DISPOSAL_RESULT', ('thanh ly', 'disposal')),
+            '22': finance_income, '23': finance_expense, '24': borrowing, '27': jv} if form == 'TT43' else {}
+        entries.update({('income_statement', code): value for code, value in mapping.items()})
     entry = entries.get((statement_family, str(line_code)))
     blockers = []
     if entry is None:

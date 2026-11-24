@@ -36,6 +36,10 @@ exact retained identities in ACTIVE_STATE). Source authority unchanged.
 - Input: exact retained FY2025/H1 originals; same-render baseline U+00B2 proof only.
 - Blocker: unadmitted operands stay blocked independently for codes 10/60/61.
 - Next trigger: original-document metadata/assurance and geometry evidence, without letter repair.
+- HOL-10 offline replay admits HPG FY2025 10/60/61, HPG H1/2025 10 and VRE
+  H1/2025 10/60/61. HPG P/S TTM is research usable at November 25 cutoff;
+  November 23 and both P/E codes remain blocked. Form-scoped literal row identity
+  distinguishes TT200/202 from TT99/43. No overlay or Daily activation.
 
 ### Long-term company economics evidence
 - Contract: [long_term_company_economics_evidence_contract.md](long_term_company_economics_evidence_contract.md)

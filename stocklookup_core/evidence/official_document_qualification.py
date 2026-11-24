@@ -358,6 +358,30 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
             required.discard(None)
             if len(required) <= 8 and all(isinstance(number, int) and 1 <= number <= len(reader.pages) for number in required):
                 pages = {number: reader.pages[number-1].extract_text() or "" for number in sorted(required)}
+                if layout_proof is not None and any(text.strip() for text in pages.values()):
+                    # Replay the already-governed explicit zero-native-candidate
+                    # fallback, including its original artifact and page hashes.
+                    # A caller flag or a nonempty text layer alone never qualifies.
+                    from stocklookup_core.evidence.official_ocr_layout_proof import verify_proof_identity, page_text
+                    from official_financial_pdf_page_evidence import build_artifact
+                    from official_financial_ocr_table_evidence import _hash
+                    proof_pages = layout_proof.get('pages') or {}
+                    failures = [proof_pages.get(str(n), {}).get('native_failure_evidence') for n, t in pages.items() if t.strip()]
+                    if (failures and all(isinstance(f, Mapping) for f in failures)
+                            and not verify_proof_identity(layout_proof, document_sha256=row.get('document_sha256'),
+                                                        proof_sha256=ref.get('proof_sha256'))):
+                        native = build_artifact(document={**record, 'entity_type': 'corporate',
+                            'official_url': record['canonical_url'], 'retrieved_at': record['observed_at']}, path=path)
+                        native_pages = {p['page_number']: p['page_text'] for p in native['page_evidence']}
+                        if (not native.get('fact_candidates') and not native.get('p3f13_panel_facts')
+                                and all(f.get('document_sha256') == row.get('document_sha256')
+                                    and f.get('native_artifact_identity') == native['artifact_identity']
+                                    and f.get('candidate_count') == 0
+                                    and f.get('trigger') == 'EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES'
+                                    and f.get('native_page_text_sha256')
+                                    and all(_hash(native_pages.get(int(n))) == h
+                                            for n, h in f['native_page_text_sha256'].items()) for f in failures)):
+                            pages = {n: page_text(layout_proof, n) for n in sorted(required)}
                 if layout_proof is not None and not any(text.strip() for text in pages.values()):
                     # Image-only document: literals replay from the hash-bound retained OCR proof,
                     # never from a fresh OCR run and never when a native text layer exists.

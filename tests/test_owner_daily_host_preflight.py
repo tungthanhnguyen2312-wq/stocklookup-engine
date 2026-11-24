@@ -449,7 +449,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     def successor_baseline_pin(path, *successors):
         # The newest corrective is every chain's last successor before the live pin.
         for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"],
-                      live_receipt["retained_baseline_two_h1_ttm_corrective"]):
+                      live_receipt["retained_baseline_two_h1_ttm_corrective"],
+                      live_receipt["retained_operand_metadata_form_corrective"]):
             if path in entry["prior_source_sha256_lf"]:
                 return entry["prior_source_sha256_lf"][path]
         return live_receipt["source_sha256"][path]
@@ -718,7 +719,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             isinstance(node, ast.FunctionDef) and node.name == "prepare_financial_intake_candidate")]
     assert ast.dump(old_tree) == ast.dump(current_tree)
     assert module_name(intake_path) not in daily_reachable(root)
-    prior_receipt["source_sha256"][intake_path] = hashlib.sha256(current_intake).hexdigest()
+    prior_receipt["source_sha256"][intake_path] = successor_baseline_pin(intake_path)
     prior_receipt["q3_intake_column_binding_corrective"] = intake
 
     resident_release = live_receipt["observer_resident_record_release_corrective"]
@@ -880,6 +881,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
 
     income = live_receipt["retained_income_operand_qualification_corrective"]
     glyph = live_receipt["retained_baseline_two_h1_ttm_corrective"]
+    operand = live_receipt['retained_operand_metadata_form_corrective']
     income_paths = ["official_financial_filing_evidence.py",
                     "stocklookup_core/evidence/financial_row_identity.py",
                     "official_financial_structural_table.py",
@@ -895,7 +897,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert income["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert income["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = glyph["prior_source_sha256_lf"].get(
-            path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+            path, operand['prior_source_sha256_lf'].get(path,
+                hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()))
     from tools.qualify_e4_infrastructure import source_identity
     assert income["e4_v2_code_digest"] == glyph["prior_e4_v2_code_digest"]
     prior_receipt["retained_income_operand_qualification_corrective"] = income
@@ -910,9 +913,28 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{glyph['base_commit']}:{path}"], cwd=root)
         assert glyph["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert glyph["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-    assert glyph["e4_v2_code_digest"] == source_identity(root, version="v2")["code_digest"]
+        prior_receipt["source_sha256"][path] = operand['prior_source_sha256_lf'].get(path,
+            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+    assert glyph["e4_v2_code_digest"] == operand['prior_e4_v2_code_digest']
     prior_receipt["retained_baseline_two_h1_ttm_corrective"] = glyph
+
+    assert operand['scope'] == 'RETAINED_OPERAND_METADATA_REPLAY_AND_FORM_SCOPED_INCOME_IDENTITY'
+    assert operand['new_capacity_measurement'] is False and operand['whole_daily_requalification'] is False
+    assert operand['changed_source_paths'] == ['financial_evidence_currency_refresh.py',
+        'official_financial_filing_evidence.py', 'official_financial_period_identity.py',
+        'stocklookup_core/evidence/approved_issuer_ir_financial_evidence.py',
+        'stocklookup_core/evidence/financial_row_identity.py',
+        'stocklookup_core/evidence/official_document_qualification.py',
+        'stocklookup_core/evidence/official_ocr_layout_proof.py',
+        'stocklookup_core/financial/financial_analysis_engine_v2.py',
+        'tools/run_reviewed_interim_canonical_ingress.py']
+    for path in operand['changed_source_paths']:
+        previous = subprocess.check_output(['git', 'show', f"{operand['base_commit']}:{path}"], cwd=root)
+        assert operand['prior_source_sha256_lf'][path] == hashlib.sha256(previous.replace(b'\r\n', b'\n')).hexdigest()
+        assert operand['prior_source_sha256_lf'][path] == prior_receipt['source_sha256'][path]
+        prior_receipt['source_sha256'][path] = hashlib.sha256((root/path).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+    assert operand['e4_v2_code_digest'] == source_identity(root, version='v2')['code_digest']
+    prior_receipt['retained_operand_metadata_form_corrective'] = operand
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

@@ -28,7 +28,9 @@ LEGACY_ROW_PROOF_SUBSTITUTED = frozenset({"DOCUMENT_METADATA_PROOF_MISSING", "RE
 # Existing issuer/attachment relationship, evidenced by HPG's retained FY2024
 # locator in config/promoted_fundamental_coverage_closeout_evidence.json. This is
 # exact issuer binding only; current registry admission still governs each URL.
-_EXISTING_ISSUER_ATTACHMENT_HOSTS = {"HPG": frozenset({"file.hoaphat.com.vn"})}
+_EXISTING_ISSUER_ATTACHMENT_HOSTS = {"HPG": frozenset({"file.hoaphat.com.vn"}),
+    # Existing registry host_admission_rule: PNJ IR links its consolidated originals here.
+    "PNJ": frozenset({"cdn.pnj.io"})}
 
 
 @lru_cache(maxsize=1)
@@ -123,7 +125,13 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
                     reasons.append(f"RETAINED_{name.upper()}_NOT_EXPLICIT")
             proof_page = document_pages.get((row.get("assurance_evidence") or {}).get("page_number"), "")
             opinion_page = document_pages.get(((row.get("assurance_evidence") or {}).get("opinion_evidence") or {}).get("page_number"), "")
-            if recognize_audit_or_review(proof_page + "\n" + opinion_page)["audit_or_review_status"] != row.get("audit_or_review_status"):
+            from official_financial_assurance_evidence import resolve_native_document_assurance
+            assurance_pages = {(row.get('assurance_evidence') or {}).get('page_number'): proof_page}
+            opinion_number = ((row.get('assurance_evidence') or {}).get('opinion_evidence') or {}).get('page_number')
+            if opinion_number is not None:
+                assurance_pages[opinion_number] = opinion_page
+            actual_assurance = resolve_native_document_assurance(sha, assurance_pages)
+            if actual_assurance.get('audit_or_review_status') != row.get('audit_or_review_status'):
                 reasons.append("RETAINED_ASSURANCE_TEXT_NOT_EXPLICIT")
             proof = row.get("assurance_evidence") or {}
             native = proof.get("native_text_evidence")
@@ -134,8 +142,10 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
                         or resolve_native_document_assurance(sha, {number:document_pages[number] for number in numbers}).get("evidence_id") != proof.get("evidence_id")):
                     reasons.append("NATIVE_ASSURANCE_SOURCE_REPLAY_MISMATCH")
             import re
-            if not re.search(r"\b" + re.escape(str(row.get("ticker") or "")) + r"\b",
-                    "\n".join(text for number,text in document_pages.items() if number <= 8), re.IGNORECASE):
+            issuer_text = "\n".join(text for number,text in document_pages.items() if number <= 8)
+            from stocklookup_core.evidence.official_ocr_layout_proof import retained_issuer_name_matches
+            if not (re.search(r"\b" + re.escape(str(row.get("ticker") or "")) + r"\b", issuer_text, re.IGNORECASE)
+                    or retained_issuer_name_matches(row, ocr_layout_proof, issuer_text)):
                 missing.append("RETAINED_ISSUER_LITERAL_PROOF_UNAVAILABLE")
         for name in ("reporting_period", "statement_scope", "currency"):
             if (claims.get(name) or {}).get("value") != row.get(name):
