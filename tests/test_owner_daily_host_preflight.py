@@ -875,8 +875,18 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{staleness['base_commit']}:{path}"], cwd=root)
         assert staleness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = live_receipt["share_basis_known_by_corrective"]["prior_source_sha256_lf"][path]
     prior_receipt["share_basis_official_event_staleness_corrective"] = staleness
+
+    known = live_receipt["share_basis_known_by_corrective"]
+    assert known["scope"] == "OFFICIAL_EVENT_RUN_CLOCK_KNOWLEDGE_CUTOFF_AND_DEFAULT_OFF_VSDC_PROTOTYPE"
+    assert known["new_capacity_measurement"] is False and known["whole_daily_requalification"] is False
+    assert known["changed_source_paths"] == ["market_wide_current_shares_resolver.py", "tools/derive_market_wide_current_valuation_input_scaleout.py", "tools/run_core_daily_decision_coherence_replay.py", "config/official_source_registry.json", "stocklookup_core/evidence/corporate_action_events.py"]
+    for path in known["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{known['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == known["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["share_basis_known_by_corrective"] = known
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

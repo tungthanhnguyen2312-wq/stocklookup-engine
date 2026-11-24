@@ -1470,3 +1470,118 @@ def reviewed_scan_observation(document: Mapping[str, Any], review: Mapping[str, 
         "absent_fields": dict(sorted(absent.items())),
         "warnings": sorted(set(warnings)),
     }
+
+
+def parse_retained_vsdc_notice(document: Mapping[str, Any], payload: bytes) -> dict[str, Any]:
+    """Prototype adapter over the existing acquirer manifest and event observation model.
+
+    A record date bounds entitlement only. It proves neither issuance nor an effective
+    outstanding count. The separate inference is permitted solely for withholding stale
+    provider observations; it never populates ex_date or the factor/ledger authority lane.
+    """
+    from datetime import datetime, timedelta, timezone
+    from stocklookup_core.evidence.official_source_registry import ADMITTED, admit
+
+    url = str(document.get("final_url") or document.get("canonical_url") or "")
+    kind = str(document.get("document_class") or "")
+    if (document.get("source_id") != "vsdc" or kind != "last_registration_date_notice"
+            or admit("vsdc", url, kind)["decision"] != ADMITTED
+            or not re.fullmatch(r"https://(?:www\.)?vsdc\.vn/vi/ad/\d+", url)):
+        raise ValueError("VSDC_NOTICE_ROUTE_NOT_SUPPORTED")
+    digest = hashlib.sha256(payload).hexdigest()
+    if document.get("sha256") != digest:
+        raise ValueError("VSDC_NOTICE_CONTENT_HASH_MISMATCH")
+    text = extract_text(payload, "text/html")
+    def label(pattern: str) -> str | None:
+        match = re.search(pattern, text, re.I)
+        return match.group(1) if match else None
+
+    ticker = label(r"Mã chứng khoán\s*:\s*([A-Z][A-Z0-9]{2,9})\b")
+    isin = label(r"(?:Mã ISIN|ISIN)\s*:\s*(VN[A-Z0-9]{10})\b")
+    exchange = label(r"(?:Sàn giao dịch|Nơi giao dịch)\s*:\s*(HOSE|HNX|UPCOM)\b")
+    if not ticker or ticker.upper() != str(document.get("ticker") or "").upper():
+        raise ValueError("VSDC_NOTICE_TICKER_MISMATCH_OR_UNAVAILABLE")
+    metadata = {**document, "ticker": ticker.upper(), "document_type": kind,
+                "content_sha256": digest, "source_url": url}
+    observation = extract_event_observation(metadata, text)
+    # The live page prints "Cập nhật ngày 02/11/2026 - 15:05:00" (HTML-entity encoded) in its
+    # header, outside the notice body that extract_text keeps, so read it from the raw page.
+    import html as _html
+    page = _html.unescape(payload.decode("utf-8", "replace"))
+    stamp = re.search(r"(?:Cập nhật(?: ngày)?|Updated)\s*:?\s*(\d{2}/\d{2}/\d{4})\s*-?\s*(\d{2}:\d{2})",
+                      text, re.I) or re.search(
+        r"(?:Cập nhật(?: ngày)?|Updated)\s*:?\s*(\d{2}/\d{2}/\d{4})\s*-?\s*(\d{2}:\d{2})", page, re.I)
+    updated_at = (datetime.strptime(stamp.group(1) + " " + stamp.group(2), "%d/%m/%Y %H:%M").replace(
+        tzinfo=timezone(timedelta(hours=7))).isoformat() if stamp else None)
+    ratio = label(r"Tỷ lệ thực hiện\s*:\s*(\d+\s*:\s*\d+)")
+    rounding = "ROUND_DOWN_FRACTIONAL_SHARES" if re.search(r"làm tròn xuống", text, re.I) else None
+    record = observation.get("record_date")
+    return {
+        "ticker": ticker.upper(), "isin": isin, "exchange": exchange.upper() if exchange else None,
+        "event_type": observation["event_type"], "lifecycle_state": observation["lifecycle_state"],
+        "record_date": record, "ratio_terms": ratio, "rounding_rule": rounding,
+        "notice_url": url, "published_at": document.get("published_at"), "updated_at": updated_at,
+        "retrieved_at": document.get("observed_at"), "content_sha256": digest,
+        "ex_date": observation.get("ex_date"), "new_share_count": None,
+        "listing_effective_date": observation.get("listing_effective_date"),
+        "absent_fields": {"ex_date": observation["absent_fields"].get("ex_date"),
+                          "new_share_count": "NOT_STATED_RECORD_DATE_NOTICE_IS_NOT_EFFECTIVE_SHARE_COUNT",
+                          "listing_effective_date": observation["absent_fields"].get("listing_effective_date"),
+                          **({"published_at": "NOT_STATED_UPDATED_TIME_IS_NOT_PUBLICATION"}
+                             if not document.get("published_at") else {})},
+        "entitlement_date_inference": ({"date": record, "classification": "INFERENCE",
+            "method": "RECORD_DATE_ENTITLEMENT_UPPER_BOUND",
+            "use": "STALE_PROVIDER_COUNT_WITHHOLDING_ONLY_NOT_EFFECTIVE_SHARES_OR_EX_DATE"} if record else None),
+        "event_observation": observation,
+    }
+
+
+def retained_vsdc_share_events(evidence_roots, *, session_date: str, known_by) -> dict[str, Any]:
+    """Read existing acquirer receipts only; never crawl, acquire, or promote authority."""
+    from datetime import datetime, date
+    from pathlib import Path
+    from stocklookup_core.evidence.official_document_acquisition import MANIFEST
+
+    if known_by.tzinfo is None or known_by.utcoffset() is None:
+        raise ValueError("VSDC_KNOWN_BY_REQUIRES_TIMEZONE")
+    events, diagnostics, seen = {}, [], set()
+    session = date.fromisoformat(session_date)
+    for root in evidence_roots:
+        root = Path(root)
+        for manifest in (root / MANIFEST, root / "data" / "official-evidence" / MANIFEST):
+            if not manifest.exists():
+                continue
+            for document in json.loads(manifest.read_text(encoding="utf-8")).get("records", []):
+                if document.get("source_id") != "vsdc" or document.get("document_class") != "last_registration_date_notice":
+                    continue
+                identity = str(document.get("document_id") or document.get("sha256") or "")
+                if identity in seen:
+                    continue
+                try:
+                    stamp = datetime.fromisoformat(str(document.get("observed_at")).replace("Z", "+00:00"))
+                    if stamp.tzinfo is None or stamp.utcoffset() is None:
+                        raise ValueError("naive retrieval")
+                except (TypeError, ValueError):
+                    diagnostics.append({"artifact_identity": identity, "reason": "KNOWN_AT_UNAVAILABLE"})
+                    continue
+                if stamp > known_by:
+                    diagnostics.append({"artifact_identity": identity, "reason": "NOT_KNOWN_BY_CUTOFF"})
+                    continue
+                path = (manifest.parent / str(document.get("relative_path") or "")).resolve()
+                if not path.is_relative_to(manifest.parent.resolve()):
+                    raise ValueError("VSDC_NOTICE_PATH_OUTSIDE_RETAINED_ROOT")
+                notice = parse_retained_vsdc_notice(document, path.read_bytes())
+                seen.add(identity)
+                if notice["exchange"] != "HOSE" or notice["event_type"] not in {"stock_dividend", "bonus_shares", "rights_issue"}:
+                    continue
+                inference = notice["entitlement_date_inference"]
+                if not inference or date.fromisoformat(inference["date"]) > session:
+                    continue
+                events.setdefault(notice["ticker"], []).append({
+                    "event_id": "vsdc_notice:" + notice["content_sha256"],
+                    "event_type": {"stock_dividend": "STOCK_DIVIDEND", "bonus_shares": "BONUS", "rights_issue": "RIGHTS"}[notice["event_type"]],
+                    "ex_date": notice["ex_date"], "source": "vsdc_retained_notice_prototype/v1",
+                    "source_url": notice["notice_url"], "retrieved_at": notice["retrieved_at"],
+                    "content_sha256": notice["content_sha256"], "withholding_date_inference": inference,
+                    "notice": notice})
+    return {"events": events, "diagnostics": diagnostics}
