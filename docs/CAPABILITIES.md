@@ -303,3 +303,14 @@ field, valuation input or quality score is added. Source receipt and exact block
 [October8 campaign](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md).
 
 SSI/POW: [receipt-forward CA facts and limits](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md).
+
+### Local VSDC dated registered-share prototype (HL-20261124-HOL-04)
+
+Default OFF under `vsdc_hose_share_staleness_prototype`. Retained registration-change
+notices supply dated `ISSUED_SHARES` only when enabled, published by the run cutoff,
+newer than the provider observation date, and linked to another retained VSDC HOSE
+notice for the exact ticker/ISIN. Authority label: `official_registered_shares`.
+Unlinked venue is UNKNOWN; record-date notices only withhold. No common-outstanding,
+continuity, factor, source admission or production promotion. Implementation and
+fixture contract: `corporate_action_events.parse_retained_vsdc_registration`,
+`retained_vsdc_share_events`, `tests/test_vsdc_hose_share_events.py`.

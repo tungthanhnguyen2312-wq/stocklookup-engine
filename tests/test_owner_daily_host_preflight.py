@@ -885,8 +885,18 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in known["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{known['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == known["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = live_receipt["vsdc_registration_shares_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     prior_receipt["share_basis_known_by_corrective"] = known
+
+    registration = live_receipt["vsdc_registration_shares_corrective"]
+    assert registration["scope"] == "DEFAULT_OFF_DATED_VSDC_REGISTERED_ISSUED_SHARES_VENUE_INDEPENDENT"
+    assert registration["new_capacity_measurement"] is False and registration["whole_daily_requalification"] is False
+    assert registration["changed_source_paths"] == ["market_wide_current_shares_resolver.py", "stocklookup_core/evidence/corporate_action_events.py"]
+    for path in registration["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{registration['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == registration["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["vsdc_registration_shares_corrective"] = registration
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

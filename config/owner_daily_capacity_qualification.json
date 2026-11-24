@@ -189,7 +189,7 @@
     "market_wide_current_descriptive_research.py": "5b5608e42956ae23e2241a38a51edc6335a2c26bf235d38d56312ef07263e209",
     "market_wide_current_fundamental_research.py": "bce0d93a49825137503e6bfb93181468650c1cbd3f96f262c051f6bdc48704d7",
     "market_wide_current_liquidity_research.py": "cc178a0a99d32145da5094aea81bc58bb854299eb7c888ae9022f2155af5dece",
-    "market_wide_current_shares_resolver.py": "876a987f14564b9f8db3cfa3028f955911b522e6e18cb18c251e72f53b9f54bf",
+    "market_wide_current_shares_resolver.py": "8de5a534c7bf2509d6418b0e118c0696988ee91fc6ec6ad2be39da293ddc2693",
     "market_wide_current_technical_coverage_scaleout.py": "d1ff39f394a46b9b2749dc9a206424cc121fd8f8c1a52cd6e16d20061dbd5a3c",
     "market_wide_historical_fundamentals_scaleout.py": "233f4d104124d61e06b4ce8147d8c4bc69cef42cd953a871524917511e72b53b",
     "market_wide_historical_research_context.py": "0cfef7d5f8b66cb01a721a3ae78d600133f4e8014b1f55c0a93f8c5af72ee502",
@@ -733,7 +733,7 @@
     "stocklookup_core/evidence/canonical_universe_tiers.py": "79f1596c8ceb9285a00f42e41232362f845cba7ad74d2f0e13fc5f2538812df9",
     "stocklookup_core/evidence/capture_only.py": "2720fbd714d74f66d7c553fe1bfb0466952610934e22403b3d2909c569caae15",
     "stocklookup_core/evidence/cited_evidence_backup.py": "e8dcdd5cb891acce80401dc78e8e8a5f43ad49309f513606bf51b1221eb0c8cc",
-    "stocklookup_core/evidence/corporate_action_events.py": "c5837f541b37ff9e464e6c529744c52c0b20f683735821cebf373b90a48aeb3a",
+    "stocklookup_core/evidence/corporate_action_events.py": "f42e4d970c8d84f306f53ad6cd77735af8fbb1073791ca7976fa3ee33d3ede64",
     "stocklookup_core/evidence/corporate_action_evidence_registry.py": "d283a5799c74fa9982d91a92e2579d378ee7f86575f8263be8036954bf46c32e",
     "stocklookup_core/evidence/corporate_actions.py": "fb3fa6510bef6f06736b24acf8b3a4e5435b850f6ad2e07e2ee0f798cc1c280d",
     "stocklookup_core/evidence/corporate_actions_export.py": "1fe95a8920baa4cf11bb85e300cf40d491179133b66ad3bace1ddbb3eb14140d",
@@ -2072,6 +2072,20 @@
       "tools/run_core_daily_decision_coherence_replay.py": "2a7a980fd009751706c5e6ba8fe2c128655078273fb6d7b9543d3e6da6a349cd",
       "config/official_source_registry.json": "422f3a805242d377f7f4faf03d26e6f49d55c4cba0185e49c069203219180ba4",
       "stocklookup_core/evidence/corporate_action_events.py": "ef9b8558caa25cfe460b70a1ee731ebc6ab63ff692dff0090687d5b78766b275"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false
+  },
+  "vsdc_registration_shares_corrective": {
+    "base_commit": "19a8a908d63f5905ea26124020f486c8da16e882",
+    "scope": "DEFAULT_OFF_DATED_VSDC_REGISTERED_ISSUED_SHARES_VENUE_INDEPENDENT",
+    "changed_source_paths": [
+      "market_wide_current_shares_resolver.py",
+      "stocklookup_core/evidence/corporate_action_events.py"
+    ],
+    "prior_source_sha256_lf": {
+      "market_wide_current_shares_resolver.py": "876a987f14564b9f8db3cfa3028f955911b522e6e18cb18c251e72f53b9f54bf",
+      "stocklookup_core/evidence/corporate_action_events.py": "c5837f541b37ff9e464e6c529744c52c0b20f683735821cebf373b90a48aeb3a"
     },
     "new_capacity_measurement": false,
     "whole_daily_requalification": false

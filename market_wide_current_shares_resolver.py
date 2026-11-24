@@ -418,7 +418,7 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
         "context_count": len(contexts),
         "context_sessions": sorted(set(contexts.values())),
         "tickers_with_events": len(events),
-        "events": {t: sorted(rows.values(), key=lambda r: (r["ex_date"] or "", r["event_id"]))
+        "events": {t: sorted(rows.values(), key=lambda r: (r.get("ex_date") or "", r["event_id"]))
                    for t, rows in sorted(events.items())},
     }
 
@@ -685,8 +685,18 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
 
     applied = 0
     prototype_evidence: dict[str, list[dict[str, Any]]] = {}
+    registrations: dict[str, list[dict[str, Any]]] = {}
     for ticker, rows in (official_events or {}).items():
         for row in rows:
+            if row.get("source") == "vsdc_retained_registration_prototype/v1":
+                if known_by is None:
+                    raise ValueError("VSDC_REGISTRATION_KNOWN_BY_REQUIRED")
+                published = datetime.fromisoformat(row["published_at"])
+                if published.tzinfo is None or published.utcoffset() is None:
+                    raise ValueError("VSDC_REGISTRATION_KNOWLEDGE_TIME_UNPROVEN")
+                if published <= known_by:
+                    registrations.setdefault(str(ticker).upper(), []).append(dict(row))
+                continue
             event_store = store.events
             exright = _as_date(row.get("ex_date"))
             if row.get("source") == "vsdc_retained_notice_prototype/v1":
@@ -723,6 +733,21 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
                         and _as_date(e["withholding_date_inference"]["date"]) > observed]
             if result["authority"] == "provider_reported_stale" and relevant:
                 result["reason"] = "vsdc_entitlement_notice_after_provider_observation:" + relevant[0]["notice_url"]
+        observed = _as_date(store.metadata.get(t, (None, None))[1])
+        eligible = [r for r in registrations.get(t, []) if observed is not None
+                    and datetime.fromisoformat(r["published_at"]).date() > observed]
+        if eligible and result["authority"] != "qualified_official":
+            latest = max(r["published_at"] for r in eligible)
+            candidates = [r for r in eligible if r["published_at"] == latest]
+            if len({(r["isin"], r["shares_after"]) for r in candidates}) != 1:
+                raise ValueError("VSDC_REGISTRATION_CONFLICTING_COUNTS")
+            record = candidates[0]
+            result = _result(t, session, "official_registered_shares", value=record["shares_after"],
+                             status="dated_official_registration", share_concept="ISSUED_SHARES",
+                             unit="shares", source="vsdc_retained_registration_prototype/v1",
+                             observation_date=record["published_at"], provider_observation_date=observed.isoformat(),
+                             isin=record["isin"], official_registration_evidence=record,
+                             freshness_proof="DATED_REGISTERED_COUNT_NOT_CURRENT_OUTSTANDING_CONTINUITY")
         tickers[t] = result
         authority = str(result["authority"])
         counts[authority] = counts.get(authority, 0) + 1

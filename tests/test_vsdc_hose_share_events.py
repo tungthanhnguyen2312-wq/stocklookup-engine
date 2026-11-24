@@ -10,7 +10,7 @@ import pytest
 
 import market_wide_current_shares_resolver as shares
 from stocklookup_core.evidence.corporate_action_events import parse_retained_vsdc_notice
-from stocklookup_core.evidence.official_document_acquisition import acquire, MANIFEST
+from stocklookup_core.evidence.official_document_acquisition import acquire, MANIFEST, TICKERS
 from stocklookup_core.evidence.official_source_registry import load_registry
 from test_share_basis_official_event_staleness import _runtime, _context, _event, CUTOFF
 
@@ -191,3 +191,137 @@ def test_materializer_passes_enabled_vsdc_events_and_the_same_cutoff(tmp_path, m
     with pytest.raises(ValueError, match="KNOWN_BY_REQUIRED"):
         runner.materialize(tmp_path / "out.json", price=Path("price"), runtime_root=tmp_path,
                            official_event_roots=[tmp_path / "notices"])
+
+from stocklookup_core.evidence.corporate_action_events import parse_retained_vsdc_registration
+
+REGISTRATIONS = [
+    ('vds', '203041', 'e315866be0cb1af2e3fc33744de7c3f4b5f31dfddfce3acb4aa60ea150b7a9fe', 'VN000000VDS6', 27200000, 299200000, '2026-11-23T13:35:59+07:00', 'STOCK_DIVIDEND'),
+    ('fpt', '202030', 'f95c782666abd88331fd63276358a4072d9ad70640a0f276e373a948bafbb5bd', 'VN000000FPT1', 171401226, 1885727648, '2026-10-30T16:28:08+07:00', 'BONUS_SHARES'),
+    ('nvl', '202081', 'f528b452d65c6bb125f64324320b14433de6bfad9152ee7a336ccdc258e50ecf', 'VN000000NVL0', 1737080, 2403805052, '2026-11-02T16:26:54+07:00', 'CONVERTIBLE_BOND_CONVERSION'),
+    ('ssb', '200363', '157f5dc3354b4621c6c867c4da58c6fef24a5dcfadd7a5bcd7d9b9b57a78c5af', 'VN000000SSB6', 40000000, 3468800000, '2026-09-18T14:19:20+07:00', 'ESOP'),
+]
+
+
+def _registration(root, case=REGISTRATIONS[0]):
+    ticker, number, digest, *_ = case
+    payload = (FIXTURES / f'{ticker}_{number}_registration_retained_20261124.html').read_bytes()
+    assert hashlib.sha256(payload).hexdigest() == digest
+    url = 'https://vsdc.vn/vi/ad/' + number
+    acquire([dict(ticker=ticker.upper(), source_id='vsdc', canonical_url=url,
+                  document_class='corporate_action_notice', reporting_period='2026')], root,
+            fetcher=lambda *a, **k: (200, {'Content-Type': 'text/html'}, payload, url),
+            observed_at='2026-11-24T01:00:00Z', additional_allowed_tickers=None if ticker.upper() in TICKERS else [ticker.upper()])
+    doc = json.loads((root / MANIFEST).read_text(encoding='utf8'))['records'][-1]
+    return doc, payload
+
+
+def _synthetic_venue(root, *, isin='VN000000VDS6', exchange='HOSE'):
+    # Explicit synthetic linkage test, not retained factual evidence about VDS.
+    payload = (FIXTURES / 'bmi_202076_synthetic.html').read_bytes().replace(b'BMI', b'VDS')
+    payload = payload.replace(b'VN000000VDS0', isin.encode()).replace(b'HOSE', exchange.encode())
+    url = 'https://vsdc.vn/vi/ad/999999'
+    acquire([dict(ticker='VDS', source_id='vsdc', canonical_url=url,
+                  document_class='last_registration_date_notice', reporting_period='2026')], root,
+            fetcher=lambda *a, **k: (200, {'Content-Type': 'text/html'}, payload, url),
+            observed_at='2026-11-02T08:10:00Z', additional_allowed_tickers=['VDS'])
+
+
+@pytest.mark.parametrize('case', REGISTRATIONS, ids=lambda c: c[0])
+def test_retained_registration_exact_facts(tmp_path, case):
+    doc, payload = _registration(tmp_path, case)
+    row = parse_retained_vsdc_registration(doc, payload)
+    t, number, digest, isin, change, after, published, reason = case
+    assert (row['ticker'], row['isin'], row['shares_change'], row['shares_after']) == (t.upper(), isin, change, after)
+    assert row['change_direction'] == 'INCREASE' and row['exchange'] == 'UNKNOWN'
+    assert row['published_at'] == published and row['reason_class'] == reason
+    assert row['reason_text'] and row['share_concept'] == 'ISSUED_SHARES'
+    assert row['content_sha256'] == digest and row['source_url'].endswith('/' + number)
+
+
+@pytest.mark.parametrize('old,new', [
+    ('299.200.000', '299.20.000'), ('299.200.000', '0'),
+    ('27.200.000', '27.bad.000'), ('Mã ISIN:', 'Absent:'),
+    ('Mã chứng khoán:', 'Absent:'), ('Số lượng chứng khoán hiện tại:', 'Absent:'),
+    ('Số lượng chứng khoán tăng:', 'Absent:'), ('Lý do:', 'Absent:'),
+    ('Cập nhật', 'Absent'), ('13:35:59', '25:35:59'),
+])
+def test_registration_damaged_or_missing_fields_block(tmp_path, old, new):
+    import html
+    doc, payload = _registration(tmp_path)
+    payload = html.unescape(payload.decode('utf8')).replace(old, new).encode('utf8')
+    doc['sha256'] = hashlib.sha256(payload).hexdigest()
+    with pytest.raises(ValueError):
+        parse_retained_vsdc_registration(doc, payload)
+
+
+def test_registration_is_venue_independent_and_isin_bound(tmp_path):
+    _registration(tmp_path)
+    regs = [e for e in _load(tmp_path)['events'].get('VDS', []) if e['source'] == 'vsdc_retained_registration_prototype/v1']
+    assert len(regs) == 1 and regs[0]['exchange'] == 'UNKNOWN' and regs[0]['isin'] == 'VN000000VDS6'
+
+
+@pytest.mark.parametrize('isin,exchange,expected', [('VN000000VDS6', 'HOSE', 'HOSE'), ('VN000000VDS6', 'HNX', 'HNX'),
+                                                     ('VN000000BMI0', 'HOSE', 'UNKNOWN')])
+def test_registration_venue_recorded_only_from_same_isin_witness(tmp_path, isin, exchange, expected):
+    _registration(tmp_path)
+    _synthetic_venue(tmp_path, isin=isin, exchange=exchange)
+    regs = [e for e in _load(tmp_path)['events'].get('VDS', []) if e['source'] == 'vsdc_retained_registration_prototype/v1']
+    assert len(regs) == 1 and regs[0]['exchange'] == expected
+
+
+@pytest.mark.parametrize('observed,cutoff,expected', [
+    ('2026-08-14', '2026-11-23T06:35:58+00:00', None),
+    ('2026-08-14', '2026-11-23T06:35:59+00:00', 299200000),
+    ('2026-11-24', '2026-11-24T10:00:00+00:00', 1000),
+    ('2026-11-23', '2026-11-24T10:00:00+00:00', 1000),
+])
+def test_registration_cutoff_and_provider_recency(tmp_path, observed, cutoff, expected):
+    _registration(tmp_path)
+    _synthetic_venue(tmp_path)
+    clock = datetime.fromisoformat(cutoff)
+    events = _load(tmp_path, cutoff=clock)['events']
+    root = _runtime(tmp_path / 'runtime', [('VDS', 1000.0, observed)])
+    row = shares.resolve_market_wide_shares(root, '2026-11-24', official_events=events, known_by=clock)['tickers']['VDS']
+    assert row['value'] == expected
+    assert (row['authority'] == 'official_registered_shares') is (expected == 299200000)
+    if expected == 299200000:
+        # Resolver defends the cutoff even with events loaded by a later caller.
+        earlier = datetime.fromisoformat('2026-11-23T06:35:58+00:00')
+        assert shares.resolve_market_wide_shares(root, '2026-11-24', official_events=events, known_by=earlier)['tickers']['VDS']['value'] is None
+
+
+def test_registration_flag_off_byte_parity_with_task_head(tmp_path, monkeypatch):
+    _registration(tmp_path)
+    _synthetic_venue(tmp_path)
+    root = _runtime(tmp_path / 'runtime', [('VDS', 1000.0, '2026-08-14')])
+    legacy = types.ModuleType('task_head_shares')
+    source = subprocess.check_output(['git', 'show', '19a8a908:market_wide_current_shares_resolver.py'])
+    exec(compile(source, 'task_head_shares.py', 'exec'), legacy.__dict__)
+    legacy.vn_now_iso = lambda: 'fixed-run-time'
+    monkeypatch.setattr(shares, 'vn_now_iso', lambda: 'fixed-run-time')
+    before = legacy.retained_official_share_events([tmp_path], '2026-11-23', known_by=CUTOFF)
+    after = _load(tmp_path, enabled=False)
+    assert before == after
+    old = legacy.resolve_market_wide_shares(root, '2026-11-23', official_events=before['events'], known_by=CUTOFF)
+    new = shares.resolve_market_wide_shares(root, '2026-11-23', official_events=after['events'], known_by=CUTOFF)
+    assert json.dumps(old, sort_keys=True).encode() == json.dumps(new, sort_keys=True).encode()
+
+
+def test_registration_decrease_preserves_direction_and_literal_reason(tmp_path):
+    doc, payload = _registration(tmp_path)
+    payload = payload.replace('Số lượng chứng khoán tăng:'.encode(), 'Số lượng chứng khoán giảm:'.encode())
+    doc['sha256'] = hashlib.sha256(payload).hexdigest()
+    row = parse_retained_vsdc_registration(doc, payload)
+    assert row['change_direction'] == 'DECREASE' and row['shares_change'] == 27200000
+    assert row['shares_after'] == 299200000
+    assert row['reason_text'] == 'Phát hành cổ phiếu để trả cổ tức'
+
+
+def test_registration_identity_and_route_are_hash_bound(tmp_path):
+    doc, payload = _registration(tmp_path)
+    with pytest.raises(ValueError, match='HASH_MISMATCH'):
+        parse_retained_vsdc_registration(doc, payload + b' changed')
+    with pytest.raises(ValueError, match='ROUTE_NOT_SUPPORTED'):
+        parse_retained_vsdc_registration({**doc, 'final_url': 'https://example.com/vi/ad/203041'}, payload)
+    with pytest.raises(ValueError, match='INSTRUMENT_UNPROVEN'):
+        parse_retained_vsdc_registration({**doc, 'ticker': 'FPT'}, payload)
