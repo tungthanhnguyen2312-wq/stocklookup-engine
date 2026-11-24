@@ -195,6 +195,11 @@ agreement cannot establish common semantics or continuity. Completed sessions re
 immutable. [Share contract](hpg_common_share_evidence_contract.md).
 
 ### 13a. Relative valuation (current state)
+- Local Owner Decision 1 (2026-11-24, `HL-20261124-HOL-06`): parent-profit headline
+  P/E; code-60 supplementary only. Retained November 23 compatibility replay
+  5 → 0 headlines; missing upstream parent panel remains an explicit evidence gap.
+  [Acceptance](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md). Unreleased;
+  existing runtime and authority boundaries below remain in force.
 - Contract: [current_state_relative_valuation_contract.md](current_state_relative_valuation_contract.md)
 - Runtime: `ACTIVE` · Authority: `SCOPED` (research context; no target price/probability) · Production: `IN_DAILY_BLOCKING` (inside enrichment)
 - Input: Financial V2 engine artifact, valuation inputs, entity applicability · Predecessor: raw valuation lane (frozen shape)

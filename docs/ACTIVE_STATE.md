@@ -29,6 +29,11 @@ Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
+- **LOCAL, unreleased — Owner Decision 1 (2026-11-24), `HL-20261124-HOL-06`:**
+  [parent-attributable headline P/E](current_state_relative_valuation_contract.md)
+  implementation with total-profit supplementary context. Supplied November 23
+  retained-input replay: 5 headlines → 0 of 1,683 evaluated names; upstream
+  annual parent panel absent locally. [Evidence and gaps](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md).
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.

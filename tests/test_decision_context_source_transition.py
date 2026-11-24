@@ -34,7 +34,9 @@ def test_archive_is_the_exact_base_source_and_binds_live_bytes():
     assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
     truthfulness = json.loads((ROOT / "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json").read_bytes())
     assert truthfulness["previous_e4_v2_digest"] == retry["active_e4_v2_digest"]
-    assert truthfulness["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    parent_pe = json.loads((ROOT / "tests/fixtures/parent_attributable_pe_source_transition_v1.json").read_bytes())
+    assert parent_pe["previous_e4_v2_digest"] == truthfulness["active_e4_v2_digest"]
+    assert parent_pe["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert spec["previous_e4_v2_digest"] != spec["active_e4_v2_digest"]
 
 

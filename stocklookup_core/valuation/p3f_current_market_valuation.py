@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections import Counter
 import json
+import math
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -169,6 +170,72 @@ def _financial_state(*facts: Mapping[str, Any] | None) -> list[str]:
     return [f"FINANCIAL_IDENTITY_MISSING:{name}" for name, fact in facts if fact is None]
 
 
+def parent_profit_metrics(entity: str) -> tuple[str, ...]:
+    # Owner Decision 1, 2026-11-24 (HL-20261124-HOL-06): corporate code 61
+    # under TT200/202 and FY2026 TT99/2025 + TT43/2026; sector forms keep
+    # their own mapped identities (including securities TT334/2016).
+    return {"corporate": ("attributable_net_income", "net_income_parent"),
+            "bank": ("net_profit_parent",),
+            "securities": ("profit_after_tax_parent",)}.get(entity, ())
+
+
+def select_pe_profit(issuer: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Latest qualified FY parent profit; only explicit standalone total equals parent.
+
+    Canonical metric identity is supplied by the existing form taxonomy/admission,
+    never inferred from a line number or issuer name. Unknown forms fail closed.
+    """
+    entity = (issuer.get("issuer_identity") or {}).get("entity_type")
+    names = parent_profit_metrics(entity)
+    candidates = []
+    for fact in issuer.get("facts") or []:
+        metric = fact.get("canonical_metric")
+        standalone = fact.get("statement_scope") in {"standalone", "separate"}
+        if metric not in names and not (entity == "corporate" and standalone and metric == "net_income"):
+            continue
+        value = fact.get("value")
+        if (fact.get("qualification_state") != "QUALIFIED" or not isinstance(value, (int, float))
+                or isinstance(value, bool) or not math.isfinite(value)
+                or fact.get("statement_scope") not in {"consolidated", "standalone", "separate"}
+                or (fact.get("period_type") != "annual" and not
+                    (len(str(fact.get("reporting_period", ""))) == 4 and str(fact.get("reporting_period", "")).isdigit()))
+                or (entity == "corporate" and metric != "net_income" and str(fact.get("line_code")) == "60")):
+            continue
+        candidates.append(fact)
+    if not candidates:
+        return None
+    latest = max(str(f.get("reporting_period")) for f in candidates)
+    selected = [f for f in candidates if str(f.get("reporting_period")) == latest]
+    if len({(f["value"], f.get("currency"), f.get("unit_scale"), f.get("statement_scope")) for f in selected}) != 1:
+        return None
+    return dict(selected[0])
+
+
+def _pe_method(fact, *, market_cap, market_blockers, supplementary=False):
+    name = "P/E_TOTAL_INCLUDING_NCI" if supplementary else "P/E"
+    standalone = bool(fact and fact.get("statement_scope") in {"standalone", "separate"})
+    attribution = ("TOTAL_INCLUDING_NCI" if supplementary else
+                   "STANDALONE_TOTAL_EQUALS_PARENT" if standalone else "PARENT_ATTRIBUTABLE")
+    period = str((fact or {}).get("reporting_period") or "")
+    label = ("P/E toàn tập đoàn" if supplementary else "P/E (LN riêng lẻ = LN cổ đông công ty mẹ" if standalone
+             else "P/E (LN cổ đông công ty mẹ")
+    period_label = ("FY" + period if (fact or {}).get("period_type") == "annual" or
+                    (len(period) == 4 and period.isdigit()) else period)
+    label += f", {period_label})" if not supplementary else f" ({period_label})"
+    extra = {"earnings_attribution": attribution, "display_label": label,
+             "headline_pe_policy": "OWNER_DECISION_1_20261124", "financial_inputs": [_lineage(fact)] if fact else [],
+             "financial_period": period or None}
+    blockers = list(market_blockers)
+    if fact is None:
+        blockers.append("TOTAL_PROFIT_NOT_QUALIFIED" if supplementary else "PARENT_PROFIT_NOT_QUALIFIED")
+    if blockers:
+        return _method(name, state="VALUATION_BLOCKED", blockers=blockers, **extra)
+    if fact["value"] <= 0:
+        return _method(name, state="PE_NOT_MEANINGFUL", blockers=["PE_NOT_MEANINGFUL", "POSITIVE_DENOMINATOR_REQUIRED"], **extra)
+    return _method(name, state="VALUATION_READY", value=market_cap / fact["value"],
+                   formula=f"market_cap / {fact['canonical_metric']}", **extra)
+
+
 def _evaluate_issuer(issuer: Mapping[str, Any], *, price: Mapping[str, Any], shares: Mapping[str, Any]) -> dict[str, Any]:
     identity = issuer.get("issuer_identity") or {}
     ticker, entity = str(identity.get("ticker")), str(identity.get("entity_type"))
@@ -184,7 +251,7 @@ def _evaluate_issuer(issuer: Mapping[str, Any], *, price: Mapping[str, Any], sha
     )}
     methods: dict[str, dict[str, Any]] = {}
     if entity == "corporate":
-        family_definitions = (("P/E", "net_income"), ("P/B", "shareholders_equity"), ("P/S", "revenue"))
+        family_definitions = (("P/B", "shareholders_equity"), ("P/S", "revenue"))
         for name, fact_name in family_definitions:
             fact = facts[fact_name]
             missing = market_blockers + _financial_state((fact_name, fact))
@@ -208,10 +275,8 @@ def _evaluate_issuer(issuer: Mapping[str, Any], *, price: Mapping[str, Any], sha
         methods["EV/EBITDA"] = _method("EV/EBITDA", state="VALUATION_BLOCKED",
             blockers=market_blockers + _financial_state(("ebitda", facts["ebitda"]), ("total_interest_bearing_debt", facts["total_interest_bearing_debt"]), ("cash_and_equivalents", facts["cash_and_equivalents"])))
     elif entity in {"bank", "securities"}:
-        earnings = facts["net_profit_parent"] if entity == "bank" else facts["profit_after_tax_parent"]
-        earnings_name = "net_profit_parent" if entity == "bank" else "profit_after_tax_parent"
         equity = facts["total_equity"]
-        for name, fact_name, fact in (("P/E", earnings_name, earnings), ("P/B", "total_equity", equity)):
+        for name, fact_name, fact in (("P/B", "total_equity", equity),):
             missing = market_blockers + _financial_state((fact_name, fact))
             methods[name] = (_method(name, state="VALUATION_BLOCKED", blockers=missing) if missing else
                 _method(name, state="VALUATION_READY", value=market_cap / fact["value"], formula=f"market_cap / {fact_name}", financial_period=fact["reporting_period"], financial_inputs=[_lineage(fact)]))
@@ -219,6 +284,12 @@ def _evaluate_issuer(issuer: Mapping[str, Any], *, price: Mapping[str, Any], sha
             methods[name] = _method(name, state="NOT_APPLICABLE", blockers=[f"{entity.upper()}_INDUSTRIAL_EV_OR_REVENUE_SEMANTICS_NOT_APPLICABLE"])
     else:
         methods = {name: _method(name, state="NOT_APPLICABLE", blockers=["ENTITY_CLASS_UNRESOLVED"]) for name in METHODS}
+    if entity in {"corporate", "bank", "securities"}:
+        methods["P/E"] = _pe_method(select_pe_profit(issuer), market_cap=market_cap, market_blockers=market_blockers)
+        if entity == "corporate":
+            total = _latest_qualified_fact(issuer, "net_income")
+            methods["P/E_TOTAL_INCLUDING_NCI"] = _pe_method(total, market_cap=market_cap,
+                market_blockers=market_blockers, supplementary=True)
     for name in METHODS:
         methods.setdefault(name, _method(name, state="VALUATION_BLOCKED", blockers=["METHOD_NOT_MODELLED"]))
     financial_readiness = {}

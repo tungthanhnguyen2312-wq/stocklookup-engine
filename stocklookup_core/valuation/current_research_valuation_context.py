@@ -218,7 +218,7 @@ def _entity(feature_record: Mapping[str, Any] | None, valuation_record: Mapping[
 def _method_applicability(entity: str, method_id: str) -> str:
     if method_id == MARKET_CAP:
         mapped = _applicability(entity, "market_cap")
-    elif method_id in {PE_TTM, PE_EXISTING, PE_REPORTED_PERIOD}:
+    elif method_id in {PE_TTM, PE_EXISTING, PE_REPORTED_PERIOD, "P/E_TOTAL_INCLUDING_NCI"}:
         mapped = _applicability(entity, "P/E")
     elif method_id in {PS_TTM, PS_EXISTING, PS_REPORTED_PERIOD}:
         mapped = _applicability(entity, "P/S")
@@ -346,6 +346,7 @@ def _existing_method(method_id: str, metric: Mapping[str, Any], *, entity: str, 
         "monetary_compatibility": metric.get("monetary_compatibility"),
         "price_session": metric.get("price_session"),
         "monetary_basis": metric.get("monetary_basis"),
+        **{key: metric[key] for key in ("earnings_attribution", "display_label", "headline_pe_policy") if key in metric},
     }
     source_status = metric.get("status")
     if applicability == NOT_APPLICABLE or source_status == "NOT_APPLICABLE":
@@ -355,7 +356,8 @@ def _existing_method(method_id: str, metric: Mapping[str, Any], *, entity: str, 
         return _method_shell(method_id, applicability=APPLICABLE, status="RESEARCH_USABLE" if source_status != "READY" else "READY",
                              value=metric["value"], extra=extra)
     return _method_shell(method_id, applicability=applicability if applicability != NOT_APPLICABLE else INPUT_BLOCKED,
-                         status=INPUT_BLOCKED, blockers=list(metric.get("blocked_reasons") or ["VALUATION_INPUT_BLOCKED"]), extra=extra)
+                         status=PE_NOT_MEANINGFUL if metric.get("p3f_method_status") == PE_NOT_MEANINGFUL else INPUT_BLOCKED,
+                         blockers=list(metric.get("blocked_reasons") or ["VALUATION_INPUT_BLOCKED"]), extra=extra)
 
 
 def _ev_ebitda(entity: str, existing: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -826,7 +828,7 @@ def _official_reported_period_methods(*, ticker: str, entity: str, share_class: 
         calculated_row = p3f._evaluate_issuer(
             {"issuer_identity": {"ticker": ticker, "entity_type": entity}, "facts": [fact]},
             price=resolved_price, shares=resolved_shares)
-        calculated = calculated_row["methods"][formula_method]
+        calculated = calculated_row["methods"]["P/E_TOTAL_INCLUDING_NCI" if metric == "net_income" else formula_method]
         extra.update({"numerator_price_input": dict(price), "numerator_share_basis_input": dict(share)})
         if price.get("session") != decision_session[:10] or calculated_row.get("market_cap") != cap:
             out[method_id] = _method_shell(method_id, applicability=applicability, status=INPUT_BLOCKED,
@@ -887,14 +889,32 @@ def evaluate_ticker_valuation(*, ticker: str, feature_record: Mapping[str, Any] 
         market_cap.update({"monetary_basis": cap_basis, "monetary_basis_status": cap_basis["basis_status"],
                            "monetary_basis_source": cap_basis["basis_source"],
                            "currency": cap_basis["currency"], "scale": cap_basis["native_scale"]})
-    ttm_ni = _select_ttm(old=_feature(feature_record, "net_income_ttm_sum"),
-                         qualified=_qualified_ttm("net_income_ttm", financial_analysis_record, financial_analysis_context_identity))
+    # Owner Decision 1 (2026-11-24): total TTM never substitutes for parent TTM.
+    # Form-specific canonical identities come from the same owner as annual P/E.
+    from stocklookup_core.valuation.p3f_current_market_valuation import parent_profit_metrics, select_pe_profit
+    parent_names = parent_profit_metrics(entity)
+    parent_metric = next((name for name in parent_names
+        if _feature(feature_record, name + "_ttm_sum").get("status") in READY_STATUSES
+        or (((financial_analysis_record or {}).get("features") or {}).get(name + "_ttm") or {}).get("fitness") == "READY"),
+        parent_names[0] if parent_names else "unmapped_parent_profit")
+    total_feature = (((financial_analysis_record or {}).get("features") or {}).get("net_income_ttm") or {})
+    old_total = _feature(feature_record, "net_income_ttm_sum")
+    standalone_ttm = entity == "corporate" and (
+        (total_feature.get("fitness") == "READY" and total_feature.get("statement_scope") in {"standalone", "separate"})
+        or (old_total.get("status") in READY_STATUSES and old_total.get("statement_scope") in {"standalone", "separate"}))
+    if standalone_ttm:
+        parent_metric = "net_income"
+    old_parent = _feature(feature_record, parent_metric + "_ttm_sum")
+    new_parent = _qualified_ttm(parent_metric + "_ttm", financial_analysis_record, financial_analysis_context_identity)
+    if standalone_ttm:
+        old_parent = old_parent if old_parent.get("statement_scope") in {"standalone", "separate"} else {}
+        new_parent = new_parent if total_feature.get("statement_scope") in {"standalone", "separate"} else None
+    ttm_ni = _select_ttm(old=old_parent, qualified=new_parent)
     ttm_rev = _select_ttm(old=_feature(feature_record, "revenue_ttm_sum"),
                           qualified=_qualified_ttm("revenue_ttm", financial_analysis_record, financial_analysis_context_identity))
-    profit = _feature(feature_record, "profit_state")
-    earnings_state = _earnings_state(ttm_ni, profit)
+    earnings_state = _earnings_state(ttm_ni, {})
     methods = {
-        PE_TTM: _ttm_method(method_id=PE_TTM, metric="net_income_ttm_sum", ttm=ttm_ni, market_cap=market_cap,
+        PE_TTM: _ttm_method(method_id=PE_TTM, metric=parent_metric + "_ttm_sum", ttm=ttm_ni, market_cap=market_cap,
                             share_class=share_class, entity=entity, earnings_state=earnings_state),
         PS_TTM: _ttm_method(method_id=PS_TTM, metric="revenue_ttm_sum", ttm=ttm_rev, market_cap=market_cap,
                             share_class=share_class, entity=entity, earnings_state=None),
@@ -913,6 +933,37 @@ def evaluate_ticker_valuation(*, ticker: str, feature_record: Mapping[str, Any] 
             decision_session=decision_session),
         MARKET_CAP: _existing_method(MARKET_CAP, market_cap, entity=entity, share_class=share_class),
     }
+    methods[PE_TTM].update(earnings_attribution="STANDALONE_TOTAL_EQUALS_PARENT" if standalone_ttm else "PARENT_ATTRIBUTABLE",
+        display_label="P/E (LN riêng lẻ = LN cổ đông công ty mẹ, TTM)" if standalone_ttm else "P/E (LN cổ đông công ty mẹ, TTM)",
+        headline_pe_policy="OWNER_DECISION_1_20261124")
+    if methods[PE_TTM]["status"] == INPUT_BLOCKED:
+        methods[PE_TTM]["blocker_reason_codes"].append("PARENT_PROFIT_NOT_QUALIFIED")
+    annual = methods[PE_EXISTING]
+    supplementary = metrics.get("P/E_TOTAL_INCLUDING_NCI")
+    # Retained pre-decision inputs remain readable, but their total earnings cannot
+    # re-enter the headline through the existing-method compatibility route.
+    inputs = annual.get("financial_inputs") or []
+    # Existing ready inputs already passed source qualification; revalidate their
+    # earnings identity/annual period with the sole denominator selector.
+    parent_annual = len(inputs) == 1 and select_pe_profit({"issuer_identity": {"entity_type": entity},
+        "facts": [{**r, "qualification_state": "QUALIFIED"} for r in inputs]}) is not None
+    if annual.get("headline_pe_policy") != "OWNER_DECISION_1_20261124" and not parent_annual:
+        if inputs and all(r.get("canonical_metric") == "net_income" for r in inputs):
+            supplementary = {**dict(metrics.get("P/E") or {}), "earnings_attribution": "TOTAL_INCLUDING_NCI",
+                "display_label": "P/E toàn tập đoàn (FY" + str(annual.get("period_basis")) + ")"}
+        annual.update(status=INPUT_BLOCKED, value=None,
+            blocker_reason_codes=sorted(set(annual.get("blocker_reason_codes") or []) | {"PARENT_PROFIT_NOT_QUALIFIED"}))
+    annual["headline_pe_policy"] = "OWNER_DECISION_1_20261124"
+    annual.setdefault("display_label", "P/E (LN cổ đông công ty mẹ)")
+    annual.setdefault("earnings_attribution", "PARENT_ATTRIBUTABLE")
+    if parent_annual:
+        standalone = all(r.get("statement_scope") in {"standalone", "separate"} for r in inputs)
+        annual.update(earnings_attribution="STANDALONE_TOTAL_EQUALS_PARENT" if standalone else "PARENT_ATTRIBUTABLE",
+            display_label=("P/E (LN riêng lẻ = LN cổ đông công ty mẹ, FY" if standalone else
+                           "P/E (LN cổ đông công ty mẹ, FY") + str(annual.get("period_basis")) + ")")
+    if supplementary:
+        methods["P/E_TOTAL_INCLUDING_NCI"] = _existing_method("P/E_TOTAL_INCLUDING_NCI", supplementary,
+            entity=entity, share_class=share_class)
     methods.update(_official_reported_period_methods(ticker=ticker, entity=entity, share_class=share_class,
         market_cap=market_cap, decision_session=decision_session, valuation_record=valuation_record,
         facts=official_financial_facts))
@@ -990,6 +1041,8 @@ def _scope_blocks_peers(method: Mapping[str, Any]) -> bool:
 
 
 def _peer_key(row: Mapping[str, Any], method: Mapping[str, Any]) -> tuple[Any, ...] | None:
+    if method.get("method_id") == "P/E_TOTAL_INCLUDING_NCI":
+        return None
     if method.get("status") not in {"RESEARCH_USABLE", "READY"} or not _numeric(method.get("value")):
         return None
     if method.get("applicability") != APPLICABLE or _scope_blocks_peers(method):
@@ -1003,6 +1056,7 @@ def _peer_key(row: Mapping[str, Any], method: Mapping[str, Any]) -> tuple[Any, .
         method.get("ttm_method") or method.get("period_basis"),
         method.get("ttm_compatibility_class") or "EXISTING_METHOD",
         latest,
+        method.get("earnings_attribution") if method["method_id"] in {PE_TTM, PE_EXISTING} else None,
     )
 
 

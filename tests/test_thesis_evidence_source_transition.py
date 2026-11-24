@@ -101,6 +101,9 @@ def _copy_domain(tmp_path: Path) -> None:
     truthfulness = "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json"
     relatives.append(truthfulness)
     relatives.extend(row["archive"] for row in json.loads((ROOT / truthfulness).read_bytes())["sources"].values())
+    parent_pe = "tests/fixtures/parent_attributable_pe_source_transition_v1.json"
+    relatives.append(parent_pe)
+    relatives.extend(row["archive"] for row in json.loads((ROOT / parent_pe).read_bytes())["sources"].values())
     for relative in relatives:
         _copy_file(tmp_path, relative)
 
@@ -151,7 +154,9 @@ def test_exact_thesis_transition_keeps_historical_v2_and_hashes_active_bytes():
     assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
     truthfulness = json.loads((ROOT / "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json").read_bytes())
     assert truthfulness["previous_e4_v2_digest"] == retry["active_e4_v2_digest"]
-    assert identity["active_e4_v2_digest"] == truthfulness["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
+    parent_pe = json.loads((ROOT / "tests/fixtures/parent_attributable_pe_source_transition_v1.json").read_bytes())
+    assert parent_pe["previous_e4_v2_digest"] == truthfulness["active_e4_v2_digest"]
+    assert identity["active_e4_v2_digest"] == parent_pe["active_e4_v2_digest"] == e4.source_identity(ROOT, version="v2")["code_digest"]
     assert identity["active_e4_v2_digest"] not in {HISTORICAL_V2, MIXED_V2}
     assert identity["historical_receipt_adoption"] is False
     assert identity["release_authority"] == "NOT_GRANTED"

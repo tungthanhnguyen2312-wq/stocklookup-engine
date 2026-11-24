@@ -1,0 +1,35 @@
+{
+  "contract_version": "parent_attributable_pe_source_transition/v1",
+  "base_commit": "7ea5b514ddc53a8ec8f8fd9630863be5a743f4ff",
+  "scope": "OWNER_DECISION_1_20261124_PARENT_HEADLINE_PE",
+  "release_authority": "NOT_GRANTED",
+  "previous_e4_v2_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+  "active_e4_v2_digest": "446af6e6e99b070f8c726004ea76e0769a93dd763919c1f3fc3b606339191faf",
+  "sources": {
+    "stocklookup_core/decision/daily_integrated_decision_brief.py": {
+      "archive": "tests/fixtures/parent_attributable_pe_v1_sources/stocklookup_core/decision/daily_integrated_decision_brief.py.txt",
+      "prior_sha256_lf": "a415d0569e6196829ee2819ad790d3ee5a862fe29db0fc68640c94b15f8e8803",
+      "active_sha256_lf": "7b5ba1e421c12a96d8fb8d43e98f29e9420b4684268d48fde69e6c8e9ed3b75e"
+    },
+    "stocklookup_core/decision/integrated_investment_decision_product.py": {
+      "archive": "tests/fixtures/parent_attributable_pe_v1_sources/stocklookup_core/decision/integrated_investment_decision_product.py.txt",
+      "prior_sha256_lf": "cbf9e109bcdbc4ec3c6f159de14c00a0e4f4b00768619829f9c76408a77d41a4",
+      "active_sha256_lf": "896f5d11874d7061765ff7030379949e9a26eddfadc54b1e6c31325a62f7035c"
+    },
+    "stocklookup_core/valuation/current_research_valuation_context.py": {
+      "archive": "tests/fixtures/parent_attributable_pe_v1_sources/stocklookup_core/valuation/current_research_valuation_context.py.txt",
+      "prior_sha256_lf": "d4484af26e8304de55d93b056fd43cd9f0709830c908d82478afc2c00314b1ff",
+      "active_sha256_lf": "78bb03d6fe705f80890f15abef9feea152c4fb5a77cdafa9cf856eb6f876e680"
+    },
+    "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py": {
+      "archive": "tests/fixtures/parent_attributable_pe_v1_sources/stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py.txt",
+      "prior_sha256_lf": "808c31ff874ef891da78328ee0fd24598a6900ce1685e3908a8a8112168c2254",
+      "active_sha256_lf": "75eac65bc3535fada4f5b0b99a53882912fb26840335e76bdeff549363444623"
+    },
+    "stocklookup_core/valuation/p3f_current_market_valuation.py": {
+      "archive": "tests/fixtures/parent_attributable_pe_v1_sources/stocklookup_core/valuation/p3f_current_market_valuation.py.txt",
+      "prior_sha256_lf": "5afd5fc5f270e7b62682c900a5d74b82d8f32ef3fba650b9d23858d16a691d3b",
+      "active_sha256_lf": "06533bfb35f018be5ae039d173b87eaa2f36fa02dea5c5b53ed43d02ef1a26ab"
+    }
+  }
+}

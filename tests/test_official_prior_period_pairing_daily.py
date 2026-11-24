@@ -226,7 +226,9 @@ def test_active_coupled_digest_refuses_both_prior_declared_and_main_receipts():
     assert retry["previous_e4_v2_digest"] == feedback_io["active_e4_v2_digest"]
     truthfulness = json.loads((ROOT / "tests/fixtures/valuation_output_truthfulness_source_transition_v1.json").read_bytes())
     assert truthfulness["previous_e4_v2_digest"] == retry["active_e4_v2_digest"]
-    assert live["code_digest"] == truthfulness["active_e4_v2_digest"]
+    parent_pe = json.loads((ROOT / "tests/fixtures/parent_attributable_pe_source_transition_v1.json").read_bytes())
+    assert parent_pe["previous_e4_v2_digest"] == truthfulness["active_e4_v2_digest"]
+    assert live["code_digest"] == parent_pe["active_e4_v2_digest"]
     for old in (row["prior_declared_e4_v2_digest"], row["base_live_e4_v2_digest"], row["active_e4_v2_digest"],
                 feedback_io["active_e4_v2_digest"], retry["active_e4_v2_digest"]):
         assert old != live["code_digest"]
