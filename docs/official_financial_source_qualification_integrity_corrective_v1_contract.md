@@ -156,6 +156,28 @@ No host, cohort, acquisition seed, period, share, overlay or formula is added.
 The external HPG H1 packet remains candidate evidence; this compatibility correction
 alone creates no official fact, newly active ratio or production authority.
 
+## HOL-11 exact year and dotted-date header provenance
+
+Task `HL-20261124-HOL-11` authorizes bounded offline diagnosis and header-proof
+correction. The existing year-band recognizer retains the exact current/comparative
+year tokens, source orders and boxes only when both independent positioned years
+are uniquely proven. Fused native headers do not acquire invented token identities.
+The existing complete-date parser also accepts literal dot separators; invalid dates,
+damaged digits and ambiguous headers fail closed. PNJ's printed headings are `2025` /
+`2024` (annual) and `30.6.2025` / `30.6.2024` (prior H1). They were already registered;
+the missing provenance and unrecognized literal separator were recognizer defects.
+
+The unit-above-header and physical same-row line-code checks are unchanged. PNJ
+prints VND below its year/date headers and several codes above the amount baseline;
+correct header registration cannot waive those failures. Competing amount tokens,
+split parent amounts and damaged parent labels remain blocked. No code 62 or equality
+of codes 60/61 is inferred from its absence. The direct-citation owner replay on HPG's
+retained original yields zero candidates: page 10 native total profit contains
+`7.614.329.s2L.616` and parent profit `7.600.771.906.752`. Manifest extraction readiness
+is not literal fact qualification; no native numeric/letter repair is authorized.
+The task requires stopping those HPG operands when native damage is established.
+Zero new income facts are admitted; existing HOL-10 cutoff results remain unchanged.
+
 ## Release gate
 
 Focused and broad financial/valuation/packet regressions, native checks and four hosted

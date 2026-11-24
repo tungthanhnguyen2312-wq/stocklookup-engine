@@ -450,7 +450,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         # The newest corrective is every chain's last successor before the live pin.
         for entry in (*successors, live_receipt["valuation_output_truthfulness_corrective"],
                       live_receipt["retained_baseline_two_h1_ttm_corrective"],
-                      live_receipt["retained_operand_metadata_form_corrective"]):
+                      live_receipt["retained_operand_metadata_form_corrective"],
+                      live_receipt["retained_period_header_provenance_corrective"]):
             if path in entry["prior_source_sha256_lf"]:
                 return entry["prior_source_sha256_lf"][path]
         return live_receipt["source_sha256"][path]
@@ -882,6 +883,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     income = live_receipt["retained_income_operand_qualification_corrective"]
     glyph = live_receipt["retained_baseline_two_h1_ttm_corrective"]
     operand = live_receipt['retained_operand_metadata_form_corrective']
+    header = live_receipt['retained_period_header_provenance_corrective']
     income_paths = ["official_financial_filing_evidence.py",
                     "stocklookup_core/evidence/financial_row_identity.py",
                     "official_financial_structural_table.py",
@@ -897,8 +899,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert income["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert income["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = glyph["prior_source_sha256_lf"].get(
-            path, operand['prior_source_sha256_lf'].get(path,
-                hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()))
+            path, operand['prior_source_sha256_lf'].get(path, header['prior_source_sha256_lf'].get(path,
+                hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())))
     from tools.qualify_e4_infrastructure import source_identity
     assert income["e4_v2_code_digest"] == glyph["prior_e4_v2_code_digest"]
     prior_receipt["retained_income_operand_qualification_corrective"] = income
@@ -933,8 +935,20 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert operand['prior_source_sha256_lf'][path] == hashlib.sha256(previous.replace(b'\r\n', b'\n')).hexdigest()
         assert operand['prior_source_sha256_lf'][path] == prior_receipt['source_sha256'][path]
         prior_receipt['source_sha256'][path] = hashlib.sha256((root/path).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
-    assert operand['e4_v2_code_digest'] == source_identity(root, version='v2')['code_digest']
+    assert operand['e4_v2_code_digest'] == header['prior_e4_v2_code_digest']
     prior_receipt['retained_operand_metadata_form_corrective'] = operand
+
+    assert header['scope'] == 'RETAINED_EXACT_YEAR_AND_DOTTED_DATE_HEADER_PROVENANCE'
+    assert header['new_capacity_measurement'] is False and header['whole_daily_requalification'] is False
+    assert header['changed_source_paths'] == ['official_financial_structural_table.py']
+    assert set(header['prior_source_sha256_lf']) == set(header['changed_source_paths'])
+    for path in header['changed_source_paths']:
+        previous = subprocess.check_output(['git', 'show', f"{header['base_commit']}:{path}"], cwd=root)
+        assert header['prior_source_sha256_lf'][path] == hashlib.sha256(previous.replace(b'\r\n', b'\n')).hexdigest()
+        assert header['prior_source_sha256_lf'][path] == prior_receipt['source_sha256'][path]
+        prior_receipt['source_sha256'][path] = hashlib.sha256((root/path).read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+    assert header['e4_v2_code_digest'] == source_identity(root, version='v2')['code_digest']
+    prior_receipt['retained_period_header_provenance_corrective'] = header
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)

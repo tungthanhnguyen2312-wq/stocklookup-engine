@@ -768,7 +768,15 @@ def _discover_column_bands_with_year(lines: Sequence[Mapping[str, Any]], target_
         "recognizer_version": GEOMETRY_RECOGNIZER_VERSION,
         "header_evidence": {"line_ids": [line["line_id"] for line in header["lines"]], "text": header["text"],
                             "bbox": {"x0": min(line["bbox"]["x0"] for line in header["lines"]), "x1": max(line["bbox"]["x1"] for line in header["lines"]),
-                                     "top": min(line["bbox"]["top"] for line in header["lines"]), "bottom": max(line["bbox"]["bottom"] for line in header["lines"])}},
+                                     "top": min(line["bbox"]["top"] for line in header["lines"]), "bottom": max(line["bbox"]["bottom"] for line in header["lines"])},
+                            **({"period_header_class": "EXPLICIT_YEAR",
+                                "period_identities": {
+                                    side: _period_header_span(selected, header_line_id=next(
+                                        line["line_id"] for line in header["lines"] if selected[0] in line["tokens"]),
+                                        header_class="EXPLICIT_YEAR")
+                                    for side, selected in (("current", current_year_tokens),
+                                                           ("comparative", comparative_year_tokens))}}
+                               if year_geometry_proven else {})},
         "current_period_label": target_period, "comparative_period_label": comparative,
         "bands": {"line_code": band(code_cluster), "note_reference": band(note_cluster) if note_cluster is not None else None, "current_period_value": current_band, "comparative_period_value": comparative_band},
     }
@@ -797,7 +805,7 @@ def _period_header_span(tokens: Sequence[Mapping[str, Any]], *, header_line_id: 
 def _parse_explicit_header_date(text: str) -> date | None:
     """Parse only explicit complete date forms; no OCR correction belongs here."""
     raw = str(text).strip()
-    numeric = re.fullmatch(r"(\d{1,2})[/-](\d{1,2})[/-](20[0-3]\d)", raw)
+    numeric = re.fullmatch(r"(\d{1,2})[./-](\d{1,2})[./-](20[0-3]\d)", raw)
     if numeric:
         day, month, year = (int(item) for item in numeric.groups())
         try:
@@ -988,7 +996,7 @@ def _contains_nonyear_period_header_evidence(lines: Sequence[Mapping[str, Any]])
         has_code_header = _has_explicit_code_header(group)
         if not has_code_header:
             continue
-        if re.search(r"\b\d{1,2}[/-]\d{1,2}[/-]20[0-3]\d\b", text) or re.search(
+        if re.search(r"\b\d{1,2}[./-]\d{1,2}[./-]20[0-3]\d\b", text) or re.search(
             r"\b\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+20[0-3]\d\b", text
         ):
             return True

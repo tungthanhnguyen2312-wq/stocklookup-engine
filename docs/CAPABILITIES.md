@@ -31,6 +31,11 @@ Macro V1: Daily/AI/cockpit wired; October 8 live acceptance verified (`MACRO_REG
 exact retained identities in ACTIVE_STATE). Source authority unchanged.
 
 ### Retained numeric glyph proof and offline H1 TTM (HOL-08)
+- HOL-11 retains exact year-header token identities and parses literal complete dotted
+  dates. PNJ annual header proof clears; prior-H1 revenue/total profit are table-qualified
+  only. Existing unit placement, physical code-row, damaged-label and metadata gates
+  still block admission. HPG native text is damaged; direct-owner replay has zero
+  candidates. Zero new facts or TTM status changes; no absent PNJ code 62 inferred.
 - Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge)
 - Runtime: `EXPERIMENTAL` · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`
 - Input: exact retained FY2025/H1 originals; same-render baseline U+00B2 proof only.

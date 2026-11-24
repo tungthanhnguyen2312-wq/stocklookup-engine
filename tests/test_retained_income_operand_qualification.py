@@ -199,3 +199,30 @@ def test_exact_legal_name_requires_registered_hash_bound_ocr_proof():
     assert not lp.retained_issuer_name_matches(dict(row, ticker='PNJ'), proof, 'CONG TY CO PHAN TAP DOAN HOA PHAT')
     proof['pages']['12']['tokens'][0]['text'] = 'changed'
     assert not lp.retained_issuer_name_matches(row, proof, 'CONG TY CO PHAN TAP DOAN HOA PHAT')
+
+
+def test_hol11_retained_pnj_year_headers_are_bound_without_waiving_row_checks():
+    from stocklookup_core.evidence import official_ocr_layout_proof as lp
+    from official_financial_value_evidence import parse_accounting_integer
+    page = annual_income_page()
+    from official_financial_structural_table import match_geometry_table_row
+    found = match_geometry_table_row(page, line_code='60', target_period='2025')
+    row = found['row_object']
+    identities = row['column_bands']['header_evidence']['period_identities']
+    assert identities['current']['raw_text'] == '2025'
+    assert identities['current']['source_token_orders'] == [52]
+    assert identities['comparative']['source_token_orders'] == [53]
+    from tests.test_official_ocr_layout_proof import make_proof
+    proof = make_proof(page['positioned_tokens'])
+    proof['document_sha256'] = page['document_sha256']
+    proof['pages']['10'] = proof['pages'].pop('12')
+    reasons = lp.verify_row(row, proof, metric='net_income', source_page=10,
+        line_code='60', raw_value=found['current_raw'], value=2828497462890,
+        unit_scale=1, parse_amount=parse_accounting_integer)
+    assert 'CURRENT_PERIOD_HEADER_NOT_REGISTERED' not in reasons
+    assert 'CURRENT_PERIOD_HEADER_NOT_IN_PROOF' not in reasons
+    # PNJ prints the line code on the first baseline of a wrapped record.
+    # Header provenance must not waive the existing physical-row check.
+    assert 'LINE_CODE_NOT_ON_VALUE_ROW' in reasons
+    assert match_geometry_table_row(page, line_code='10', target_period='2025') is None
+    assert match_geometry_table_row(page, line_code='61', target_period='2025') is None

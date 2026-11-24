@@ -29,6 +29,21 @@ Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
+- **LOCAL / OFFLINE - HOL-11 exact header provenance (partial; no new admissions):**
+  The existing year-band recognizer now retains exact positioned year token identities;
+  complete dotted dates such as PNJ's printed `30.6.2025` / `30.6.2024` use the
+  existing date owner without character repair. PNJ FY2025 header-proof blockers
+  clear; prior-H1 revenue and total profit become table-qualified, not admitted.
+  The unchanged unit-above-header and physical same-row code gates reject PNJ's
+  below-year `VND` headings and amounts on wrapped second baselines. FY2025 revenue
+  still has a competing comparative token, FY2025 parent profit is split, and H1
+  parent label/period evidence remains damaged or unavailable. No absent code 62
+  is inferred. HPG page 10 native text is damaged: total profit includes `s2L`,
+  parent profit ends `.752` instead of a usable literal; the direct owner yields
+  zero candidates. HPG operand investigation stops there under HOL-11 instructions.
+  Zero new facts; November 23/25 TTM statuses remain HOL-10's (only HPG P/S at
+  November 25 is research usable). No admission gate, Daily or production change.
+  Contract: [HOL-11 corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-11-exact-year-and-dotted-date-header-provenance).
 - **LOCAL / OFFLINE — HOL-10 retained operand metadata and form identity:**
   Common-owner replay admits seven income rows: HPG FY2025 10/60/61,
   HPG H1/2025 10, and VRE H1/2025 10/60/61. Exact manifest root routing,

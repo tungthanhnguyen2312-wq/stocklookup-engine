@@ -215,7 +215,7 @@
     "official_financial_ocr_table_evidence.py": "5a451bf4c5eda1f315e429b85a47fe95ee1c66f53f3856a4ac12024373e6dea7",
     "official_financial_pdf_page_evidence.py": "eb78b5c412ec2ca1ee6ec629e1dc50f6f75ef93d81631c01d9ad54e07bca18de",
     "official_financial_period_identity.py": "da8a9d1cbdf31f1057a322413c91049af138878a72f9ffc47b03bc5a81c59da0",
-    "official_financial_structural_table.py": "0e430af70a111a79dbd32b199cb65397d39d1724b0625a52907f890224eac0d5",
+    "official_financial_structural_table.py": "a0160d9290d777d0fcda7afec66168555bef878dc43ae375280cda14335ce1b7",
     "official_financial_value_evidence.py": "c406c531f017553f5a724a61c015f757b6664f3048edaed56fadb117c95071d2",
     "official_legacy_precedence.py": "bf50a8197d3acdfa84d40494a1e5df9801107c1b7473c360ba1ae442e586ed6e",
     "official_liquidity_market_wide.py": "aa3319a0da66bad04acaed32d0c850ebfe8775d341589362bd7f473447517d2a",
@@ -2131,5 +2131,20 @@
     "prior_e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
     "e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
     "compatibility": "HOL-10 offline only: exact retained metadata/issuer/assurance/zero-native-candidate proof replay; explicit prior-H1 root routing; TT200/202 versus TT99/43 literal row identity; admitted normalized TTM uses existing base-unit vocabulary. No OCR letter repair, new digit rule, overlay publication, Daily or headline change."
+  },
+  "retained_period_header_provenance_corrective": {
+    "base_commit": "b1fb727cc89dacc3c3552b5141a2f36db9278a7e",
+    "scope": "RETAINED_EXACT_YEAR_AND_DOTTED_DATE_HEADER_PROVENANCE",
+    "changed_source_paths": [
+      "official_financial_structural_table.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "prior_source_sha256_lf": {
+      "official_financial_structural_table.py": "0e430af70a111a79dbd32b199cb65397d39d1724b0625a52907f890224eac0d5"
+    },
+    "prior_e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+    "e4_v2_code_digest": "1d583174707853c1efd3b4835e0b73b8dbc741363f1ea0a79b681e5f1c2f120a",
+    "compatibility": "HOL-11: preserve exact positioned year header identities; recognize literal complete dotted dates. No unit-placement, physical-row, comparative-numeric or damaged-label gate changes. Zero new income admissions; HPG damaged native layer remains blocked. Offline replay only."
   }
 }
