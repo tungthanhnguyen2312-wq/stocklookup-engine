@@ -33,7 +33,9 @@ MANIFEST = "official_document_acquisition_manifest.json"
 INDEPENDENT_ROUTE = "INDEPENDENT_OFFICIAL_SOURCE"
 RIGHTS_STATUS = "RESEARCH_AND_AI_READING_APPROVED"
 METRICS = (("revenue", "10"), ("net_income", "60"), ("attributable_net_income", "61"))
-REGISTERED_ISSUER_FOLD = {"HPG": "cong ty co phan tap doan hoa phat"}
+# Same exact registered legal names as official_ocr_layout_proof.retained_issuer_name_matches.
+REGISTERED_ISSUER_FOLD = {"HPG": "cong ty co phan tap doan hoa phat",
+                          "PNJ": "cong ty co phan vang bac da quy phu nhuan"}
 
 # The one retained page this v1 run seals. Every value here is checked against bytes.
 HPG_2025_H1_P10 = {
@@ -53,6 +55,26 @@ HPG_2025_H1_P10 = {
     "render_meta": "official-hpg-h1-2025/input.meta.json",
     "comparison_started_at": "2026-11-24T21:33:00+07:00",
 }
+
+PNJ_2025_P10 = {
+    "ticker": "PNJ", "reporting_period": "2025",
+    "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+    "document_id": "964efd1c800de93d643eebc42476aaf7eadb465a256f1a48f04be2e25e3ad888",
+    "original_subdir": "currency-refresh-20260929",
+    "new_subdir": "fy2025-dual-reader-pnj-20261124",
+    "page_key": "pnj-fy2025-p10",
+    "source_page": 10, "printed_page": "8",
+    "image_sha256": "4df1be5fb096b9745126885f93bb063aba82c349f58a35c2b15cd56ba41e53d1",
+    "column_id": "c1",
+    # Claude: raw file write completed 21:52:44.08 (mtime, rounded up); Gemini: comparison record.
+    "readings": (("claude", "blind-input-pnj-fy2025-p10/claude/claude-reader.raw.json", "2026-11-24T21:52:45+07:00"),
+                 ("gemini", "blind-input-pnj-fy2025-p10/gemini/gemini-reader.raw.json", "2026-11-24T21:55:01+07:00")),
+    "image": "blind-input-pnj-fy2025-p10/render/page-10.png",
+    "render_meta": "blind-input-pnj-fy2025-p10/input.meta.json",
+    "comparison_started_at": "2026-11-24T21:55:24+07:00",
+}
+
+SPECS = {"HPG-2025-H1-P10": HPG_2025_H1_P10, "PNJ-2025-P10": PNJ_2025_P10}
 
 
 def _sha(payload: bytes) -> str:
@@ -86,6 +108,16 @@ def _copy_verified(source: Path, target: Path, sha256: str) -> str:
     return status
 
 
+def _read_render_meta(payload: bytes) -> tuple[dict, str]:
+    """Read-only. A meta file with unescaped Windows backslashes is parsed from an
+    in-memory escaped copy; the retained bytes are copied unchanged."""
+    text = payload.decode("utf-8")
+    try:
+        return json.loads(text), "STRICT_JSON"
+    except ValueError:
+        return json.loads(text.replace("\\", "\\\\")), "READ_ONLY_BACKSLASH_ESCAPED_PARSE"
+
+
 def _stable(prefix: str, value: Any) -> str:
     return _sha((prefix + json.dumps(value, ensure_ascii=False, sort_keys=True)).encode("utf-8"))
 
@@ -99,13 +131,16 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
     splits it. Values are parsed by the existing accounting-integer owner.
     """
     from official_financial_value_evidence import parse_accounting_integer
-    from financial_statement_unit_resolution import parse_explicit_unit_declaration
     from official_financial_period_identity import period_bounds
-    unit = parse_explicit_unit_declaration(raw_table["currency_unit_literal"])
-    if not unit or unit.get("currency") != "VND":
-        raise ValueError("UNIT_NOT_EXPLICIT_VND")
+    # Currency/scale come from the qualified document metadata; the verifier then
+    # requires both readers' unit literal to declare exactly this unit.
+    claims = document_evidence["document_metadata"]["metadata_claims"]
+    unit = {"currency": claims["currency"]["value"], "unit_scale": claims["unit_scale"]["value"]}
+    if unit["currency"] != "VND" or type(unit["unit_scale"]) is not int or unit["unit_scale"] <= 0:
+        raise ValueError("DOCUMENT_UNIT_NOT_QUALIFIED_VND")
     column = next(c for c in raw_table["columns"] if c["column_id"] == spec["column_id"])
     start, end = period_bounds(spec["reporting_period"])
+    annual = str(spec["reporting_period"]).isdigit()
     rows = []
     for metric, code in METRICS:
         matches = [r for r in raw_table["rows"] if r["line_code_literal"] == code]
@@ -122,7 +157,7 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
         citation = _stable("dual_reader_citation/v1:", identity)
         rows.append({
             "ticker": spec["ticker"], "canonical_metric": metric, "line_code": code,
-            "reporting_period": spec["reporting_period"], "period_type": "interim",
+            "reporting_period": spec["reporting_period"], "period_type": "annual" if annual else "interim",
             "period_start": start, "period_end": end, "statement_scope": "consolidated",
             "statement_family": "income_statement", "temporal_nature": "duration",
             "currency": "VND", "unit_scale": 1, "source_unit_scale": unit["unit_scale"],
@@ -185,7 +220,7 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
     render_meta = reader_root / spec["render_meta"]
     meta_rel = f"{base}/page-{spec['source_page']}.render-meta.json"
     files[meta_rel] = _copy_verified(render_meta, target / meta_rel, _sha(render_meta.read_bytes()))
-    meta = json.loads(render_meta.read_text(encoding="utf-8"))
+    meta, meta_parse = _read_render_meta(render_meta.read_bytes())
     if (meta.get("source_sha256") != spec["document_sha256"] or meta.get("image_sha256") != spec["image_sha256"]
             or meta.get("source_page") != spec["source_page"] or meta.get("rights_route") != dual.RIGHTS_ROUTE):
         raise ValueError("RENDER_PROVENANCE_MISMATCH")
@@ -211,7 +246,8 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
               "rights_status": RIGHTS_STATUS, "issuer_name": issuer, "page_image_bindings": [image],
               "retained_copy_of": {"evidence_subdir": spec["original_subdir"], "manifest": MANIFEST,
                                    "record_sha256": _sha(_canonical(matches[0]))},
-              "page_image_render": {"render_meta_relative_path": meta_rel, "rendered_at": meta.get("rendered_at")}}
+              "page_image_render": {"render_meta_relative_path": meta_rel, "rendered_at": meta.get("rendered_at"),
+                                    **({} if meta_parse == "STRICT_JSON" else {"render_meta_parse": meta_parse})}}
     files[MANIFEST] = _write_once(target / MANIFEST, _canonical({"schema_version": "1.2.0", "records": [record]}))
 
     # 4. OCR layout proof reused only for document-level page text, hash identity verified.
@@ -283,10 +319,11 @@ def main(argv=None) -> int:
     parser.add_argument("--document-evidence", type=Path, required=True)
     parser.add_argument("--ocr-layout-proof", type=Path, required=True)
     parser.add_argument("--admission-completed-at")
+    parser.add_argument("--spec", choices=sorted(SPECS), default="HPG-2025-H1-P10")
     args = parser.parse_args(argv)
     report = run(landing_root=args.landing_root, reader_root=args.reader_root,
                  document_evidence_path=args.document_evidence, ocr_layout_proof_path=args.ocr_layout_proof,
-                 admission_completed_at=args.admission_completed_at)
+                 admission_completed_at=args.admission_completed_at, spec=SPECS[args.spec])
     print(json.dumps(report, ensure_ascii=False, indent=1, sort_keys=True))
     return 0 if all(item["state"] == "ADMITTED" for item in report["admissions"]) else 2
 
