@@ -912,6 +912,16 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["vsdc_market_wide_retention_corrective"] = retention
 
+    valuation = live_receipt["vsdc_registered_share_valuation_corrective"]
+    assert valuation["scope"] == "VSDC_REGISTERED_SHARES_VALUATION_ELIGIBILITY_FLAG_OFF"
+    assert valuation["new_capacity_measurement"] is False and valuation["whole_daily_requalification"] is False
+    assert valuation["changed_source_paths"] == ["stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"]
+    for path in valuation["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{valuation['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == valuation["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["vsdc_registered_share_valuation_corrective"] = valuation
+
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

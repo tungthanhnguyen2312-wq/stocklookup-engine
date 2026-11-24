@@ -5,6 +5,8 @@ import json
 
 import pytest
 import copy
+import subprocess
+import types
 
 from stocklookup_core.evidence.official_document_acquisition import acquire, MANIFEST
 from tools.retain_vsdc_share_notices import plan, main
@@ -13,6 +15,7 @@ from test_vsdc_hose_share_events import REGISTRATIONS, FIXTURES
 from test_share_basis_official_event_staleness import _runtime, CUTOFF
 from test_market_wide_current_valuation_input_scaleout import _corporate_facts
 from stocklookup_core.evidence.official_source_registry import load_registry
+import stocklookup_core.valuation.market_wide_current_valuation_input_scaleout as valuation
 
 
 def spec(ticker="ZZZ", **overrides):
@@ -112,7 +115,7 @@ def test_csv_dry_run_no_storage_no_http_and_all_errors(tmp_path, monkeypatch, ca
 
 
 @pytest.mark.parametrize("case", REGISTRATIONS, ids=lambda c: c[0])
-def test_four_retained_registration_fixtures_through_real_resolver_and_valuation(tmp_path, case):
+def test_four_retained_registration_fixtures_through_real_resolver_and_valuation(tmp_path, case, monkeypatch):
     ticker, number, digest, isin, change, count, published, reason = case
     t = ticker.upper()
     root = tmp_path / "notices"
@@ -144,13 +147,73 @@ def test_four_retained_registration_fixtures_through_real_resolver_and_valuation
     assert row["authority_before"] == "provider_reported_lagged"
     assert row["authority_after"] == "official_registered_shares"
     assert row["notice_url"].endswith(number) and row["published_at"] == published
-    # The existing builder has no registered-share research tier. Do not silently
-    # equate registration with current outstanding to force a numeric sensitivity.
-    for metric in row["metrics"].values():
+    basis = row["share_basis_after"]
+    assert basis["share_basis"] == "VSDC_REGISTERED_SHARES"
+    assert basis["share_concept"] == "ISSUED_SHARES"
+    assert basis["status"] == "OFFICIAL_REGISTERED_SHARES"
+    assert basis["observation_date"] == published
+    assert basis["authoritative_current_market_cap_eligible"] is False
+    assert "includes treasury shares" in basis["limitations"][0]
+    assert "not outstanding ex-treasury" in basis["limitations"][0]
+    assert "not a listing effective date" in basis["limitations"][0]
+    assert row["shares_percent_change"] == pytest.approx((count - 1000) / 1000 * 100)
+    for name, metric in row["metrics"].items():
+        if name == "EV/EBITDA":
+            assert metric["status_after"] == "BLOCKED" and metric["after"] is None
+            continue
         assert metric["status_before"] == "RESEARCH_USABLE"
-        assert metric["status_after"] == "BLOCKED" and metric["after"] is None
-        assert metric["percent_change"] is None
+        assert metric["status_after"] == "RESEARCH_USABLE"
+        if name in {"enterprise_value", "EV/Sales"}:
+            expected = 10_000 * count + 50 - 20
+            if name == "EV/Sales":
+                expected /= 200
+        else:
+            expected = 10_000 * count / {"market_cap": 1, "P/E": 10, "P/B": 100, "P/S": 200}[name]
+        assert metric["after"] == pytest.approx(expected)
+        assert metric["percent_change"] == pytest.approx((expected - metric["before"]) / abs(metric["before"]) * 100)
+
+    # Capture the real ON artifact to verify labels on every metric, including blocked ones.
+    captured = []
+    original = valuation.build_current_valuation_artifact
+    def capture(**inputs):
+        artifact = original(**inputs)
+        captured.append((inputs, artifact))
+        return artifact
+    monkeypatch.setattr("tools.replay_vsdc_valuation_impact.build_current_valuation_artifact", capture)
+    replay(**kwargs)
+    for metric in captured[1][1]["records"][t]["metrics"].values():
+        assert metric["share_basis"] == "VSDC_REGISTERED_SHARES"
+        assert metric["share_concept"] == "ISSUED_SHARES"
+        assert metric["share_authority_tier"] == "OFFICIAL_REGISTERED_SHARES"
+        assert metric["observation_date"] == published
+        assert metric["limitations"] == basis["limitations"]
+        if metric["status"] == "RESEARCH_USABLE":
+            assert "NOT_COMMON_OUTSTANDING_SHARE_BASIS" in metric["labels"]
+            assert metric["historical_pit_eligible"] is False
+
+    # Extend flag-OFF byte parity through the builder against this task's exact HEAD.
+    legacy = types.ModuleType("hol07_head_valuation")
+    source = subprocess.check_output(["git", "show", "15c77ffe:stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"])
+    exec(compile(source, "hol07_head_valuation.py", "exec"), legacy.__dict__)
+    old = legacy.build_current_valuation_artifact(**captured[0][0])
+    assert json.dumps(old, sort_keys=True).encode() == json.dumps(captured[0][1], sort_keys=True).encode()
     before_publication = datetime.fromisoformat(published).replace(year=2025)
     assert replay(**(kwargs | {"known_by": before_publication}))["changed_tickers"] == 0
     with pytest.raises(ValueError, match="AWARE"):
         replay(**(kwargs | {"known_by": datetime(2026, 11, 23)}))
+
+
+@pytest.mark.parametrize("authority", [
+    key for key in valuation.SHARE_STATUS_BY_AUTHORITY if key != "official_registered_shares"
+] + ["unrecognized_authority"])
+def test_every_other_resolver_authority_has_byte_identical_valuation(authority):
+    from test_market_wide_current_valuation_input_scaleout import _inputs
+    price, fundamental, shares, p3e = _inputs()
+    legacy = types.ModuleType("hol07_head_valuation")
+    source = subprocess.check_output(["git", "show", "15c77ffe:stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"])
+    exec(compile(source, "hol07_head_valuation.py", "exec"), legacy.__dict__)
+    inputs = dict(price_snapshot=price, fundamental_artifact=fundamental,
+                  share_promotion_artifact=shares, p3e_artifact=p3e,
+                  share_resolution={"tickers": {"HPG": {"authority": authority, "value": 200}}})
+    assert json.dumps(legacy.build_current_valuation_artifact(**inputs), sort_keys=True).encode() == json.dumps(
+        valuation.build_current_valuation_artifact(**inputs), sort_keys=True).encode()

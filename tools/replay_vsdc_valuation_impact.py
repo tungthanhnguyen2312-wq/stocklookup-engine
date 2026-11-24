@@ -22,7 +22,7 @@ from stocklookup_core.valuation.market_wide_current_valuation_input_scaleout imp
 from tools.derive_market_wide_current_valuation_input_scaleout import _verify_sources
 from tools.run_p3f6_mva_provider_share_proxy import _metadata
 
-METRICS = ("market_cap", "P/E", "P/B", "P/S")
+METRICS = ("market_cap", "P/E", "P/B", "P/S", "enterprise_value", "EV/Sales", "EV/EBITDA")
 
 
 def replay(*, evidence_roots, runtime_root, known_by, price, fundamental, shares, p3e,
@@ -69,6 +69,9 @@ def replay(*, evidence_roots, runtime_root, known_by, price, fundamental, shares
         rows.append({"ticker": ticker, "authority_before": before["authority"],
             "authority_after": after["authority"], "shares_before": before["value"],
             "shares_after": after["value"], "provider_shares": provider.get(ticker, {}).get("value"),
+            "shares_percent_change": ((after["value"] - before["value"]) / abs(before["value"]) * 100
+                if before["value"] not in (None, 0) and after["value"] is not None else None),
+            "share_basis_after": artifacts[1]["records"].get(ticker, {}).get("share_basis_input"),
             "provider_observation_date": after.get("provider_observation_date", before.get("observation_date")),
             "vsdc_registered_shares": evidence.get("shares_after"),
             "notice_url": evidence.get("source_url"), "published_at": evidence.get("published_at"),
