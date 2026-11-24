@@ -6,6 +6,20 @@ from stocklookup_core.evidence.official_document_acquisition import BOUNDED_ADDI
 PDF=b"%PDF-1.4\nfixture\n"
 HTML=b"<html><body>official notice</body></html>"
 
+
+def test_retained_native_page_digest_preserves_proof_bytes_without_ocr_extractor():
+    import hashlib
+    import sys
+    from stocklookup_core.evidence.official_document_qualification import _native_page_text_sha256
+    # Frozen proof serialization: JSON string escaping, UTF-8 (not ASCII escapes),
+    # and absent-page null must remain byte-identical to the existing OCR proof.
+    cases = [(None, b'null'), ('', b'""'), ('a\n"b', b'"a\\n\\"b"'),
+             ('Lợi nhuận', '"Lợi nhuận"'.encode('utf-8'))]
+    with patch.dict(sys.modules, {'official_financial_ocr_table_evidence': None}):
+        for page_text, retained_bytes in cases:
+            assert _native_page_text_sha256(page_text) == hashlib.sha256(retained_bytes).hexdigest()
+    assert _native_page_text_sha256(None) != _native_page_text_sha256('')
+
 #: These tests are about retention mechanics -- caching, redirects, hash conflicts, size and
 #: timeout handling -- against fixture hosts that are deliberately not real. `acquire()` now
 #: refuses anything the source registry does not admit, so they run against a registry that

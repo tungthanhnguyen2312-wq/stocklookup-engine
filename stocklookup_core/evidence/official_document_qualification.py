@@ -28,6 +28,16 @@ QUALIFICATION_SUCCESS_STATUS = "QUALIFIED_RETAINED_FINANCIAL_STATEMENT"
 QUALIFICATION_FAILURE_STATUS = "DISQUALIFIED_RETAINED_DOCUMENT"
 
 
+def _native_page_text_sha256(value: str | None) -> str:
+    """Preserve the retained native-failure proof's JSON-string digest contract.
+
+    Admission needs only this byte identity, not the higher-level OCR extractor.
+    In particular, a missing page remains JSON null, distinct from empty text.
+    """
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                    separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
 def retained_assurance_is_bound(status, evidence, *, document_sha256):
     """Reuse this owner's existing assurance identity check for retained fields."""
     from official_financial_assurance_evidence import assurance_proof_is_bound
@@ -364,7 +374,6 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
                     # A caller flag or a nonempty text layer alone never qualifies.
                     from stocklookup_core.evidence.official_ocr_layout_proof import verify_proof_identity, page_text
                     from official_financial_pdf_page_evidence import build_artifact
-                    from official_financial_ocr_table_evidence import _hash
                     proof_pages = layout_proof.get('pages') or {}
                     failures = [proof_pages.get(str(n), {}).get('native_failure_evidence') for n, t in pages.items() if t.strip()]
                     if (failures and all(isinstance(f, Mapping) for f in failures)
@@ -379,7 +388,7 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
                                     and f.get('candidate_count') == 0
                                     and f.get('trigger') == 'EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES'
                                     and f.get('native_page_text_sha256')
-                                    and all(_hash(native_pages.get(int(n))) == h
+                                    and all(_native_page_text_sha256(native_pages.get(int(n))) == h
                                             for n, h in f['native_page_text_sha256'].items()) for f in failures)):
                             pages = {n: page_text(layout_proof, n) for n in sorted(required)}
                 if layout_proof is not None and not any(text.strip() for text in pages.values()):
