@@ -197,7 +197,11 @@ HOSE Q3 locator, with filing-type admission and session share continuity still o
   retained-byte qualification and H1 bridge integration are implemented with synthetic end-to-end
   tests. Two different model families, precomparison raw retention, explicit source rights and
   completion-time knowledge floor are required. Tier: `DUAL_READER_REVIEWED_TRANSCRIPTION`,
-  `OFFLINE_RESEARCH_ONLY`; no real issuer admission or Production/PIT authority is claimed.
+  `OFFLINE_RESEARCH_ONLY`; no Production/PIT authority is claimed. First real admission
+  (2026-11-24, knowledge floor 21:46:10+07:00): HPG 2025-H1 codes 10/60/61 from Claude +
+  Gemini readings of page 10 (subdir `h1-2025-dual-reader-hpg-20261124`). This unblocks the
+  offline H1 bridge for HPG net income TTM and parent net income TTM, and the research P/E
+  TTM, at the November 25 cutoff. Overlay, headline and Daily are unchanged.
 - PR168/169 local: tainted KBS periods blocked; six unreviewed research rows remain separate. Authority unchanged; [release gate](ACTIVE_STATE.md).
 - Frozen August-23 baseline. PNJ/VRE H1 fields and PVD USD context retain [currency](currency_preserving_interim_context_contract.md) and [earnings](reported_earnings_component_context_contract.md) limits.
 - [Reviewed HPG/KBC/FPT financial cases](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md) are OFFLINE_ONLY / NON_VOTING.

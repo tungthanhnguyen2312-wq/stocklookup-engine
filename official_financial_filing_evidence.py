@@ -338,7 +338,22 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         reasons.append("INTENDED_USE_NOT_ADMITTED")
     if intended_use not in {"CURRENT_RESEARCH_FACTUAL_AUTHORITY", "CANONICAL_CITATION", "VALUATION_INPUT_WHERE_METRIC_PERMITS"}:
         reasons.append("INTENDED_USE_OUTSIDE_CONTRACT")
-    if row.get("ocr_layout_proof") is not None:
+    if row.get("ocr_layout_proof") is not None and dual_valid:
+        # Decision 2 reuses a registered hash-bound OCR proof only as the document's
+        # page text for metadata, assurance and issuer literals (loaded by the retained
+        # owner under its own contract). The value cell is proven by the dual reading,
+        # so no OCR row or unit coordinate proof substitutes for any reason here.
+        from stocklookup_core.evidence.official_ocr_layout_proof import layout_for, verify_proof_identity
+        layout = layout_for(sha) or {}
+        if ocr_layout_proof is None:
+            missing.append("OCR_LAYOUT_PROOF_UNAVAILABLE")
+        else:
+            reasons.extend(verify_proof_identity(ocr_layout_proof, document_sha256=sha,
+                proof_sha256=(row.get("ocr_layout_proof") or {}).get("proof_sha256")))
+        if (row.get("ticker"), row.get("reporting_period"), row.get("statement_scope")) != (
+                layout.get("ticker"), layout.get("reporting_period"), layout.get("statement_scope")):
+            reasons.append("OCR_LAYOUT_SCOPE_MISMATCH")
+    elif row.get("ocr_layout_proof") is not None:
         # Registered image-only layout (Owner corrective 2026-11-07): coordinate proofs replace exactly
         # the contiguous-span and front-page-unit text checks; every other reason stays.
         from stocklookup_core.evidence.official_ocr_layout_proof import apply_layout_proof

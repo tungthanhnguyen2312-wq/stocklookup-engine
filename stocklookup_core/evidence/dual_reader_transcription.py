@@ -23,6 +23,31 @@ FAMILY_ALIASES = {"openai-gpt": "gpt", "gpt": "gpt", "codex": "gpt",
                   "anthropic-claude": "claude", "claude": "claude"}
 
 
+# A printed outline enumerator ("3.", "17.", "17.1", "18") sits in the statement's
+# numbering column, separate from the line item text and from the Ma so line code.
+_OUTLINE_ENUMERATOR = re.compile(r"^(\d{1,2}(?:\.\d{1,2})*\.?)\s+(?=\S)")
+
+
+def split_outline_enumerator(label: str) -> tuple[str | None, str]:
+    """Split only a leading numbering-column token; the line item text is kept verbatim.
+
+    No letter, digit or accent is changed. Callers still compare the remaining text
+    exactly, and two printed enumerators must agree exactly.
+    """
+    match = _OUTLINE_ENUMERATOR.match(str(label))
+    return (match.group(1), str(label)[match.end():]) if match else (None, str(label))
+
+
+def _column_binding(column: Mapping[str, Any], caption: Any) -> dict:
+    """A column period that is absent, or the exact shared caption, is bound by that caption.
+
+    Any other literal is kept verbatim and must itself agree between readers.
+    """
+    literal = column["reporting_period"]
+    return {"column_id": column["column_id"], "label_literal": column["label_literal"], "role": column["role"],
+            "reporting_period": None if literal is None or literal == caption else literal}
+
+
 def _sha(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -150,7 +175,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             readings.append(raw["table"])
         if families[0] == families[1] or ids[0] == ids[1]:
             return fail("DIFFERENT_MODEL_FAMILIES_REQUIRED")
-        selected = []
+        selected, enumerators = [], []
         for table in readings:
             columns = [c for c in table["columns"] if c["column_id"] == row["column_id"]]
             rows = [r for r in table["rows"] if r["line_code_literal"] == str(row["line_code"])]
@@ -162,9 +187,11 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             selected.append({name: table[name] for name in (
                 "issuer_literal", "statement_title_literal", "scope_literal", "form_reference_literal",
                 "currency_unit_literal", "period_caption_literal")})
-            selected[-1].update(column=columns[0], row_label_literal=rows[0]["row_label_literal"],
-                                line_code_literal=rows[0]["line_code_literal"], cell=cells[0])
-        if selected[0] != selected[1]:
+            enumerator, label = split_outline_enumerator(rows[0]["row_label_literal"])
+            enumerators.append(enumerator)
+            selected[-1].update(column=_column_binding(columns[0], table["period_caption_literal"]),
+                                row_label_literal=label, line_code_literal=rows[0]["line_code_literal"], cell=cells[0])
+        if selected[0] != selected[1] or (None not in enumerators and enumerators[0] != enumerators[1]):
             return fail("LITERAL_DISAGREEMENT")
         agreed = selected[0]
         # Unknown glyphs or omitted literal metadata cannot be repaired by arithmetic.
@@ -183,7 +210,8 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or agreed["form_reference_literal"] != row["form_reference_literal"]
                 or agreed["statement_title_literal"] != row["statement_title_literal"]
                 or column["label_literal"] != row["current_period_label"]
-                or column["reporting_period"] != row["reporting_period"]
+                or (column["reporting_period"] != row["reporting_period"] and recognize_period(
+                    column["reporting_period"] or agreed["period_caption_literal"])["period"] != row["reporting_period"])
                 or column["role"] != "current" or not column["label_literal"]
                 or recognize_period(agreed["period_caption_literal"])["period"] != row["reporting_period"]
                 or recognize_scope(agreed["scope_literal"])["statement_scope"] != row["statement_scope"]):

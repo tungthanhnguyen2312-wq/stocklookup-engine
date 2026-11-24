@@ -322,3 +322,132 @@ def test_real_common_admission_supplies_h1_bridge_and_fact_local_conflict(tmp_pa
     other['evidence_subdir'] = 'other/' + other['evidence_subdir']
     conflicted = official_h1_ttm_features(ticker='PNJ', rows=rows + [other], cutoff='2026-11-24T09:04:00+00:00', evidence_root=tmp_path)
     assert 'OFFICIAL_H1_OPERAND_CONFLICT:2025-H1' in conflicted['attributable_net_income_ttm']['reason_codes']
+
+
+# --- Real-shaped (still synthetic) retained readings: HPG-like page layout -------------
+# Two columns read as printed (current/comparative), the current column's period stated by
+# the shared caption (one reader leaves it null, the other copies the caption), and the
+# outline enumerator from the numbering column included by only one reader.
+_ENUMERATORS = {"10": "3.", "60": "17.", "61": "17.1"}
+
+
+def _real_shape(directory, row, proof, *, enumerators=("", None), periods=(None, "caption"), labels=(None, None)):
+    for index in (0, 1):
+        def change(raw, i=index):
+            table = raw['table']
+            base = table['rows'][0]
+            code = base['line_code_literal']
+            prefix = {None: _ENUMERATORS[code] + ' ', '': ''}.get(enumerators[i], (enumerators[i] or '') + ' ')
+            current = {'caption': table['period_caption_literal']}.get(periods[i], periods[i])
+            table['columns'] = [
+                {'column_id': 'c1', 'label_literal': 'Kỳ này', 'reporting_period': current, 'role': 'current'},
+                {'column_id': 'c2', 'label_literal': 'Kỳ trước', 'reporting_period': None, 'role': 'comparative'}]
+            table['rows'] = [
+                {'line_code_literal': code, 'row_label_literal': prefix + (labels[i] or base['row_label_literal']),
+                 'cells': [{**base['cells'][0], 'column_id': 'c1'},
+                           {'column_id': 'c2', 'raw_value_literal': '6.189.851.834.853', 'sign_literal': 'unsigned', 'uncertainty': []}]},
+                {'line_code_literal': '62', 'row_label_literal': '17.2 Lợi nhuận/(Lỗ) sau thuế của cổ đông không kiểm soát',
+                 'cells': [{'column_id': 'c1', 'raw_value_literal': '1.094.513.836', 'sign_literal': 'parentheses', 'uncertainty': []},
+                           {'column_id': 'c2', 'raw_value_literal': '13.557.615.464', 'sign_literal': 'unsigned', 'uncertainty': []}]}]
+        _change_reader(directory, row, proof, change, index=index)
+    row.update(column_id='c1', current_period_label='Kỳ này')
+
+
+@pytest.mark.parametrize('metric', ['revenue', 'net_income', 'attributable_net_income'])
+def test_real_shaped_retained_proof_replays_through_common_admission(tmp_path, metric):
+    row, context, directory, proof = _fixture(tmp_path, '2025-H1', 7600771906152, metric)
+    _real_shape(directory, row, proof)
+    retained = admit_retained_financial_fact(row, evidence_root=tmp_path, registry=context['registry'])
+    assert retained['state'] == 'ADMITTED', retained
+    assert retained['admission_basis'] == dual.EVIDENCE_TIER
+    assert retained['evidence_classification']['pit_backtest_eligible'] is False
+    assert retained['evidence_classification']['authority_effect'] == 'OFFLINE_RESEARCH_ONLY'
+
+
+def test_outline_enumerator_split_keeps_text_verbatim():
+    assert dual.split_outline_enumerator('17.1 Lợi nhuận sau thuế') == ('17.1', 'Lợi nhuận sau thuế')
+    assert dual.split_outline_enumerator('18 Lãi cơ bản') == ('18', 'Lãi cơ bản')
+    assert dual.split_outline_enumerator('3. Doanh thu') == ('3.', 'Doanh thu')
+    assert dual.split_outline_enumerator('2025 revenue') == (None, '2025 revenue')
+    assert dual.split_outline_enumerator('Doanh thu 10') == (None, 'Doanh thu 10')
+
+
+@pytest.mark.parametrize('kwargs', [
+    {'enumerators': ('17.1', '17.2')},                               # both printed, disagree
+    {'labels': (None, 'Lợi nhuận khác')},                            # line item text differs
+    {'periods': (None, 'Cho kỳ hoạt động 6 tháng kết thúc ngày 30 tháng 6 năm 2024')},  # one non-caption period
+])
+def test_real_shaped_literal_disagreement_still_blocks(tmp_path, kwargs):
+    row, context, directory, proof = _fixture(tmp_path, '2025-H1', 7600771906152)
+    _real_shape(directory, row, proof, **kwargs)
+    assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']
+
+
+def test_agreed_column_period_must_still_be_the_fact_period(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, '2025-H1', 7600771906152)
+    other = 'Cho kỳ hoạt động 6 tháng kết thúc ngày 30 tháng 6 năm 2024'
+    _real_shape(directory, row, proof, periods=(other, other))
+    assert 'DUAL_READER_SEMANTIC_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
+
+
+def test_row_label_with_enumerator_is_not_the_bound_label(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, '2025-H1', 7600771906152)
+    _real_shape(directory, row, proof)
+    row['raw_row_label'] = '17.1 ' + row['raw_row_label']
+    row['source_span']['text'] = row['raw_row_label'] + ' ' + row['raw_value_text']
+    assert 'DUAL_READER_SEMANTIC_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
+
+
+def _ocr_page_proof(monkeypatch, row):
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    sha = row['document_sha256']
+    monkeypatch.setitem(ocr.LAYOUT_PROOFS, sha, {'ticker': row['ticker'], 'reporting_period': row['reporting_period'],
+        'statement_scope': 'consolidated', 'layout': 'SYNTHETIC_TEST_ONLY', 'statement_pages': (1,)})
+    body = {'contract_version': ocr.CONTRACT_VERSION, 'document_sha256': sha, 'layout': 'SYNTHETIC_TEST_ONLY',
+            'engine_version': 'synthetic', 'ocr_config': {}, 'pages': {}}
+    proof = {**body, 'proof_sha256': _sha(ocr.canonical_json(body).encode('utf-8'))}
+    row['ocr_layout_proof'] = {'contract_version': ocr.CONTRACT_VERSION, 'proof_sha256': proof['proof_sha256'],
+                               'relative_path': ocr.PROOF_DIR + '/synthetic.json'}
+    return proof
+
+
+def test_dual_row_reuses_ocr_page_proof_only_for_document_text(tmp_path, monkeypatch):
+    row, context, directory, proof = _fixture(tmp_path, '2025-H1', 7600771906152)
+    _real_shape(directory, row, proof)
+    ocr_proof = _ocr_page_proof(monkeypatch, row)
+    loaded = dual.load_retained_dual_reader_proof(row, directory)
+    admitted = admit_official_financial_fact(row, dual_reader_proof=loaded, ocr_layout_proof=ocr_proof, **context)
+    assert admitted['state'] == 'ADMITTED' and admitted['admission_basis'] == dual.EVIDENCE_TIER, admitted
+    # The reused page proof keeps its own identity and scope gates.
+    forged = {**ocr_proof, 'engine_version': 'changed'}
+    result = admit_official_financial_fact(row, dual_reader_proof=loaded, ocr_layout_proof=forged, **context)
+    assert result['state'] == 'BLOCKED' and 'OCR_PROOF_HASH_MISMATCH' in result['reason_codes']
+    missing = admit_official_financial_fact(row, dual_reader_proof=loaded, **context)
+    assert missing['state'] != 'ADMITTED' and 'OCR_LAYOUT_PROOF_UNAVAILABLE' in missing['reason_codes']
+    # Without a valid dual reading the OCR row proof is required again.
+    invalid = admit_official_financial_fact(row, ocr_layout_proof=ocr_proof, **context)
+    assert invalid['state'] == 'BLOCKED' and 'ROW_PROOF_MISSING' in invalid['reason_codes'], invalid
+
+
+def test_real_shaped_rows_feed_h1_bridge_for_codes_60_and_61(tmp_path, monkeypatch):
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    import stocklookup_core.evidence.official_document_qualification as owner
+    rows, registry = [], None
+    values = {('2025', 'net_income'): 100, ('2026-H1', 'net_income'): 60, ('2025-H1', 'net_income'): 40,
+              ('2025', 'attributable_net_income'): 90, ('2026-H1', 'attributable_net_income'): 55,
+              ('2025-H1', 'attributable_net_income'): 35}
+    for (period, metric), value in values.items():
+        row, context, directory, proof = _fixture(tmp_path, period, value, metric)
+        if period == '2025-H1':
+            _real_shape(directory, row, proof)
+        rows.append(row); registry = context['registry']
+    monkeypatch.setattr(owner, 'load_registry', lambda: registry)
+    result = official_h1_ttm_features(ticker='PNJ', rows=rows, cutoff='2026-11-24T09:04:00+00:00', evidence_root=tmp_path)
+    for fid, expected, attribution in (('net_income_ttm', 120, 'TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI'),
+                                       ('attributable_net_income_ttm', 110, 'PARENT_ATTRIBUTABLE')):
+        feature = result[fid]
+        assert feature['fitness'] == 'READY' and feature['value'] == expected, feature
+        assert feature['earnings_attribution'] == attribution
+        assert feature['authority_effect'] == 'OFFLINE_RESEARCH_ONLY' and feature['pit_backtest_eligible'] is False
+        prior = [p for p in feature['provider_source_provenance'] if p['reporting_period'] == '2025-H1']
+        assert prior and prior[0]['evidence_tier'] == dual.EVIDENCE_TIER

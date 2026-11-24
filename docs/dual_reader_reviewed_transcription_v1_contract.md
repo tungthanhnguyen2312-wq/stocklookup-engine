@@ -28,6 +28,13 @@ value's presence in that text. The cited label, line code, metric/template,
 document-bound citation and numeric normalization still must pass. Missing
 metadata or assurance text cannot be supplied by this tier. Existing valid OCR
 or native metadata/assurance proofs may be reused under their own contracts.
+A fully verified dual-reader row may carry a registered `ocr_layout_proof`
+reference. The retained owner then replays that hash-bound proof, including its
+zero-native-candidate evidence, as document page text for metadata, assurance and
+issuer literals only. Its identity and ticker/period/scope still apply. The OCR
+row and statement-unit coordinate proofs are not run for that row and replace no
+reason; any metadata/unit text failure stays. Without a valid dual reading the
+row needs the OCR row proof as before.
 
 ## Retained source and files
 
@@ -91,7 +98,20 @@ claim that hashes can establish how a model was prompted.
 `uncertainty` (an empty list for an eligible cell). Preserve all numeric columns
 as read; this implementation selects one explicit current column.
 
-The selected row/column and all shared literal headers must agree exactly.
+The selected row/column and all shared literal headers must agree exactly, with
+two literal-preserving bindings:
+
+- A column `reporting_period` that is null, or byte-equal to the shared agreed
+  `period_caption_literal`, means the caption states that column's period. Any
+  other literal is kept verbatim, must agree between readers, and must itself be
+  recognized as the fact period. The caption must still recognize as the fact
+  period and the header must be an explicit current-period label.
+- A leading outline enumerator printed in the numbering column (`3.`, `17.`,
+  `17.1`, `18`) is split from the line item text before comparison. The
+  remaining text must agree exactly and equal the row's `raw_row_label`. If both
+  readers report an enumerator, the enumerators must also agree exactly. No
+  letter, digit or accent is altered, and the line code is still compared exactly.
+
 Duplicate row codes or cell/column identities, unreadable glyphs, unresolved
 cell uncertainty, unknown family, unsupported current header, sign mismatch,
 wrong form or row concept, implicit currency/scale, or missing bindings block
@@ -116,6 +136,17 @@ knowledge floor, `OFFLINE_RESEARCH_ONLY`, and `pit_backtest_eligible: false`.
 The existing H1 bridge calls common retained admission for each operand and
 propagates these labels into each input's provenance. Its normal fact-local
 conflict and cutoff checks still block dependent outputs.
+
+## First real admission (HPG 2025-H1, 2026-11-24)
+
+`tools/run_dual_reader_transcription_admission.py` seals one page without network
+or model calls. It copies the PDF, page image, render metadata and both raw readings
+byte-identically into the new retained subdirectory
+`h1-2025-dual-reader-hpg-20261124`. Original files are only read. It writes one
+manifest record: the original fields plus the three rights fields, `issuer_name`
+and `page_image_bindings`. It also writes the sealed proof, with
+`admission_completed_at` set once. It then replays codes 10/60/61 through
+`admit_retained_financial_fact`. A rerun reuses only byte-identical files.
 
 Focused synthetic tests in `tests/test_dual_reader_transcription.py` exercise
 real retained-loader/pure-admission/H1-consumer integration and rejection paths.
