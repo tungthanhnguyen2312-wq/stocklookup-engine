@@ -227,6 +227,7 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
 
 def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, ocr_layout_proof_path: Path,
         admission_completed_at: str | None = None, spec: Mapping[str, Any] = HPG_2025_H1_P10) -> dict[str, Any]:
+    import official_financial_ocr_table_evidence  # noqa: F401 - registers native PDF artifact builder
     from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
     from stocklookup_core.evidence.official_ocr_layout_proof import PROOF_DIR as OCR_DIR, verify_proof_identity
     from stocklookup_core.evidence.financial_row_identity import _identity_fold

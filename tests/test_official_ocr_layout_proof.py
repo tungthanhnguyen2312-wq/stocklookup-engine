@@ -311,3 +311,65 @@ def test_retained_zero_native_candidate_replay_requires_every_source_binding(tmp
     assert replay(bad) == {1: Page().extract_text()}
     artifact['fact_candidates'] = [{'native': 'candidate exists'}]
     assert replay(base) == {1: Page().extract_text()}
+
+
+def _zero_native_candidate_fixture(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    import pypdf
+    import official_financial_filing_evidence as filing
+    from official_financial_ocr_table_evidence import _hash
+    payload = b'%PDF synthetic zero-candidate di fixture'
+    sha = hashlib.sha256(payload).hexdigest()
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, sha, dict(lp.LAYOUT_PROOFS[SHA]))
+    record = dict(sha256=sha, relative_path='original.pdf', ticker='HPG',
+                  canonical_url='https://file.hoaphat.com.vn/synthetic.pdf', observed_at='2026-11-24T01:00:00Z')
+    (tmp_path/'original.pdf').write_bytes(payload)
+    (tmp_path/'official_document_acquisition_manifest.json').write_text(json.dumps({'records': [record]}))
+    class Page:
+        def extract_text(self):
+            return 'unusable native font map'
+    class Reader:
+        def __init__(self, *args):
+            self.pages = [Page()]
+    monkeypatch.setattr(pypdf, 'PdfReader', Reader)
+    monkeypatch.setattr(filing, 'admit_official_financial_fact', lambda row, **kw: kw['document_pages'])
+    native_text = Page().extract_text()
+    artifact = dict(artifact_identity='native-zero', fact_candidates=[], p3f13_panel_facts=[],
+                    page_evidence=[dict(page_number=1, page_text=native_text)])
+    failure = dict(document_sha256=sha, native_artifact_identity='native-zero', candidate_count=0,
+                   trigger='EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES',
+                   native_page_text_sha256={'1': _hash(native_text)})
+    body = dict(contract_version=lp.CONTRACT_VERSION, document_sha256=sha, pages={'1': dict(
+        tokens=[tok(1, 'retained OCR literal', 0, 10, 0, 10, 1)], native_failure_evidence=failure)})
+    proof = dict(body, proof_sha256=hashlib.sha256(lp.canonical_json(body).encode()).hexdigest())
+    ref = lp.proof_reference(proof)
+    path = tmp_path/ref['relative_path']; path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(proof))
+    row = dict(document_sha256=sha, ocr_layout_proof=ref, document_metadata={'metadata_claims': {}},
+               assurance_evidence={'page_number': 1}, source_span={'source_page': 1})
+    return row, native_text, artifact
+
+
+def test_retained_zero_native_candidate_replay_fails_closed_without_builder(tmp_path, monkeypatch):
+    """When no native PDF builder is registered or passed, OCR fallback must fail closed."""
+    from stocklookup_core.evidence import official_document_qualification as odq
+    row, native_text, _ = _zero_native_candidate_fixture(tmp_path, monkeypatch)
+    previous = odq.register_native_artifact_builder(None)
+    try:
+        assert odq.admit_retained_financial_fact(row, evidence_root=tmp_path, registry={}) == {1: native_text}
+    finally:
+        odq.register_native_artifact_builder(previous)
+
+
+def test_retained_zero_native_candidate_replay_accepts_explicit_builder(tmp_path, monkeypatch):
+    """An explicit native_artifact_builder parameter replays even with no registered builder."""
+    from stocklookup_core.evidence import official_document_qualification as odq
+    row, _, artifact = _zero_native_candidate_fixture(tmp_path, monkeypatch)
+    previous = odq.register_native_artifact_builder(None)
+    try:
+        result = odq.admit_retained_financial_fact(
+            row, evidence_root=tmp_path, registry={}, native_artifact_builder=lambda **kw: artifact)
+        assert result == {1: 'retained OCR literal'}
+    finally:
+        odq.register_native_artifact_builder(previous)

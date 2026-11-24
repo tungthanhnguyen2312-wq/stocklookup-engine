@@ -50,6 +50,16 @@ STANDARD_FACT_RULES = (
 from stocklookup_core.evidence.financial_row_identity import (
     ROW_LABEL_CONTRACT, _identity_fold, row_label_supports_metric as _row_label_supports_metric,
 )
+from stocklookup_core.evidence.official_document_qualification import register_native_artifact_builder
+
+
+def _build_native_pdf_artifact(**kwargs: Any) -> dict[str, Any]:
+    """Late-bound adapter so retained zero-native-candidate replay uses the root PDF builder."""
+    import official_financial_pdf_page_evidence
+    return official_financial_pdf_page_evidence.build_artifact(**kwargs)
+
+
+register_native_artifact_builder(_build_native_pdf_artifact)
 
 
 def row_label_supports_metric(metric: str, label: str) -> bool:

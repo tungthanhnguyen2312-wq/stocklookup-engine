@@ -38,6 +38,24 @@ def _native_page_text_sha256(value: str | None) -> str:
                                     separators=(",", ":")).encode("utf-8")).hexdigest()
 
 
+_NATIVE_ARTIFACT_BUILDER: Any = None
+
+
+def register_native_artifact_builder(builder: Any | None) -> Any | None:
+    """Register the upper-layer native PDF artifact builder for zero-native-candidate replay.
+
+    Returns the previously registered builder so callers and tests can restore state cleanly.
+    Passing ``None`` clears registration; when no builder is registered or explicitly passed,
+    the zero-native-candidate OCR fallback fails closed.
+    """
+    global _NATIVE_ARTIFACT_BUILDER
+    if builder is not None and not callable(builder):
+        raise TypeError("native_artifact_builder must be callable or None")
+    previous = _NATIVE_ARTIFACT_BUILDER
+    _NATIVE_ARTIFACT_BUILDER = builder
+    return previous
+
+
 def retained_assurance_is_bound(status, evidence, *, document_sha256):
     """Reuse this owner's existing assurance identity check for retained fields."""
     from official_financial_assurance_evidence import assurance_proof_is_bound
@@ -313,7 +331,8 @@ def official_landing_root(legacy: str | os.PathLike[str] | None = None) -> Path:
 
 def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path | None = None,
         registry: Mapping[str, Any] | None = None, cutoff: str | None = None,
-        intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY") -> dict[str, Any]:
+        intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY",
+        native_artifact_builder: Any | None = None) -> dict[str, Any]:
     """Read-only source replay around the pure filing admission rule.
 
     The source record comes from the retained manifest, never from an overlay's
@@ -375,11 +394,14 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
                     # Replay the already-governed explicit zero-native-candidate
                     # fallback, including its original artifact and page hashes.
                     # A caller flag or a nonempty text layer alone never qualifies.
+                    # When no native artifact builder is injected or registered,
+                    # fail closed and retain the native text layer.
                     from stocklookup_core.evidence.official_ocr_layout_proof import verify_proof_identity, page_text
-                    from official_financial_pdf_page_evidence import build_artifact
+                    build_artifact = (native_artifact_builder if native_artifact_builder is not None
+                                      else _NATIVE_ARTIFACT_BUILDER)
                     proof_pages = layout_proof.get('pages') or {}
                     failures = [proof_pages.get(str(n), {}).get('native_failure_evidence') for n, t in pages.items() if t.strip()]
-                    if (failures and all(isinstance(f, Mapping) for f in failures)
+                    if (callable(build_artifact) and failures and all(isinstance(f, Mapping) for f in failures)
                             and not verify_proof_identity(layout_proof, document_sha256=row.get('document_sha256'),
                                                         proof_sha256=ref.get('proof_sha256'))):
                         native = build_artifact(document={**record, 'entity_type': 'corporate',
