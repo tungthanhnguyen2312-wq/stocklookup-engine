@@ -381,7 +381,9 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             evidence_tier=dual["evidence_tier"], evidence_classification={
                 "authority_effect": dual["authority_effect"], "pit_backtest_eligible": False,
                 "knowledge_floor": dual["knowledge_floor"], "model_families": dual["model_families"],
-                "proof_sha256": dual["proof_sha256"], "raw_sha256": dual["raw_sha256"]})
+                "proof_sha256": dual["proof_sha256"], "raw_sha256": dual["raw_sha256"],
+                **({"literal_normalizations": dual["literal_normalizations"]}
+                   if dual.get("literal_normalizations") else {})})
     elif state == "ADMITTED":
         result["admission_basis"] = "RETAINED_SOURCE_REPLAY"
     result["admission_id"] = stable_id({**result, "row": {k: v for k, v in row.items() if k != "admission"}, "cutoff": cutoff})

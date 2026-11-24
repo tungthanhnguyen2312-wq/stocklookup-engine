@@ -48,6 +48,41 @@ def _column_binding(column: Mapping[str, Any], caption: Any) -> dict:
             "reporting_period": None if literal is None or literal == caption else literal}
 
 
+def _agreed_column_label(first: str, second: str, unit_literal: str) -> tuple[str | None, str | None]:
+    """Owner-approved PNJ rule 1: identical labels agree; otherwise one label may equal the other
+    followed by whitespace and a final token that is exactly the agreed currency/unit literal.
+
+    Returns the shorter (agreed) label and the normalization applied; any other difference is None.
+    """
+    if first == second:
+        return first, None
+    for short, long in ((first, second), (second, first)):
+        if (short and unit_literal and long.startswith(short)
+                and re.fullmatch(r"\s+" + re.escape(unit_literal), long[len(short):])):
+            return short, "TRAILING_CURRENCY_UNIT_TOKEN"
+    return None, None
+
+
+def _label_period(label: str, recognize_period) -> str | None:
+    """Owner-approved PNJ rule 2: a column label states its own period (recognizer, or a bare year)."""
+    recognized = recognize_period(label)["period"]
+    if recognized:
+        return recognized
+    text = " ".join(str(label).split())
+    return text if re.fullmatch(r"(?:19|20)\d{2}", text) else None
+
+
+def _unit(literal: str, parse_unit) -> dict | None:
+    """Owner-approved PNJ rule 3: the whole literal 'VND' declares VND at scale 1.
+
+    The existing parser does not accept a bare 'VND'; every other literal keeps its handling.
+    """
+    if literal == "VND":
+        return {"currency": "VND", "unit_scale": 1, "unit_label": "VND", "evidence_text": literal,
+                "label_recognition": "DUAL_READER_BARE_VND_TABLE_UNIT"}
+    return parse_unit(literal)
+
+
 def _sha(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
 
@@ -191,15 +226,30 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             enumerators.append(enumerator)
             selected[-1].update(column=_column_binding(columns[0], table["period_caption_literal"]),
                                 row_label_literal=label, line_code_literal=rows[0]["line_code_literal"], cell=cells[0])
-        if selected[0] != selected[1] or (None not in enumerators and enumerators[0] != enumerators[1]):
+        labels = [item["column"].pop("label_literal") for item in selected]
+        agreed_label, label_normalization = _agreed_column_label(
+            labels[0], labels[1], selected[0]["currency_unit_literal"])
+        if (selected[0] != selected[1] or agreed_label is None
+                or (None not in enumerators and enumerators[0] != enumerators[1])):
             return fail("LITERAL_DISAGREEMENT")
         agreed = selected[0]
+        agreed["column"]["label_literal"] = agreed_label
         # Unknown glyphs or omitted literal metadata cannot be repaired by arithmetic.
         if ("UNREADABLE" in json.dumps(agreed, ensure_ascii=False).upper()
                 or any(not agreed[k] for k in ("issuer_literal", "statement_title_literal", "scope_literal",
                        "form_reference_literal", "currency_unit_literal", "period_caption_literal"))):
             return fail("UNREADABLE_OR_MISSING_LITERAL")
         column, cell = agreed["column"], agreed["cell"]
+        caption_period = recognize_period(agreed["period_caption_literal"])["period"]
+        if caption_period is None:
+            # Rule 2: a caption without a period defers to the current column's own label, which must
+            # equal both the fact period and the qualified document metadata period.
+            claims = (row.get("document_metadata") or {}).get("metadata_claims") or {}
+            label_period = _label_period(column["label_literal"], recognize_period)
+            if (label_period == row["reporting_period"]
+                    and label_period == (claims.get("reporting_period") or {}).get("value")
+                    and column["role"] == "current"):
+                caption_period = label_period
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
         if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year}:
@@ -213,7 +263,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or (column["reporting_period"] != row["reporting_period"] and recognize_period(
                     column["reporting_period"] or agreed["period_caption_literal"])["period"] != row["reporting_period"])
                 or column["role"] != "current" or not column["label_literal"]
-                or recognize_period(agreed["period_caption_literal"])["period"] != row["reporting_period"]
+                or caption_period != row["reporting_period"]
                 or recognize_scope(agreed["scope_literal"])["statement_scope"] != row["statement_scope"]):
             return fail("SEMANTIC_BINDING_MISMATCH")
         if (row.get("statement_family") != "income_statement"
@@ -223,7 +273,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             return fail("ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED")
         if cell.get("uncertainty") != []:
             return fail("UNRESOLVED_CELL_UNCERTAINTY")
-        unit = parse_unit(agreed["currency_unit_literal"])
+        unit = _unit(agreed["currency_unit_literal"], parse_unit)
         if (not unit or unit["currency"] != row["currency"]
                 or unit["unit_scale"] != row.get("source_unit_scale", row["unit_scale"])):
             return fail("CURRENCY_UNIT_MISMATCH")
@@ -238,6 +288,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         return {"valid": True, "reason_codes": [], "knowledge_floor": floor.isoformat(),
                 "evidence_tier": EVIDENCE_TIER, "proof_sha256": ref["proof_sha256"],
                 "raw_sha256": [r["sha256"] for r in refs], "model_families": families,
-                "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False}
+                "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False,
+                **({"literal_normalizations": [{"field": "column.label_literal", "column_id": row["column_id"],
+                    "reader_literals": labels, "agreed": agreed_label, "rule": label_normalization}]}
+                   if label_normalization else {})}
     except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):
         return fail("MALFORMED_RETAINED_PROOF")

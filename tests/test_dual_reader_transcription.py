@@ -451,3 +451,88 @@ def test_real_shaped_rows_feed_h1_bridge_for_codes_60_and_61(tmp_path, monkeypat
         assert feature['authority_effect'] == 'OFFLINE_RESEARCH_ONLY' and feature['pit_backtest_eligible'] is False
         prior = [p for p in feature['provider_source_provenance'] if p['reporting_period'] == '2025-H1']
         assert prior and prior[0]['evidence_tier'] == dual.EVIDENCE_TIER
+
+
+# --- Annual B 02 - DN/HN shape (PNJ-like, still synthetic): owner-approved rules 1-3 ----------
+_YEARLESS_CAPTION = 'Năm tài chính kết thúc ngày 31 tháng 12 năm'
+_COLUMN_PERIOD = 'Năm tài chính kết thúc ngày 31 tháng 12 năm 2025'
+
+
+def _annual_shape(directory, row, proof, *, labels=('2025', '2025 VND'), unit='VND', caption=_YEARLESS_CAPTION,
+                  periods=(_COLUMN_PERIOD, _COLUMN_PERIOD), roles=('current', 'current')):
+    for index in (0, 1):
+        def change(raw, i=index):
+            table = raw['table']
+            table.update(currency_unit_literal=unit, period_caption_literal=caption)
+            table['columns'] = [
+                {'column_id': 'c1', 'label_literal': labels[i], 'reporting_period': periods[i], 'role': roles[i]},
+                {'column_id': 'c2', 'label_literal': labels[i].replace('2025', '2024'),
+                 'reporting_period': _COLUMN_PERIOD.replace('2025', '2024'), 'role': 'comparative'}]
+            base = table['rows'][0]
+            base['cells'] = [{**base['cells'][0], 'column_id': 'c1'},
+                             {'column_id': 'c2', 'raw_value_literal': '2.112.916.282.946', 'sign_literal': 'unsigned', 'uncertainty': []}]
+        _change_reader(directory, row, proof, change, index=index)
+    row.update(column_id='c1', current_period_label=min(labels, key=len))
+
+
+@pytest.mark.parametrize('metric', ['revenue', 'net_income', 'attributable_net_income'])
+def test_annual_trailing_unit_label_yearless_caption_and_bare_vnd_admit(tmp_path, metric):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890, metric)
+    _annual_shape(directory, row, proof)
+    retained = admit_retained_financial_fact(row, evidence_root=tmp_path, registry=context['registry'])
+    assert retained['state'] == 'ADMITTED' and retained['admission_basis'] == dual.EVIDENCE_TIER, retained
+    assert retained['evidence_classification']['literal_normalizations'] == [{
+        'field': 'column.label_literal', 'column_id': 'c1', 'reader_literals': ['2025', '2025 VND'],
+        'agreed': '2025', 'rule': 'TRAILING_CURRENCY_UNIT_TOKEN'}]
+
+
+def test_identical_annual_labels_record_no_normalization(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'))
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert 'literal_normalizations' not in result['evidence_classification']
+
+
+@pytest.mark.parametrize('labels', [('2025', '2025 USD'), ('2025', '2024'), ('2025', 'VND 2025'),
+                                    ('2025', '2025 VND VND'), ('2025', '2025VND'), ('2025', '2025 vnd')])
+def test_column_label_rule_one_only_accepts_trailing_agreed_unit(tmp_path, labels):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof, labels=labels)
+    assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']
+
+
+@pytest.mark.parametrize('case', ['column_year_mismatch', 'metadata_period_mismatch', 'role_not_current',
+                                  'no_period_anywhere'])
+def test_yearless_caption_needs_current_column_period_matching_fact_and_metadata(tmp_path, case):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    if case == 'column_year_mismatch':
+        _annual_shape(directory, row, proof, labels=('2024', '2024 VND'), periods=(None, None))
+        row['current_period_label'] = '2024'
+    elif case == 'metadata_period_mismatch':
+        _annual_shape(directory, row, proof, periods=(None, None))
+        row['document_metadata']['metadata_claims']['reporting_period']['value'] = '2024'
+    elif case == 'role_not_current':
+        _annual_shape(directory, row, proof, roles=('unknown', 'unknown'))
+    else:
+        _annual_shape(directory, row, proof, labels=('Năm nay', 'Năm nay VND'), periods=(None, None))
+        row['current_period_label'] = 'Năm nay'
+    result = _pure(row, context, directory)
+    assert result['state'] == 'BLOCKED'
+    assert ('DUAL_READER_SEMANTIC_BINDING_MISMATCH' in result['reason_codes']
+            or 'DUAL_READER_CURRENT_COLUMN_NOT_EXPLICIT' in result['reason_codes']), result
+
+
+@pytest.mark.parametrize('unit', ['VNĐ triệu', 'Triệu VND', 'Nghìn VND', 'vnd', 'VND ', 'USD', 'VND/USD'])
+def test_only_whole_bare_vnd_is_added_other_units_keep_existing_handling(tmp_path, unit):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 2828497462890)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'), unit=unit)
+    assert 'DUAL_READER_CURRENCY_UNIT_MISMATCH' in _pure(row, context, directory)['reason_codes']
+
+
+def test_bare_vnd_mapping_is_single_and_delegates_otherwise():
+    from financial_statement_unit_resolution import parse_explicit_unit_declaration as parse
+    assert dual._unit('VND', parse)['currency'] == 'VND' and dual._unit('VND', parse)['unit_scale'] == 1
+    for literal in ('Đơn vị: VND', 'Đơn vị: Triệu VND', 'Nghìn VND', 'VNĐ triệu', 'vnd'):
+        assert dual._unit(literal, parse) == parse(literal)
+    assert dual._unit('Đơn vị: VND', parse)['unit_scale'] == 1

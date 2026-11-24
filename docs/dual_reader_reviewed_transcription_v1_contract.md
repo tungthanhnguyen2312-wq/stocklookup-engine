@@ -137,6 +137,30 @@ The existing H1 bridge calls common retained admission for each operand and
 propagates these labels into each input's provenance. Its normal fact-local
 conflict and cutoff checks still block dependent outputs.
 
+## Annual B 02 - DN/HN bindings (Head Leader decision, 2026-11-24)
+
+Three bounded rules. Nothing else is widened.
+
+1. **Column label agreement.** Two readers' `label_literal` for the selected
+   column agree if they are identical. They also agree if one equals the other
+   followed by whitespace and a final token that is exactly the agreed table
+   `currency_unit_literal` (e.g. `2025` vs `2025 VND` when the unit literal is
+   `VND`). The shorter label is the agreed label. Any other difference is
+   `DUAL_READER_LITERAL_DISAGREEMENT`. An applied normalization is recorded in
+   the admission's `evidence_classification.literal_normalizations`.
+2. **Yearless caption.** When the agreed caption recognizes no period, the
+   selected column's agreed label must resolve one. Resolution uses
+   `recognize_period`, or the label is a bare four-digit year. That period must
+   equal the row's `reporting_period` and the qualified document-metadata period.
+   The column role must be `current` in both readers. If neither the caption nor
+   the column resolves, the fact is blocked. A caption that does recognize a
+   period must still equal the fact period.
+3. **Bare unit.** An agreed `currency_unit_literal` that is exactly `VND` (the
+   whole literal) declares VND at scale 1, through one explicit mapping. The
+   existing unit parser does not accept a bare `VND`. Every other literal keeps
+   the existing parser handling, including `Triệu VND`, `Nghìn VND` and
+   `Đơn vị: VND`.
+
 ## First real admission (HPG 2025-H1, 2026-11-24)
 
 `tools/run_dual_reader_transcription_admission.py` seals one page without network
