@@ -440,6 +440,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
     # Rebuild the current receipt using only the enumerated successor paths.
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    layouts = live_receipt["decision2_pow_nvl_layout_corrective"]
     coverage = live_receipt["decision2_coverage_factlocal_corrective"]
     def coverage_predecessor_pin(path):
         return coverage["prior_source_sha256_lf"].get(path,
@@ -1157,9 +1158,26 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in coverage["changed_source_paths"]:
         assert coverage["prior_source_sha256_lf"][path] == baseline["source_sha256"][path]
         assert coverage["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = layouts["prior_source_sha256_lf"].get(path,
+            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+    prior_receipt["decision2_coverage_factlocal_corrective"] = coverage
+
+    assert layouts["scope"] == "DECISION2_EXACT_POW_NVL_INCOME_LAYOUT_REGISTRATIONS"
+    assert layouts["new_capacity_measurement"] is False
+    assert layouts["whole_daily_requalification"] is False
+    assert layouts["release_authority"] == "NOT_GRANTED"
+    assert layouts["changed_source_paths"] == ["stocklookup_core/evidence/official_ocr_layout_proof.py"]
+    assert set(layouts["prior_source_sha256_lf"]) == set(layouts["changed_source_paths"])
+    layout_baseline = json.loads(subprocess.check_output(
+        ["git", "show", f"{layouts['base_commit']}:{receipt_path}"], cwd=root))
+    for path in layouts["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{layouts['base_commit']}:{path}"], cwd=root)
+        assert layouts["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
+        assert layouts["prior_source_sha256_lf"][path] == layout_baseline["source_sha256"][path]
+        assert layouts["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = hashlib.sha256(
             (root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-    prior_receipt["decision2_coverage_factlocal_corrective"] = coverage
+    prior_receipt["decision2_pow_nvl_layout_corrective"] = layouts
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
