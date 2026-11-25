@@ -270,6 +270,15 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             else recognize_period(column["reporting_period"])["period"])
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
+        # The explicit annual header already accepts "Năm YYYY" below. When
+        # readers repeat that same literal as the column period, bind its year
+        # consistently; the independent caption must still prove the same FY.
+        # Do not apply this to H1, another period literal or a contrary caption.
+        if (column_period is None and row["reporting_period"] == year
+                and caption_period == year
+                and column["reporting_period"] == column["label_literal"]
+                and header == "năm " + year):
+            column_period = year
         if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year}:
             return fail("CURRENT_COLUMN_NOT_EXPLICIT")
         if (agreed["row_label_literal"] != row["raw_row_label"]

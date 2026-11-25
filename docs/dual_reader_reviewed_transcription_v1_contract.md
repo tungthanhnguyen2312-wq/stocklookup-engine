@@ -209,6 +209,13 @@ retention instant. Those provenance failures require owner evidence resolution.
 Caption-bound columns reuse the validated caption period, including the existing
 yearless-caption/current-label/qualified-metadata resolution. Explicit independent
 column periods are separately validated and contradictory periods still fail.
+The already supported explicit annual header `Năm YYYY`, when repeated exactly
+as the column's period literal, binds to that same FY only when the independent
+caption also resolves that FY. This fixes the inconsistent header/column-period
+checks (HL-20261125-CDX-10); raw literals remain unchanged. It does not resolve
+a yearless caption, an H1 period, a different column-period literal or a contrary
+caption. Missing scope versus an explicit scope and a form reference with versus
+without a circular suffix remain literal disagreements requiring Owner decision.
 
 The runner constructs codes 10/60/61 independently, checking selected row,
 column and cell uniqueness in both readings. Missing, duplicate, unparsable or

@@ -142,6 +142,55 @@ def _pure(row, context, directory):
     return admit_official_financial_fact(row, dual_reader_proof=dual.load_retained_dual_reader_proof(row, directory), **context)
 
 
+@pytest.mark.parametrize("metric,literal,value", [
+    ("revenue", "6.965.748.286.065", 6965748286065),
+    ("net_income", "1.861.407.508.211", 1861407508211),
+    ("attributable_net_income", "1.743.741.158.759", 1743741158759),
+])
+def test_explicit_annual_header_repeated_as_column_period(tmp_path, metric, literal, value):
+    row, context, directory, proof = _fixture(tmp_path, period="2025", metric=metric, value=value)
+    row.update(current_period_label="Năm 2025", raw_value_text=literal)
+    row["source_span"]["text"] = row["raw_row_label"] + " " + literal
+    def change(raw):
+        raw["table"]["columns"][0].update(label_literal="Năm 2025", reporting_period="Năm 2025")
+        raw["table"]["rows"][0]["cells"][0]["raw_value_literal"] = literal
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    # The owned PDF contains none of these amounts. Admission must therefore
+    # verify the dual proof, including sign/scale, to waive text presence.
+    result = _pure(row, context, directory)
+    assert result["state"] == "ADMITTED", result["reason_codes"]
+
+
+@pytest.mark.parametrize("period,column_period,caption", [
+    ("2025", "Năm 2024", None),
+    ("2025", "Năm 2025", "financial year ended 31 December 2024"),
+    ("2026-H1", "Năm 2026", None),
+])
+def test_annual_header_binding_preserves_period_conflicts(tmp_path, period, column_period, caption):
+    row, context, directory, proof = _fixture(tmp_path, period=period)
+    row["current_period_label"] = "Năm " + period[:4]
+    def change(raw):
+        raw["table"]["columns"][0].update(label_literal=row["current_period_label"], reporting_period=column_period)
+        if caption is not None:
+            raw["table"]["period_caption_literal"] = caption
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    assert "DUAL_READER_SEMANTIC_BINDING_MISMATCH" in _pure(row, context, directory)["reason_codes"]
+
+
+@pytest.mark.parametrize("metric", ["revenue", "net_income", "attributable_net_income"])
+@pytest.mark.parametrize("difference", ["missing_scope", "form_suffix"])
+def test_h1_scope_and_form_literal_differences_still_block(tmp_path, metric, difference):
+    row, context, directory, proof = _fixture(tmp_path, metric=metric)
+    if difference == "missing_scope":
+        _change_reader(directory, row, proof, lambda raw: raw["table"].update(scope_literal=None), index=0)
+    else:
+        _change_reader(directory, row, proof, lambda raw: raw["table"].update(
+            form_reference_literal=row["form_reference_literal"] + " Thông tư số 43/2026/TT-BTC"))
+    assert "DUAL_READER_LITERAL_DISAGREEMENT" in _pure(row, context, directory)["reason_codes"]
+
+
 def test_same_common_pipeline_requires_raw_replay_and_labels_research(tmp_path):
     row, context, directory, _ = _fixture(tmp_path)
     no_proof = admit_official_financial_fact(row, **context)
