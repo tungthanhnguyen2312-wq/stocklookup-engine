@@ -35,13 +35,13 @@ No successor; SBV UNKNOWN. [Contract](macro_market_regime_decision_context_contr
 
 ## PRIOR — retained financial evidence checkpoints (COMPLETE)
 
-Qualification/blockers remain in ACTIVE_STATE and [campaign record](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md) ([prior checkpoint detail](long_term_company_economics_evidence_contract.md#retained-prior-checkpoint-detail)). Strict shares/valuation stay zero; completed sessions immutable; campaign authorizes no Daily (Oct 8 Owner completion recorded separately).
+Qualification/blockers: ACTIVE_STATE and [campaign record](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md) ([prior checkpoint](long_term_company_economics_evidence_contract.md#retained-prior-checkpoint-detail)). Strict shares/valuation zero; completed sessions immutable; campaign authorizes no Daily (Oct 8 Owner completion separate).
 
-`FIRST_REAL_POST_RELEASE_CAPTURE_ACCEPTANCE` stays RECORDED for Oct 5 (not reopened). Non-voting research foundations (decision-intelligence closure, portfolio workbench, evidence packet V2, outcome review, historical panel, freshness contract) are indexed in ACTIVE_STATE; none starts a successor or supplies capital decisions. Forex idea bank is not a roadmap entry.
+`FIRST_REAL_POST_RELEASE_CAPTURE_ACCEPTANCE` stays RECORDED for Oct 5 (not reopened). Non-voting research foundations (decision-intelligence closure, portfolio workbench, evidence packet V2, outcome review, historical panel, freshness) are in ACTIVE_STATE; none starts a successor or supplies capital decisions. Forex idea bank is not a roadmap entry.
 
-**2026-10-06 Phase C:** `3231616022213aac7f8c75e164c1f403566ee12c`, `RESIDUAL_PEAK_CORRECTIVE_READY`. Heavy path 4.03 GiB private; separate Owner completion/handoff 5.51 GiB (< 7-GiB guard), exact semantic parity, no authority effect. Disk READY required; Depth2 `DEPTH_PENDING`. [Whole model](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md); [V1 proof](internal/POST_FIRST_REAL_DAILY_PHASE_C_RESOURCE_SIMPLIFICATION_20261006.md). Oct 5 identities and 10.23-GiB peak stay in ACTIVE_STATE; `official_verification` conditional, RAW/CA closed, journal COMPLETE.
+**2026-10-06 Phase C:** `3231616022213aac7f8c75e164c1f403566ee12c`, `RESIDUAL_PEAK_CORRECTIVE_READY`. Heavy path 4.03 GiB private; Owner completion/handoff 5.51 GiB (< 7-GiB guard), exact parity, no authority effect. Disk READY required; Depth2 `DEPTH_PENDING`. [Whole model](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md); [V1 proof](internal/POST_FIRST_REAL_DAILY_PHASE_C_RESOURCE_SIMPLIFICATION_20261006.md). Oct 5 identities & 10.23-GiB peak in ACTIVE_STATE; `official_verification` conditional, RAW/CA closed, journal COMPLETE.
 
-Next ordinary Daily = next completed market session after fresh READY host preflight (not a milestone; `queued_next` empty).
+Next ordinary Daily = next completed session after fresh READY preflight (not a milestone; `queued_next` empty).
 
 ## NEXT EVIDENCE GATE — time-driven, not milestones
 

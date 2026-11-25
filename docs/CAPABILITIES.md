@@ -8,56 +8,32 @@ Navigation; no scores. [Facts](ACTIVE_STATE.md), [authority](AUTHORITY.md), [run
 Local PR167 [comparison](integrated_investment_opportunity_comparison_v1_contract.md)/[discovery](thesis_opportunity_discovery_v1_contract.md): ratio, divergence and trajectory research;
 `action-center --compare` / `--thesis-discovery`. Non-voting; no score or posture change.
 
-**Runtime status vocabulary:** `ACTIVE` (runs in production, failure blocks that stage) ·
-`ACTIVE_FAILSOFT` (runs in production, failure is component-local `UNAVAILABLE`, never revises sealed
-results) · `FROZEN_HISTORICAL` (code/artifacts preserved, not the production path) ·
-`BLOCKED_EVIDENCE` (cannot advance until named evidence exists) · `DEFERRED` · `EXPERIMENTAL`.
-**Authority vocabulary:** `AUTHORITATIVE` · `SCOPED` · `NON_VOTING` · `BLOCKED` · `DEFERRED`.
-**Production vocabulary:** `IN_DAILY_BLOCKING` · `IN_DAILY_FAILSOFT` · `OWNER_LAUNCHER` · `OFFLINE_ONLY` · `NOT_RUN`.
-Each block: **Contract** · **Runtime** · **Authority** · **Production** · **Input** · **Predecessor**
-(frozen) · **Blocker** · **Next trigger** (the evidence that would change the status).
+**Runtime:** `ACTIVE` (production, failure blocks stage) · `ACTIVE_FAILSOFT` (production, component-local `UNAVAILABLE`, never revises sealed results) · `FROZEN_HISTORICAL` (preserved, non-production) · `BLOCKED_EVIDENCE` (awaiting named evidence) · `DEFERRED` · `EXPERIMENTAL`.
+**Authority:** `AUTHORITATIVE` · `SCOPED` · `NON_VOTING` · `BLOCKED` · `DEFERRED`. **Production:** `IN_DAILY_BLOCKING` · `IN_DAILY_FAILSOFT` · `OWNER_LAUNCHER` · `OFFLINE_ONLY` · `NOT_RUN`.
+Blocks: **Contract · Runtime · Authority · Production · Input · Predecessor** (frozen) **· Blocker · Next trigger**.
 
-[Development lanes](parallel_domain_development_control_plane_v1_contract.md):
-released PR134; native admission only; no runtime authority.
-
-[Wave 1 replay](SYSTEM_MAP.md#wave-1-historical-replay-relocation--2026-10-13): PR139 released; 34 modules in `tools/replay/`; `FROZEN_HISTORICAL / NON_VOTING / OFFLINE_ONLY`; identity/evidence unchanged.
-
-Decision-intelligence closure (2026-10-07) is research coverage and calibration context
-only. Contract `decision_intelligence_coverage_calibration/v1`. It does not vote, size,
-or recommend. Read-only inspection released PR116; [scope](research_inspection_integrity_v1_contract.md).
-[Closure evidence](internal/DECISION_INTELLIGENCE_COVERAGE_AND_CALIBRATION_CLOSURE_20261007.md).
-
-Macro V1: Daily/AI/cockpit wired; October 8 live acceptance verified (`MACRO_REGIME_20261008_LIVE_ACCEPTED`;
-exact retained identities in ACTIVE_STATE). Source authority unchanged.
+[Development lanes](parallel_domain_development_control_plane_v1_contract.md): PR134; native admission only; no runtime authority.
+[Wave 1 replay](SYSTEM_MAP.md#wave-1-historical-replay-relocation--2026-10-13): PR139; 34 `tools/replay/` modules; `FROZEN_HISTORICAL / NON_VOTING / OFFLINE_ONLY`; identity/evidence unchanged.
+Decision-intelligence closure (2026-10-07, `decision_intelligence_coverage_calibration/v1`): coverage/calibration context only; non-voting, no sizing/recommendation. Read-only inspection PR116 ([scope](research_inspection_integrity_v1_contract.md)); [evidence](internal/DECISION_INTELLIGENCE_COVERAGE_AND_CALIBRATION_CLOSURE_20261007.md).
+Macro V1: Daily/AI/cockpit wired; Oct 8 live acceptance verified (`MACRO_REGIME_20261008_LIVE_ACCEPTED`; identities in ACTIVE_STATE); source authority unchanged.
 
 ### Long-term company economics evidence
 - Contract: [long_term_company_economics_evidence_contract.md](long_term_company_economics_evidence_contract.md)
 - Runtime: `EXPERIMENTAL` (opt-in library) · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`
-- Input: existing qualified official overlay with explicit cutoff; optional verified, timed thesis research references and method-qualified relative context
-- Predecessor: existing financial qualification, earnings-component and thesis contracts (unchanged)
-- Blocker: no qualified multi-year structural/cycle proof, recurrence/accounting normalization bridge or strict share continuity
-- Next trigger: qualified evidence; [packet/quality bridge](company_economics_research_packet_consumer_v1_contract.md), offline/non-voting
+- Input: qualified official overlay + cutoff; optional verified timed thesis refs & method-qualified relative context · Predecessor: existing financial/earnings/thesis contracts (unchanged)
+- Blocker: no multi-year structural/cycle proof, recurrence/accounting bridge or strict share continuity · Next trigger: qualified evidence; [packet/quality bridge](company_economics_research_packet_consumer_v1_contract.md), offline/non-voting
 
 ### Vault snapshot / retention
 - Contract: [vault_incremental_snapshot_contract.md](vault_incremental_snapshot_contract.md)
 - Runtime: `EXPERIMENTAL` · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`
 - Input: completed boundary, native SHA, volume proofs · Predecessor: retained vault audit
-- Blocker: runtime recovery/reference closure and source-retention approval
-- Next trigger: separate production approval; backup grants no deletion authority
+- Blocker: runtime recovery/reference closure & source-retention approval · Next trigger: separate production approval; backup grants no deletion authority
 
-Price/flow corrective: current-research, non-voting; local checkpoint only.
-[Qualification and compatibility](price_basis_and_flow_contract_corrective.md).
+Price/flow corrective: current-research, non-voting; local checkpoint only ([qualification](price_basis_and_flow_contract_corrective.md)).
 
 ## A. Market evidence and calendar
 
-Phase C resource architecture (released 2026-10-06) retains record-wise IID hashing, borrowed
-analytical binding leaves and bounded delivery encoding. Production signal velocity verifies
-full T0/root/per-record hashes while retaining only seven axes; T0 and observer hashing/emission
-are record-bounded, with exact immutable publication/reuse. Held-live heavy-path private
-peak 4.03 GiB; separate actual Owner completion/handoff 5.51 GiB, under unchanged 7-GiB
-containment. Disposition `RESIDUAL_PEAK_CORRECTIVE_READY`; no capability or authority promotion
-and no production Daily launch. Disk admission remains independently mandatory.
-[Whole-pipeline review evidence](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md).
+Phase C (2026-10-06): record-wise IID hashing, borrowed binding leaves, bounded delivery encoding, full-hash 7-axis velocity, record-bounded T0/observer hashing/emission, immutable publication/reuse. Held-live heavy peak 4.03 GiB private; separate Owner completion/handoff 5.51 GiB (< 7-GiB limit). `RESIDUAL_PEAK_CORRECTIVE_READY`; no authority promotion or Daily launch; disk admission mandatory ([evidence](internal/PHASE_C_WHOLE_PIPELINE_RESOURCE_CLOSEOUT_20261006.md)).
 
 ### 1. Market acquisition (DNSE exact-session)
 - Contract: [exact_session_bundle_contract.md](exact_session_bundle_contract.md); Phase A/B gates in `completed_market_session_gate.py`
@@ -148,62 +124,34 @@ and no production Daily launch. Disk admission remains independently mandatory.
 
 ## C. Fundamental, valuation, decision
 
-[VN30 financial/valuation research](vn30_financial_valuation_research_scaleout_v1_contract.md):
-local `EXPERIMENTAL / NON_VOTING / OFFLINE_ONLY` compatible opt-in projection over
-existing Producer metrics, labelled freshness and unchanged source lineage. One new
-VRE reported-H1 ending-equity ROE proxy; no exact/TTM/sector/share authority change.
-The new ROE peer distribution remains below the compatible minimum; existing
-valuation peer verdicts retain their upstream scope. Default Daily behavior is unchanged.
+[VN30 financial/valuation research](vn30_financial_valuation_research_scaleout_v1_contract.md): local `EXPERIMENTAL / NON_VOTING / OFFLINE_ONLY` opt-in projection over Producer metrics, labelled freshness, unchanged lineage. One VRE reported-H1 ending-equity ROE proxy (peer distribution below minimum); no exact/TTM/sector/share authority or Daily change.
 
 ### 11. Corporate Intelligence
-- Local projection checkpoint: exact selected session event context joins the three retained
-  historical chains. Prior contexts require deterministic session projection with immutable
-  parent identity; missing selection is explicit UNAVAILABLE. Governance/ownership remain
-  unavailable without their own evidence. [Measured integration](internal/CURRENT_OFFICIAL_EVIDENCE_PROJECTION_INTEGRATION_20261007.md).
+- Local checkpoint: selected session event context joins 3 retained chains; deterministic projection with immutable parent identity; missing = UNAVAILABLE; governance/ownership unavailable ([integration](internal/CURRENT_OFFICIAL_EVIDENCE_PROJECTION_INTEGRATION_20261007.md)).
 - Contract: [corporate_currency_daily_rollforward_contract.md](corporate_currency_daily_rollforward_contract.md); `current_corporate_intelligence_axis.py`
-- Runtime: `ACTIVE_FAILSOFT` (bounded HNX/HOSE rollforward; failure leaves the axis `NOT_PROVIDED`) · Authority: `SCOPED` (additive IID axis; official events only) · Production: `IN_DAILY_FAILSOFT`
-- Input: official HNX/HOSE corporate events within one shared budget · Predecessor: frozen 2026-08-21 event context
-- Blocker: three real corporate-action factors unqualified; lifecycle/term identities incomplete
-- Next trigger: qualified executed official factor with explicit ex-date and knowledge time
+- Runtime: `ACTIVE_FAILSOFT` (HNX/HOSE rollforward; failure = `NOT_PROVIDED`) · Authority: `SCOPED` (additive IID axis; official events only) · Production: `IN_DAILY_FAILSOFT`
+- Input: official HNX/HOSE events within shared budget · Predecessor: frozen 2026-08-21 context
+- Blocker: 3 CA factors unqualified; lifecycle/term identities incomplete · Next trigger: qualified executed official factor with ex-date and knowledge time
 
-[Business updates](official_business_update_research_contract.md): PR135; news route blocked.
-[Intake](official_financial_quarterly_intake_contract.md): PR137; offline/source gate. HPG binding PR138 uses approved routes.
-[Q3 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md): column gate fixed; no new official facts.
-HPG reviewed H1 OCR adds four qualified facts from the 2026-11-09 cutoff. Producer
-PR #235 and Dashboard PR #32 expose six HPG Q3 shadow research rows. The shadow
-tier has zero official Q3 admissions and no valuation eligibility. PAN has a
-HOSE Q3 locator, with filing-type admission and session share continuity still open.
-[Qualifier transport](current_financial_valuation_input_unlock_v1_contract.md): PR140; present Workspace/AI labels (AI bound session ≥2026-10-14); coverage unchanged.
-[CI extension](CI_AND_DEPENDENCY_TIERS.md): G2/business/quarterly mandatory; 367 files nonblocking; release via native lanes.
+[Business updates](official_business_update_research_contract.md): PR135; news blocked. [Intake](official_financial_quarterly_intake_contract.md): PR137; offline/source gate; HPG binding PR138 uses approved routes. [Q3 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md): column gate fixed; no new official facts. HPG reviewed H1 OCR adds 4 facts (2026-11-09 cutoff); Producer PR #235 / Dashboard PR #32 expose 6 HPG Q3 shadow rows (0 official Q3 admissions, no valuation eligibility); PAN HOSE Q3 locator open for filing-type/share continuity. [Qualifier transport](current_financial_valuation_input_unlock_v1_contract.md): PR140; Workspace/AI labels (AI bound ≥2026-10-14); coverage unchanged. [CI extension](CI_AND_DEPENDENCY_TIERS.md): G2/business/quarterly mandatory; 367 files nonblocking; native lanes.
 
 ### 12. Current financial evidence
-- PR168/169 local: tainted KBS periods blocked; six unreviewed research rows remain separate. Authority unchanged; [release gate](ACTIVE_STATE.md).
-- Frozen August-23 baseline. PNJ/VRE H1 fields and PVD USD context retain [currency](currency_preserving_interim_context_contract.md) and [earnings](reported_earnings_component_context_contract.md) limits.
-- [Reviewed HPG/KBC/FPT financial cases](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md) are OFFLINE_ONLY / NON_VOTING.
-  FPT FY2025 line 03 Provisions is an audited annual component in historical context only.
-  2026-H1 reviewed consolidated current fields known 2026-10-08: VNM cash 4,535,672,366,831 VND; QNS equity 10,647,823,148,609 VND. The QNS detail page is discovery only and did not add another fact.
-  FY2025 historical context now has ten fields: HPG revenue/profit, PNJ cash/operating flow, PVD revenue/profit/assets/equity and FPT revenue/equity. [Annual contract](audited_annual_exact_field_context_contract.md). Annual metrics/share gates unchanged; other fields retain geometry blockers.
+- PR168/169 local: tainted KBS periods blocked; 6 unreviewed rows separate; authority unchanged ([release gate](ACTIVE_STATE.md)).
+- Frozen Aug-23 baseline; PNJ/VRE H1 & PVD USD keep [currency](currency_preserving_interim_context_contract.md)/[earnings](reported_earnings_component_context_contract.md) limits.
+- [Reviewed HPG/KBC/FPT](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md): `OFFLINE_ONLY / NON_VOTING`. FPT FY2025 line 03 Provisions = audited annual context only. 2026-H1 fields (known 2026-10-08): VNM cash 4,535,672,366,831 VND; QNS equity 10,647,823,148,609 VND (QNS detail page discovery only). FY2025 context (10 fields): HPG rev/profit, PNJ cash/OCF, PVD rev/profit/assets/equity, FPT rev/equity ([annual contract](audited_annual_exact_field_context_contract.md)); annual/share gates unchanged; geometry blockers remain.
 - Contract: [financial_statement_canonical_contract.md](financial_statement_canonical_contract.md); `stocklookup_core/financial/financial_analysis_engine_v2.py`
-- Runtime: `ACTIVE` · Authority: `SCOPED` (provider-reported research evidence with explicit method/provenance; no official promotion) · Production: `IN_DAILY_BLOCKING` (inside enrichment; absent inputs yield explicit ABSENT records)
-- Input: pinned Financial V2 current-input authority chain · Predecessor: legacy 523-record fundamental shape (frozen)
-- Blocker: official statement refresh and OCR cohorts `PARTIAL`
-- Next trigger: official statement currency refresh
+- Runtime: `ACTIVE` · Authority: `SCOPED` (provider-reported research with method/provenance; no official promotion) · Production: `IN_DAILY_BLOCKING` (absent = explicit ABSENT)
+- Input: pinned Financial V2 authority chain · Predecessor: legacy 523-record shape (frozen)
+- Blocker: official refresh & OCR cohorts `PARTIAL` · Next trigger: official statement currency refresh
 
-HPG's audited capital note now supplies one dated common-outstanding observation,
-context only until complete continuity qualifies. Listed quantities and provider
-agreement cannot establish common semantics or continuity. Completed sessions remain
-immutable. [Share contract](hpg_common_share_evidence_contract.md).
+HPG audited capital note: 1 dated common-outstanding observation (context only until continuity qualifies); listed/provider counts cannot prove common continuity; completed sessions immutable ([share contract](hpg_common_share_evidence_contract.md)).
 
 ### 13a. Relative valuation (current state)
-- Local Owner Decision 1 (2026-11-24, `HL-20261124-HOL-06`): parent-profit headline
-  P/E; code-60 supplementary only. Retained November 23 compatibility replay
-  5 → 0 headlines; missing upstream parent panel remains an explicit evidence gap.
-  [Acceptance](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md). Unreleased;
-  existing runtime and authority boundaries below remain in force.
+- Local Owner Decision 1 (2026-11-24, `HL-20261124-HOL-06`): parent-profit headline P/E; code-60 supplementary only; Nov 23 replay 5 → 0 headlines; missing upstream parent panel explicit ([acceptance](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md)); unreleased, boundaries unchanged.
 - Contract: [current_state_relative_valuation_contract.md](current_state_relative_valuation_contract.md)
 - Runtime: `ACTIVE` · Authority: `SCOPED` (research context; no target price/probability) · Production: `IN_DAILY_BLOCKING` (inside enrichment)
-- Input: Financial V2 engine artifact, valuation inputs, entity applicability · Predecessor: raw valuation lane (frozen shape)
-- Blocker: market cap is size, not valuation; EV/EBITDA only where qualified · Next trigger: input qualification changes
+- Input: Financial V2 artifact, valuation inputs, entity applicability · Predecessor: raw valuation lane (frozen)
+- Blocker: market cap = size, not valuation; EV/EBITDA only where qualified · Next trigger: input qualification changes
 
 ### 13b. Intrinsic / reverse valuation
 - Contract: [intrinsic_sector_valuation_contract.md](intrinsic_sector_valuation_contract.md), [scenario_analysis_contract.md](scenario_analysis_contract.md)
@@ -297,17 +245,7 @@ cold guard/plan/adapter offline. Authority NONE; no production activation or rec
 - Input/Predecessor/Blocker/Next trigger: new owner decision required to revive anything
 
 
-Retained reviewed H1 requalification (`PNJ_VRE_REVIEWED_H1_PROVISION_COMPONENT_AND_TOTAL_ASSET_IDENTITY_V1`): indirect cash-flow line 03
-is an earnings-quality component only (`NON_RECURRING_COMPONENT_PRESENT_OR_POSSIBLE`,
-recurrence UNKNOWN, no normalization). Total assets require a literal total label; 2026
-templates number `Tài sản dài hạn khác` 270. Facts first qualified now are known now.
-
-NVL's newly retained H1 filing proves reviewed consolidated assurance after explicit
-zero-candidate native fallback. Every exact financial value remains blocked; no current
-field, valuation input or quality score is added. Source receipt and exact blockers:
-[October8 campaign](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md).
-
-SSI/POW: [receipt-forward CA facts and limits](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md).
+Retained H1 requalification (`PNJ_VRE_REVIEWED_H1_PROVISION_COMPONENT_AND_TOTAL_ASSET_IDENTITY_V1`): indirect cash-flow line 03 = earnings-quality component only (`NON_RECURRING_COMPONENT_PRESENT_OR_POSSIBLE`, recurrence UNKNOWN, no normalization). Total assets require literal total label; 2026 templates number `Tài sản dài hạn khác` 270; newly qualified facts known now. NVL H1 filing proves reviewed consolidated assurance after zero-candidate native fallback; all exact values blocked, no field/valuation/quality added ([Oct 8 campaign](internal/STOCK_LOOKUP_AUTONOMOUS_CAMPAIGN_20261008.md)). SSI/POW: [receipt-forward CA facts](official_ssi_pow_corporate_action_evidence_qualification_v1_contract.md).
 
 ### 24. Local VSDC dated registered-share prototype (HL-20261124-HOL-04 / HL-20261124-HOL-05)
 - Contract: [VSDC notice retention/replay](official_document_acquisition_pilot.md#vsdc-finite-operator-notice-scope-hl-20261124-hol-05); `corporate_action_events.parse_retained_vsdc_registration`, `retained_vsdc_share_events`, `tests/test_vsdc_hose_share_events.py`
