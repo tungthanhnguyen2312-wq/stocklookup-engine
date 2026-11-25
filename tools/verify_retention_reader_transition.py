@@ -1400,9 +1400,40 @@ def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> b
     return prior
 
 
+OFFICIAL_FINANCIAL_PERIOD_IDENTITY_MANIFEST = "tests/fixtures/official_financial_period_identity_source_transition_v1.json"
+OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE = "official_financial_period_identity.py"
+OFFICIAL_FINANCIAL_PERIOD_IDENTITY_ARCHIVE = "tests/fixtures/official_financial_period_identity_v1_sources/official_financial_period_identity.py.txt"
+
+
+def _official_financial_period_identity_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Bind the exact Decision 2 successor to the protected E6 baseline; fail closed."""
+    if relative != OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE:
+        return active
+    spec = json.loads((root / OFFICIAL_FINANCIAL_PERIOD_IDENTITY_MANIFEST).read_bytes())
+    expected = {'contract_version': 'official_financial_period_identity_source_transition/v1',
+     'base_commit': '70fbba96d02369e0f02a5a15dd264bad780fe6ce',
+     'scope': 'RETAINED_PERIOD_IDENTITY_EXACT_E6_BASELINE_ONLY',
+     'release_authority': 'NOT_GRANTED',
+     'source_path': 'official_financial_period_identity.py',
+     'archive': 'tests/fixtures/official_financial_period_identity_v1_sources/official_financial_period_identity.py.txt',
+     'prior_sha256_lf': '87c727c12aea86d180abd924d9660d1b2c626f8c0c08cc713c1a0c3c92d25f26',
+     'active_sha256_lf': 'da8a9d1cbdf31f1057a322413c91049af138878a72f9ffc47b03bc5a81c59da0'}
+    if spec != expected:
+        raise ValueError("OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / OFFICIAL_FINANCIAL_PERIOD_IDENTITY_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or prior == active):
+        raise ValueError("OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    if relative == OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE:
+        # This archive is already the protected E6 baseline, before OCR recognition.
+        return _official_financial_period_identity_prior_bytes(root, relative, content)
     content = _official_source_registry_vsdc_flag_prior_bytes(root, relative, content)
     content = _tplus_retry_integrity_prior_bytes(root, relative, content)
     if relative == TACTICAL_SHADOW_PIPELINE:

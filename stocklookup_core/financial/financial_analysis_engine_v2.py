@@ -339,6 +339,76 @@ def _blocked(feature_id: str, *codes: str, method: str = "blocked_by_evidence/v2
     return _feature(feature_id, method=method, reason_codes=codes, growth_basis=growth_basis)
 
 
+def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], cutoff: str,
+                             evidence_root, current_year: int = 2026) -> dict[str, dict[str, Any]]:
+    """HOL-08 opt-in offline V2 bridge: FY + current H1 - prior H1, per literal metric.
+
+    Calls the common retained admission owner at the decision cutoff. Neither caller labels
+    nor table-only qualification can substitute for admission. No default headline change,
+    quarter alias, quarterly-tier input or annualization. All three operands must agree on
+    scope/currency and have individually proven base-unit normalization.
+    """
+    from datetime import datetime
+    from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
+    stamp = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
+    if stamp.tzinfo is None:
+        raise ValueError("QUALIFIED_TIMESTAMP_MISSING_OR_INVALID")
+    periods = (str(current_year-1), f"{current_year}-H1", f"{current_year-1}-H1")
+    bounds = ((f"{current_year-1}-01-01", f"{current_year-1}-12-31"),
+              (f"{current_year}-01-01", f"{current_year}-06-30"),
+              (f"{current_year-1}-01-01", f"{current_year-1}-06-30"))
+    output = {}
+    for metric, code, attribution in (("revenue", "10", None),
+            ("net_income", "60", "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI"),
+            ("attributable_net_income", "61", "PARENT_ATTRIBUTABLE")):
+        fid = metric + "_ttm"
+        inputs, blockers = [], []
+        for i, period in enumerate(periods):
+            candidates = [r for r in rows if r.get("ticker") == ticker and r.get("canonical_metric") == metric
+                          and r.get("reporting_period") == period]
+            admitted = []
+            for row in candidates:
+                if (row.get("qualification_state") != "QUALIFIED" or row.get("statement_scope") != "consolidated"
+                        or str(row.get("line_code")) != code or row.get("currency") != "VND"
+                        or row.get("unit_scale") != 1 or isinstance(row.get("unit_scale"), bool)
+                        or not _numeric(row.get("normalized_value")) or not math.isfinite(row["normalized_value"])
+                        or (row.get("period_start"), row.get("period_end")) != bounds[i]
+                        or row.get("audit_or_review_status") != ("audited" if i == 0 else "reviewed")
+                        or row.get("evidence_tier") == "UNREVIEWED_QUARTERLY"):
+                    blockers.append("OFFICIAL_H1_OPERAND_IDENTITY_OR_QUALIFICATION_INVALID:" + period)
+                    continue
+                admission = admit_retained_financial_fact(row, evidence_root=evidence_root, cutoff=cutoff)
+                if admission["state"] == "ADMITTED":
+                    admitted.append({**row, "_retained_admission": admission})
+                else:
+                    blockers.extend(admission["reason_codes"])
+            if not admitted:
+                blockers.append("OFFICIAL_H1_OPERAND_MISSING_OR_NOT_ADMITTED:" + period)
+            elif len({r["normalized_value"] for r in admitted}) != 1:
+                blockers.append("OFFICIAL_H1_OPERAND_CONFLICT:" + period)
+            else:
+                inputs.append(min(admitted, key=lambda r: str(r.get("citation_id") or "")))
+        feature = _blocked(fid, *sorted(set(blockers)), method="official_fy_plus_h1_minus_prior_h1/v2", growth_basis="TTM")
+        if not blockers and len(inputs) == 3:
+            feature.update(value=inputs[0]["normalized_value"] + inputs[1]["normalized_value"] - inputs[2]["normalized_value"],
+                fitness="READY", currency="VND", scale=basis_contract.BASE_UNIT_SCALE_LABEL, scope=["consolidated"],
+                period_identity=list(periods), period_semantics=["FULL_YEAR", "CUMULATIVE_H1"],
+                knowledge_available_at=max((r["knowledge_available_at"] for r in inputs),
+                    key=lambda v: datetime.fromisoformat(v.replace("Z", "+00:00"))),
+                provider_source_provenance=[{"provider": "official_issuer_ir", "source_sha256": r["document_sha256"],
+                    "fact_id": r.get("fact_id") or r["citation_id"], "citation_id": r["citation_id"],
+                    "source_page": r["source_page"], "reporting_period": r["reporting_period"],
+                    "knowledge_available_at": r["knowledge_available_at"],
+                    "admission_basis": r["_retained_admission"].get("admission_basis"),
+                    "evidence_tier": r["_retained_admission"].get("evidence_tier"),
+                    "evidence_classification": r["_retained_admission"].get("evidence_classification")} for r in inputs])
+        feature.update(canonical_metric=metric, line_code=code, cutoff=cutoff,
+                       operand_periods=list(periods), earnings_attribution=attribution,
+                       authority_effect="OFFLINE_RESEARCH_ONLY", pit_backtest_eligible=False)
+        output[fid] = feature
+    return output
+
+
 def _not_applicable(feature_id: str) -> dict[str, Any]:
     return _feature(feature_id, fitness="NOT_APPLICABLE", method="entity_applicability/v2",
                     reason_codes=["ENTITY_TYPE_NOT_SUPPORTED_THIS_MILESTONE"])

@@ -28,6 +28,34 @@ QUALIFICATION_SUCCESS_STATUS = "QUALIFIED_RETAINED_FINANCIAL_STATEMENT"
 QUALIFICATION_FAILURE_STATUS = "DISQUALIFIED_RETAINED_DOCUMENT"
 
 
+def _native_page_text_sha256(value: str | None) -> str:
+    """Preserve the retained native-failure proof's JSON-string digest contract.
+
+    Admission needs only this byte identity, not the higher-level OCR extractor.
+    In particular, a missing page remains JSON null, distinct from empty text.
+    """
+    return hashlib.sha256(json.dumps(value, ensure_ascii=False, sort_keys=True,
+                                    separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+_NATIVE_ARTIFACT_BUILDER: Any = None
+
+
+def register_native_artifact_builder(builder: Any | None) -> Any | None:
+    """Register the upper-layer native PDF artifact builder for zero-native-candidate replay.
+
+    Returns the previously registered builder so callers and tests can restore state cleanly.
+    Passing ``None`` clears registration; when no builder is registered or explicitly passed,
+    the zero-native-candidate OCR fallback fails closed.
+    """
+    global _NATIVE_ARTIFACT_BUILDER
+    if builder is not None and not callable(builder):
+        raise TypeError("native_artifact_builder must be callable or None")
+    previous = _NATIVE_ARTIFACT_BUILDER
+    _NATIVE_ARTIFACT_BUILDER = builder
+    return previous
+
+
 def retained_assurance_is_bound(status, evidence, *, document_sha256):
     """Reuse this owner's existing assurance identity check for retained fields."""
     from official_financial_assurance_evidence import assurance_proof_is_bound
@@ -303,7 +331,8 @@ def official_landing_root(legacy: str | os.PathLike[str] | None = None) -> Path:
 
 def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path | None = None,
         registry: Mapping[str, Any] | None = None, cutoff: str | None = None,
-        intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY") -> dict[str, Any]:
+        intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY",
+        native_artifact_builder: Any | None = None) -> dict[str, Any]:
     """Read-only source replay around the pure filing admission rule.
 
     The source record comes from the retained manifest, never from an overlay's
@@ -333,6 +362,9 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
         return admit_official_financial_fact(row, **kwargs)
     pages = None
     layout_proof = None
+    if row.get("dual_reader_transcription") is not None:
+        from stocklookup_core.evidence.dual_reader_transcription import load_retained_dual_reader_proof
+        kwargs["dual_reader_proof"] = load_retained_dual_reader_proof(row, landing)
     ref = row.get("ocr_layout_proof")
     if isinstance(ref, Mapping):
         try:
@@ -358,6 +390,32 @@ def admit_retained_financial_fact(row: Mapping[str, Any], *, evidence_root: Path
             required.discard(None)
             if len(required) <= 8 and all(isinstance(number, int) and 1 <= number <= len(reader.pages) for number in required):
                 pages = {number: reader.pages[number-1].extract_text() or "" for number in sorted(required)}
+                if layout_proof is not None and any(text.strip() for text in pages.values()):
+                    # Replay the already-governed explicit zero-native-candidate
+                    # fallback, including its original artifact and page hashes.
+                    # A caller flag or a nonempty text layer alone never qualifies.
+                    # When no native artifact builder is injected or registered,
+                    # fail closed and retain the native text layer.
+                    from stocklookup_core.evidence.official_ocr_layout_proof import verify_proof_identity, page_text
+                    build_artifact = (native_artifact_builder if native_artifact_builder is not None
+                                      else _NATIVE_ARTIFACT_BUILDER)
+                    proof_pages = layout_proof.get('pages') or {}
+                    failures = [proof_pages.get(str(n), {}).get('native_failure_evidence') for n, t in pages.items() if t.strip()]
+                    if (callable(build_artifact) and failures and all(isinstance(f, Mapping) for f in failures)
+                            and not verify_proof_identity(layout_proof, document_sha256=row.get('document_sha256'),
+                                                        proof_sha256=ref.get('proof_sha256'))):
+                        native = build_artifact(document={**record, 'entity_type': 'corporate',
+                            'official_url': record['canonical_url'], 'retrieved_at': record['observed_at']}, path=path)
+                        native_pages = {p['page_number']: p['page_text'] for p in native['page_evidence']}
+                        if (not native.get('fact_candidates') and not native.get('p3f13_panel_facts')
+                                and all(f.get('document_sha256') == row.get('document_sha256')
+                                    and f.get('native_artifact_identity') == native['artifact_identity']
+                                    and f.get('candidate_count') == 0
+                                    and f.get('trigger') == 'EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES'
+                                    and f.get('native_page_text_sha256')
+                                    and all(_native_page_text_sha256(native_pages.get(int(n))) == h
+                                            for n, h in f['native_page_text_sha256'].items()) for f in failures)):
+                            pages = {n: page_text(layout_proof, n) for n in sorted(required)}
                 if layout_proof is not None and not any(text.strip() for text in pages.values()):
                     # Image-only document: literals replay from the hash-bound retained OCR proof,
                     # never from a fresh OCR run and never when a native text layer exists.

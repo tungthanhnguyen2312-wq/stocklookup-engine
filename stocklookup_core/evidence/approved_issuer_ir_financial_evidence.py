@@ -166,8 +166,13 @@ def prepare_financial_intake_candidate(candidate: Mapping[str, Any], *, document
         citation.append("ORIGINAL_DOCUMENT_HASH_MISMATCH")
     if not doc.get("ticker") or row.get("ticker") != doc.get("ticker"):
         schema.append("DOCUMENT_ISSUER_MISMATCH")
+    period = dict(period_resolver(str(row.get("native_period_label") or ""),
+        statement_family=str(row.get("statement_family") or ""),
+        explicit_start=row.get("period_start"), explicit_end=row.get("period_end")))
     identity = resolve_reported_row_identity(str(row.get("statement_family") or ""),
-        str(row.get("line_code") or ""), str(row.get("raw_row_label") or ""))
+        str(row.get("line_code") or ""), str(row.get("raw_row_label") or ""),
+        form_reference=str(row.get('form_reference') or doc.get('form_reference') or ''),
+        fiscal_period_start=row.get('period_start') or doc.get('period_start') or period.get('period_start'))
     label_only_candidate = str(row.get("line_code") or "") == "" and identity["accounting_identity"] != "UNKNOWN" and not identity["blockers"]
     required_fields = ["statement_family", "raw_row_label", "native_period_label", "statement_scope", "unit_scale"]
     if row.get("statement_family") != "eps_note" and not label_only_candidate:
@@ -238,9 +243,6 @@ def prepare_financial_intake_candidate(candidate: Mapping[str, Any], *, document
     except (ValueError, TypeError):
         normalized = None
         semantic.append("ACCOUNTING_INTEGER_INVALID_OR_CONFLICTING")
-    period = dict(period_resolver(str(row.get("native_period_label") or ""),
-        statement_family=str(row.get("statement_family") or ""),
-        explicit_start=row.get("period_start"), explicit_end=row.get("period_end")))
     semantic.extend(period["blockers"])
     if row.get("reporting_period") is not None and row["reporting_period"] != period.get("reporting_period"):
         semantic.append("REPORTED_PERIOD_IDENTITY_CONFLICT")

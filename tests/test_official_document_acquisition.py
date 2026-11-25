@@ -6,6 +6,20 @@ from stocklookup_core.evidence.official_document_acquisition import BOUNDED_ADDI
 PDF=b"%PDF-1.4\nfixture\n"
 HTML=b"<html><body>official notice</body></html>"
 
+
+def test_retained_native_page_digest_preserves_proof_bytes_without_ocr_extractor():
+    import hashlib
+    import sys
+    from stocklookup_core.evidence.official_document_qualification import _native_page_text_sha256
+    # Frozen proof serialization: JSON string escaping, UTF-8 (not ASCII escapes),
+    # and absent-page null must remain byte-identical to the existing OCR proof.
+    cases = [(None, b'null'), ('', b'""'), ('a\n"b', b'"a\\n\\"b"'),
+             ('Lợi nhuận', '"Lợi nhuận"'.encode('utf-8'))]
+    with patch.dict(sys.modules, {'official_financial_ocr_table_evidence': None}):
+        for page_text, retained_bytes in cases:
+            assert _native_page_text_sha256(page_text) == hashlib.sha256(retained_bytes).hexdigest()
+    assert _native_page_text_sha256(None) != _native_page_text_sha256('')
+
 #: These tests are about retention mechanics -- caching, redirects, hash conflicts, size and
 #: timeout handling -- against fixture hosts that are deliberately not real. `acquire()` now
 #: refuses anything the source registry does not admit, so they run against a registry that
@@ -118,6 +132,15 @@ class AcquisitionTests(unittest.TestCase):
   self.assertEqual(future["outcomes"][0]["state"],"unsupported_request")
  def test_index_observed_dtp_is_a_finite_supported_ticker(self):
   self.assertIn("DTP",TICKERS)
+ def test_owner_approved_statement_periods_remain_a_finite_allowlist(self):
+  for period in ("2025-H1", "2025-Q3", "2026-Q3"):
+   with self.subTest(period=period):
+    result=acquire([self.spec(reporting_period=period, document_class="reviewed_interim_financial_statements",
+                             canonical_url=f"https://issuer.example/{period}.pdf")],self.root,fetcher=self.fetch)
+    self.assertEqual(result["outcomes"][0]["state"],"retained")
+  denied=acquire([self.spec(reporting_period="2024-H1", document_class="reviewed_interim_financial_statements")],
+                 self.root,fetcher=lambda *_a,**_k:self.fail("unlisted period reached HTTP"))
+  self.assertEqual(denied["outcomes"][0]["state"],"unsupported_request")
  def test_explicit_bounded_additional_ticker_is_admitted_without_widening_default_scope(self):
   denied=acquire([self.spec(ticker="VBB")],self.root,fetcher=self.fetch)
   admitted=acquire([self.spec(ticker="VBB")],self.root,fetcher=self.fetch,additional_allowed_tickers=("VBB",))

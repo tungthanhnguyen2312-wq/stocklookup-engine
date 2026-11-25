@@ -768,7 +768,15 @@ def _discover_column_bands_with_year(lines: Sequence[Mapping[str, Any]], target_
         "recognizer_version": GEOMETRY_RECOGNIZER_VERSION,
         "header_evidence": {"line_ids": [line["line_id"] for line in header["lines"]], "text": header["text"],
                             "bbox": {"x0": min(line["bbox"]["x0"] for line in header["lines"]), "x1": max(line["bbox"]["x1"] for line in header["lines"]),
-                                     "top": min(line["bbox"]["top"] for line in header["lines"]), "bottom": max(line["bbox"]["bottom"] for line in header["lines"])}},
+                                     "top": min(line["bbox"]["top"] for line in header["lines"]), "bottom": max(line["bbox"]["bottom"] for line in header["lines"])},
+                            **({"period_header_class": "EXPLICIT_YEAR",
+                                "period_identities": {
+                                    side: _period_header_span(selected, header_line_id=next(
+                                        line["line_id"] for line in header["lines"] if selected[0] in line["tokens"]),
+                                        header_class="EXPLICIT_YEAR")
+                                    for side, selected in (("current", current_year_tokens),
+                                                           ("comparative", comparative_year_tokens))}}
+                               if year_geometry_proven else {})},
         "current_period_label": target_period, "comparative_period_label": comparative,
         "bands": {"line_code": band(code_cluster), "note_reference": band(note_cluster) if note_cluster is not None else None, "current_period_value": current_band, "comparative_period_value": comparative_band},
     }
@@ -797,7 +805,7 @@ def _period_header_span(tokens: Sequence[Mapping[str, Any]], *, header_line_id: 
 def _parse_explicit_header_date(text: str) -> date | None:
     """Parse only explicit complete date forms; no OCR correction belongs here."""
     raw = str(text).strip()
-    numeric = re.fullmatch(r"(\d{1,2})[/-](\d{1,2})[/-](20[0-3]\d)", raw)
+    numeric = re.fullmatch(r"(\d{1,2})[./-](\d{1,2})[./-](20[0-3]\d)", raw)
     if numeric:
         day, month, year = (int(item) for item in numeric.groups())
         try:
@@ -988,7 +996,7 @@ def _contains_nonyear_period_header_evidence(lines: Sequence[Mapping[str, Any]])
         has_code_header = _has_explicit_code_header(group)
         if not has_code_header:
             continue
-        if re.search(r"\b\d{1,2}[/-]\d{1,2}[/-]20[0-3]\d\b", text) or re.search(
+        if re.search(r"\b\d{1,2}[./-]\d{1,2}[./-]20[0-3]\d\b", text) or re.search(
             r"\b\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+20[0-3]\d\b", text
         ):
             return True
@@ -1151,10 +1159,29 @@ def match_geometry_table_row(
                             and token not in vas_notes]
         if any(any(ch.isalpha() for ch in str(token["text"])) for token in candidate_tokens):
             candidates.append((candidate_band, candidate_tokens))
-    # Explicit alphabetic labels on both sides are ambiguous. Never select one by
-    # its financial meaning or manufacture a label from a neighbouring row.
+    # The midpoint envelope can contain an off-row margin annotation on the
+    # opposite side of the code. Resolve sidedness only when exactly one side
+    # has an alphabetic token vertically overlapping the actual code token.
+    # This is geometric evidence, never a choice by financial meaning. Keep all
+    # wrapped fragments on that side; competing labels on the code row still block.
     if len(candidates) > 1:
-        return None
+        code_tokens = [token for token in line["tokens"]
+                       if _in_band(token, bands["line_code"])
+                       and str(token["text"]).strip() == str(line_code)]
+        if len(code_tokens) != 1:
+            return None
+        code_token = code_tokens[0]
+        def on_code_row(token):
+            overlap = min(float(token["bottom"]), float(code_token["bottom"])) - max(float(token["top"]), float(code_token["top"]))
+            # Both boxes must share at least half their height: a tall gutter
+            # glyph spanning several rows cannot establish a competing label.
+            height = max(float(token["bottom"]) - float(token["top"]), float(code_token["bottom"]) - float(code_token["top"]))
+            return height > 0 and overlap / height >= 0.5
+        candidates = [(band, selected) for band, selected in candidates
+                      if any(any(ch.isalpha() for ch in str(token["text"])) and on_code_row(token)
+                             for token in selected)]
+        if len(candidates) != 1:
+            return None
     label_band, label_tokens = candidates[0] if candidates else (candidate_label_bands[1], [])
     label_binding = {"contract": "physical_midpoint_label/v1"}
     # TSV hierarchy binds a wrapped label to its own code line through the next

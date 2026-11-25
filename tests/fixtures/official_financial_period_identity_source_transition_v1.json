@@ -1,0 +1,10 @@
+{
+  "contract_version": "official_financial_period_identity_source_transition/v1",
+  "base_commit": "70fbba96d02369e0f02a5a15dd264bad780fe6ce",
+  "scope": "RETAINED_PERIOD_IDENTITY_EXACT_E6_BASELINE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "source_path": "official_financial_period_identity.py",
+  "archive": "tests/fixtures/official_financial_period_identity_v1_sources/official_financial_period_identity.py.txt",
+  "prior_sha256_lf": "87c727c12aea86d180abd924d9660d1b2c626f8c0c08cc713c1a0c3c92d25f26",
+  "active_sha256_lf": "da8a9d1cbdf31f1057a322413c91049af138878a72f9ffc47b03bc5a81c59da0"
+}

@@ -179,3 +179,197 @@ def test_modern_overlay_rows_require_a_registered_layout_proof(tmp_path):
 def test_registered_layout_records_verified_absent_text_layer():
     verification = lp.LAYOUT_PROOFS[SHA]["text_layer_verification"]
     assert verification["state"] == "NONE_VERIFIED" and verification["non_empty_pages"] == 0
+
+
+def baseline_two_token(raw="1.²34.567", top=100, bottom=120):
+    boxes = [{"text": char, "x0": i * 10, "x1": i * 10 + 8,
+              "top": top if char == "²" else 100, "bottom": bottom if char == "²" else 120}
+             for i, char in enumerate(raw)]
+    return {"token_id": "synthetic", "text": raw, "x0": 0, "x1": len(raw)*10,
+            "top": min(100, top), "bottom": max(120, bottom), "glyph_evidence": {
+                "contract_version": "tesseract_makebox_same_render/v1", "rendered_image_sha256": "a"*64,
+                "engine_version": "synthetic", "config": {"psm": 6}, "boxes": boxes}}
+
+
+def test_baseline_two_proof_passes_only_for_bound_baseline_glyphs():
+    token = baseline_two_token()
+    raw, proof = lp.baseline_two_value(token, "a"*64)
+    assert raw == "1.234.567"
+    assert proof["tolerance_fraction"] == .10 and proof["tolerance_pixels"] == 2
+    assert proof["glyph_evidence"]["boxes"] == token["glyph_evidence"]["boxes"]
+    assert token["text"] == "1.²34.567"
+    assert lp.baseline_two_value(token, "b"*64) == (token["text"], None)
+    del token["glyph_evidence"]
+    assert lp.baseline_two_value(token, "a"*64) == (token["text"], None)
+
+
+def test_true_superscript_and_mixed_damage_still_block():
+    for token in [baseline_two_token(top=90, bottom=103), baseline_two_token(top=100, bottom=113),
+                  baseline_two_token(raw="1.²3O.567"), baseline_two_token(raw="1.²³4.567"),
+                  baseline_two_token(raw="1.²34.5²²")]:
+        # The last token has too few unaffected ASCII reference digits.
+        if token["text"] == "1.²34.5²²":
+            token["glyph_evidence"]["boxes"][2]["top"] = 90
+        assert lp.baseline_two_value(token, "a"*64) == (token["text"], None)
+
+
+def test_retained_baseline_two_character_boxes_replay_without_digit_algebra():
+    import json
+    from pathlib import Path
+    fixture = Path(__file__).parent / "fixtures/retained_interim_geometry/baseline_two_glyphs.json"
+    rows = json.loads(fixture.read_text(encoding="utf8"))["records"]
+    assert len(rows) == 3
+    for row in rows:
+        normalized, proof = lp.baseline_two_value(row["token"], row["rendered_image_sha256"])
+        assert normalized == row["expected"] and proof is not None
+        assert proof["rendered_image_sha256"] == row["rendered_image_sha256"]
+        assert proof["raw_value"] == row["token"]["text"]
+        for field in ("top", "bottom"):
+            damaged = copy.deepcopy(row["token"])
+            next(b for b in damaged["glyph_evidence"]["boxes"] if b["text"] == "²")[field] -= 10
+            assert lp.baseline_two_value(damaged, row["rendered_image_sha256"])[1] is None
+
+
+def test_baseline_two_tolerance_boundary_and_malformed_boxes():
+    assert lp.baseline_two_value(baseline_two_token(top=102, bottom=122), "a"*64)[1]
+    assert lp.baseline_two_value(baseline_two_token(top=103, bottom=123), "a"*64)[1] is None
+    for bad in (None, [], [None], "missing", [{"text": "²"}]):
+        token = baseline_two_token()
+        token["glyph_evidence"]["boxes"] = bad
+        assert lp.baseline_two_value(token, "a"*64)[1] is None
+
+
+def test_baseline_two_layout_row_and_admission_parse_are_bound_to_proof():
+    tokens = base_tokens()
+    token = tokens[12]
+    raw = "108.059.749.601.²54"
+    token["text"] = raw
+    width = (token["x1"]-token["x0"])/len(raw)
+    token["glyph_evidence"] = {"contract_version": "tesseract_makebox_same_render/v1",
+        "rendered_image_sha256": "a"*64, "engine_version": "tesseract test", "config": {"dpi": 240},
+        "boxes": [{"text": c, "x0": token["x0"]+i*width, "x1": token["x0"]+(i+1)*width-1,
+                   "top": token["top"], "bottom": token["bottom"]} for i,c in enumerate(raw)]}
+    proof = make_proof(tokens)
+    proof["pages"][str(PAGE)]["rendered_image_sha256"] = "a"*64
+    import hashlib
+    proof["proof_sha256"] = hashlib.sha256(lp.canonical_json({k:v for k,v in proof.items() if k!="proof_sha256"}).encode()).hexdigest()
+    assert verify(proof=proof, raw=raw, value=108059749601254) == []
+    row = {"raw_value_text": raw, "document_sha256": SHA, "source_page": PAGE,
+           "ocr_layout_proof": lp.proof_reference(proof), "ocr_row_object": ROW}
+    assert lp.bound_numeric_value(row, proof) == "108.059.749.601.254"
+    token["glyph_evidence"]["boxes"][14]["top"] -= 12
+    assert lp.bound_numeric_value(row, proof) == raw  # changed boxes invalidate proof hash
+
+
+def test_retained_zero_native_candidate_replay_requires_every_source_binding(tmp_path, monkeypatch):
+    """Modern retained replay cannot trust a caller's zero-candidate assertion."""
+    import hashlib
+    import json
+    import pypdf
+    import official_financial_filing_evidence as filing
+    import official_financial_pdf_page_evidence as native_owner
+    from official_financial_ocr_table_evidence import _hash
+    from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
+    payload = b'%PDF synthetic zero-candidate fixture'
+    sha = hashlib.sha256(payload).hexdigest()
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, sha, dict(lp.LAYOUT_PROOFS[SHA]))
+    record = dict(sha256=sha, relative_path='original.pdf', ticker='HPG',
+                  canonical_url='https://file.hoaphat.com.vn/synthetic.pdf', observed_at='2026-11-24T01:00:00Z')
+    (tmp_path/'original.pdf').write_bytes(payload)
+    (tmp_path/'official_document_acquisition_manifest.json').write_text(json.dumps({'records': [record]}))
+    class Page:
+        def extract_text(self):
+            return 'unusable native font map'
+    class Reader:
+        def __init__(self, *args):
+            self.pages = [Page()]
+    monkeypatch.setattr(pypdf, 'PdfReader', Reader)
+    artifact = dict(artifact_identity='native-zero', fact_candidates=[], p3f13_panel_facts=[],
+                    page_evidence=[dict(page_number=1, page_text=Page().extract_text())])
+    monkeypatch.setattr(native_owner, 'build_artifact', lambda **kw: artifact)
+    monkeypatch.setattr(filing, 'admit_official_financial_fact', lambda row, **kw: kw['document_pages'])
+    failure = dict(document_sha256=sha, native_artifact_identity='native-zero', candidate_count=0,
+        trigger='EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES',
+        native_page_text_sha256={'1': _hash(Page().extract_text())})
+    base = dict(contract_version=lp.CONTRACT_VERSION, document_sha256=sha, pages={'1': dict(
+        tokens=[tok(1, 'retained OCR literal', 0, 10, 0, 10, 1)], native_failure_evidence=failure)})
+    def replay(body):
+        proof = dict(body, proof_sha256=hashlib.sha256(lp.canonical_json(body).encode()).hexdigest())
+        ref = lp.proof_reference(proof)
+        path = tmp_path/ref['relative_path'];path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(proof))
+        row = dict(document_sha256=sha, ocr_layout_proof=ref, document_metadata={'metadata_claims': {}},
+                   assurance_evidence={'page_number': 1}, source_span={'source_page': 1})
+        return admit_retained_financial_fact(row, evidence_root=tmp_path, registry={})
+    assert replay(base) == {1: 'retained OCR literal'}
+    for change in ({'native_artifact_identity': 'forged'}, {'candidate_count': 1},
+                   {'native_page_text_sha256': {'1': 'wrong'}}, {'document_sha256': 'f'*64},
+                   {'trigger': 'caller asserted'}):
+        bad = copy.deepcopy(base);bad['pages']['1']['native_failure_evidence'].update(change)
+        assert replay(bad) == {1: Page().extract_text()}
+    bad = copy.deepcopy(base);bad['pages']['1'].pop('native_failure_evidence')
+    assert replay(bad) == {1: Page().extract_text()}
+    artifact['fact_candidates'] = [{'native': 'candidate exists'}]
+    assert replay(base) == {1: Page().extract_text()}
+
+
+def _zero_native_candidate_fixture(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    import pypdf
+    import official_financial_filing_evidence as filing
+    from official_financial_ocr_table_evidence import _hash
+    payload = b'%PDF synthetic zero-candidate di fixture'
+    sha = hashlib.sha256(payload).hexdigest()
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, sha, dict(lp.LAYOUT_PROOFS[SHA]))
+    record = dict(sha256=sha, relative_path='original.pdf', ticker='HPG',
+                  canonical_url='https://file.hoaphat.com.vn/synthetic.pdf', observed_at='2026-11-24T01:00:00Z')
+    (tmp_path/'original.pdf').write_bytes(payload)
+    (tmp_path/'official_document_acquisition_manifest.json').write_text(json.dumps({'records': [record]}))
+    class Page:
+        def extract_text(self):
+            return 'unusable native font map'
+    class Reader:
+        def __init__(self, *args):
+            self.pages = [Page()]
+    monkeypatch.setattr(pypdf, 'PdfReader', Reader)
+    monkeypatch.setattr(filing, 'admit_official_financial_fact', lambda row, **kw: kw['document_pages'])
+    native_text = Page().extract_text()
+    artifact = dict(artifact_identity='native-zero', fact_candidates=[], p3f13_panel_facts=[],
+                    page_evidence=[dict(page_number=1, page_text=native_text)])
+    failure = dict(document_sha256=sha, native_artifact_identity='native-zero', candidate_count=0,
+                   trigger='EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES',
+                   native_page_text_sha256={'1': _hash(native_text)})
+    body = dict(contract_version=lp.CONTRACT_VERSION, document_sha256=sha, pages={'1': dict(
+        tokens=[tok(1, 'retained OCR literal', 0, 10, 0, 10, 1)], native_failure_evidence=failure)})
+    proof = dict(body, proof_sha256=hashlib.sha256(lp.canonical_json(body).encode()).hexdigest())
+    ref = lp.proof_reference(proof)
+    path = tmp_path/ref['relative_path']; path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(proof))
+    row = dict(document_sha256=sha, ocr_layout_proof=ref, document_metadata={'metadata_claims': {}},
+               assurance_evidence={'page_number': 1}, source_span={'source_page': 1})
+    return row, native_text, artifact
+
+
+def test_retained_zero_native_candidate_replay_fails_closed_without_builder(tmp_path, monkeypatch):
+    """When no native PDF builder is registered or passed, OCR fallback must fail closed."""
+    from stocklookup_core.evidence import official_document_qualification as odq
+    row, native_text, _ = _zero_native_candidate_fixture(tmp_path, monkeypatch)
+    previous = odq.register_native_artifact_builder(None)
+    try:
+        assert odq.admit_retained_financial_fact(row, evidence_root=tmp_path, registry={}) == {1: native_text}
+    finally:
+        odq.register_native_artifact_builder(previous)
+
+
+def test_retained_zero_native_candidate_replay_accepts_explicit_builder(tmp_path, monkeypatch):
+    """An explicit native_artifact_builder parameter replays even with no registered builder."""
+    from stocklookup_core.evidence import official_document_qualification as odq
+    row, _, artifact = _zero_native_candidate_fixture(tmp_path, monkeypatch)
+    previous = odq.register_native_artifact_builder(None)
+    try:
+        result = odq.admit_retained_financial_fact(
+            row, evidence_root=tmp_path, registry={}, native_artifact_builder=lambda **kw: artifact)
+        assert result == {1: 'retained OCR literal'}
+    finally:
+        odq.register_native_artifact_builder(previous)

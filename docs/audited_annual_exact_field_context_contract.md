@@ -112,6 +112,23 @@ preserve all17 earlier facts and their knowledge/citations. Annual context8→10
 completed October7/current official9/annual exact94/shares and strict valuation0 unchanged.
 Other annual geometry/numeric blockers and Q2 absent assurance remain explicit.
 
+November 24 retained replay (HL-20261124-HOL-02F) locates PNJ's consolidated
+income statement on PDF page 10, already inside the selected pages. Label-side
+competition may be resolved only when exactly one side has an alphabetic token
+overlapping at least half of both its own and the actual code token's height.
+This excludes off-row/tall gutter marks without choosing by financial meaning;
+competing aligned labels, amount tokens and damaged characters remain blocked.
+PNJ codes 10/60/61 still fail the existing amount/geometry gates. No new fact follows.
+
+VRE FY2025 retained SHA
+`85b250e9bd3b87aac9a1f650363f7063b2a830f6f4f1dda07eb6eecd09063a3e`
+is registered in the annual runner with statement pages 7–12. Use `--tickers VRE`;
+the original HPG/PNJ/PVD default and shared three-document/40-page caps remain.
+Default governed OCR fails assurance (`ASSURANCE_STATUS_NOT_EXPLICIT`), code 60
+geometry and code 61 literal parent-label identity. Code 10 is a table candidate
+only. No VRE layout proof or annual fact is admitted/published by registration.
+Annual knowledge still has the qualification-time floor; it is never backdated.
+
 FPT FY2025 cash-flow line 03 Provisions, 651,406,282,654 VND, is an audited annual
 earnings-quality component. It is not an eleventh exact annual field. The ten-field
 annual context, current official count, annual exact baseline, and strict valuation
