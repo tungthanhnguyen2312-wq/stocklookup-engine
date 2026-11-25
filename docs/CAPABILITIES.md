@@ -26,6 +26,7 @@ Macro V1: Daily/AI/cockpit wired; Oct 8 live acceptance verified (`MACRO_REGIME_
 - Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge)
 - Runtime: `EXPERIMENTAL` · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`
 - Input: exact retained FY2025/H1 originals; same-render baseline U+00B2 proof only.
+- Predecessor: HOL-02C/02F income identity; HOL-10 supersedes metadata/HPG P/S blockers.
 - Blocker: unadmitted operands stay blocked independently for codes 10/60/61.
 - Next trigger: original-document metadata/assurance and geometry evidence, without letter repair.
 - HOL-10 offline replay admits HPG FY2025 10/60/61, HPG H1/2025 10 and VRE
@@ -152,6 +153,15 @@ Phase C (2026-10-06): record-wise IID hashing, borrowed binding leaves, bounded 
 [Business updates](official_business_update_research_contract.md): PR135; news blocked. [Intake](official_financial_quarterly_intake_contract.md): PR137; offline/source gate; HPG binding PR138 uses approved routes. [Q3 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md): column gate fixed; no new official facts. HPG reviewed H1 OCR adds 4 facts (2026-11-09 cutoff); Producer PR #235 / Dashboard PR #32 expose 6 HPG Q3 shadow rows (0 official Q3 admissions, no valuation eligibility); PAN HOSE Q3 locator open for filing-type/share continuity. [Qualifier transport](current_financial_valuation_input_unlock_v1_contract.md): PR140; Workspace/AI labels (AI bound ≥2026-10-14); coverage unchanged. [CI extension](CI_AND_DEPENDENCY_TIERS.md): G2/business/quarterly mandatory; 367 files nonblocking; native lanes.
 
 ### 12. Current financial evidence
+- Decision 2 [dual-reader transcription](dual_reader_reviewed_transcription_v1_contract.md): local
+  retained-byte qualification and H1 bridge integration are implemented with synthetic end-to-end
+  tests. Two different model families, precomparison raw retention, explicit source rights and
+  completion-time knowledge floor are required. Tier: `DUAL_READER_REVIEWED_TRANSCRIPTION`,
+  `OFFLINE_RESEARCH_ONLY`; no Production/PIT authority is claimed. First real admission
+  (2026-11-24, knowledge floor 21:46:10+07:00): HPG 2025-H1 codes 10/60/61 from Claude +
+  Gemini readings of page 10 (subdir `h1-2025-dual-reader-hpg-20261124`). This unblocks the
+  offline H1 bridge for HPG net income TTM and parent net income TTM, and the research P/E
+  TTM, at the November 25 cutoff. Overlay, headline and Daily are unchanged.
 - PR168/169 local: tainted KBS periods blocked; 6 unreviewed rows separate; authority unchanged ([release gate](ACTIVE_STATE.md)).
 - Frozen Aug-23 baseline; PNJ/VRE H1 & PVD USD keep [currency](currency_preserving_interim_context_contract.md)/[earnings](reported_earnings_component_context_contract.md) limits.
 - [Reviewed HPG/KBC/FPT](internal/FINANCIAL_EVIDENCE_INTEGRATION_20261113.md): `OFFLINE_ONLY / NON_VOTING`. FPT FY2025 line 03 Provisions = audited annual context only. 2026-H1 fields (known 2026-10-08): VNM cash 4,535,672,366,831 VND; QNS equity 10,647,823,148,609 VND (QNS detail page discovery only). FY2025 context (10 fields): HPG rev/profit, PNJ cash/OCF, PVD rev/profit/assets/equity, FPT rev/equity ([annual contract](audited_annual_exact_field_context_contract.md)); annual/share gates unchanged; geometry blockers remain.
