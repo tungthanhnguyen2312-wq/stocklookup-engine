@@ -222,6 +222,42 @@ def _official_source_registry_vsdc_flag_prior_bytes(root: Path, relative: str, a
     return prior
 
 
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST = "tests/fixtures/vsdc_valuation_parent_pe_successor_transition_v1.json"
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE = "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_BASE = "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc"
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_SCOPE = "VSDC_REGISTERED_SHARES_VALUATION_ELIGIBILITY_FLAG_OFF_SUCCESSOR_ONLY"
+
+
+def _vsdc_valuation_parent_pe_successor_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel PR #284's default-OFF VSDC registered-share additions back to e31e560b parent-PE bytes."""
+    manifest = root / VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST
+    if relative != VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    hunks = spec.get("inserted_hunks_lf")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority",
+                      "source_path", "prior_sha256_lf", "active_sha256_lf", "inserted_hunks_lf"}
+            or spec.get("contract_version") != "vsdc_valuation_parent_pe_successor_transition/v1"
+            or spec.get("base_commit") != VSDC_VALUATION_PARENT_PE_SUCCESSOR_BASE
+            or spec.get("scope") != VSDC_VALUATION_PARENT_PE_SUCCESSOR_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("source_path") != VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE
+            or not isinstance(hunks, list) or not hunks or not all(isinstance(h, str) and h for h in hunks)):
+        raise ValueError("VSDC_VALUATION_PARENT_PE_SUCCESSOR_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]:
+        return active
+    peeled = active
+    for hunk in hunks:
+        hunk_bytes = hunk.encode("utf-8")
+        if peeled.count(hunk_bytes) != 1:
+            raise ValueError("VSDC_VALUATION_PARENT_PE_SUCCESSOR_BINDING_INVALID")
+        peeled = peeled.replace(hunk_bytes, b"", 1)
+    if (hashlib.sha256(peeled).hexdigest() != spec["prior_sha256_lf"]
+            or spec["prior_sha256_lf"] == spec["active_sha256_lf"]):
+        raise ValueError("VSDC_VALUATION_PARENT_PE_SUCCESSOR_BINDING_INVALID")
+    return peeled
+
+
 PARENT_PE_MANIFEST = "tests/fixtures/parent_attributable_pe_source_transition_v1.json"
 PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.py",
                      "stocklookup_core/decision/integrated_investment_decision_product.py",
@@ -232,6 +268,7 @@ PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.
 
 def _parent_pe_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact Owner Decision 1 source successor; historical receipts remain frozen."""
+    active = _vsdc_valuation_parent_pe_successor_prior_bytes(root, relative, active)
     manifest = root / PARENT_PE_MANIFEST
     if relative not in PARENT_PE_SOURCES or not manifest.is_file():
         return active
@@ -1580,6 +1617,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         parent_pe = json.loads(parent_pe_manifest.read_bytes())
         for relative in PARENT_PE_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _vsdc_valuation_parent_pe_successor_prior_bytes(root, relative, live)
             if hashlib.sha256(live).hexdigest() != parent_pe["sources"][relative]["active_sha256_lf"]:
                 raise ValueError("PARENT_PE_SOURCE_TRANSITION_BINDING_INVALID")
             _parent_pe_prior_bytes(root, relative, live)

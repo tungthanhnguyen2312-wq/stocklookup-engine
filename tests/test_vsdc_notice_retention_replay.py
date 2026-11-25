@@ -326,9 +326,9 @@ def test_four_retained_registration_fixtures_through_real_resolver_and_valuation
             assert "NOT_COMMON_OUTSTANDING_SHARE_BASIS" in metric["labels"]
             assert metric["historical_pit_eligible"] is False
 
-    # Extend flag-OFF byte parity through the builder against this task's exact HEAD.
+    # Extend flag-OFF byte parity through the builder against pre-#284 main (e31e560b).
     legacy = types.ModuleType("hol07_head_valuation")
-    source = subprocess.check_output(["git", "show", "15c77ffe:stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"])
+    source = subprocess.check_output(["git", "show", "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc:stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"])
     exec(compile(source, "hol07_head_valuation.py", "exec"), legacy.__dict__)
     old = legacy.build_current_valuation_artifact(**captured[0][0])
     assert json.dumps(old, sort_keys=True).encode() == json.dumps(captured[0][1], sort_keys=True).encode()
@@ -345,7 +345,7 @@ def test_every_other_resolver_authority_has_byte_identical_valuation(authority):
     from test_market_wide_current_valuation_input_scaleout import _inputs
     price, fundamental, shares, p3e = _inputs()
     legacy = types.ModuleType("hol07_head_valuation")
-    source = subprocess.check_output(["git", "show", "15c77ffe:stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"])
+    source = subprocess.check_output(["git", "show", "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc:stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"])
     exec(compile(source, "hol07_head_valuation.py", "exec"), legacy.__dict__)
     inputs = dict(price_snapshot=price, fundamental_artifact=fundamental,
                   share_promotion_artifact=shares, p3e_artifact=p3e,
