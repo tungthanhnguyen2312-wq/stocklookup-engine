@@ -50,7 +50,7 @@ def _bytes(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
 
 
-def _pdf(text):
+def _pdf(text, *, image_only=False):
     # Owned, single-page ASCII PDF; the accounting value is deliberately absent
     # from its text layer. It is supplied only by the separately retained image readings.
     lines = [line.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)') for line in text.splitlines()]
@@ -59,15 +59,25 @@ def _pdf(text):
         b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
         b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
         b'<< /Length ' + str(len(stream)).encode() + b' >>\nstream\n' + stream + b'\nendstream']
+    if image_only:
+        # Owned raster-only PDF: no font or text operators for the loader to extract.
+        objects[2] = (b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+                      b'/Resources << /XObject << /Im0 6 0 R >> >> /Contents 5 0 R >>')
+        image_stream = b'q 612 0 0 792 0 0 cm /Im0 Do Q'
+        objects[4] = (b'<< /Length ' + str(len(image_stream)).encode() + b' >>\nstream\n'
+                      + image_stream + b'\nendstream')
+        objects.append(b'<< /Type /XObject /Subtype /Image /Width 1 /Height 1 '
+                       b'/ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>\nstream\n'
+                       b'\xff\nendstream')
     output = b'%PDF-1.4\n'; offsets = []
     for n, obj in enumerate(objects, 1):
         offsets.append(len(output)); output += str(n).encode() + b' 0 obj\n' + obj + b'\nendobj\n'
     xref = len(output)
-    output += b'xref\n0 6\n0000000000 65535 f \n' + b''.join(f'{n:010d} 00000 n \n'.encode() for n in offsets)
-    return output + b'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + str(xref).encode() + b'\n%%EOF\n'
+    output += b'xref\n0 ' + str(len(objects) + 1).encode() + b'\n0000000000 65535 f \n' + b''.join(f'{n:010d} 00000 n \n'.encode() for n in offsets)
+    return output + b'trailer\n<< /Size ' + str(len(objects) + 1).encode() + b' /Root 1 0 R >>\nstartxref\n' + str(xref).encode() + b'\n%%EOF\n'
 
 
-def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income"):
+def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income", *, image_only=False):
     from official_financial_assurance_evidence import resolve_native_document_assurance
     from official_financial_period_identity import period_bounds
     from official_source_registry import load_registry
@@ -86,7 +96,7 @@ def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_inc
         "BAO CAO SOAT XET hop dong dich vu soat xet so 2410 hop nhat giua nien do")
     issuer = "PNJ synthetic fixture"
     native_text = '\n'.join([issuer, period_text, assurance_title, "consolidated", "Unit: VND"])
-    payload = _pdf(native_text); sha = _sha(payload)
+    payload = _pdf(native_text, image_only=image_only); sha = _sha(payload)
     (directory / 'fixture.pdf').write_bytes(payload)
     label = GENERIC_METRIC_RULES[metric]["source_label"]
     label = ''.join(c for c in unicodedata.normalize('NFD', label.replace('đ', 'd').replace('Đ', 'D')) if not unicodedata.combining(c))
@@ -711,12 +721,181 @@ def test_missing_scope_against_explicit_scope_remains_literal_disagreement(tmp_p
     assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']
 
 
-def test_identical_reader_unit_does_not_silently_waive_common_metadata_text_gate(tmp_path):
-    row, context, directory, proof = _fixture(tmp_path)
-    # The new lower-owner unit evidence is not yet wired into the common owner:
-    # that file is outside CDX-17's lease. Keep the independent gate fail-closed.
-    context['document_pages'] = {1: context['document_pages'][1].replace('Unit: VND', 'garbled')}
-    assert 'RETAINED_UNIT_SCALE_NOT_EXPLICIT' in _pure(row, context, directory)['reason_codes']
+def _replay_metadata(row):
+    metadata = row['document_metadata']
+    document = metadata['document']
+    row['document_metadata'] = qualify_document_metadata({
+        'issuer_identity': metadata['issuer_identity'], 'entity_type': metadata['entity_type'],
+        'document': {**document, 'sha256': document['document_sha256']},
+        'metadata': {**metadata['metadata_claims'], **metadata['optional_metadata_claims']}})
+
+
+def _unit_gap_fixture(tmp_path, period='2026-H1', *, missing_units=True, image_only=False):
+    row, context, directory, proof = _fixture(tmp_path, period, image_only=image_only)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+            currency_unit_literal='Đơn vị tính: Đồng Việt Nam'), index=index)
+    context['document_pages'][1] = context['document_pages'][1].replace('Unit: VND', 'garbled')
+    from official_financial_assurance_evidence import resolve_native_document_assurance
+    row['assurance_evidence'] = resolve_native_document_assurance(
+        row['document_sha256'], context['document_pages'])
+    if missing_units:
+        for name in ('currency', 'unit_scale'):
+            row['document_metadata']['metadata_claims'].pop(name)
+        _replay_metadata(row)
+    return row, context, directory, proof
+
+
+@pytest.mark.parametrize('period', ['2025-H1', '2026-H1'])
+@pytest.mark.parametrize('missing_units', [True, False])
+def test_identical_reader_unit_waives_common_metadata_text_gate_only_after_full_verification(
+        tmp_path, period, missing_units):
+    row, context, directory, _ = _unit_gap_fixture(tmp_path, period, missing_units=missing_units)
+    before = deepcopy(row), deepcopy(context)
+    metadata = row['document_metadata']
+    if missing_units:
+        assert metadata['qualification_status'] == 'DOCUMENT_METADATA_BLOCKED'
+        assert set(metadata['blockers']) == {'CURRENCY_MISSING', 'UNIT_SCALE_MISSING'}
+    else:
+        assert metadata['qualification_status'] == 'DOCUMENT_METADATA_QUALIFIED'
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert row['source_unit_scale'] == row['unit_scale'] == 1
+    assert result['admission_basis'] == result['evidence_tier'] == dual.EVIDENCE_TIER
+    assert result['evidence_classification']['authority_effect'] == 'OFFLINE_RESEARCH_ONLY'
+    assert result['evidence_classification']['pit_backtest_eligible'] is False
+    effective = deepcopy(row)
+    for name, value in (('currency', 'VND'), ('unit_scale', 1)):
+        effective['document_metadata']['metadata_claims'][name] = {'value': value, 'evidence_span': {
+            'citation_id': 'effective', 'document_sha256': row['document_sha256'],
+            'source_page': 1, 'text': 'Đơn vị tính: Đồng Việt Nam'}}
+    _replay_metadata(effective)
+    assert result['metadata_evidence_id'] == effective['document_metadata']['evidence_envelope_id']
+    if missing_units:
+        assert result['metadata_evidence_id'] != metadata['evidence_envelope_id']
+    assert (row, context) == before
+
+
+@pytest.mark.parametrize('case', ['reader_disagreement', 'non_vnd', 'fact_page', 'span_page',
+    'reader_page', 'document_sha', 'proof_reference', 'no_dual', 'no_ocr_dual',
+    'missing_scope', 'missing_period', 'stale_id', 'forged_status',
+    'assurance', 'rights', 'source', 'cutoff', 'knowledge_floor'])
+def test_statement_unit_waiver_refused_without_all_other_proofs(tmp_path, monkeypatch, case):
+    row, context, directory, proof = _unit_gap_fixture(tmp_path)
+    if case == 'reader_disagreement':
+        _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+            currency_unit_literal='Đơn vị tính: Đồng Việt Nam '))
+    elif case == 'non_vnd':
+        for index in (0, 1):
+            _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+                currency_unit_literal='Đơn vị tính: USD'), index=index)
+    elif case == 'fact_page':
+        row['source_page'] = 2
+    elif case == 'span_page':
+        row['source_span']['source_page'] = 2
+    elif case == 'reader_page':
+        _change_reader(directory, row, proof, lambda raw: raw['input'].update(source_page=2))
+    elif case == 'document_sha':
+        row['document_sha256'] = '0' * 64
+    elif case == 'proof_reference':
+        row['dual_reader_transcription']['proof_sha256'] = '0' * 64
+    elif case in ('no_dual', 'no_ocr_dual'):
+        row.pop('dual_reader_transcription')
+        if case == 'no_ocr_dual':
+            context['ocr_layout_proof'] = _ocr_page_proof(monkeypatch, row)
+    elif case in ('missing_scope', 'missing_period'):
+        name = 'statement_scope' if case == 'missing_scope' else 'reporting_period'
+        row['document_metadata']['metadata_claims'].pop(name)
+        _replay_metadata(row)
+    elif case == 'stale_id':
+        row['document_metadata']['evidence_envelope_id'] = '0' * 64
+    elif case == 'forged_status':
+        row['document_metadata']['qualification_status'] = 'DOCUMENT_METADATA_QUALIFIED'
+    elif case == 'assurance':
+        row['assurance_evidence'] = None
+    elif case == 'rights':
+        context['source_record']['rights_status'] = 'UNKNOWN'
+    elif case == 'source':
+        context['source_record']['canonical_url'] = context['source_record']['final_url'] = 'https://invalid.example/test.pdf'
+    elif case == 'cutoff':
+        context['cutoff'] = '2026-11-24T09:02:00+00:00'
+    elif case == 'knowledge_floor':
+        row['knowledge_available_at'] = '2026-11-24T09:01:00+00:00'
+    result = _pure(row, context, directory)
+    assert result['state'] != 'ADMITTED', (case, result)
+    if case in ('reader_disagreement', 'non_vnd', 'reader_page', 'document_sha',
+                'proof_reference', 'rights', 'knowledge_floor'):
+        assert any(reason.startswith('DUAL_READER_') for reason in result['reason_codes']), result
+    if case in ('no_dual', 'no_ocr_dual', 'stale_id', 'forged_status', 'missing_scope', 'missing_period'):
+        assert 'DOCUMENT_METADATA_NOT_QUALIFIED' in result['reason_codes'], result
+
+
+@pytest.mark.parametrize('text', ['Unit: USD', 'Unit: million VND'])
+@pytest.mark.parametrize('location', ['selected_page', 'outside_selected_ocr_page'])
+def test_statement_unit_waiver_rejects_contrary_retained_declarations(tmp_path, monkeypatch, text, location):
+    row, context, directory, _ = _unit_gap_fixture(tmp_path)
+    if location == 'selected_page':
+        context['document_pages'][1] += '\n' + text
+    else:
+        proof = _ocr_page_proof(monkeypatch, row)
+        _seal_ocr_pages(row, proof, {9: text})
+        context['ocr_layout_proof'] = proof
+        assert 9 not in context['document_pages']
+    result = _pure(row, context, directory)
+    assert result['state'] == 'BLOCKED', result
+    assert 'DUAL_READER_STATEMENT_UNIT_CONFLICT' in result['reason_codes'], result
+
+
+def test_statement_unit_waiver_rejects_contrary_metadata_value(tmp_path):
+    row, context, directory, _ = _unit_gap_fixture(tmp_path, missing_units=False)
+    row['document_metadata']['metadata_claims']['unit_scale']['value'] = 1000000
+    _replay_metadata(row)
+    result = _pure(row, context, directory)
+    assert result['state'] == 'BLOCKED', result
+    assert 'DUAL_READER_STATEMENT_UNIT_CONFLICT' in result['reason_codes'], result
+
+
+def _seal_ocr_pages(row, proof, pages):
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    proof['pages'] = {str(number): {'tokens': [
+        {'text': line, 'raw_token_order': index, 'tsv_hierarchy': {'line_num': index}}
+        for index, line in enumerate(text.splitlines(), 1)]} for number, text in pages.items()}
+    body = {key: value for key, value in proof.items() if key != 'proof_sha256'}
+    proof['proof_sha256'] = _sha(ocr.canonical_json(body).encode('utf-8'))
+    row['ocr_layout_proof']['proof_sha256'] = proof['proof_sha256']
+
+
+@pytest.mark.parametrize('period', ['2025-H1', '2026-H1'])
+@pytest.mark.parametrize('contrary', [False, True])
+def test_retained_loader_replays_dual_statement_unit_with_unreadable_ocr(tmp_path, monkeypatch, period, contrary):
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    row, context, directory, _ = _unit_gap_fixture(tmp_path, period, image_only=True)
+    proof = _ocr_page_proof(monkeypatch, row)
+    # Register only this owned fixture; the loader and both verifiers run normally.
+    monkeypatch.setitem(ocr.LAYOUT_PROOFS[row['document_sha256']], 'text_layer_verification', {
+        'state': 'NONE_VERIFIED'})
+    pages = {1: context['document_pages'][1]}
+    if contrary:
+        pages[9] = 'Unit: USD'  # retained proof page outside the loader's required set
+    _seal_ocr_pages(row, proof, pages)
+    target = directory / row['ocr_layout_proof']['relative_path']
+    target.parent.mkdir(exist_ok=True)
+    target.write_bytes(_bytes(proof))
+    before = deepcopy(row)
+    retained_paths = [directory / 'fixture.pdf', directory / 'official_document_acquisition_manifest.json',
+                      target, *[path for path in (directory / dual.PROOF_DIR).iterdir() if path.is_file()]]
+    retained_bytes = {path: path.read_bytes() for path in retained_paths}
+    result = admit_retained_financial_fact(row, evidence_root=tmp_path, registry=context['registry'])
+    if contrary:
+        assert result['state'] == 'BLOCKED', result
+        assert 'DUAL_READER_STATEMENT_UNIT_CONFLICT' in result['reason_codes'], result
+    else:
+        assert result['state'] == 'ADMITTED', result
+        assert result['admission_basis'] == dual.EVIDENCE_TIER
+        assert result['evidence_classification']['authority_effect'] == 'OFFLINE_RESEARCH_ONLY'
+        assert result['evidence_classification']['pit_backtest_eligible'] is False
+    assert row == before
+    assert {path: path.read_bytes() for path in retained_paths} == retained_bytes
 
 
 @pytest.mark.parametrize("label", ["06 tháng đầu năm 2026", "6 tháng đầu năm 2026"])

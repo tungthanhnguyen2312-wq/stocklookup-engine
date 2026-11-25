@@ -1,5 +1,17 @@
 # Decision 2: retained dual-reader reviewed transcription v1
 
+## Statement-unit integration
+
+For a fully verified DUAL_READER_REVIEWED_TRANSCRIPTION fact only, common
+admission may derive currency and scale metadata claims from the verifier's
+statement_unit_evidence. Its document SHA, statement page and sealed proof hash
+must match that fact. Existing metadata values and recognized retained
+native/OCR unit declarations must not contradict it. The supplied envelope
+must replay consistently before derivation; the resulting envelope must pass
+normal metadata qualification. Retained metadata and OCR text remain unchanged.
+This supersedes the unit-text prohibition below only for currency and scale.
+All other metadata, assurance, source, rights, time and use gates remain.
+
 Owner-approved Decision 2 adds `DUAL_READER_REVIEWED_TRANSCRIPTION` as an
 **offline research only** evidence tier. It has no Production, source promotion,
 execution, exact-mode or PIT-backtest authority. Existing source, metadata,
