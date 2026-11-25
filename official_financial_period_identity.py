@@ -79,11 +79,29 @@ def recognize_statement_period(text: str) -> dict[str, Any]:
     # Comparative notes describe other periods; they cannot identify this filing.
     blob = re.split(r"\b(?:notes?\s*:|comparative|thuyết minh|thuyet minh)\b",
                     str(text or ""), maxsplit=1, flags=re.IGNORECASE)[0]
+    # Other-matters paragraphs describe earlier auditors/periods, not this filing.
+    import unicodedata
+    folded = ''.join(ch for ch in unicodedata.normalize('NFD', blob.lower())
+                     if unicodedata.category(ch) != 'Mn').replace('đ', 'd')
+    boundary = re.search(r'\b(?:van de khac|other matters?)\b|(?m:^.{0,20}\bde khac\b[^\n]*$)', folded)
+    if boundary:
+        blob = blob[:boundary.start()]
+        folded = folded[:boundary.start()]
     if _Q3_VI.search(blob) or _Q3_EN.search(blob) or re.search(
             r"\b(?:nine[- ]months?|9\s+th[áa]ng)\b", blob, re.IGNORECASE):
         return {"period": None, "periodicity": None, "status": "OUT_OF_SCOPE_Q3_2026",
                 "evidence": "Quarter-three/nine-month statement is not admitted"}
     hits = []
+    # Mixed Vietnamese accents are ordinary literal spelling, not OCR letter repair.
+    # NFD preserves digits (including superscripts); never use NFKD here.
+    for pattern, suffix, periodicity in (
+        (r'nam tai chinh ket thuc ngay\s+31\s+thang\s+12\s+nam\s+(20[0-9]{2})', '', ANNUAL),
+        (r'(?:ky\s+(?:ke toan\s+)?(?:6|sau)\s+thang|ban nien|giua nien do).{0,80}?30\s+thang\s+0?6\s+nam\s+(20[0-9]{2})', '-H1', INTERIM_H1),
+        (r'ky hoat dong\s+(?:6|sau)\s+thang\s+ket thuc ngay\s+30\s+thang\s+0?6\s+nam\s+(20[0-9]{2})', '-H1', INTERIM_H1),
+    ):
+        for found in re.finditer(pattern, folded, re.DOTALL):
+            hits.append(dict(period=found.group(1)+suffix, periodicity=periodicity,
+                             status='EXPLICIT', evidence=blob[found.start():found.end()]))
     for pattern, period_fn, periodicity in (
         (_ANNUAL_VI, lambda m: m.group(1), ANNUAL),
         (_ANNUAL_EN, lambda m: m.group(1), ANNUAL),

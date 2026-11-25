@@ -17,6 +17,22 @@ Blocks: **Contract · Runtime · Authority · Production · Input · Predecessor
 Decision-intelligence closure (2026-10-07, `decision_intelligence_coverage_calibration/v1`): coverage/calibration context only; non-voting, no sizing/recommendation. Read-only inspection PR116 ([scope](research_inspection_integrity_v1_contract.md)); [evidence](internal/DECISION_INTELLIGENCE_COVERAGE_AND_CALIBRATION_CLOSURE_20261007.md).
 Macro V1: Daily/AI/cockpit wired; Oct 8 live acceptance verified (`MACRO_REGIME_20261008_LIVE_ACCEPTED`; identities in ACTIVE_STATE); source authority unchanged.
 
+### Retained numeric glyph proof and offline H1 TTM (HOL-08)
+- HOL-11 retains exact year-header token identities and parses literal complete dotted
+  dates. PNJ annual header proof clears; prior-H1 revenue/total profit are table-qualified
+  only. Existing unit placement, physical code-row, damaged-label and metadata gates
+  still block admission. HPG native text is damaged; direct-owner replay has zero
+  candidates. Zero new facts or TTM status changes; no absent PNJ code 62 inferred.
+- Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge)
+- Runtime: `EXPERIMENTAL` · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`
+- Input: exact retained FY2025/H1 originals; same-render baseline U+00B2 proof only.
+- Blocker: unadmitted operands stay blocked independently for codes 10/60/61.
+- Next trigger: original-document metadata/assurance and geometry evidence, without letter repair.
+- HOL-10 offline replay admits HPG FY2025 10/60/61, HPG H1/2025 10 and VRE
+  H1/2025 10/60/61. HPG P/S TTM is research usable at November 25 cutoff;
+  November 23 and both P/E codes remain blocked. Form-scoped literal row identity
+  distinguishes TT200/202 from TT99/43. No overlay or Daily activation.
+
 ### Long-term company economics evidence
 - Contract: [long_term_company_economics_evidence_contract.md](long_term_company_economics_evidence_contract.md)
 - Runtime: `EXPERIMENTAL` (opt-in library) · Authority: `NON_VOTING` · Production: `OFFLINE_ONLY`

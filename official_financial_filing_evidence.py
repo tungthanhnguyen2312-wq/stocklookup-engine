@@ -28,7 +28,9 @@ LEGACY_ROW_PROOF_SUBSTITUTED = frozenset({"DOCUMENT_METADATA_PROOF_MISSING", "RE
 # Existing issuer/attachment relationship, evidenced by HPG's retained FY2024
 # locator in config/promoted_fundamental_coverage_closeout_evidence.json. This is
 # exact issuer binding only; current registry admission still governs each URL.
-_EXISTING_ISSUER_ATTACHMENT_HOSTS = {"HPG": frozenset({"file.hoaphat.com.vn"})}
+_EXISTING_ISSUER_ATTACHMENT_HOSTS = {"HPG": frozenset({"file.hoaphat.com.vn"}),
+    # Existing registry host_admission_rule: PNJ IR links its consolidated originals here.
+    "PNJ": frozenset({"cdn.pnj.io"})}
 
 
 @lru_cache(maxsize=1)
@@ -73,7 +75,8 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         retained_bytes: bytes | None = None, registry: Mapping[str, Any] | None = None,
         document_pages: Mapping[int, str] | None = None,
         cutoff: str | None = None, intended_use: str = "CURRENT_RESEARCH_FACTUAL_AUTHORITY",
-        ocr_layout_proof: Mapping[str, Any] | None = None) -> dict[str, Any]:
+        ocr_layout_proof: Mapping[str, Any] | None = None,
+        dual_reader_proof: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Pure common admission. Retained bytes and registry arrive independently of row claims.
 
     An overlay seal, SHA string or caller boolean cannot replace the retained source.
@@ -88,6 +91,16 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     from financial_evidence_currency_contract import TARGET_PERIODS
 
     reasons, missing = [], []
+    dual = None
+    if row.get("dual_reader_transcription") is not None:
+        from stocklookup_core.evidence.dual_reader_transcription import verify_dual_reader_transcription
+        from financial_statement_unit_resolution import parse_explicit_unit_declaration
+        dual = verify_dual_reader_transcription(row, dual_reader_proof, source_record=source_record,
+            retained_bytes=retained_bytes, parse_amount=parse_accounting_integer,
+            parse_unit=parse_explicit_unit_declaration, recognize_period=recognize_statement_period,
+            recognize_scope=recognize_scope)
+        reasons.extend(dual["reason_codes"])
+    dual_valid = dual is not None and dual["valid"]
     sha = str(row.get("document_sha256") or "")
     metadata = row.get("document_metadata")
     if not isinstance(metadata, Mapping):
@@ -121,10 +134,20 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
                 page = document_pages.get((claim.get("evidence_span") or {}).get("source_page"), "")
                 if recognizer(page).get(name) != claim.get("value"):
                     reasons.append(f"RETAINED_{name.upper()}_NOT_EXPLICIT")
-            proof_page = document_pages.get((row.get("assurance_evidence") or {}).get("page_number"), "")
-            opinion_page = document_pages.get(((row.get("assurance_evidence") or {}).get("opinion_evidence") or {}).get("page_number"), "")
-            if recognize_audit_or_review(proof_page + "\n" + opinion_page)["audit_or_review_status"] != row.get("audit_or_review_status"):
+            proof_number = (row.get("assurance_evidence") or {}).get("page_number")
+            opinion_number = ((row.get("assurance_evidence") or {}).get("opinion_evidence") or {}).get("page_number")
+            assurance_pages = {}
+            if isinstance(proof_number, int) and not isinstance(proof_number, bool):
+                assurance_pages[proof_number] = document_pages.get(proof_number, "")
+            if isinstance(opinion_number, int) and not isinstance(opinion_number, bool):
+                assurance_pages[opinion_number] = document_pages.get(opinion_number, "")
+            if not assurance_pages:
                 reasons.append("RETAINED_ASSURANCE_TEXT_NOT_EXPLICIT")
+            else:
+                from official_financial_assurance_evidence import resolve_native_document_assurance
+                actual_assurance = resolve_native_document_assurance(sha, assurance_pages)
+                if actual_assurance.get("audit_or_review_status") != row.get("audit_or_review_status"):
+                    reasons.append("RETAINED_ASSURANCE_TEXT_NOT_EXPLICIT")
             proof = row.get("assurance_evidence") or {}
             native = proof.get("native_text_evidence")
             if isinstance(native, Mapping):
@@ -134,8 +157,10 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
                         or resolve_native_document_assurance(sha, {number:document_pages[number] for number in numbers}).get("evidence_id") != proof.get("evidence_id")):
                     reasons.append("NATIVE_ASSURANCE_SOURCE_REPLAY_MISMATCH")
             import re
-            if not re.search(r"\b" + re.escape(str(row.get("ticker") or "")) + r"\b",
-                    "\n".join(text for number,text in document_pages.items() if number <= 8), re.IGNORECASE):
+            issuer_text = "\n".join(text for number,text in document_pages.items() if number <= 8)
+            from stocklookup_core.evidence.official_ocr_layout_proof import retained_issuer_name_matches
+            if not (re.search(r"\b" + re.escape(str(row.get("ticker") or "")) + r"\b", issuer_text, re.IGNORECASE)
+                    or retained_issuer_name_matches(row, ocr_layout_proof, issuer_text)):
                 missing.append("RETAINED_ISSUER_LITERAL_PROOF_UNAVAILABLE")
         for name in ("reporting_period", "statement_scope", "currency"):
             if (claims.get(name) or {}).get("value") != row.get(name):
@@ -211,7 +236,15 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     if row.get("metadata_qualification") in {"BLOCKED", "UNQUALIFIED", METADATA_BLOCKED} or row.get("qualification_status") in {"BLOCKED", "OFFICIAL_FACT_CANDIDATE_BLOCKED"}:
         reasons.append("FACT_QUALIFICATION_BLOCKED")
     period = str(row.get("reporting_period") or "")
-    if period not in TARGET_PERIODS:
+    from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+    prior_h1_layout = layout_for(sha) or {}
+    bounded_prior_h1 = (period == "2025-H1" and row.get("ocr_layout_proof") is not None
+                        and prior_h1_layout.get("reporting_period") == period
+                        and prior_h1_layout.get("ticker") == row.get("ticker"))
+    # Decision 2 includes the approved H1 bridge operand, with its original
+    # period, reviewed assurance and all retained-source gates still required.
+    bounded_prior_h1 = bounded_prior_h1 or (period == "2025-H1" and dual_valid)
+    if period not in TARGET_PERIODS and not bounded_prior_h1:
         reasons.append("SOURCE_PERIOD_NOT_ADMITTED")
     else:
         start, end = period_bounds(period)
@@ -236,7 +269,12 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
     else:
         spec = GENERIC_METRIC_RULES.get("cash_and_equivalents" if metric == "cash_and_cash_equivalents" else metric)
         if spec:
-            if (not any(anchor in _normalize_text(str(label)) for anchor in spec["label_anchors"])
+            normalized_label = _normalize_text(str(label))
+            # The shared row owner already permits joined OCR words. Keep the
+            # parent template check consistent, without repairing any letters.
+            parent_label = (metric == "attributable_net_income"
+                            and row_label_supports_metric(metric, str(label)))
+            if ((not parent_label and not any(anchor in normalized_label for anchor in spec["label_anchors"]))
                     or row.get("statement_family") != str(spec["statement_type"])):
                 reasons.append("METRIC_STATEMENT_IDENTITY_MISMATCH")
         elif metric not in {"investment_property_disposal_result", "provision_charge_or_reversal_adjustment"}:
@@ -250,7 +288,7 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             reasons.append("METRIC_LITERAL_NOT_IN_CITED_SPAN")
         if document_pages is not None:
             page = document_pages.get(span.get("source_page"), "")
-            if not span_text or span_text not in " ".join(page.split()):
+            if not dual_valid and (not span_text or span_text not in " ".join(page.split())):
                 reasons.append("VALUE_SPAN_NOT_IN_RETAINED_DOCUMENT")
     try:
         value = row.get("normalized_value", row.get("parsed_numeric_value"))
@@ -264,11 +302,16 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             missing.append("LITERAL_VALUE_PROOF_MISSING")
         if isinstance(value, bool) or not isinstance(scale, int) or isinstance(scale, bool) or scale <= 0:
             raise ValueError()
-        if raw is not None and parse_accounting_integer(raw) * scale != value:
+        numeric_raw = raw
+        if raw is not None and "²" in str(raw):
+            from stocklookup_core.evidence.official_ocr_layout_proof import bound_numeric_value
+            numeric_raw = bound_numeric_value(row, ocr_layout_proof)
+        if raw is not None and parse_accounting_integer(numeric_raw) * scale != value:
             raise ValueError()
         if raw is not None and isinstance(span, Mapping) and str(raw) not in str(span.get("text") or ""):
             raise ValueError()
-        if raw is not None and document_pages is not None and str(raw) not in " ".join(document_pages.values()):
+        if (not dual_valid and raw is not None and document_pages is not None
+                and str(raw) not in " ".join(document_pages.values())):
             raise ValueError()
     except (ValueError, TypeError):
         reasons.append("LITERAL_VALUE_NORMALIZATION_NOT_BOUND")
@@ -299,7 +342,22 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         reasons.append("INTENDED_USE_NOT_ADMITTED")
     if intended_use not in {"CURRENT_RESEARCH_FACTUAL_AUTHORITY", "CANONICAL_CITATION", "VALUATION_INPUT_WHERE_METRIC_PERMITS"}:
         reasons.append("INTENDED_USE_OUTSIDE_CONTRACT")
-    if row.get("ocr_layout_proof") is not None:
+    if row.get("ocr_layout_proof") is not None and dual_valid:
+        # Decision 2 reuses a registered hash-bound OCR proof only as the document's
+        # page text for metadata, assurance and issuer literals (loaded by the retained
+        # owner under its own contract). The value cell is proven by the dual reading,
+        # so no OCR row or unit coordinate proof substitutes for any reason here.
+        from stocklookup_core.evidence.official_ocr_layout_proof import layout_for, verify_proof_identity
+        layout = layout_for(sha) or {}
+        if ocr_layout_proof is None:
+            missing.append("OCR_LAYOUT_PROOF_UNAVAILABLE")
+        else:
+            reasons.extend(verify_proof_identity(ocr_layout_proof, document_sha256=sha,
+                proof_sha256=(row.get("ocr_layout_proof") or {}).get("proof_sha256")))
+        if (row.get("ticker"), row.get("reporting_period"), row.get("statement_scope")) != (
+                layout.get("ticker"), layout.get("reporting_period"), layout.get("statement_scope")):
+            reasons.append("OCR_LAYOUT_SCOPE_MISMATCH")
+    elif row.get("ocr_layout_proof") is not None:
         # Registered image-only layout (Owner corrective 2026-11-07): coordinate proofs replace exactly
         # the contiguous-span and front-page-unit text checks; every other reason stays.
         from stocklookup_core.evidence.official_ocr_layout_proof import apply_layout_proof
@@ -322,6 +380,14 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         pin = _legacy_row_admission()["pin"]
         result.update(admission_basis=pin["admission_basis"], legacy_row_sha256=legacy["row_sha256"],
                       evidence_classification=dict(pin["evidence_classification"]))
+    elif state == "ADMITTED" and dual_valid:
+        result.update(admission_basis="DUAL_READER_REVIEWED_TRANSCRIPTION",
+            evidence_tier=dual["evidence_tier"], evidence_classification={
+                "authority_effect": dual["authority_effect"], "pit_backtest_eligible": False,
+                "knowledge_floor": dual["knowledge_floor"], "model_families": dual["model_families"],
+                "proof_sha256": dual["proof_sha256"], "raw_sha256": dual["raw_sha256"],
+                **({"literal_normalizations": dual["literal_normalizations"]}
+                   if dual.get("literal_normalizations") else {})})
     elif state == "ADMITTED":
         result["admission_basis"] = "RETAINED_SOURCE_REPLAY"
     result["admission_id"] = stable_id({**result, "row": {k: v for k, v in row.items() if k != "admission"}, "cutoff": cutoff})

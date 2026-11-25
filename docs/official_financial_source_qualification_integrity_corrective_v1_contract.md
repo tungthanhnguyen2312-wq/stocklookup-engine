@@ -57,6 +57,84 @@ No production refresh, Daily, deployment, source activation, provider substituti
 private/runtime data repair, or writes to the 27-row overlay. Default production call
 shapes and completed Daily artifacts are preserved. No second repository writer.
 
+## HOL-08 retained baseline digit proof and offline H1 bridge
+
+Owner task `HL-20261124-HOL-08` authorizes this bounded offline extension.
+The OCR numeric gate may interpret **only U+00B2** as ASCII `2` when the same
+retained page render supplies character boxes for the complete, unchanged numeric
+token. Tesseract makebox uses the same full-page image, language, PSM and engine
+as TSV. Character sequence must exactly equal the raw token; boxes must be finite,
+positive, ordered and contained in the exact TSV token (one pixel coordinate
+tolerance). At least three unaffected ASCII digit glyphs in that token supply
+independent medians for top, bottom and height. Each `²` must match all three
+medians within **10% of median ASCII digit height**, inclusive. No minimum pixel
+allowance is added. Raised/smaller superscripts, missing boxes, render mismatch,
+competing tokens and mixed character damage remain blocked. No other numeric
+character is normalized. Arithmetic identities never supply digits or waive
+geometry, labels, metadata or assurance.
+
+Raw text stays unchanged. The proof/citation retains every character box,
+reference medians, fractional and pixel tolerance, raw and interpreted token,
+page-render SHA-256, engine and configuration. The content-addressed layout proof
+freezes those boxes; admission replays proof identity and numeric geometry.
+Only the five exact HPG/PNJ FY2025 and HPG/PNJ/VRE H1/2025 originals listed in
+`official_ocr_layout_proof.LAYOUT_PROOFS` join the existing scoped registry.
+H1/2025 ingress requires explicit opt-in and exact registered document identity.
+Registration alone is never admission.
+
+The explicit offline V2 builder `official_h1_ttm_features` computes each of codes
+10, 60 and 61 independently as FY2025 + H1/2026 - H1/2025. It requires common-owner
+admitted, QUALIFIED, consolidated VND operands with explicit period bounds, source
+normalization and audited FY/reviewed H1 assurance. It replays retained admission
+at a timezone-aware cutoff, rejects conflicts and never borrows code 60 for 61.
+Knowledge time is the system retention/qualification clock; new prior-H1 and
+annual requalifications have a qualification-time floor, never issuer publication
+time. Total profit includes NCI; parent profit carries `PARENT_ATTRIBUTABLE`.
+Both remain distinct through V2 features and the existing valuation evaluator.
+Default headline selection, Daily inputs and policy stay unchanged. This
+task-specific offline bridge extends the older no-TTM interim boundary only for
+this use. Unreviewed quarterly documents cannot enter the bridge. No overlay,
+runtime or production artifact is written by this task.
+
+## HOL-10 retained metadata and form-aware identity
+
+Task `HL-20261124-HOL-10` corrects the existing ingress and admission owners offline.
+Explicit registered prior-H1 replay defaults to the `h1-2025-q3-20261124` manifest
+root; ordinary H1/annual routing retains `currency-refresh-20260929`. Exact issuer,
+period, bytes, source class and host admission are still required.
+
+Period recognition accepts literal mixed Vietnamese accents by NFD accent folding,
+preserves the original evidence span and never folds superscript digits. Other-matters
+paragraphs cannot supply the current period. Only exact registered layouts may use
+a statement heading when front matter supplies no period; conflicting claims block.
+The original full legal names for registered HPG/PNJ/VRE documents may establish
+issuer identity instead of a printed ticker, with valid content-addressed OCR proof.
+No fuzzy spelling, letter repair, host inference or caller label establishes identity.
+PNJ's already-admitted `cdn.pnj.io` attachment relationship (source registry's retained
+IR linkage) joins the existing issuer binding; each URL still needs registry admission.
+
+Assurance text replays the existing document assurance owner, including an immediately
+adjacent opinion page. Missing/damaged wording stays blocked. The retained OCR proof
+now also freezes native-failure evidence. A nonempty unusable native layer may replay
+OCR only when rebuilding the native artifact yields zero candidates and matches its
+original artifact identity, document SHA, explicit trigger and every recorded page hash.
+Missing/altered proof or any native candidate keeps the native path. Row geometry,
+comparative columns, literal labels and the HOL-08 digit gate are unchanged.
+
+Income row identity uses printed TT200/202 (2014) or TT99/2025/TT43/2026 references;
+only an absent reference permits the fiscal-start fallback at 2026-01-01. Printed
+unknown/conflicting references fail closed for the form-sensitive codes. Legacy codes
+21/22/23/24 mean financial income/expense/interest/JV; modern codes 21/22/23/24/27
+mean investment-property disposal/financial income/expense/borrowing costs/JV.
+Literal guards remain mandatory, as do crossed 60/61 and parent/NCI guards.
+
+The offline H1 bridge emits the existing monetary contract's `units` label only after
+all three operands prove normalized VND unit scale 1. No magnitude-based unit inference,
+quarterly input, headline selection, overlay publication or Daily activation is added.
+HPG P/E remains blocked by prior-H1 comparative geometry and parent label; VRE annual
+assurance remains blocked. HPG revenue TTM and P/S are usable only after the newly
+qualified prior-H1 operand's retention/qualification clock.
+
 ## Existing HPG attachment-host compatibility
 
 The source-only `HPG_EXISTING_ISSUER_ATTACHMENT_BINDING_CORRECTIVE_V1` correction binds
@@ -77,6 +155,28 @@ cross-issuer redirects, withdrawn host/class approval and missing/altered proof.
 No host, cohort, acquisition seed, period, share, overlay or formula is added.
 The external HPG H1 packet remains candidate evidence; this compatibility correction
 alone creates no official fact, newly active ratio or production authority.
+
+## HOL-11 exact year and dotted-date header provenance
+
+Task `HL-20261124-HOL-11` authorizes bounded offline diagnosis and header-proof
+correction. The existing year-band recognizer retains the exact current/comparative
+year tokens, source orders and boxes only when both independent positioned years
+are uniquely proven. Fused native headers do not acquire invented token identities.
+The existing complete-date parser also accepts literal dot separators; invalid dates,
+damaged digits and ambiguous headers fail closed. PNJ's printed headings are `2025` /
+`2024` (annual) and `30.6.2025` / `30.6.2024` (prior H1). They were already registered;
+the missing provenance and unrecognized literal separator were recognizer defects.
+
+The unit-above-header and physical same-row line-code checks are unchanged. PNJ
+prints VND below its year/date headers and several codes above the amount baseline;
+correct header registration cannot waive those failures. Competing amount tokens,
+split parent amounts and damaged parent labels remain blocked. No code 62 or equality
+of codes 60/61 is inferred from its absence. The direct-citation owner replay on HPG's
+retained original yields zero candidates: page 10 native total profit contains
+`7.614.329.s2L.616` and parent profit `7.600.771.906.752`. Manifest extraction readiness
+is not literal fact qualification; no native numeric/letter repair is authorized.
+The task requires stopping those HPG operands when native damage is established.
+Zero new income facts are admitted; existing HOL-10 cutoff results remain unchanged.
 
 ## Release gate
 

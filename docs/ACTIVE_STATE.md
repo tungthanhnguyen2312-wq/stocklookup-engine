@@ -31,6 +31,65 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 ## 1. The operational gate
 - **LOCAL, unreleased — Owner Decision 1 (2026-11-24), `HL-20261124-HOL-06`:** [parent-attributable headline P/E](current_state_relative_valuation_contract.md) implementation with total-profit supplementary context. Supplied November 23 retained-input replay: 5 headlines → 0 of 1,683 evaluated names; upstream annual parent panel absent locally. [Evidence and gaps](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md).
 - **LOCAL PR #284 (`HL-20261124-HOL-01`, `HL-20261124-HOL-04`, `HL-20261124-HOL-05`, `HL-20261124-HOL-09`):** retained official share events require explicit aware `known_by` (live CLI: recorded run clock; replay: historical cutoff), excluding only proven-late rows; untimed rows stay admitted for withholding with `KNOWN_AT_UNPROVEN_ADMITTED_FOR_WITHHOLDING_ONLY` (excluding them is fail-open; 2026-11-23 output matches main). Owner decision 2026-11-24 admits VSDC registered-securities counts and share-changing events market-wide where supported; `official_source_registry.json` prototype flag stays OFF. Record-date upper bounds (BMI fixture `tests/fixtures/vsdc_notices/bmi_202076_retained_20261124.html`) are withholding-only; registration-change notices (`corporate_action_notice`, 4 fixture hashes verified, absent venue `UNKNOWN`) parse `ISSUED_SHARES` with literal reason and second-precision `Asia/Ho_Chi_Minh` publication time, supplying `official_registered_shares` when enabled with exact ticker/ISIN link to a retained VSDC HOSE notice and known by cutoff after provider observation. [Finite operator notice retention](official_document_acquisition_pilot.md#vsdc-finite-operator-notice-scope-hl-20261124-hol-05) supports exact VSDC URLs beyond the financial cohort (registry gates/manifest fixed; offline OFF/ON replay may show `BLOCKED` without a registered-share valuation tier; real downloads/full-market replay pending). [Body completeness/repair](official_document_acquisition_pilot.md#body-completeness-and-append-only-repair-hl-20261124-hol-09) refuses body-less HTTP 200 shells, appends superseding receipts, selects latest complete linked version and diagnoses preserved shells (re-fetch/replay of 3 reported shells pending). No outstanding-ex-treasury, continuity, effective-date, valuation-use, PIT, price-factor, Daily, source-admission or production promotion; no production evidence changed.
+- **LOCAL / OFFLINE - HOL-11 exact header provenance (partial; no new admissions):**
+  The existing year-band recognizer now retains exact positioned year token identities;
+  complete dotted dates such as PNJ's printed `30.6.2025` / `30.6.2024` use the
+  existing date owner without character repair. PNJ FY2025 header-proof blockers
+  clear; prior-H1 revenue and total profit become table-qualified, not admitted.
+  The unchanged unit-above-header and physical same-row code gates reject PNJ's
+  below-year `VND` headings and amounts on wrapped second baselines. FY2025 revenue
+  still has a competing comparative token, FY2025 parent profit is split, and H1
+  parent label/period evidence remains damaged or unavailable. No absent code 62
+  is inferred. HPG page 10 native text is damaged: total profit includes `s2L`,
+  parent profit ends `.752` instead of a usable literal; the direct owner yields
+  zero candidates. HPG operand investigation stops there under HOL-11 instructions.
+  Zero new facts; November 23/25 TTM statuses remain HOL-10's (only HPG P/S at
+  November 25 is research usable). No admission gate, Daily or production change.
+  Contract: [HOL-11 corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-11-exact-year-and-dotted-date-header-provenance).
+- **LOCAL / OFFLINE — HOL-10 retained operand metadata and form identity:**
+  Common-owner replay admits seven income rows: HPG FY2025 10/60/61,
+  HPG H1/2025 10, and VRE H1/2025 10/60/61. Exact manifest root routing,
+  literal mixed-accent period headings, registered legal issuer names and the
+  existing assurance owner are used; nonempty unusable native text requires
+  replay of the retained zero-candidate artifact and page hashes. No gate is waived.
+  At November 25 cutoff HPG revenue TTM is 190,643,650,555,249 VND and
+  research P/S TTM is 0.9034472205413704 using the retained market-cap snapshot.
+  November 23 remains blocked. Both P/E codes remain blocked: prior-H1 code 60
+  has overlapping comparative glyph boxes; code 61 has a damaged label.
+  PNJ annual layout proof and VRE annual assurance remain blocked. Printed
+  TT200/202 versus TT99/43 form references govern financial income/expense,
+  borrowing costs and JV rows; absent references use the fiscal start date.
+  No overlay, headline, Daily or production change.
+  Contract: [HOL-10 corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-10-retained-metadata-and-form-aware-identity).
+- **LOCAL / OFFLINE — HOL-08 retained numeric proof and H1 TTM replay:**
+  U+00B2 may be interpreted as 2 only with same-render character boxes whose top,
+  bottom and height match ASCII digit medians within 10% of median digit height.
+  Raw tokens and full proof remain retained; other numeric characters and damaged
+  parent labels are not repaired. The explicit offline V2 H1 bridge replays all
+  three operands through common admission at the decision cutoff. Table-qualified
+  values remain unusable where document metadata, issuer, period or assurance
+  admission fails. The 17 requested operands improve from 5 to 8 table-qualified;
+  zero new facts were admitted by HOL-08. Its November 23/25 cutoff replays kept P/E TTM
+  blocked for all 13 names; P/S TTM was blocked (SSI/VCB not applicable).
+  HOL-10 above supersedes the metadata and HPG P/S subset of this diagnosis.
+  No overlay, Daily inputs or headline selection change.
+  Contract: [source integrity corrective](official_financial_source_qualification_integrity_corrective_v1_contract.md#hol-08-retained-baseline-digit-proof-and-offline-h1-bridge).
+- **LOCAL / OFFLINE — retained income operand corrective (HL-20261124-HOL-02C):**
+  parent-label admission now shares the existing joined-word rule; TT43 parent labels
+  and JV code 27 are recognized, industrial interest is code 23 and JV share code 24.
+  Crossed 60/61 and NCI guards remain. Annual replay keeps its conservative
+  qualification-time knowledge floor (never backdated). Retained HPG H1/2026 layout-proof
+  replay admits parent profit; no overlay was published. HOL-02F completed offline
+  PNJ/VRE FY2025 OCR replay with the supplied dependencies. PNJ income is page 10;
+  code-row overlap resolves off-row gutter label competition, but revenue has a
+  competing comparative token, total profit has superscript digits and parent
+  profit has a split amount and damaged label. VRE is registered for explicit annual
+  subset replay; its assurance wording, code 60 geometry and code 61 damaged label
+  remain blocked. No new income fact was admitted or published. Owner approval
+  2026-11-24 adds only 2025-H1/2025-Q3/2026-Q3 to the bounded acquisition period list;
+  no downloads were run. HOL-08 above supersedes the numeric-blocker subset of
+  this earlier diagnosis; canonical admission and VRE H1/2026 damaged parent-label
+  letter remain blocked.
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.

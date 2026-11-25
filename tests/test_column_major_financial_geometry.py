@@ -215,3 +215,22 @@ def test_hpg_existing_official_collisions_remain_explicit_and_never_ingress():
     assert all(not record["eligible_for_ingress"] for record in records)
     by_metric = {(record["reporting_period"], record["canonical_metric"]): record["classification"] for record in records}
     assert set(by_metric.values()) == {"EXACT_MATCH"}
+
+
+@pytest.mark.parametrize('current,prior', [('30.6.2024', '30.6.2023'), ('30/6/2024', '30/6/2023'), ('30-6-2024', '30-6-2023')])
+def test_hol11_complete_numeric_dates_keep_exact_header_tokens(current, prior):
+    tokens = _period_header_fixture([('Code', 50), ('Note', 75), (current, 110), (prior, 180)])
+    bands = structural.discover_column_bands(structural.reconstruct_physical_lines(tokens)['lines'],
+                                            '2024-H1', statement_family='income_statement')
+    assert bands is not None
+    identity = bands['header_evidence']['period_identities']['current']
+    assert identity['raw_text'] == current and identity['parsed_date'] == '2024-06-30'
+    assert identity['source_token_orders'] == [tokens[2]['raw_token_order']]
+
+
+@pytest.mark.parametrize('damaged', ['31.6.2024', '30.6.20\u00b24', '30.6.24'])
+def test_hol11_invalid_or_damaged_dot_dates_never_fall_back_to_year(damaged):
+    assert structural._parse_explicit_header_date(damaged) is None
+    tokens = _period_header_fixture([('Code', 50), ('Note', 75), (damaged, 110), ('30.6.2023', 180)])
+    assert structural.discover_column_bands(structural.reconstruct_physical_lines(tokens)['lines'],
+                                            '2024-H1', statement_family='income_statement') is None
