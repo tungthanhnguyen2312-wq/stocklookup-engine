@@ -9,6 +9,21 @@ from stocklookup_core.evidence import official_ocr_layout_proof as lp
 SHA = "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968"
 PAGE = 12
 
+DECISION2_LAYOUTS = (
+    ("54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7", "POW", "2025", 11,
+     "Current year", "Prior year"),
+    ("e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1", "POW", "2025-H1", 11,
+     "Current period", "Prior period"),
+    ("38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5", "POW", "2026-H1", 11,
+     "Current period", "Prior period"),
+    ("618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c", "NVL", "2025-H1", 12,
+     "06 tháng đầu năm 2025", "06 tháng đầu năm 2024"),
+    ("20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007", "NVL", "2026-H1", 12,
+     "06 tháng đầu năm 2026", "06 tháng đầu năm 2025 (Trình bày lại)"),
+    ("8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353", "NVL", "2025", 12,
+     "Năm 2025", "Năm 2024"),
+)
+
 
 def tok(order, text, x0, x1, top, bottom, line):
     return {"token_id": f"t{order}", "raw_token_order": order, "text": text, "x0": x0, "x1": x1, "top": top,
@@ -373,3 +388,81 @@ def test_retained_zero_native_candidate_replay_accepts_explicit_builder(tmp_path
         assert result == {1: 'retained OCR literal'}
     finally:
         odq.register_native_artifact_builder(previous)
+
+
+def test_nvl_exact_legal_name_requires_bound_layout_and_proof(monkeypatch):
+    import hashlib
+    from tools.run_dual_reader_transcription_admission import REGISTERED_ISSUER_FOLD
+    name = 'CONG TY CO PHAN TAP DOAN DAU TU DIA OC NO VA'
+    assert REGISTERED_ISSUER_FOLD['NVL'] == name.lower()
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, SHA, {**lp.LAYOUT_PROOFS[SHA], 'ticker': 'NVL'})
+    body = {'contract_version': lp.CONTRACT_VERSION, 'document_sha256': SHA, 'pages': {}}
+    digest = hashlib.sha256(lp.canonical_json(body).encode()).hexdigest()
+    proof = {**body, 'proof_sha256': digest}
+    row = {'ticker': 'NVL', 'document_sha256': SHA, 'ocr_layout_proof': {'proof_sha256': digest}}
+    assert lp.retained_issuer_name_matches(row, proof, name)
+    for bad in ('NOVALAND', name.replace('NO VA', 'NOVA'), name.replace('DIA OC', 'DIA O')):
+        assert not lp.retained_issuer_name_matches(row, proof, bad)
+    assert not lp.retained_issuer_name_matches({**row, 'ticker': 'POW'}, proof, name)
+    assert not lp.retained_issuer_name_matches(row, {**proof, 'document_sha256': '0' * 64}, name)
+    monkeypatch.delitem(lp.LAYOUT_PROOFS, SHA)
+    assert not lp.retained_issuer_name_matches(row, proof, name)
+
+
+def test_decision2_exact_original_registrations():
+    for sha, ticker, period, page, current, comparative in DECISION2_LAYOUTS:
+        layout = lp.layout_for(sha)
+        assert (layout['ticker'], layout['reporting_period'], layout['statement_scope']) == (ticker, period, 'consolidated')
+        assert layout['statement_pages'] == (page,)
+        assert layout['current_headers'] == (current,)
+        assert layout['comparative_headers'] == (comparative,)
+        assert layout['metric_line_codes'] == {'revenue': '10', 'net_income': '60', 'attributable_net_income': '61'}
+        assert layout['approval'] == 'Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)'
+        assert layout['text_layer_verification']['state'] == 'HOST_VERIFICATION_REQUIRED'
+        wrong_sha = sha[:-1] + ('0' if sha[-1] != '0' else '1')
+        assert lp.layout_for(wrong_sha) is None
+
+
+def test_decision2_proof_scope_and_literal_headers_fail_closed():
+    import hashlib
+    for sha, ticker, period, page, current, _ in DECISION2_LAYOUTS:
+        tokens = base_tokens()
+        # Synthetic positioned literal: verifies the gate, not a real OCR result.
+        tokens[3] = tok(4, current, 1390, 1480, 540, 570, 2)
+        row_object = copy.deepcopy(ROW)
+        row_object['current_period_label'] = current
+        row_object['column_bands']['header_evidence']['period_identities']['current'] = {
+            'raw_text': current, 'source_token_orders': [4]}
+        body = {k: v for k, v in make_proof(tokens).items() if k != 'proof_sha256'}
+        body.update(document_sha256=sha, layout=lp.layout_for(sha)['layout'])
+        body['pages'] = {str(page): body['pages'][str(PAGE)]}
+        proof = {**body, 'proof_sha256': hashlib.sha256(lp.canonical_json(body).encode()).hexdigest()}
+        assert lp.verify_proof_identity(proof, document_sha256=sha, proof_sha256=proof['proof_sha256']) == []
+        assert 'OCR_PROOF_DOCUMENT_OR_LAYOUT_MISMATCH' in lp.verify_proof_identity(
+            proof, document_sha256=SHA, proof_sha256=proof['proof_sha256'])
+        unit_evidence = copy.deepcopy(UNIT)
+        unit_evidence['evidence'].update(document_sha256=sha, page_number=page)
+        row = dict(document_sha256=sha, ticker=ticker, reporting_period=period, statement_scope='consolidated',
+                   ocr_layout_proof=lp.proof_reference(proof), source_page=page, canonical_metric='revenue',
+                   line_code='10', raw_value_text='108.059.749.601.554', normalized_value=108059749601554,
+                   source_unit_scale=1, currency='VND', ocr_row_object=row_object, ocr_unit_evidence=unit_evidence)
+        metadata = {'metadata_claims': {'unit_scale': {'evidence_span': {'citation_kind': lp.STATEMENT_UNIT_CITATION_KIND}}}}
+        args = dict(parse_amount=PA, parse_unit=PU)
+        reason = ['VALUE_SPAN_NOT_IN_RETAINED_DOCUMENT']
+        assert lp.apply_layout_proof(row, proof, metadata, reason, [], **args) == ([], [])
+        for change in ({'ticker': 'HPG'}, {'reporting_period': '2024'}):
+            refused, _ = lp.apply_layout_proof({**row, **change}, proof, metadata, reason, [], **args)
+            assert 'OCR_LAYOUT_SCOPE_MISMATCH' in refused
+            assert reason[0] in refused
+        refused, _ = lp.apply_layout_proof({**row, 'source_page': page + 1}, proof, metadata, reason, [], **args)
+        assert 'ROW_PAGE_OUTSIDE_REGISTERED_LAYOUT' in refused
+        assert reason[0] in refused
+        for bad_header in (current.lower(), current + ' ', '2025'):
+            if bad_header == current:
+                continue
+            wrong = copy.deepcopy(row_object)
+            wrong['current_period_label'] = bad_header
+            wrong['column_bands']['header_evidence']['period_identities']['current']['raw_text'] = bad_header
+            assert 'CURRENT_PERIOD_HEADER_NOT_REGISTERED' in lp.verify_row(
+                wrong, proof, metric='revenue', source_page=page, line_code='10',
+                raw_value=row['raw_value_text'], value=row['normalized_value'], unit_scale=1, parse_amount=PA)

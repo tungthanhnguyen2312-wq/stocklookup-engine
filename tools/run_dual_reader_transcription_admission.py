@@ -36,7 +36,8 @@ METRICS = (("revenue", "10"), ("net_income", "60"), ("attributable_net_income", 
 # Same exact registered legal names as official_ocr_layout_proof.retained_issuer_name_matches.
 REGISTERED_ISSUER_FOLD = {"HPG": "cong ty co phan tap doan hoa phat",
                           "PNJ": "cong ty co phan vang bac da quy phu nhuan",
-                          "VRE": "cong ty co phan vincom retail"}
+                          "VRE": "cong ty co phan vincom retail",
+                          "NVL": "cong ty co phan tap doan dau tu dia oc no va"}
 
 # The one retained page this v1 run seals. Every value here is checked against bytes.
 HPG_2025_H1_P10 = {
@@ -110,8 +111,190 @@ VRE_2025_P11 = {
     "comparison_started_at": "2026-11-24T22:25:06+07:00",
 }
 
+# HL-20261125-CDX-08 retained inputs. NVL H1/2025 keeps Claude's literal
+# "10"; Gemini's "Trang 10" fails exact input binding (no normalization).
+POW_2025_P11 = {
+    "page_key": "pow-fy2025-p11",
+    "ticker": "POW",
+    "reporting_period": "2025",
+    "document_sha256": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+    "document_id": "cb601f58d70aa060d082f5b48d659477dcf7cf28b6514bd4c0a103fc11a72baf",
+    "original_subdir": "gem1-04-acquisition-20261125",
+    "source_page": 11,
+    "image_sha256": "fde535333f1ac65b7e40b613229e8906fb3d34be66ade252ec081ef4c2a752c5",
+    "image": "blind-input-pow-fy2025-p11/claude/page-11.png",
+    "render_meta": "blind-input-pow-fy2025-p11/input.meta.json",
+    "readings": [
+        [
+            "claude",
+            "blind-input-pow-fy2025-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-25T12:26:53+07:00"
+        ],
+        [
+            "gemini",
+            "blind-input-pow-fy2025-p11/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:04+07:00"
+        ]
+    ],
+    "new_subdir": "fy2025-dual-reader-pow-20261125",
+    "printed_page": "7",
+    "column_id": "c1",
+    "comparison_started_at": "2026-11-25T12:27:10+07:00"
+}
+
+POW_2025_H1_P11 = {
+    "page_key": "pow-2025h1-p11",
+    "ticker": "POW",
+    "reporting_period": "2025-H1",
+    "document_sha256": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+    "document_id": "422afc62b2d433875eb5db8dfa80e0103932a53f2c4a680edade3564ce4a5312",
+    "original_subdir": "h1-2025-ttm-batch3-20261125",
+    "source_page": 11,
+    "image_sha256": "c69bb4a8cac577b52ba718b6987b37dd51e7b35945d9dd68eb851b86a959df21",
+    "image": "blind-input-pow-2025h1-p11/claude/page-11.png",
+    "render_meta": "blind-input-pow-2025h1-p11/input.meta.json",
+    "readings": [
+        [
+            "claude",
+            "blind-input-pow-2025h1-p11/claude/claude-reader.raw.json",
+            "2026-11-25T12:02:25+07:00"
+        ],
+        [
+            "gemini",
+            "blind-input-pow-2025h1-p11/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:26+07:00"
+        ]
+    ],
+    "new_subdir": "h1-2025-dual-reader-pow-20261125",
+    "printed_page": "7",
+    "column_id": "c1",
+    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+}
+
+POW_2026_H1_P11 = {
+    "page_key": "pow-2026h1-p11",
+    "ticker": "POW",
+    "reporting_period": "2026-H1",
+    "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+    "document_id": "a9fffec5811e3522a692dcec0795f1d70ea0652e9373c819e7561955d646b6d4",
+    "original_subdir": "gem1-04-acquisition-20261125",
+    "source_page": 11,
+    "image_sha256": "cd386354584d7747f9bb4b6098712b31a4274708ec6e6dd6d21255a34f8578ec",
+    "image": "blind-input-pow-2026h1-p11/claude/page-11.png",
+    "render_meta": "blind-input-pow-2026h1-p11/input.meta.json",
+    "readings": [
+        [
+            "claude",
+            "blind-input-pow-2026h1-p11/claude/claude-reader.raw.json",
+            "2026-11-25T12:02:24+07:00"
+        ],
+        [
+            "gemini",
+            "blind-input-pow-2026h1-p11/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:16+07:00"
+        ]
+    ],
+    "new_subdir": "h1-2026-dual-reader-pow-20261125",
+    "printed_page": "7",
+    "column_id": "c1",
+    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+}
+
+NVL_2025_H1_P12 = {
+    "page_key": "nvl-2025h1-p12",
+    "ticker": "NVL",
+    "reporting_period": "2025-H1",
+    "document_sha256": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+    "document_id": "37c73f169b42344a61cdb529b79c9721f9d0d31d0dc29efd2be824afa3b8897c",
+    "original_subdir": "h1-2025-ttm-batch3-20261125",
+    "source_page": 12,
+    "image_sha256": "375c77e36fad1ca1797f32777f88625dc535751e7b492aeb71af9cd59a77b49b",
+    "image": "blind-input-nvl-2025h1-p12/claude/page-12.png",
+    "render_meta": "blind-input-nvl-2025h1-p12/input.meta.json",
+    "readings": [
+        [
+            "claude",
+            "blind-input-nvl-2025h1-p12/claude/claude-reader.raw.json",
+            "2026-11-25T12:02:28+07:00"
+        ],
+        [
+            "gemini",
+            "blind-input-nvl-2025h1-p12/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:36+07:00"
+        ]
+    ],
+    "new_subdir": "h1-2025-dual-reader-nvl-20261125",
+    "printed_page": "10",
+    "column_id": "c1",
+    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+}
+
+NVL_2026_H1_P12 = {
+    "page_key": "nvl-2026h1-p12",
+    "ticker": "NVL",
+    "reporting_period": "2026-H1",
+    "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+    "document_id": "c7c7ca6cb25567d7a1307e15987cf0eeba7f44b7b11d682ce738a0d978606abd",
+    "original_subdir": "nvl-reviewed-evidence-20261008",
+    "source_page": 12,
+    "image_sha256": "880dfa4354201b1135663b5bf1e5f27c58f79e0ed053982c12235d4caac18e9d",
+    "image": "blind-input-nvl-2026h1-p12/claude/page-12.png",
+    "render_meta": "blind-input-nvl-2026h1-p12/input.meta.json",
+    "readings": [
+        [
+            "claude",
+            "blind-input-nvl-2026h1-p12/claude/claude-reader.raw.json",
+            "2026-11-25T12:02:30+07:00"
+        ],
+        [
+            "gemini",
+            "blind-input-nvl-2026h1-p12/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:46+07:00"
+        ]
+    ],
+    "new_subdir": "h1-2026-dual-reader-nvl-20261125",
+    "printed_page": "Trang 10",
+    "column_id": "c1",
+    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+}
+
+NVL_2025_P12 = {
+    "page_key": "nvl-fy2025-p12",
+    "ticker": "NVL",
+    "reporting_period": "2025",
+    "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+    "document_id": "c040b3b610442453248c6c43423a17be20869e7c0560da3384677a74f79b9622",
+    "original_subdir": "gem1-04-acquisition-20261125",
+    "source_page": 12,
+    "image_sha256": "d003a13f910ffab2bf14ef269f80fe3a12b2cf50ba01bdb1706e9b4b28526378",
+    "image": "blind-input-nvl-fy2025-p12/claude/page-12.png",
+    "render_meta": "blind-input-nvl-fy2025-p12/input.meta.json",
+    "readings": [
+        [
+            "claude",
+            "blind-input-nvl-fy2025-p12/claude/claude-reader.raw.json",
+            "2026-11-25T08:11:58+07:00"
+        ],
+        [
+            "gemini",
+            "blind-input-nvl-fy2025-p12/gemini/gemini-reader.raw.json",
+            "2026-11-25T08:15:12+07:00"
+        ]
+    ],
+    "new_subdir": "fy2025-dual-reader-nvl-20261125",
+    "printed_page": "Trang 10",
+    "column_id": "c1",
+    "comparison_started_at": "2026-11-25T08:15:17+07:00"
+}
+
 SPECS = {"HPG-2025-H1-P10": HPG_2025_H1_P10, "PNJ-2025-P10": PNJ_2025_P10,
-         "PNJ-2025-H1-P10": PNJ_2025_H1_P10, "VRE-2025-P11": VRE_2025_P11}
+         "PNJ-2025-H1-P10": PNJ_2025_H1_P10, "VRE-2025-P11": VRE_2025_P11,
+         "POW-2025-P11": POW_2025_P11,
+         "POW-2025-H1-P11": POW_2025_H1_P11,
+         "POW-2026-H1-P11": POW_2026_H1_P11,
+         "NVL-2025-H1-P12": NVL_2025_H1_P12,
+         "NVL-2026-H1-P12": NVL_2026_H1_P12,
+         "NVL-2025-P12": NVL_2025_P12}
 
 
 def _sha(payload: bytes) -> str:
@@ -159,8 +342,22 @@ def _stable(prefix: str, value: Any) -> str:
     return _sha((prefix + json.dumps(value, ensure_ascii=False, sort_keys=True)).encode("utf-8"))
 
 
+def _selected_cell(table, column_id, code):
+    columns = [c for c in table["columns"] if c["column_id"] == column_id]
+    if len(columns) != 1:
+        raise ValueError(f"COLUMN_NOT_UNIQUE:{code}")
+    matches = [r for r in table["rows"] if r["line_code_literal"] == code]
+    if len(matches) != 1:
+        raise ValueError(f"ROW_NOT_UNIQUE:{code}")
+    cells = [c for c in matches[0]["cells"] if c["column_id"] == column_id]
+    if len(cells) != 1:
+        raise ValueError(f"CELL_NOT_UNIQUE:{code}")
+    return columns[0], matches[0], cells[0]
+
+
 def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any], raw_table: Mapping[str, Any],
-               proof_ref: Mapping[str, str], knowledge_available_at: str, subdir: str) -> list[dict[str, Any]]:
+               proof_ref: Mapping[str, str], knowledge_available_at: str, subdir: str, rejections: list[dict[str, Any]],
+               other_tables: tuple[Mapping[str, Any], ...] = ()) -> list[dict[str, Any]]:
     """Current-column rows from one reader's literal cells; admission replays both readers.
 
     No digit, sign or label is altered. The literal outline enumerator, if printed
@@ -175,20 +372,28 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
     unit = {"currency": claims["currency"]["value"], "unit_scale": claims["unit_scale"]["value"]}
     if unit["currency"] != "VND" or type(unit["unit_scale"]) is not int or unit["unit_scale"] <= 0:
         raise ValueError("DOCUMENT_UNIT_NOT_QUALIFIED_VND")
-    column = next(c for c in raw_table["columns"] if c["column_id"] == spec["column_id"])
     start, end = period_bounds(spec["reporting_period"])
     annual = str(spec["reporting_period"]).isdigit()
     rows = []
     for metric, code in METRICS:
-        matches = [r for r in raw_table["rows"] if r["line_code_literal"] == code]
-        if len(matches) != 1:
-            raise ValueError(f"ROW_NOT_UNIQUE:{code}")
-        cell = next(c for c in matches[0]["cells"] if c["column_id"] == spec["column_id"])
-        _, label = dual.split_outline_enumerator(matches[0]["row_label_literal"])
-        literal = cell["raw_value_literal"]
-        if cell["sign_literal"] != "unsigned":
-            raise ValueError(f"SIGNED_CELL_NOT_SUPPORTED_BY_THIS_RUN:{code}")
-        value = parse_accounting_integer(literal) * unit["unit_scale"]
+        try:
+            for table in (raw_table, *other_tables):
+                column, literal_row, cell = _selected_cell(table, spec["column_id"], code)
+                if cell["sign_literal"] != "unsigned":
+                    raise ValueError(f"SIGNED_CELL_NOT_SUPPORTED_BY_THIS_RUN:{code}")
+                try:
+                    parse_accounting_integer(cell["raw_value_literal"])
+                except (ValueError, TypeError, AttributeError):
+                    raise ValueError(f"VALUE_NOT_PARSEABLE:{code}") from None
+            column, literal_row, cell = _selected_cell(raw_table, spec["column_id"], code)
+            _, label = dual.split_outline_enumerator(literal_row["row_label_literal"])
+            literal = cell["raw_value_literal"]
+            value = parse_accounting_integer(literal) * unit["unit_scale"]
+        except (ValueError, KeyError, TypeError, AttributeError) as exc:
+            reason = str(exc) if isinstance(exc, ValueError) else f"CELL_LITERAL_MISSING_OR_INVALID:{code}"
+            rejections.append({"canonical_metric": metric, "line_code": code,
+                               "state": "BLOCKED", "reason_codes": [reason]})
+            continue
         identity = {"document_sha256": spec["document_sha256"], "source_page": spec["source_page"],
                     "line_code": code, "column_id": spec["column_id"], "proof_sha256": proof_ref["proof_sha256"]}
         citation = _stable("dual_reader_citation/v1:", identity)
@@ -225,6 +430,36 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
     return rows
 
 
+def _validate_readings(*, spec, reader_root, observed_at, completed):
+    """Document-wide provenance fails before any output; cell disagreements stay local."""
+    comparison, completion = dual._time(spec["comparison_started_at"]), dual._time(completed)
+    if completion < comparison or len(spec["readings"]) != 2:
+        raise ValueError("READER_TIME_OR_COUNT_INVALID")
+    families, ids, hashes = [], [], []
+    expected = {key: spec[key] for key in ("document_sha256", "document_id", "source_page", "printed_page")}
+    expected["image_sha256"] = spec["image_sha256"]
+    payloads = []
+    for family, relative, retained_at in spec["readings"]:
+        payload = (reader_root / relative).read_bytes()
+        raw = dual._json(payload)
+        actual_family = dual.FAMILY_ALIASES.get(str(raw.get("model_family")).lower())
+        if not actual_family or actual_family != family or raw.get("contract_version") != dual.RAW_VERSION:
+            raise ValueError("READER_CONTRACT_OR_FAMILY_MISMATCH")
+        if (raw.get("method") != "DIRECT_PAGE_IMAGE" or raw.get("independent_input") is not True
+                or raw.get("saw_other_reader_output") is not False or not raw.get("reader_id")):
+            raise ValueError("READER_INDEPENDENCE_NOT_PROVEN")
+        if raw.get("input") != expected:
+            raise ValueError("READER_INPUT_BINDING_MISMATCH")
+        if not (dual._time(observed_at) <= dual._time(raw["recorded_at"])
+                <= dual._time(retained_at) < comparison <= completion):
+            raise ValueError("RAW_NOT_RETAINED_BEFORE_COMPARISON")
+        families.append(actual_family); ids.append(raw["reader_id"]); hashes.append(_sha(payload))
+        payloads.append(payload)
+    if len(set(families)) != 2 or len(set(ids)) != 2 or len(set(hashes)) != 2:
+        raise ValueError("DIFFERENT_MODEL_FAMILIES_AND_RECORDS_REQUIRED")
+    return payloads
+
+
 def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, ocr_layout_proof_path: Path,
         admission_completed_at: str | None = None, spec: Mapping[str, Any] = HPG_2025_H1_P10) -> dict[str, Any]:
     import official_financial_ocr_table_evidence  # noqa: F401 - registers native PDF artifact builder
@@ -248,6 +483,13 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
     if (source.get("acquisition_status") != "retained" or source.get("ticker") != spec["ticker"]
             or source.get("reporting_period") != spec["reporting_period"]):
         raise ValueError("ORIGINAL_SOURCE_RECORD_IDENTITY_MISMATCH")
+    base = f"{dual.PROOF_DIR}/{spec['page_key']}"
+    proof_path = target / base / "agreement.proof.json"
+    completed = (json.loads(proof_path.read_text(encoding="utf-8"))["admission_completed_at"]
+                 if proof_path.exists() else admission_completed_at
+                 or datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds"))
+    payloads = _validate_readings(spec=spec, reader_root=reader_root,
+                                  observed_at=source["observed_at"], completed=completed)
     files[source["relative_path"]] = _copy_verified(original / source["relative_path"],
                                                     target / source["relative_path"], spec["document_sha256"])
 
@@ -266,8 +508,7 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
             or meta.get("rights_route", dual.RIGHTS_ROUTE) != dual.RIGHTS_ROUTE):
         raise ValueError("RENDER_PROVENANCE_MISMATCH")
     readings, tables = [], []
-    for family, relative, retained_at in spec["readings"]:
-        payload = (reader_root / relative).read_bytes()
+    for (family, relative, retained_at), payload in zip(spec["readings"], payloads):
         name = f"{base}/{Path(relative).name}"
         files[name] = _copy_verified(reader_root / relative, target / name, _sha(payload))
         raw = json.loads(payload.decode("utf-8"))
@@ -315,7 +556,6 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
         proof = json.loads(proof_path.read_text(encoding="utf-8"))
         completed = proof["admission_completed_at"]
     else:
-        completed = admission_completed_at or datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
         proof = {"contract_version": dual.CONTRACT_VERSION, "document_sha256": spec["document_sha256"],
                  "document_id": spec["document_id"], "page_image": image, "readings": readings,
                  "comparison_started_at": spec["comparison_started_at"], "admission_completed_at": completed}
@@ -326,8 +566,10 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
     proof_ref = {"relative_path": proof_rel, "proof_sha256": _sha(proof_bytes)}
 
     # 6. Rows from the agreed literal cells, then the common retained admission owner.
+    fact_local_rejections = []
     rows = build_rows(spec=spec, document_evidence=evidence, raw_table=tables[0], proof_ref=proof_ref,
-                      knowledge_available_at=completed, subdir=spec["new_subdir"])
+                      knowledge_available_at=completed, subdir=spec["new_subdir"],
+                      rejections=fact_local_rejections, other_tables=tuple(tables[1:]))
     admissions = []
     for row in rows:
         result = admit_retained_financial_fact(row, evidence_root=landing_root)
@@ -348,7 +590,7 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
             "document_sha256": spec["document_sha256"], "proof": proof_ref,
             "raw_sha256": [r["sha256"] for r in readings], "comparison_started_at": spec["comparison_started_at"],
             "admission_completed_at": completed, "knowledge_floor": completed, "files": files,
-            "admissions": admissions, "rows_relative_path": rows_rel if admitted else None,
+            "admissions": admissions, "fact_local_rejections": fact_local_rejections, "rows_relative_path": rows_rel if admitted else None,
             "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False,
             "network_used": False, "model_calls": 0}
 
@@ -366,7 +608,8 @@ def main(argv=None) -> int:
                  document_evidence_path=args.document_evidence, ocr_layout_proof_path=args.ocr_layout_proof,
                  admission_completed_at=args.admission_completed_at, spec=SPECS[args.spec])
     print(json.dumps(report, ensure_ascii=False, indent=1, sort_keys=True))
-    return 0 if all(item["state"] == "ADMITTED" for item in report["admissions"]) else 2
+    return 0 if (not report["fact_local_rejections"] and report["admissions"]
+                 and all(item["state"] == "ADMITTED" for item in report["admissions"])) else 2
 
 
 if __name__ == "__main__":

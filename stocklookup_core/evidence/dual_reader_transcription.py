@@ -264,8 +264,21 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                     and label_period == (claims.get("reporting_period") or {}).get("value")
                     and column["role"] == "current"):
                 caption_period = label_period
+        # Caption-bound columns reuse the validated resolution, including the yearless fallback.
+        column_period = caption_period if column["reporting_period"] is None else (
+            column["reporting_period"] if column["reporting_period"] == row["reporting_period"]
+            else recognize_period(column["reporting_period"])["period"])
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
+        # The explicit annual header already accepts "Năm YYYY" below. When
+        # readers repeat that same literal as the column period, bind its year
+        # consistently; the independent caption must still prove the same FY.
+        # Do not apply this to H1, another period literal or a contrary caption.
+        if (column_period is None and row["reporting_period"] == year
+                and caption_period == year
+                and column["reporting_period"] == column["label_literal"]
+                and header == "năm " + year):
+            column_period = year
         if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year}:
             return fail("CURRENT_COLUMN_NOT_EXPLICIT")
         if (agreed["row_label_literal"] != row["raw_row_label"]
@@ -274,8 +287,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or agreed["form_reference_literal"] != row["form_reference_literal"]
                 or agreed["statement_title_literal"] != row["statement_title_literal"]
                 or column["label_literal"] != row["current_period_label"]
-                or (column["reporting_period"] != row["reporting_period"] and recognize_period(
-                    column["reporting_period"] or agreed["period_caption_literal"])["period"] != row["reporting_period"])
+                or column_period != row["reporting_period"]
                 or column["role"] != "current" or not column["label_literal"]
                 or caption_period != row["reporting_period"]
                 or recognize_scope(agreed["scope_literal"])["statement_scope"] != row["statement_scope"]):
