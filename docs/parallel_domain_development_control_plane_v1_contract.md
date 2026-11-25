@@ -194,6 +194,44 @@ dependencies, provides/consumes, required checks, and unrelated lanes remain
 unchanged. This operation grants no merge, release, or runtime authority
 (`authority_effect: NONE`, `merge_authorized: false`, `runtime_authorized: false`).
 
+## Owner-authorized dormant predecessor lane release
+
+`--release-dormant-lane --release-spec <owner-reviewed-spec>` releases a
+dormant, never-merged predecessor lane in `COMPLETE_LOCAL` state to `ABANDONED`
+so its shared-file leases no longer block new admissions. It uses the same
+bound coordinator worktree/branch, bound integration owner (`--agent`),
+explicit Owner directive (`--owner-override` and `--scope-note`), OS lock, byte
+CAS, and fsynced atomic writer. It performs no Git mutation of the branch or
+worktree.
+
+The spec schema is `stocklookup_dormant_lane_release/1` with exact keys:
+`schema`, `expected_revision`, `coordinator_head`, `milestone_id`,
+`responsible_agent`, `state`, `checkpoint`, `branch`, and `worktree`. The
+command refuses (`LANE_DORMANT_RELEASE_*`) without writing anything unless all
+of the following hold:
+
+- structural development-control state is valid, `expected_revision` matches
+  the current revision, `--agent` equals `integration_agent`, and the
+  coordinator worktree is tracked-clean at exactly `coordinator_head`;
+- the target lane exists with `state == "COMPLETE_LOCAL" == spec.state`,
+  `responsible_agent == spec.responsible_agent != integration_agent` (only a
+  predecessor's lane may be released this way), and exact `checkpoint`,
+  `branch`, and `worktree` matches;
+- the checkpoint is not an ancestor of `origin/main` or local `main` (genuinely
+  unreleased; released lanes must use `MERGED_RELEASED`);
+- if the worktree exists, it is registered for the same repository, on that
+  branch, at `HEAD == checkpoint`, and completely clean (no staged, unstaged,
+  or untracked changes); if the worktree does not exist, `refs/heads/<branch>`
+  still resolves to `checkpoint`.
+
+On success, the lane transitions to `ABANDONED` while preserving `checkpoint`,
+`branch`, `worktree`, `base_sha`, `allowed_paths`, `shared_paths`, and prior
+`history`, recording `release_kind: "OWNER_AUTHORIZED_DORMANT_RELEASE"` and
+`released_from: "COMPLETE_LOCAL"`, and appending one lane history entry and one
+control history entry (`operation: "DORMANT_LANE_RELEASE"`, `owner_note`, and
+observed heads). This operation grants no merge, release, or runtime authority
+(`authority_effect: NONE`, `merge_authorized: false`, `runtime_authorized: false`).
+
 ## Integration planning
 
 `--integration-plan --main-sha <observed-main> [--candidate-lane ID]` reads

@@ -642,7 +642,7 @@
     "retained_evidence_catalog.py": "76a323fe1a14f60f5235be256fce889891deac3e6c9ae59c3e28b4942d5904c8",
     "reviewed_interim_canonical_ingress.py": "f4470d4a64c25844e94d39d24e7f9c4c5e2809c59f5f53f571ee3bb6a3ed989b",
     "risk_liquidity.py": "56161db8b60402473f6184ace83a76566ed1967f069a5b69a8d7335b6034490a",
-    "roadmap_execution_state.py": "801ebe63d042855b99367ba1a84fff86c0c689854004102298da6f713b2dfb6f",
+    "roadmap_execution_state.py": "8f89819951308d0984e5c81f5124a8abdecd9588b3da67300c0eba79bef71983",
     "run.py": "60ef4b67c1e971c63ae5da2a01defed16b4b891b3279e0c18419b05d199bdf5f",
     "runtime_paths.py": "9063580b26becacadaf9b2e89ef58457311dc191b0a11df9b64e48a92d916b4f",
     "same_session_technical_coverage_disposition.py": "bab403a41148d3f6459be22a7a5e5e05ccbaae3e9ff2be573adf30e36c760aa6",
@@ -1292,7 +1292,7 @@
     "tools/safe_deploy.py": "0ba6c2468265311ad94e80b8fe36c1b098e0d0767b3ac25e4bc6593fb65c76fc",
     "tools/scaleout_capability_research_digest.py": "8a1d5c85a3ccac8c881bc21514f4b207b4e8a2b51f8b50e35b70568a7bb7bc62",
     "tools/shadow_taxonomy_qualification.py": "374d6cb3eb4643594bcbcacade1866aa9655221fd42b42ac5f8ff9ba8c2f0029",
-    "tools/stocklookup_roadmap.py": "ad4bab6de98be670c97194a9506ae319e927f7fe33ce96d9055cf57b56099be1",
+    "tools/stocklookup_roadmap.py": "20d17853cffd7d30a114dca73e768f00d2f8c72fd6dfef6acfcdc8de2f215e8e",
     "tools/storage_capacity_plan.py": "e319688905c588d203ec89209a1f7ab1de03c30b2f67b1f28501f41ddb3e9207",
     "tools/storage_dedup_relink.py": "95098ced4d5a205b174a70a7290e8d438cd66dd7fee20de498ea12219e13d133",
     "tools/storage_ledger.py": "f1b1f9c72b12dc8c287cfae2443fdcbe614f7a6838bbc4ecce3bd0404aa94e22",
@@ -2122,8 +2122,24 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED"
   },
+  "dormant_lane_release_corrective": {
+    "base_commit": "dbc85bb3934a356fcc9d605387524f4228448cbe",
+    "scope": "OWNER_CONTROL_PLANE_DORMANT_LANE_RELEASE_CLI_ONLY",
+    "changed_source_paths": [
+      "roadmap_execution_state.py",
+      "tools/stocklookup_roadmap.py"
+    ],
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "prior_source_sha256_lf": {
+      "roadmap_execution_state.py": "801ebe63d042855b99367ba1a84fff86c0c689854004102298da6f713b2dfb6f",
+      "tools/stocklookup_roadmap.py": "ad4bab6de98be670c97194a9506ae319e927f7fe33ce96d9055cf57b56099be1"
+    },
+    "authority_effect": "NONE_OWNER_CONTROL_PLANE_ONLY",
+    "daily_call_shape": "UNCHANGED_NO_DAILY_STAGE_IMPORTS_OR_CALLS_THE_NEW_OPERATION"
+  },
   "share_basis_known_by_corrective": {
-    "base_commit": "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc",
+    "base_commit": "729b76d0ca6b19979ad38e466a361eb2158a0a96",
     "scope": "OFFICIAL_EVENT_RUN_CLOCK_KNOWLEDGE_CUTOFF_AND_DEFAULT_OFF_VSDC_PROTOTYPE",
     "changed_source_paths": [
       "market_wide_current_shares_resolver.py",
@@ -2173,7 +2189,7 @@
     ]
   },
   "vsdc_registered_share_valuation_corrective": {
-    "base_commit": "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc",
+    "base_commit": "729b76d0ca6b19979ad38e466a361eb2158a0a96",
     "scope": "VSDC_REGISTERED_SHARES_VALUATION_ELIGIBILITY_FLAG_OFF",
     "changed_source_paths": [
       "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"

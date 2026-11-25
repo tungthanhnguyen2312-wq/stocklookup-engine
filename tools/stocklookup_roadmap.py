@@ -245,11 +245,14 @@ def lane_command(args, state: dict, repo: Path | None) -> dict:
     state = json.loads(original)
     scope_spec = (json.loads(args.scope_spec.read_text(encoding="utf-8"))
                   if args.amend_lane_scope and args.scope_spec else None)
+    release_spec = (json.loads(args.release_spec.read_text(encoding="utf-8"))
+                    if args.release_dormant_lane and args.release_spec else None)
     if not res.git_head(repo):
         raise res.RoadmapStateError("LANE_NATIVE_ROADMAP_NOT_ON_TRACK")
     report = res.evaluate(state, repo=repo)
-    if args.amend_lane_scope:
-        target_mid = scope_spec.get("milestone_id") if isinstance(scope_spec, dict) else None
+    if args.amend_lane_scope or args.release_dormant_lane:
+        target_spec = scope_spec if args.amend_lane_scope else release_spec
+        target_mid = target_spec.get("milestone_id") if isinstance(target_spec, dict) else None
         blocking = [f for f in report.findings if f.severity == res.FAIL
                     and not (f.code == "ROADMAP_LANE_INVALID" and target_mid and f.milestone_id == target_mid)]
         if blocking or report.git_verification != res.GIT_VERIFICATION_VERIFIED:
@@ -326,6 +329,23 @@ def lane_command(args, state: dict, repo: Path | None) -> dict:
                 "owner_note": args.scope_note,
             })
             event = {"operation": "LANE_SCOPE_AMENDMENT", **change}
+        elif args.release_dormant_lane:
+            state, change = res.prepare_dormant_lane_release(state, release_spec, repo=repo, agent=args.agent)
+            control = state["development_control"]
+            lane = res.lane_by_id(state, change["milestone_id"])
+            lane["history"].append({
+                "operation": "DORMANT_LANE_RELEASE",
+                "from": "COMPLETE_LOCAL",
+                "to": "ABANDONED",
+                "release_kind": change["release_kind"],
+                "released_from": change["released_from"],
+                "responsible_agent": change["responsible_agent"],
+                "checkpoint": change["checkpoint"],
+                "coordinator_head": change["coordinator_head"],
+                "observed_lane_head": change["observed_lane_head"],
+                "owner_note": args.scope_note,
+            })
+            event = {"operation": "DORMANT_LANE_RELEASE", **change}
         elif args.amend_lane_declarations:
             spec = json.loads(args.declaration_spec.read_text(encoding="utf-8")) if args.declaration_spec else None
             state, changes = res.prepare_declaration_amendment(state, spec, repo=repo)
@@ -403,7 +423,7 @@ def lane_command(args, state: dict, repo: Path | None) -> dict:
     errors = res.validate_development_control(state)
     if errors:
         raise res.RoadmapStateError(";".join(errors))
-    if args.amend_lane_scope and res.evaluate(state, repo=repo).overall != "ON_TRACK":
+    if (args.amend_lane_scope or args.release_dormant_lane) and res.evaluate(state, repo=repo).overall != "ON_TRACK":
         raise res.RoadmapStateError("LANE_NATIVE_ROADMAP_NOT_ON_TRACK")
     _write_control(args.state_file, original, control)
     return {"operation": event, "revision": control["revision"], "authority_effect": "NONE",
@@ -435,6 +455,8 @@ def main(argv: list[str] | None = None) -> int:
                        help="Owner-reviewed atomic declaration-only correction; no checkpoint, lease or state changes.")
     lanes.add_argument("--amend-lane-scope", action="store_true",
                        help="Owner-reviewed exact CAS-guarded base_sha/allowed_paths/shared_paths amendment.")
+    lanes.add_argument("--release-dormant-lane", action="store_true",
+                       help="Owner-authorized release of an unreleased dormant predecessor COMPLETE_LOCAL lane to ABANDONED.")
     lanes.add_argument("--release-coupled-lanes", action="store_true",
                        help="Atomic true release of two explicitly reviewed, coupled source candidates already on main.")
     lanes.add_argument("--transfer-integration-owner", action="store_true",
@@ -449,6 +471,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="Exact versioned batch with expected revision, checkpoints and before/after declarations.")
     parser.add_argument("--scope-spec", type=Path,
                         help="Exact scope amendment spec with expected revision, heads and before/after scope.")
+    parser.add_argument("--release-spec", type=Path,
+                        help="Exact dormant lane release spec with expected revision, coordinator HEAD and lane identity.")
     parser.add_argument("--coupled-spec", type=Path, help="Exact two-candidate fixture and failed standalone evidence; no implicit dependency release.")
     parser.add_argument("--transfer-spec", type=Path,
                         help="Exact predecessor/successor, expected revision, coordinator HEAD and in-flight lane heads.")
@@ -457,13 +481,20 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("lane scope amendment requires exactly --amend-lane-scope with --scope-spec")
     if args.amend_lane_scope and any((args.lane_spec, args.lane_state, args.checkpoint_at, args.main_sha,
                                       args.review_receipt, args.candidate_lane, args.declaration_spec,
-                                      args.coupled_spec, args.transfer_spec)):
-        parser.error("lane scope amendment cannot combine lifecycle, integration, declaration or transfer arguments")
+                                      args.coupled_spec, args.transfer_spec, args.release_spec)):
+        parser.error("lane scope amendment cannot combine lifecycle, integration, declaration, transfer or release arguments")
+    if bool(args.release_spec) != bool(args.release_dormant_lane):
+        parser.error("dormant lane release requires exactly --release-dormant-lane with --release-spec")
+    if args.release_dormant_lane and any((args.lane_spec, args.lane_state, args.checkpoint_at, args.main_sha,
+                                          args.review_receipt, args.candidate_lane, args.declaration_spec,
+                                          args.scope_spec, args.coupled_spec, args.transfer_spec)):
+        parser.error("dormant lane release cannot combine lifecycle, integration, declaration, scope or transfer arguments")
     if bool(args.transfer_spec) != bool(args.transfer_integration_owner):
         parser.error("integration owner transfer requires exactly --transfer-integration-owner with --transfer-spec")
     if args.transfer_integration_owner and any((args.lane_spec, args.lane_state, args.checkpoint_at, args.main_sha,
-                                                args.review_receipt, args.candidate_lane, args.declaration_spec, args.coupled_spec)):
-        parser.error("integration owner transfer cannot combine lifecycle, integration or declaration arguments")
+                                                args.review_receipt, args.candidate_lane, args.declaration_spec,
+                                                args.coupled_spec, args.release_spec)):
+        parser.error("integration owner transfer cannot combine lifecycle, integration, declaration or release arguments")
     if args.declaration_spec and not args.amend_lane_declarations:
         parser.error("declaration spec requires --amend-lane-declarations")
     if args.coupled_spec and not (args.integration_plan or args.release_coupled_lanes):
@@ -486,8 +517,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("coordinated mode requires scoped lane operations; legacy history remains preserved")
 
     if (args.init_lanes or args.admit_lane or args.transition_lane or args.check_lane or args.integration_plan
-            or args.amend_lane_declarations or args.amend_lane_scope or args.release_coupled_lanes
-            or args.transfer_integration_owner):
+            or args.amend_lane_declarations or args.amend_lane_scope or args.release_dormant_lane
+            or args.release_coupled_lanes or args.transfer_integration_owner):
         if args.admit_scope or args.continue_scope or args.complete_local_scope or args.can_start or args.worktrees:
             parser.error("lane operations cannot be combined with legacy operations")
         try:

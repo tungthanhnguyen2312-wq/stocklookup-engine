@@ -1093,6 +1093,118 @@ def prepare_lane_scope_amendment(
     }
 
 
+def prepare_dormant_lane_release(
+    state: Mapping[str, Any], spec: Any, *, repo: Path, agent: str,
+) -> tuple[dict, dict]:
+    """Prepare one Owner-authorized release of a dormant predecessor COMPLETE_LOCAL lane.
+
+    Pure function: never writes state, never mutates Git branches or worktrees,
+    and grants no merge or runtime authority. Transitions the named predecessor
+    lane from ``COMPLETE_LOCAL`` to ``ABANDONED`` while preserving its
+    checkpoint, branch, worktree, base_sha, allowed_paths, shared_paths, and
+    history.
+    """
+    import copy
+    keys = {
+        "schema", "expected_revision", "coordinator_head", "milestone_id",
+        "responsible_agent", "state", "checkpoint", "branch", "worktree",
+    }
+    str_keys = ("coordinator_head", "milestone_id", "responsible_agent", "state", "checkpoint", "branch", "worktree")
+    if (not isinstance(spec, dict) or set(spec) != keys
+            or spec.get("schema") != "stocklookup_dormant_lane_release/1"
+            or not isinstance(spec.get("expected_revision"), int) or isinstance(spec["expected_revision"], bool)
+            or not all(isinstance(spec.get(k), str) and spec[k].strip() for k in str_keys)):
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_EXACT_SPEC_REQUIRED")
+    errors = validate_development_control(state)
+    if errors:
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_STATE_INVALID:" + ";".join(errors))
+    control = state.get("development_control")
+    if not isinstance(control, dict):
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_COORDINATOR_NOT_INITIALIZED")
+    if spec["expected_revision"] != control.get("revision"):
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_REVISION_CHANGED_RELOAD_REQUIRED")
+    if not isinstance(agent, str) or not agent.strip() or agent != control.get("integration_agent"):
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_INTEGRATION_OWNER_REQUIRED")
+    code, status, _ = git_run(repo, "status", "--porcelain", "--untracked-files=no")
+    if git_head(repo) != spec["coordinator_head"] or code != 0 or status.strip():
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_EXACT_CLEAN_COORDINATOR_HEAD_REQUIRED")
+    mid = spec["milestone_id"]
+    by_id = {l["milestone_id"]: l for l in control["lanes"]}
+    if mid not in by_id:
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_UNKNOWN_LANE:{mid}")
+    lane = by_id[mid]
+    if lane["state"] != "COMPLETE_LOCAL":
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_STATE_NOT_COMPLETE_LOCAL:{mid}:{lane['state']}")
+    if spec["state"] != "COMPLETE_LOCAL":
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_SPEC_STATE_MISMATCH:{mid}:{spec['state']}")
+    if lane.get("responsible_agent") == control["integration_agent"]:
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_INTEGRATION_OWNER_LANE_FORBIDDEN:{mid}")
+    if spec["responsible_agent"] != lane.get("responsible_agent"):
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_RESPONSIBLE_AGENT_MISMATCH:{mid}")
+    if spec["checkpoint"] != lane.get("checkpoint"):
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_CHECKPOINT_MISMATCH:{mid}")
+    if spec["branch"] != lane.get("branch"):
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_BRANCH_MISMATCH:{mid}")
+    if spec["worktree"] != lane.get("worktree"):
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_WORKTREE_MISMATCH:{mid}")
+    checkpoint = lane["checkpoint"]
+    branch = lane["branch"]
+    if not _full_sha(repo, checkpoint):
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_CHECKPOINT_NOT_IN_GIT:{mid}")
+    for main_ref in ("refs/remotes/origin/main", "refs/heads/main"):
+        ref_code, ref_sha, _ = git_run(repo, "rev-parse", "--verify", main_ref)
+        if ref_code == 0 and ref_sha.strip() and git_is_ancestor(repo, checkpoint, ref_sha.strip()):
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_CHECKPOINT_ALREADY_ON_MAIN:{mid}:{main_ref}")
+    wt = Path(lane["worktree"])
+    wt_present = wt.exists()
+    if wt_present:
+        if not wt.is_dir():
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_WORKTREE_INVALID:{mid}")
+        registered = git_worktrees(repo)
+        match = next((w for w in registered if _path_key(w["worktree"]) == _path_key(str(wt))), None)
+        if not match or match.get("branch") != "refs/heads/" + branch:
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_WORKTREE_BRANCH_MISMATCH:{mid}")
+        if match.get("locked") or match.get("prunable"):
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_WORKTREE_LOCKED_OR_PRUNABLE:{mid}")
+        def _common(root: Path) -> str:
+            c, val, _ = git_run(root, "rev-parse", "--path-format=absolute", "--git-common-dir")
+            return _path_key(val.strip()) if c == 0 else ""
+        if not _common(wt) or _common(wt) != _common(repo):
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_REPOSITORY_MISMATCH:{mid}")
+        live_head = git_head(wt)
+        if git_branch(wt) != branch or live_head != checkpoint or live_head != match.get("head"):
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_WORKTREE_HEAD_MISMATCH:{mid}")
+        wt_code, wt_status, _ = git_run(wt, "status", "--porcelain", "--untracked-files=all")
+        if wt_code != 0 or wt_status.strip():
+            raise RoadmapStateError(f"LANE_DORMANT_RELEASE_WORKTREE_DIRTY:{mid}")
+    ref_code, branch_head, _ = git_run(repo, "rev-parse", "--verify", "refs/heads/" + branch)
+    if ref_code != 0 or branch_head.strip() != checkpoint:
+        raise RoadmapStateError(f"LANE_DORMANT_RELEASE_BRANCH_HEAD_MISMATCH:{mid}")
+    updated = copy.deepcopy(state)
+    updated_lane = next(l for l in updated["development_control"]["lanes"] if l["milestone_id"] == mid)
+    updated_lane["state"] = "ABANDONED"
+    updated_lane["release_kind"] = "OWNER_AUTHORIZED_DORMANT_RELEASE"
+    updated_lane["released_from"] = "COMPLETE_LOCAL"
+    validation_errors = validate_development_control(updated)
+    if validation_errors:
+        raise RoadmapStateError("LANE_DORMANT_RELEASE_VALIDATION_FAILED:" + ";".join(validation_errors))
+    return updated, {
+        "milestone_id": mid,
+        "expected_revision": spec["expected_revision"],
+        "coordinator_head": spec["coordinator_head"],
+        "responsible_agent": lane["responsible_agent"],
+        "from_state": "COMPLETE_LOCAL",
+        "to_state": "ABANDONED",
+        "release_kind": "OWNER_AUTHORIZED_DORMANT_RELEASE",
+        "released_from": "COMPLETE_LOCAL",
+        "checkpoint": checkpoint,
+        "branch": branch,
+        "worktree": lane["worktree"],
+        "worktree_present": wt_present,
+        "observed_lane_head": branch_head.strip(),
+    }
+
+
 def coordinator_host_available(state: Mapping[str, Any], repo: Path) -> bool:
     """Clone/CI metadata validation cannot certify another host's live worktrees."""
     control = state.get("development_control") if isinstance(state.get("development_control"), dict) else {}
