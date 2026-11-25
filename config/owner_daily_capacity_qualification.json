@@ -1317,7 +1317,7 @@
     "volume_and_flow_retained_v2.py": "0a74da82bfdc1da88edbcf1ab4a4bab4bf599103944dd631aece977d72304b20",
     "watchlist_eval.py": "51042477e5305317368b6af52f5d4859be4477388dd46662fef43e398b5dc5c9",
     "stocklookup_core/evidence/dual_reader_transcription.py": "8a8870a4c660eea4417695601f3d56eed1330fa57ab9f396532e1aa22ff5e95a",
-    "tools/run_dual_reader_transcription_admission.py": "ee4df52e44d3470c2783def4aaa3a6b0f142bfe740cd209efd5b099de2215400"
+    "tools/run_dual_reader_transcription_admission.py": "de9a5cfddaa7b11989cd60563b3baa294c91b72a5906fabb92e20fa66675bba8"
   },
   "launcher_corrective": {
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",

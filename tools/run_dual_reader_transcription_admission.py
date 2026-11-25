@@ -127,8 +127,8 @@ POW_2025_P11 = {
     "readings": [
         [
             "claude",
-            "blind-input-pow-fy2025-p11/claude/claude-reader.raw.json",
-            "2026-11-25T12:02:25+07:00"
+            "blind-input-pow-fy2025-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-25T12:26:53+07:00"
         ],
         [
             "gemini",
@@ -139,7 +139,7 @@ POW_2025_P11 = {
     "new_subdir": "fy2025-dual-reader-pow-20261125",
     "printed_page": "7",
     "column_id": "c1",
-    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+    "comparison_started_at": "2026-11-25T12:27:10+07:00"
 }
 
 POW_2025_H1_P11 = {
