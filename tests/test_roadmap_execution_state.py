@@ -1070,3 +1070,356 @@ def test_lane_scope_amendment_refusals(tmp_path):
     assert state_path.read_bytes() == frozen
     assert snapshot != b""
 
+
+# ---------------------------------------------------------------------------
+# Owner-authorized dormant predecessor lane release
+# ---------------------------------------------------------------------------
+
+def _dormant_world(tmp_path):
+    """Coordinator transferred from Codex to Claude with Codex COMPLETE_LOCAL lane holding a shared lease."""
+    coord = tmp_path / "coordinator"
+    _init_repo(coord)
+    _git(coord, "checkout", "-q", "-b", "main")
+    (coord / "README.md").write_text("root\n", encoding="utf-8")
+    (coord / "docs").mkdir(parents=True, exist_ok=True)
+    (coord / "docs" / "ACTIVE_STATE.md").write_text("active state\n", encoding="utf-8")
+    base_sha = _commit_all(coord, "initial main")
+    state_path = coord / "docs" / "ROADMAP_STATE.json"
+    state = _state([], current={}, queued_next=[], lineage_head=base_sha)
+    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    def run(*cli_args):
+        return cli.main(["--repo", str(coord), "--state-file", str(state_path), "--json", *cli_args])
+
+    assert run("--init-lanes", "--owner-override", "--scope-note", "init codex coordinator", "--agent", "Codex") == 0
+
+    wt_pred = coord.parent / "PRED_DORMANT"
+    _git(coord, "worktree", "add", "-q", "-b", "evidence/pred-dormant", str(wt_pred), base_sha)
+    pred_spec = {
+        "milestone_id": "PRED_DORMANT",
+        "responsible_agent": "Codex",
+        "branch": "evidence/pred-dormant",
+        "worktree": str(wt_pred),
+        "base_sha": base_sha,
+        "domain": "pred-dormant",
+        "mode": "IMPLEMENTATION",
+        "allowed_paths": ["docs/ACTIVE_STATE.md", "stocklookup_core/pred/"],
+        "shared_paths": ["docs/ACTIVE_STATE.md"],
+        "lease_note": "Predecessor shared lease",
+        "dependencies": [],
+        "provides": {},
+        "consumes": {},
+        "required_checks": ["unit-tests"],
+    }
+    pred_spec_file = coord.parent / "PRED_DORMANT-spec.json"
+    pred_spec_file.write_text(json.dumps(pred_spec), encoding="utf-8")
+    assert run("--admit-lane", "PRED_DORMANT", "--lane-spec", str(pred_spec_file),
+               "--owner-override", "--scope-note", "admit pred", "--agent", "Codex") == 0
+    assert run("--transition-lane", "PRED_DORMANT", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "activate pred", "--agent", "Codex") == 0
+
+    (wt_pred / "stocklookup_core" / "pred").mkdir(parents=True, exist_ok=True)
+    (wt_pred / "stocklookup_core" / "pred" / "note.py").write_text("X = 1\n", encoding="utf-8")
+    pred_ckpt = _commit_all(wt_pred, "pred local work")
+
+    assert run("--transition-lane", "PRED_DORMANT", "--lane-state", "REVIEW_READY",
+               "--checkpoint-at", pred_ckpt, "--owner-override", "--scope-note", "review pred", "--agent", "Codex") == 0
+    assert run("--transition-lane", "PRED_DORMANT", "--lane-state", "COMPLETE_LOCAL",
+               "--checkpoint-at", pred_ckpt, "--owner-override", "--scope-note", "complete pred", "--agent", "Codex") == 0
+
+    # Transfer integration ownership from Codex to Claude; PRED_DORMANT stays COMPLETE_LOCAL under Codex.
+    cur_rev = res.load_state(state_path)["development_control"]["revision"]
+    transfer_spec = {
+        "schema": "stocklookup_integration_owner_transfer/1",
+        "expected_revision": cur_rev,
+        "from_agent": "Codex",
+        "to_agent": "Claude",
+        "coordinator_head": _git(coord, "rev-parse", "HEAD").strip(),
+        "successor_lanes": [],
+    }
+    transfer_file = coord.parent / "transfer-spec.json"
+    transfer_file.write_text(json.dumps(transfer_spec), encoding="utf-8")
+    assert run("--transfer-integration-owner", "--transfer-spec", str(transfer_file),
+               "--owner-override", "--scope-note", "Owner succession Codex->Claude", "--agent", "Claude") == 0
+
+    return coord, base_sha, state_path, run, wt_pred, pred_ckpt
+
+
+def _release_spec(coord, state_path, mid):
+    state = res.load_state(state_path)
+    control = state["development_control"]
+    lane = res.lane_by_id(state, mid)
+    return {
+        "schema": "stocklookup_dormant_lane_release/1",
+        "expected_revision": control["revision"],
+        "coordinator_head": _git(coord, "rev-parse", "HEAD").strip(),
+        "milestone_id": mid,
+        "responsible_agent": lane["responsible_agent"],
+        "state": lane["state"],
+        "checkpoint": lane["checkpoint"],
+        "branch": lane["branch"],
+        "worktree": lane["worktree"],
+    }
+
+
+def _release_dormant(coord, run, spec, *, agent="Claude", owner=True, note="Owner-authorized dormant release"):
+    spec_file = coord.parent / "dormant-release.json"
+    spec_file.write_text(json.dumps(spec), encoding="utf-8")
+    extra = ["--owner-override"] if owner else []
+    return run("--release-dormant-lane", "--release-spec", str(spec_file),
+               "--agent", agent, "--scope-note", note, *extra)
+
+
+def test_dormant_lane_release_frees_shared_lease_and_preserves_artifacts(tmp_path, capsys):
+    coord, base_sha, state_path, run, wt_pred, pred_ckpt = _dormant_world(tmp_path)
+
+    # A new Claude lane requesting docs/ACTIVE_STATE.md is blocked before releasing PRED_DORMANT.
+    wt_new = coord.parent / "NEW_LANE"
+    _git(coord, "worktree", "add", "-q", "-b", "feature/new-lane", str(wt_new), base_sha)
+    new_spec = {
+        "milestone_id": "NEW_LANE",
+        "responsible_agent": "Claude",
+        "branch": "feature/new-lane",
+        "worktree": str(wt_new),
+        "base_sha": base_sha,
+        "domain": "new-lane",
+        "mode": "IMPLEMENTATION",
+        "allowed_paths": ["docs/ACTIVE_STATE.md"],
+        "shared_paths": ["docs/ACTIVE_STATE.md"],
+        "lease_note": "Owner exact lease for NEW_LANE",
+        "dependencies": [],
+        "provides": {},
+        "consumes": {},
+        "required_checks": ["unit-tests"],
+    }
+    new_spec_file = coord.parent / "NEW_LANE-spec.json"
+    new_spec_file.write_text(json.dumps(new_spec), encoding="utf-8")
+    capsys.readouterr()
+    assert run("--admit-lane", "NEW_LANE", "--lane-spec", str(new_spec_file),
+               "--owner-override", "--scope-note", "admit new", "--agent", "Claude") == 2
+    assert "LANE_OWNERSHIP_OVERLAP" in capsys.readouterr().err
+
+    before_bytes = state_path.read_bytes()
+    before_state = res.load_state(state_path)
+    before_lane = res.lane_by_id(before_state, "PRED_DORMANT")
+    spec = _release_spec(coord, state_path, "PRED_DORMANT")
+
+    capsys.readouterr()
+    assert _release_dormant(coord, run, spec, note="Owner approved dormant release") == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["authority_effect"] == "NONE"
+    assert payload["merge_authorized"] is False
+    assert payload["runtime_authorized"] is False
+    assert payload["operation"]["operation"] == "DORMANT_LANE_RELEASE"
+    assert payload["operation"]["owner_note"] == "Owner approved dormant release"
+    assert payload["operation"]["coordinator_head"] == spec["coordinator_head"]
+    assert payload["operation"]["observed_lane_head"] == pred_ckpt
+
+    after_state = res.load_state(state_path)
+    assert res.validate_development_control(after_state) == []
+    assert res.evaluate(after_state, repo=coord).overall == "ON_TRACK"
+
+    old_ctrl, new_ctrl = before_state["development_control"], after_state["development_control"]
+    assert new_ctrl["revision"] == old_ctrl["revision"] + 1
+    assert new_ctrl["history"][:-1] == old_ctrl["history"]
+    assert new_ctrl["history"][-1]["operation"] == "DORMANT_LANE_RELEASE"
+    assert new_ctrl["history"][-1]["owner_note"] == "Owner approved dormant release"
+    assert new_ctrl["history"][-1]["observed_head"] == spec["coordinator_head"]
+    assert new_ctrl["history"][-1]["observed_lane_head"] == pred_ckpt
+
+    after_lane = res.lane_by_id(after_state, "PRED_DORMANT")
+    assert after_lane["state"] == "ABANDONED"
+    assert after_lane["release_kind"] == "OWNER_AUTHORIZED_DORMANT_RELEASE"
+    assert after_lane["released_from"] == "COMPLETE_LOCAL"
+    for preserved in ("checkpoint", "branch", "worktree", "base_sha", "allowed_paths", "shared_paths", "responsible_agent"):
+        assert after_lane[preserved] == before_lane[preserved]
+    assert after_lane["history"][:-1] == before_lane["history"]
+    assert after_lane["history"][-1]["operation"] == "DORMANT_LANE_RELEASE"
+    assert after_lane["history"][-1]["owner_note"] == "Owner approved dormant release"
+    assert after_lane["history"][-1]["observed_lane_head"] == pred_ckpt
+
+    # No git mutation of branch or worktree; legacy JSON bytes preserved.
+    assert wt_pred.is_dir()
+    assert _git(wt_pred, "rev-parse", "HEAD").strip() == pred_ckpt
+    assert _git(coord, "rev-parse", "refs/heads/evidence/pred-dormant").strip() == pred_ckpt
+    marker = b'  "development_control": '
+    assert before_bytes.split(marker)[0] == state_path.read_bytes().split(marker)[0]
+
+    # Previously blocked admission now succeeds.
+    assert run("--admit-lane", "NEW_LANE", "--lane-spec", str(new_spec_file),
+               "--owner-override", "--scope-note", "admit new after release", "--agent", "Claude") == 0
+    assert res.evaluate(res.load_state(state_path), repo=coord).overall == "ON_TRACK"
+
+
+def test_dormant_lane_release_when_worktree_absent_requires_branch_at_checkpoint(tmp_path):
+    coord, base_sha, state_path, run, wt_pred, pred_ckpt = _dormant_world(tmp_path)
+    _git(coord, "worktree", "remove", str(wt_pred))
+    assert not wt_pred.exists()
+
+    # If branch ref does not resolve to checkpoint, refuse.
+    spec = _release_spec(coord, state_path, "PRED_DORMANT")
+    _git(coord, "branch", "-f", "evidence/pred-dormant", base_sha)
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_BRANCH_HEAD_MISMATCH"):
+        res.prepare_dormant_lane_release(res.load_state(state_path), spec, repo=coord, agent="Claude")
+
+    # Restore branch ref to exact checkpoint; CLI release succeeds and returns ON_TRACK.
+    _git(coord, "branch", "-f", "evidence/pred-dormant", pred_ckpt)
+    assert _release_dormant(coord, run, spec) == 0
+    after_state = res.load_state(state_path)
+    assert res.lane_by_id(after_state, "PRED_DORMANT")["state"] == "ABANDONED"
+    assert res.evaluate(after_state, repo=coord).overall == "ON_TRACK"
+
+
+def test_dormant_lane_release_refusals(tmp_path):
+    coord, base_sha, state_path, run, wt_pred, pred_ckpt = _dormant_world(tmp_path)
+    world = (coord, base_sha, state_path, run)
+
+    # Add a Claude-owned COMPLETE_LOCAL lane, a Codex ACTIVE lane, a Codex REVIEW_READY lane,
+    # and a Codex MERGED_RELEASED lane for state/owner refusal checks.
+    wt_own, rc = _admit_lane(world, "OWN_CLAUDE", ["stocklookup_core/own/"], agent="Claude")
+    assert rc == 0
+    assert run("--transition-lane", "OWN_CLAUDE", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "act own", "--agent", "Claude") == 0
+    (wt_own / "stocklookup_core" / "own").mkdir(parents=True, exist_ok=True)
+    (wt_own / "stocklookup_core" / "own" / "a.py").write_text("a=1\n", encoding="utf-8")
+    own_ckpt = _commit_all(wt_own, "own work")
+    assert run("--transition-lane", "OWN_CLAUDE", "--lane-state", "REVIEW_READY",
+               "--checkpoint-at", own_ckpt, "--owner-override", "--scope-note", "rr own", "--agent", "Claude") == 0
+    assert run("--transition-lane", "OWN_CLAUDE", "--lane-state", "COMPLETE_LOCAL",
+               "--checkpoint-at", own_ckpt, "--owner-override", "--scope-note", "cl own", "--agent", "Claude") == 0
+
+    wt_act, rc = _admit_lane(world, "PRED_ACTIVE", ["stocklookup_core/act/"], agent="Codex")
+    assert rc == 0
+    assert run("--transition-lane", "PRED_ACTIVE", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "act", "--agent", "Claude") == 0
+
+    wt_rr, rc = _admit_lane(world, "PRED_RR", ["stocklookup_core/rr/"], agent="Codex")
+    assert rc == 0
+    assert run("--transition-lane", "PRED_RR", "--lane-state", "ACTIVE",
+               "--owner-override", "--scope-note", "act rr", "--agent", "Claude") == 0
+    (wt_rr / "stocklookup_core" / "rr").mkdir(parents=True, exist_ok=True)
+    (wt_rr / "stocklookup_core" / "rr" / "r.py").write_text("r=1\n", encoding="utf-8")
+    rr_ckpt = _commit_all(wt_rr, "rr work")
+    assert run("--transition-lane", "PRED_RR", "--lane-state", "REVIEW_READY",
+               "--checkpoint-at", rr_ckpt, "--owner-override", "--scope-note", "rr", "--agent", "Claude") == 0
+
+    state = res.load_state(state_path)
+    valid = _release_spec(coord, state_path, "PRED_DORMANT")
+
+    # 1. Stale revision
+    bad = dict(valid, expected_revision=valid["expected_revision"] - 1)
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_REVISION_CHANGED_RELOAD_REQUIRED"):
+        res.prepare_dormant_lane_release(state, bad, repo=coord, agent="Claude")
+
+    # 2. Wrong agent
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_INTEGRATION_OWNER_REQUIRED"):
+        res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Codex")
+
+    # 3a. Different coordinator head
+    bad = dict(valid, coordinator_head="0" * 40)
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_EXACT_CLEAN_COORDINATOR_HEAD_REQUIRED"):
+        res.prepare_dormant_lane_release(state, bad, repo=coord, agent="Claude")
+
+    # 3b. Dirty coordinator worktree
+    (coord / "README.md").write_text("dirty\n", encoding="utf-8")
+    try:
+        with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_EXACT_CLEAN_COORDINATOR_HEAD_REQUIRED"):
+            res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Claude")
+    finally:
+        _git(coord, "checkout", "--", "README.md")
+
+    # 4. Lane owned by the integration owner
+    own_spec = _release_spec(coord, state_path, "OWN_CLAUDE")
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_INTEGRATION_OWNER_LANE_FORBIDDEN"):
+        res.prepare_dormant_lane_release(state, own_spec, repo=coord, agent="Claude")
+
+    # 5. Wrong state: ACTIVE, REVIEW_READY, MERGED_RELEASED
+    act_lane = res.lane_by_id(state, "PRED_ACTIVE")
+    act_spec = dict(valid, milestone_id="PRED_ACTIVE", state="ACTIVE",
+                    checkpoint=base_sha, branch=act_lane["branch"], worktree=act_lane["worktree"])
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_STATE_NOT_COMPLETE_LOCAL:PRED_ACTIVE:ACTIVE"):
+        res.prepare_dormant_lane_release(state, act_spec, repo=coord, agent="Claude")
+
+    rr_spec = _release_spec(coord, state_path, "PRED_RR")
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_STATE_NOT_COMPLETE_LOCAL:PRED_RR:REVIEW_READY"):
+        res.prepare_dormant_lane_release(state, rr_spec, repo=coord, agent="Claude")
+
+    merged_state = json.loads(json.dumps(state))
+    res.lane_by_id(merged_state, "PRED_DORMANT")["state"] = "MERGED_RELEASED"
+    merged_spec = dict(valid, state="MERGED_RELEASED")
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_STATE_NOT_COMPLETE_LOCAL:PRED_DORMANT:MERGED_RELEASED"):
+        res.prepare_dormant_lane_release(merged_state, merged_spec, repo=coord, agent="Claude")
+
+    # 6. Spec mismatch on each identity field
+    for field, wrong_val, err_code in (
+        ("responsible_agent", "Grok", "LANE_DORMANT_RELEASE_RESPONSIBLE_AGENT_MISMATCH"),
+        ("state", "REVIEW_READY", "LANE_DORMANT_RELEASE_SPEC_STATE_MISMATCH"),
+        ("checkpoint", base_sha, "LANE_DORMANT_RELEASE_CHECKPOINT_MISMATCH"),
+        ("branch", "feature/other", "LANE_DORMANT_RELEASE_BRANCH_MISMATCH"),
+        ("worktree", str(coord.parent / "OTHER"), "LANE_DORMANT_RELEASE_WORKTREE_MISMATCH"),
+    ):
+        bad = dict(valid, **{field: wrong_val})
+        with pytest.raises(res.RoadmapStateError, match=err_code):
+            res.prepare_dormant_lane_release(state, bad, repo=coord, agent="Claude")
+
+    # 7. Extra / missing keys
+    bad_extra = dict(valid, extra=1)
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_EXACT_SPEC_REQUIRED"):
+        res.prepare_dormant_lane_release(state, bad_extra, repo=coord, agent="Claude")
+    bad_missing = dict(valid)
+    del bad_missing["worktree"]
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_EXACT_SPEC_REQUIRED"):
+        res.prepare_dormant_lane_release(state, bad_missing, repo=coord, agent="Claude")
+
+    # 8. Dirty worktree (untracked, unstaged, staged)
+    untracked = wt_pred / "stocklookup_core" / "pred" / "scratch.py"
+    untracked.write_text("u=1\n", encoding="utf-8")
+    try:
+        with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_WORKTREE_DIRTY"):
+            res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Claude")
+    finally:
+        untracked.unlink()
+
+    note_file = wt_pred / "stocklookup_core" / "pred" / "note.py"
+    note_file.write_text("X = 2\n", encoding="utf-8")
+    try:
+        with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_WORKTREE_DIRTY"):
+            res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Claude")
+        _git(wt_pred, "add", "stocklookup_core/pred/note.py")
+        with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_WORKTREE_DIRTY"):
+            res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Claude")
+    finally:
+        _git(wt_pred, "reset", "-q", "HEAD", "--", "stocklookup_core/pred/note.py")
+        _git(wt_pred, "checkout", "--", "stocklookup_core/pred/note.py")
+
+    # 9. Worktree HEAD != checkpoint
+    (wt_pred / "stocklookup_core" / "pred" / "extra.py").write_text("Y = 1\n", encoding="utf-8")
+    _commit_all(wt_pred, "extra commit past checkpoint")
+    try:
+        with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_WORKTREE_HEAD_MISMATCH"):
+            res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Claude")
+    finally:
+        _git(wt_pred, "reset", "-q", "--hard", pred_ckpt)
+
+    # 10a. Checkpoint already on origin/main
+    _git(coord, "update-ref", "refs/remotes/origin/main", pred_ckpt)
+    try:
+        with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_CHECKPOINT_ALREADY_ON_MAIN:PRED_DORMANT:refs/remotes/origin/main"):
+            res.prepare_dormant_lane_release(state, valid, repo=coord, agent="Claude")
+    finally:
+        _git(coord, "update-ref", "-d", "refs/remotes/origin/main")
+
+    # 10b. Checkpoint already on local main
+    _git(coord, "merge", "--no-edit", pred_ckpt)
+    merged_main = _git(coord, "rev-parse", "HEAD").strip()
+    spec_after_merge = dict(valid, coordinator_head=merged_main)
+    with pytest.raises(res.RoadmapStateError, match="LANE_DORMANT_RELEASE_CHECKPOINT_ALREADY_ON_MAIN:PRED_DORMANT:refs/heads/main"):
+        res.prepare_dormant_lane_release(state, spec_after_merge, repo=coord, agent="Claude")
+
+    # CLI refusal without --owner-override and on invalid spec leaves disk unchanged.
+    frozen = state_path.read_bytes()
+    assert _release_dormant(coord, run, spec_after_merge) == 2
+    assert _release_dormant(coord, run, spec_after_merge, owner=False) == 2
+    assert state_path.read_bytes() == frozen
+
+
