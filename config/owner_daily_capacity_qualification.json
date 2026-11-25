@@ -816,7 +816,7 @@
     "stocklookup_core/evidence/official_financial_source_route_discovery.py": "78d9ae3d39b4b9d6734b329b6c9a098e54c833be473c8f73aec2cb2baca65a6c",
     "stocklookup_core/evidence/official_issuer_disclosure_registry.py": "324a2fcda18844093fe28deb2de225d5ee945da11d3b8c9632456dd09c2546cb",
     "stocklookup_core/evidence/official_listing_page_parser.py": "017437c31ead0db6391cf4b3b4b54aaaf15349f1090e98ba02e8014cc1f3b0ce",
-    "stocklookup_core/evidence/official_ocr_layout_proof.py": "a18644ec742a7743c6822363ac09786073a0ce923e377398bcfb17fd01874327",
+    "stocklookup_core/evidence/official_ocr_layout_proof.py": "bc9687ccee5c2875e53eced6294cfc5d6f847f964b3f8de53e84e36a4c63256c",
     "stocklookup_core/evidence/official_route_ownership_evidence.py": "2b0a1d317d935afc1d1d5fbe8984224be1cffbb06432834f54c0a8a1c1b27c65",
     "stocklookup_core/evidence/official_source_registry.py": "a68cac26c67d7827ad79368ea68377d259e0eef74d7bfe8700587eb712835d2f",
     "stocklookup_core/evidence/official_source_registry_owner_promotion.py": "91a81dbc2bb081359932bcc71b7a39392a285747ec4ee7c273a2685e186faae8",
@@ -1316,8 +1316,8 @@
     "volume_and_flow_retained.py": "6fd3cc95391a3ec4dc138ae809ad5d3dd11e8d82cfab81803016d5bfd0f8abc3",
     "volume_and_flow_retained_v2.py": "0a74da82bfdc1da88edbcf1ab4a4bab4bf599103944dd631aece977d72304b20",
     "watchlist_eval.py": "51042477e5305317368b6af52f5d4859be4477388dd46662fef43e398b5dc5c9",
-    "stocklookup_core/evidence/dual_reader_transcription.py": "cdfe2b60980b0ec680a5fc3395342e15f125c8bfc26456c66c38ca7c8f4009fd",
-    "tools/run_dual_reader_transcription_admission.py": "3a485d0a5a50e957f8694938274f6750640c74c3601bc601f83270353765328a"
+    "stocklookup_core/evidence/dual_reader_transcription.py": "8a8870a4c660eea4417695601f3d56eed1330fa57ab9f396532e1aa22ff5e95a",
+    "tools/run_dual_reader_transcription_admission.py": "de9a5cfddaa7b11989cd60563b3baa294c91b72a5906fabb92e20fa66675bba8"
   },
   "launcher_corrective": {
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
@@ -2345,5 +2345,37 @@
     "new_capacity_measurement": false,
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED"
+  },
+  "decision2_coverage_factlocal_corrective": {
+    "base_commit": "6f780e0baa8d5eaa824d6bcc3594f391e55891c7",
+    "scope": "DECISION2_COVERAGE_POW_NVL_AND_FACT_LOCAL_CORRECTIVE",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/dual_reader_transcription.py",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py",
+      "tools/run_dual_reader_transcription_admission.py"
+    ],
+    "prior_source_sha256_lf": {
+      "stocklookup_core/evidence/dual_reader_transcription.py": "cdfe2b60980b0ec680a5fc3395342e15f125c8bfc26456c66c38ca7c8f4009fd",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "a18644ec742a7743c6822363ac09786073a0ce923e377398bcfb17fd01874327",
+      "tools/run_dual_reader_transcription_admission.py": "3a485d0a5a50e957f8694938274f6750640c74c3601bc601f83270353765328a"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "Offline specs, exact NVL issuer identity, resolved caption binding and fact-local construction only. POW legal-name and retained timing blockers remain. No Daily launch, new measurement, threshold or runtime authority change."
+  },
+  "decision2_pow_nvl_layout_corrective": {
+    "base_commit": "b472ed00b967c573b3a4a40c3855b55d2c7f6708",
+    "scope": "DECISION2_EXACT_POW_NVL_INCOME_LAYOUT_REGISTRATIONS",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/official_ocr_layout_proof.py"
+    ],
+    "prior_source_sha256_lf": {
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "243e09d8f5def15ebfe3aea8a3f13cf13b0af8965a4cd857c0e7e74e14b5a791"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "Six exact retained SHA/issuer/period/income-page registrations and literal headers only. Text-layer verification pending on host. No verifier, native fallback, issuer-name, printed-page, reading retention, Daily, threshold or runtime authority change."
   }
 }

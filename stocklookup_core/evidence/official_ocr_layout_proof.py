@@ -67,6 +67,34 @@ for _sha, _ticker, _period, _pages in (
         "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay",
     }
 
+# Decision 2: exact originals only, bounded to the independently read income page.
+# Text-layer descriptions are Head Leader observations, not executor verification:
+# pypdf is unavailable in this sandbox. Presence never qualifies native text or
+# bypasses the existing zero-native-candidate OCR fallback gate.
+for _sha, _ticker, _period, _pages, _current, _comparative, _text_layer in (
+    ("54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7", "POW", "2025", (11,),
+     ("Current year",), ("Prior year",), "Native text layer reported: 60,233 characters over 26 pages"),
+    ("e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1", "POW", "2025-H1", (11,),
+     ("Current period",), ("Prior period",), "Scanned PDF reported: 419 extracted characters"),
+    ("38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5", "POW", "2026-H1", (11,),
+     ("Current period",), ("Prior period",), "Scanned PDF reported: 2,959 extracted characters"),
+    ("618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c", "NVL", "2025-H1", (12,),
+     ("06 tháng đầu năm 2025",), ("06 tháng đầu năm 2024",), "Garbled OCR text layer reported"),
+    ("20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007", "NVL", "2026-H1", (12,),
+     ("06 tháng đầu năm 2026",), ("06 tháng đầu năm 2025 (Trình bày lại)",), "Garbled OCR text layer reported"),
+    ("8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353", "NVL", "2025", (12,),
+     ("Năm 2025",), ("Năm 2024",), "Garbled OCR text layer reported"),
+):
+    LAYOUT_PROOFS[_sha] = {
+        "ticker": _ticker, "reporting_period": _period, "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": _pages, "current_headers": _current, "comparative_headers": _comparative,
+        "metric_line_codes": {"revenue": "10", "net_income": "60", "attributable_net_income": "61"},
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {"tool": "pypdf unavailable in executor sandbox",
+                                    "state": "HOST_VERIFICATION_REQUIRED", "reported_observation": _text_layer},
+    }
+
 _AMOUNT = re.compile(r"^\(?-?\d{1,3}(?:\.\d{3})+\)?$")
 
 BASELINE_TWO_CONTRACT = "ocr_baseline_u00b2_geometry/v1"
@@ -164,7 +192,8 @@ def retained_issuer_name_matches(row, proof, text: str) -> bool:
     from stocklookup_core.evidence.financial_row_identity import _identity_fold
     names = {'HPG': 'cong ty co phan tap doan hoa phat',
              'PNJ': 'cong ty co phan vang bac da quy phu nhuan',
-             'VRE': 'cong ty co phan vincom retail'}
+             'VRE': 'cong ty co phan vincom retail',
+             'NVL': 'cong ty co phan tap doan dau tu dia oc no va'}
     sha = row.get('document_sha256')
     layout = layout_for(sha) or {}
     ref = row.get('ocr_layout_proof') or {}
