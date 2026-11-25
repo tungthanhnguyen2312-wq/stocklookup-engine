@@ -35,11 +35,14 @@ def setup_native(tmp_path,monkeypatch):
     monkeypatch.setitem(sys.modules,'fitz',SimpleNamespace(open=lambda *args:Document()))
     tsv=b'level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext\n5\t1\t1\t1\t1\t1\t10\t10\t20\t10\t95\tRaw\n'
     monkeypatch.setattr(ocr.subprocess,'run',lambda args,**kwargs: SimpleNamespace(stdout='test engine\n' if '--version' in args else tsv))
-    # Glyph retention reads the render dimensions, even when no ambiguous digit occurs.
-    from io import BytesIO
-    from PIL import Image
-    rendered = BytesIO(); Image.new('L', (40, 40)).save(rendered, format='PNG')
-    monkeypatch.setattr(ocr,'_render_image_bytes',lambda *args: (rendered.getvalue(),{'rendered_image_sha256':'img'}))
+    # Glyph retention reads the render height through PIL, even when no ambiguous digit
+    # occurs. Pillow is a host-only OCR dependency (not in the hermetic core tier), so it is
+    # stubbed here exactly like `fitz` above.
+    rendered = b'fixed rendered page image'
+    image_stub = SimpleNamespace(open=lambda *args: SimpleNamespace(height=40, width=40))
+    monkeypatch.setitem(sys.modules,'PIL',SimpleNamespace(Image=image_stub))
+    monkeypatch.setitem(sys.modules,'PIL.Image',image_stub)
+    monkeypatch.setattr(ocr,'_render_image_bytes',lambda *args: (rendered,{'rendered_image_sha256':'img'}))
     monkeypatch.setattr(native,'build_artifact',lambda **kwargs:{'artifact_identity':'native-proof', 'fact_candidates':[],
         'p3f13_panel_facts':[],'page_evidence':[{'page_number':1,'page_text':'broken native labels'}]})
     return tmp_path,record
