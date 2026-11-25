@@ -1306,7 +1306,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "e40f925f3104e2bf768a5c2b38c04424242655b581cb4bae0f14e5f89f2e3fb2",
+    "tools/verify_retention_reader_transition.py": "a663557edfce26c0482aeea6bd5e061825cb3dff30e40b3e126ba60ab70a3215",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -2211,6 +2211,18 @@
     "prior_source_sha256_lf": {
       "stocklookup_core/evidence/official_document_acquisition.py": "5ec50011ab6d07fa83bd5219f3c08ae2bd8f1c08ee183759193e78be32d6612f",
       "stocklookup_core/evidence/corporate_action_events.py": "f42e4d970c8d84f306f53ad6cd77735af8fbb1073791ca7976fa3ee33d3ede64"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false
+  },
+  "vsdc_registry_flag_transition_corrective": {
+    "base_commit": "729b76d0ca6b19979ad38e466a361eb2158a0a96",
+    "scope": "VSDC_REGISTRY_FLAG_AND_PARENT_PE_VALUATION_SUCCESSOR_VERIFIER_ONLY",
+    "changed_source_paths": [
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "prior_source_sha256_lf": {
+      "tools/verify_retention_reader_transition.py": "e40f925f3104e2bf768a5c2b38c04424242655b581cb4bae0f14e5f89f2e3fb2"
     },
     "new_capacity_measurement": false,
     "whole_daily_requalification": false

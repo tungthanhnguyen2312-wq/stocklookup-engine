@@ -925,12 +925,13 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert parent_pe["new_capacity_measurement"] is False and parent_pe["whole_daily_requalification"] is False
     assert parent_pe["release_authority"] == "NOT_GRANTED"
     vsdc_valuation_prior = live_receipt["vsdc_registered_share_valuation_corrective"]["prior_source_sha256_lf"]
+    vsdc_registry_prior = live_receipt["vsdc_registry_flag_transition_corrective"]["prior_source_sha256_lf"]
     for path in parent_pe["changed_source_paths"]:
         assert parent_pe["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         previous = subprocess.check_output(["git", "show", f"{parent_pe['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = vsdc_valuation_prior.get(
-            path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+            path, vsdc_registry_prior.get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()))
     assert parent_pe["added_source_paths"] == ["tools/replay_parent_attributable_headline_pe.py"]
     for path in parent_pe["added_source_paths"]:
         assert path not in prior_receipt["source_sha256"]
@@ -1007,6 +1008,17 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == completeness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["vsdc_notice_body_completeness_corrective"] = completeness
+
+    registry_flag = live_receipt["vsdc_registry_flag_transition_corrective"]
+    assert registry_flag["scope"] == "VSDC_REGISTRY_FLAG_AND_PARENT_PE_VALUATION_SUCCESSOR_VERIFIER_ONLY"
+    assert registry_flag["new_capacity_measurement"] is False
+    assert registry_flag["whole_daily_requalification"] is False
+    assert registry_flag["changed_source_paths"] == ["tools/verify_retention_reader_transition.py"]
+    for path in registry_flag["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{registry_flag['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == registry_flag["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["vsdc_registry_flag_transition_corrective"] = registry_flag
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
