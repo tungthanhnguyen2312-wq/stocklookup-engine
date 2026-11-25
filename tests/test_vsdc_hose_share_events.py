@@ -331,12 +331,21 @@ def test_official_source_registry_vsdc_flag_source_transition_reconstructs_and_f
     from tools import verify_retention_reader_transition as vrt
     root = Path(__file__).resolve().parents[1]
     rel = vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE
-    live = (root / rel).read_bytes().replace(b'\r\n', b'\n')
+    current = (root / rel).read_bytes().replace(b'\r\n', b'\n')
     prior_e31 = subprocess.check_output(
         ['git', 'show', vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_BASE + ':' + rel], cwd=root
     ).replace(b'\r\n', b'\n')
+    # The VSDC-flag transition governs the registry as it stood right after the flag (sha 2645eac7).
+    # The later reviewed issuer-coverage amendment (ACQUISITION_REGISTRY_COVERAGE_EXPANSION_20261125)
+    # is verified separately and exactly; reconstruct that VSDC successor from the retained archive.
+    live = prior_e31[:2] + vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE + prior_e31[2:]
+    assert hashlib.sha256(live).hexdigest() == "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4"
     assert vrt._official_source_registry_vsdc_flag_prior_bytes(root, rel, live) == prior_e31
-    assert vrt.historical_bytes(root, rel) == prior_e31
+    assert vrt._official_source_registry_reviewed_amendment_bytes(root, current) == current
+    assert vrt.historical_bytes(root, rel) == current
+    # The live (amended) registry is not itself a VSDC-flag successor.
+    with pytest.raises(ValueError, match='OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_BINDING_INVALID'):
+        vrt._official_source_registry_vsdc_flag_prior_bytes(root, rel, current)
 
     # Flipping the flag to true or making any extra edit must fail closed.
     flipped = live.replace(b': false},', b': true},', 1)

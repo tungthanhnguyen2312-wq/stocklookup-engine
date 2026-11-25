@@ -440,11 +440,14 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
     # Rebuild the current receipt using only the enumerated successor paths.
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    issuer = live_receipt["issuer_registry_coverage_corrective"]
+    def issuer_predecessor_pin(path):
+        return issuer["prior_source_sha256_lf"].get(path,
+            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     layouts = live_receipt["decision2_pow_nvl_layout_corrective"]
     coverage = live_receipt["decision2_coverage_factlocal_corrective"]
     def coverage_predecessor_pin(path):
-        return coverage["prior_source_sha256_lf"].get(path,
-            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        return coverage["prior_source_sha256_lf"].get(path, issuer_predecessor_pin(path))
     velocity = live_receipt["retained_t0_velocity_projection_corrective"]
 
     dispatch = live_receipt["canonical_d4a_dispatch_corrective"]
@@ -966,7 +969,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in known["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{known['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == known["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = live_receipt["vsdc_registration_shares_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        prior_receipt["source_sha256"][path] = live_receipt["vsdc_registration_shares_corrective"]["prior_source_sha256_lf"].get(path, issuer_predecessor_pin(path))
     prior_receipt["share_basis_known_by_corrective"] = known
 
     registration = live_receipt["vsdc_registration_shares_corrective"]
@@ -1022,7 +1025,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in registry_flag["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{registry_flag['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == registry_flag["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        prior_receipt["source_sha256"][path] = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, issuer_predecessor_pin(path))
     prior_receipt["vsdc_registry_flag_transition_corrective"] = registry_flag
 
     # Main's verification blocks above intentionally keep their live-byte checks.
@@ -1041,7 +1044,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         baseline = subprocess.check_output(["git", "show", f"{incoming_base}:{path}"], cwd=root)
         baseline_hash = hashlib.sha256(baseline.replace(b"\r\n", b"\n")).hexdigest()
         assert baseline_hash == main_receipt["source_sha256"][path]
-        current_hash = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        current_hash = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, issuer_predecessor_pin(path))
         assert prior_receipt["source_sha256"][path] in (baseline_hash, current_hash)
         prior_receipt["source_sha256"][path] = baseline_hash
 
@@ -1178,6 +1181,30 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         prior_receipt["source_sha256"][path] = hashlib.sha256(
             (root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["decision2_pow_nvl_layout_corrective"] = layouts
+
+    assert issuer["base_commit"] == "ab3b50727d68ae48493077a763c9e14d5ceaa187"
+    assert issuer["scope"] == "OFFLINE_ISSUER_REGISTRY_COVERAGE_AND_EXACT_HISTORICAL_MANIFEST_BINDING"
+    assert issuer["new_capacity_measurement"] is False
+    assert issuer["whole_daily_requalification"] is False
+    assert issuer["release_authority"] == "NOT_GRANTED"
+    assert issuer["source_transition"] == "tests/fixtures/official_source_registry_issuer_coverage_manifest_transition_v1.json"
+    assert issuer["changed_source_paths"] == [
+        "config/official_source_registry.json", "tools/verify_retention_reader_transition.py"]
+    assert set(issuer["prior_source_sha256_lf"]) == set(issuer["changed_source_paths"])
+    assert set(issuer["active_source_sha256_lf"]) == set(issuer["changed_source_paths"])
+    issuer_baseline = json.loads(subprocess.check_output(
+        ["git", "show", f"{issuer['base_commit']}:{receipt_path}"], cwd=root))
+    assert issuer_baseline["decision2_pow_nvl_layout_corrective"] == layouts
+    for path in issuer["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{issuer['base_commit']}:{path}"], cwd=root)
+        assert issuer["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
+        assert issuer["prior_source_sha256_lf"][path] == issuer_baseline["source_sha256"][path]
+        assert issuer["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        active_pin = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        assert active_pin == issuer["active_source_sha256_lf"][path] == live_receipt["source_sha256"][path]
+        assert active_pin != issuer["prior_source_sha256_lf"][path]
+        prior_receipt["source_sha256"][path] = active_pin
+    prior_receipt["issuer_registry_coverage_corrective"] = issuer
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
@@ -1216,3 +1243,39 @@ def test_offline_edits_keep_receipt_but_runtime_import_or_new_runtime_file_inval
     tracked.append("tools/other_offline_tool.py")
     (tmp_path / tracked[-1]).write_bytes(b"# still needs review\n")
     assert not preflight.capacity_qualification(tmp_path)["source_matches"]
+
+
+def test_issuer_registry_coverage_manifest_peels_only_exact_added_pin(tmp_path):
+    from tools.verify_retention_reader_transition import issuer_registry_coverage_prior_manifest_bytes
+
+    root = Path(__file__).resolve().parents[1]
+    manifest = "tests/fixtures/e2e3_frozen_sources.json"
+    spec_path = "tests/fixtures/official_source_registry_issuer_coverage_manifest_transition_v1.json"
+    spec = json.loads((root / spec_path).read_bytes())
+    active = (root / manifest).read_bytes().replace(b"\r\n", b"\n")
+    prior = issuer_registry_coverage_prior_manifest_bytes(root, manifest, active)
+    baseline = subprocess.check_output(["git", "show", f"{spec['base_commit']}:{manifest}"], cwd=root)
+    assert prior == baseline.replace(b"\r\n", b"\n")
+    assert prior == (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    active_pins = json.loads(active)["source_sha256_lf"]
+    assert active_pins.pop(spec["added_source_path"]) == spec["added_source_sha256_lf"]
+    assert active_pins == json.loads(prior)["source_sha256_lf"]
+    assert issuer_registry_coverage_prior_manifest_bytes(root, "other.json", active) == active
+    marker = (f'    "{spec["added_source_path"]}": "{spec["added_source_sha256_lf"]}",\n').encode()
+    for changed in (active + b" ", prior, active.replace(marker, b"", 1),
+                    active.replace(marker, marker + marker, 1), active.replace(b"3543d80a", b"4543d80a", 1)):
+        with pytest.raises(ValueError, match="ISSUER_REGISTRY_COVERAGE_MANIFEST_BINDING_INVALID"):
+            issuer_registry_coverage_prior_manifest_bytes(root, manifest, changed)
+    for relative in (spec_path, spec["archive"]):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((root / relative).read_bytes())
+    archive = tmp_path / spec["archive"]
+    archive.write_bytes(archive.read_bytes() + b" ")
+    with pytest.raises(ValueError, match="ISSUER_REGISTRY_COVERAGE_MANIFEST_BINDING_INVALID"):
+        issuer_registry_coverage_prior_manifest_bytes(tmp_path, manifest, active)
+    archive.write_bytes(prior)
+    altered_spec = dict(spec, release_authority="GRANTED")
+    (tmp_path / spec_path).write_text(json.dumps(altered_spec), encoding="utf-8")
+    with pytest.raises(ValueError, match="ISSUER_REGISTRY_COVERAGE_MANIFEST_SCOPE_INVALID"):
+        issuer_registry_coverage_prior_manifest_bytes(tmp_path, manifest, active)

@@ -1428,6 +1428,34 @@ def _official_financial_period_identity_prior_bytes(root: Path, relative: str, a
     return prior
 
 
+def issuer_registry_coverage_prior_manifest_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel only the exact issuer-registry pin addition; preserve all earlier amendments."""
+    if relative != "tests/fixtures/e2e3_frozen_sources.json":
+        return active
+    expected = {
+        "contract_version": "official_source_registry_issuer_coverage_manifest_transition/v1",
+        "base_commit": "ab3b50727d68ae48493077a763c9e14d5ceaa187",
+        "scope": "EXACT_E2E3_ISSUER_REGISTRY_PIN_ADDITION_ONLY",
+        "release_authority": "NOT_GRANTED",
+        "manifest_path": "tests/fixtures/e2e3_frozen_sources.json",
+        "archive": "tests/fixtures/official_source_registry_issuer_coverage_e2e3_prior.json",
+        "added_source_path": "config/official_source_registry.json",
+        "added_source_sha256_lf": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881",
+        "prior_sha256_lf": "9cd7a7192bb35cd7863a1300ae5b46fa2dfcfa132a9254886c2ed462775c1e49",
+        "active_sha256_lf": "42e435533c2081838f026bf13558348d65c954fd137e4bef36bc18fa6b428f61"
+    }
+    spec = json.loads((root / "tests/fixtures/official_source_registry_issuer_coverage_manifest_transition_v1.json").read_bytes())
+    if spec != expected:
+        raise ValueError("ISSUER_REGISTRY_COVERAGE_MANIFEST_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    marker = (f'    "{spec["added_source_path"]}": "{spec["added_source_sha256_lf"]}",\n').encode()
+    if (hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or active.count(marker) != 1 or active.replace(marker, b"", 1) != prior):
+        raise ValueError("ISSUER_REGISTRY_COVERAGE_MANIFEST_BINDING_INVALID")
+    return prior
+
+
 def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes) -> bytes | None:
     """Verify the exact acquisition successor and its unchanged VSDC predecessor."""
     relative = OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE

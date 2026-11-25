@@ -1,0 +1,12 @@
+{
+  "contract_version": "official_source_registry_issuer_coverage_manifest_transition/v1",
+  "base_commit": "ab3b50727d68ae48493077a763c9e14d5ceaa187",
+  "scope": "EXACT_E2E3_ISSUER_REGISTRY_PIN_ADDITION_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "manifest_path": "tests/fixtures/e2e3_frozen_sources.json",
+  "archive": "tests/fixtures/official_source_registry_issuer_coverage_e2e3_prior.json",
+  "added_source_path": "config/official_source_registry.json",
+  "added_source_sha256_lf": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881",
+  "prior_sha256_lf": "9cd7a7192bb35cd7863a1300ae5b46fa2dfcfa132a9254886c2ed462775c1e49",
+  "active_sha256_lf": "42e435533c2081838f026bf13558348d65c954fd137e4bef36bc18fa6b428f61"
+}
