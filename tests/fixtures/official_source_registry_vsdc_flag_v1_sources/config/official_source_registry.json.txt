@@ -1,0 +1,203 @@
+{
+  "schema_version": "1.0.0",
+  "policy_version": "official-source-registry/1.0.0",
+  "purpose": "Pillar B step B1: the source registry and crawl policy for official Vietnamese corporate-action evidence. Declares what may be requested, from where, how often, and what is retained. Nothing here authorizes a scheduled crawl by itself -- see approval_state.",
+  "approval_state": {
+    "state": "APPROVED",
+    "meaning": "Owner approved declared sources. `official_source_registry.py` admits requests for approved sources according to rate, host, and document rules.",
+    "approved_by": "owner",
+    "approved_at": "2026-08-03T07:00:00Z",
+    "approved_at_provenance": "Owner confirmed on 2026-08-03 that they approved the registry personally and that the originally recorded 14:00 was Asia/Ho_Chi_Minh (UTC+07:00); the canonical instant is therefore 07:00Z. The earlier 2026-08-03T14:00:00Z was a local time written with a Z suffix.",
+    "reopening_rule": "Activating a source is an owner decision recorded here and in docs/DECISIONS.md."
+  },
+  "global_policy": {
+    "discovery": "closed_world_only_until_approved",
+    "robots_policy": "respect_robots_txt_and_terms; a Disallow on the target path is terminal for that path, never worked around",
+    "user_agent": "StockLookupOfficialEvidence/1.1",
+    "connect_timeout_seconds": 5,
+    "read_timeout_seconds": 15,
+    "max_response_bytes": 33554432,
+    "max_attempts": 2,
+    "backoff": "exponential, base 0.25s, bounded by max_attempts",
+    "max_redirects": 5,
+    "max_redirects_enforcement": "official_document_acquisition.fetch_http follows one hop at a time and admits each hop against this registry before following it; a refused hop is terminal for that request and retains nothing",
+    "concurrency": 1,
+    "retention": "immutable, content-addressed by SHA-256; documents are never overwritten, edited or deleted",
+    "credentials": "none; no source in this registry requires or accepts authentication",
+    "excluded_sources": [
+      {
+        "source": "EODHD",
+        "status": "REJECTED_BY_OWNER",
+        "note": "Permanently out of scope. Not to be tested, called, retried, diagnosed or recommended. See docs/DECISIONS.md 2026-08-03."
+      }
+    ]
+  },
+  "sources": [
+    {
+      "source_id": "hose",
+      "authority": "Ho Chi Minh City Stock Exchange",
+      "authority_class": "exchange",
+      "activation": "approved",
+      "allowed_hosts": ["www.hsx.vn", "hsx.vn", "staticfile.hsx.vn"],
+      "document_types": [
+        "corporate_action_notice",
+        "ex_right_notice",
+        "listing_change_notice",
+        "amendment_or_supersession_notice",
+        "official_exchange_annual_trading_statistics",
+        "official_exchange_daily_trading_summary"
+      ],
+      "discovery_path": "operator-supplied finite listing or detail URLs only; no pagination, no search, no link following. One bounded official-search-engine locator may be retained when a milestone explicitly authorizes official exchange trading-statistics discovery, including a bounded daily-trading-summary route qualification; the retained official URL and bytes, never the search snippet, are the authority.",
+      "requests_per_minute": 6,
+      "min_request_interval_seconds": 10,
+      "terms_considerations": "Public disclosure pages. Exchange notices are published for investor use; retention is for evidence provenance, not redistribution.",
+      "parser_version": "1.0.0",
+      "retention_policy": "indefinite, content-addressed",
+      "failure_classification": [
+        "access_denied", "robots_or_anti_bot_block", "timeout", "tls_network_error",
+        "invalid_content_type", "empty_or_truncated_document", "unstable_redirect",
+        "redirect_refused_by_source_registry", "response_size_limit", "hash_conflict"
+      ]
+    },
+    {
+      "source_id": "hnx",
+      "authority": "Hanoi Stock Exchange",
+      "authority_class": "exchange",
+      "activation": "approved",
+      "allowed_hosts": ["www.hnx.vn", "hnx.vn", "owa.hnx.vn"],
+      "document_types": [
+        "corporate_action_notice",
+        "ex_right_notice",
+        "listing_change_notice",
+      "amendment_or_supersession_notice",
+      "audited_annual_financial_statements",
+      "reviewed_interim_financial_statements",
+      "insider_transaction_notice",
+        "major_shareholder_notice"
+      ],
+      "index_document_types": [
+        "disclosure_rss_feed"
+      ],
+      "index_document_type_rule": "A syndication feed is a DISCOVERY INPUT, never disclosure evidence. It is admissible for acquisition so item links can be read from stored bytes, and is refused by official_document_store.adopt_retained_document (see DOCUMENT_TYPES), so it can never reach the observation ledger, the resolver, qualified_official or corroborated_period_end. Declared for hnx only, because hnx is the one exchange source whose own RSS landing page (retained 2026-08-24, /vi-vn/rss.html) directly links a first-party, unauthenticated, statically-rendered channel -- '/3/vi_vn/thong-tin-cong-bo-tu-to-chuc-phat-hanh.rss' ('disclosure information from the issuing organization') -- confirmed by direct fetch to carry real-time insider-transaction registration/result notices and major-shareholder threshold-crossing notices market-wide, one item per disclosure, with no query parameters or session state. HOSE's equivalent listed-organization disclosure feed ('Tin tổ chức niêm yết') was investigated the same day and found to render its list client-side (a plain HTTP GET returns an empty SPA shell; no first-party JSON/XML endpoint was observed), so it is deliberately NOT given this type; do not add it without the same kind of first-party static-rendering observation this rule records for hnx.",
+      "discovery_path": "per-security event pages, operator-supplied, remain the primary route (most structured, first crawl candidate, B2). Additionally, the one RSS channel named in index_document_types may be fetched whole (it is bounded by the feed itself, not paginated) and parsed for item links; no query, search, or link-following beyond that one parsed feed.",
+      "requests_per_minute": 6,
+      "min_request_interval_seconds": 10,
+      "terms_considerations": "Public disclosure pages.",
+      "parser_version": "1.0.0",
+      "retention_policy": "indefinite, content-addressed",
+      "failure_classification": [
+        "access_denied", "robots_or_anti_bot_block", "timeout", "tls_network_error",
+        "invalid_content_type", "empty_or_truncated_document", "unstable_redirect",
+        "redirect_refused_by_source_registry", "response_size_limit", "hash_conflict"
+      ]
+    },
+    {
+      "source_id": "vsdc",
+      "authority": "Vietnam Securities Depository and Clearing Corporation",
+      "authority_class": "depository",
+      "activation": "approved",
+      "allowed_hosts": ["vsdc.vn", "www.vsdc.vn", "vsd.vn", "www.vsd.vn"],
+      "document_types": [
+        "last_registration_date_notice",
+        "corporate_action_notice",
+        "amendment_or_supersession_notice"
+      ],
+      "index_document_types": [
+        "announcement_index_page"
+      ],
+      "index_document_type_rule": "A navigation/index page is a DISCOVERY INPUT, never corporate-action evidence. It is admissible for acquisition so links can be read from a stored artifact, and is refused by official_document_store.adopt_retained_document, so it can never reach the observation ledger, the resolver, qualified_official or corroborated_period_end. Declared for vsdc only, because vsdc is the one source whose index pages are observed in a retained first-party artifact (the /en/alc/6 breadcrumb in the retained VNM notice /en/ad/177392). Do not add this type to another source without the same kind of observation.",
+      "discovery_path": "operator-supplied finite notice URLs only, plus the announcement index pages named in index_document_types; no pagination, no search, no link following beyond one parsed index page",
+      "requests_per_minute": 4,
+      "min_request_interval_seconds": 15,
+      "terms_considerations": "Public registration notices. VSDC is the authority for record dates and entitlement execution method.",
+      "parser_version": "1.0.0",
+      "retention_policy": "indefinite, content-addressed",
+      "failure_classification": [
+        "access_denied", "robots_or_anti_bot_block", "timeout", "tls_network_error",
+        "invalid_content_type", "empty_or_truncated_document", "unstable_redirect",
+        "redirect_refused_by_source_registry", "response_size_limit", "hash_conflict"
+      ]
+    },
+    {
+      "source_id": "issuer_ir",
+      "authority": "Qualified issuer investor-relations domains",
+      "authority_class": "issuer",
+      "activation": "approved",
+      "allowed_hosts": [
+        "file.hoaphat.com.vn",
+        "www.hoaphat.com.vn",
+        "hoaphat.com.vn",
+        "www.vinamilk.com.vn",
+        "vinamilk.com.vn",
+        "d8um25gjecm9v.cloudfront.net",
+        "www.vietcombank.com.vn",
+        "vietcombank.com.vn",
+        "www.ssi.com.vn",
+        "ssi.com.vn",
+        "storage.thepangroup.vn",
+        "www.pnj.com.vn",
+        "pnj.com.vn",
+        "cdn.pnj.io",
+        "fpt.com",
+        "www.fpt.com",
+        "www.pvdrilling.com.vn",
+        "pvdrilling.com.vn",
+        "www.qns.com.vn",
+        "qns.com.vn",
+        "www.pvpower.vn",
+        "pvpower.vn",
+        "www.novaland.com.vn",
+        "novaland.com.vn",
+        "www.pvgas.com.vn",
+        "ir.vincom.com.vn",
+        "bitagco.com",
+        "abs.vn",
+        "www.acb.com.vn",
+        "www.mbbank.com.vn",
+        "mwg.vn",
+        "techcombank.com",
+        "anphatbioplastics.com",
+        "tiensonaus.com",
+        "bidv.com.vn"
+      ],
+      "host_admission_rule": "An issuer host is admitted only when retained official evidence, or a bounded issuer IR page that directly links the exact filing, evidences it. `storage.thepangroup.vn` is the existing retained PAN FY2024 filing host. PNJ's official financial-reports page directly links `cdn.pnj.io` FY2024 consolidated statements; FPT's official IR report page and attempted FY2024 issuer filing are on `fpt.com`; PV Drilling's official financial-statements page lists its FY2024 audited consolidated statement on `www.pvdrilling.com.vn`; QNS's official FY2024 report directly publishes the audited consolidated financial-statement section on `www.qns.com.vn`; PV Power's official FY2024 financial-statements page directly links its audited consolidated statement on `pvpower.vn`; Novaland's official IR financial-statements page directly links its FY2024 audited consolidated filing on `www.novaland.com.vn`; PV GAS's official IR shareholder-documents page lists its FY2024 audited consolidated financial statements on `www.pvgas.com.vn`; Vincom Retail's official IR portal publishes its FY2025 audited consolidated financial statements directly on `ir.vincom.com.vn`. Owner authorization dated 2026-08-21 additionally activates only `bitagco.com`, `abs.vn`, `www.acb.com.vn`, `www.mbbank.com.vn`, `mwg.vn`, `techcombank.com`, `anphatbioplastics.com`, `tiensonaus.com`, and `bidv.com.vn`, bound to the retained prospective-review and bounded-enrichment evidence artifacts. `bidv.com.vn` is admitted only as the retained final host under `redirect_domain_authority/v1`; `tienson.vn` and `aquatexbentre.com` remain unapproved. This is an enumerated evidence relationship, not a wildcard for cloud/CDN hosts; see docs/annual_financial_source_authority_decision.md, the 2026-08-09 scale-out decisions, and the P2-D2 promotion decision.",
+      "host_document_types": {
+        "www.pvgas.com.vn": [
+          "audited_annual_financial_statements",
+          "reviewed_interim_financial_statements",
+          "issuer_ir_index_page"
+        ],
+        "ir.vincom.com.vn": [
+          "audited_annual_financial_statements",
+          "reviewed_interim_financial_statements",
+          "issuer_ir_index_page"
+        ]
+      },
+      "index_document_types": [
+        "issuer_ir_index_page"
+      ],
+      "index_document_type_rule": "An issuer IR index/page is a DISCOVERY INPUT, never financial-statement evidence. It is admissible so one first-party index per issuer can be read for exact FY2025 and H1/Q2 2026 statement locators, and is refused by official_document_store.adopt_retained_document. Bounded to FINANCIAL_EVIDENCE_CURRENCY_AND_OFFICIAL_STATEMENT_REFRESH_V1: one index page per frozen Cohort-1 issuer on an already-admitted host.",
+      "document_types": [
+        "corporate_action_notice",
+        "listing_change_notice",
+        "agm_document_or_resolution",
+        "corporate_governance_report",
+        "annual_report",
+        "audited_annual_financial_statements",
+        "reviewed_interim_financial_statements",
+        "amendment_or_supersession_notice"
+      ],
+      "discovery_path": "operator-supplied finite URLs only, plus one admitted issuer IR index/page per named Cohort-1 issuer; issuer sites are not crawled beyond that one parsed index",
+      "requests_per_minute": 6,
+      "min_request_interval_seconds": 10,
+      "terms_considerations": "Issuer-published investor-relations documents.",
+      "parser_version": "1.0.0",
+      "retention_policy": "indefinite, content-addressed",
+      "failure_classification": [
+        "access_denied", "robots_or_anti_bot_block", "timeout", "tls_network_error",
+        "invalid_content_type", "empty_or_truncated_document", "unstable_redirect",
+        "redirect_refused_by_source_registry", "response_size_limit", "hash_conflict"
+      ]
+    }
+  ]
+}

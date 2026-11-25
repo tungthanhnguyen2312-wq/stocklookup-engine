@@ -1,0 +1,17 @@
+{
+  "contract_version": "vsdc_valuation_parent_pe_successor_transition/v1",
+  "base_commit": "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc",
+  "scope": "VSDC_REGISTERED_SHARES_VALUATION_ELIGIBILITY_FLAG_OFF_SUCCESSOR_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "source_path": "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py",
+  "prior_sha256_lf": "75eac65bc3535fada4f5b0b99a53882912fb26840335e76bdeff549363444623",
+  "active_sha256_lf": "9b3c3ec415d58c6ab8e5d84b57cc44ff71d1d503fcf7602de6eae01be7c5e4dc",
+  "inserted_hunks_lf": [
+    "    \"official_registered_shares\": \"OFFICIAL_REGISTERED_SHARES\",\n",
+    "VSDC_REGISTERED_LIMITATIONS = (\n    \"VSDC registered securities count includes treasury shares; it is not outstanding \"\n    \"ex-treasury shares and the notice publication date is not a listing effective date.\"\n)\n",
+    "    if authority == \"official_registered_shares\":\n        # Owner-approved current research basis, never current common outstanding.\n        evidence = resolved.get(\"official_registration_evidence\") or {}\n        return {\n            \"status\": \"OFFICIAL_REGISTERED_SHARES\",\n            \"authority\": authority,\n            \"value\": resolved.get(\"value\"),\n            \"share_concept\": \"ISSUED_SHARES\",\n            \"share_basis\": \"VSDC_REGISTERED_SHARES\",\n            \"source_artifact_identity\": resolved.get(\"source\") or resolved.get(\"resolver_version\"),\n            \"freshness\": str(resolved.get(\"status\") or authority),\n            \"observation_date\": evidence.get(\"published_at\"),\n            \"observation_lag_days\": resolved.get(\"observation_lag_days\"),\n            \"authoritative_current_market_cap_eligible\": False,\n            \"research_proxy_eligible\": resolved.get(\"value\") is not None,\n            \"limitations\": [VSDC_REGISTERED_LIMITATIONS],\n            \"blocked_reasons\": [\"CURRENT_COMMON_OUTSTANDING_COVERAGE_NOT_PROVEN_THROUGH_PRICE_SESSION\"],\n            \"retained_evidence\": dict(resolved),\n        }\n",
+    "    identities = row.get(\"input_identities\") or {}\n    if identities.get(\"share_authority_tier\") == \"OFFICIAL_REGISTERED_SHARES\":\n        row.update({\n            \"share_concept\": \"ISSUED_SHARES\", \"share_basis\": \"VSDC_REGISTERED_SHARES\",\n            \"share_authority_tier\": \"OFFICIAL_REGISTERED_SHARES\",\n            \"observation_date\": identities.get(\"share_observation_date\"),\n            \"limitations\": [VSDC_REGISTERED_LIMITATIONS],\n        })\n",
+    "        if row.get(\"share_basis\") == \"VSDC_REGISTERED_SHARES\":\n            labels.extend([\"VSDC_REGISTERED_SHARES\", \"NOT_COMMON_OUTSTANDING_SHARE_BASIS\"])\n",
+    "    if share.get(\"authority\") == \"official_registered_shares\":\n        identities[\"share_basis\"] = \"VSDC_REGISTERED_SHARES\"\n        identities[\"share_observation_date\"] = share.get(\"observation_date\")\n"
+  ]
+}

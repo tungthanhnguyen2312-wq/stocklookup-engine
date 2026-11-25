@@ -283,6 +283,7 @@ class _Store:
         self.anchors = load_official_anchors(self.runtime_root)
         self.metadata: dict[str, tuple[float | None, Any]] = {}
         self.events: dict[str, list[dict[str, Any]]] = {}
+        self.provider_staleness_events: dict[str, list[dict[str, Any]]] = {}
         self.ledger_coverage: dict[str, str] = {}
         self.exchange_shares: dict[str, dict[str, Any]] = {}
 
@@ -313,11 +314,13 @@ class _Store:
         return sorted(self.metadata)
 
 
-def retained_official_share_events(evidence_roots: Iterable[Path | str], session_date: str) -> dict[str, Any]:
+def retained_official_share_events(evidence_roots: Iterable[Path | str], session_date: str, *,
+                                   known_by: datetime, vsdc_hose_events_enabled: bool = False) -> dict[str, Any]:
     """Share-changing official events already retained and known by the session.
 
     Reads every retained ``current_official_event_context/v1`` artifact under the governed
-    evidence roots whose own acquisition session is on or before ``session_date``. Keeps stock
+    evidence roots whose research session is on or before ``session_date`` and whose real source
+    observation timestamps are available by the explicit ``known_by`` cutoff. Keeps stock
     dividend, bonus and rights events whose ex-date is officially qualified and falls on or before
     the session, plus undated events whose freshness cannot be verified. A later qualified
     ex-date has not changed the count at the session. Nothing is fetched.
@@ -327,6 +330,10 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
     session = _as_date(session_date)
     if session is None:
         raise ValueError(f"session_date must be an ISO date, got {session_date!r}")
+    if known_by.tzinfo is None or known_by.utcoffset() is None:
+        raise ValueError("OFFICIAL_EVENT_KNOWN_BY_REQUIRES_TIMEZONE")
+    evidence_roots = tuple(evidence_roots)
+    diagnostics = []
     contexts: dict[str, str] = {}
     events: dict[str, dict[str, dict[str, Any]]] = {}
     for root in evidence_roots:
@@ -341,6 +348,43 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
             identity = str(artifact.get("artifact_identity") or "")
             if acquired is None or acquired > session or not identity or identity in contexts:
                 continue
+            # These events can only WITHHOLD a provider count, so the fail-closed direction is to
+            # keep them. A context is excluded only on positive proof it was not known by the
+            # cutoff: any row observation/publication time later than ``known_by``. Rows without a
+            # usable time (most retained HNX rows carry official_observed_at=None) do not prove
+            # lateness; dropping them would publish counts this resolver withholds today.
+            # ``corporate_event_temporality.context_known_by`` is the promotion-side check (every
+            # row must be proven) and is deliberately not used here.
+            rows = ((artifact.get("all_current_universe_event_records") or [])
+                    + (artifact.get("excluded_noncurrent_or_official_only_event_records") or []))
+            late = unproven = 0
+            for row in rows:
+                values = ([row.get("official_observed_at"), row.get("published_at")]
+                          if isinstance(row, Mapping) else [])
+                proven = False
+                for value in values:
+                    if value in (None, ""):
+                        continue
+                    try:
+                        stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+                    except ValueError:
+                        continue
+                    if stamp.tzinfo is None or stamp.utcoffset() is None:
+                        continue
+                    proven = True
+                    if stamp > known_by:
+                        late += 1
+                        break
+                if not proven:
+                    unproven += 1
+            if late:
+                diagnostics.append({"artifact_identity": identity, "reason": "NOT_KNOWN_BY_CUTOFF",
+                                    "rows_after_cutoff": late})
+                continue
+            if unproven:
+                diagnostics.append({"artifact_identity": identity,
+                                    "reason": "KNOWN_AT_UNPROVEN_ADMITTED_FOR_WITHHOLDING_ONLY",
+                                    "rows_without_usable_time": unproven, "rows": len(rows)})
             contexts[identity] = acquired.isoformat()
             for row in artifact.get("all_current_universe_event_records") or []:
                 event_type = str(row.get("event_type") or "").upper()
@@ -356,13 +400,25 @@ def retained_official_share_events(evidence_roots: Iterable[Path | str], session
                 events.setdefault(ticker, {}).setdefault(key, {
                     "event_id": key, "event_type": event_type, "ex_date": ex_date,
                     "source": row.get("source"), "first_retained_in_context": acquired.isoformat()})
+    if vsdc_hose_events_enabled:
+        from stocklookup_core.evidence.corporate_action_events import retained_vsdc_share_events
+        try:
+            vsdc = retained_vsdc_share_events(evidence_roots, session_date=session_date, known_by=known_by)
+        except (OSError, ValueError) as exc:
+            raise ShareStoreUnreadable(f"VSDC retained notice unreadable: {exc}") from None
+        diagnostics.extend(vsdc["diagnostics"])
+        for ticker, rows in vsdc["events"].items():
+            for row in rows:
+                events.setdefault(ticker, {}).setdefault(row["event_id"], row)
     return {
-        "status": "APPLIED" if contexts else "NO_RETAINED_OFFICIAL_EVENT_CONTEXT",
+        "status": "APPLIED" if contexts or events else "NO_RETAINED_OFFICIAL_EVENT_CONTEXT",
         "session_date": session.isoformat(),
+        "known_by": known_by.isoformat(),
+        "diagnostics": diagnostics,
         "context_count": len(contexts),
         "context_sessions": sorted(set(contexts.values())),
         "tickers_with_events": len(events),
-        "events": {t: sorted(rows.values(), key=lambda r: (r["ex_date"] or "", r["event_id"]))
+        "events": {t: sorted(rows.values(), key=lambda r: (r.get("ex_date") or "", r["event_id"]))
                    for t, rows in sorted(events.items())},
     }
 
@@ -497,7 +553,7 @@ def resolve_effective_shares(ticker: str, runtime_root: Path | str, session_date
     anchor = store.anchors.get(t)
     shares, updated = store.metadata.get(t, (None, None))
     observed_on = _as_date(updated)
-    events = store.events.get(t, [])
+    events = store.events.get(t, []) + store.provider_staleness_events.get(t, [])
     coverage = store.ledger_coverage.get(t, "absent")
 
     official: dict[str, Any] | None = None
@@ -595,6 +651,7 @@ def resolve_effective_shares(ticker: str, runtime_root: Path | str, session_date
 def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
                                official_events: Mapping[str, Sequence[Mapping[str, Any]]] | None = None,
                                exchange_observations: Mapping[str, Mapping[str, Any]] | None = None,
+                               known_by: datetime | None = None,
                                ) -> dict[str, Any]:
     """Authority counts across the retained active universe, for a stated session.
 
@@ -609,6 +666,8 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
     if not _as_date(session):
         raise ValueError(f"session_date must be an ISO date, got {session_date!r}")
 
+    if known_by is not None and (known_by.tzinfo is None or known_by.utcoffset() is None):
+        raise ValueError("OFFICIAL_EVENT_KNOWN_BY_REQUIRES_TIMEZONE")
     measured_at = vn_now_iso()
     try:
         store = _Store(runtime_root)
@@ -625,12 +684,36 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
         }
 
     applied = 0
+    prototype_evidence: dict[str, list[dict[str, Any]]] = {}
+    registrations: dict[str, list[dict[str, Any]]] = {}
     for ticker, rows in (official_events or {}).items():
         for row in rows:
+            if row.get("source") == "vsdc_retained_registration_prototype/v1":
+                if known_by is None:
+                    raise ValueError("VSDC_REGISTRATION_KNOWN_BY_REQUIRED")
+                published = datetime.fromisoformat(row["published_at"])
+                if published.tzinfo is None or published.utcoffset() is None:
+                    raise ValueError("VSDC_REGISTRATION_KNOWLEDGE_TIME_UNPROVEN")
+                if published <= known_by:
+                    registrations.setdefault(str(ticker).upper(), []).append(dict(row))
+                continue
+            event_store = store.events
             exright = _as_date(row.get("ex_date"))
+            if row.get("source") == "vsdc_retained_notice_prototype/v1":
+                inference = row.get("withholding_date_inference") or {}
+                if inference.get("classification") != "INFERENCE" or inference.get("method") != "RECORD_DATE_ENTITLEMENT_UPPER_BOUND":
+                    continue
+                exright = _as_date(inference.get("date"))
+                if exright is None or exright > _as_date(session):
+                    continue
+                event_store = store.provider_staleness_events
+                prototype_evidence.setdefault(str(ticker).upper(), []).append({
+                    "notice_url": row.get("source_url"), "content_sha256": row.get("content_sha256"),
+                    "retrieved_at": row.get("retrieved_at"), "withholding_date_inference": inference,
+                    "used_as_share_count": False, "effective_share_count_proven": False})
             if exright is not None and exright > _as_date(session):
                 continue
-            store.events.setdefault(str(ticker).upper(), []).append({
+            event_store.setdefault(str(ticker).upper(), []).append({
                 "event_code": "OFFICIAL_" + str(row.get("event_type") or "SHARE_EVENT").upper(),
                 "event_class": "share_changing",
                 "exright_date": exright,
@@ -643,6 +726,28 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
     counts: dict[str, int] = {}
     for t in store.universe():
         result = resolve_effective_shares(t, runtime_root, session, store=store)
+        if t in prototype_evidence:
+            result["official_share_event_evidence"] = prototype_evidence[t]
+            observed = _as_date(store.metadata.get(t, (None, None))[1])
+            relevant = [e for e in prototype_evidence[t] if observed is not None
+                        and _as_date(e["withholding_date_inference"]["date"]) > observed]
+            if result["authority"] == "provider_reported_stale" and relevant:
+                result["reason"] = "vsdc_entitlement_notice_after_provider_observation:" + relevant[0]["notice_url"]
+        observed = _as_date(store.metadata.get(t, (None, None))[1])
+        eligible = [r for r in registrations.get(t, []) if observed is not None
+                    and datetime.fromisoformat(r["published_at"]).date() > observed]
+        if eligible and result["authority"] != "qualified_official":
+            latest = max(r["published_at"] for r in eligible)
+            candidates = [r for r in eligible if r["published_at"] == latest]
+            if len({(r["isin"], r["shares_after"]) for r in candidates}) != 1:
+                raise ValueError("VSDC_REGISTRATION_CONFLICTING_COUNTS")
+            record = candidates[0]
+            result = _result(t, session, "official_registered_shares", value=record["shares_after"],
+                             status="dated_official_registration", share_concept="ISSUED_SHARES",
+                             unit="shares", source="vsdc_retained_registration_prototype/v1",
+                             observation_date=record["published_at"], provider_observation_date=observed.isoformat(),
+                             isin=record["isin"], official_registration_evidence=record,
+                             freshness_proof="DATED_REGISTERED_COUNT_NOT_CURRENT_OUTSTANDING_CONTINUITY")
         tickers[t] = result
         authority = str(result["authority"])
         counts[authority] = counts.get(authority, 0) + 1
@@ -661,6 +766,7 @@ def resolve_market_wide_shares(runtime_root: Path | str, session_date: str, *,
         "counts_reconcile": sum(counts.values()) == universe,
         "official_anchors_retained": len(store.anchors),
         "ledger_tickers_covered": len(store.events),
+        **({"known_by": known_by.isoformat()} if known_by is not None else {}),
         "official_share_events_applied": applied,
         "exchange_share_witnesses": len(store.exchange_shares),
         "tickers": tickers,

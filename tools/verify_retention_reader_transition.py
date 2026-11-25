@@ -186,6 +186,78 @@ OBSERVER_RESIDENT_RELEASE_PRIOR = "c03249a02f056136f7d4c0e7cef6e3fd1513425175961
 E4_V2_DIGEST = "5f5229a90fc24f8728ce48a6f50f804f2fc8fddc33e473bc7003268092173576"
 
 
+OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST = "tests/fixtures/official_source_registry_vsdc_flag_source_transition_v1.json"
+OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE = "config/official_source_registry.json"
+OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE = (
+    "tests/fixtures/official_source_registry_vsdc_flag_v1_sources/config/official_source_registry.json.txt"
+)
+OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_BASE = "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc"
+OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SCOPE = "OFFICIAL_SOURCE_REGISTRY_DEFAULT_OFF_VSDC_PROTOTYPE_FLAG_ONLY"
+OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE = b'  "feature_flags": {"vsdc_hose_share_staleness_prototype": false},\n'
+
+
+def _official_source_registry_vsdc_flag_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel the single default-OFF VSDC prototype flag line from official_source_registry.json."""
+    manifest = root / OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST
+    if relative != OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority",
+                      "source_path", "archive", "prior_sha256_lf", "active_sha256_lf"}
+            or spec.get("contract_version") != "official_source_registry_vsdc_flag_source_transition/v1"
+            or spec.get("base_commit") != OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_BASE
+            or spec.get("scope") != OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("source_path") != OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE
+            or spec.get("archive") != OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE):
+        raise ValueError("OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    prior_sha = hashlib.sha256(prior).hexdigest()
+    active_sha = hashlib.sha256(active).hexdigest()
+    if (spec.get("prior_sha256_lf") != prior_sha or spec.get("active_sha256_lf") != active_sha
+            or prior_sha == active_sha
+            or active.count(OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE) != 1
+            or active.replace(OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE, b"", 1) != prior):
+        raise ValueError("OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST = "tests/fixtures/vsdc_valuation_parent_pe_successor_transition_v1.json"
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE = "stocklookup_core/valuation/market_wide_current_valuation_input_scaleout.py"
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_BASE = "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc"
+VSDC_VALUATION_PARENT_PE_SUCCESSOR_SCOPE = "VSDC_REGISTERED_SHARES_VALUATION_ELIGIBILITY_FLAG_OFF_SUCCESSOR_ONLY"
+
+
+def _vsdc_valuation_parent_pe_successor_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel PR #284's default-OFF VSDC registered-share additions back to e31e560b parent-PE bytes."""
+    manifest = root / VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST
+    if relative != VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    hunks = spec.get("inserted_hunks_lf")
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority",
+                      "source_path", "prior_sha256_lf", "active_sha256_lf", "inserted_hunks_lf"}
+            or spec.get("contract_version") != "vsdc_valuation_parent_pe_successor_transition/v1"
+            or spec.get("base_commit") != VSDC_VALUATION_PARENT_PE_SUCCESSOR_BASE
+            or spec.get("scope") != VSDC_VALUATION_PARENT_PE_SUCCESSOR_SCOPE
+            or spec.get("release_authority") != "NOT_GRANTED"
+            or spec.get("source_path") != VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE
+            or not isinstance(hunks, list) or not hunks or not all(isinstance(h, str) and h for h in hunks)):
+        raise ValueError("VSDC_VALUATION_PARENT_PE_SUCCESSOR_SCOPE_INVALID")
+    if hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]:
+        return active
+    peeled = active
+    for hunk in hunks:
+        hunk_bytes = hunk.encode("utf-8")
+        if peeled.count(hunk_bytes) != 1:
+            raise ValueError("VSDC_VALUATION_PARENT_PE_SUCCESSOR_BINDING_INVALID")
+        peeled = peeled.replace(hunk_bytes, b"", 1)
+    if (hashlib.sha256(peeled).hexdigest() != spec["prior_sha256_lf"]
+            or spec["prior_sha256_lf"] == spec["active_sha256_lf"]):
+        raise ValueError("VSDC_VALUATION_PARENT_PE_SUCCESSOR_BINDING_INVALID")
+    return peeled
+
+
 PARENT_PE_MANIFEST = "tests/fixtures/parent_attributable_pe_source_transition_v1.json"
 PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.py",
                      "stocklookup_core/decision/integrated_investment_decision_product.py",
@@ -196,6 +268,7 @@ PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.
 
 def _parent_pe_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact Owner Decision 1 source successor; historical receipts remain frozen."""
+    active = _vsdc_valuation_parent_pe_successor_prior_bytes(root, relative, active)
     manifest = root / PARENT_PE_MANIFEST
     if relative not in PARENT_PE_SOURCES or not manifest.is_file():
         return active
@@ -1330,6 +1403,7 @@ def _decision_context_prior_bytes(root: Path, relative: str, active: bytes) -> b
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _official_source_registry_vsdc_flag_prior_bytes(root, relative, content)
     content = _tplus_retry_integrity_prior_bytes(root, relative, content)
     if relative == TACTICAL_SHADOW_PIPELINE:
         content = _tactical_shadow_prior_bytes(root, relative, content)
@@ -1543,6 +1617,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         parent_pe = json.loads(parent_pe_manifest.read_bytes())
         for relative in PARENT_PE_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _vsdc_valuation_parent_pe_successor_prior_bytes(root, relative, live)
             if hashlib.sha256(live).hexdigest() != parent_pe["sources"][relative]["active_sha256_lf"]:
                 raise ValueError("PARENT_PE_SOURCE_TRANSITION_BINDING_INVALID")
             _parent_pe_prior_bytes(root, relative, live)

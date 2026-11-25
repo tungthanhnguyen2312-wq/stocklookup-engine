@@ -33,6 +33,7 @@ OFFICIAL_CURRENT_STATUSES = frozenset({
     "OFFICIAL_CURRENT_STOCK_LIST_CANDIDATE",
 })
 SHARE_STATUS_BY_AUTHORITY = {
+    "official_registered_shares": "OFFICIAL_REGISTERED_SHARES",
     "qualified_official": "QUALIFIED_OFFICIAL",
     "qualified_current_common_shares": "QUALIFIED_CURRENT_COMMON_SHARES",
     "qualified_official_anchor_not_current": "QUALIFIED_OFFICIAL_ANCHOR_NOT_CURRENT",
@@ -48,6 +49,10 @@ SHARE_STATUS_BY_AUTHORITY = {
     "unavailable": "UNAVAILABLE",
     "unresolved_error": "UNRESOLVED_ERROR",
 }
+VSDC_REGISTERED_LIMITATIONS = (
+    "VSDC registered securities count includes treasury shares; it is not outstanding "
+    "ex-treasury shares and the notice publication date is not a listing effective date."
+)
 RESEARCH_SHARE_AUTHORITIES = frozenset({
     "qualified_official",
     "qualified_current_common_shares",
@@ -187,6 +192,25 @@ def compact_official_share_observation(record: Mapping[str, Any]) -> dict[str, A
 
 def _share_from_resolver(resolved: Mapping[str, Any], authoritative: Mapping[str, Any] | None) -> dict[str, Any]:
     authority = str(resolved.get("authority") or "unavailable")
+    if authority == "official_registered_shares":
+        # Owner-approved current research basis, never current common outstanding.
+        evidence = resolved.get("official_registration_evidence") or {}
+        return {
+            "status": "OFFICIAL_REGISTERED_SHARES",
+            "authority": authority,
+            "value": resolved.get("value"),
+            "share_concept": "ISSUED_SHARES",
+            "share_basis": "VSDC_REGISTERED_SHARES",
+            "source_artifact_identity": resolved.get("source") or resolved.get("resolver_version"),
+            "freshness": str(resolved.get("status") or authority),
+            "observation_date": evidence.get("published_at"),
+            "observation_lag_days": resolved.get("observation_lag_days"),
+            "authoritative_current_market_cap_eligible": False,
+            "research_proxy_eligible": resolved.get("value") is not None,
+            "limitations": [VSDC_REGISTERED_LIMITATIONS],
+            "blocked_reasons": ["CURRENT_COMMON_OUTSTANDING_COVERAGE_NOT_PROVEN_THROUGH_PRICE_SESSION"],
+            "retained_evidence": dict(resolved),
+        }
     status = SHARE_STATUS_BY_AUTHORITY.get(authority, "UNAVAILABLE")
     share_concept = resolved.get("share_concept") or (
         "current_common_shares_outstanding" if authority == "qualified_official" else
@@ -453,10 +477,20 @@ def _metric_shell(metric: str, *, status: str, applicability: str, value: Any = 
     }
     if extra:
         row.update(dict(extra))
+    identities = row.get("input_identities") or {}
+    if identities.get("share_authority_tier") == "OFFICIAL_REGISTERED_SHARES":
+        row.update({
+            "share_concept": "ISSUED_SHARES", "share_basis": "VSDC_REGISTERED_SHARES",
+            "share_authority_tier": "OFFICIAL_REGISTERED_SHARES",
+            "observation_date": identities.get("share_observation_date"),
+            "limitations": [VSDC_REGISTERED_LIMITATIONS],
+        })
     if status == "RESEARCH_USABLE":
         labels = list(RESEARCH_LABELS)
         if extra and extra.get("share_identity") == issued_share_proxy.SEMANTIC_IDENTITY:
             labels.append("NOT_COMMON_OUTSTANDING_SHARE_BASIS")
+        if row.get("share_basis") == "VSDC_REGISTERED_SHARES":
+            labels.extend(["VSDC_REGISTERED_SHARES", "NOT_COMMON_OUTSTANDING_SHARE_BASIS"])
         row["labels"] = labels
         row["allowed_uses"] = ["CURRENT_RESEARCH_ONLY"]
         row["forbidden_uses"] = [
@@ -478,6 +512,9 @@ def _input_identities(metric: str, entity: str, share: Mapping[str, Any]) -> dic
         "weighted_average_shares_not_used_as_current_outstanding": True,
         "liabilities_not_aliased_to_interest_bearing_debt": True,
     }
+    if share.get("authority") == "official_registered_shares":
+        identities["share_basis"] = "VSDC_REGISTERED_SHARES"
+        identities["share_observation_date"] = share.get("observation_date")
     if metric == "P/E":
         identities["earnings"] = EARNINGS_IDENTITY_BY_ENTITY.get(entity)
         identities["parent_attributable_vs_total_earnings_kept_distinct"] = True

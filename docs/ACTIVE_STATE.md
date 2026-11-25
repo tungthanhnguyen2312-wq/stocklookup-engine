@@ -29,11 +29,8 @@ Release `a9c799397a74641a0e16c8ea84454d2dc4d0745b`: PR146; post-merge CI38512024
 Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLOCKED**, **DEFERRED**, **HISTORICAL**.
 
 ## 1. The operational gate
-- **LOCAL, unreleased — Owner Decision 1 (2026-11-24), `HL-20261124-HOL-06`:**
-  [parent-attributable headline P/E](current_state_relative_valuation_contract.md)
-  implementation with total-profit supplementary context. Supplied November 23
-  retained-input replay: 5 headlines → 0 of 1,683 evaluated names; upstream
-  annual parent panel absent locally. [Evidence and gaps](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md).
+- **LOCAL, unreleased — Owner Decision 1 (2026-11-24), `HL-20261124-HOL-06`:** [parent-attributable headline P/E](current_state_relative_valuation_contract.md) implementation with total-profit supplementary context. Supplied November 23 retained-input replay: 5 headlines → 0 of 1,683 evaluated names; upstream annual parent panel absent locally. [Evidence and gaps](internal/PARENT_ATTRIBUTABLE_HEADLINE_PE_20261124.md).
+- **LOCAL PR #284 (`HL-20261124-HOL-01`, `HL-20261124-HOL-04`, `HL-20261124-HOL-05`, `HL-20261124-HOL-09`):** retained official share events require explicit aware `known_by` (live CLI: recorded run clock; replay: historical cutoff), excluding only proven-late rows; untimed rows stay admitted for withholding with `KNOWN_AT_UNPROVEN_ADMITTED_FOR_WITHHOLDING_ONLY` (excluding them is fail-open; 2026-11-23 output matches main). Owner decision 2026-11-24 admits VSDC registered-securities counts and share-changing events market-wide where supported; `official_source_registry.json` prototype flag stays OFF. Record-date upper bounds (BMI fixture `tests/fixtures/vsdc_notices/bmi_202076_retained_20261124.html`) are withholding-only; registration-change notices (`corporate_action_notice`, 4 fixture hashes verified, absent venue `UNKNOWN`) parse `ISSUED_SHARES` with literal reason and second-precision `Asia/Ho_Chi_Minh` publication time, supplying `official_registered_shares` when enabled with exact ticker/ISIN link to a retained VSDC HOSE notice and known by cutoff after provider observation. [Finite operator notice retention](official_document_acquisition_pilot.md#vsdc-finite-operator-notice-scope-hl-20261124-hol-05) supports exact VSDC URLs beyond the financial cohort (registry gates/manifest fixed; offline OFF/ON replay may show `BLOCKED` without a registered-share valuation tier; real downloads/full-market replay pending). [Body completeness/repair](official_document_acquisition_pilot.md#body-completeness-and-append-only-repair-hl-20261124-hol-09) refuses body-less HTTP 200 shells, appends superseding receipts, selects latest complete linked version and diagnoses preserved shells (re-fetch/replay of 3 reported shells pending). No outstanding-ex-treasury, continuity, effective-date, valuation-use, PIT, price-factor, Daily, source-admission or production promotion; no production evidence changed.
 - [Shareholder/dilution](corporate_shareholder_economics_research_v1_contract.md): share-note scaleout LOCAL COMPLETE; OFFLINE/NON_VOTING; strict gates unchanged.
 - **Non-voting prior-period research:** [pairing contract](official_prior_period_pairing_daily_frozen_source_transition_v1_contract.md) and [reviewed HPG, PNJ and FPT comparisons](internal/FABLE_FULL_SYSTEM_TRANSFORMATION_HANDOFF_20261115.md).
 - **[Native releases](parallel_domain_development_control_plane_v1_contract.md):** declaration correction; explicit coupled source review.
@@ -48,14 +45,9 @@ Kinds: **CURRENT FACT** (verified), **HOST-LOCAL** (untracked; re-verify), **BLO
 - **COMPLETE — [E1 evidence move](e1_official_exchange_evidence_package_migration_contract.md):** 13 modules to `stocklookup_core/evidence/`; no shim, Daily or authority change.
 - **COMPLETE — [E0](stocklookup_architecture_dependency_ratchet_and_daily_launch_guard_v1_contract.md):** PR123 `56cdc36`. [CI extension](CI_AND_DEPENDENCY_TIERS.md): G2/business/quarterly mandatory; 367 files nonblocking; release via native lanes.
 - **COMPLETE — [Action Center cases](action_center_opportunity_cost_cases_consumer_v1_contract.md):** PR119, four post-merge jobs PASS (38105025004); offline/non-voting.
-- **COMPLETE — [capacity Phase 1](capacity_recovery_phase1_contract.md):** PR99 merged
-  `168e0f7`, post-merge CI 37893984528 success; zero production reclaim/activation.
-- **COMPLETE — Vault V1:** PR97 merged `3f3d4fe`; offline/opt-in, 77 candidates,
-  zero deletion authority; C retention/runtime recovery still gated. Queue empty.
-  [Contract](vault_incremental_snapshot_contract.md); session emitter offline/opt-in.
-- **Economics research:** PR96 matrix / PR117 [packet](company_economics_research_packet_consumer_v1_contract.md).
-  Quality bridge LOCAL COMPLETE: offline/opt-in/non-voting; profit vs cash/components,
-  denominator limits and thesis tests. No normalized EPS, strict valuation or Daily change.
+- **COMPLETE — [capacity Phase 1](capacity_recovery_phase1_contract.md):** PR99 merged `168e0f7`, post-merge CI 37893984528 success; zero production reclaim/activation.
+- **COMPLETE — Vault V1:** PR97 merged `3f3d4fe`; offline/opt-in, 77 candidates, zero deletion authority; C retention/runtime recovery still gated. Queue empty. [Contract](vault_incremental_snapshot_contract.md); session emitter offline/opt-in.
+- **Economics research:** PR96 matrix / PR117 [packet](company_economics_research_packet_consumer_v1_contract.md). Quality bridge LOCAL COMPLETE: offline/opt-in/non-voting; profit vs cash/components, denominator limits and thesis tests. No normalized EPS, strict valuation or Daily change.
 - **HOST-LOCAL — October 8 Owner Daily completed; Macro live acceptance independently verified:**
   `MACRO_REGIME_20261008_LIVE_ACCEPTED`. Operation
   `daily_research_session_operation:537cda6b2e7085d1461d925c7f342cf5e870feca41abb6d5ecaccd71f7262a98`,

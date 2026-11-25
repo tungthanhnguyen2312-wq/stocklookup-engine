@@ -116,11 +116,16 @@ def materialize(output: Path = DEFAULT_OUTPUT, *, price: Path,
     # observed before their ex-date. The governed roots are the ones Daily binds before any phase.
     from datetime import datetime, timezone
     roots = governed_evidence_roots(ROOT) if official_event_roots is None else official_event_roots
-    official = retained_official_share_events(roots, session)
+    if known_by is None:
+        raise ValueError("VALUATION_KNOWN_BY_REQUIRED_FOR_REPLAY")
+    from stocklookup_core.evidence.official_source_registry import load_registry
+    vsdc_enabled = load_registry().get("feature_flags", {}).get("vsdc_hose_share_staleness_prototype") is True
+    official = retained_official_share_events(roots, session, known_by=known_by,
+                                             vsdc_hose_events_enabled=vsdc_enabled)
     # A first-party exchange share observation already retained and known now is a witness only.
-    exchange = retained_exchange_share_observations(roots, session, known_by=known_by or datetime.now(timezone.utc))
+    exchange = retained_exchange_share_observations(roots, session, known_by=known_by)
     safety = resolve_market_wide_shares(runtime_root, session, official_events=official["events"],
-                                        exchange_observations=exchange["observations"])
+                                        exchange_observations=exchange["observations"], known_by=known_by)
     if safety.get("status") != "measured" or not safety.get("counts_reconcile"):
         raise ValueError("RETAINED_SHARE_INVENTORY_UNREADABLE_OR_NONRECONCILING")
     artifact = build_current_valuation_artifact(
@@ -140,7 +145,7 @@ def materialize(output: Path = DEFAULT_OUTPUT, *, price: Path,
         "usable_positive_observations": safety["usable_share_value_count"],
         "authority_counts": safety["counts"], "session": session,
         "official_share_event_ledger": {key: official[key] for key in (
-            "status", "context_count", "context_sessions", "tickers_with_events")}
+            "status", "context_count", "context_sessions", "tickers_with_events", "known_by", "diagnostics")}
         | {"events_applied": safety.get("official_share_events_applied", 0),
            "source_contract": "current_official_event_context/v1",
            "effect": "PROVIDER_COUNT_WITHHELD_AS_STALE_NEVER_ADJUSTED"},
@@ -172,11 +177,14 @@ def main() -> None:
     parser.add_argument("--shares", type=Path, default=DEFAULT_SHARES)
     parser.add_argument("--p3e", type=Path, default=DEFAULT_P3E)
     parser.add_argument("--official-universe", type=Path, default=DEFAULT_OFFICIAL_UNIVERSE)
+    parser.add_argument("--known-by", help="Aware historical run cutoff; omitted only for a live run.")
     args = parser.parse_args()
+    from datetime import datetime, timezone
+    cutoff = datetime.fromisoformat(args.known_by.replace("Z", "+00:00")) if args.known_by else datetime.now(timezone.utc)
     artifact = materialize(
         args.output, runtime_root=args.runtime_root, price=args.price, fundamental=args.fundamental,
         shares=args.shares, p3e=args.p3e, official_universe=args.official_universe, report=args.report,
-        expected_session=args.expected_session,
+        expected_session=args.expected_session, known_by=cutoff,
     )
     print(json.dumps({
         "artifact_identity": artifact["artifact_identity"],

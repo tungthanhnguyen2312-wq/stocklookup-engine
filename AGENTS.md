@@ -123,44 +123,24 @@ not competing current authority.
 
 ## AI context hygiene
 
-To minimize AI context waste and maintain repository cleanliness:
-
-- **No recursive `operations-review/` scan:** Do not recursively scan `operations-review/` by default.
-- **Exact evidence paths only:** Read exact evidence paths only when the task requires them.
-- **Source placement:** New implementation belongs in `stocklookup_core/`, reusable tools in `tools/`; no root helpers. CI enforces `config/repository_layout.json`; root exceptions need a reviewed compatibility reason.
-- **Temporary helpers:** Place temporary helpers outside the repository or in `.stocklookup/scratch/`.
-- **Reusable tools:** Reusable runners and developer tools belong in `tools/`.
-- **Single production entrypoint:** Do not create a new production entrypoint; `stocklookup.ps1 daily` remains the owner entrypoint.
-- **No blanket scans:** Do not scan all handoffs, decisions, or tests for a bounded milestone; use [`docs/SYSTEM_MAP.md`](docs/SYSTEM_MAP.md) for navigation.
-- **Edit over proliferate:** Prefer editing an existing capability module over creating a sibling module unless a distinct contract boundary genuinely exists.
+- **No recursive `operations-review/` scan** by default; read **exact evidence paths only** when required.
+- **Source placement:** implementation in `stocklookup_core/`, reusable tools in `tools/`; no root helpers. CI enforces `config/repository_layout.json`; root exceptions need a reviewed compatibility reason.
+- **Temporary helpers:** outside repo or in `.stocklookup/scratch/`.
+- **Single production entrypoint:** `stocklookup.ps1 daily` remains the only owner entrypoint.
+- **No blanket scans:** use [`docs/SYSTEM_MAP.md`](docs/SYSTEM_MAP.md) rather than scanning all handoffs/decisions/tests.
+- **Edit over proliferate:** edit an existing capability module unless a distinct contract boundary exists.
 
 ## Repository boundaries
 
 ### First-party source-route qualification
 
-Classify each source surface by its explicit role (for example, universe
-enumeration, lookup, issuer detail, disclosure index, event calendar,
-attachment, or bulk download) before drawing a capability conclusion. Inspect
-bounded adjacent first-party surfaces before closing a source family. Retain
-broadly supported raw observations with their route provenance, then resolve
-and promote each use-case authority fail-closed; a search/autocomplete helper
-is never universe-enumeration evidence. Exact upstream parent metadata may
-establish provenance only through an exact linkage. A source closure must name
-the sibling surfaces checked and the specific evidence that would reopen it.
+Classify each source surface by role (universe enumeration, lookup, issuer detail, disclosure index, event calendar, attachment, bulk download) before concluding. Inspect bounded adjacent first-party surfaces before closing a source family. Retain supported raw observations with route provenance, then resolve/promote each use-case authority fail-closed; search/autocomplete is never universe-enumeration evidence. Upstream parent metadata proves provenance only via exact linkage. Closures name sibling surfaces checked and reopening evidence.
 
-Codex is the executor. Producer owns raw-source contracts, canonicalization, and artifact
-authority. For a cross-repository task, read the directly applicable sibling repository guardrail
-and the Producer active set (`docs/ACTIVE_STATE.md` plus the contract the task names); do not reconstruct
-project truth from chat memory or old handoffs.
+Codex is the executor. Producer owns raw-source contracts, canonicalization, and artifact authority. For cross-repo tasks, read the sibling guardrail and Producer active set (`docs/ACTIVE_STATE.md` + named contract); never reconstruct truth from chat memory or old handoffs.
 
-- Work only inside this repository unless the task explicitly names another workspace location.
-- Use `STOCK_LOOKUP_RUNTIME_ROOT` for runtime data; do not infer or hard-code a runtime path.
-- Keep repository documentation portable, with relative repository links only. Put machine-specific procedures in local operator documentation.
-- Do not edit databases, generated artifacts, backups, credentials, or deploy outputs unless explicitly requested.
-- Preserve raw observations and provenance when semantics are unknown; mark the affected
-  field/feature `UNKNOWN` and fail closed only where that semantic is required.
-- Do not add a market-data provider without an explicit owner decision. DNSE/Livespeed is the
-  current direction; EODHD remains rejected.
-- Do not start a later milestone merely because the current one is ready. Owner authorization is
-  still required.
-- Detailed agent context, internal validation narratives, and workspace audit records are consolidated in [`docs/internal/`](docs/internal/); historical decision archives reside in [`docs/archive/decisions/`](docs/archive/decisions/).
+- Work only inside this repo unless explicitly given another workspace; use `STOCK_LOOKUP_RUNTIME_ROOT` (never hard-code runtime paths).
+- Keep repo docs portable (relative links only); machine-specific steps go in local operator docs.
+- Never edit databases, generated artifacts, backups, credentials, or deploy outputs unless requested.
+- Preserve raw observations/provenance when semantics are unknown; mark `UNKNOWN` and fail closed only where required.
+- No new market-data provider without owner decision (DNSE/Livespeed primary; EODHD rejected); no auto-starting later milestones without Owner authorization.
+- Internal records: [`docs/internal/`](docs/internal/); decision archives: [`docs/archive/decisions/`](docs/archive/decisions/).

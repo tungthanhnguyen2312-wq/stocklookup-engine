@@ -56,3 +56,30 @@ def test_parent_pe_transition_rejects_tampering(tmp_path, tamper):
     manifest.write_text(json.dumps(spec), encoding="utf-8")
     with pytest.raises(ValueError, match="PARENT_PE_SOURCE_TRANSITION"):
         _parent_pe_prior_bytes(tmp_path, relative, (ROOT / relative).read_bytes().replace(b"\r\n", b"\n"))
+
+
+@pytest.mark.parametrize("tamper", ["scope", "forged_prior", "missing_hunk"])
+def test_vsdc_valuation_parent_pe_successor_binds_and_rejects_tampering(tmp_path, tamper):
+    from tools.verify_retention_reader_transition import (
+        VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST,
+        VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE,
+        _vsdc_valuation_parent_pe_successor_prior_bytes,
+    )
+    spec = json.loads((ROOT / VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST).read_bytes())
+    live = (ROOT / VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    e31 = subprocess.check_output(
+        ["git", "show", spec["base_commit"] + ":" + VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE], cwd=ROOT
+    ).replace(b"\r\n", b"\n")
+    assert _vsdc_valuation_parent_pe_successor_prior_bytes(ROOT, VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE, live) == e31
+    assert _vsdc_valuation_parent_pe_successor_prior_bytes(ROOT, VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE, e31) == e31
+    if tamper == "scope":
+        spec["scope"] = "EXPANDED"
+    elif tamper == "forged_prior":
+        spec["prior_sha256_lf"] = "0" * 64
+    else:
+        spec["inserted_hunks_lf"] = spec["inserted_hunks_lf"][:-1]
+    manifest = tmp_path / VSDC_VALUATION_PARENT_PE_SUCCESSOR_MANIFEST
+    manifest.parent.mkdir(parents=True, exist_ok=True)
+    manifest.write_text(json.dumps(spec), encoding="utf-8")
+    with pytest.raises(ValueError, match="VSDC_VALUATION_PARENT_PE_SUCCESSOR_"):
+        _vsdc_valuation_parent_pe_successor_prior_bytes(tmp_path, VSDC_VALUATION_PARENT_PE_SUCCESSOR_SOURCE, live)

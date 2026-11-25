@@ -1,0 +1,10 @@
+{
+  "contract_version": "official_source_registry_vsdc_flag_source_transition/v1",
+  "base_commit": "e31e560b12612ae4898f9f6ab3e1cb4a620bc3bc",
+  "scope": "OFFICIAL_SOURCE_REGISTRY_DEFAULT_OFF_VSDC_PROTOTYPE_FLAG_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "source_path": "config/official_source_registry.json",
+  "archive": "tests/fixtures/official_source_registry_vsdc_flag_v1_sources/config/official_source_registry.json.txt",
+  "prior_sha256_lf": "422f3a805242d377f7f4faf03d26e6f49d55c4cba0185e49c069203219180ba4",
+  "active_sha256_lf": "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4"
+}

@@ -11,6 +11,7 @@ import hashlib
 import json
 import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -160,7 +161,7 @@ def run(*, runtime_root: Path, output_dir: Path, session: str = PRIMARY_SESSION)
 
     raw_path = output_dir / "primary_20260904_raw_valuation_artifact.json"
     raw = materialize(
-        raw_path, runtime_root=runtime_root, price=snapshot_path, expected_session=session,
+        raw_path, known_by=datetime.fromisoformat(requested_at), runtime_root=runtime_root, price=snapshot_path, expected_session=session,
         report=output_dir / "primary_20260904_raw_valuation_report.json",
     )
     technical = structure.build_artifact(
