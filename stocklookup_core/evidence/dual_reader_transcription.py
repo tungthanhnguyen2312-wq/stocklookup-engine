@@ -28,6 +28,49 @@ FAMILY_ALIASES = {"openai-gpt": "gpt", "gpt": "gpt", "codex": "gpt",
 _OUTLINE_ENUMERATOR = re.compile(r"^(\d{1,2}(?:\.\d{1,2})*\.?)\s+(?=\S)")
 
 
+def printed_page_identity(literal: Any) -> Any:
+    """Strip one exact 'Trang ' only before ASCII digits; preserve all other bytes."""
+    if isinstance(literal, str) and re.fullmatch(r"Trang [0-9]+", literal):
+        return literal[len("Trang "):]
+    return literal
+
+
+def input_binding_matches(actual: Any, expected: Mapping[str, Any]) -> bool:
+    """Only the printed-page prefix exception applies to a raw input binding."""
+    if not isinstance(actual, Mapping) or actual.keys() != expected.keys():
+        return False
+    return all((printed_page_identity(actual[k]) == printed_page_identity(v)
+                if k == "printed_page" else actual[k] == v) for k, v in expected.items())
+
+
+def form_code_literal(literal: str) -> str:
+    """A trailing circular line is excluded, with exactly one space or LF separator.
+
+    Some retained readers flatten the printed line break to one space. No other
+    separator, circular spelling, suffix or change to the form itself is accepted.
+    """
+    match = re.fullmatch(r"([^\n]+?)[ \n]Thông tư số [0-9]+/[0-9]{4}/TT-BTC", literal)
+    return match.group(1) if match else literal
+
+
+def agreed_vnd_unit(tables, parse_unit) -> dict | None:
+    """Two byte-identical statement-page literals, parsed by the existing unit owner.
+
+    This helper does not prove provenance or qualify metadata; the complete raw
+    proof must still pass verify_dual_reader_transcription before it has authority.
+    """
+    if len(tables) != 2:
+        return None
+    literal = tables[0].get("currency_unit_literal")
+    if not isinstance(literal, str) or not literal or literal != tables[1].get("currency_unit_literal"):
+        return None
+    unit = _unit(literal, parse_unit)
+    if (not unit or unit.get("currency") != "VND" or type(unit.get("unit_scale")) is not int
+            or unit["unit_scale"] <= 0):
+        return None
+    return {**unit, "evidence_text": literal}
+
+
 def split_outline_enumerator(label: str) -> tuple[str | None, str]:
     """Split only a leading numbering-column token; the line item text is kept verbatim.
 
@@ -201,7 +244,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         completion = _time(proof["admission_completed_at"])
         if completion < comparison:
             return fail("TIME_ORDER_INVALID")
-        readings, families, ids, times = [], [], [], []
+        readings, families, ids, times, printed_pages = [], [], [], [], []
         for entry, payload in zip(refs, raws):
             if _sha(payload) != entry["sha256"]:
                 return fail("RAW_HASH_MISMATCH")
@@ -213,14 +256,15 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                     or raw["saw_other_reader_output"] is not False or not raw["reader_id"]):
                 return fail("INDEPENDENCE_NOT_PROVEN")
             binding = raw["input"]
-            if binding != {"document_sha256": sha, "document_id": proof["document_id"],
+            if not input_binding_matches(binding, {"document_sha256": sha, "document_id": proof["document_id"],
                     "image_sha256": image["sha256"], "source_page": page,
-                    "printed_page": image["printed_page"]}:
+                    "printed_page": image["printed_page"]}):
                 return fail("INPUT_BINDING_MISMATCH")
             recorded, retained = _time(raw["recorded_at"]), _time(entry["retained_at"])
             if not (_time(source_record["observed_at"]) <= recorded <= retained < comparison <= completion):
                 return fail("RAW_NOT_RETAINED_BEFORE_COMPARISON")
             families.append(family); ids.append(raw["reader_id"]); times.append(recorded)
+            printed_pages.append(binding["printed_page"])
             readings.append(raw["table"])
         if families[0] == families[1] or ids[0] == ids[1]:
             return fail("DIFFERENT_MODEL_FAMILIES_REQUIRED")
@@ -240,6 +284,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             enumerators.append(enumerator)
             selected[-1].update(column=_column_binding(columns[0], table["period_caption_literal"]),
                                 row_label_literal=label, line_code_literal=rows[0]["line_code_literal"], cell=cells[0])
+        forms = [item["form_reference_literal"] for item in selected]
+        for item in selected:
+            item["form_reference_literal"] = form_code_literal(item["form_reference_literal"])
         labels = [item["column"].pop("label_literal") for item in selected]
         agreed_label, label_normalization = _agreed_column_label(
             labels[0], labels[1], selected[0]["currency_unit_literal"])
@@ -284,7 +331,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         if (agreed["row_label_literal"] != row["raw_row_label"]
                 or agreed["issuer_literal"] != row["issuer_literal"]
                 or agreed["issuer_literal"] != source_record.get("issuer_name")
-                or agreed["form_reference_literal"] != row["form_reference_literal"]
+                or agreed["form_reference_literal"] != form_code_literal(row["form_reference_literal"])
                 or agreed["statement_title_literal"] != row["statement_title_literal"]
                 or column["label_literal"] != row["current_period_label"]
                 or column_period != row["reporting_period"]
@@ -300,7 +347,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             return fail("ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED")
         if cell.get("uncertainty") != []:
             return fail("UNRESOLVED_CELL_UNCERTAINTY")
-        unit = _unit(agreed["currency_unit_literal"], parse_unit)
+        unit = agreed_vnd_unit(readings, parse_unit)
         if (not unit or unit["currency"] != row["currency"]
                 or unit["unit_scale"] != row.get("source_unit_scale", row["unit_scale"])):
             return fail("CURRENCY_UNIT_MISMATCH")
@@ -310,6 +357,12 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or parse_amount(raw) * unit["unit_scale"] != row["normalized_value"]):
             return fail("VALUE_OR_SIGN_MISMATCH")
         normalizations = []
+        if any(form_code_literal(f) != f for f in forms):
+            normalizations.append({"field": "form_reference_literal", "reader_literals": forms,
+                                   "agreed": agreed["form_reference_literal"], "rule": "TRAILING_CIRCULAR_REFERENCE_LINE"})
+        if any(p != image["printed_page"] for p in printed_pages):
+            normalizations.append({"field": "input.printed_page", "reader_literals": printed_pages,
+                                   "agreed": image["printed_page"], "rule": "LEADING_TRANG_PAGE_PREFIX"})
         if label_normalization:
             normalizations.append({"field": "column.label_literal", "column_id": row["column_id"],
                                    "reader_literals": labels, "agreed": agreed_label, "rule": label_normalization})
@@ -322,6 +375,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         return {"valid": True, "reason_codes": [], "knowledge_floor": floor.isoformat(),
                 "evidence_tier": EVIDENCE_TIER, "proof_sha256": ref["proof_sha256"],
                 "raw_sha256": [r["sha256"] for r in refs], "model_families": families,
+                "statement_unit_evidence": {"document_sha256": sha, "source_page": page,
+                    "currency": unit["currency"], "unit_scale": unit["unit_scale"],
+                    "literal": agreed["currency_unit_literal"], "proof_sha256": ref["proof_sha256"]},
                 "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False,
                 **({"literal_normalizations": normalizations} if normalizations else {})}
     except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):

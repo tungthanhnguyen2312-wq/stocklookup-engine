@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from typing import Any, Mapping, Sequence
 
 CONTRACT_VERSION = "official_financial_assurance_evidence/v1"
@@ -29,6 +30,9 @@ _EN_OPINION_ANCHORS = ("in our opinion", "consolidated financial statements",
                        "consolidated financial statements present fairly",
                        "in all material respects", "accounting standards")
 _EN_REVIEW_DISCLAIMER = "do not express an audit opinion"
+_EN_REVIEW_TITLE = ("report", "on", "review", "of", "interim", "financial", "information")
+_EN_REVIEW_ENGAGEMENT = ("review engagements 2410", "review engagement 2410")
+_EN_REVIEW_SCOPE = ("interim consolidated financial information", "interim consolidated financial statements")
 
 
 def _explicit_consolidated_opinion(tokens):
@@ -101,22 +105,31 @@ def resolve_document_assurance_evidence(materialization: Mapping[str, Any]) -> d
         review_title = _title_span(tokens, _REVIEW_TITLE)
         audit_title = _title_span(tokens, _AUDIT_TITLE)
         english_title = _title_span(tokens, _EN_AUDIT_TITLE)
-        if (english_title and not review_title and "we have audited" in text
+        english_review_title = _title_span(tokens, _EN_REVIEW_TITLE)
+        if (english_title and not review_title and not english_review_title and "we have audited" in text
                 and "consolidated financial statements" in text
                 and _EN_REVIEW_DISCLAIMER not in text):
             for opinion_number in (number, number + 1):
                 opinion_page = pages.get(opinion_number) or {}
                 opinion_tokens = (opinion_page.get("ocr_derived_text_evidence") or {}).get("tokens") or []
                 opinion_text = _page_text(opinion_tokens)
-                heading = _title_span(opinion_tokens, _EN_OPINION_TITLE)
+                # POW prints the literal heading "Opinion", immediately followed
+                # by "In our opinion". A prose occurrence of "opinion" is not a heading.
+                pow_heading = _title_span(opinion_tokens, ("opinion", "in", "our", "opinion"))
+                heading = (_title_span(opinion_tokens, _EN_OPINION_TITLE)
+                           or (pow_heading[:1] if pow_heading else None))
+                other_title = _title_span(opinion_tokens, _EN_AUDIT_TITLE)
+                continued_title = _title_span(opinion_tokens, (*_EN_AUDIT_TITLE, "continued"))
                 if (not heading or not all(anchor in opinion_text for anchor in _EN_OPINION_ANCHORS)
                         or assurance_language_is_negative(opinion_text)
                         or _EN_REVIEW_DISCLAIMER in opinion_text
                         or _REVIEW_DISCLAIMER in opinion_text
                         or _title_span(opinion_tokens, _REVIEW_TITLE)
+                        or _title_span(opinion_tokens, _EN_REVIEW_TITLE)
                         or (opinion_number != number and (
-                            (bool(other_title := _title_span(opinion_tokens, _EN_AUDIT_TITLE))
-                             and int(other_title[0].get("raw_token_order", 0)) < int(heading[0].get("raw_token_order", 0)))
+                            (bool(other_title)
+                             and int(other_title[0].get("raw_token_order", 0)) < int(heading[0].get("raw_token_order", 0))
+                             and not (continued_title and continued_title[:len(_EN_AUDIT_TITLE)] == other_title))
                             or _title_span(opinion_tokens, _AUDIT_TITLE)))):
                     continue
                 audited.append({"page_number": number, "title_tokens": english_title,
@@ -127,6 +140,18 @@ def resolve_document_assurance_evidence(materialization: Mapping[str, Any]) -> d
                         "rendered_image_sha256": (opinion_page.get("source_image_evidence") or {}).get("rendered_image_sha256"),
                         "page_text_sha256": _hash(opinion_text)}})
                 break
+        if english_review_title and not audit_title and not english_title:
+            engagement = [phrase for phrase in _EN_REVIEW_ENGAGEMENT
+                          if re.search(r"\b" + re.escape(phrase) + r"\b", text)]
+            scope = [phrase for phrase in _EN_REVIEW_SCOPE
+                     if re.search(r"\b" + re.escape(phrase) + r"\b", text)]
+            if engagement and scope:
+                anchors = ["report on review of interim financial information", *engagement,
+                           *scope]
+                if _EN_REVIEW_DISCLAIMER in text:
+                    anchors.append(_EN_REVIEW_DISCLAIMER)
+                reviewed.append({"page_number": number, "title_tokens": english_review_title,
+                                 "anchors": anchors, "text": text, "page": page})
         if review_title and not audit_title:
             engagement = [phrase for phrase in _REVIEW_ENGAGEMENT if phrase in text]
             if engagement and "hop nhat" in text and "giua nien do" in text:

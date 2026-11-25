@@ -12,6 +12,60 @@ from financial_evidence_currency_refresh import PUBLIC_FACTS, PUBLIC_PRECEDENCE
 TITLE = "BÁO CÁO KIỂM TOÁN ĐỘC LẬP báo cáo tài chính hợp nhất"
 OPINION = "Ý kiến của Kiểm toán viên báo cáo tài chính hợp nhất đã phản ánh trung thực trên các khía cạnh trọng yếu theo chuẩn mực Việt Nam"
 
+EN_TITLE = "INDEPENDENT AUDITORS' REPORT We have audited the consolidated financial statements"
+EN_OPINION = ("Opinion In our opinion the consolidated financial statements present fairly "
+              "in all material respects in accordance with Vietnamese Accounting Standards")
+EN_REVIEW = ("REPORT ON REVIEW OF INTERIM FINANCIAL INFORMATION "
+             "We have reviewed the interim consolidated financial information in accordance with "
+             "Standard on Review Engagements 2410. We do not express an audit opinion")
+
+
+@pytest.mark.parametrize("texts,status", [((EN_TITLE + " " + EN_OPINION,), "audited"),
+    ((EN_TITLE, EN_OPINION), "audited"),
+    ((EN_TITLE, "INDEPENDENT AUDITORS' REPORT (Continued) " + EN_OPINION), "audited"),
+    ((EN_REVIEW,), "reviewed"),
+    ((EN_REVIEW.replace("interim consolidated financial information", "interim consolidated financial statements"),), "reviewed")])
+def test_bounded_english_report_classes(texts, status):
+    result = resolve_document_assurance_evidence(_materialization(*texts))
+    assert result["state"] == "QUALIFIED"
+    assert result["audit_or_review_status"] == status
+
+
+@pytest.mark.parametrize("texts", [
+    (EN_TITLE,), (EN_OPINION,), (EN_TITLE, "unrelated", EN_OPINION),
+    (EN_TITLE.replace("INDEPENDENT", "DEPENDENT"), EN_OPINION),
+    (EN_TITLE, EN_OPINION.replace("Opinion In", "Summary In")),
+    (EN_TITLE, EN_OPINION.replace("present fairly", "might present fairly")),
+    (EN_TITLE, EN_OPINION + " We do not express an audit opinion"),
+    (EN_TITLE, "INDEPENDENT AUDITORS' REPORT " + EN_OPINION),
+    (EN_REVIEW.replace("ON REVIEW", "ON PREVIEW"),),
+    (EN_REVIEW.replace("2410", "2411"),),
+    (EN_REVIEW.replace("2410", "24100"),),
+    (EN_REVIEW.replace("interim consolidated financial", "interim consolidated financially"),),
+    (EN_REVIEW.replace("interim consolidated", "interim separate"),),
+    (EN_REVIEW.replace("Review Engagements", "Audit Engagements"),),
+    (EN_REVIEW + " We do not express a review conclusion",),
+    ("Management discusses review of interim financial information and 2410",),
+])
+def test_english_near_miss_unrelated_and_negative_reports_refused(texts):
+    assert resolve_document_assurance_evidence(_materialization(*texts))["state"] == "BLOCKED"
+
+
+@pytest.mark.parametrize("vn,en", [
+    ("Ý kiến ngoại trừ", "Qualified opinion"),
+    ("Ý kiến trái ngược", "Adverse opinion"),
+    ("Từ chối đưa ra ý kiến", "Disclaimer of opinion"),
+    ("Vấn đề cần nhấn mạnh", "Emphasis of matter"),
+])
+def test_english_modifications_keep_vietnamese_assurance_status_treatment(vn, en):
+    # This owner classifies assurance kind, not opinion quality or valuation fitness.
+    vietnamese = resolve_document_assurance_evidence(_materialization(TITLE + " chúng tôi đã kiểm toán " + vn))
+    english = resolve_document_assurance_evidence(_materialization(EN_TITLE + " " + EN_OPINION + " " + en))
+    assert english["audit_or_review_status"] == vietnamese["audit_or_review_status"]
+    vietnamese = resolve_document_assurance_evidence(_materialization(REVIEW_PAGE + " " + vn))
+    english = resolve_document_assurance_evidence(_materialization(EN_REVIEW + " " + en))
+    assert english["audit_or_review_status"] == vietnamese["audit_or_review_status"]
+
 @pytest.mark.parametrize("texts,opinion_page", [((TITLE + " " + OPINION,), 1), ((TITLE, OPINION), 2)])
 def test_literal_opinion_same_or_immediately_next_page(texts, opinion_page):
     result = resolve_document_assurance_evidence(_materialization(*texts))

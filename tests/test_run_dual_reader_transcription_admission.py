@@ -9,6 +9,7 @@ from tools import run_dual_reader_transcription_admission as runner
 
 def _table():
     return {"issuer_literal": "synthetic", "form_reference_literal": "B02-DN/HN",
+            "currency_unit_literal": "VND",
             "statement_title_literal": "Consolidated income statement",
             "columns": [{"column_id": "c1", "label_literal": "2025"}],
             "rows": [{"line_code_literal": code, "row_label_literal": metric,
@@ -91,7 +92,7 @@ def test_global_provenance_failures_refuse_entire_batch_before_writes(tmp_path, 
     if case == "document":
         raw["input"]["document_sha256"] = "0" * 64
     elif case == "printed_page":
-        raw["input"]["printed_page"] = "10"
+        raw["input"]["printed_page"] = "Trang 11"
     elif case == "independence":
         raw["saw_other_reader_output"] = True
     else:
@@ -116,3 +117,31 @@ def test_six_specs_preserve_literal_pages_and_retained_comparison_times():
     assert runner.NVL_2025_H1_P12["printed_page"] == "10"
     assert runner.NVL_2026_H1_P12["printed_page"] == "Trang 10"
     assert runner.NVL_2025_P12["comparison_started_at"] == "2026-11-25T08:15:17+07:00"
+
+
+def test_runner_accepts_only_exact_trang_prefix_binding(tmp_path):
+    spec = _raw_pair(tmp_path)
+    path = tmp_path / "gemini.json"
+    raw = json.loads(path.read_text())
+    numeric = runner.dual.printed_page_identity(spec["printed_page"])
+    spec["printed_page"] = numeric
+    raw["input"]["printed_page"] = "Trang " + numeric
+    path.write_text(json.dumps(raw), encoding="utf-8")
+    assert len(runner._validate_readings(spec=spec, reader_root=tmp_path,
+        observed_at="2026-11-24T00:00:00Z", completed="2026-11-25T12:30:00+07:00")) == 2
+    raw["input"]["printed_page"] = "Trang  " + numeric
+    path.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="READER_INPUT_BINDING_MISMATCH"):
+        runner._validate_readings(spec=spec, reader_root=tmp_path,
+            observed_at="2026-11-24T00:00:00Z", completed="2026-11-25T12:30:00+07:00")
+
+
+def test_runner_binds_identical_reader_unit_without_repairing_metadata():
+    first, second = _table(), _table()
+    first["currency_unit_literal"] = second["currency_unit_literal"] = "Đơn vị tính: Đồng Việt Nam"
+    rows, rejected = _build(first, second)
+    assert not rejected and len(rows) == 3
+    assert all(r["source_unit_scale"] == 1 and r["currency"] == "VND" for r in rows)
+    second["currency_unit_literal"] += " "
+    with pytest.raises(ValueError, match="READERS_UNIT_LITERAL_NOT_IDENTICAL_EXPLICIT_VND"):
+        _build(first, second)

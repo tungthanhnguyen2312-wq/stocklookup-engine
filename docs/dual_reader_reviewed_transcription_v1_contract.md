@@ -191,20 +191,27 @@ official source/render bindings, rights and all existing qualification proofs.
 ## Coverage specs and fact-local construction (HL-20261125-CDX-08)
 
 The offline runner enumerates POW and NVL FY2025, H1/2025 and H1/2026 pages.
-A spec is a retained-input locator, never evidence of admission. `printed_page`
-must equal each raw input literal and the sealed image binding exactly. NVL
-H1/2025 retains Claude's `10` in its spec; Gemini's `Trang 10` fails that global
-binding. No printed-page normalization is authorized.
+A spec is a retained-input locator, never evidence of admission. The sealed image
+binding stays exact. Under HL-20261125-CDX-17, a raw `printed_page` may differ
+only by a single case-sensitive leading `Trang ` before otherwise identical
+ASCII digits. NVL H1/2025 uses agreed `10`; `Trang 10` binds to that page.
+`trang 10`, `Trang  10`, `Trang 010`, suffixes and repeated prefixes do not.
+Every other input-binding field and key set remains exact.
 
 NVL's registered exact legal-name fold is
-`cong ty co phan tap doan dau tu dia oc no va`. POW's printed English name
-`PETROVIETNAM POWER CORPORATION` remains unregistered here: no existing registry
-or config names it exactly. The historical entity decision in
+`cong ty co phan tap doan dau tu dia oc no va`. HL-20261125-CDX-17 registers POW's
+exact literal `PETROVIETNAM POWER CORPORATION`, supported by its retained official
+English charter amendment 8, SHA256
+`3b06425b3d79803f9e7bf634c8bfd600f4aca998bcd15dabcd95ffb04877afbc`,
+PDF page 7 (foreign language name), acquired from pvpower.vn. The shared name
+registry retains this provenance. No amendment-7 `PETRO VIETNAM` variant is added.
+The historical entity decision in
 [the August decision archive](archive/decisions/decisions-2026-08-01-to-2026-08-16.md)
 and `tools/replay/legacy_financial_materializers/qns_pow_official_financial_materialization.py`
 name `PetroVietnam Power Corporation - JSC`; that difference is not silently
-removed. POW FY2025 also retains a recorded-at instant later than its supplied
-retention instant. Those provenance failures require owner evidence resolution.
+removed. The original POW FY2025 reading with recorded-at later than retention
+remains ineligible; the spec uses the separately retained Claude r2 reading
+(a1df606a), without editing the original.
 
 Caption-bound columns reuse the validated caption period, including the existing
 yearless-caption/current-label/qualified-metadata resolution. Explicit independent
@@ -214,8 +221,18 @@ as the column's period literal, binds to that same FY only when the independent
 caption also resolves that FY. This fixes the inconsistent header/column-period
 checks (HL-20261125-CDX-10); raw literals remain unchanged. It does not resolve
 a yearless caption, an H1 period, a different column-period literal or a contrary
-caption. Missing scope versus an explicit scope and a form reference with versus
-without a circular suffix remain literal disagreements requiring Owner decision.
+caption. Missing scope versus an explicit scope remains a literal disagreement;
+POW 2025-H1 requires conflict resolution under Decision 2 condition 5.
+The supplied POW 2026-H1 readings also disagree (`INTERIM CONSOLIDATED` versus
+`CONSOLIDATED`); they remain refused by the same exact-literal rule.
+
+For form-code comparison only, a trailing reference exactly matching
+`Thông tư số [0-9]+/[0-9]{4}/TT-BTC` is excluded from the form code. It must be
+separated by exactly one LF or one ASCII space (the retained reader flattened
+the printed line break). The remaining form code must agree byte-for-byte.
+No case, dash, digit, accent or other whitespace is repaired for agreement.
+Raw files stay unchanged, and the applied page/form exceptions are recorded
+in `literal_normalizations` after complete verification.
 
 The runner constructs codes 10/60/61 independently, checking selected row,
 column and cell uniqueness in both readings. Missing, duplicate, unparsable or
@@ -230,9 +247,46 @@ abort before output. Existing document/image byte hash checks remain global.
 No accounting equation chooses or repairs a literal, no retained raw input is
 edited, and knowledge floors and research-only authority remain unchanged.
 
-At this implementation base, all six document hashes lack registered OCR layouts.
-The runner's existing document-level proof verifier therefore refuses them even
-when raw provenance passes. Qualified document-level evidence and registered,
-hash-bound OCR proofs must be supplied through the existing owner before host
-admission. This change creates none of those proofs and records zero real
-admissions or new TTM ratios.
+The six exact document layouts were registered by a71a0871. Registration does
+not qualify a native text layer or bypass the retained zero-candidate fallback.
+Qualified document evidence and hash-bound OCR proofs remain necessary.
+
+## English assurance and statement units (HL-20261125-CDX-17)
+
+The assurance owner retains its existing heading-token recognition and negative
+language checks. The English annual path also accepts the literal `Opinion`
+heading immediately followed by `In our opinion`, with its existing exact
+fair-presentation/consolidation/accounting-standards anchors. Only the same or
+immediately next page may supply the opinion. An immediately next page's repeated
+`INDEPENDENT AUDITORS' REPORT (Continued)` is a continuation; another report
+heading still refuses. No OCR spelling repair is introduced.
+
+English reviewed assurance requires on one page the literal heading
+`REPORT ON REVIEW OF INTERIM FINANCIAL INFORMATION`, the phrase
+`interim consolidated financial information` or
+`interim consolidated financial statements`, and `review engagements 2410` or
+`review engagement 2410`, through the same existing heading text folding as
+Vietnamese. `do not express an audit opinion` is normal review wording but
+disqualifies the annual path; negative review wording still refuses. Modified,
+qualified, adverse, disclaimer and emphasis-of-matter text retain the Vietnamese
+assurance-kind treatment; this recognizer grants no opinion-quality, fitness,
+restatement or valuation waiver.
+
+The lower dual-reader owner now returns statement-unit evidence only after full
+raw proof verification: both readers must record the identical nonempty literal
+on the bound statement page, parsed by the existing unit owner as VND and a
+positive integer scale (including the existing exact bare `VND` mapping).
+The runner uses that agreed unit for row values when both tables are supplied.
+It never changes the document metadata envelope or retained OCR text.
+
+**Integration blocker:** common admission in `official_financial_filing_evidence.py`
+still independently requires currency/unit metadata literals in OCR/native page
+text and explicit OCR/native unit recognition. That file is outside CDX-17's
+allowed paths. The returned `statement_unit_evidence` is therefore not yet a
+substitute for those gates. NVL H1 metadata admission remains blocked pending a
+leased common-owner integration; no synthetic text or forged metadata is used.
+The explicit NVL H1 current-column captions (`06 tháng đầu năm YYYY`) also remain
+outside the verifier's existing current-header allowlist; period/header authority
+is not expanded by these literal-comparison changes. No real admissions or new
+TTM ratios are claimed here. FPT scope change, PVD currency, period changes,
+restatements and corporate actions retain their separate gates (condition 8).

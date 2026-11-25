@@ -8,11 +8,39 @@ import json
 import unicodedata
 
 import pytest
-
 from official_financial_filing_evidence import admit_official_financial_fact, qualify_document_metadata
 from stocklookup_core.evidence import dual_reader_transcription as dual
 from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
 
+
+@pytest.mark.parametrize("literal,expected", [("10", "10"), ("Trang 10", "10"),
+    ("Trang 010", "010"), ("trang 10", "trang 10"), ("Trang  10", "Trang  10"),
+    ("Trang Trang 10", "Trang Trang 10"), ("Trang 10 ", "Trang 10 "),
+    ("Trang ١٠", "Trang ١٠"), ("Trang +10", "Trang +10")])
+def test_exact_printed_page_identity(literal, expected):
+    assert dual.printed_page_identity(literal) == expected
+
+
+@pytest.mark.parametrize("suffix,accepted", [("\nThông tư số 43/2026/TT-BTC", True),
+    (" Thông tư số 43/2026/TT-BTC", True), ("\nThông tư số 99/2025/TT-BTC", True),
+    ("\nThông tư số 43/26/TT-BTC", False), ("\nThông tư số 43/2026/TT-BTC ", False),
+    ("\nThông tư số 43/2026/TT-BTC\nextra", False), ("\nthông tư số 43/2026/TT-BTC", False),
+    ("\tThông tư số 43/2026/TT-BTC", False)])
+def test_exact_form_circular_suffix(suffix, accepted):
+    form = "Mẫu số B 02a - DN/HN"
+    assert (dual.form_code_literal(form + suffix) == form) is accepted
+
+
+def test_agreed_unit_requires_two_identical_explicit_vnd_literals():
+    from financial_statement_unit_resolution import parse_explicit_unit_declaration as parse
+    literal = "Đơn vị tính: Đồng Việt Nam"
+    tables = [{"currency_unit_literal": literal}, {"currency_unit_literal": literal}]
+    assert dual.agreed_vnd_unit(tables, parse)["unit_scale"] == 1
+    for other in (literal + " ", "Đơn vị tính: USD", None, "UNREADABLE"):
+        assert dual.agreed_vnd_unit([tables[0], {"currency_unit_literal": other}], parse) is None
+    assert dual.agreed_vnd_unit(tables[:1], parse) is None
+    for literal in ("USD", "Đơn vị tính: USD", "UNREADABLE", ""):
+        assert dual.agreed_vnd_unit([{"currency_unit_literal": literal}] * 2, parse) is None
 
 def _sha(payload):
     return hashlib.sha256(payload).hexdigest()
@@ -187,7 +215,9 @@ def test_h1_scope_and_form_literal_differences_still_block(tmp_path, metric, dif
         _change_reader(directory, row, proof, lambda raw: raw["table"].update(scope_literal=None), index=0)
     else:
         _change_reader(directory, row, proof, lambda raw: raw["table"].update(
-            form_reference_literal=row["form_reference_literal"] + " Thông tư số 43/2026/TT-BTC"))
+            # HL rule 2026-11-25: an exact trailing "Thông tư số N/YYYY/TT-BTC" line is excluded
+            # (admitted in test_form_circular_suffix_admits_and_preserves_raw); any other suffix still disagrees.
+            form_reference_literal=row["form_reference_literal"] + " Thông tư 43/2026/TT-BTC"))
     assert "DUAL_READER_LITERAL_DISAGREEMENT" in _pure(row, context, directory)["reason_codes"]
 
 
@@ -649,7 +679,41 @@ def test_explicit_contradictory_column_period_still_blocks_after_caption_resolut
     assert 'DUAL_READER_SEMANTIC_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
 
 
-def test_printed_page_literal_difference_has_no_normalization(tmp_path):
+def test_printed_page_exact_trang_prefix_admits(tmp_path):
     row, context, directory, proof = _fixture(tmp_path)
     _change_reader(directory, row, proof, lambda raw: raw['input'].update(printed_page='Trang 1'))
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert result['evidence_classification']['literal_normalizations'][0]['rule'] == 'LEADING_TRANG_PAGE_PREFIX'
+
+
+@pytest.mark.parametrize('literal', ['trang 1', 'Trang  1', 'Trang 01', 'Trang 2', 'Trang 1 ', 'Trang Trang 1'])
+def test_printed_page_near_miss_still_refused(tmp_path, literal):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda raw: raw['input'].update(printed_page=literal))
     assert 'DUAL_READER_INPUT_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
+
+
+@pytest.mark.parametrize('reader', [0, 1])
+def test_form_circular_suffix_admits_and_preserves_raw(tmp_path, reader):
+    row, context, directory, proof = _fixture(tmp_path)
+    form = row['form_reference_literal']
+    _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+        form_reference_literal=form + '\nThông tư số 43/2026/TT-BTC'), index=reader)
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert result['evidence_classification']['literal_normalizations'][0]['rule'] == 'TRAILING_CIRCULAR_REFERENCE_LINE'
+
+
+def test_missing_scope_against_explicit_scope_remains_literal_disagreement(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda raw: raw['table'].update(scope_literal=None))
+    assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']
+
+
+def test_identical_reader_unit_does_not_silently_waive_common_metadata_text_gate(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    # The new lower-owner unit evidence is not yet wired into the common owner:
+    # that file is outside CDX-17's lease. Keep the independent gate fail-closed.
+    context['document_pages'] = {1: context['document_pages'][1].replace('Unit: VND', 'garbled')}
+    assert 'RETAINED_UNIT_SCALE_NOT_EXPLICIT' in _pure(row, context, directory)['reason_codes']
