@@ -71,6 +71,21 @@ def agreed_vnd_unit(tables, parse_unit) -> dict | None:
     return {**unit, "evidence_text": literal}
 
 
+_VN_H1_LITERAL = re.compile(r"(?:Cho kỳ kế toán )?0?6 tháng đầu năm ([0-9]{4})")
+
+
+def vn_first_half_period(literal: Any) -> str | None:
+    """Exact Vietnamese first-half literal ("[Cho kỳ kế toán ]06 tháng đầu năm YYYY") -> "YYYY-H1".
+
+    Used only where the shared statement-period recognizer returns no period; any other
+    wording, extra text or a different month count stays unrecognized.
+    """
+    if not isinstance(literal, str):
+        return None
+    match = _VN_H1_LITERAL.fullmatch(" ".join(literal.split()))
+    return match.group(1) + "-H1" if match else None
+
+
 def split_outline_enumerator(label: str) -> tuple[str | None, str]:
     """Split only a leading numbering-column token; the line item text is kept verbatim.
 
@@ -301,7 +316,8 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                        "form_reference_literal", "currency_unit_literal", "period_caption_literal"))):
             return fail("UNREADABLE_OR_MISSING_LITERAL")
         column, cell = agreed["column"], agreed["cell"]
-        caption_period = recognize_period(agreed["period_caption_literal"])["period"]
+        caption_period = (recognize_period(agreed["period_caption_literal"])["period"]
+                          or vn_first_half_period(agreed["period_caption_literal"]))
         if caption_period is None:
             # Rule 2: a caption without a period defers to the current column's own label, which must
             # equal both the fact period and the qualified document metadata period.
@@ -314,7 +330,8 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         # Caption-bound columns reuse the validated resolution, including the yearless fallback.
         column_period = caption_period if column["reporting_period"] is None else (
             column["reporting_period"] if column["reporting_period"] == row["reporting_period"]
-            else recognize_period(column["reporting_period"])["period"])
+            else (recognize_period(column["reporting_period"])["period"]
+                  or vn_first_half_period(column["reporting_period"])))
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
         # The explicit annual header already accepts "Năm YYYY" below. When
@@ -326,7 +343,12 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 and column["reporting_period"] == column["label_literal"]
                 and header == "năm " + year):
             column_period = year
-        if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year}:
+        # An H1 current column may print its own explicit half-year header; it is accepted
+        # only for an H1 fact of that same year (the caption check below must still agree).
+        h1_headers = ({"06 tháng đầu năm " + year, "6 tháng đầu năm " + year}
+                      if str(row["reporting_period"]) == year + "-H1" else set())
+        if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year,
+                          *h1_headers}:
             return fail("CURRENT_COLUMN_NOT_EXPLICIT")
         if (agreed["row_label_literal"] != row["raw_row_label"]
                 or agreed["issuer_literal"] != row["issuer_literal"]

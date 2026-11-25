@@ -185,8 +185,8 @@ POW_2026_H1_P11 = {
     "readings": [
         [
             "claude",
-            "blind-input-pow-2026h1-p11/claude/claude-reader.raw.json",
-            "2026-11-25T12:02:24+07:00"
+            "blind-input-pow-2026h1-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-26T00:14:54+07:00"
         ],
         [
             "gemini",
@@ -194,10 +194,10 @@ POW_2026_H1_P11 = {
             "2026-11-25T12:05:16+07:00"
         ]
     ],
-    "new_subdir": "h1-2026-dual-reader-pow-20261125",
+    "new_subdir": "h1-2026-dual-reader-pow-r2-20261126",
     "printed_page": "7",
     "column_id": "c1",
-    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+    "comparison_started_at": "2026-11-26T00:15:10+07:00"
 }
 
 NVL_2025_H1_P12 = {

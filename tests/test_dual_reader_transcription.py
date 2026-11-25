@@ -717,3 +717,61 @@ def test_identical_reader_unit_does_not_silently_waive_common_metadata_text_gate
     # that file is outside CDX-17's lease. Keep the independent gate fail-closed.
     context['document_pages'] = {1: context['document_pages'][1].replace('Unit: VND', 'garbled')}
     assert 'RETAINED_UNIT_SCALE_NOT_EXPLICIT' in _pure(row, context, directory)['reason_codes']
+
+
+@pytest.mark.parametrize("label", ["06 tháng đầu năm 2026", "6 tháng đầu năm 2026"])
+def test_h1_explicit_half_year_current_header_admits(tmp_path, label):
+    row, context, directory, proof = _fixture(tmp_path, period="2026-H1")
+    row["current_period_label"] = label
+    def change(raw):
+        raw["table"]["columns"][0].update(label_literal=label, reporting_period=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] == "ADMITTED", result["reason_codes"]
+
+
+@pytest.mark.parametrize("period,label", [
+    ("2026-H1", "06 tháng đầu năm 2025"),   # another year's half-year header
+    ("2026-H1", "06 tháng cuối năm 2026"),  # not the first half
+    ("2026-H1", "9 tháng đầu năm 2026"),    # not a half year
+    ("2025", "06 tháng đầu năm 2025"),      # annual fact never takes an H1 header
+])
+def test_h1_half_year_header_rule_is_exact(tmp_path, period, label):
+    row, context, directory, proof = _fixture(tmp_path, period=period)
+    row["current_period_label"] = label
+    def change(raw):
+        raw["table"]["columns"][0].update(label_literal=label, reporting_period=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] != "ADMITTED"
+    assert set(result["reason_codes"]) & {"DUAL_READER_CURRENT_COLUMN_NOT_EXPLICIT",
+                                          "DUAL_READER_SEMANTIC_BINDING_MISMATCH"}, result["reason_codes"]
+
+
+@pytest.mark.parametrize("literal,expected", [
+    ("06 tháng đầu năm 2026", "2026-H1"), ("6 tháng đầu năm 2025", "2025-H1"),
+    ("Cho kỳ kế toán 06 tháng đầu năm 2025", "2025-H1"),
+    ("06 tháng cuối năm 2026", None), ("9 tháng đầu năm 2026", None),
+    ("06 tháng đầu năm 2025 (Trình bày lại)", None), ("Cho kỳ 06 tháng đầu năm 2025", None), (None, None),
+])
+def test_vn_first_half_period_literal_is_exact(literal, expected):
+    assert dual.vn_first_half_period(literal) == expected
+
+
+def test_h1_vietnamese_caption_and_header_bind_the_same_half_year(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, period="2026-H1")
+    label = "06 tháng đầu năm 2026"
+    row["current_period_label"] = label
+    def change(raw):
+        raw["table"]["period_caption_literal"] = "Cho kỳ kế toán 06 tháng đầu năm 2026"
+        raw["table"]["columns"][0].update(label_literal=label, reporting_period=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    assert _pure(row, context, directory)["state"] == "ADMITTED"
+    def contrary(raw):
+        raw["table"]["period_caption_literal"] = "Cho kỳ kế toán 06 tháng đầu năm 2025"
+    for index in (0, 1):
+        _change_reader(directory, row, proof, contrary, index=index)
+    assert "DUAL_READER_SEMANTIC_BINDING_MISMATCH" in _pure(row, context, directory)["reason_codes"]
