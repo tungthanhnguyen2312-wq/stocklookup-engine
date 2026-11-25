@@ -223,7 +223,7 @@ NVL_2025_H1_P12 = {
             "2026-11-25T12:05:36+07:00"
         ]
     ],
-    "new_subdir": "h1-2025-dual-reader-nvl-20261125",
+    "new_subdir": "h1-2025-dual-reader-nvl-signed-20261126",
     "printed_page": "10",
     "column_id": "c1",
     "comparison_started_at": "2026-11-25T12:06:00+07:00"
@@ -386,15 +386,21 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
         try:
             for table in (raw_table, *other_tables):
                 column, literal_row, cell = _selected_cell(table, spec["column_id"], code)
-                if cell["sign_literal"] != "unsigned":
+                # A printed loss "(digits)" is supported only for profit lines 60/61; revenue and
+                # any other sign vocabulary stay refused.
+                if cell["sign_literal"] != "unsigned" and not (
+                        cell["sign_literal"] == "parentheses" and code in {"60", "61"}):
                     raise ValueError(f"SIGNED_CELL_NOT_SUPPORTED_BY_THIS_RUN:{code}")
+                signed = dual.signed_cell_literal(cell["raw_value_literal"], cell["sign_literal"])
                 try:
-                    parse_accounting_integer(cell["raw_value_literal"])
+                    if signed is None:
+                        raise ValueError
+                    parse_accounting_integer(signed)
                 except (ValueError, TypeError, AttributeError):
                     raise ValueError(f"VALUE_NOT_PARSEABLE:{code}") from None
             column, literal_row, cell = _selected_cell(raw_table, spec["column_id"], code)
             _, label = dual.split_outline_enumerator(literal_row["row_label_literal"])
-            literal = cell["raw_value_literal"]
+            literal = dual.signed_cell_literal(cell["raw_value_literal"], cell["sign_literal"])
             value = parse_accounting_integer(literal) * unit["unit_scale"]
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
             reason = str(exc) if isinstance(exc, ValueError) else f"CELL_LITERAL_MISSING_OR_INVALID:{code}"

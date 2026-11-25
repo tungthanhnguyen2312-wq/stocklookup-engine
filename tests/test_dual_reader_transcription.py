@@ -969,3 +969,36 @@ def test_h1_vietnamese_caption_and_header_bind_the_same_half_year(tmp_path):
     for index in (0, 1):
         _change_reader(directory, row, proof, contrary, index=index)
     assert "DUAL_READER_SEMANTIC_BINDING_MISMATCH" in _pure(row, context, directory)["reason_codes"]
+
+
+@pytest.mark.parametrize("raw,sign,expected", [
+    ("603.917.668.121", "parentheses", "(603.917.668.121)"),
+    ("(603.917.668.121)", "parentheses", "(603.917.668.121)"),
+    ("603.917.668.121", "unsigned", "603.917.668.121"),
+    ("(603.917.668.121)", "unsigned", None),
+    ("603.917.668.121)", "parentheses", None),
+    ("-603.917.668.121", "minus", None),
+    ("603.917.668.121", None, None),
+    ("", "parentheses", None),
+])
+def test_signed_cell_literal_is_exact(raw, sign, expected):
+    assert dual.signed_cell_literal(raw, sign) == expected
+
+
+def test_parenthesized_loss_admits_only_when_both_readers_record_it(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, metric="attributable_net_income")
+    digits = row["raw_value_text"].strip("()")
+    row.update(raw_value_text="(" + digits + ")", normalized_value=-abs(row["normalized_value"]))
+    if "value" in row:
+        row["value"] = -abs(row["value"])
+    row["source_span"]["text"] = row["raw_row_label"] + " " + row["raw_value_text"]
+    def loss(raw):
+        raw["table"]["rows"][0]["cells"][0].update(raw_value_literal=digits, sign_literal="parentheses")
+    for index in (0, 1):
+        _change_reader(directory, row, proof, loss, index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] == "ADMITTED", result["reason_codes"]
+    def unsigned(raw):
+        raw["table"]["rows"][0]["cells"][0].update(sign_literal="unsigned")
+    _change_reader(directory, row, proof, unsigned, index=1)
+    assert _pure(row, context, directory)["state"] != "ADMITTED"

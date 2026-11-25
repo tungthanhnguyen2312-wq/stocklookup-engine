@@ -51,7 +51,8 @@ def test_unsupported_parent_cell_does_not_abort_other_facts(case, reason):
     elif case == "duplicate":
         cells.append(deepcopy(cells[0]))
     elif case == "signed":
-        cells[0].update(sign_literal="parentheses", raw_value_literal="(123)")
+        # A printed loss "(digits)" on 60/61 is supported (see test below); other vocabulary is not.
+        cells[0].update(sign_literal="minus", raw_value_literal="123")
     else:
         cells[0]["raw_value_literal"] = "UNREADABLE"
     rows, rejections = _build(table)
@@ -61,6 +62,21 @@ def test_unsupported_parent_cell_does_not_abort_other_facts(case, reason):
         assert rejections[0]["reason_codes"] == [reason]
     else:
         assert rejections[0]["reason_codes"]
+
+
+def test_parenthesized_profit_loss_builds_negative_row_but_revenue_sign_is_refused():
+    table = _table()
+    table["rows"][-1]["cells"][0].update(sign_literal="parentheses", raw_value_literal="123")
+    rows, rejections = _build(table)
+    parent = [r for r in rows if r["line_code"] == "61"]
+    assert len(parent) == 1 and parent[0]["normalized_value"] < 0
+    assert parent[0]["raw_value_text"] == "(123)" and not rejections
+    table = _table()
+    revenue = next(r for r in table["rows"] if r["line_code_literal"] == "10")
+    revenue["cells"][0].update(sign_literal="parentheses")
+    rows, rejections = _build(table)
+    assert "10" not in [r["line_code"] for r in rows]
+    assert rejections[0]["reason_codes"] == ["SIGNED_CELL_NOT_SUPPORTED_BY_THIS_RUN:10"]
 
 
 def _raw_pair(tmp_path):

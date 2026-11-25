@@ -95,6 +95,26 @@ def vn_first_half_period(literal: Any) -> str | None:
     return None
 
 
+def signed_cell_literal(raw: Any, sign_literal: Any) -> str | None:
+    """The displayed accounting literal implied by one reader cell, or None if inconsistent.
+
+    The reader contract records digits without parentheses plus sign_literal. "parentheses"
+    therefore means the printed value was "(digits)". A literal already carrying its own
+    parentheses is kept (legacy readings) only when sign_literal says the same. Any other sign
+    vocabulary, or a mismatch between the two, is refused; no sign is ever inferred.
+    """
+    if not isinstance(raw, str) or not raw:
+        return None
+    wrapped = raw.startswith("(") and raw.endswith(")")
+    if sign_literal == "unsigned":
+        return None if ("(" in raw or ")" in raw) else raw
+    if sign_literal == "parentheses":
+        if wrapped:
+            return raw
+        return None if ("(" in raw or ")" in raw) else "(" + raw + ")"
+    return None
+
+
 def split_outline_enumerator(label: str) -> tuple[str | None, str]:
     """Split only a leading numbering-column token; the line item text is kept verbatim.
 
@@ -383,9 +403,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or unit["unit_scale"] != row.get("source_unit_scale", row["unit_scale"])):
             return fail("CURRENCY_UNIT_MISMATCH")
         raw = cell["raw_value_literal"]
-        sign = "parentheses" if str(raw).startswith("(") and str(raw).endswith(")") else "unsigned"
-        if (raw != row["raw_value_text"] or cell["sign_literal"] != sign
-                or parse_amount(raw) * unit["unit_scale"] != row["normalized_value"]):
+        signed = signed_cell_literal(raw, cell.get("sign_literal"))
+        if (signed is None or signed != row["raw_value_text"]
+                or parse_amount(signed) * unit["unit_scale"] != row["normalized_value"]):
             return fail("VALUE_OR_SIGN_MISMATCH")
         normalizations = []
         if any(form_code_literal(f) != f for f in forms):
