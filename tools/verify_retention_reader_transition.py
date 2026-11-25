@@ -1428,9 +1428,46 @@ def _official_financial_period_identity_prior_bytes(root: Path, relative: str, a
     return prior
 
 
+def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes) -> bytes | None:
+    """Verify the exact acquisition successor and its unchanged VSDC predecessor."""
+    relative = OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE
+    amendments = json.loads((root / "tests/fixtures/frozen_source_reviewed_amendments.json").read_bytes())["amendments"]
+    spec = amendments.get(relative)
+    if spec is None:
+        return None
+    base_sha = "422f3a805242d377f7f4faf03d26e6f49d55c4cba0185e49c069203219180ba4"
+    prior_sha = "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4"
+    active_sha = "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881"
+    if (set(spec) != {"milestone", "reason", "base_sha256_lf", "prior_sha256_lf", "sha256_lf"}
+            or spec.get("milestone") != "ACQUISITION_REGISTRY_COVERAGE_EXPANSION_20261125"
+            or not isinstance(spec.get("reason"), str) or not spec["reason"].strip()
+            or spec.get("base_sha256_lf") != base_sha
+            or spec.get("prior_sha256_lf") != prior_sha
+            or spec.get("sha256_lf") != active_sha):
+        raise ValueError("OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_SCOPE_INVALID")
+    pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
+    base = (root / OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    # Reconstruct the exact post-flag predecessor from its retained pre-flag archive.
+    prior = base[:2] + OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE + base[2:]
+    if (not base.startswith(b"{\n") or hashlib.sha256(base).hexdigest() != base_sha
+            or hashlib.sha256(prior).hexdigest() != prior_sha
+            or hashlib.sha256(active).hexdigest() != active_sha
+            or pins.get(relative) != active_sha
+            or active.count(OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE) != 1):
+        raise ValueError("OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID")
+    # Missing/tampered VSDC metadata or archive must still fail the original check.
+    if _official_source_registry_vsdc_flag_prior_bytes(root, relative, prior) != base:
+        raise ValueError("OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID")
+    return active
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    if relative == OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE:
+        amended = _official_source_registry_reviewed_amendment_bytes(root, content)
+        if amended is not None:
+            return amended
     if relative == OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE:
         # This archive is already the protected E6 baseline, before OCR recognition.
         return _official_financial_period_identity_prior_bytes(root, relative, content)
