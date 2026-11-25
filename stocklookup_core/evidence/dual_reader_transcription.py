@@ -71,19 +71,28 @@ def agreed_vnd_unit(tables, parse_unit) -> dict | None:
     return {**unit, "evidence_text": literal}
 
 
-_VN_H1_LITERAL = re.compile(r"(?:Cho kỳ kế toán )?0?6 tháng đầu năm ([0-9]{4})")
+_H1_LITERALS = (
+    re.compile(r"(?:Cho kỳ kế toán )?0?6 tháng đầu năm ([0-9]{4})"),
+    # English statements of Vietnamese issuers (e.g. POW): "For the 6-month period ended 30 June YYYY".
+    re.compile(r"(?:For the )?6-month period ended 30 June ([0-9]{4})"),
+)
 
 
 def vn_first_half_period(literal: Any) -> str | None:
-    """Exact Vietnamese first-half literal ("[Cho kỳ kế toán ]06 tháng đầu năm YYYY") -> "YYYY-H1".
+    """Exact first-half literal -> "YYYY-H1".
 
-    Used only where the shared statement-period recognizer returns no period; any other
-    wording, extra text or a different month count stays unrecognized.
+    Accepted literals (whole string, whitespace-collapsed): "[Cho kỳ kế toán ]06 tháng đầu năm YYYY"
+    and "[For the ]6-month period ended 30 June YYYY". Used only where the shared statement-period
+    recognizer returns no period; any other wording, extra text or month count stays unrecognized.
     """
     if not isinstance(literal, str):
         return None
-    match = _VN_H1_LITERAL.fullmatch(" ".join(literal.split()))
-    return match.group(1) + "-H1" if match else None
+    text = " ".join(literal.split())
+    for pattern in _H1_LITERALS:
+        match = pattern.fullmatch(text)
+        if match:
+            return match.group(1) + "-H1"
+    return None
 
 
 def split_outline_enumerator(label: str) -> tuple[str | None, str]:

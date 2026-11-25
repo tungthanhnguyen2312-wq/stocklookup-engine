@@ -161,3 +161,38 @@ def test_retained_source_anchor_spans_and_new_facts_stay_historical_context():
             financial = _financial_input(record, later)
             assert _valuation({"financial_input": financial})["official_field_context"] == record["official_field_context"]
             assert _compact_context(ticker, {"product": {}}, {"fundamental": later})["fundamental_context"]["official_field_context"] == record["official_field_context"]
+
+
+EN_REVIEW_FS = ("REPORT ON REVIEW OF INTERIM CONSOLIDATED FINANCIAL STATEMENTS "
+                "We conducted our review in accordance with Vietnamese Standard on Review Engagements "
+                "VSRE 2410 on the interim consolidated financial statements. We do not express an audit opinion")
+
+
+def test_english_review_titled_by_statements_with_vsre_2410_is_reviewed():
+    # Deloitte Vietnam's English report wording (POW 2025-H1 / 2026-H1).
+    result = resolve_document_assurance_evidence(_materialization(EN_REVIEW_FS))
+    assert result["state"] == "QUALIFIED"
+    assert result["audit_or_review_status"] == "reviewed"
+
+
+@pytest.mark.parametrize("text", [
+    EN_REVIEW_FS.replace("INTERIM CONSOLIDATED FINANCIAL STATEMENTS", "INTERIM SEPARATE FINANCIAL STATEMENTS", 1)
+                .replace("interim consolidated financial statements", "interim separate financial statements"),
+    EN_REVIEW_FS.replace("VSRE 2410", "VSRE 2411"),
+    EN_REVIEW_FS.replace("VSRE 2410", "VSA 2410"),
+    EN_REVIEW_FS.replace("ON REVIEW", "ON PREVIEW"),
+    EN_REVIEW_FS.replace("REPORT ON REVIEW OF INTERIM CONSOLIDATED FINANCIAL STATEMENTS",
+                         "REPORT ON AUDIT OF INTERIM CONSOLIDATED FINANCIAL STATEMENTS"),
+])
+def test_english_review_statements_title_near_misses_refused(text):
+    assert resolve_document_assurance_evidence(_materialization(text))["state"] == "BLOCKED"
+
+
+def test_vsre_citation_split_by_ocr_artifact_requires_both_exact_literals():
+    split = EN_REVIEW_FS.replace("Vietnamese Standard on Review Engagements VSRE 2410",
+                                 "Vietnamese Standards on Review Engagements el VSRE 2410")
+    assert resolve_document_assurance_evidence(_materialization(split))["audit_or_review_status"] == "reviewed"
+    for broken in (split.replace("VSRE 2410", "VSRE 2411"),
+                   split.replace("Vietnamese Standards on Review Engagements", "Vietnamese Standards on Audit Engagements"),
+                   split.replace("Vietnamese Standards on Review Engagements el ", "")):
+        assert resolve_document_assurance_evidence(_materialization(broken))["state"] == "BLOCKED", broken

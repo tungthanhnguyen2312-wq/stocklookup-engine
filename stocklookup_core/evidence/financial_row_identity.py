@@ -28,7 +28,10 @@ ROW_LABEL_CONTRACT = {
     "long_term_borrowings_or_finance_leases": {"any_of": ("vay",), "all_of": ("dai", "han"), "forbidden": ("phai tra",)},
     "net_income": {"any_of": ("loi nhuan sau thue", "profit after tax"),
                    "forbidden": ("cong ty me", "chu so huu", "co dong", "parent", "khong kiem soat")},
-    "attributable_net_income": {"any_of": ("cong ty me", "of the parent", "parent company"),
+    # "attributable to the parent" is the exact English line-61 wording of e.g. POW 2026-H1
+    # ("Net profit after tax attributable to the parent entity"); NCI wording stays forbidden.
+    "attributable_net_income": {"any_of": ("cong ty me", "of the parent", "parent company",
+                                           "attributable to the parent"),
                                 "forbidden": ("khong kiem soat", "non controlling", "non-controlling")},
 }
 

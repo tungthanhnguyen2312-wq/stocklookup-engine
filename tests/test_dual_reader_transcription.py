@@ -755,9 +755,24 @@ def test_h1_half_year_header_rule_is_exact(tmp_path, period, label):
     ("Cho kỳ kế toán 06 tháng đầu năm 2025", "2025-H1"),
     ("06 tháng cuối năm 2026", None), ("9 tháng đầu năm 2026", None),
     ("06 tháng đầu năm 2025 (Trình bày lại)", None), ("Cho kỳ 06 tháng đầu năm 2025", None), (None, None),
+    ("For the 6-month period ended 30 June 2025", "2025-H1"), ("6-month period ended 30 June 2026", "2026-H1"),
+    ("For the 6-month period ended 30 September 2025", None), ("For the 9-month period ended 30 June 2025", None),
+    ("For the 6-month period ended 30 June 2025 (restated)", None),
 ])
 def test_vn_first_half_period_literal_is_exact(literal, expected):
     assert dual.vn_first_half_period(literal) == expected
+
+
+@pytest.mark.parametrize("metric,label,supported", [
+    ("attributable_net_income", "Net profit after tax attributable to the parent entity", True),
+    ("attributable_net_income", "Profit after tax attributable to Parent Company", True),
+    ("attributable_net_income", "Net profit after tax attributable to non-controlling interests", False),
+    ("attributable_net_income", "Net profit after tax attributable to the parent's non-controlling interests", False),
+    ("net_income", "Net profit after tax attributable to the parent entity", False),
+])
+def test_english_parent_attributable_row_label_is_exact(metric, label, supported):
+    from stocklookup_core.evidence.financial_row_identity import row_label_supports_metric
+    assert row_label_supports_metric(metric, label) is supported
 
 
 def test_h1_vietnamese_caption_and_header_bind_the_same_half_year(tmp_path):

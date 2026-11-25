@@ -194,7 +194,7 @@ POW_2026_H1_P11 = {
             "2026-11-25T12:05:16+07:00"
         ]
     ],
-    "new_subdir": "h1-2026-dual-reader-pow-r2-20261126",
+    "new_subdir": "h1-2026-dual-reader-pow-r2b-20261126",
     "printed_page": "7",
     "column_id": "c1",
     "comparison_started_at": "2026-11-26T00:15:10+07:00"

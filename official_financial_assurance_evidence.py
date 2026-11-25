@@ -31,7 +31,14 @@ _EN_OPINION_ANCHORS = ("in our opinion", "consolidated financial statements",
                        "in all material respects", "accounting standards")
 _EN_REVIEW_DISCLAIMER = "do not express an audit opinion"
 _EN_REVIEW_TITLE = ("report", "on", "review", "of", "interim", "financial", "information")
-_EN_REVIEW_ENGAGEMENT = ("review engagements 2410", "review engagement 2410")
+# Vietnamese auditors' English reports title the same report by its subject (e.g. Deloitte
+# Vietnam, POW 2025-H1/2026-H1) and cite the Vietnamese standard as "VSRE 2410".
+_EN_REVIEW_TITLE_STATEMENTS = ("report", "on", "review", "of", "interim", "consolidated",
+                               "financial", "statements")
+_EN_REVIEW_ENGAGEMENT = ("review engagements 2410", "review engagement 2410",
+                         "review engagements vsre 2410")
+_EN_REVIEW_STANDARD_NAME = ("vietnamese standard on review engagements",
+                            "vietnamese standards on review engagements")
 _EN_REVIEW_SCOPE = ("interim consolidated financial information", "interim consolidated financial statements")
 
 
@@ -105,7 +112,8 @@ def resolve_document_assurance_evidence(materialization: Mapping[str, Any]) -> d
         review_title = _title_span(tokens, _REVIEW_TITLE)
         audit_title = _title_span(tokens, _AUDIT_TITLE)
         english_title = _title_span(tokens, _EN_AUDIT_TITLE)
-        english_review_title = _title_span(tokens, _EN_REVIEW_TITLE)
+        english_review_title = (_title_span(tokens, _EN_REVIEW_TITLE)
+                                or _title_span(tokens, _EN_REVIEW_TITLE_STATEMENTS))
         if (english_title and not review_title and not english_review_title and "we have audited" in text
                 and "consolidated financial statements" in text
                 and _EN_REVIEW_DISCLAIMER not in text):
@@ -126,6 +134,7 @@ def resolve_document_assurance_evidence(materialization: Mapping[str, Any]) -> d
                         or _REVIEW_DISCLAIMER in opinion_text
                         or _title_span(opinion_tokens, _REVIEW_TITLE)
                         or _title_span(opinion_tokens, _EN_REVIEW_TITLE)
+                        or _title_span(opinion_tokens, _EN_REVIEW_TITLE_STATEMENTS)
                         or (opinion_number != number and (
                             (bool(other_title)
                              and int(other_title[0].get("raw_token_order", 0)) < int(heading[0].get("raw_token_order", 0))
@@ -143,11 +152,18 @@ def resolve_document_assurance_evidence(materialization: Mapping[str, Any]) -> d
         if english_review_title and not audit_title and not english_title:
             engagement = [phrase for phrase in _EN_REVIEW_ENGAGEMENT
                           if re.search(r"\b" + re.escape(phrase) + r"\b", text)]
+            # The Vietnamese standard citation may be separated from its name by an OCR artifact;
+            # both exact literals must then be present on the same report page.
+            if not engagement and re.search(r"\bvsre 2410\b", text):
+                named = [phrase for phrase in _EN_REVIEW_STANDARD_NAME
+                         if re.search(r"\b" + re.escape(phrase) + r"\b", text)]
+                if named:
+                    engagement = [named[0], "vsre 2410"]
             scope = [phrase for phrase in _EN_REVIEW_SCOPE
                      if re.search(r"\b" + re.escape(phrase) + r"\b", text)]
             if engagement and scope:
-                anchors = ["report on review of interim financial information", *engagement,
-                           *scope]
+                anchors = [_normalize(" ".join(str(t.get("text", "")) for t in english_review_title)),
+                           *engagement, *scope]
                 if _EN_REVIEW_DISCLAIMER in text:
                     anchors.append(_EN_REVIEW_DISCLAIMER)
                 reviewed.append({"page_number": number, "title_tokens": english_review_title,
