@@ -134,16 +134,20 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
                 page = document_pages.get((claim.get("evidence_span") or {}).get("source_page"), "")
                 if recognizer(page).get(name) != claim.get("value"):
                     reasons.append(f"RETAINED_{name.upper()}_NOT_EXPLICIT")
-            proof_page = document_pages.get((row.get("assurance_evidence") or {}).get("page_number"), "")
-            opinion_page = document_pages.get(((row.get("assurance_evidence") or {}).get("opinion_evidence") or {}).get("page_number"), "")
-            from official_financial_assurance_evidence import resolve_native_document_assurance
-            assurance_pages = {(row.get('assurance_evidence') or {}).get('page_number'): proof_page}
-            opinion_number = ((row.get('assurance_evidence') or {}).get('opinion_evidence') or {}).get('page_number')
-            if opinion_number is not None:
-                assurance_pages[opinion_number] = opinion_page
-            actual_assurance = resolve_native_document_assurance(sha, assurance_pages)
-            if actual_assurance.get('audit_or_review_status') != row.get('audit_or_review_status'):
+            proof_number = (row.get("assurance_evidence") or {}).get("page_number")
+            opinion_number = ((row.get("assurance_evidence") or {}).get("opinion_evidence") or {}).get("page_number")
+            assurance_pages = {}
+            if isinstance(proof_number, int) and not isinstance(proof_number, bool):
+                assurance_pages[proof_number] = document_pages.get(proof_number, "")
+            if isinstance(opinion_number, int) and not isinstance(opinion_number, bool):
+                assurance_pages[opinion_number] = document_pages.get(opinion_number, "")
+            if not assurance_pages:
                 reasons.append("RETAINED_ASSURANCE_TEXT_NOT_EXPLICIT")
+            else:
+                from official_financial_assurance_evidence import resolve_native_document_assurance
+                actual_assurance = resolve_native_document_assurance(sha, assurance_pages)
+                if actual_assurance.get("audit_or_review_status") != row.get("audit_or_review_status"):
+                    reasons.append("RETAINED_ASSURANCE_TEXT_NOT_EXPLICIT")
             proof = row.get("assurance_evidence") or {}
             native = proof.get("native_text_evidence")
             if isinstance(native, Mapping):
