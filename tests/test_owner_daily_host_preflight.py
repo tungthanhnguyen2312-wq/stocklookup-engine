@@ -911,12 +911,14 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert lane_scope["authority_effect"] == "NONE_OWNER_CONTROL_PLANE_ONLY"
     assert lane_scope["changed_source_paths"] == lane_scope_paths
     assert lane_scope["base_commit"] == "2233dc22322c5c5cfa106864f0df5be22742760f"
+    dormant_release = live_receipt["dormant_lane_release_corrective"]
+    dormant_prior = dormant_release["prior_source_sha256_lf"]
     for path in lane_scope_paths:
         previous = subprocess.check_output(["git", "show", f"{lane_scope['base_commit']}:{path}"], cwd=root)
         assert lane_scope["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         current = (root / path).read_bytes().replace(b"\r\n", b"\n")
-        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+        prior_receipt["source_sha256"][path] = dormant_prior.get(path, hashlib.sha256(current).hexdigest())
     prior_receipt["native_lane_scope_amendment_corrective"] = lane_scope
 
     assert parent_pe["owner_decision"] == "OWNER_DECISION_1_20261124"
@@ -933,6 +935,21 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert subprocess.run(["git", "cat-file", "-e", f"{parent_pe['base_commit']}:{path}"], cwd=root).returncode != 0
         prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["parent_attributable_headline_pe_corrective"] = parent_pe
+
+    dormant_release_paths = ["roadmap_execution_state.py", "tools/stocklookup_roadmap.py"]
+    assert dormant_release["scope"] == "OWNER_CONTROL_PLANE_DORMANT_LANE_RELEASE_CLI_ONLY"
+    assert dormant_release["new_capacity_measurement"] is False
+    assert dormant_release["whole_daily_requalification"] is False
+    assert dormant_release["authority_effect"] == "NONE_OWNER_CONTROL_PLANE_ONLY"
+    assert dormant_release["changed_source_paths"] == dormant_release_paths
+    assert dormant_release["base_commit"] == "dbc85bb3934a356fcc9d605387524f4228448cbe"
+    for path in dormant_release_paths:
+        previous = subprocess.check_output(["git", "show", f"{dormant_release['base_commit']}:{path}"], cwd=root)
+        assert dormant_release["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
+        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
+    prior_receipt["dormant_lane_release_corrective"] = dormant_release
 
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
