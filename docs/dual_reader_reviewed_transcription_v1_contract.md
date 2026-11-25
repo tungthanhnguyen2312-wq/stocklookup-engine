@@ -186,3 +186,46 @@ real retained-loader/pure-admission/H1-consumer integration and rejection paths.
 Synthetic fixture success is local implementation evidence, not an actual
 issuer admission. Real admission requires two eligible raw files, retained
 official source/render bindings, rights and all existing qualification proofs.
+
+
+## Coverage specs and fact-local construction (HL-20261125-CDX-08)
+
+The offline runner enumerates POW and NVL FY2025, H1/2025 and H1/2026 pages.
+A spec is a retained-input locator, never evidence of admission. `printed_page`
+must equal each raw input literal and the sealed image binding exactly. NVL
+H1/2025 retains Claude's `10` in its spec; Gemini's `Trang 10` fails that global
+binding. No printed-page normalization is authorized.
+
+NVL's registered exact legal-name fold is
+`cong ty co phan tap doan dau tu dia oc no va`. POW's printed English name
+`PETROVIETNAM POWER CORPORATION` remains unregistered here: no existing registry
+or config names it exactly. The historical entity decision in
+[the August decision archive](archive/decisions/decisions-2026-08-01-to-2026-08-16.md)
+and `tools/replay/legacy_financial_materializers/qns_pow_official_financial_materialization.py`
+name `PetroVietnam Power Corporation - JSC`; that difference is not silently
+removed. POW FY2025 also retains a recorded-at instant later than its supplied
+retention instant. Those provenance failures require owner evidence resolution.
+
+Caption-bound columns reuse the validated caption period, including the existing
+yearless-caption/current-label/qualified-metadata resolution. Explicit independent
+column periods are separately validated and contradictory periods still fail.
+
+The runner constructs codes 10/60/61 independently, checking selected row,
+column and cell uniqueness in both readings. Missing, duplicate, unparsable or
+unsupported signed cells produce `fact_local_rejections` records with metric,
+line code, `state: BLOCKED` and literal reason codes (for example
+`ROW_NOT_UNIQUE:61`), while other candidate facts reach common admission.
+All previous report fields remain; `admissions` still reports common-owner
+results. Any construction rejection makes the command return nonzero even if
+other facts admit. This runner's unsigned-cell restriction is unchanged.
+Document-wide raw input identity, reader independence and timestamp failures
+abort before output. Existing document/image byte hash checks remain global.
+No accounting equation chooses or repairs a literal, no retained raw input is
+edited, and knowledge floors and research-only authority remain unchanged.
+
+At this implementation base, all six document hashes lack registered OCR layouts.
+The runner's existing document-level proof verifier therefore refuses them even
+when raw provenance passes. Qualified document-level evidence and registered,
+hash-bound OCR proofs must be supplied through the existing owner before host
+admission. This change creates none of those proofs and records zero real
+admissions or new TTM ratios.

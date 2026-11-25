@@ -373,3 +373,22 @@ def test_retained_zero_native_candidate_replay_accepts_explicit_builder(tmp_path
         assert result == {1: 'retained OCR literal'}
     finally:
         odq.register_native_artifact_builder(previous)
+
+
+def test_nvl_exact_legal_name_requires_bound_layout_and_proof(monkeypatch):
+    import hashlib
+    from tools.run_dual_reader_transcription_admission import REGISTERED_ISSUER_FOLD
+    name = 'CONG TY CO PHAN TAP DOAN DAU TU DIA OC NO VA'
+    assert REGISTERED_ISSUER_FOLD['NVL'] == name.lower()
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, SHA, {**lp.LAYOUT_PROOFS[SHA], 'ticker': 'NVL'})
+    body = {'contract_version': lp.CONTRACT_VERSION, 'document_sha256': SHA, 'pages': {}}
+    digest = hashlib.sha256(lp.canonical_json(body).encode()).hexdigest()
+    proof = {**body, 'proof_sha256': digest}
+    row = {'ticker': 'NVL', 'document_sha256': SHA, 'ocr_layout_proof': {'proof_sha256': digest}}
+    assert lp.retained_issuer_name_matches(row, proof, name)
+    for bad in ('NOVALAND', name.replace('NO VA', 'NOVA'), name.replace('DIA OC', 'DIA O')):
+        assert not lp.retained_issuer_name_matches(row, proof, bad)
+    assert not lp.retained_issuer_name_matches({**row, 'ticker': 'POW'}, proof, name)
+    assert not lp.retained_issuer_name_matches(row, {**proof, 'document_sha256': '0' * 64}, name)
+    monkeypatch.delitem(lp.LAYOUT_PROOFS, SHA)
+    assert not lp.retained_issuer_name_matches(row, proof, name)

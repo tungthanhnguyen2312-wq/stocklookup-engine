@@ -264,6 +264,10 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                     and label_period == (claims.get("reporting_period") or {}).get("value")
                     and column["role"] == "current"):
                 caption_period = label_period
+        # Caption-bound columns reuse the validated resolution, including the yearless fallback.
+        column_period = caption_period if column["reporting_period"] is None else (
+            column["reporting_period"] if column["reporting_period"] == row["reporting_period"]
+            else recognize_period(column["reporting_period"])["period"])
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
         if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year}:
@@ -274,8 +278,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or agreed["form_reference_literal"] != row["form_reference_literal"]
                 or agreed["statement_title_literal"] != row["statement_title_literal"]
                 or column["label_literal"] != row["current_period_label"]
-                or (column["reporting_period"] != row["reporting_period"] and recognize_period(
-                    column["reporting_period"] or agreed["period_caption_literal"])["period"] != row["reporting_period"])
+                or column_period != row["reporting_period"]
                 or column["role"] != "current" or not column["label_literal"]
                 or caption_period != row["reporting_period"]
                 or recognize_scope(agreed["scope_literal"])["statement_scope"] != row["statement_scope"]):

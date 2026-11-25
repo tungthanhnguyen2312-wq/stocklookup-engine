@@ -440,6 +440,10 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
     # Rebuild the current receipt using only the enumerated successor paths.
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    coverage = live_receipt["decision2_coverage_factlocal_corrective"]
+    def coverage_predecessor_pin(path):
+        return coverage["prior_source_sha256_lf"].get(path,
+            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     velocity = live_receipt["retained_t0_velocity_projection_corrective"]
 
     dispatch = live_receipt["canonical_d4a_dispatch_corrective"]
@@ -1060,7 +1064,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert income["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = glyph["prior_source_sha256_lf"].get(
             path, operand['prior_source_sha256_lf'].get(path, header['prior_source_sha256_lf'].get(path,
-                live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()))))
+                live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, coverage_predecessor_pin(path)))))
     from tools.qualify_e4_infrastructure import source_identity
     assert income["e4_v2_code_digest"] == glyph["prior_e4_v2_code_digest"]
     prior_receipt["retained_income_operand_qualification_corrective"] = income
@@ -1076,7 +1080,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert glyph["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert glyph["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = operand['prior_source_sha256_lf'].get(path,
-            live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()))
+            live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, coverage_predecessor_pin(path)))
     assert glyph["e4_v2_code_digest"] == operand['prior_e4_v2_code_digest']
     prior_receipt["retained_baseline_two_h1_ttm_corrective"] = glyph
 
@@ -1094,7 +1098,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(['git', 'show', f"{operand['base_commit']}:{path}"], cwd=root)
         assert operand['prior_source_sha256_lf'][path] == hashlib.sha256(previous.replace(b'\r\n', b'\n')).hexdigest()
         assert operand['prior_source_sha256_lf'][path] == prior_receipt['source_sha256'][path]
-        prior_receipt['source_sha256'][path] = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root/path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        prior_receipt['source_sha256'][path] = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, coverage_predecessor_pin(path))
     assert operand['e4_v2_code_digest'] == header['prior_e4_v2_code_digest']
     prior_receipt['retained_operand_metadata_form_corrective'] = operand
 
@@ -1106,7 +1110,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(['git', 'show', f"{header['base_commit']}:{path}"], cwd=root)
         assert header['prior_source_sha256_lf'][path] == hashlib.sha256(previous.replace(b'\r\n', b'\n')).hexdigest()
         assert header['prior_source_sha256_lf'][path] == prior_receipt['source_sha256'][path]
-        prior_receipt['source_sha256'][path] = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root/path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        prior_receipt['source_sha256'][path] = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, coverage_predecessor_pin(path))
     assert header['e4_v2_code_digest'] == source_identity(root, version='v2')['code_digest']
     prior_receipt['retained_period_header_provenance_corrective'] = header
 
@@ -1133,12 +1137,29 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         # still pins the predecessor. Chain the receipt, not those successor bytes.
         assert dual_reader["prior_source_sha256_lf"][path] == baseline_receipt["source_sha256"][path]
         assert dual_reader["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = coverage_predecessor_pin(path)
     for path in dual_reader["added_source_paths"]:
         assert path not in prior_receipt["source_sha256"]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = coverage_predecessor_pin(path)
     prior_receipt["decision2_dual_reader_corrective"] = dual_reader
 
+    assert coverage["scope"] == "DECISION2_COVERAGE_POW_NVL_AND_FACT_LOCAL_CORRECTIVE"
+    assert coverage["new_capacity_measurement"] is False
+    assert coverage["whole_daily_requalification"] is False
+    assert coverage["release_authority"] == "NOT_GRANTED"
+    assert coverage["changed_source_paths"] == [
+        "stocklookup_core/evidence/dual_reader_transcription.py",
+        "stocklookup_core/evidence/official_ocr_layout_proof.py",
+        "tools/run_dual_reader_transcription_admission.py"]
+    assert set(coverage["prior_source_sha256_lf"]) == set(coverage["changed_source_paths"])
+    baseline = json.loads(subprocess.check_output(
+        ["git", "show", f"{coverage['base_commit']}:{receipt_path}"], cwd=root))
+    for path in coverage["changed_source_paths"]:
+        assert coverage["prior_source_sha256_lf"][path] == baseline["source_sha256"][path]
+        assert coverage["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        prior_receipt["source_sha256"][path] = hashlib.sha256(
+            (root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    prior_receipt["decision2_coverage_factlocal_corrective"] = coverage
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 

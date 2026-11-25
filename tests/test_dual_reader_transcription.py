@@ -584,3 +584,23 @@ def test_reader_form_literals_must_still_agree_exactly(tmp_path):
     _annual_shape(directory, row, proof, labels=('2025', '2025'))
     _set_form(directory, row, proof, ('Mẫu số B 02 – DN/HN', 'Mẫu số B 02 - DN/HN'))
     assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']
+
+
+@pytest.mark.parametrize('periods', [(None, None), (_YEARLESS_CAPTION, _YEARLESS_CAPTION)])
+def test_yearless_caption_resolved_period_is_reused_for_caption_bound_column(tmp_path, periods):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 123)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'), periods=periods)
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+
+
+def test_explicit_contradictory_column_period_still_blocks_after_caption_resolution(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, '2025', 123)
+    _annual_shape(directory, row, proof, labels=('2025', '2025'), periods=('2024', '2024'))
+    assert 'DUAL_READER_SEMANTIC_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
+
+
+def test_printed_page_literal_difference_has_no_normalization(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda raw: raw['input'].update(printed_page='Trang 1'))
+    assert 'DUAL_READER_INPUT_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']

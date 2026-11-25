@@ -164,7 +164,8 @@ def retained_issuer_name_matches(row, proof, text: str) -> bool:
     from stocklookup_core.evidence.financial_row_identity import _identity_fold
     names = {'HPG': 'cong ty co phan tap doan hoa phat',
              'PNJ': 'cong ty co phan vang bac da quy phu nhuan',
-             'VRE': 'cong ty co phan vincom retail'}
+             'VRE': 'cong ty co phan vincom retail',
+             'NVL': 'cong ty co phan tap doan dau tu dia oc no va'}
     sha = row.get('document_sha256')
     layout = layout_for(sha) or {}
     ref = row.get('ocr_layout_proof') or {}
