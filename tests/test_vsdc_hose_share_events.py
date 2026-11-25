@@ -325,3 +325,37 @@ def test_registration_identity_and_route_are_hash_bound(tmp_path):
         parse_retained_vsdc_registration({**doc, 'final_url': 'https://example.com/vi/ad/203041'}, payload)
     with pytest.raises(ValueError, match='INSTRUMENT_UNPROVEN'):
         parse_retained_vsdc_registration({**doc, 'ticker': 'FPT'}, payload)
+
+
+def test_official_source_registry_vsdc_flag_source_transition_reconstructs_and_fails_closed(tmp_path):
+    from tools import verify_retention_reader_transition as vrt
+    root = Path(__file__).resolve().parents[1]
+    rel = vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE
+    live = (root / rel).read_bytes().replace(b'\r\n', b'\n')
+    prior_e31 = subprocess.check_output(
+        ['git', 'show', vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_BASE + ':' + rel], cwd=root
+    ).replace(b'\r\n', b'\n')
+    assert vrt._official_source_registry_vsdc_flag_prior_bytes(root, rel, live) == prior_e31
+    assert vrt.historical_bytes(root, rel) == prior_e31
+
+    # Flipping the flag to true or making any extra edit must fail closed.
+    flipped = live.replace(b': false},', b': true},', 1)
+    with pytest.raises(ValueError, match='OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_BINDING_INVALID'):
+        vrt._official_source_registry_vsdc_flag_prior_bytes(root, rel, flipped)
+    with pytest.raises(ValueError, match='OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_BINDING_INVALID'):
+        vrt._official_source_registry_vsdc_flag_prior_bytes(root, rel, live + b'\n')
+
+    # Tampered manifest scope or archive must fail closed.
+    manifest_dst = tmp_path / vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST
+    archive_dst = tmp_path / vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE
+    manifest_dst.parent.mkdir(parents=True, exist_ok=True)
+    archive_dst.parent.mkdir(parents=True, exist_ok=True)
+    spec = json.loads((root / vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST).read_bytes())
+    archive_dst.write_bytes(prior_e31)
+    manifest_dst.write_text(json.dumps({**spec, 'scope': 'EXPANDED'}), encoding='utf-8')
+    with pytest.raises(ValueError, match='OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_SCOPE_INVALID'):
+        vrt._official_source_registry_vsdc_flag_prior_bytes(tmp_path, rel, live)
+    manifest_dst.write_text(json.dumps(spec), encoding='utf-8')
+    archive_dst.write_bytes(prior_e31 + b'x')
+    with pytest.raises(ValueError, match='OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_BINDING_INVALID'):
+        vrt._official_source_registry_vsdc_flag_prior_bytes(tmp_path, rel, live)
