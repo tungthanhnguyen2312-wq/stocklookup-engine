@@ -1097,3 +1097,59 @@ def test_parenthesized_loss_admits_only_when_both_readers_record_it(tmp_path):
         raw["table"]["rows"][0]["cells"][0].update(sign_literal="unsigned")
     _change_reader(directory, row, proof, unsigned, index=1)
     assert _pure(row, context, directory)["state"] != "ADMITTED"
+
+
+def test_chatgpt_alias_and_exact_reader_filename_replay(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda r: r.update(model_family="anthropic-claude"), index=0)
+    _change_reader(directory, row, proof, lambda r: r.update(model_family="openai-chatgpt"))
+    old = directory / proof["readings"][1]["relative_path"]
+    relative = dual.PROOF_DIR + "/chatgpt/chatgpt-reader.raw.json"
+    new = directory / relative
+    new.parent.mkdir(parents=True)
+    new.write_bytes(old.read_bytes())
+    proof["readings"][1]["relative_path"] = relative
+    _seal(directory, row, proof)
+    assert _pure(row, context, directory)["state"] == "ADMITTED"
+    # ChatGPT and Codex are the same GPT family, not independent families.
+    _change_reader(directory, row, proof, lambda r: r.update(model_family="codex"), index=0)
+    assert "DUAL_READER_DIFFERENT_MODEL_FAMILIES_REQUIRED" in _pure(row, context, directory)["reason_codes"]
+    _change_reader(directory, row, proof, lambda r: r.update(model_family="openai-chatgpt-other"))
+    assert "DUAL_READER_READER_CONTRACT_OR_FAMILY_UNKNOWN" in _pure(row, context, directory)["reason_codes"]
+
+
+def test_extra_unselected_notes_column_does_not_disagree_with_selected_fact(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    def extra(raw):
+        raw["table"]["columns"].append({"column_id": "c3", "label_literal": "Thuyết minh",
+                                          "reporting_period": None, "role": "unknown"})
+        raw["table"]["rows"][0]["cells"].append({"column_id": "c3", "raw_value_literal": "",
+                                                   "sign_literal": "unsigned", "uncertainty": []})
+    _change_reader(directory, row, proof, extra)
+    assert _pure(row, context, directory)["state"] == "ADMITTED"
+    # Selected-column duplicates still fail even if empty.
+    def duplicate(raw):
+        raw["table"]["rows"][0]["cells"].append({"column_id": row["column_id"],
+            "raw_value_literal": "", "sign_literal": "unsigned", "uncertainty": []})
+    _change_reader(directory, row, proof, duplicate)
+    assert "DUAL_READER_CELL_AMBIGUOUS" in _pure(row, context, directory)["reason_codes"]
+
+
+def test_scope_literal_and_independent_column_period_remain_exact(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda r: r["table"].update(scope_literal="interim consolidated"))
+    assert "DUAL_READER_LITERAL_DISAGREEMENT" in _pure(row, context, directory)["reason_codes"]
+    def column_disagreement(raw):
+        raw["table"]["scope_literal"] = "consolidated"
+        raw["table"]["columns"][0]["reporting_period"] = "six months ended 30 June 2025"
+    _change_reader(directory, row, proof, column_disagreement)
+    assert "DUAL_READER_LITERAL_DISAGREEMENT" in _pure(row, context, directory)["reason_codes"]
+
+
+def test_absent_form_reference_never_inferred_from_agreed_numbers(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, lambda r: r["table"].update(form_reference_literal=None), index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] == "BLOCKED"
+    assert "DUAL_READER_MALFORMED_RETAINED_PROOF" in result["reason_codes"]

@@ -18,7 +18,7 @@ EVIDENCE_TIER = "DUAL_READER_REVIEWED_TRANSCRIPTION"
 PROOF_DIR = "dual-reader-transcriptions"
 RIGHTS_ROUTE = "OWNER_APPROVED_OFFICIAL_ISSUER_RESEARCH_NOT_VIETSTOCK"
 # Accounts, products and model versions do not create separate families.
-FAMILY_ALIASES = {"openai-gpt": "gpt", "gpt": "gpt", "codex": "gpt",
+FAMILY_ALIASES = {"openai-gpt": "gpt", "openai-chatgpt": "gpt", "gpt": "gpt", "codex": "gpt",
                   "google-gemini": "gemini", "gemini": "gemini",
                   "anthropic-claude": "claude", "claude": "claude"}
 
