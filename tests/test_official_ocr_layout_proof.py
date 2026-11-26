@@ -409,6 +409,28 @@ def test_nvl_exact_legal_name_requires_bound_layout_and_proof(monkeypatch):
     assert not lp.retained_issuer_name_matches(row, proof, name)
 
 
+def test_pow_english_name_is_exact_and_requires_bound_layout_and_proof(monkeypatch):
+    import hashlib
+    name = "PETROVIETNAM POWER CORPORATION"
+    registration = lp.EXACT_REGISTERED_ISSUER_NAMES["POW"][0]
+    assert registration["provenance"]["document_sha256"] == "3b06425b3d79803f9e7bf634c8bfd600f4aca998bcd15dabcd95ffb04877afbc"
+    assert registration["provenance"]["source_page"] == 7
+    monkeypatch.setitem(lp.LAYOUT_PROOFS, SHA, {**lp.LAYOUT_PROOFS[SHA], 'ticker': 'POW'})
+    body = {'contract_version': lp.CONTRACT_VERSION, 'document_sha256': SHA, 'pages': {}}
+    digest = hashlib.sha256(lp.canonical_json(body).encode()).hexdigest()
+    proof = {**body, 'proof_sha256': digest}
+    row = {'ticker': 'POW', 'document_sha256': SHA, 'ocr_layout_proof': {'proof_sha256': digest}}
+    assert lp.exact_registered_issuer_name('POW', name)
+    assert lp.retained_issuer_name_matches(row, proof, name)
+    for bad in ('PETRO VIETNAM POWER CORPORATION', name.lower(), name.replace('POWER', 'POWR'), 'X' + name):
+        assert not lp.exact_registered_issuer_name('POW', bad)
+        assert not lp.retained_issuer_name_matches(row, proof, bad)
+    assert not lp.retained_issuer_name_matches({**row, 'ticker': 'NVL'}, proof, name)
+    assert not lp.retained_issuer_name_matches(row, {**proof, 'document_sha256': '0' * 64}, name)
+    monkeypatch.delitem(lp.LAYOUT_PROOFS, SHA)
+    assert not lp.retained_issuer_name_matches(row, proof, name)
+
+
 def test_decision2_exact_original_registrations():
     for sha, ticker, period, page, current, comparative in DECISION2_LAYOUTS:
         layout = lp.layout_for(sha)

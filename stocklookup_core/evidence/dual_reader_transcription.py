@@ -28,6 +28,93 @@ FAMILY_ALIASES = {"openai-gpt": "gpt", "gpt": "gpt", "codex": "gpt",
 _OUTLINE_ENUMERATOR = re.compile(r"^(\d{1,2}(?:\.\d{1,2})*\.?)\s+(?=\S)")
 
 
+def printed_page_identity(literal: Any) -> Any:
+    """Strip one exact 'Trang ' only before ASCII digits; preserve all other bytes."""
+    if isinstance(literal, str) and re.fullmatch(r"Trang [0-9]+", literal):
+        return literal[len("Trang "):]
+    return literal
+
+
+def input_binding_matches(actual: Any, expected: Mapping[str, Any]) -> bool:
+    """Only the printed-page prefix exception applies to a raw input binding."""
+    if not isinstance(actual, Mapping) or actual.keys() != expected.keys():
+        return False
+    return all((printed_page_identity(actual[k]) == printed_page_identity(v)
+                if k == "printed_page" else actual[k] == v) for k, v in expected.items())
+
+
+def form_code_literal(literal: str) -> str:
+    """A trailing circular line is excluded, with exactly one space or LF separator.
+
+    Some retained readers flatten the printed line break to one space. No other
+    separator, circular spelling, suffix or change to the form itself is accepted.
+    """
+    match = re.fullmatch(r"([^\n]+?)[ \n]Thông tư số [0-9]+/[0-9]{4}/TT-BTC", literal)
+    return match.group(1) if match else literal
+
+
+def agreed_vnd_unit(tables, parse_unit) -> dict | None:
+    """Two byte-identical statement-page literals, parsed by the existing unit owner.
+
+    This helper does not prove provenance or qualify metadata; the complete raw
+    proof must still pass verify_dual_reader_transcription before it has authority.
+    """
+    if len(tables) != 2:
+        return None
+    literal = tables[0].get("currency_unit_literal")
+    if not isinstance(literal, str) or not literal or literal != tables[1].get("currency_unit_literal"):
+        return None
+    unit = _unit(literal, parse_unit)
+    if (not unit or unit.get("currency") != "VND" or type(unit.get("unit_scale")) is not int
+            or unit["unit_scale"] <= 0):
+        return None
+    return {**unit, "evidence_text": literal}
+
+
+_H1_LITERALS = (
+    re.compile(r"(?:Cho kỳ kế toán )?0?6 tháng đầu năm ([0-9]{4})"),
+    # English statements of Vietnamese issuers (e.g. POW): "For the 6-month period ended 30 June YYYY".
+    re.compile(r"(?:For the )?6-month period ended 30 June ([0-9]{4})"),
+)
+
+
+def vn_first_half_period(literal: Any) -> str | None:
+    """Exact first-half literal -> "YYYY-H1".
+
+    Accepted literals (whole string, whitespace-collapsed): "[Cho kỳ kế toán ]06 tháng đầu năm YYYY"
+    and "[For the ]6-month period ended 30 June YYYY". Used only where the shared statement-period
+    recognizer returns no period; any other wording, extra text or month count stays unrecognized.
+    """
+    if not isinstance(literal, str):
+        return None
+    text = " ".join(literal.split())
+    for pattern in _H1_LITERALS:
+        match = pattern.fullmatch(text)
+        if match:
+            return match.group(1) + "-H1"
+    return None
+
+
+def signed_cell_literal(raw: Any, sign_literal: Any) -> str | None:
+    """The displayed accounting literal implied by one reader cell, or None if inconsistent.
+
+    The reader contract records digits without parentheses plus sign_literal. "parentheses"
+    therefore means the printed value was "(digits)". A literal already carrying its own
+    parentheses is kept (legacy readings) only when sign_literal says the same. Any other sign
+    vocabulary, or a mismatch between the two, is refused; no sign is ever inferred.
+    """
+    if not isinstance(raw, str) or not raw:
+        return None
+    wrapped = raw.startswith("(") and raw.endswith(")")
+    if sign_literal == "unsigned":
+        return None if ("(" in raw or ")" in raw) else raw
+    if sign_literal == "parentheses":
+        if wrapped:
+            return raw
+        return None if ("(" in raw or ")" in raw) else "(" + raw + ")"
+    return None
+
+
 def split_outline_enumerator(label: str) -> tuple[str | None, str]:
     """Split only a leading numbering-column token; the line item text is kept verbatim.
 
@@ -201,7 +288,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         completion = _time(proof["admission_completed_at"])
         if completion < comparison:
             return fail("TIME_ORDER_INVALID")
-        readings, families, ids, times = [], [], [], []
+        readings, families, ids, times, printed_pages = [], [], [], [], []
         for entry, payload in zip(refs, raws):
             if _sha(payload) != entry["sha256"]:
                 return fail("RAW_HASH_MISMATCH")
@@ -213,14 +300,15 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                     or raw["saw_other_reader_output"] is not False or not raw["reader_id"]):
                 return fail("INDEPENDENCE_NOT_PROVEN")
             binding = raw["input"]
-            if binding != {"document_sha256": sha, "document_id": proof["document_id"],
+            if not input_binding_matches(binding, {"document_sha256": sha, "document_id": proof["document_id"],
                     "image_sha256": image["sha256"], "source_page": page,
-                    "printed_page": image["printed_page"]}:
+                    "printed_page": image["printed_page"]}):
                 return fail("INPUT_BINDING_MISMATCH")
             recorded, retained = _time(raw["recorded_at"]), _time(entry["retained_at"])
             if not (_time(source_record["observed_at"]) <= recorded <= retained < comparison <= completion):
                 return fail("RAW_NOT_RETAINED_BEFORE_COMPARISON")
             families.append(family); ids.append(raw["reader_id"]); times.append(recorded)
+            printed_pages.append(binding["printed_page"])
             readings.append(raw["table"])
         if families[0] == families[1] or ids[0] == ids[1]:
             return fail("DIFFERENT_MODEL_FAMILIES_REQUIRED")
@@ -240,6 +328,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             enumerators.append(enumerator)
             selected[-1].update(column=_column_binding(columns[0], table["period_caption_literal"]),
                                 row_label_literal=label, line_code_literal=rows[0]["line_code_literal"], cell=cells[0])
+        forms = [item["form_reference_literal"] for item in selected]
+        for item in selected:
+            item["form_reference_literal"] = form_code_literal(item["form_reference_literal"])
         labels = [item["column"].pop("label_literal") for item in selected]
         agreed_label, label_normalization = _agreed_column_label(
             labels[0], labels[1], selected[0]["currency_unit_literal"])
@@ -254,7 +345,8 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                        "form_reference_literal", "currency_unit_literal", "period_caption_literal"))):
             return fail("UNREADABLE_OR_MISSING_LITERAL")
         column, cell = agreed["column"], agreed["cell"]
-        caption_period = recognize_period(agreed["period_caption_literal"])["period"]
+        caption_period = (recognize_period(agreed["period_caption_literal"])["period"]
+                          or vn_first_half_period(agreed["period_caption_literal"]))
         if caption_period is None:
             # Rule 2: a caption without a period defers to the current column's own label, which must
             # equal both the fact period and the qualified document metadata period.
@@ -267,7 +359,8 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         # Caption-bound columns reuse the validated resolution, including the yearless fallback.
         column_period = caption_period if column["reporting_period"] is None else (
             column["reporting_period"] if column["reporting_period"] == row["reporting_period"]
-            else recognize_period(column["reporting_period"])["period"])
+            else (recognize_period(column["reporting_period"])["period"]
+                  or vn_first_half_period(column["reporting_period"])))
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
         # The explicit annual header already accepts "Năm YYYY" below. When
@@ -279,12 +372,17 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 and column["reporting_period"] == column["label_literal"]
                 and header == "năm " + year):
             column_period = year
-        if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year}:
+        # An H1 current column may print its own explicit half-year header; it is accepted
+        # only for an H1 fact of that same year (the caption check below must still agree).
+        h1_headers = ({"06 tháng đầu năm " + year, "6 tháng đầu năm " + year}
+                      if str(row["reporting_period"]) == year + "-H1" else set())
+        if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year,
+                          *h1_headers}:
             return fail("CURRENT_COLUMN_NOT_EXPLICIT")
         if (agreed["row_label_literal"] != row["raw_row_label"]
                 or agreed["issuer_literal"] != row["issuer_literal"]
                 or agreed["issuer_literal"] != source_record.get("issuer_name")
-                or agreed["form_reference_literal"] != row["form_reference_literal"]
+                or agreed["form_reference_literal"] != form_code_literal(row["form_reference_literal"])
                 or agreed["statement_title_literal"] != row["statement_title_literal"]
                 or column["label_literal"] != row["current_period_label"]
                 or column_period != row["reporting_period"]
@@ -300,16 +398,22 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             return fail("ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED")
         if cell.get("uncertainty") != []:
             return fail("UNRESOLVED_CELL_UNCERTAINTY")
-        unit = _unit(agreed["currency_unit_literal"], parse_unit)
+        unit = agreed_vnd_unit(readings, parse_unit)
         if (not unit or unit["currency"] != row["currency"]
                 or unit["unit_scale"] != row.get("source_unit_scale", row["unit_scale"])):
             return fail("CURRENCY_UNIT_MISMATCH")
         raw = cell["raw_value_literal"]
-        sign = "parentheses" if str(raw).startswith("(") and str(raw).endswith(")") else "unsigned"
-        if (raw != row["raw_value_text"] or cell["sign_literal"] != sign
-                or parse_amount(raw) * unit["unit_scale"] != row["normalized_value"]):
+        signed = signed_cell_literal(raw, cell.get("sign_literal"))
+        if (signed is None or signed != row["raw_value_text"]
+                or parse_amount(signed) * unit["unit_scale"] != row["normalized_value"]):
             return fail("VALUE_OR_SIGN_MISMATCH")
         normalizations = []
+        if any(form_code_literal(f) != f for f in forms):
+            normalizations.append({"field": "form_reference_literal", "reader_literals": forms,
+                                   "agreed": agreed["form_reference_literal"], "rule": "TRAILING_CIRCULAR_REFERENCE_LINE"})
+        if any(p != image["printed_page"] for p in printed_pages):
+            normalizations.append({"field": "input.printed_page", "reader_literals": printed_pages,
+                                   "agreed": image["printed_page"], "rule": "LEADING_TRANG_PAGE_PREFIX"})
         if label_normalization:
             normalizations.append({"field": "column.label_literal", "column_id": row["column_id"],
                                    "reader_literals": labels, "agreed": agreed_label, "rule": label_normalization})
@@ -322,6 +426,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         return {"valid": True, "reason_codes": [], "knowledge_floor": floor.isoformat(),
                 "evidence_tier": EVIDENCE_TIER, "proof_sha256": ref["proof_sha256"],
                 "raw_sha256": [r["sha256"] for r in refs], "model_families": families,
+                "statement_unit_evidence": {"document_sha256": sha, "source_page": page,
+                    "currency": unit["currency"], "unit_scale": unit["unit_scale"],
+                    "literal": agreed["currency_unit_literal"], "proof_sha256": ref["proof_sha256"]},
                 "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False,
                 **({"literal_normalizations": normalizations} if normalizations else {})}
     except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):

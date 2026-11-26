@@ -210,8 +210,8 @@
     "official_corporate_event_incremental_acquisition.py": "10109819a073ddeee5d8515311e4885576e15c4fe5c570129d73ea0cd787defd",
     "official_document_acquisition.py": "f114c6d9abdbe18f575fafef72a1136405c373b359a22194741d4bffcd350275",
     "official_evidence.py": "67ac2a632e412d041c618ad57e67121ec8edf6f0bbd099615d5bff3baa2bb400",
-    "official_financial_assurance_evidence.py": "4b362d3a731beaabf2233fde60a9b78444ccdc1e6ca24ce6fc9cac53c9a8c9c2",
-    "official_financial_filing_evidence.py": "f6221831243c08ee049bcaf519ae6ce2a63a817560fe50b551025ac0b947cc31",
+    "official_financial_assurance_evidence.py": "4b0c4c6f997b627d2907d30303d0d2c958dcf6fdc12b2dc5c9dac10187d7fda8",
+    "official_financial_filing_evidence.py": "88bc2c0ebbffcb21488dd871742eb7ec160badc6f420a8fc2aa63befea2842a3",
     "official_financial_ocr_table_evidence.py": "b53060fe7ec9bec69c964cea51d58a50bfb4fd27950a27f839bef25e7198bb1e",
     "official_financial_pdf_page_evidence.py": "eb78b5c412ec2ca1ee6ec629e1dc50f6f75ef93d81631c01d9ad54e07bca18de",
     "official_financial_period_identity.py": "da8a9d1cbdf31f1057a322413c91049af138878a72f9ffc47b03bc5a81c59da0",
@@ -769,7 +769,7 @@
     "stocklookup_core/evidence/financial_filings_replay_adapter.py": "c06f796cc4c1f8824a1b9a01bc00f54782ac0447a339692de8739d967e761f08",
     "stocklookup_core/evidence/financial_identity.py": "950b51fe27e6d77e284af6ee13bcd850db9c3f2b63dd372bf902249d24e7da15",
     "stocklookup_core/evidence/financial_metadata_envelope.py": "58b0ba35616f4dab07d857a70ee35d3daaa8a7bfe3e0ef1f5c4f6c12ce342583",
-    "stocklookup_core/evidence/financial_row_identity.py": "f0829d2ea193b50a8e76f2a8ebf3ab959ec2131822800ad92e4253b457738da5",
+    "stocklookup_core/evidence/financial_row_identity.py": "65aeb975187c68ec38ae70490b6c27ba5d4c8dfffcc180334d11548f95c4a0c5",
     "stocklookup_core/evidence/freshness_history.py": "3b0f75554fe4b5d24798b729e6d653d2f0bdac30f28b401cbd12a1816fc2dec5",
     "stocklookup_core/evidence/fundamental_quality.py": "a3e0aceffb0d6709e767017e23aeef04155af66d54519269166224ed192a9496",
     "stocklookup_core/evidence/governed_trading_session_calendar.py": "618a464b05b5b49cf1ff9d09abd0d6a25f3d456925e722e1a2b40f0dde681754",
@@ -816,7 +816,7 @@
     "stocklookup_core/evidence/official_financial_source_route_discovery.py": "78d9ae3d39b4b9d6734b329b6c9a098e54c833be473c8f73aec2cb2baca65a6c",
     "stocklookup_core/evidence/official_issuer_disclosure_registry.py": "324a2fcda18844093fe28deb2de225d5ee945da11d3b8c9632456dd09c2546cb",
     "stocklookup_core/evidence/official_listing_page_parser.py": "017437c31ead0db6391cf4b3b4b54aaaf15349f1090e98ba02e8014cc1f3b0ce",
-    "stocklookup_core/evidence/official_ocr_layout_proof.py": "bc9687ccee5c2875e53eced6294cfc5d6f847f964b3f8de53e84e36a4c63256c",
+    "stocklookup_core/evidence/official_ocr_layout_proof.py": "e6077592b86d61bcda5ddae4dfa503ac7fab1eda67ec444043b2b2306c26de41",
     "stocklookup_core/evidence/official_route_ownership_evidence.py": "2b0a1d317d935afc1d1d5fbe8984224be1cffbb06432834f54c0a8a1c1b27c65",
     "stocklookup_core/evidence/official_source_registry.py": "a68cac26c67d7827ad79368ea68377d259e0eef74d7bfe8700587eb712835d2f",
     "stocklookup_core/evidence/official_source_registry_owner_promotion.py": "91a81dbc2bb081359932bcc71b7a39392a285747ec4ee7c273a2685e186faae8",
@@ -1306,7 +1306,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "ddc5324f4ab4b336eac989109a1316d340c76c7229a260390f0b53526bcf8ecb",
+    "tools/verify_retention_reader_transition.py": "c01f54644341fe7779c85abd43cfaa7e148102586b376092f0963e9ad700bbec",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1316,8 +1316,8 @@
     "volume_and_flow_retained.py": "6fd3cc95391a3ec4dc138ae809ad5d3dd11e8d82cfab81803016d5bfd0f8abc3",
     "volume_and_flow_retained_v2.py": "0a74da82bfdc1da88edbcf1ab4a4bab4bf599103944dd631aece977d72304b20",
     "watchlist_eval.py": "51042477e5305317368b6af52f5d4859be4477388dd46662fef43e398b5dc5c9",
-    "stocklookup_core/evidence/dual_reader_transcription.py": "8a8870a4c660eea4417695601f3d56eed1330fa57ab9f396532e1aa22ff5e95a",
-    "tools/run_dual_reader_transcription_admission.py": "de9a5cfddaa7b11989cd60563b3baa294c91b72a5906fabb92e20fa66675bba8"
+    "stocklookup_core/evidence/dual_reader_transcription.py": "713a248d723c9f76fbaf8fd5a506ed722618c82693fa5ac27099ba99d3f795e3",
+    "tools/run_dual_reader_transcription_admission.py": "cb0cf103aaaa218c25d9fee2ed66112d47975642192c6bdaf0ab96d87131e2f6"
   },
   "launcher_corrective": {
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
@@ -2394,6 +2394,41 @@
       "tools/verify_retention_reader_transition.py": "ddc5324f4ab4b336eac989109a1316d340c76c7229a260390f0b53526bcf8ecb"
     },
     "source_transition": "tests/fixtures/official_source_registry_issuer_coverage_manifest_transition_v1.json",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED"
+  },
+  "decision2_admission_completion_corrective": {
+    "base_commit": "244b1682a7a35763b7a2c9e086a5b3a7742dff09",
+    "scope": "OFFLINE_DECISION2_ADMISSION_COMPLETION_AND_EXACT_E6_ASSURANCE_BINDING",
+    "changed_source_paths": [
+      "official_financial_assurance_evidence.py",
+      "official_financial_filing_evidence.py",
+      "stocklookup_core/evidence/dual_reader_transcription.py",
+      "stocklookup_core/evidence/financial_row_identity.py",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py",
+      "tools/run_dual_reader_transcription_admission.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "prior_source_sha256_lf": {
+      "official_financial_assurance_evidence.py": "4b362d3a731beaabf2233fde60a9b78444ccdc1e6ca24ce6fc9cac53c9a8c9c2",
+      "official_financial_filing_evidence.py": "f6221831243c08ee049bcaf519ae6ce2a63a817560fe50b551025ac0b947cc31",
+      "stocklookup_core/evidence/dual_reader_transcription.py": "8a8870a4c660eea4417695601f3d56eed1330fa57ab9f396532e1aa22ff5e95a",
+      "stocklookup_core/evidence/financial_row_identity.py": "f0829d2ea193b50a8e76f2a8ebf3ab959ec2131822800ad92e4253b457738da5",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "bc9687ccee5c2875e53eced6294cfc5d6f847f964b3f8de53e84e36a4c63256c",
+      "tools/run_dual_reader_transcription_admission.py": "de9a5cfddaa7b11989cd60563b3baa294c91b72a5906fabb92e20fa66675bba8",
+      "tools/verify_retention_reader_transition.py": "ddc5324f4ab4b336eac989109a1316d340c76c7229a260390f0b53526bcf8ecb"
+    },
+    "active_source_sha256_lf": {
+      "official_financial_assurance_evidence.py": "4b0c4c6f997b627d2907d30303d0d2c958dcf6fdc12b2dc5c9dac10187d7fda8",
+      "official_financial_filing_evidence.py": "88bc2c0ebbffcb21488dd871742eb7ec160badc6f420a8fc2aa63befea2842a3",
+      "stocklookup_core/evidence/dual_reader_transcription.py": "713a248d723c9f76fbaf8fd5a506ed722618c82693fa5ac27099ba99d3f795e3",
+      "stocklookup_core/evidence/financial_row_identity.py": "65aeb975187c68ec38ae70490b6c27ba5d4c8dfffcc180334d11548f95c4a0c5",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "e6077592b86d61bcda5ddae4dfa503ac7fab1eda67ec444043b2b2306c26de41",
+      "tools/run_dual_reader_transcription_admission.py": "cb0cf103aaaa218c25d9fee2ed66112d47975642192c6bdaf0ab96d87131e2f6",
+      "tools/verify_retention_reader_transition.py": "c01f54644341fe7779c85abd43cfaa7e148102586b376092f0963e9ad700bbec"
+    },
+    "source_transition": "tests/fixtures/official_financial_assurance_evidence_source_transition_v1.json",
     "new_capacity_measurement": false,
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED"

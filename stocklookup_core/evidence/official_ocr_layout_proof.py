@@ -183,6 +183,18 @@ def layout_for(document_sha256: str | None) -> dict[str, Any] | None:
     return LAYOUT_PROOFS.get(str(document_sha256 or ""))
 
 
+EXACT_REGISTERED_ISSUER_NAMES = {
+    "POW": ({"literal": "PETROVIETNAM POWER CORPORATION",
+             "provenance": {"document_sha256": "3b06425b3d79803f9e7bf634c8bfd600f4aca998bcd15dabcd95ffb04877afbc",
+                            "source_page": 7, "source_host": "pvpower.vn",
+                            "description": "English charter amendment 8, foreign language name"}},),
+}
+
+
+def exact_registered_issuer_name(ticker: str, literal: str) -> bool:
+    return any(item["literal"] == literal for item in EXACT_REGISTERED_ISSUER_NAMES.get(ticker, ()))
+
+
 def retained_issuer_name_matches(row, proof, text: str) -> bool:
     """Exact registered originals may print their full legal name instead of ticker.
 
@@ -198,9 +210,11 @@ def retained_issuer_name_matches(row, proof, text: str) -> bool:
     layout = layout_for(sha) or {}
     ref = row.get('ocr_layout_proof') or {}
     ticker = row.get('ticker')
-    return bool(proof and ticker in names and layout.get('ticker') == ticker
+    exact_name = any(re.search(r'(?<!\w)' + re.escape(item['literal']) + r'(?!\w)', text)
+                     for item in EXACT_REGISTERED_ISSUER_NAMES.get(ticker, ()))
+    return bool(proof and layout.get('ticker') == ticker
                 and not verify_proof_identity(proof, document_sha256=sha, proof_sha256=ref.get('proof_sha256'))
-                and re.search(r'\b'+re.escape(names[ticker])+r'\b', _identity_fold(text)))
+                and (exact_name or (ticker in names and re.search(r'\b'+re.escape(names[ticker])+r'\b', _identity_fold(text)))))
 
 
 def build_ocr_proof(*, document_sha256: str, materializations: Iterable[Mapping[str, Any]]) -> dict[str, Any]:

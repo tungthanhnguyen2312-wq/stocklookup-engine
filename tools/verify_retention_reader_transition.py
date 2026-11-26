@@ -1428,6 +1428,34 @@ def _official_financial_period_identity_prior_bytes(root: Path, relative: str, a
     return prior
 
 
+OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_MANIFEST = "tests/fixtures/official_financial_assurance_evidence_source_transition_v1.json"
+OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE = "official_financial_assurance_evidence.py"
+OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_ARCHIVE = "tests/fixtures/official_financial_assurance_evidence_v1_sources/official_financial_assurance_evidence.py.txt"
+
+
+def _official_financial_assurance_evidence_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Bind the exact Decision 2 successor to the protected E6 baseline; fail closed."""
+    if relative != OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE:
+        return active
+    spec = json.loads((root / OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_MANIFEST).read_bytes())
+    expected = {'contract_version': 'official_financial_assurance_evidence_source_transition/v1',
+     'base_commit': '70fbba96d02369e0f02a5a15dd264bad780fe6ce',
+     'scope': 'DECISION2_ENGLISH_ASSURANCE_EXACT_E6_BASELINE_ONLY',
+     'release_authority': 'NOT_GRANTED',
+     'source_path': 'official_financial_assurance_evidence.py',
+     'archive': 'tests/fixtures/official_financial_assurance_evidence_v1_sources/official_financial_assurance_evidence.py.txt',
+     'prior_sha256_lf': '4b362d3a731beaabf2233fde60a9b78444ccdc1e6ca24ce6fc9cac53c9a8c9c2',
+     'active_sha256_lf': '4b0c4c6f997b627d2907d30303d0d2c958dcf6fdc12b2dc5c9dac10187d7fda8'}
+    if spec != expected:
+        raise ValueError("OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or prior == active):
+        raise ValueError("OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def issuer_registry_coverage_prior_manifest_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel only the exact issuer-registry pin addition; preserve all earlier amendments."""
     if relative != "tests/fixtures/e2e3_frozen_sources.json":
@@ -1499,6 +1527,9 @@ def historical_bytes(root: Path, relative: str) -> bytes:
     if relative == OFFICIAL_FINANCIAL_PERIOD_IDENTITY_SOURCE:
         # This archive is already the protected E6 baseline, before OCR recognition.
         return _official_financial_period_identity_prior_bytes(root, relative, content)
+    if relative == OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE:
+        # This archive is already the exact protected E6 assurance baseline.
+        return _official_financial_assurance_evidence_prior_bytes(root, relative, content)
     content = _official_source_registry_vsdc_flag_prior_bytes(root, relative, content)
     content = _tplus_retry_integrity_prior_bytes(root, relative, content)
     if relative == TACTICAL_SHADOW_PIPELINE:

@@ -8,11 +8,39 @@ import json
 import unicodedata
 
 import pytest
-
 from official_financial_filing_evidence import admit_official_financial_fact, qualify_document_metadata
 from stocklookup_core.evidence import dual_reader_transcription as dual
 from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
 
+
+@pytest.mark.parametrize("literal,expected", [("10", "10"), ("Trang 10", "10"),
+    ("Trang 010", "010"), ("trang 10", "trang 10"), ("Trang  10", "Trang  10"),
+    ("Trang Trang 10", "Trang Trang 10"), ("Trang 10 ", "Trang 10 "),
+    ("Trang ١٠", "Trang ١٠"), ("Trang +10", "Trang +10")])
+def test_exact_printed_page_identity(literal, expected):
+    assert dual.printed_page_identity(literal) == expected
+
+
+@pytest.mark.parametrize("suffix,accepted", [("\nThông tư số 43/2026/TT-BTC", True),
+    (" Thông tư số 43/2026/TT-BTC", True), ("\nThông tư số 99/2025/TT-BTC", True),
+    ("\nThông tư số 43/26/TT-BTC", False), ("\nThông tư số 43/2026/TT-BTC ", False),
+    ("\nThông tư số 43/2026/TT-BTC\nextra", False), ("\nthông tư số 43/2026/TT-BTC", False),
+    ("\tThông tư số 43/2026/TT-BTC", False)])
+def test_exact_form_circular_suffix(suffix, accepted):
+    form = "Mẫu số B 02a - DN/HN"
+    assert (dual.form_code_literal(form + suffix) == form) is accepted
+
+
+def test_agreed_unit_requires_two_identical_explicit_vnd_literals():
+    from financial_statement_unit_resolution import parse_explicit_unit_declaration as parse
+    literal = "Đơn vị tính: Đồng Việt Nam"
+    tables = [{"currency_unit_literal": literal}, {"currency_unit_literal": literal}]
+    assert dual.agreed_vnd_unit(tables, parse)["unit_scale"] == 1
+    for other in (literal + " ", "Đơn vị tính: USD", None, "UNREADABLE"):
+        assert dual.agreed_vnd_unit([tables[0], {"currency_unit_literal": other}], parse) is None
+    assert dual.agreed_vnd_unit(tables[:1], parse) is None
+    for literal in ("USD", "Đơn vị tính: USD", "UNREADABLE", ""):
+        assert dual.agreed_vnd_unit([{"currency_unit_literal": literal}] * 2, parse) is None
 
 def _sha(payload):
     return hashlib.sha256(payload).hexdigest()
@@ -22,7 +50,7 @@ def _bytes(value):
     return json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
 
 
-def _pdf(text):
+def _pdf(text, *, image_only=False):
     # Owned, single-page ASCII PDF; the accounting value is deliberately absent
     # from its text layer. It is supplied only by the separately retained image readings.
     lines = [line.replace('\\', '\\\\').replace('(', '\\(').replace(')', '\\)') for line in text.splitlines()]
@@ -31,15 +59,26 @@ def _pdf(text):
         b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
         b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
         b'<< /Length ' + str(len(stream)).encode() + b' >>\nstream\n' + stream + b'\nendstream']
+    if image_only:
+        # Owned raster-only PDF: no font or text operators for the loader to extract.
+        objects[2] = (b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] '
+                      b'/Resources << /XObject << /Im0 6 0 R >> >> /Contents 5 0 R >>')
+        image_stream = b'q 612 0 0 792 0 0 cm /Im0 Do Q'
+        objects[4] = (b'<< /Length ' + str(len(image_stream)).encode() + b' >>\nstream\n'
+                      + image_stream + b'\nendstream')
+        objects.append(b'<< /Type /XObject /Subtype /Image /Width 1 /Height 1 '
+                       b'/ColorSpace /DeviceGray /BitsPerComponent 8 /Length 1 >>\nstream\n'
+                       b'\xff\nendstream')
     output = b'%PDF-1.4\n'; offsets = []
     for n, obj in enumerate(objects, 1):
         offsets.append(len(output)); output += str(n).encode() + b' 0 obj\n' + obj + b'\nendobj\n'
     xref = len(output)
-    output += b'xref\n0 6\n0000000000 65535 f \n' + b''.join(f'{n:010d} 00000 n \n'.encode() for n in offsets)
-    return output + b'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n' + str(xref).encode() + b'\n%%EOF\n'
+    output += b'xref\n0 ' + str(len(objects) + 1).encode() + b'\n0000000000 65535 f \n' + b''.join(f'{n:010d} 00000 n \n'.encode() for n in offsets)
+    return output + b'trailer\n<< /Size ' + str(len(objects) + 1).encode() + b' /Root 1 0 R >>\nstartxref\n' + str(xref).encode() + b'\n%%EOF\n'
 
 
-def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income"):
+def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income", *, image_only=False,
+             native_text_override=None):
     from official_financial_assurance_evidence import resolve_native_document_assurance
     from official_financial_period_identity import period_bounds
     from official_source_registry import load_registry
@@ -58,7 +97,8 @@ def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_inc
         "BAO CAO SOAT XET hop dong dich vu soat xet so 2410 hop nhat giua nien do")
     issuer = "PNJ synthetic fixture"
     native_text = '\n'.join([issuer, period_text, assurance_title, "consolidated", "Unit: VND"])
-    payload = _pdf(native_text); sha = _sha(payload)
+    payload = _pdf(native_text if native_text_override is None else native_text_override,
+                   image_only=image_only); sha = _sha(payload)
     (directory / 'fixture.pdf').write_bytes(payload)
     label = GENERIC_METRIC_RULES[metric]["source_label"]
     label = ''.join(c for c in unicodedata.normalize('NFD', label.replace('đ', 'd').replace('Đ', 'D')) if not unicodedata.combining(c))
@@ -187,7 +227,9 @@ def test_h1_scope_and_form_literal_differences_still_block(tmp_path, metric, dif
         _change_reader(directory, row, proof, lambda raw: raw["table"].update(scope_literal=None), index=0)
     else:
         _change_reader(directory, row, proof, lambda raw: raw["table"].update(
-            form_reference_literal=row["form_reference_literal"] + " Thông tư số 43/2026/TT-BTC"))
+            # HL rule 2026-11-25: an exact trailing "Thông tư số N/YYYY/TT-BTC" line is excluded
+            # (admitted in test_form_circular_suffix_admits_and_preserves_raw); any other suffix still disagrees.
+            form_reference_literal=row["form_reference_literal"] + " Thông tư 43/2026/TT-BTC"))
     assert "DUAL_READER_LITERAL_DISAGREEMENT" in _pure(row, context, directory)["reason_codes"]
 
 
@@ -649,7 +691,409 @@ def test_explicit_contradictory_column_period_still_blocks_after_caption_resolut
     assert 'DUAL_READER_SEMANTIC_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
 
 
-def test_printed_page_literal_difference_has_no_normalization(tmp_path):
+def test_printed_page_exact_trang_prefix_admits(tmp_path):
     row, context, directory, proof = _fixture(tmp_path)
     _change_reader(directory, row, proof, lambda raw: raw['input'].update(printed_page='Trang 1'))
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert result['evidence_classification']['literal_normalizations'][0]['rule'] == 'LEADING_TRANG_PAGE_PREFIX'
+
+
+@pytest.mark.parametrize('literal', ['trang 1', 'Trang  1', 'Trang 01', 'Trang 2', 'Trang 1 ', 'Trang Trang 1'])
+def test_printed_page_near_miss_still_refused(tmp_path, literal):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda raw: raw['input'].update(printed_page=literal))
     assert 'DUAL_READER_INPUT_BINDING_MISMATCH' in _pure(row, context, directory)['reason_codes']
+
+
+@pytest.mark.parametrize('reader', [0, 1])
+def test_form_circular_suffix_admits_and_preserves_raw(tmp_path, reader):
+    row, context, directory, proof = _fixture(tmp_path)
+    form = row['form_reference_literal']
+    _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+        form_reference_literal=form + '\nThông tư số 43/2026/TT-BTC'), index=reader)
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert result['evidence_classification']['literal_normalizations'][0]['rule'] == 'TRAILING_CIRCULAR_REFERENCE_LINE'
+
+
+def test_missing_scope_against_explicit_scope_remains_literal_disagreement(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path)
+    _change_reader(directory, row, proof, lambda raw: raw['table'].update(scope_literal=None))
+    assert 'DUAL_READER_LITERAL_DISAGREEMENT' in _pure(row, context, directory)['reason_codes']
+
+
+def _replay_metadata(row):
+    metadata = row['document_metadata']
+    document = metadata['document']
+    row['document_metadata'] = qualify_document_metadata({
+        'issuer_identity': metadata['issuer_identity'], 'entity_type': metadata['entity_type'],
+        'document': {**document, 'sha256': document['document_sha256']},
+        'metadata': {**metadata['metadata_claims'], **metadata['optional_metadata_claims']}})
+
+
+def _unit_gap_fixture(tmp_path, period='2026-H1', *, missing_units=True, image_only=False):
+    row, context, directory, proof = _fixture(tmp_path, period, image_only=image_only)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+            currency_unit_literal='Đơn vị tính: Đồng Việt Nam'), index=index)
+    context['document_pages'][1] = context['document_pages'][1].replace('Unit: VND', 'garbled')
+    from official_financial_assurance_evidence import resolve_native_document_assurance
+    row['assurance_evidence'] = resolve_native_document_assurance(
+        row['document_sha256'], context['document_pages'])
+    if missing_units:
+        for name in ('currency', 'unit_scale'):
+            row['document_metadata']['metadata_claims'].pop(name)
+        _replay_metadata(row)
+    return row, context, directory, proof
+
+
+@pytest.mark.parametrize('period', ['2025-H1', '2026-H1'])
+@pytest.mark.parametrize('missing_units', [True, False])
+def test_identical_reader_unit_waives_common_metadata_text_gate_only_after_full_verification(
+        tmp_path, period, missing_units):
+    row, context, directory, _ = _unit_gap_fixture(tmp_path, period, missing_units=missing_units)
+    before = deepcopy(row), deepcopy(context)
+    metadata = row['document_metadata']
+    if missing_units:
+        assert metadata['qualification_status'] == 'DOCUMENT_METADATA_BLOCKED'
+        assert set(metadata['blockers']) == {'CURRENCY_MISSING', 'UNIT_SCALE_MISSING'}
+    else:
+        assert metadata['qualification_status'] == 'DOCUMENT_METADATA_QUALIFIED'
+    result = _pure(row, context, directory)
+    assert result['state'] == 'ADMITTED', result
+    assert row['source_unit_scale'] == row['unit_scale'] == 1
+    assert result['admission_basis'] == result['evidence_tier'] == dual.EVIDENCE_TIER
+    assert result['evidence_classification']['authority_effect'] == 'OFFLINE_RESEARCH_ONLY'
+    assert result['evidence_classification']['pit_backtest_eligible'] is False
+    effective = deepcopy(row)
+    for name, value in (('currency', 'VND'), ('unit_scale', 1)):
+        effective['document_metadata']['metadata_claims'][name] = {'value': value, 'evidence_span': {
+            'citation_id': 'effective', 'document_sha256': row['document_sha256'],
+            'source_page': 1, 'text': 'Đơn vị tính: Đồng Việt Nam'}}
+    _replay_metadata(effective)
+    assert result['metadata_evidence_id'] == effective['document_metadata']['evidence_envelope_id']
+    if missing_units:
+        assert result['metadata_evidence_id'] != metadata['evidence_envelope_id']
+    assert (row, context) == before
+
+
+@pytest.mark.parametrize('case', ['reader_disagreement', 'non_vnd', 'fact_page', 'span_page',
+    'reader_page', 'document_sha', 'proof_reference', 'no_dual', 'no_ocr_dual',
+    'missing_scope', 'missing_period', 'stale_id', 'forged_status',
+    'assurance', 'rights', 'source', 'cutoff', 'knowledge_floor'])
+def test_statement_unit_waiver_refused_without_all_other_proofs(tmp_path, monkeypatch, case):
+    row, context, directory, proof = _unit_gap_fixture(tmp_path)
+    if case == 'reader_disagreement':
+        _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+            currency_unit_literal='Đơn vị tính: Đồng Việt Nam '))
+    elif case == 'non_vnd':
+        for index in (0, 1):
+            _change_reader(directory, row, proof, lambda raw: raw['table'].update(
+                currency_unit_literal='Đơn vị tính: USD'), index=index)
+    elif case == 'fact_page':
+        row['source_page'] = 2
+    elif case == 'span_page':
+        row['source_span']['source_page'] = 2
+    elif case == 'reader_page':
+        _change_reader(directory, row, proof, lambda raw: raw['input'].update(source_page=2))
+    elif case == 'document_sha':
+        row['document_sha256'] = '0' * 64
+    elif case == 'proof_reference':
+        row['dual_reader_transcription']['proof_sha256'] = '0' * 64
+    elif case in ('no_dual', 'no_ocr_dual'):
+        row.pop('dual_reader_transcription')
+        if case == 'no_ocr_dual':
+            context['ocr_layout_proof'] = _ocr_page_proof(monkeypatch, row)
+    elif case in ('missing_scope', 'missing_period'):
+        name = 'statement_scope' if case == 'missing_scope' else 'reporting_period'
+        row['document_metadata']['metadata_claims'].pop(name)
+        _replay_metadata(row)
+    elif case == 'stale_id':
+        row['document_metadata']['evidence_envelope_id'] = '0' * 64
+    elif case == 'forged_status':
+        row['document_metadata']['qualification_status'] = 'DOCUMENT_METADATA_QUALIFIED'
+    elif case == 'assurance':
+        row['assurance_evidence'] = None
+    elif case == 'rights':
+        context['source_record']['rights_status'] = 'UNKNOWN'
+    elif case == 'source':
+        context['source_record']['canonical_url'] = context['source_record']['final_url'] = 'https://invalid.example/test.pdf'
+    elif case == 'cutoff':
+        context['cutoff'] = '2026-11-24T09:02:00+00:00'
+    elif case == 'knowledge_floor':
+        row['knowledge_available_at'] = '2026-11-24T09:01:00+00:00'
+    result = _pure(row, context, directory)
+    assert result['state'] != 'ADMITTED', (case, result)
+    if case in ('reader_disagreement', 'non_vnd', 'reader_page', 'document_sha',
+                'proof_reference', 'rights', 'knowledge_floor'):
+        assert any(reason.startswith('DUAL_READER_') for reason in result['reason_codes']), result
+    if case in ('no_dual', 'no_ocr_dual', 'stale_id', 'forged_status', 'missing_scope', 'missing_period'):
+        assert 'DOCUMENT_METADATA_NOT_QUALIFIED' in result['reason_codes'], result
+
+
+@pytest.mark.parametrize('text', ['Unit: USD', 'Unit: million VND'])
+@pytest.mark.parametrize('location', ['selected_page', 'outside_selected_ocr_page'])
+def test_statement_unit_waiver_rejects_contrary_retained_declarations(tmp_path, monkeypatch, text, location):
+    row, context, directory, _ = _unit_gap_fixture(tmp_path)
+    if location == 'selected_page':
+        context['document_pages'][1] += '\n' + text
+    else:
+        proof = _ocr_page_proof(monkeypatch, row)
+        _seal_ocr_pages(row, proof, {9: text})
+        context['ocr_layout_proof'] = proof
+        assert 9 not in context['document_pages']
+    result = _pure(row, context, directory)
+    assert result['state'] == 'BLOCKED', result
+    assert 'DUAL_READER_STATEMENT_UNIT_CONFLICT' in result['reason_codes'], result
+
+
+def test_statement_unit_waiver_rejects_contrary_metadata_value(tmp_path):
+    row, context, directory, _ = _unit_gap_fixture(tmp_path, missing_units=False)
+    row['document_metadata']['metadata_claims']['unit_scale']['value'] = 1000000
+    _replay_metadata(row)
+    result = _pure(row, context, directory)
+    assert result['state'] == 'BLOCKED', result
+    assert 'DUAL_READER_STATEMENT_UNIT_CONFLICT' in result['reason_codes'], result
+
+
+def _seal_ocr_pages(row, proof, pages):
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    proof['pages'] = {str(number): {'tokens': [
+        {'text': line, 'raw_token_order': index, 'tsv_hierarchy': {'line_num': index}}
+        for index, line in enumerate(text.splitlines(), 1)]} for number, text in pages.items()}
+    body = {key: value for key, value in proof.items() if key != 'proof_sha256'}
+    proof['proof_sha256'] = _sha(ocr.canonical_json(body).encode('utf-8'))
+    row['ocr_layout_proof']['proof_sha256'] = proof['proof_sha256']
+
+
+@pytest.mark.parametrize('metric', ['revenue', 'attributable_net_income'])
+@pytest.mark.parametrize('case', ['ready', 'cutoff', 'wrong_root', 'pdf_hash', 'row_value',
+                                  'missing_operand', 'native_proof_hash'])
+def test_dual_h1_engine_replays_zero_native_proof_only_with_registered_builder(tmp_path, monkeypatch, metric, case):
+    from official_financial_pdf_page_evidence import build_artifact
+    from stocklookup_core.evidence import official_document_qualification as owner
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    from stocklookup_core.valuation import current_research_valuation_context as valuation
+
+    rows, directories = [], []
+    for period, value in [('2025', 100), ('2026-H1', 60), ('2025-H1', 40)]:
+        row, context, directory, _ = _fixture(
+            tmp_path, period, value, metric, native_text_override='unusable native text layer ' + period)
+        proof = _ocr_page_proof(monkeypatch, row)
+        _seal_ocr_pages(row, proof, context['document_pages'])
+        source = context['source_record']
+        native = build_artifact(document={**source, 'entity_type': 'corporate',
+            'official_url': source['canonical_url'], 'retrieved_at': source['observed_at']},
+            path=directory / 'fixture.pdf')
+        assert not native['fact_candidates'] and not native['p3f13_panel_facts']
+        proof['pages']['1']['native_failure_evidence'] = {
+            'document_sha256': row['document_sha256'], 'candidate_count': 0,
+            'trigger': 'EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES',
+            'native_artifact_identity': native['artifact_identity'],
+            'native_page_text_sha256': {str(p['page_number']): owner._native_page_text_sha256(p['page_text'])
+                                        for p in native['page_evidence']}}
+        if case == 'native_proof_hash' and period == '2026-H1':
+            proof['pages']['1']['native_failure_evidence']['native_artifact_identity'] = 'tampered'
+        proof['proof_sha256'] = _sha(ocr.canonical_json(
+            {k: v for k, v in proof.items() if k != 'proof_sha256'}).encode('utf8'))
+        row['ocr_layout_proof']['proof_sha256'] = proof['proof_sha256']
+        target = directory / row['ocr_layout_proof']['relative_path']
+        target.parent.mkdir(exist_ok=True)
+        target.write_bytes(_bytes(proof))
+        rows.append(row)
+        directories.append(directory)
+
+    # Reproduce a fresh engine process, even if other tests imported the OCR runner.
+    monkeypatch.setattr(owner, '_NATIVE_ARTIFACT_BUILDER', None)
+    monkeypatch.setattr(owner, 'load_registry', lambda: context['registry'])
+    controls = []
+    for keep_ocr in (True, False):
+        control = deepcopy(rows[0])
+        control.pop('dual_reader_transcription')
+        if not keep_ocr:
+            control.pop('ocr_layout_proof')
+        controls.append((control, owner.admit_retained_financial_fact(control, evidence_root=tmp_path)))
+    if case == 'ready':
+        # Same row, bytes and cutoff: only supplying the existing builder differs.
+        assert owner.admit_retained_financial_fact(rows[0], evidence_root=tmp_path)['state'] == 'BLOCKED'
+        assert owner.admit_retained_financial_fact(rows[0], evidence_root=tmp_path,
+            native_artifact_builder=build_artifact)['state'] == 'ADMITTED'
+    cutoff = '2026-11-24T09:02:00+00:00' if case == 'cutoff' else '2026-11-24T09:04:00+00:00'
+    root = tmp_path / 'absent' if case == 'wrong_root' else tmp_path
+    if case == 'pdf_hash':
+        with (directories[1] / 'fixture.pdf').open('ab') as stream:
+            stream.write(b'\n% tampered retained bytes\n')
+    elif case == 'row_value':
+        rows[1]['normalized_value'] += 1
+    elif case == 'missing_operand':
+        rows.pop(1)
+    before = deepcopy(rows)
+    fid = metric + '_ttm'
+    # Core never imports the root builder: without the composition root's registration the
+    # engine fails closed on the zero-native-candidate replay.
+    unregistered = official_h1_ttm_features(ticker='PNJ', rows=rows, cutoff=cutoff, evidence_root=root)
+    assert unregistered[fid]['fitness'] == 'BLOCKED_BY_EVIDENCE' and unregistered[fid]['value'] is None
+    # The composition root (admission runner, Daily) registers the existing builder by importing
+    # official_financial_ocr_table_evidence; reproduce exactly that registration.
+    monkeypatch.setattr(owner, '_NATIVE_ARTIFACT_BUILDER', build_artifact)
+    features = official_h1_ttm_features(ticker='PNJ', rows=rows, cutoff=cutoff, evidence_root=root)
+    feature = features[fid]
+    assert rows == before
+    monkeypatch.setattr(owner, '_NATIVE_ARTIFACT_BUILDER', None)
+    for control, original in controls:
+        assert owner.admit_retained_financial_fact(control, evidence_root=tmp_path) == original
+    selected = valuation._qualified_ttm(fid, {'features': features}, 'SYNTHETIC_DUAL_REPLAY')
+    if case == 'ready':
+        assert feature['fitness'] == 'READY' and feature['value'] == 120, feature
+        assert selected['value'] == 120
+        method = valuation._ttm_method(method_id='P/S_TTM' if metric == 'revenue' else 'P/E_TTM',
+            metric=fid, ttm=selected, market_cap={'status': 'RESEARCH_USABLE', 'value': 1200,
+                'currency': 'VND', 'scale': 'units'},
+            share_class=valuation.share_basis_class({'research_proxy_eligible': True}),
+            entity='corporate', earnings_state=None)
+        assert method['value'] == 10, method
+        assert method['status'] == 'RESEARCH_USABLE', method
+    else:
+        assert feature['fitness'] == 'BLOCKED_BY_EVIDENCE' and feature['value'] is None, feature
+        assert selected is None
+
+
+@pytest.mark.parametrize('period', ['2025-H1', '2026-H1'])
+@pytest.mark.parametrize('contrary', [False, True])
+def test_retained_loader_replays_dual_statement_unit_with_unreadable_ocr(tmp_path, monkeypatch, period, contrary):
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    row, context, directory, _ = _unit_gap_fixture(tmp_path, period, image_only=True)
+    proof = _ocr_page_proof(monkeypatch, row)
+    # Register only this owned fixture; the loader and both verifiers run normally.
+    monkeypatch.setitem(ocr.LAYOUT_PROOFS[row['document_sha256']], 'text_layer_verification', {
+        'state': 'NONE_VERIFIED'})
+    pages = {1: context['document_pages'][1]}
+    if contrary:
+        pages[9] = 'Unit: USD'  # retained proof page outside the loader's required set
+    _seal_ocr_pages(row, proof, pages)
+    target = directory / row['ocr_layout_proof']['relative_path']
+    target.parent.mkdir(exist_ok=True)
+    target.write_bytes(_bytes(proof))
+    before = deepcopy(row)
+    retained_paths = [directory / 'fixture.pdf', directory / 'official_document_acquisition_manifest.json',
+                      target, *[path for path in (directory / dual.PROOF_DIR).iterdir() if path.is_file()]]
+    retained_bytes = {path: path.read_bytes() for path in retained_paths}
+    result = admit_retained_financial_fact(row, evidence_root=tmp_path, registry=context['registry'])
+    if contrary:
+        assert result['state'] == 'BLOCKED', result
+        assert 'DUAL_READER_STATEMENT_UNIT_CONFLICT' in result['reason_codes'], result
+    else:
+        assert result['state'] == 'ADMITTED', result
+        assert result['admission_basis'] == dual.EVIDENCE_TIER
+        assert result['evidence_classification']['authority_effect'] == 'OFFLINE_RESEARCH_ONLY'
+        assert result['evidence_classification']['pit_backtest_eligible'] is False
+    assert row == before
+    assert {path: path.read_bytes() for path in retained_paths} == retained_bytes
+
+
+@pytest.mark.parametrize("label", ["06 tháng đầu năm 2026", "6 tháng đầu năm 2026"])
+def test_h1_explicit_half_year_current_header_admits(tmp_path, label):
+    row, context, directory, proof = _fixture(tmp_path, period="2026-H1")
+    row["current_period_label"] = label
+    def change(raw):
+        raw["table"]["columns"][0].update(label_literal=label, reporting_period=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] == "ADMITTED", result["reason_codes"]
+
+
+@pytest.mark.parametrize("period,label", [
+    ("2026-H1", "06 tháng đầu năm 2025"),   # another year's half-year header
+    ("2026-H1", "06 tháng cuối năm 2026"),  # not the first half
+    ("2026-H1", "9 tháng đầu năm 2026"),    # not a half year
+    ("2025", "06 tháng đầu năm 2025"),      # annual fact never takes an H1 header
+])
+def test_h1_half_year_header_rule_is_exact(tmp_path, period, label):
+    row, context, directory, proof = _fixture(tmp_path, period=period)
+    row["current_period_label"] = label
+    def change(raw):
+        raw["table"]["columns"][0].update(label_literal=label, reporting_period=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] != "ADMITTED"
+    assert set(result["reason_codes"]) & {"DUAL_READER_CURRENT_COLUMN_NOT_EXPLICIT",
+                                          "DUAL_READER_SEMANTIC_BINDING_MISMATCH"}, result["reason_codes"]
+
+
+@pytest.mark.parametrize("literal,expected", [
+    ("06 tháng đầu năm 2026", "2026-H1"), ("6 tháng đầu năm 2025", "2025-H1"),
+    ("Cho kỳ kế toán 06 tháng đầu năm 2025", "2025-H1"),
+    ("06 tháng cuối năm 2026", None), ("9 tháng đầu năm 2026", None),
+    ("06 tháng đầu năm 2025 (Trình bày lại)", None), ("Cho kỳ 06 tháng đầu năm 2025", None), (None, None),
+    ("For the 6-month period ended 30 June 2025", "2025-H1"), ("6-month period ended 30 June 2026", "2026-H1"),
+    ("For the 6-month period ended 30 September 2025", None), ("For the 9-month period ended 30 June 2025", None),
+    ("For the 6-month period ended 30 June 2025 (restated)", None),
+])
+def test_vn_first_half_period_literal_is_exact(literal, expected):
+    assert dual.vn_first_half_period(literal) == expected
+
+
+@pytest.mark.parametrize("metric,label,supported", [
+    ("attributable_net_income", "Net profit after tax attributable to the parent entity", True),
+    ("attributable_net_income", "Profit after tax attributable to Parent Company", True),
+    ("attributable_net_income", "Net profit after tax attributable to non-controlling interests", False),
+    ("attributable_net_income", "Net profit after tax attributable to the parent's non-controlling interests", False),
+    ("net_income", "Net profit after tax attributable to the parent entity", False),
+])
+def test_english_parent_attributable_row_label_is_exact(metric, label, supported):
+    from stocklookup_core.evidence.financial_row_identity import row_label_supports_metric
+    assert row_label_supports_metric(metric, label) is supported
+
+
+def test_h1_vietnamese_caption_and_header_bind_the_same_half_year(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, period="2026-H1")
+    label = "06 tháng đầu năm 2026"
+    row["current_period_label"] = label
+    def change(raw):
+        raw["table"]["period_caption_literal"] = "Cho kỳ kế toán 06 tháng đầu năm 2026"
+        raw["table"]["columns"][0].update(label_literal=label, reporting_period=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    assert _pure(row, context, directory)["state"] == "ADMITTED"
+    def contrary(raw):
+        raw["table"]["period_caption_literal"] = "Cho kỳ kế toán 06 tháng đầu năm 2025"
+    for index in (0, 1):
+        _change_reader(directory, row, proof, contrary, index=index)
+    assert "DUAL_READER_SEMANTIC_BINDING_MISMATCH" in _pure(row, context, directory)["reason_codes"]
+
+
+@pytest.mark.parametrize("raw,sign,expected", [
+    ("603.917.668.121", "parentheses", "(603.917.668.121)"),
+    ("(603.917.668.121)", "parentheses", "(603.917.668.121)"),
+    ("603.917.668.121", "unsigned", "603.917.668.121"),
+    ("(603.917.668.121)", "unsigned", None),
+    ("603.917.668.121)", "parentheses", None),
+    ("-603.917.668.121", "minus", None),
+    ("603.917.668.121", None, None),
+    ("", "parentheses", None),
+])
+def test_signed_cell_literal_is_exact(raw, sign, expected):
+    assert dual.signed_cell_literal(raw, sign) == expected
+
+
+def test_parenthesized_loss_admits_only_when_both_readers_record_it(tmp_path):
+    row, context, directory, proof = _fixture(tmp_path, metric="attributable_net_income")
+    digits = row["raw_value_text"].strip("()")
+    row.update(raw_value_text="(" + digits + ")", normalized_value=-abs(row["normalized_value"]))
+    if "value" in row:
+        row["value"] = -abs(row["value"])
+    row["source_span"]["text"] = row["raw_row_label"] + " " + row["raw_value_text"]
+    def loss(raw):
+        raw["table"]["rows"][0]["cells"][0].update(raw_value_literal=digits, sign_literal="parentheses")
+    for index in (0, 1):
+        _change_reader(directory, row, proof, loss, index=index)
+    result = _pure(row, context, directory)
+    assert result["state"] == "ADMITTED", result["reason_codes"]
+    def unsigned(raw):
+        raw["table"]["rows"][0]["cells"][0].update(sign_literal="unsigned")
+    _change_reader(directory, row, proof, unsigned, index=1)
+    assert _pure(row, context, directory)["state"] != "ADMITTED"

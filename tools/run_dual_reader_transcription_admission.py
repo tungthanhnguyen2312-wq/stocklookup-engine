@@ -111,8 +111,8 @@ VRE_2025_P11 = {
     "comparison_started_at": "2026-11-24T22:25:06+07:00",
 }
 
-# HL-20261125-CDX-08 retained inputs. NVL H1/2025 keeps Claude's literal
-# "10"; Gemini's "Trang 10" fails exact input binding (no normalization).
+# HL-20261125-CDX-17: NVL H1/2025 uses agreed numeric printed page "10";
+# exactly one leading "Trang " before the identical digits is equivalent.
 POW_2025_P11 = {
     "page_key": "pow-fy2025-p11",
     "ticker": "POW",
@@ -156,8 +156,8 @@ POW_2025_H1_P11 = {
     "readings": [
         [
             "claude",
-            "blind-input-pow-2025h1-p11/claude/claude-reader.raw.json",
-            "2026-11-25T12:02:25+07:00"
+            "blind-input-pow-2025h1-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-25T23:58:20+07:00"
         ],
         [
             "gemini",
@@ -165,10 +165,10 @@ POW_2025_H1_P11 = {
             "2026-11-25T12:05:26+07:00"
         ]
     ],
-    "new_subdir": "h1-2025-dual-reader-pow-20261125",
+    "new_subdir": "h1-2025-dual-reader-pow-r2-20261125",
     "printed_page": "7",
     "column_id": "c1",
-    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+    "comparison_started_at": "2026-11-25T23:58:40+07:00"
 }
 
 POW_2026_H1_P11 = {
@@ -185,8 +185,8 @@ POW_2026_H1_P11 = {
     "readings": [
         [
             "claude",
-            "blind-input-pow-2026h1-p11/claude/claude-reader.raw.json",
-            "2026-11-25T12:02:24+07:00"
+            "blind-input-pow-2026h1-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-26T00:14:54+07:00"
         ],
         [
             "gemini",
@@ -194,10 +194,10 @@ POW_2026_H1_P11 = {
             "2026-11-25T12:05:16+07:00"
         ]
     ],
-    "new_subdir": "h1-2026-dual-reader-pow-20261125",
+    "new_subdir": "h1-2026-dual-reader-pow-r2b-20261126",
     "printed_page": "7",
     "column_id": "c1",
-    "comparison_started_at": "2026-11-25T12:06:00+07:00"
+    "comparison_started_at": "2026-11-26T00:15:10+07:00"
 }
 
 NVL_2025_H1_P12 = {
@@ -223,7 +223,7 @@ NVL_2025_H1_P12 = {
             "2026-11-25T12:05:36+07:00"
         ]
     ],
-    "new_subdir": "h1-2025-dual-reader-nvl-20261125",
+    "new_subdir": "h1-2025-dual-reader-nvl-signed-20261126",
     "printed_page": "10",
     "column_id": "c1",
     "comparison_started_at": "2026-11-25T12:06:00+07:00"
@@ -366,10 +366,17 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
     """
     from official_financial_value_evidence import parse_accounting_integer
     from official_financial_period_identity import period_bounds
-    # Currency/scale come from the qualified document metadata; the verifier then
-    # requires both readers' unit literal to declare exactly this unit.
-    claims = document_evidence["document_metadata"]["metadata_claims"]
-    unit = {"currency": claims["currency"]["value"], "unit_scale": claims["unit_scale"]["value"]}
+    # Decision 2 condition 3: use the two readers' identical statement-page unit
+    # when both tables are supplied. Metadata and the full retained proof remain
+    # independent admission gates; this does not repair an OCR metadata envelope.
+    if other_tables:
+        from financial_statement_unit_resolution import parse_explicit_unit_declaration
+        unit = dual.agreed_vnd_unit((raw_table, *other_tables), parse_explicit_unit_declaration)
+        if unit is None:
+            raise ValueError("READERS_UNIT_LITERAL_NOT_IDENTICAL_EXPLICIT_VND")
+    else:
+        claims = document_evidence["document_metadata"]["metadata_claims"]
+        unit = {"currency": claims["currency"]["value"], "unit_scale": claims["unit_scale"]["value"]}
     if unit["currency"] != "VND" or type(unit["unit_scale"]) is not int or unit["unit_scale"] <= 0:
         raise ValueError("DOCUMENT_UNIT_NOT_QUALIFIED_VND")
     start, end = period_bounds(spec["reporting_period"])
@@ -379,15 +386,21 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
         try:
             for table in (raw_table, *other_tables):
                 column, literal_row, cell = _selected_cell(table, spec["column_id"], code)
-                if cell["sign_literal"] != "unsigned":
+                # A printed loss "(digits)" is supported only for profit lines 60/61; revenue and
+                # any other sign vocabulary stay refused.
+                if cell["sign_literal"] != "unsigned" and not (
+                        cell["sign_literal"] == "parentheses" and code in {"60", "61"}):
                     raise ValueError(f"SIGNED_CELL_NOT_SUPPORTED_BY_THIS_RUN:{code}")
+                signed = dual.signed_cell_literal(cell["raw_value_literal"], cell["sign_literal"])
                 try:
-                    parse_accounting_integer(cell["raw_value_literal"])
+                    if signed is None:
+                        raise ValueError
+                    parse_accounting_integer(signed)
                 except (ValueError, TypeError, AttributeError):
                     raise ValueError(f"VALUE_NOT_PARSEABLE:{code}") from None
             column, literal_row, cell = _selected_cell(raw_table, spec["column_id"], code)
             _, label = dual.split_outline_enumerator(literal_row["row_label_literal"])
-            literal = cell["raw_value_literal"]
+            literal = dual.signed_cell_literal(cell["raw_value_literal"], cell["sign_literal"])
             value = parse_accounting_integer(literal) * unit["unit_scale"]
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
             reason = str(exc) if isinstance(exc, ValueError) else f"CELL_LITERAL_MISSING_OR_INVALID:{code}"
@@ -421,7 +434,7 @@ def build_rows(*, spec: Mapping[str, Any], document_evidence: Mapping[str, Any],
             "extraction_method": "dual_reader_reviewed_transcription",
             "dual_reader_transcription": dict(proof_ref),
             "issuer_literal": raw_table["issuer_literal"],
-            "form_reference_literal": raw_table["form_reference_literal"],
+            "form_reference_literal": dual.form_code_literal(raw_table["form_reference_literal"]),
             "statement_title_literal": raw_table["statement_title_literal"],
             "current_period_label": column["label_literal"], "column_id": spec["column_id"],
             "evidence_tier": dual.EVIDENCE_TIER, "authority_effect": "OFFLINE_RESEARCH_ONLY",
@@ -448,7 +461,7 @@ def _validate_readings(*, spec, reader_root, observed_at, completed):
         if (raw.get("method") != "DIRECT_PAGE_IMAGE" or raw.get("independent_input") is not True
                 or raw.get("saw_other_reader_output") is not False or not raw.get("reader_id")):
             raise ValueError("READER_INDEPENDENCE_NOT_PROVEN")
-        if raw.get("input") != expected:
+        if not dual.input_binding_matches(raw.get("input"), expected):
             raise ValueError("READER_INPUT_BINDING_MISMATCH")
         if not (dual._time(observed_at) <= dual._time(raw["recorded_at"])
                 <= dual._time(retained_at) < comparison <= completion):
@@ -519,8 +532,10 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
 
     # 3. Manifest record: original fields plus explicit rights, issuer name and image binding.
     issuer = tables[0]["issuer_literal"]
+    from stocklookup_core.evidence.official_ocr_layout_proof import exact_registered_issuer_name
     if (any(t["issuer_literal"] != issuer for t in tables)
-            or _identity_fold(issuer) != REGISTERED_ISSUER_FOLD.get(spec["ticker"])):
+            or not (exact_registered_issuer_name(spec["ticker"], issuer)
+                    or _identity_fold(issuer) == REGISTERED_ISSUER_FOLD.get(spec["ticker"]))):
         raise ValueError("ISSUER_LITERAL_NOT_REGISTERED_LEGAL_NAME")
     image = {"relative_path": image_rel, "sha256": spec["image_sha256"],
              "source_page": spec["source_page"], "printed_page": spec["printed_page"]}

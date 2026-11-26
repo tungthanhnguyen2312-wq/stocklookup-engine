@@ -1,0 +1,10 @@
+{
+  "contract_version": "official_financial_assurance_evidence_source_transition/v1",
+  "base_commit": "70fbba96d02369e0f02a5a15dd264bad780fe6ce",
+  "scope": "DECISION2_ENGLISH_ASSURANCE_EXACT_E6_BASELINE_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "source_path": "official_financial_assurance_evidence.py",
+  "archive": "tests/fixtures/official_financial_assurance_evidence_v1_sources/official_financial_assurance_evidence.py.txt",
+  "prior_sha256_lf": "4b362d3a731beaabf2233fde60a9b78444ccdc1e6ca24ce6fc9cac53c9a8c9c2",
+  "active_sha256_lf": "4b0c4c6f997b627d2907d30303d0d2c958dcf6fdc12b2dc5c9dac10187d7fda8"
+}

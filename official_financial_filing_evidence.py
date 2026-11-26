@@ -102,6 +102,7 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
         reasons.extend(dual["reason_codes"])
     dual_valid = dual is not None and dual["valid"]
     sha = str(row.get("document_sha256") or "")
+    dual_unit_claims = set()
     metadata = row.get("document_metadata")
     if not isinstance(metadata, Mapping):
         missing.append("DOCUMENT_METADATA_PROOF_MISSING")
@@ -111,6 +112,68 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             "document": {**document, "sha256": document.get("document_sha256")},
             "metadata": {**(metadata.get("metadata_claims") or {}), **(metadata.get("optional_metadata_claims") or {})}}
         replay = qualify_document_metadata(candidate)
+        if dual_valid and document_pages is not None:
+            # Only the fully replayed Decision 2 proof may supply these claims.
+            # Derive a fact-local envelope; never alter retained metadata or OCR.
+            unit = dual.get("statement_unit_evidence") or {}
+            bound = (
+                dual.get("evidence_tier") == "DUAL_READER_REVIEWED_TRANSCRIPTION"
+                and unit.get("document_sha256") == sha
+                and document.get("document_sha256") == sha
+                and type(unit.get("source_page")) is int
+                and unit.get("source_page") == row.get("source_page")
+                and unit.get("source_page") == (row.get("source_span") or {}).get("source_page")
+                and unit.get("source_page") in document_pages
+                and unit.get("proof_sha256")
+                    == (row.get("dual_reader_transcription") or {}).get("proof_sha256")
+            )
+            original_replays = (
+                replay["qualification_status"] == metadata.get("qualification_status")
+                and replay["evidence_envelope_id"] == metadata.get("evidence_envelope_id")
+            )
+            if bound and original_replays:
+                texts = list(document_pages.values())
+                if ocr_layout_proof is not None:
+                    # Include retained pages outside the loader's required-page subset.
+                    # OCR identity/scope are still independently checked below.
+                    from stocklookup_core.evidence.official_ocr_layout_proof import page_text
+                    texts.extend(page_text(ocr_layout_proof, int(number))
+                                 for number in (ocr_layout_proof.get("pages") or {}))
+                contrary = False
+                for text in texts:
+                    currency = recognize_currency(text)
+                    if (currency.get("status") == "CONFLICT"
+                            or currency.get("currency") not in (None, unit["currency"])):
+                        contrary = True
+                    for line in text.splitlines():
+                        parsed = parse_explicit_unit_declaration(line)
+                        scale = recognize_unit_scale(line)
+                        if (parsed and (parsed["currency"], parsed["unit_scale"]) !=
+                                (unit["currency"], unit["unit_scale"])):
+                            contrary = True
+                        if scale.get("unit_scale") not in (None, unit["unit_scale"]):
+                            contrary = True
+                claims = dict(metadata.get("metadata_claims") or {})
+                if any((claims.get(name) or {}).get("value") not in (None, unit[name])
+                       for name in ("currency", "unit_scale")):
+                    contrary = True
+                if contrary:
+                    reasons.append("DUAL_READER_STATEMENT_UNIT_CONFLICT")
+                else:
+                    span = {
+                        "citation_id": stable_id(unit),
+                        "document_sha256": sha,
+                        "source_page": unit["source_page"],
+                        "text": unit["literal"],
+                        "citation_kind": "dual_reader_statement_unit",
+                    }
+                    for name in ("currency", "unit_scale"):
+                        claims[name] = {"value": unit[name], "evidence_span": dict(span)}
+                    candidate["metadata"] = {
+                        **claims, **(metadata.get("optional_metadata_claims") or {})}
+                    replay = qualify_document_metadata(candidate)
+                    metadata = replay
+                    dual_unit_claims = {"currency", "unit_scale"}
         if (replay["qualification_status"] != METADATA_QUALIFIED or metadata.get("qualification_status") != METADATA_QUALIFIED
                 or replay["evidence_envelope_id"] != metadata.get("evidence_envelope_id")):
             reasons.append("DOCUMENT_METADATA_NOT_QUALIFIED")
@@ -121,6 +184,8 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             missing.append("RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE")
         else:
             for name, claim in claims.items():
+                if name in dual_unit_claims:
+                    continue
                 span = (claim or {}).get("evidence_span") or {}
                 page = document_pages.get(span.get("source_page"), "")
                 literal = " ".join(str(span.get("text") or "").split()).lower()
@@ -130,6 +195,8 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             if recognize_statement_period(period_page)["period"] != row.get("reporting_period"):
                 reasons.append("RETAINED_STATEMENT_PERIOD_MISMATCH")
             for name, recognizer in (("statement_scope", recognize_scope), ("currency", recognize_currency), ("unit_scale", recognize_unit_scale)):
+                if name in dual_unit_claims:
+                    continue
                 claim = claims.get(name) or {}
                 page = document_pages.get((claim.get("evidence_span") or {}).get("source_page"), "")
                 if recognizer(page).get(name) != claim.get("value"):
