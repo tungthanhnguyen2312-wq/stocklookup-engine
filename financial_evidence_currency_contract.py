@@ -42,6 +42,7 @@ ENTITY_FAMILY: dict[str, str] = {
     "SSI": "securities",
     "VCB": "bank",
     "EVF": "finance_company",
+    "HAH": "corporate",
 }
 
 CORPORATE_CORE_METRICS: tuple[str, ...] = (

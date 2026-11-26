@@ -6,6 +6,7 @@ hashes active source; no digest spoofing or historical receipt adoption is provi
 """
 from __future__ import annotations
 
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -1456,6 +1457,110 @@ def _official_financial_assurance_evidence_prior_bytes(root: Path, relative: str
     return prior
 
 
+FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_MANIFEST = "tests/fixtures/financial_evidence_currency_contract_source_transition_v1.json"
+FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE = "financial_evidence_currency_contract.py"
+FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_ARCHIVE = "tests/fixtures/financial_evidence_currency_contract_v1_sources/financial_evidence_currency_contract.py.txt"
+
+
+def _financial_evidence_currency_entity_family_structure_valid(prior: bytes, active: bytes) -> bool:
+    """Allow exactly HAH=corporate; compare the remaining complete module AST to E6."""
+    try:
+        prior_tree, active_tree = ast.parse(prior), ast.parse(active)
+    except (SyntaxError, ValueError):
+        return False
+
+    def family_dict(tree: ast.Module) -> ast.Dict | None:
+        declarations = [node for node in tree.body
+                        if (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+                            and node.target.id == "ENTITY_FAMILY")
+                        or (isinstance(node, ast.Assign) and any(
+                            isinstance(target, ast.Name) and target.id == "ENTITY_FAMILY"
+                            for target in node.targets))]
+        if len(declarations) != 1 or not isinstance(declarations[0].value, ast.Dict):
+            return None
+        value = declarations[0].value
+        if any(not isinstance(key, ast.Constant) or not isinstance(key.value, str)
+               for key in value.keys):
+            return None
+        if len({key.value for key in value.keys}) != len(value.keys):
+            return None
+        return value
+
+    prior_family, active_family = family_dict(prior_tree), family_dict(active_tree)
+    if prior_family is None or active_family is None:
+        return False
+    prior_keys = {key.value for key in prior_family.keys}
+    active_keys = {key.value for key in active_family.keys}
+    if "HAH" in prior_keys or active_keys != prior_keys | {"HAH"}:
+        return False
+    index = next(i for i, key in enumerate(active_family.keys) if key.value == "HAH")
+    value = active_family.values[index]
+    if not isinstance(value, ast.Constant) or value.value != "corporate":
+        return False
+    del active_family.keys[index]
+    del active_family.values[index]
+    return ast.dump(prior_tree, include_attributes=False) == ast.dump(active_tree, include_attributes=False)
+
+
+def _financial_evidence_currency_contract_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Bind the HAH-only declaration to the exact protected E6 bytes; fail closed."""
+    if relative != FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE:
+        return active
+    spec = json.loads((root / FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_MANIFEST).read_bytes())
+    expected = {'contract_version': 'financial_evidence_currency_contract_source_transition/v1',
+     'base_commit': '70fbba96d02369e0f02a5a15dd264bad780fe6ce',
+     'scope': 'DECISION2_HAH_CORPORATE_ENTITY_FAMILY_ONLY',
+     'release_authority': 'NOT_GRANTED',
+     'source_path': 'financial_evidence_currency_contract.py',
+     'archive': 'tests/fixtures/financial_evidence_currency_contract_v1_sources/financial_evidence_currency_contract.py.txt',
+     'prior_sha256_lf': '591bd160ac2e13c5f17954db3e35dd8e6a6bdeb187037ad8c48cf607b391ef5d',
+     'active_sha256_lf': 'e2fc9db81bb8c01ca62f28615b5a6e23d910d6da64d6c3cb05dffc4745e76d88',
+     'added_tickers': ['HAH'],
+     'classification_basis': 'Dual-reader agreed corporate statement form B 02-DN/HN or B 02a-DN/HN; '
+                             'classification only, no page admission or release authority.',
+     'reader_evidence_root': 'data-landing/reader-transcriptions-20261124',
+     'evidence_refs': [{'spec_ref': 'tools/run_dual_reader_transcription_admission.py:HAH_2025_P13',
+                        'reporting_period': '2025',
+                        'source_page': 13,
+                        'document_sha256': '2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1',
+                        'readers': [{'path': 'blind-input-hah-fy2025-p13/claude/claude-reader.raw.json',
+                                     'sha256': '6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d',
+                                     'form_reference_literal': 'MẪU SỐ B 02-DN/HN'},
+                                    {'path': 'blind-input-hah-fy2025-p13/chatgpt/chatgpt-reader.raw.json',
+                                     'sha256': 'c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145',
+                                     'form_reference_literal': 'MẪU SỐ B 02-DN/HN'}]},
+                       {'spec_ref': 'tools/run_dual_reader_transcription_admission.py:HAH_2025_H1_P12',
+                        'reporting_period': '2025-H1',
+                        'source_page': 12,
+                        'document_sha256': 'a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b',
+                        'readers': [{'path': 'blind-input-hah-2025h1-p12/claude/claude-reader.raw.json',
+                                     'sha256': '9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6',
+                                     'form_reference_literal': 'MẪU SỐ B 02a-DN/HN'},
+                                    {'path': 'blind-input-hah-2025h1-p12/chatgpt-r2/chatgpt-reader.raw.json',
+                                     'sha256': '7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb',
+                                     'form_reference_literal': 'MẪU SỐ B 02a-DN/HN'}]},
+                       {'spec_ref': 'tools/run_dual_reader_transcription_admission.py:HAH_2026_H1_P13',
+                        'reporting_period': '2026-H1',
+                        'source_page': 13,
+                        'document_sha256': '913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291',
+                        'readers': [{'path': 'blind-input-hah-2026h1-p13/claude/claude-reader.raw.json',
+                                     'sha256': 'd6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0',
+                                     'form_reference_literal': 'MẪU SỐ B 02a-DN/HN'},
+                                    {'path': 'blind-input-hah-2026h1-p13/chatgpt/chatgpt-reader.raw.json',
+                                     'sha256': 'a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71',
+                                     'form_reference_literal': 'MẪU SỐ B 02a-DN/HN'}]}]}
+    if spec != expected:
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    if not _financial_evidence_currency_entity_family_structure_valid(prior, active):
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_STRUCTURE_INVALID")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or prior == active):
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def issuer_registry_coverage_prior_manifest_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Peel only the exact issuer-registry pin addition; preserve all earlier amendments."""
     if relative != "tests/fixtures/e2e3_frozen_sources.json":
@@ -1530,6 +1635,9 @@ def historical_bytes(root: Path, relative: str) -> bytes:
     if relative == OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE:
         # This archive is already the exact protected E6 assurance baseline.
         return _official_financial_assurance_evidence_prior_bytes(root, relative, content)
+    if relative == FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE:
+        # The archive is the exact E6 baseline; no earlier transition must be peeled.
+        return _financial_evidence_currency_contract_prior_bytes(root, relative, content)
     content = _official_source_registry_vsdc_flag_prior_bytes(root, relative, content)
     content = _tplus_retry_integrity_prior_bytes(root, relative, content)
     if relative == TACTICAL_SHADOW_PIPELINE:
