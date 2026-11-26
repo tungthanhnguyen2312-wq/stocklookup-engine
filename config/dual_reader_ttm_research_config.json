@@ -71,6 +71,39 @@
       "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
       "proof_sha256": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
       "enabled": true
+    },
+    {
+      "subdir": "fy2025-dual-reader-hah-r3-20261126",
+      "ticker": "HAH",
+      "reporting_period": "2025",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "4f9082c8de8672ca21f7cc0c89868f2e09cf46e4a9a6551556c107d342f4dd4d",
+      "document_sha256": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+      "proof_sha256": "9b41976fae9b6a0f1fbe2848b5da27bb15026fed02370529a40829c10a65d8f8",
+      "enabled": true
+    },
+    {
+      "subdir": "h1-2025-dual-reader-hah-r3-20261126",
+      "ticker": "HAH",
+      "reporting_period": "2025-H1",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "29e3a6dde051347ca07aae2067b15464fed60584284fac03f0317d7ec8e13c06",
+      "document_sha256": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+      "proof_sha256": "e882b2c9e326d6f2d10a19c9d4d7d8f0786224670ef4aeaf7eebb55449e0947c",
+      "enabled": true
+    },
+    {
+      "subdir": "h1-2026-dual-reader-hah-r3-20261126",
+      "ticker": "HAH",
+      "reporting_period": "2026-H1",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "bb4b8c53f512c4b756aa1a6ffe57e450ed1c2b2ecf404c91aaa6a80515578db1",
+      "document_sha256": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+      "proof_sha256": "7987c626aa84d5d14a425f5fc1f92497deea04efa7d57b0f3af08effda2f3eb8",
+      "enabled": true
     }
   ],
   "research_caveats": [

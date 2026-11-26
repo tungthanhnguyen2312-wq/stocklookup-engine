@@ -1320,7 +1320,7 @@
     "tools/run_dual_reader_transcription_admission.py": "6438811a5d5118c5d8001a92e8ff12891c7d397d412841fa82e290b78da4a8a5",
     "config/official_financial_issuers/r0001.json": "54cc428a0d2901a371976b91152e5fe99a014a114d1e2c81839fad45fd51a818",
     "config/official_financial_layouts/r0001.json": "8a23646bf7efbda0ae674e22ae3feb2161d01de3678f3b2a388e73be9b238c01",
-    "config/dual_reader_ttm_research_config.json": "73c25c56df3ea960bfcb433bbdc499fd5cc945726259ecf7e18cd09449e4798a"
+    "config/dual_reader_ttm_research_config.json": "376dbced744eab0e8883386461d5eecfbb56e6565c789ab11f062beed879f02f"
   },
   "launcher_corrective": {
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",

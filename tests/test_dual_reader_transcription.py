@@ -52,8 +52,8 @@ def test_research_off_validates_frozen_rows_and_caveat_schema(tmp_path):
     digest = _write_research_config(tmp_path, config)
     assert dual.load_dual_reader_ttm_research_config(tmp_path, expected_sha256=digest) == config
     assert config["enabled"] is False
-    assert len(config["evidence_subdirs"]) == 6
-    assert {e["ticker"] for e in config["evidence_subdirs"]} == {"POW", "NVL"}
+    assert len(config["evidence_subdirs"]) == 9
+    assert {e["ticker"] for e in config["evidence_subdirs"]} == {"POW", "NVL", "HAH"}
 
 
 def test_research_config_symlink_is_corrupt(tmp_path):
