@@ -161,3 +161,51 @@ def test_runner_binds_identical_reader_unit_without_repairing_metadata():
     second["currency_unit_literal"] += " "
     with pytest.raises(ValueError, match="READERS_UNIT_LITERAL_NOT_IDENTICAL_EXPLICIT_VND"):
         _build(first, second)
+
+# Registration tests use synthetic bytes only; HL executes the retained replay.
+@pytest.mark.parametrize("spec_id,sha,page", [
+    ("HAH-2025-P13", "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1", 13),
+    ("HAH-2025-H1-P12", "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b", 12),
+    ("HAH-2026-H1-P13", "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291", 13),
+    ("BWE-2025-P12", "9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9", 12),
+    ("BWE-2025-H1-P12", "acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8", 12),
+    ("BWE-2026-H1-P12", "6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef", 12),
+])
+def test_hah_bwe_exact_spec_bindings(tmp_path, spec_id, sha, page):
+    from stocklookup_core.evidence.official_ocr_layout_proof import layout_for
+    spec = runner.SPECS[spec_id]
+    assert (spec["document_sha256"], spec["source_page"]) == (sha, page)
+    assert layout_for(sha)["statement_pages"] == (page,)
+    assert spec["original_subdir"] == "acquisition-batch3-20261126"
+    assert spec["new_subdir"].endswith("-20261126")
+    assert spec["readings"][1][0] == "gpt"
+    # HAH 2025-H1: first ChatGPT reading disagreed on scope/period wording; the cross-family
+    # condition-5 third reading (new conversation, same prompt) agrees and is the admitted pair.
+    expected = "/chatgpt-r2/chatgpt-reader.raw.json" if spec_id == "HAH-2025-H1-P12" else "/chatgpt/chatgpt-reader.raw.json"
+    assert spec["readings"][1][1].endswith(expected)
+    refs = []
+    for family, relative, retained in spec["readings"]:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        raw = {"contract_version": runner.dual.RAW_VERSION,
+               "model_family": "openai-chatgpt" if family == "gpt" else "anthropic-claude",
+               "reader_id": family, "method": "DIRECT_PAGE_IMAGE", "independent_input": True,
+               "saw_other_reader_output": False, "recorded_at": "2026-11-26T08:58:00+07:00",
+               "input": {k: spec[k] for k in ("document_sha256", "document_id", "source_page", "printed_page", "image_sha256")}}
+        path.write_text(json.dumps(raw), encoding="utf-8")
+        refs.append((path, raw))
+    args = dict(spec=spec, reader_root=tmp_path, observed_at="2026-11-26T00:00:00Z",
+                completed="2026-11-26T10:00:00+07:00")
+    assert len(runner._validate_readings(**args)) == 2
+    path, raw = refs[1]
+    for field, bad in (("document_sha256", "0" * 64), ("source_page", page + 1), ("image_sha256", "0" * 64)):
+        altered = deepcopy(raw)
+        altered["input"][field] = bad
+        path.write_text(json.dumps(altered), encoding="utf-8")
+        with pytest.raises(ValueError, match="READER_INPUT_BINDING_MISMATCH"):
+            runner._validate_readings(**args)
+    altered = deepcopy(raw)
+    altered["model_family"] = "openai-chatgpt-other"
+    path.write_text(json.dumps(altered), encoding="utf-8")
+    with pytest.raises(ValueError, match="READER_CONTRACT_OR_FAMILY_MISMATCH"):
+        runner._validate_readings(**args)

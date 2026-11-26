@@ -287,6 +287,184 @@ NVL_2025_P12 = {
     "comparison_started_at": "2026-11-25T08:15:17+07:00"
 }
 
+# HL-20261126-CDX-26: retained batch-3 inputs; registration is not admission.
+# Retention: raw mtime rounded up; HAH FY uses later Claude RUN_NOTE and GPT clipboard provenance.
+# Initial comparison: retained HL 09:09:20 record. Original pairs are immutable.
+HAH_2025_P13 = {
+    "ticker": "HAH",
+    "reporting_period": "2025",
+    "document_sha256": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+    "document_id": "edb02b425a2b4bc62dac4300ebeacc69d4b8b8b31e207ae8f24284cf535183ad",
+    "original_subdir": "acquisition-batch3-20261126",
+    "new_subdir": "fy2025-dual-reader-hah-r3-20261126",
+    "page_key": "hah-fy2025-p13",
+    "source_page": 13,
+    "printed_page": "8",
+    "image_sha256": "fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b",
+    "column_id": "c1",
+    "readings": [
+        [
+            "claude",
+            "blind-input-hah-fy2025-p13/claude/claude-reader.raw.json",
+            "2026-11-26T09:02:15+07:00"
+        ],
+        [
+            "gpt",
+            "blind-input-hah-fy2025-p13/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:00:17+07:00"
+        ]
+    ],
+    "image": "blind-input-hah-fy2025-p13/claude/page-13.png",
+    "render_meta": "blind-input-hah-fy2025-p13/input.meta.json",
+    "comparison_started_at": "2026-11-26T09:09:20+07:00"
+}
+
+HAH_2025_H1_P12 = {
+    "ticker": "HAH",
+    "reporting_period": "2025-H1",
+    "document_sha256": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+    "document_id": "9d550132d892a447b11d06fbe4aa9dace11c3e8d26d164ae9e63935cd9c71a7c",
+    "original_subdir": "acquisition-batch3-20261126",
+    "new_subdir": "h1-2025-dual-reader-hah-r3-20261126",
+    "page_key": "hah-2025h1-p12",
+    "source_page": 12,
+    "printed_page": "8",
+    "image_sha256": "88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b",
+    "column_id": "c1",
+    "readings": [
+        [
+            "claude",
+            "blind-input-hah-2025h1-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:28+07:00"
+        ],
+        [
+            "gpt",
+            "blind-input-hah-2025h1-p12/chatgpt-r2/chatgpt-reader.raw.json",
+            "2026-11-26T09:27:14+07:00"
+        ]
+    ],
+    "image": "blind-input-hah-2025h1-p12/claude/page-12.png",
+    "render_meta": "blind-input-hah-2025h1-p12/input.meta.json",
+    "comparison_started_at": "2026-11-26T09:27:30+07:00"
+}
+
+HAH_2026_H1_P13 = {
+    "ticker": "HAH",
+    "reporting_period": "2026-H1",
+    "document_sha256": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+    "document_id": "6579946bb113061c88bf132ad3987de33f721b8b3e192f04730c214d6c4f1a60",
+    "original_subdir": "acquisition-batch3-20261126",
+    "new_subdir": "h1-2026-dual-reader-hah-r3-20261126",
+    "page_key": "hah-2026h1-p13",
+    "source_page": 13,
+    "printed_page": "8",
+    "image_sha256": "98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6",
+    "column_id": "c1",
+    "readings": [
+        [
+            "claude",
+            "blind-input-hah-2026h1-p13/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:45+07:00"
+        ],
+        [
+            "gpt",
+            "blind-input-hah-2026h1-p13/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:02:14+07:00"
+        ]
+    ],
+    "image": "blind-input-hah-2026h1-p13/claude/page-13.png",
+    "render_meta": "blind-input-hah-2026h1-p13/input.meta.json",
+    "comparison_started_at": "2026-11-26T09:09:20+07:00"
+}
+
+BWE_2025_P12 = {
+    "ticker": "BWE",
+    "reporting_period": "2025",
+    "document_sha256": "9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9",
+    "document_id": "b03c92d58bf9c9f92fa4637ee080c5e08e47f6b1d1dc7e89512324da747a1a09",
+    "original_subdir": "acquisition-batch3-20261126",
+    "new_subdir": "fy2025-dual-reader-bwe-r3-20261126",
+    "page_key": "bwe-fy2025-p12",
+    "source_page": 12,
+    "printed_page": "8",
+    "image_sha256": "fa7896a2f4a352ff7435c9b2daf0b8269d3b293b38ef7661798a1f061588902b",
+    "column_id": "c1",
+    "readings": [
+        [
+            "claude",
+            "blind-input-bwe-fy2025-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:47+07:00"
+        ],
+        [
+            "gpt",
+            "blind-input-bwe-fy2025-p12/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:05:43+07:00"
+        ]
+    ],
+    "image": "blind-input-bwe-fy2025-p12/claude/page-12.png",
+    "render_meta": "blind-input-bwe-fy2025-p12/input.meta.json",
+    "comparison_started_at": "2026-11-26T09:09:20+07:00"
+}
+
+BWE_2025_H1_P12 = {
+    "ticker": "BWE",
+    "reporting_period": "2025-H1",
+    "document_sha256": "acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8",
+    "document_id": "87fa92572759510c5dd1707af7c7a9c5475046a824eaa858eab742b82bd72f64",
+    "original_subdir": "acquisition-batch3-20261126",
+    "new_subdir": "h1-2025-dual-reader-bwe-r3-20261126",
+    "page_key": "bwe-2025h1-p12",
+    "source_page": 12,
+    "printed_page": "8",
+    "image_sha256": "e7950cad0cc38eb6e9e4ed16f7d12a21eb168f8ac4e62f5428db933f6dba17a6",
+    "column_id": "c1",
+    "readings": [
+        [
+            "claude",
+            "blind-input-bwe-2025h1-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:20+07:00"
+        ],
+        [
+            "gpt",
+            "blind-input-bwe-2025h1-p12/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:09:10+07:00"
+        ]
+    ],
+    "image": "blind-input-bwe-2025h1-p12/claude/page-12.png",
+    "render_meta": "blind-input-bwe-2025h1-p12/input.meta.json",
+    "comparison_started_at": "2026-11-26T09:09:20+07:00"
+}
+
+BWE_2026_H1_P12 = {
+    "ticker": "BWE",
+    "reporting_period": "2026-H1",
+    "document_sha256": "6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef",
+    "document_id": "b21ac8140f19ec3d0f8d9e4fef7a6c1bcba798c1c382d12781502fa1d25768b8",
+    "original_subdir": "acquisition-batch3-20261126",
+    "new_subdir": "h1-2026-dual-reader-bwe-r3-20261126",
+    "page_key": "bwe-2026h1-p12",
+    "source_page": 12,
+    "printed_page": "8",
+    "image_sha256": "259e24d077202a6cff9e7c6040142c7fc16444cd42f99d0ecda481bbc63a8ee2",
+    "column_id": "c1",
+    "readings": [
+        [
+            "claude",
+            "blind-input-bwe-2026h1-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:17+07:00"
+        ],
+        [
+            "gpt",
+            "blind-input-bwe-2026h1-p12/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:07:21+07:00"
+        ]
+    ],
+    "image": "blind-input-bwe-2026h1-p12/claude/page-12.png",
+    "render_meta": "blind-input-bwe-2026h1-p12/input.meta.json",
+    "comparison_started_at": "2026-11-26T09:09:20+07:00"
+}
+
+
 SPECS = {"HPG-2025-H1-P10": HPG_2025_H1_P10, "PNJ-2025-P10": PNJ_2025_P10,
          "PNJ-2025-H1-P10": PNJ_2025_H1_P10, "VRE-2025-P11": VRE_2025_P11,
          "POW-2025-P11": POW_2025_P11,
@@ -294,7 +472,13 @@ SPECS = {"HPG-2025-H1-P10": HPG_2025_H1_P10, "PNJ-2025-P10": PNJ_2025_P10,
          "POW-2026-H1-P11": POW_2026_H1_P11,
          "NVL-2025-H1-P12": NVL_2025_H1_P12,
          "NVL-2026-H1-P12": NVL_2026_H1_P12,
-         "NVL-2025-P12": NVL_2025_P12}
+         "NVL-2025-P12": NVL_2025_P12,
+         'HAH-2025-P13': HAH_2025_P13,
+         'HAH-2025-H1-P12': HAH_2025_H1_P12,
+         'HAH-2026-H1-P13': HAH_2026_H1_P13,
+         'BWE-2025-P12': BWE_2025_P12,
+         'BWE-2025-H1-P12': BWE_2025_H1_P12,
+         'BWE-2026-H1-P12': BWE_2026_H1_P12}
 
 
 def _sha(payload: bytes) -> str:

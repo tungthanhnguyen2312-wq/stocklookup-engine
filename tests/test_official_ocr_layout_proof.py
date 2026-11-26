@@ -488,3 +488,36 @@ def test_decision2_proof_scope_and_literal_headers_fail_closed():
             assert 'CURRENT_PERIOD_HEADER_NOT_REGISTERED' in lp.verify_row(
                 wrong, proof, metric='revenue', source_page=page, line_code='10',
                 raw_value=row['raw_value_text'], value=row['normalized_value'], unit_scale=1, parse_amount=PA)
+
+
+def test_hah_bwe_names_have_exact_retained_page_and_reader_provenance():
+    import hashlib
+    from tools.run_dual_reader_transcription_admission import SPECS
+    for spec in (s for s in SPECS.values() if s["ticker"] in {"HAH", "BWE"}):
+        sha, page, ticker = spec["document_sha256"], spec["source_page"], spec["ticker"]
+        entry, = [e for e in lp.EXACT_REGISTERED_ISSUER_NAMES[ticker]
+                  if e["provenance"]["document_sha256"] == sha]
+        name, provenance = entry["literal"], entry["provenance"]
+        assert provenance["source_page"] == page
+        assert provenance["image_sha256"] == spec["image_sha256"]
+        assert [f["relative_path"] for f in provenance["reader_files"]] == [r[1] for r in spec["readings"]]
+        assert all(len(f["sha256"]) == 64 for f in provenance["reader_files"])
+        layout = lp.layout_for(sha)
+        assert (layout["ticker"], layout["reporting_period"], layout["statement_pages"]) == (
+            ticker, spec["reporting_period"], (page,))
+        body = {"contract_version": lp.CONTRACT_VERSION, "document_sha256": sha,
+                "layout": layout["layout"], "pages": {}}
+        proof = {**body, "proof_sha256": hashlib.sha256(lp.canonical_json(body).encode()).hexdigest()}
+        row = {"ticker": ticker, "document_sha256": sha, "reporting_period": spec["reporting_period"],
+               "statement_scope": "consolidated", "ocr_layout_proof": lp.proof_reference(proof)}
+        assert lp.exact_registered_issuer_name(ticker, name)
+        assert lp.retained_issuer_name_matches(row, proof, name)
+        for wrong in (name.lower(), name[:-1], "X" + name):
+            assert not lp.exact_registered_issuer_name(ticker, wrong)
+            assert not lp.retained_issuer_name_matches(row, proof, wrong)
+        assert not lp.retained_issuer_name_matches({**row, "document_sha256": "0" * 64}, proof, name)
+        assert not lp.retained_issuer_name_matches({**row, "ticker": "POW"}, proof, name)
+        wrong_page_row = {**row, "source_page": page + 1, "canonical_metric": "revenue",
+                          "normalized_value": 123, "source_unit_scale": 1}
+        reasons, _ = lp.apply_layout_proof(wrong_page_row, proof, {}, [], [], parse_amount=PA, parse_unit=PU)
+        assert "ROW_PAGE_OUTSIDE_REGISTERED_LAYOUT" in reasons

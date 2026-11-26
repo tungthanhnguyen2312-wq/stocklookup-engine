@@ -317,3 +317,50 @@ verifier, row-claim shortcut or qualification waiver is added. Cutoff, source
 bytes, exact dual-reader agreement, assurance and all three TTM operand gates
 continue to apply. Real POW/NVL replay (later-known, OFFLINE_RESEARCH_ONLY) is
 recorded outside this contract.
+
+## HAH/BWE retained registrations (HL-20261126-CDX-26)
+
+Six exact batch-3 document/image/page specs are registered for HAH and BWE
+FY2025, 2025-H1 and 2026-H1. Registration supplies locators only; no admission
+was run by this task. The shared exact-name registry cites each retained
+statement's SHA256, source page, image SHA256 and both raw reader file hashes.
+These printed issuer names use exact matching, like POW; no additional
+accent-folded issuer-name fallback is introduced.
+
+`openai-chatgpt` is explicitly allowlisted as an alias of the existing `gpt`
+family. It is not independent of GPT/Codex. The six specs explicitly select
+`chatgpt/chatgpt-reader.raw.json`; the retained runner copies that basename
+unchanged beneath the proof root. The loader already accepts relative reader
+paths under its governed proof root and does not require Gemini folder/file
+names. No new wildcard family or path policy is added. Claude + ChatGPT may
+supply different families; two Claude readings may not.
+
+The existing verifier compares every shared header, including `scope_literal`,
+exactly. A third Claude reading that repeats the first Claude wording does not
+make a disagreeing Claude/ChatGPT pair eligible: this v1 seals exactly two
+agreeing readings from different families, with no majority-vote override.
+HAH 2025-H1 and BWE FY2025 therefore remain UNADMITTED despite the retained
+third-reading agreement with Claude. BWE 2025-H1 has three different scope
+wordings and remains UNADMITTED. HAH 2025-H1 additionally has differing selected
+column period bindings: caption-bound versus a separate literal. Neither
+scope nor column-period agreement is relaxed.
+
+The verifier selects only the requested column and cell, requiring uniqueness.
+BWE 2026-H1's extra c3 notes column (empty on 10/60/61; `24` on 01) does not
+constitute a c1 disagreement. All three BWE pages nevertheless have null
+`form_reference_literal` in both retained readers. The required printed
+B02/B02a-DN/HN form identity is absent; no form is inferred from numbers or
+another page. The current verifier refuses these null forms as malformed
+retained proof, and the runner cannot build such rows. All BWE pages remain
+UNADMITTED. HAH FY2025 and 2026-H1 are eligible for an admission attempt only;
+document metadata, assurance, OCR fallback, source and common admission gates
+still control the outcome.
+
+Retention instants use raw-file mtime rounded up to the next second. HAH
+FY2025 uses conservative later provenance bounds: Claude RUN_NOTE.md mtime
+rounded up (09:02:15+07:00; note records the file-write resume without exposure
+to the other reading), and ChatGPT clipboard collection rounded up
+(09:00:17+07:00). The spec comparison instant is the retained initial HL
+comparison (09:09:20+07:00), not a newly invented comparison. Original files,
+third readings and comparison notes remain unchanged. No raw timestamps are
+backdated and no admission or PIT authority is asserted.

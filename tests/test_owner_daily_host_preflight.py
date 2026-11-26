@@ -440,10 +440,13 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
     # Rebuild the current receipt using only the enumerated successor paths.
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    hah_bwe = live_receipt["decision2_hah_bwe_admission_corrective"]
+    def hah_bwe_predecessor_pin(path):
+        return hah_bwe["prior_source_sha256_lf"].get(path,
+            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
     completion = live_receipt["decision2_admission_completion_corrective"]
     def completion_predecessor_pin(path):
-        return completion["prior_source_sha256_lf"].get(path,
-            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        return completion["prior_source_sha256_lf"].get(path, hah_bwe_predecessor_pin(path))
     issuer = live_receipt["issuer_registry_coverage_corrective"]
     def issuer_predecessor_pin(path):
         return issuer["prior_source_sha256_lf"].get(path, completion_predecessor_pin(path))
@@ -1049,8 +1052,11 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert baseline_hash == main_receipt["source_sha256"][path]
         current_hash = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, issuer_predecessor_pin(path))
         observed_pin = prior_receipt["source_sha256"][path]
-        if path in completion["changed_source_paths"] and observed_pin == completion["active_source_sha256_lf"][path]:
+        if path in hah_bwe["changed_source_paths"] and observed_pin == hah_bwe["active_source_sha256_lf"][path]:
             assert observed_pin == hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            observed_pin = hah_bwe["prior_source_sha256_lf"][path]
+        if path in completion["changed_source_paths"] and observed_pin == completion["active_source_sha256_lf"][path]:
+            assert observed_pin == hah_bwe_predecessor_pin(path)
             assert completion["prior_source_sha256_lf"][path] == current_hash
             observed_pin = completion["prior_source_sha256_lf"][path]
         assert observed_pin in (baseline_hash, current_hash)
@@ -1237,11 +1243,47 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert completion["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert completion["prior_source_sha256_lf"][path] == completion_baseline["source_sha256"][path]
         assert completion["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        active_pin = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
-        assert active_pin == completion["active_source_sha256_lf"][path] == live_receipt["source_sha256"][path]
+        active_pin = hah_bwe_predecessor_pin(path)
+        assert active_pin == completion["active_source_sha256_lf"][path]
         assert active_pin != completion["prior_source_sha256_lf"][path]
         prior_receipt["source_sha256"][path] = active_pin
     prior_receipt["decision2_admission_completion_corrective"] = completion
+
+    assert hah_bwe["base_commit"] == "770d8c3e338aa1219b32df38209153ea8cc8d9eb"
+    assert hah_bwe["predecessor_corrective"] == "decision2_admission_completion_corrective"
+    assert hah_bwe["scope"] == "OFFLINE_DECISION2_HAH_BWE_ADMISSION_COMPATIBILITY_PIN_UPDATE"
+    assert hah_bwe["new_capacity_measurement"] is False
+    assert hah_bwe["whole_daily_requalification"] is False
+    assert hah_bwe["release_authority"] == "NOT_GRANTED"
+    assert hah_bwe["compatibility"] == (
+        "COMPATIBILITY pin update only. No new capacity measurement was performed. "
+        "The predecessor receipt's measured values, IID bounds, physical/commit limits and runtime safeguards "
+        "are reused unchanged. Offline HAH/BWE admission source transition only; no Daily launch or release authority.")
+    assert hah_bwe["changed_source_paths"] == [
+        "financial_evidence_currency_contract.py",
+        "stocklookup_core/evidence/dual_reader_transcription.py",
+        "stocklookup_core/evidence/official_ocr_layout_proof.py",
+        "tools/run_dual_reader_transcription_admission.py",
+        "tools/verify_retention_reader_transition.py",
+    ]
+    assert set(hah_bwe["prior_source_sha256_lf"]) == set(hah_bwe["changed_source_paths"])
+    assert set(hah_bwe["active_source_sha256_lf"]) == set(hah_bwe["changed_source_paths"])
+    hah_bwe_baseline = json.loads(subprocess.check_output(
+        ["git", "show", f"{hah_bwe['base_commit']}:{receipt_path}"], cwd=root))
+    assert list(hah_bwe_baseline)[-1] == hah_bwe["predecessor_corrective"]
+    assert hah_bwe_baseline["decision2_admission_completion_corrective"] == completion
+    # This equality also protects all measured values, limits and historical entries.
+    assert prior_receipt == hah_bwe_baseline
+    for path in hah_bwe["changed_source_paths"]:
+        previous = subprocess.check_output(["git", "show", f"{hah_bwe['base_commit']}:{path}"], cwd=root)
+        assert hah_bwe["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
+        assert hah_bwe["prior_source_sha256_lf"][path] == hah_bwe_baseline["source_sha256"][path]
+        assert hah_bwe["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
+        active_pin = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        assert active_pin == hah_bwe["active_source_sha256_lf"][path] == live_receipt["source_sha256"][path]
+        assert active_pin != hah_bwe["prior_source_sha256_lf"][path]
+        prior_receipt["source_sha256"][path] = active_pin
+    prior_receipt["decision2_hah_bwe_admission_corrective"] = hah_bwe
     assert live_receipt == prior_receipt
     assert archive == git_blob(relative)
 
