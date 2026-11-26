@@ -16,6 +16,9 @@ explicitly configured value.
 from __future__ import annotations
 
 import os
+from copy import deepcopy
+
+import pytest
 
 from _runtime_root import RUNTIME_ROOT, _RUNTIME_ROOT_ENV
 
@@ -30,7 +33,7 @@ os.environ["STOCKLOOKUP_PROVIDER_OS_BACKEND"] = "disabled"
 # Explicit test tiers (hermetic / retained-evidence / provider-runtime); see tests/_test_tiers.py.
 from _test_tiers import (  # noqa: E402,F401 -- re-exported as this conftest's pytest hooks
     pytest_collection_modifyitems,
-    pytest_configure,
+    pytest_configure as _configure_test_tiers,
     pytest_runtest_setup,
 )
 
@@ -43,3 +46,30 @@ from _canonical_evidence_write_guard import (  # noqa: E402,F401 -- re-exported 
 )
 
 _evidence_write_guard.install()
+
+
+def pytest_configure(config):
+    _configure_test_tiers(config)
+    config.addinivalue_line(
+        "markers", "registry_gate_real: exercise the real financial registry integrity gate")
+
+
+@pytest.fixture(autouse=True)
+def legacy_owner_daily_registry_inputs(request, monkeypatch):
+    """Keep legacy workflow fixtures focused on their own boundaries, without source inputs.
+
+    Real registry tests opt out explicitly and retain the production integrity gate.
+    These fixed synthetic bindings are parser-valid test data, never approval evidence.
+    """
+    if request.node.get_closest_marker("registry_gate_real") is not None:
+        return
+    from tools import run_owner_daily
+    bindings = {
+        "layouts": {"path": "config/official_financial_layouts/r0001.json",
+                    "revision": 1, "sha256_lf": "a" * 64},
+        "issuers": {"path": "config/official_financial_issuers/r0001.json",
+                    "revision": 1, "sha256_lf": "b" * 64},
+        "capacity_receipt_sha256_lf": "c" * 64,
+    }
+    monkeypatch.setattr(run_owner_daily, "_require_financial_registry_inputs",
+                        lambda root, **kwargs: deepcopy(bindings))

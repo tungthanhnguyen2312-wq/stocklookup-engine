@@ -120,6 +120,8 @@ def _copy_boundary(tmp_path: Path) -> None:
              "tests/fixtures/storage_reuse_d4a_sources/canonical_post_close_pipeline.py.txt",
              "tests/fixtures/storage_reuse_d4a_canonical_source_transition_v1.json",
              "tests/fixtures/storage_reuse_d4a_canonical_sources/canonical_daily_operation.py.txt",
+             "tests/fixtures/registry_migration_v1/run_owner_daily_source_transition_v1.json",
+             "tests/fixtures/registry_migration_v1/run_owner_daily.py.txt",
              "tests/fixtures/ndjson_subtree_codec_launcher_source_transition_v1.json",
              "tests/fixtures/ndjson_subtree_codec_launcher_sources/tools/run_owner_daily.py.txt",
              "tests/fixtures/tplus_retry_integrity_source_transition_v1.json",

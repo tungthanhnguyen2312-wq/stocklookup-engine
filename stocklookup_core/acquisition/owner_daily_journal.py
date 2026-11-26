@@ -16,8 +16,6 @@ holding the single most recent run (a new run supersedes, never merges with, an 
 from __future__ import annotations
 
 import json
-import os
-import re
 import uuid
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -108,83 +106,10 @@ def start_run(root: Path, *, intended_session: str | None = None,
         "attestation": None,
     }
     if financial_registry_inputs is not None:
-        from stocklookup_core.evidence.official_ocr_layout_proof import validate_financial_registry_bindings
-        validate_financial_registry_bindings(financial_registry_inputs)
+        # Registry semantics belong to the caller; the journal preserves opaque data.
         entry["financial_registry_inputs"] = deepcopy(financial_registry_inputs)
     _atomic_write(journal_path(root), entry)
     return entry
-
-
-def _registry_child_directory(root: Path, run_id: str) -> Path:
-    from stocklookup_core.evidence.official_ocr_layout_proof import _registry_child_directory as directory
-    return directory(root, run_id)
-
-
-def registry_child_environment(root: Path, bindings: Mapping[str, Any], *, run_id: str | None = None):
-    from stocklookup_core.evidence.official_ocr_layout_proof import (
-        REGISTRY_BINDINGS_ENV, REGISTRY_RUN_ENV, validate_financial_registry_bindings,
-    )
-    validate_financial_registry_bindings(bindings)
-    run_id = uuid.uuid4().hex if run_id is None else run_id
-    directory = _registry_child_directory(root, run_id)
-    # A fresh token must never adopt another invocation's child attestations.
-    directory.mkdir(parents=True, exist_ok=False)
-    return {REGISTRY_BINDINGS_ENV: json.dumps(bindings, sort_keys=True), REGISTRY_RUN_ENV: run_id,
-            "STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID": str(os.getpid())}
-
-
-def _registry_ancestor_pids() -> list[int]:
-    from stocklookup_core.evidence.official_ocr_layout_proof import _registry_ancestor_pids as ancestors
-    return ancestors()
-
-
-def attest_registry_child(root: Path, run_id: str, bindings: Mapping[str, Any]) -> None:
-    from stocklookup_core.evidence.official_ocr_layout_proof import _attest_registry_child
-    _attest_registry_child(root, run_id, bindings, ancestor_pids=_registry_ancestor_pids)
-
-
-def verify_registry_children(root: Path, run_id: str, bindings: Mapping[str, Any], *, owner_pid=None):
-    from stocklookup_core.evidence.official_ocr_layout_proof import (
-        _registry_json, registry_bytes, validate_financial_registry_bindings,
-    )
-    validate_financial_registry_bindings(bindings)
-    directory = _registry_child_directory(root, run_id)
-    owner_pid = os.getpid() if owner_pid is None else owner_pid
-    if type(owner_pid) is not int or owner_pid <= 0:
-        raise ValueError("REGISTRY_CHILD_OWNER_PID_INVALID")
-    seen = set()
-    for index, path in enumerate(directory.iterdir()):
-        if index >= 256 or not re.fullmatch(r"[1-9][0-9]*\.json", path.name):
-            raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID")
-        relative = path.relative_to(root.resolve()).as_posix()
-        try:
-            row = _registry_json(registry_bytes(root, relative))
-            if (type(row) is not dict or set(row) != {"pid", "ancestor_pids", "financial_registry_inputs"}
-                    or type(row["pid"]) is not int or path.name != str(row["pid"]) + ".json"):
-                raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID")
-        except (ValueError, TypeError, KeyError) as exc:
-            raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID") from exc
-        ancestors = row["ancestor_pids"]
-        if (type(ancestors) is not list or not 1 <= len(ancestors) <= 256
-                or any(type(pid) is not int or pid <= 0 for pid in ancestors)
-                or len(set(ancestors)) != len(ancestors) or row["pid"] in ancestors
-                or ancestors[-1] != owner_pid):
-            raise ValueError("REGISTRY_CHILD_PID_NOT_DESCENDANT")
-        if row["pid"] in seen:
-            raise ValueError("REGISTRY_CHILD_ATTESTATION_DUPLICATE")
-        try:
-            validate_financial_registry_bindings(row["financial_registry_inputs"])
-        except (ValueError, TypeError, KeyError) as exc:
-            raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID") from exc
-        if row["financial_registry_inputs"] != bindings:
-            raise ValueError("REGISTRY_CHILD_BINDING_MISMATCH")
-        seen.add(row["pid"])
-    return sorted(seen)
-
-
-def registry_child_attestations(root: Path, run_id: str, bindings: Mapping[str, Any]):
-    pids = verify_registry_children(root, run_id, bindings)
-    return {"pids": pids, "status": "BOUND" if pids else "REGISTRY_NOT_LOADED_BY_CHILD"}
 
 
 def advance(

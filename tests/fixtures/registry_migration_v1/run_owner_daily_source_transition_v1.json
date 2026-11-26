@@ -6,5 +6,5 @@
   "source_path": "tools/run_owner_daily.py",
   "archive": "tests/fixtures/registry_migration_v1/run_owner_daily.py.txt",
   "prior_sha256_lf": "41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9",
-  "active_sha256_lf": "82dc36e6402634c0f532ecb026bc403f4b5da7ae4629e79a11d5e682a6b8648b"
+  "active_sha256_lf": "0e712d65704ea2646b9c32968c5cf0a4a1c88f24c2098184d7aa565ded096b8e"
 }

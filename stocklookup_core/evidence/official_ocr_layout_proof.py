@@ -27,6 +27,7 @@ import re
 import math
 import os
 import sys
+import uuid
 from statistics import median
 from typing import Any, Iterable, Mapping
 
@@ -367,6 +368,16 @@ def _registry_child_directory(root: Path, run_id: str) -> Path:
     return registry_path(root, "operations-review/owner-daily-journal-v1/financial-registry-children/" + run_id)
 
 
+def registry_child_environment(root: Path, bindings: Mapping[str, Any], *, run_id: str | None = None):
+    validate_financial_registry_bindings(bindings)
+    run_id = uuid.uuid4().hex if run_id is None else run_id
+    directory = _registry_child_directory(root, run_id)
+    # A fresh token must never adopt another invocation's child attestations.
+    directory.mkdir(parents=True, exist_ok=False)
+    return {REGISTRY_BINDINGS_ENV: json.dumps(bindings, sort_keys=True), REGISTRY_RUN_ENV: run_id,
+            "STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID": str(os.getpid())}
+
+
 def _registry_ancestor_pids() -> list[int]:
     """Capture OS parentage while the importing child and its ancestors are alive."""
     owner = os.environ.get("STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID", "")
@@ -434,6 +445,47 @@ def _attest_registry_child(root: Path, run_id: str, bindings: Mapping[str, Any],
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     tmp.replace(path)
+
+
+def verify_registry_children(root: Path, run_id: str, bindings: Mapping[str, Any], *, owner_pid=None):
+    validate_financial_registry_bindings(bindings)
+    directory = _registry_child_directory(root, run_id)
+    owner_pid = os.getpid() if owner_pid is None else owner_pid
+    if type(owner_pid) is not int or owner_pid <= 0:
+        raise ValueError("REGISTRY_CHILD_OWNER_PID_INVALID")
+    seen = set()
+    for index, path in enumerate(directory.iterdir()):
+        if index >= 256 or not re.fullmatch(r"[1-9][0-9]*\.json", path.name):
+            raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID")
+        relative = path.relative_to(root.resolve()).as_posix()
+        try:
+            row = _registry_json(registry_bytes(root, relative))
+            if (type(row) is not dict or set(row) != {"pid", "ancestor_pids", "financial_registry_inputs"}
+                    or type(row["pid"]) is not int or path.name != str(row["pid"]) + ".json"):
+                raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID")
+        except (ValueError, TypeError, KeyError) as exc:
+            raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID") from exc
+        ancestors = row["ancestor_pids"]
+        if (type(ancestors) is not list or not 1 <= len(ancestors) <= 256
+                or any(type(pid) is not int or pid <= 0 for pid in ancestors)
+                or len(set(ancestors)) != len(ancestors) or row["pid"] in ancestors
+                or ancestors[-1] != owner_pid):
+            raise ValueError("REGISTRY_CHILD_PID_NOT_DESCENDANT")
+        if row["pid"] in seen:
+            raise ValueError("REGISTRY_CHILD_ATTESTATION_DUPLICATE")
+        try:
+            validate_financial_registry_bindings(row["financial_registry_inputs"])
+        except (ValueError, TypeError, KeyError) as exc:
+            raise ValueError("REGISTRY_CHILD_ATTESTATION_INVALID") from exc
+        if row["financial_registry_inputs"] != bindings:
+            raise ValueError("REGISTRY_CHILD_BINDING_MISMATCH")
+        seen.add(row["pid"])
+    return sorted(seen)
+
+
+def registry_child_attestations(root: Path, run_id: str, bindings: Mapping[str, Any]):
+    pids = verify_registry_children(root, run_id, bindings)
+    return {"pids": pids, "status": "BOUND" if pids else "REGISTRY_NOT_LOADED_BY_CHILD"}
 
 
 def _bind_registry_child():

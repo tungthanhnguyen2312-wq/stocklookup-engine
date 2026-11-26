@@ -24,6 +24,8 @@ import pytest
 from stocklookup_core.acquisition import owner_daily_journal as journal
 from stocklookup_core.evidence import official_ocr_layout_proof as registry
 
+pytestmark = pytest.mark.registry_gate_real
+
 ROOT = Path(__file__).resolve().parents[1]
 DAILY = "tools/run_owner_daily.py"
 
@@ -220,23 +222,23 @@ def test_optional_child_attestations_remain_strict_and_run_bound(registry_root, 
     root = registry_root
     bindings, _ = registry.verify_financial_registry_inputs(root)
     owner_pid = os.getpid()
-    env = journal.registry_child_environment(root, bindings)
+    env = registry.registry_child_environment(root, bindings)
     run_id = env[registry.REGISTRY_RUN_ENV]
     if case == "missing":
-        assert journal.registry_child_attestations(root, run_id, bindings) == {
+        assert registry.registry_child_attestations(root, run_id, bindings) == {
             "pids": [], "status": "REGISTRY_NOT_LOADED_BY_CHILD"}
         return
-    monkeypatch.setattr(journal.os, "getpid", lambda: 12345)
+    monkeypatch.setattr(registry.os, "getpid", lambda: 12345)
     ancestors = [54321, owner_pid] if case == "descendant" else [owner_pid]
-    monkeypatch.setattr(journal, "_registry_ancestor_pids", lambda: ancestors)
-    journal.attest_registry_child(root, run_id, bindings)
-    directory = journal._registry_child_directory(root, run_id)
+    monkeypatch.setattr(registry, "_registry_ancestor_pids", lambda: ancestors)
+    registry._attest_registry_child(root, run_id, bindings)
+    directory = registry._registry_child_directory(root, run_id)
     path = directory / "12345.json"
     row = json.loads(path.read_bytes())
     if case in {"direct", "descendant"}:
-        assert journal.verify_registry_children(root, run_id, bindings, owner_pid=owner_pid) == [12345]
+        assert registry.verify_registry_children(root, run_id, bindings, owner_pid=owner_pid) == [12345]
         with pytest.raises(ValueError, match="ATTESTATION_EXISTS"):
-            journal.attest_registry_child(root, run_id, bindings)
+            registry._attest_registry_child(root, run_id, bindings)
         return
     if case == "unrelated":
         row["ancestor_pids"] = [54321]
@@ -258,18 +260,18 @@ def test_optional_child_attestations_remain_strict_and_run_bound(registry_root, 
     expected = ("REGISTRY_CHILD_ATTESTATION_INVALID" if case in
                 {"duplicate", "extra", "type", "malformed", "shape", "encoding"} else "REGISTRY_")
     with pytest.raises(ValueError, match=expected):
-        journal.verify_registry_children(root, run_id, bindings, owner_pid=owner_pid)
+        registry.verify_registry_children(root, run_id, bindings, owner_pid=owner_pid)
     with pytest.raises(ValueError, match="RUN_ID_INVALID"):
-        journal.verify_registry_children(root, "../escape", bindings)
+        registry.verify_registry_children(root, "../escape", bindings)
 
 
 def test_child_cannot_attest_outside_owner_lineage(registry_root, monkeypatch):
     bindings, _ = registry.verify_financial_registry_inputs(registry_root)
-    env = journal.registry_child_environment(registry_root, bindings)
+    env = registry.registry_child_environment(registry_root, bindings)
     # The current process is the owner, not its own descendant.
     monkeypatch.setenv("STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID", str(os.getpid()))
     with pytest.raises(ValueError, match="PID_NOT_DESCENDANT"):
-        journal.attest_registry_child(registry_root, env[registry.REGISTRY_RUN_ENV], bindings)
+        registry._attest_registry_child(registry_root, env[registry.REGISTRY_RUN_ENV], bindings)
 
 
 @pytest.mark.parametrize("mismatch", [False, True])
@@ -286,7 +288,7 @@ def test_isolated_consumer_import_verifies_and_attests_without_daily(registry_ro
     bindings, _ = registry.verify_financial_registry_inputs(root)
     env = os.environ.copy()
     env.pop("PYTHONPATH", None)
-    env.update(journal.registry_child_environment(root, bindings))
+    env.update(registry.registry_child_environment(root, bindings))
     if mismatch:
         receipt = _receipt(root)
         receipt["unrelated_capacity_history"] = "changed receipt digest"
@@ -303,12 +305,12 @@ print(json.dumps({"pid": os.getpid(), "bindings": r._BOUND_REGISTRIES[1]}))
                            capture_output=True, text=True, timeout=30)
     if mismatch:
         assert child.returncode != 0 and "REGISTRY_CHILD_BINDING_MISMATCH" in child.stderr
-        assert not list(journal._registry_child_directory(root, env[registry.REGISTRY_RUN_ENV]).iterdir())
+        assert not list(registry._registry_child_directory(root, env[registry.REGISTRY_RUN_ENV]).iterdir())
     else:
         assert child.returncode == 0, child.stderr
         row = json.loads(child.stdout)
         assert row["bindings"] == bindings
-        assert journal.verify_registry_children(root, env[registry.REGISTRY_RUN_ENV], bindings,
+        assert registry.verify_registry_children(root, env[registry.REGISTRY_RUN_ENV], bindings,
                                                 owner_pid=os.getpid()) == [row["pid"]]
 
 
@@ -369,11 +371,11 @@ def test_daily_child_registry_load_is_optional_but_attestations_must_match(regis
             binding = deepcopy(expected)
             if attestation == "mismatch":
                 binding["issuers"]["sha256_lf"] = "0" * 64
-            monkeypatch.setattr(journal, "_registry_ancestor_pids", lambda: [owner_pid])
+            monkeypatch.setattr(registry, "_registry_ancestor_pids", lambda: [owner_pid])
             with monkeypatch.context() as child_patch:
-                child_patch.setattr(journal.os, "getpid", lambda: 12345)
-                journal.attest_registry_child(registry_root, env[registry.REGISTRY_RUN_ENV], binding)
-            path = journal._registry_child_directory(registry_root, env[registry.REGISTRY_RUN_ENV]) / "12345.json"
+                child_patch.setattr(registry.os, "getpid", lambda: 12345)
+                registry._attest_registry_child(registry_root, env[registry.REGISTRY_RUN_ENV], binding)
+            path = registry._registry_child_directory(registry_root, env[registry.REGISTRY_RUN_ENV]) / "12345.json"
             if attestation == "malformed":
                 path.write_bytes(b"{")
             elif attestation == "unrelated":
@@ -445,7 +447,7 @@ def test_failure_journal_and_external_receipt_keep_bindings(registry_root, daily
 @pytest.mark.parametrize("case", ["missing_pair", "duplicate", "bool_revision", "mismatch"])
 def test_direct_child_rejects_corrupt_inherited_environment_before_launch(registry_root, daily_functions, monkeypatch, case):
     bindings, _ = registry.verify_financial_registry_inputs(registry_root)
-    env = journal.registry_child_environment(registry_root, bindings)
+    env = registry.registry_child_environment(registry_root, bindings)
     if case == "missing_pair":
         del env[registry.REGISTRY_RUN_ENV]
     elif case == "duplicate":

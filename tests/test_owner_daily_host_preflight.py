@@ -213,6 +213,7 @@ def launcher_registry_inputs(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("classification", ["BLOCKED", "AMBER"])
+@pytest.mark.registry_gate_real
 def test_launcher_stops_before_child_for_nonready(tmp_path, monkeypatch, classification, launcher_registry_inputs):
     monkeypatch.setattr(preflight, "check", lambda *a: {"classification": classification, "operator_guidance": preflight.GUIDANCE})
     monkeypatch.setattr(owner.subprocess, "Popen", lambda *a, **k: pytest.fail("must not launch"))
@@ -220,6 +221,7 @@ def test_launcher_stops_before_child_for_nonready(tmp_path, monkeypatch, classif
         owner._run_daily(tmp_path, tmp_path)
 
 
+@pytest.mark.registry_gate_real
 def test_ready_preserves_canonical_child_gate_failure(tmp_path, monkeypatch, launcher_registry_inputs):
     monkeypatch.setattr(preflight, "check", lambda *a: {"classification": "READY"})
     class Process:
@@ -343,6 +345,7 @@ def test_source_fingerprint_excludes_only_noncode_and_normal_session_registry(mo
         "config/policy.json", "runtime.py", "tools/run_owner_daily.py"]
 
 
+@pytest.mark.registry_gate_real
 def test_bounded_ready_requires_strict_runner_and_propagates_failure(tmp_path, monkeypatch, launcher_registry_inputs):
     from stocklookup_core.acquisition import feedback_resource_guard as guard
     host = preflight.evaluate(qualified_observation())
@@ -1391,6 +1394,7 @@ def test_issuer_registry_coverage_manifest_peels_only_exact_added_pin(tmp_path):
         issuer_registry_coverage_prior_manifest_bytes(tmp_path, manifest, active)
 
 
+@pytest.mark.registry_gate_real
 def test_registry_migration_capacity_corrective_is_exact_and_preserves_history():
     from datetime import datetime
     root = preflight.ROOT
@@ -1410,7 +1414,7 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
         "The predecessor receipt's measured values, IID bounds, physical/commit limits and runtime safeguards "
         "are reused unchanged. Registry migration A1 + A2 integrity and child-attestation correction only; "
         "no Daily launch or release authority.")
-    changed = ["financial_evidence_currency_contract.py",
+    changed = ["config/daily_path_launchers.json", "financial_evidence_currency_contract.py",
                "stocklookup_core/acquisition/owner_daily_journal.py",
                "stocklookup_core/evidence/official_ocr_layout_proof.py",
                "tools/check_owner_daily_host_preflight.py",
@@ -1465,11 +1469,12 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
 
 
 @pytest.mark.parametrize("path", [
-    "financial_evidence_currency_contract.py", "stocklookup_core/acquisition/owner_daily_journal.py",
+    "config/daily_path_launchers.json", "financial_evidence_currency_contract.py", "stocklookup_core/acquisition/owner_daily_journal.py",
     "stocklookup_core/evidence/official_ocr_layout_proof.py", "tools/check_owner_daily_host_preflight.py",
     "tools/run_dual_reader_transcription_admission.py", "tools/run_owner_daily.py",
     "tools/verify_retention_reader_transition.py", "config/official_financial_layouts/r0001.json",
     "config/official_financial_issuers/r0001.json"])
+@pytest.mark.registry_gate_real
 def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, path):
     root = preflight.ROOT
     receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
@@ -1488,6 +1493,7 @@ def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, 
 
 
 @pytest.mark.parametrize("tamper", [None, "missing", "approval", "revision", "pin"])
+@pytest.mark.registry_gate_real
 def test_registry_migration_live_selectors_and_gate_refuse_tampering(tmp_path, tamper):
     from stocklookup_core.evidence.official_ocr_layout_proof import verify_financial_registry_inputs
     root = preflight.ROOT

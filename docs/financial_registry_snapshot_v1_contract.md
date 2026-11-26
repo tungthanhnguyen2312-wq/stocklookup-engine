@@ -123,9 +123,11 @@ records sorted `pids` and status `BOUND` when any valid attestation exists, or
 and journal details carry this result. The child command, launcher lifecycle,
 and import-time `bind_active_workspace` remain unchanged.
 
-The layout owner writes import-time child attestations directly; the journal's
-compatibility wrappers delegate to that owner without a reverse import. Directory
-validation, OS ancestry proof, atomic serialization and record format are unchanged.
+The layout owner owns child environment construction, import-time attestation,
+verification and parsing. The tools orchestrator calls that owner directly; the
+acquisition journal stores and returns bindings and attestations as opaque data
+without importing evidence. Directory validation, OS ancestry proof, atomic
+serialization and record format are unchanged.
 Attestation parse and shape failures raise
 `ValueError("REGISTRY_CHILD_ATTESTATION_INVALID")`; lineage and binding mismatches
 retain their fail-closed refusals.

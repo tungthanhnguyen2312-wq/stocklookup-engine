@@ -704,13 +704,14 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
     bindings = _require_financial_registry_inputs(root, expected=financial_registry_inputs)
     from stocklookup_core.evidence.official_ocr_layout_proof import (
         REGISTRY_BINDINGS_ENV, REGISTRY_RUN_ENV, _registry_json, validate_financial_registry_bindings,
+        _registry_child_directory, registry_child_environment, registry_child_attestations,
     )
     env = os.environ.copy()
     if REGISTRY_RUN_ENV not in env:
         if REGISTRY_BINDINGS_ENV in env:
             raise OwnerDailyError("Financial registry preflight", "REGISTRY_CHILD_BINDING_MISSING",
                                   financial_registry_inputs=bindings)
-        env.update(journal.registry_child_environment(root, bindings))
+        env.update(registry_child_environment(root, bindings))
     else:
         try:
             encoded = env.get(REGISTRY_BINDINGS_ENV, "")
@@ -720,7 +721,7 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
             validate_financial_registry_bindings(inherited)
             if inherited != bindings:
                 raise ValueError("REGISTRY_CHILD_BINDING_MISMATCH")
-            if not journal._registry_child_directory(root, env[REGISTRY_RUN_ENV]).is_dir():
+            if not _registry_child_directory(root, env[REGISTRY_RUN_ENV]).is_dir():
                 raise ValueError("REGISTRY_CHILD_RUN_MISSING")
         except (OSError, ValueError, TypeError, KeyError) as exc:
             raise OwnerDailyError("Financial registry preflight", str(exc),
@@ -735,7 +736,7 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
         try:
             if env.get("STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID") != str(os.getpid()):
                 raise ValueError("REGISTRY_CHILD_OWNER_PID_INVALID")
-            return journal.registry_child_attestations(root, env[REGISTRY_RUN_ENV], bindings)
+            return registry_child_attestations(root, env[REGISTRY_RUN_ENV], bindings)
         except (OSError, ValueError, TypeError, KeyError) as exc:
             raise OwnerDailyError("Financial registry preflight", str(exc),
                                   financial_registry_inputs=bindings) from exc
@@ -1568,6 +1569,9 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
 
     # Integrity is mandatory for fresh Daily and replay alike, before journal/analytical work.
     financial_registry_inputs = _require_financial_registry_inputs(root)
+    from stocklookup_core.evidence.official_ocr_layout_proof import (
+        registry_child_environment, registry_child_attestations,
+    )
     run_id = None
     dashboard: dict[str, Any] | None = None
     previous_registry_environment = {}
@@ -1600,7 +1604,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
 
         run_id = _journal_start(root, intended_session=intended_session,
                                 financial_registry_inputs=financial_registry_inputs)
-        registry_environment = journal.registry_child_environment(root, financial_registry_inputs, run_id=run_id)
+        registry_environment = registry_child_environment(root, financial_registry_inputs, run_id=run_id)
         previous_registry_environment = {key: os.environ.get(key) for key in registry_environment}
         os.environ.update(registry_environment)
         # SESSION_RESOLVED must be durable BEFORE any material work begins (repository preflight,
@@ -1706,7 +1710,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         # is withheld.
         session = str(completion["session"])
         presentation_state = _presentation_bound_state(root, session)
-        financial_registry_child_attestations = journal.registry_child_attestations(root, run_id, financial_registry_inputs)
+        financial_registry_child_attestations = registry_child_attestations(root, run_id, financial_registry_inputs)
         if presentation_state == "UNKNOWN":
             _journal_advance(root, run_id, journal.BLOCKED, detail={
                 "reason": "PRESENTATION_UNKNOWN_CANNOT_COMPLETE", "presentation_state": presentation_state,
@@ -1804,7 +1808,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
             if telemetry is not None:
                 telemetry.emit(phase_index=8, progress_kind="PIPELINE", status="END")
 
-        financial_registry_child_attestations = journal.registry_child_attestations(root, run_id, financial_registry_inputs)
+        financial_registry_child_attestations = registry_child_attestations(root, run_id, financial_registry_inputs)
         dashboard_failed = dashboard["status"] not in {"READY", "SKIPPED", _NOT_REQUESTED}
         if action_center["status"] == "PARTIAL" or dashboard_failed:
             _journal_advance(root, run_id, journal.BLOCKED, detail={
@@ -1845,7 +1849,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         flow_price = (presentation_attestation or {}).get("flow_price_divergence_shadow") or {}
         post_handoff_feedback = (presentation_attestation or {}).get("post_handoff_prospective_decision_feedback") or {}
         runtime_restage = (presentation_attestation or {}).get("runtime_restage") or {}
-        financial_registry_child_attestations = journal.registry_child_attestations(root, run_id, financial_registry_inputs)
+        financial_registry_child_attestations = registry_child_attestations(root, run_id, financial_registry_inputs)
         _journal_advance_strict(root, run_id, journal.COMPLETE, detail={
             "financial_registry_child_attestations": financial_registry_child_attestations,
                 "financial_registry_inputs": financial_registry_inputs,
@@ -1887,7 +1891,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
     except BaseException as exc:
         if run_id is not None:
             try:
-                financial_registry_child_attestations = journal.registry_child_attestations(
+                financial_registry_child_attestations = registry_child_attestations(
                     root, run_id, financial_registry_inputs)
             except (OSError, ValueError, TypeError, KeyError):
                 pass  # Preserve the failure and last verified set; never accept malformed rows.
