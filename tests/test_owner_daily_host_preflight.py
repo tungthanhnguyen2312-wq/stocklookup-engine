@@ -197,17 +197,35 @@ def test_tool_no_network_no_repository_or_evidence_writes(tmp_path, monkeypatch,
                       for p in tmp_path.rglob('*') if p.is_file()}
 
 
+@pytest.fixture
+def launcher_registry_inputs(tmp_path, monkeypatch):
+    # Give only these legacy launcher cases real, valid inputs so their host/child
+    # failure assertions still reach the original boundary through the strict gate.
+    from stocklookup_core.evidence import official_ocr_layout_proof as registry
+    receipt = json.loads((preflight.ROOT / registry.CAPACITY_RECEIPT).read_bytes())
+    for selector in receipt["financial_registry_inputs"].values():
+        target = tmp_path / selector["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((preflight.ROOT / selector["path"]).read_bytes())
+    (tmp_path / registry.CAPACITY_RECEIPT).write_bytes(json.dumps(receipt).encode("utf-8"))
+    # Each fixture checkout is a distinct process binding, restored after the case.
+    monkeypatch.setattr(registry, "_BOUND_REGISTRIES", None)
+
+
 @pytest.mark.parametrize("classification", ["BLOCKED", "AMBER"])
-def test_launcher_stops_before_child_for_nonready(tmp_path, monkeypatch, classification):
+@pytest.mark.registry_gate_real
+def test_launcher_stops_before_child_for_nonready(tmp_path, monkeypatch, classification, launcher_registry_inputs):
     monkeypatch.setattr(preflight, "check", lambda *a: {"classification": classification, "operator_guidance": preflight.GUIDANCE})
     monkeypatch.setattr(owner.subprocess, "Popen", lambda *a, **k: pytest.fail("must not launch"))
     with pytest.raises(owner.OwnerDailyError, match="OWNER_DAILY_HOST_PREFLIGHT_" + classification):
         owner._run_daily(tmp_path, tmp_path)
 
 
-def test_ready_preserves_canonical_child_gate_failure(tmp_path, monkeypatch):
+@pytest.mark.registry_gate_real
+def test_ready_preserves_canonical_child_gate_failure(tmp_path, monkeypatch, launcher_registry_inputs):
     monkeypatch.setattr(preflight, "check", lambda *a: {"classification": "READY"})
     class Process:
+        pid = 12345
         def wait(self):
             return 7  # Existing canonical gate still refuses.
     def launch(argv, **kwargs):
@@ -327,7 +345,8 @@ def test_source_fingerprint_excludes_only_noncode_and_normal_session_registry(mo
         "config/policy.json", "runtime.py", "tools/run_owner_daily.py"]
 
 
-def test_bounded_ready_requires_strict_runner_and_propagates_failure(tmp_path, monkeypatch):
+@pytest.mark.registry_gate_real
+def test_bounded_ready_requires_strict_runner_and_propagates_failure(tmp_path, monkeypatch, launcher_registry_inputs):
     from stocklookup_core.acquisition import feedback_resource_guard as guard
     host = preflight.evaluate(qualified_observation())
     monkeypatch.setattr(preflight, "check", lambda *a: host)
@@ -406,13 +425,29 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     from tools.check_architecture import module_name
 
     root = preflight.ROOT
+    receipt_path = "config/owner_daily_capacity_qualification.json"
+    live_receipt = json.loads((root / receipt_path).read_bytes())
+    # Verify the older chains against the exact pre-migration source and pins.
+    # The separate migration test checks this successor against the working tree.
+    migration = live_receipt.pop("registry_migration_a_corrective")
+    live_receipt.pop("financial_registry_inputs")
+    live_receipt["source_sha256"].update(migration["prior_source_sha256_lf"])
+    for path in migration["added_source_paths"]:
+        del live_receipt["source_sha256"][path]
+
+    def predecessor_source_bytes(path):
+        if path in migration["prior_source_sha256_lf"]:
+            raw = subprocess.check_output(["git", "show", f"{migration['base_commit']}:{path}"], cwd=root)
+            assert hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest() == migration["prior_source_sha256_lf"][path]
+            return raw
+        return (root / path).read_bytes()
     spec = json.loads((root / "tests/fixtures/offline_financial_capacity_source_transition_v1.json").read_bytes())
     assert spec["scope"] == "EXACT_OFFLINE_FINANCIAL_SOURCE_ENUMERATION_ONLY"
     assert spec["new_capacity_measurement"] is False
     relative = spec["source_path"]
     assert relative == "tools/check_owner_daily_host_preflight.py"
     archive = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
-    active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    active = predecessor_source_bytes(relative).replace(b"\r\n", b"\n")
     assert hashlib.sha256(archive).hexdigest() == spec["prior_sha256_lf"]
     assert hashlib.sha256(active).hexdigest() == spec["active_sha256_lf"]
 
@@ -438,12 +473,11 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     prior_receipt = json.loads(git_blob(receipt_path))
     assert prior_receipt["source_sha256"][relative] == spec["prior_sha256_lf"]
     prior_receipt["source_sha256"][relative] = spec["active_sha256_lf"]
-    # Rebuild the current receipt using only the enumerated successor paths.
-    live_receipt = json.loads((root / receipt_path).read_bytes())
+    # Rebuild the pre-migration receipt using only its enumerated successor paths.
     hah_bwe = live_receipt["decision2_hah_bwe_admission_corrective"]
     def hah_bwe_predecessor_pin(path):
         return hah_bwe["prior_source_sha256_lf"].get(path,
-            hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+            hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest())
     completion = live_receipt["decision2_admission_completion_corrective"]
     def completion_predecessor_pin(path):
         return completion["prior_source_sha256_lf"].get(path, hah_bwe_predecessor_pin(path))
@@ -531,7 +565,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     assert module_name(sync_path) not in daily_reachable(root)
     for path in preflight.capacity_source_paths(root):
         if path != sync_path and path.endswith((".py", ".cmd", ".ps1", ".bat")):
-            assert b"sync_producer_release" not in (root / path).read_bytes()
+            assert b"sync_producer_release" not in predecessor_source_bytes(path)
     prior_receipt["source_sha256"][sync_path] = hashlib.sha256(new_sync).hexdigest()
     prior_receipt["freeze_inventory_rebaseline_corrective"] = rebaseline
     scheduled = live_receipt["scheduled_capture_reliability_corrective"]
@@ -579,7 +613,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         old = subprocess.check_output(["git", "show", f"{fable['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(old).hexdigest() == expected
         prior_receipt["source_sha256"][path] = hashlib.sha256(
-            (root / path).read_bytes().replace(b"\r\n", b"\n")
+            predecessor_source_bytes(path).replace(b"\r\n", b"\n")
         ).hexdigest()
     prior_receipt["fable_handoff_and_offline_research"] = fable
     copy_corrective = live_receipt["immutable_delivery_copy_corrective"]
@@ -850,7 +884,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert precheck["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         old_capture = subprocess.check_output(["git", "show", f"{precheck['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(old_capture.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["pit_capture_admission_precheck_corrective"] = precheck
 
     truthfulness = live_receipt["valuation_output_truthfulness_corrective"]
@@ -875,7 +909,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{truthfulness['base_commit']}:{path}"], cwd=root)
         assert truthfulness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        current = predecessor_source_bytes(path).replace(b"\r\n", b"\n")
         direction_prior = live_receipt["tplus_taxonomy_direction_corrective"]["prior_source_sha256_lf"]
         parent_prior = live_receipt["parent_attributable_headline_pe_corrective"]["prior_source_sha256_lf"]
         prior_receipt["source_sha256"][path] = direction_prior.get(
@@ -913,7 +947,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{direction['base_commit']}:{path}"], cwd=root)
         assert direction["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        current = predecessor_source_bytes(path).replace(b"\r\n", b"\n")
         prior_receipt["source_sha256"][path] = parent_prior.get(path, hashlib.sha256(current).hexdigest())
     prior_receipt["tplus_taxonomy_direction_corrective"] = direction
 
@@ -931,7 +965,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{lane_scope['base_commit']}:{path}"], cwd=root)
         assert lane_scope["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        current = predecessor_source_bytes(path).replace(b"\r\n", b"\n")
         prior_receipt["source_sha256"][path] = dormant_prior.get(path, hashlib.sha256(current).hexdigest())
     prior_receipt["native_lane_scope_amendment_corrective"] = lane_scope
 
@@ -945,12 +979,12 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{parent_pe['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
         prior_receipt["source_sha256"][path] = vsdc_valuation_prior.get(
-            path, vsdc_registry_prior.get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()))
+            path, vsdc_registry_prior.get(path, hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()))
     assert parent_pe["added_source_paths"] == ["tools/replay_parent_attributable_headline_pe.py"]
     for path in parent_pe["added_source_paths"]:
         assert path not in prior_receipt["source_sha256"]
         assert subprocess.run(["git", "cat-file", "-e", f"{parent_pe['base_commit']}:{path}"], cwd=root).returncode != 0
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["parent_attributable_headline_pe_corrective"] = parent_pe
 
     dormant_release_paths = ["roadmap_execution_state.py", "tools/stocklookup_roadmap.py"]
@@ -964,7 +998,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         previous = subprocess.check_output(["git", "show", f"{dormant_release['base_commit']}:{path}"], cwd=root)
         assert dormant_release["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == prior_receipt["source_sha256"][path]
-        current = (root / path).read_bytes().replace(b"\r\n", b"\n")
+        current = predecessor_source_bytes(path).replace(b"\r\n", b"\n")
         prior_receipt["source_sha256"][path] = hashlib.sha256(current).hexdigest()
     prior_receipt["dormant_lane_release_corrective"] = dormant_release
 
@@ -985,7 +1019,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in registration["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{registration['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == registration["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = live_receipt["vsdc_notice_body_completeness_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        prior_receipt["source_sha256"][path] = live_receipt["vsdc_notice_body_completeness_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest())
     prior_receipt["vsdc_registration_shares_corrective"] = registration
 
     retention = live_receipt["vsdc_market_wide_retention_corrective"]
@@ -995,11 +1029,11 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in retention["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{retention['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == retention["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = live_receipt["vsdc_notice_body_completeness_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest())
+        prior_receipt["source_sha256"][path] = live_receipt["vsdc_notice_body_completeness_corrective"]["prior_source_sha256_lf"].get(path, hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest())
     assert retention["added_source_paths"] == ["tools/retain_vsdc_share_notices.py", "tools/replay_vsdc_valuation_impact.py"]
     for path in retention["added_source_paths"]:
         assert path not in prior_receipt["source_sha256"]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["vsdc_market_wide_retention_corrective"] = retention
 
     valuation = live_receipt["vsdc_registered_share_valuation_corrective"]
@@ -1009,7 +1043,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in valuation["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{valuation['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == valuation["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["vsdc_registered_share_valuation_corrective"] = valuation
 
     completeness = live_receipt["vsdc_notice_body_completeness_corrective"]
@@ -1020,7 +1054,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     for path in completeness["changed_source_paths"]:
         previous = subprocess.check_output(["git", "show", f"{completeness['base_commit']}:{path}"], cwd=root)
         assert hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest() == completeness["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        prior_receipt["source_sha256"][path] = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        prior_receipt["source_sha256"][path] = hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
     prior_receipt["vsdc_notice_body_completeness_corrective"] = completeness
 
     registry_flag = live_receipt["vsdc_registry_flag_transition_corrective"]
@@ -1053,7 +1087,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         current_hash = live_receipt["decision2_dual_reader_corrective"]["prior_source_sha256_lf"].get(path, issuer_predecessor_pin(path))
         observed_pin = prior_receipt["source_sha256"][path]
         if path in hah_bwe["changed_source_paths"] and observed_pin == hah_bwe["active_source_sha256_lf"][path]:
-            assert observed_pin == hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            assert observed_pin == hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
             observed_pin = hah_bwe["prior_source_sha256_lf"][path]
         if path in completion["changed_source_paths"] and observed_pin == completion["active_source_sha256_lf"][path]:
             assert observed_pin == hah_bwe_predecessor_pin(path)
@@ -1279,7 +1313,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
         assert hah_bwe["prior_source_sha256_lf"][path] == hashlib.sha256(previous.replace(b"\r\n", b"\n")).hexdigest()
         assert hah_bwe["prior_source_sha256_lf"][path] == hah_bwe_baseline["source_sha256"][path]
         assert hah_bwe["prior_source_sha256_lf"][path] == prior_receipt["source_sha256"][path]
-        active_pin = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        active_pin = hashlib.sha256(predecessor_source_bytes(path).replace(b"\r\n", b"\n")).hexdigest()
         assert active_pin == hah_bwe["active_source_sha256_lf"][path] == live_receipt["source_sha256"][path]
         assert active_pin != hah_bwe["prior_source_sha256_lf"][path]
         prior_receipt["source_sha256"][path] = active_pin
@@ -1298,7 +1332,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     names = re.compile(rb"\b(?:" + b"|".join(re.escape(Path(path).stem.encode()) for path in sorted(offline)) + rb")\b")
     for path in preflight.capacity_source_paths(root):
         if path not in (relative, compact_command):
-            assert not names.search((root / path).read_bytes()), path
+            assert not names.search(predecessor_source_bytes(path)), path
 
 
 def test_offline_edits_keep_receipt_but_runtime_import_or_new_runtime_file_invalidates_it(tmp_path, monkeypatch):
@@ -1358,3 +1392,128 @@ def test_issuer_registry_coverage_manifest_peels_only_exact_added_pin(tmp_path):
     (tmp_path / spec_path).write_text(json.dumps(altered_spec), encoding="utf-8")
     with pytest.raises(ValueError, match="ISSUER_REGISTRY_COVERAGE_MANIFEST_SCOPE_INVALID"):
         issuer_registry_coverage_prior_manifest_bytes(tmp_path, manifest, active)
+
+
+@pytest.mark.registry_gate_real
+def test_registry_migration_capacity_corrective_is_exact_and_preserves_history():
+    from datetime import datetime
+    root = preflight.ROOT
+    receipt_path = "config/owner_daily_capacity_qualification.json"
+    raw = (root / receipt_path).read_bytes()
+    live = json.loads(raw)
+    migration = live["registry_migration_a_corrective"]
+    assert list(live)[-2:] == ["financial_registry_inputs", "registry_migration_a_corrective"]
+    assert migration["base_commit"] == "74017553c7a17c33a5464ec735f3700df669bbd5"
+    assert migration["predecessor_corrective"] == "decision2_hah_bwe_admission_corrective"
+    assert migration["scope"] == "REGISTRY_MIGRATION_A_COMPATIBILITY_PIN_UPDATE_ONLY"
+    assert migration["new_capacity_measurement"] is False
+    assert migration["whole_daily_requalification"] is False
+    assert migration["release_authority"] == "NOT_GRANTED"
+    assert migration["compatibility"] == (
+        "COMPATIBILITY pin update only. No new capacity measurement was performed. "
+        "The predecessor receipt's measured values, IID bounds, physical/commit limits and runtime safeguards "
+        "are reused unchanged. Registry migration A1 + A2 integrity and child-attestation correction only; "
+        "no Daily launch or release authority.")
+    changed = ["config/daily_path_launchers.json", "financial_evidence_currency_contract.py",
+               "stocklookup_core/acquisition/owner_daily_journal.py",
+               "stocklookup_core/evidence/official_ocr_layout_proof.py",
+               "tools/check_owner_daily_host_preflight.py",
+               "tools/run_dual_reader_transcription_admission.py",
+               "tools/run_owner_daily.py", "tools/verify_retention_reader_transition.py"]
+    added = ["config/official_financial_issuers/r0001.json", "config/official_financial_layouts/r0001.json"]
+    assert migration["changed_source_paths"] == changed
+    assert migration["added_source_paths"] == added
+    assert set(migration["prior_source_sha256_lf"]) == set(changed)
+    assert set(migration["active_source_sha256_lf"]) == set(changed + added)
+    baseline_raw = subprocess.check_output(["git", "show", f"{migration['base_commit']}:{receipt_path}"], cwd=root)
+    baseline = json.loads(baseline_raw)
+    assert list(baseline)[-1] == migration["predecessor_corrective"]
+    rebuilt = copy.deepcopy(baseline)
+    changed_names = set(subprocess.check_output(
+        ["git", "diff", "--name-only", migration["base_commit"]], cwd=root, text=True).splitlines())
+    assert changed_names.intersection(baseline["source_sha256"]) == set(changed)
+    for path in changed:
+        old = subprocess.check_output(["git", "show", f"{migration['base_commit']}:{path}"], cwd=root)
+        assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == migration["prior_source_sha256_lf"][path]
+        assert baseline["source_sha256"][path] == migration["prior_source_sha256_lf"][path]
+        assert migration["prior_source_sha256_lf"][path] != migration["active_source_sha256_lf"][path]
+    for path in changed + added:
+        digest = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        assert digest == migration["active_source_sha256_lf"][path] == live["source_sha256"][path]
+        rebuilt["source_sha256"][path] = digest
+    assert not set(added).intersection(baseline["source_sha256"])
+    selectors = live["financial_registry_inputs"]
+    assert set(selectors) == {"layouts", "issuers"}
+    for role, selector in selectors.items():
+        assert set(selector) == {"role", "path", "revision", "approval_reference", "approved_at"}
+        assert selector["role"] == role and type(selector["revision"]) is int and selector["revision"] == 1
+        assert selector["path"] == f"config/official_financial_{role}/r0001.json"
+        assert selector["approval_reference"] == (
+            "Claude HL review, lane REGISTRY_MIGRATION_A_20261126, Owner standing merge authorization 2026-11-26")
+        assert datetime.fromisoformat(selector["approved_at"]).utcoffset() is not None
+    rebuilt["financial_registry_inputs"] = selectors
+    rebuilt["registry_migration_a_corrective"] = migration
+    assert live == rebuilt  # Every measured value, limit and historical entry is unchanged.
+    # Protect literal historical entry bytes too, not just parsed equality.
+    decoder = json.JSONDecoder()
+    def member_bytes(data, key):
+        text = data.decode("utf-8")
+        marker = '\n  "' + key + '": '
+        start = text.index(marker) + len(marker)
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end].encode("utf-8")
+    for key in baseline:
+        if key != "source_sha256":
+            assert member_bytes(raw, key) == member_bytes(baseline_raw, key)
+    assert preflight.capacity_qualification(root)["source_matches"] is True
+
+
+@pytest.mark.parametrize("path", [
+    "config/daily_path_launchers.json", "financial_evidence_currency_contract.py", "stocklookup_core/acquisition/owner_daily_journal.py",
+    "stocklookup_core/evidence/official_ocr_layout_proof.py", "tools/check_owner_daily_host_preflight.py",
+    "tools/run_dual_reader_transcription_admission.py", "tools/run_owner_daily.py",
+    "tools/verify_retention_reader_transition.py", "config/official_financial_layouts/r0001.json",
+    "config/official_financial_issuers/r0001.json"])
+@pytest.mark.registry_gate_real
+def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, path):
+    root = preflight.ROOT
+    receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
+    selected = receipt["registry_migration_a_corrective"]["active_source_sha256_lf"]
+    receipt["source_sha256"] = selected
+    for relative in selected:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((root / relative).read_bytes())
+    (tmp_path / "config/owner_daily_capacity_qualification.json").write_text(json.dumps(receipt), encoding="utf-8")
+    monkeypatch.setattr(preflight, "capacity_source_paths", lambda root: sorted(selected))
+    assert preflight.capacity_qualification(tmp_path)["source_matches"] is True
+    target = tmp_path / path
+    target.write_bytes(target.read_bytes() + b" ")
+    assert preflight.capacity_qualification(tmp_path)["source_matches"] is False
+
+
+@pytest.mark.parametrize("tamper", [None, "missing", "approval", "revision", "pin"])
+@pytest.mark.registry_gate_real
+def test_registry_migration_live_selectors_and_gate_refuse_tampering(tmp_path, tamper):
+    from stocklookup_core.evidence.official_ocr_layout_proof import verify_financial_registry_inputs
+    root = preflight.ROOT
+    receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
+    for selector in receipt["financial_registry_inputs"].values():
+        path = tmp_path / selector["path"]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes((root / selector["path"]).read_bytes())
+    if tamper == "missing":
+        del receipt["financial_registry_inputs"]["issuers"]
+    elif tamper == "approval":
+        receipt["financial_registry_inputs"]["layouts"]["approval_reference"] = "PENDING"
+    elif tamper == "revision":
+        receipt["financial_registry_inputs"]["layouts"]["revision"] = 2
+    elif tamper == "pin":
+        receipt["source_sha256"][receipt["financial_registry_inputs"]["layouts"]["path"]] = "0" * 64
+    (tmp_path / "config/owner_daily_capacity_qualification.json").write_text(json.dumps(receipt), encoding="utf-8")
+    if tamper is None:
+        bindings, _ = verify_financial_registry_inputs(tmp_path)
+        assert bindings["layouts"]["revision"] == bindings["issuers"]["revision"] == 1
+    else:
+        with pytest.raises(ValueError):
+            verify_financial_registry_inputs(tmp_path)

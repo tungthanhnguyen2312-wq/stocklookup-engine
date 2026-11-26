@@ -533,6 +533,8 @@ def test_capacity_successor_conserves_historical_launcher_and_rejects_tampering(
                  transition.TACTICAL_SHADOW_MANIFEST.removesuffix(".json") + "_sources/tools/run_owner_daily.py.txt",
                  "tests/fixtures/owner_daily_multi_freeze_source_transition_v1.json",
                  "tests/fixtures/owner_daily_multi_freeze_v1_sources/tools/run_owner_daily.py.txt",
+                 "tests/fixtures/registry_migration_v1/run_owner_daily_source_transition_v1.json",
+                 "tests/fixtures/registry_migration_v1/run_owner_daily.py.txt",
                  transition.SUBTREE_CODEC_LAUNCHER_MANIFEST,
                  "tests/fixtures/ndjson_subtree_codec_launcher_sources/tools/run_owner_daily.py.txt",
                  *("tests/fixtures/owner_daily_launcher_v1_sources/" + p + ".txt" for p in transition.LAUNCHER_SOURCES),

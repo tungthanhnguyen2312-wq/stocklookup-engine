@@ -35,15 +35,9 @@ MAX_INDEX_PAGES_PER_ISSUER = 1
 STORAGE_BUDGET_BYTES = 5 * 1024 * 1024 * 1024
 FINANCIAL_V2_PIN_TICKER_THRESHOLD = 5
 
-ENTITY_FAMILY: dict[str, str] = {
-    "HPG": "corporate", "VNM": "corporate", "FPT": "corporate", "PNJ": "corporate",
-    "PAN": "corporate", "PVD": "corporate", "NVL": "corporate", "POW": "corporate",
-    "GAS": "corporate", "VRE": "corporate", "QNS": "corporate",
-    "SSI": "securities",
-    "VCB": "bank",
-    "EVF": "finance_company",
-    "HAH": "corporate",
-}
+from stocklookup_core.evidence.official_ocr_layout_proof import issuer_registry_values
+
+ENTITY_FAMILY: dict[str, str] = issuer_registry_values()[2]
 
 CORPORATE_CORE_METRICS: tuple[str, ...] = (
     "revenue", "net_income", "attributable_net_income",

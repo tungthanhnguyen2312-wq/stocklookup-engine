@@ -197,7 +197,9 @@ def test_launcher_decode_transition_conserves_the_exact_prior_source(tmp_path, t
     spec = json.loads((root / SUBTREE_CODEC_LAUNCHER_MANIFEST).read_bytes())
     relative = "tools/run_owner_daily.py"
     archive = spec["sources"][relative]["archive"]
-    for name in (SUBTREE_CODEC_LAUNCHER_MANIFEST, relative, archive):
+    for name in (SUBTREE_CODEC_LAUNCHER_MANIFEST, relative, archive,
+                 "tests/fixtures/registry_migration_v1/run_owner_daily_source_transition_v1.json",
+                 "tests/fixtures/registry_migration_v1/run_owner_daily.py.txt"):
         (tmp_path / name).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(root / name, tmp_path / name)
     active = (tmp_path / relative).read_bytes().replace(b"\r\n", b"\n")

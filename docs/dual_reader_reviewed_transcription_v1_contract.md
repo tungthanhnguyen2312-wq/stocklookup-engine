@@ -364,3 +364,19 @@ to the other reading), and ChatGPT clipboard collection rounded up
 comparison (09:09:20+07:00), not a newly invented comparison. Original files,
 third readings and comparison notes remain unchanged. No raw timestamps are
 backdated and no admission or PIT authority is asserted.
+
+## Immutable registry data migration (HL-20261126-CDX-34, A1)
+
+The offline runner now reads all registered specs from
+`config/dual_reader_admissions/r0001.json`. CLI IDs, default selection, payloads,
+legacy exported dictionaries and tuple/list shapes are conserved against the
+complete merged baseline fixture. The shared layout, exact/folded issuer names
+and entity families come from distinct immutable snapshots; `COHORT` remains an
+independent constant. Entry review/provenance metadata stays outside sealed
+payloads. Original completion instants and knowledge floors are preserved.
+
+See [the snapshot contract](financial_registry_snapshot_v1_contract.md) for strict
+loading, source conservation, Daily isolation and replay limitations. No real
+replay is certified in this executor environment, and A2 has not started because
+its initial-journal and protected-source transition paths need lease expansion.
+This migration does not admit any new document or expand existing authority.

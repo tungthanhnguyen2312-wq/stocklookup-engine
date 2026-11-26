@@ -467,7 +467,7 @@ SUBTREE_CODEC_LAUNCHER_MANIFEST = "tests/fixtures/ndjson_subtree_codec_launcher_
 
 
 def _subtree_codec_launcher_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
-    """Peel the M1 full-universe decode (newest transition) back to the reviewed launcher."""
+    """Peel the registry successor, then the conserved M1 decode launcher transition."""
     manifest = root / SUBTREE_CODEC_LAUNCHER_MANIFEST
     if relative != "tools/run_owner_daily.py" or not manifest.is_file():
         return active
@@ -480,6 +480,15 @@ def _subtree_codec_launcher_prior_bytes(root: Path, relative: str, active: bytes
             or set(spec.get("sources", {})) != {relative}):
         raise ValueError("SUBTREE_CODEC_LAUNCHER_SOURCE_TRANSITION_SCOPE_INVALID")
     row = spec["sources"][relative]
+    if hashlib.sha256(active).hexdigest() != row.get("active_sha256_lf"):
+        # Direct callers may still supply the registry-gated successor. Verify both
+        # sides of that boundary before checking the immutable historical fixture.
+        try:
+            active = _registry_daily_gate_prior_bytes(root, relative, active)
+        except (ValueError, OSError):
+            # Keep this historical boundary's refusal when the successor cannot
+            # supply verified predecessor bytes. Never substitute an archive.
+            pass
     prior = (root / archive).read_bytes().replace(b"\r\n", b"\n")
     if (row.get("archive") != archive
             or hashlib.sha256(prior).hexdigest() != row.get("prior_sha256_lf")
@@ -515,9 +524,19 @@ def _d4a_canonical_prior_bytes(root: Path, relative: str, active: bytes) -> byte
 def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Conserve both historical source chains across the optional observer dispatch."""
     active = _velocity_projection_prior_bytes(root, relative, active)
-    active = _d4a_canonical_prior_bytes(root, relative, active)
+    successor_error = None
+    try:
+        active = _d4a_canonical_prior_bytes(root, relative, active)
+    except (ValueError, OSError) as exc:
+        if relative != "tools/run_owner_daily.py":
+            raise
+        # Classify unmatched live bytes through the historical chain's own
+        # checks. Retain the successor refusal even if that older layer binds.
+        successor_error = exc
     manifest = root / TACTICAL_SHADOW_MANIFEST
     if relative not in TACTICAL_SHADOW_SOURCES or not manifest.is_file():
+        if successor_error is not None:
+            raise successor_error
         return active
     spec = json.loads(manifest.read_bytes())
     if (spec.get("base_commit") != "7d2c6915a84a9576c5783336ddca13995aaeb13f"
@@ -531,6 +550,8 @@ def _tactical_shadow_prior_bytes(root: Path, relative: str, active: bytes) -> by
             or hashlib.sha256(active).hexdigest() != row["active_sha256_lf"]
             or row["prior_sha256_lf"] == row["active_sha256_lf"]):
         raise ValueError("TACTICAL_SHADOW_SOURCE_TRANSITION_BINDING_INVALID")
+    if successor_error is not None:
+        raise successor_error
     return prior
 
 
@@ -1541,6 +1562,16 @@ def _financial_evidence_currency_contract_prior_bytes(root: Path, relative: str,
     if relative != FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE:
         return active
     spec = json.loads((root / FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_MANIFEST).read_bytes())
+    successor = spec.pop("registry_snapshot_transition", None)
+    if (type(successor) is not dict or set(successor) != set(REGISTRY_CURRENCY_SUCCESSOR) | {"prior_source_lf"}
+            or {k: v for k, v in successor.items() if k != "prior_source_lf"} != REGISTRY_CURRENCY_SUCCESSOR
+            or type(successor["prior_source_lf"]) is not str):
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_SCOPE_INVALID")
+    predecessor = successor["prior_source_lf"].encode("utf-8")
+    if (hashlib.sha256(active).hexdigest() != successor["active_sha256_lf"]
+            or hashlib.sha256(predecessor).hexdigest() != successor["prior_sha256_lf"]):
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_BINDING_INVALID")
+    active = predecessor
     expected = {'contract_version': 'financial_evidence_currency_contract_source_transition/v1',
      'base_commit': '70fbba96d02369e0f02a5a15dd264bad780fe6ce',
      'scope': 'DECISION2_HAH_CORPORATE_ENTITY_FAMILY_AND_EXACT_ISSUER_LOCATORS',
@@ -1669,9 +1700,77 @@ def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes
     return active
 
 
+REGISTRY_LAYOUT_TRANSITION = "tests/fixtures/registry_migration_v1/official_ocr_layout_proof_source_transition_v1.json"
+REGISTRY_SNAPSHOT_TRANSITIONS = {'stocklookup_core/evidence/official_ocr_layout_proof.py': {'contract_version': 'financial_registry_snapshot_source_transition/v1', 'base_commit': '74017553c7a17c33a5464ec735f3700df669bbd5', 'scope': 'REGISTRY_MIGRATION_A_SNAPSHOTS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'stocklookup_core/evidence/official_ocr_layout_proof.py', 'archive': 'tests/fixtures/registry_migration_v1/official_ocr_layout_proof.py.txt', 'prior_sha256_lf': 'e0ca67d98028d3bd87af7ac272d6df7ea2d36131f2d4b9ea0e17d6958b533350', 'active_sha256_lf': 'aae4182cc194e494c903585c24dcd218332c9d911ff9994835fb08ac33a62ecc'}}
+REGISTRY_CURRENCY_SUCCESSOR = {'contract_version': 'financial_registry_snapshot_source_transition/v1', 'base_commit': '74017553c7a17c33a5464ec735f3700df669bbd5', 'scope': 'REGISTRY_MIGRATION_A_SNAPSHOTS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'financial_evidence_currency_contract.py', 'prior_sha256_lf': '2e68914bd7d83a235695983e68fe49c1dc54efb4bf67fc80358819361d109838', 'active_sha256_lf': '242c24374d9370ff5232bea291bb9382d7369c846ac35eee770d5584333b9c79'}
+
+
+def _registry_snapshot_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    if relative not in REGISTRY_SNAPSHOT_TRANSITIONS:
+        return active
+    expected = REGISTRY_SNAPSHOT_TRANSITIONS[relative]
+    spec = _registry_transition_spec(root, REGISTRY_LAYOUT_TRANSITION, "REGISTRY_SNAPSHOT_SOURCE_TRANSITION_")
+    successor = spec.pop("daily_gate_transition", None)
+    if (type(successor) is not dict
+            or set(successor) != set(REGISTRY_LAYOUT_DAILY_GATE_SUCCESSOR) | {"prior_source_lf"}
+            or {k: v for k, v in successor.items() if k != "prior_source_lf"} != REGISTRY_LAYOUT_DAILY_GATE_SUCCESSOR):
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    if type(successor["prior_source_lf"]) is not str:
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = successor["prior_source_lf"].encode("utf-8")
+    if (hashlib.sha256(prior).hexdigest() != successor["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != successor["active_sha256_lf"]):
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_BINDING_INVALID")
+    active = prior
+    if spec != expected:
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]):
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
+REGISTRY_DAILY_GATE_TRANSITION = "tests/fixtures/registry_migration_v1/run_owner_daily_source_transition_v1.json"
+# Exact reviewed successors are bound here independently of the fixture's claims.
+REGISTRY_LAYOUT_DAILY_GATE_SUCCESSOR = {'contract_version': 'financial_registry_daily_gate_source_transition/v1', 'base_commit': '19c4846e783559c349715b3a799f47c275e929fb', 'scope': 'REGISTRY_MIGRATION_A_DAILY_GATE_AND_BINDINGS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'stocklookup_core/evidence/official_ocr_layout_proof.py', 'prior_sha256_lf': 'aae4182cc194e494c903585c24dcd218332c9d911ff9994835fb08ac33a62ecc', 'active_sha256_lf': '83261355404193d7bc3eb20508b9ca85de07874eafe5557bb7a84e5943978035'}
+REGISTRY_DAILY_GATE_SUCCESSOR = {'contract_version': 'financial_registry_daily_gate_source_transition/v1', 'base_commit': '19c4846e783559c349715b3a799f47c275e929fb', 'scope': 'REGISTRY_MIGRATION_A_DAILY_GATE_AND_BINDINGS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'tools/run_owner_daily.py', 'archive': 'tests/fixtures/registry_migration_v1/run_owner_daily.py.txt', 'prior_sha256_lf': '41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9', 'active_sha256_lf': '0e712d65704ea2646b9c32968c5cf0a4a1c88f24c2098184d7aa565ded096b8e'}
+
+
+def _registry_transition_spec(root: Path, relative: str, prefix: str):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError(prefix + "SCOPE_INVALID")
+            result[key] = value
+        return result
+    def invalid_number(value):
+        raise ValueError(prefix + "SCOPE_INVALID")
+    spec = json.loads((root / relative).read_bytes(), object_pairs_hook=pairs, parse_constant=invalid_number)
+    if type(spec) is not dict:
+        raise ValueError(prefix + "SCOPE_INVALID")
+    return spec
+
+
+def _registry_daily_gate_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    if relative != "tools/run_owner_daily.py":
+        return active
+    spec = _registry_transition_spec(root, REGISTRY_DAILY_GATE_TRANSITION, "REGISTRY_DAILY_GATE_SOURCE_TRANSITION_")
+    if spec != REGISTRY_DAILY_GATE_SUCCESSOR:
+        raise ValueError("REGISTRY_DAILY_GATE_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]):
+        raise ValueError("REGISTRY_DAILY_GATE_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _registry_daily_gate_prior_bytes(root, relative, content)
+    content = _registry_snapshot_prior_bytes(root, relative, content)
     if relative == OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE:
         amended = _official_source_registry_reviewed_amendment_bytes(root, content)
         if amended is not None:

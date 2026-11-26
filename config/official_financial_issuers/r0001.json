@@ -1,0 +1,622 @@
+{
+  "schema_version": 1,
+  "revision": 1,
+  "supersedes_sha256_lf": null,
+  "review": {
+    "reference": "HL-20261126-CDX-34 migration of 74017553c7a17c33a5464ec735f3700df669bbd5",
+    "recorded_at": "2026-11-26T13:29:15+00:00"
+  },
+  "issuer_legal_names": {
+    "BWE": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:BWE"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [
+        {
+          "literal": "Công ty CP - Tổng Công ty Nước - Môi trường Bình Dương",
+          "provenance": {
+            "document_sha256": "9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9",
+            "source_page": 12,
+            "image_sha256": "fa7896a2f4a352ff7435c9b2daf0b8269d3b293b38ef7661798a1f061588902b",
+            "source_host": "www.biwase.com.vn",
+            "description": "Exact statement-page issuer literal agreed by retained Claude and ChatGPT blind readings",
+            "reader_files": [
+              {
+                "relative_path": "blind-input-bwe-fy2025-p12/claude/claude-reader.raw.json",
+                "sha256": "c64abe2e55ba35242953de9bcb7bf4418bc5c632300e392008a0198c0454d18f"
+              },
+              {
+                "relative_path": "blind-input-bwe-fy2025-p12/chatgpt/chatgpt-reader.raw.json",
+                "sha256": "1a228f64043041541536363c4e932c2766f34a1b4c5f7b932b3063b6f40f80e9"
+              }
+            ]
+          }
+        },
+        {
+          "literal": "Công ty CP - Tổng Công ty Nước - Môi trường Bình Dương",
+          "provenance": {
+            "document_sha256": "acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8",
+            "source_page": 12,
+            "image_sha256": "e7950cad0cc38eb6e9e4ed16f7d12a21eb168f8ac4e62f5428db933f6dba17a6",
+            "source_host": "www.biwase.com.vn",
+            "description": "Exact statement-page issuer literal agreed by retained Claude and ChatGPT blind readings",
+            "reader_files": [
+              {
+                "relative_path": "blind-input-bwe-2025h1-p12/claude/claude-reader.raw.json",
+                "sha256": "0af0725d2f6c2a5fd9cea83a5ebc44b4e1e6fee87cdcca459f6faaa5275f8058"
+              },
+              {
+                "relative_path": "blind-input-bwe-2025h1-p12/chatgpt/chatgpt-reader.raw.json",
+                "sha256": "172e64c3f4c845dad1c42e7dfe0c5b88aa590f7a36e33f6c13d5e54a25092749"
+              }
+            ]
+          }
+        },
+        {
+          "literal": "Công ty CP - Tổng Công ty Nước - Môi trường Bình Dương",
+          "provenance": {
+            "document_sha256": "6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef",
+            "source_page": 12,
+            "image_sha256": "259e24d077202a6cff9e7c6040142c7fc16444cd42f99d0ecda481bbc63a8ee2",
+            "source_host": "www.biwase.com.vn",
+            "description": "Exact statement-page issuer literal agreed by retained Claude and ChatGPT blind readings",
+            "reader_files": [
+              {
+                "relative_path": "blind-input-bwe-2026h1-p12/claude/claude-reader.raw.json",
+                "sha256": "24b8185dc72ef2cee49bba18a7cf1b9f4f7b078afc59debb360932468ebae05a"
+              },
+              {
+                "relative_path": "blind-input-bwe-2026h1-p12/chatgpt/chatgpt-reader.raw.json",
+                "sha256": "aabf4bf5d0c543d873ab1b5a6de7ddbfda935a9c30b40f8b83398be6d3e7c240"
+              }
+            ]
+          }
+        }
+      ],
+      "folded": []
+    },
+    "HAH": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:HAH"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [
+        {
+          "literal": "CÔNG TY CỔ PHẦN VẬN TẢI VÀ XẾP DỠ HẢI AN",
+          "provenance": {
+            "document_sha256": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+            "source_page": 13,
+            "image_sha256": "fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b",
+            "source_host": "haiants.vn",
+            "description": "Exact statement-page issuer literal agreed by retained Claude and ChatGPT blind readings",
+            "reader_files": [
+              {
+                "relative_path": "blind-input-hah-fy2025-p13/claude/claude-reader.raw.json",
+                "sha256": "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d"
+              },
+              {
+                "relative_path": "blind-input-hah-fy2025-p13/chatgpt/chatgpt-reader.raw.json",
+                "sha256": "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145"
+              }
+            ]
+          }
+        },
+        {
+          "literal": "CÔNG TY CỔ PHẦN VẬN TẢI VÀ XẾP DỠ HẢI AN",
+          "provenance": {
+            "document_sha256": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+            "source_page": 12,
+            "image_sha256": "88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b",
+            "source_host": "haiants.vn",
+            "description": "Exact statement-page issuer literal agreed by retained Claude and ChatGPT blind readings",
+            "reader_files": [
+              {
+                "relative_path": "blind-input-hah-2025h1-p12/claude/claude-reader.raw.json",
+                "sha256": "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6"
+              },
+              {
+                "relative_path": "blind-input-hah-2025h1-p12/chatgpt-r2/chatgpt-reader.raw.json",
+                "sha256": "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb"
+              }
+            ]
+          }
+        },
+        {
+          "literal": "CÔNG TY CỔ PHẦN VẬN TẢI VÀ XẾP DỠ HẢI AN",
+          "provenance": {
+            "document_sha256": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+            "source_page": 13,
+            "image_sha256": "98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6",
+            "source_host": "haiants.vn",
+            "description": "Exact statement-page issuer literal agreed by retained Claude and ChatGPT blind readings",
+            "reader_files": [
+              {
+                "relative_path": "blind-input-hah-2026h1-p13/claude/claude-reader.raw.json",
+                "sha256": "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0"
+              },
+              {
+                "relative_path": "blind-input-hah-2026h1-p13/chatgpt/chatgpt-reader.raw.json",
+                "sha256": "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71"
+              }
+            ]
+          }
+        }
+      ],
+      "folded": []
+    },
+    "HPG": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:HPG"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [],
+      "folded": [
+        "cong ty co phan tap doan hoa phat"
+      ]
+    },
+    "NVL": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:NVL"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [],
+      "folded": [
+        "cong ty co phan tap doan dau tu dia oc no va"
+      ]
+    },
+    "PNJ": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:PNJ"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [],
+      "folded": [
+        "cong ty co phan vang bac da quy phu nhuan"
+      ]
+    },
+    "POW": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:POW"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [
+        {
+          "literal": "PETROVIETNAM POWER CORPORATION",
+          "provenance": {
+            "document_sha256": "3b06425b3d79803f9e7bf634c8bfd600f4aca998bcd15dabcd95ffb04877afbc",
+            "source_page": 7,
+            "source_host": "pvpower.vn",
+            "description": "English charter amendment 8, foreign language name"
+          }
+        }
+      ],
+      "folded": []
+    },
+    "VRE": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:issuer:VRE"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "exact": [],
+      "folded": [
+        "cong ty co phan vincom retail"
+      ]
+    }
+  },
+  "entity_families": {
+    "HPG": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:HPG"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "VNM": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:VNM"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "FPT": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:FPT"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "PNJ": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:PNJ"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "PAN": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:PAN"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "PVD": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:PVD"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "NVL": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:NVL"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "POW": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:POW"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "GAS": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:GAS"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "VRE": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:VRE"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "QNS": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:QNS"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    },
+    "SSI": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:SSI"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "securities"
+    },
+    "VCB": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:VCB"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "bank"
+    },
+    "EVF": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:EVF"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "finance_company"
+    },
+    "HAH": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:financial_evidence_currency_contract.py:ENTITY_FAMILY:HAH"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "family": "corporate"
+    }
+  }
+}

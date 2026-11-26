@@ -1774,7 +1774,10 @@ def test_external_result_path_is_accepted_and_written_unchanged(tmp_path, monkey
     assert workflow.main(["--result-path", str(target)]) == 0
     written = json.loads(target.read_text(encoding="utf-8"))
     assert written.pop("telemetry")["authority_effect"] == "NONE_OPERATIONAL_OBSERVABILITY_ONLY"
-    assert written == {"status": "PASS", "session": SESSION, "workflow_mode": "CORE_AI"}
+    assert written == {"status": "PASS", "session": SESSION, "workflow_mode": "CORE_AI",
+                       "financial_registry_inputs": None,
+                       "financial_registry_child_attestations": {
+                           "pids": [], "status": "REGISTRY_NOT_LOADED_BY_CHILD"}}
     assert list(checkout.iterdir()) == []
 
 

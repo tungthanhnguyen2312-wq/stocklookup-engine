@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
@@ -82,7 +83,8 @@ def read_journal(root: Path) -> dict[str, Any] | None:
     return _load(journal_path(root))
 
 
-def start_run(root: Path, *, intended_session: str | None = None) -> dict[str, Any]:
+def start_run(root: Path, *, intended_session: str | None = None,
+              financial_registry_inputs: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """Begin a NEW journal entry for a fresh owner-workflow invocation.
 
     Always creates a fresh ``run_id`` -- an existing journal (any session, any prior outcome,
@@ -103,6 +105,9 @@ def start_run(root: Path, *, intended_session: str | None = None) -> dict[str, A
         "failure": None,
         "attestation": None,
     }
+    if financial_registry_inputs is not None:
+        # Registry semantics belong to the caller; the journal preserves opaque data.
+        entry["financial_registry_inputs"] = deepcopy(financial_registry_inputs)
     _atomic_write(journal_path(root), entry)
     return entry
 

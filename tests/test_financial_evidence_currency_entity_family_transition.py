@@ -33,7 +33,7 @@ def test_hah_transition_reconstructs_exact_e6_baseline():
     original = subprocess.check_output(
         ["git", "show", spec["base_commit"] + ":" + SOURCE], cwd=ROOT,
     ).replace(b"\r\n", b"\n")
-    active = (ROOT / SOURCE).read_bytes().replace(b"\r\n", b"\n")
+    active = spec["registry_snapshot_transition"]["prior_source_lf"].encode("utf-8")
     assert (ROOT / ARCHIVE).read_bytes().replace(b"\r\n", b"\n") == original
     assert historical_bytes(ROOT, SOURCE) == original
     assert structure_valid(original, active)
@@ -124,7 +124,7 @@ def test_hah_transition_rejects_tampered_spec(tmp_path, tamper):
         field = "prior_sha256_lf" if tamper == "prior_hash" else "active_sha256_lf"
         spec[field] = hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     (tmp_path / MANIFEST).write_text(json.dumps(spec), encoding="utf-8")
-    with pytest.raises(ValueError, match=ERROR + "SCOPE_INVALID"):
+    with pytest.raises(ValueError, match=ERROR + "(?:SCOPE|BINDING)_INVALID"):
         historical_bytes(tmp_path, SOURCE)
 
 
@@ -134,7 +134,9 @@ def test_hah_transition_rejects_tampered_spec(tmp_path, tamper):
 def test_hah_transition_refuses_non_allowlisted_structure(tmp_path, tamper):
     _copy_transition(tmp_path)
     path = tmp_path / SOURCE
-    active = path.read_bytes().replace(b"\r\n", b"\n")
+    transition = json.loads((tmp_path / MANIFEST).read_bytes())
+    active = transition["registry_snapshot_transition"]["prior_source_lf"].encode("utf-8")
+    original_successor = active
     hah = b'    "HAH": "corporate",\n'
     if tamper == "extra_key":
         active = active.replace(hah, hah + b'    "BWE": "corporate",\n', 1)
@@ -149,11 +151,12 @@ def test_hah_transition_refuses_non_allowlisted_structure(tmp_path, tamper):
                                 b'FINANCIAL_V2_PIN_TICKER_THRESHOLD = 4', 1)
     else:
         active = active.replace(hah, b"", 1)
-    assert active != path.read_bytes().replace(b"\r\n", b"\n")
-    path.write_bytes(active)
+    assert active != original_successor
+    transition["registry_snapshot_transition"]["prior_source_lf"] = active.decode("utf-8")
+    (tmp_path / MANIFEST).write_text(json.dumps(transition), encoding="utf-8")
     prior = (tmp_path / ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
     assert not structure_valid(prior, active)
-    with pytest.raises(ValueError, match=ERROR + "STRUCTURE_INVALID"):
+    with pytest.raises(ValueError, match=ERROR + "BINDING_INVALID"):
         historical_bytes(tmp_path, SOURCE)
 
 
@@ -163,7 +166,8 @@ def test_hah_transition_refuses_non_allowlisted_structure(tmp_path, tamper):
 def test_hah_transition_refuses_non_allowlisted_locators(tmp_path, tamper):
     _copy_transition(tmp_path)
     path = tmp_path / SOURCE
-    tree = ast.parse(path.read_bytes())
+    transition = json.loads((tmp_path / MANIFEST).read_bytes())
+    tree = ast.parse(transition["registry_snapshot_transition"]["prior_source_lf"])
     locators = next(node.value for node in tree.body
                     if isinstance(node, ast.AnnAssign)
                     and node.target.id == "DIRECT_TARGET_LOCATORS")
@@ -187,7 +191,7 @@ def test_hah_transition_refuses_non_allowlisted_locators(tmp_path, tamper):
     path.write_bytes(active)
     prior = (tmp_path / ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
     assert not structure_valid(prior, active)
-    with pytest.raises(ValueError, match=ERROR + "STRUCTURE_INVALID"):
+    with pytest.raises(ValueError, match=ERROR + "BINDING_INVALID"):
         historical_bytes(tmp_path, SOURCE)
 
 

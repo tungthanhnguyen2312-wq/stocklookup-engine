@@ -129,10 +129,12 @@ DEFAULT_WEB_DIR = CANONICAL_WEB_ROOT
 
 
 class OwnerDailyError(RuntimeError):
-    def __init__(self, step: str, reason: str, hint: str = "", *, capacity_diagnostics=None) -> None:
+    def __init__(self, step: str, reason: str, hint: str = "", *, capacity_diagnostics=None,
+                 financial_registry_inputs=None) -> None:
         super().__init__(reason)
         self.step, self.reason, self.hint = step, reason, hint
         self.capacity_diagnostics = capacity_diagnostics
+        self.financial_registry_inputs = financial_registry_inputs
 
 
 def _last_capacity_stage(telemetry) -> dict[str, Any] | None:
@@ -670,6 +672,15 @@ def _bind_written_publication_attestation(
     return bound
 
 
+def _require_financial_registry_inputs(root: Path, *, expected=None) -> dict[str, Any]:
+    try:
+        from stocklookup_core.evidence.official_ocr_layout_proof import bind_financial_registry_inputs
+        return bind_financial_registry_inputs(root, expected=expected)
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError) as exc:
+        raise OwnerDailyError("Financial registry preflight", "FINANCIAL_REGISTRY_GATE:" + str(exc),
+                              financial_registry_inputs=expected) from exc
+
+
 def _require_host_ready(root: Path) -> dict[str, Any]:
     """Mandatory host-capacity gate for a fresh acquisition; raises unless READY (no override)."""
     from tools.check_owner_daily_host_preflight import check
@@ -683,15 +694,52 @@ def _require_host_ready(root: Path) -> dict[str, Any]:
 
 
 def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress | None = None,
-               host_ready: dict[str, Any] | None = None, include_tactical_shadow: bool = True) -> None:
+               host_ready: dict[str, Any] | None = None, include_tactical_shadow: bool = True,
+               financial_registry_inputs=None) -> dict[str, Any]:
     """Run the canonical child with explicit sequential sidecar-writer ownership.
 
     ``run_workflow`` evaluates the host gate inside phase 1, before Canonical Daily BEGIN, and
     passes the accepted READY result here. A direct caller without one is still gated.
     """
+    bindings = _require_financial_registry_inputs(root, expected=financial_registry_inputs)
+    from stocklookup_core.evidence.official_ocr_layout_proof import (
+        REGISTRY_BINDINGS_ENV, REGISTRY_RUN_ENV, _registry_json, validate_financial_registry_bindings,
+        _registry_child_directory, registry_child_environment, registry_child_attestations,
+    )
+    env = os.environ.copy()
+    if REGISTRY_RUN_ENV not in env:
+        if REGISTRY_BINDINGS_ENV in env:
+            raise OwnerDailyError("Financial registry preflight", "REGISTRY_CHILD_BINDING_MISSING",
+                                  financial_registry_inputs=bindings)
+        env.update(registry_child_environment(root, bindings))
+    else:
+        try:
+            encoded = env.get(REGISTRY_BINDINGS_ENV, "")
+            if len(encoded) > 8192:
+                raise ValueError("REGISTRY_CHILD_BINDING_INVALID")
+            inherited = _registry_json(encoded.encode("utf-8"))
+            validate_financial_registry_bindings(inherited)
+            if inherited != bindings:
+                raise ValueError("REGISTRY_CHILD_BINDING_MISMATCH")
+            if not _registry_child_directory(root, env[REGISTRY_RUN_ENV]).is_dir():
+                raise ValueError("REGISTRY_CHILD_RUN_MISSING")
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            raise OwnerDailyError("Financial registry preflight", str(exc),
+                                  financial_registry_inputs=bindings) from exc
     if host_ready is None or host_ready.get("classification") != "READY":
         host_ready = _require_host_ready(root)
-    env = os.environ.copy()
+    def child_started(pid):
+        if telemetry is not None:
+            telemetry.set_child_pid(pid)
+
+    def verify_child():
+        try:
+            if env.get("STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID") != str(os.getpid()):
+                raise ValueError("REGISTRY_CHILD_OWNER_PID_INVALID")
+            return registry_child_attestations(root, env[REGISTRY_RUN_ENV], bindings)
+        except (OSError, ValueError, TypeError, KeyError) as exc:
+            raise OwnerDailyError("Financial registry preflight", str(exc),
+                                  financial_registry_inputs=bindings) from exc
     if telemetry is not None and telemetry.progress_path is not None:
         env[PROGRESS_PATH_ENV] = str(telemetry.progress_path)
         env.update(telemetry.child_environment())
@@ -709,7 +757,7 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
         try:
             returncode = run_capacity_guarded(command, cwd=root, env=env,
                 memory_probe=windows_memory,
-                on_start=telemetry.set_child_pid if telemetry is not None else None)
+                on_start=child_started)
         except OSError as exc:
             diagnostics = dict(getattr(exc, "diagnostics", {}))
             diagnostics["last_child_stage"] = _last_capacity_stage(telemetry)
@@ -721,10 +769,9 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
         if returncode:
             raise OwnerDailyError("Canonical Daily", f"CANONICAL_DAILY_EXIT_{returncode}",
                                   "Read the log; no state or AI publication was attempted.")
-        return
+        return verify_child()
     process = subprocess.Popen(command, cwd=root, env=env)
-    if telemetry is not None:
-        telemetry.set_child_pid(process.pid)
+    child_started(process.pid)
     try:
         returncode = process.wait()
     finally:
@@ -733,6 +780,7 @@ def _run_daily(root: Path, runtime_root: Path, *, telemetry: OwnerDailyProgress 
     if returncode:
         raise OwnerDailyError("Canonical Daily", f"CANONICAL_DAILY_EXIT_{returncode}",
                               "Read the log; no state or AI publication was attempted.")
+    return verify_child()
 
 
 _DAILY_BRIEF_FILENAME = "daily_integrated_decision_brief_artifact.json"
@@ -1174,7 +1222,7 @@ def open_action_center_view(path: str) -> dict[str, str]:
     return {"status": "READY"}
 
 
-def _journal_start(root: Path, *, intended_session: str | None) -> str:
+def _journal_start(root: Path, *, intended_session: str | None, financial_registry_inputs=None) -> str:
     """Fail-closed on the production owner path: a durable crash-resume journal MUST be
     initialized before any material work begins (git preflight, acquisition, ...) -- see
     CANONICAL_DAILY_OWNER_PUBLICATION_RESUME_AND_PRESENTATION_JOIN_V1 section 6. Raises
@@ -1185,13 +1233,15 @@ def _journal_start(root: Path, *, intended_session: str | None) -> str:
     marker regardless, which is expected and unrelated to this gate.
     """
     try:
-        return journal.start_run(root, intended_session=intended_session)["run_id"]
+        return journal.start_run(root, intended_session=intended_session,
+                                 financial_registry_inputs=financial_registry_inputs)["run_id"]
     except Exception as exc:
         raise OwnerDailyError(
             "Repository preflight", f"OWNER_JOURNAL_INITIALIZATION_FAILED:{type(exc).__name__}:{exc}",
             "A durable crash-resume journal could not be written before material work began. "
             "Resolve the underlying filesystem/permissions issue for "
             "operations-review/owner-daily-journal-v1/ and rerun.",
+            financial_registry_inputs=financial_registry_inputs,
         ) from exc
 
 
@@ -1517,34 +1567,46 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
             raise ValueError("WORKFLOW_WORKSPACE_PROFILE_CONFLICT")
         os.environ.update(workspace_environment())
 
-    # Read the PRE-EXISTING journal (if any) before superseding it below -- this is the only
-    # source of "was a session interrupted mid-publication last time" this invocation has.
-    auto_resumed = False
-    intended_session = replay_completed_session
-    if not replay_completed_session:
-        intended_session = _resolve_intended_session()
-        prior_journal = journal.read_journal(root)
-        auto_session = _auto_resumable_session(root, runtime_root, intended_session=intended_session)
-        if auto_session:
-            replay_completed_session = auto_session
-            intended_session = auto_session
-            auto_resumed = True
-        elif (prior_journal is not None and prior_journal.get("stage") != journal.COMPLETE
-              and prior_journal.get("resolved_session") not in (None, intended_session)):
-            # An earlier invocation left an INCOMPLETE journal for a DIFFERENT (older) session --
-            # this run must never silently replay it as today's Daily (section 1). Superseding it
-            # with a fresh run is the existing, already-governed behavior (`start_run` always
-            # supersedes); this only makes the abandoned state visible on the console/log instead
-            # of silent, per section 1's "surface explicitly" requirement.
-            print("STATUS: SUPERSEDING_INCOMPLETE_PRIOR_OWNER_RUN")
-            print(f"PRIOR_RUN_SESSION: {prior_journal.get('resolved_session')}")
-            print(f"PRIOR_RUN_STAGE: {prior_journal.get('stage')}")
-            print(f"PRIOR_RUN_ID: {prior_journal.get('run_id')}")
-            print(f"NEW_INTENDED_SESSION: {intended_session}")
-
-    run_id = _journal_start(root, intended_session=intended_session)
+    # Integrity is mandatory for fresh Daily and replay alike, before journal/analytical work.
+    financial_registry_inputs = _require_financial_registry_inputs(root)
+    from stocklookup_core.evidence.official_ocr_layout_proof import (
+        registry_child_environment, registry_child_attestations,
+    )
+    run_id = None
     dashboard: dict[str, Any] | None = None
+    previous_registry_environment = {}
+    financial_registry_child_attestations = {"pids": [], "status": "REGISTRY_NOT_LOADED_BY_CHILD"}
     try:
+        # Read the PRE-EXISTING journal (if any) before superseding it below -- this is the only
+        # source of "was a session interrupted mid-publication last time" this invocation has.
+        auto_resumed = False
+        intended_session = replay_completed_session
+        if not replay_completed_session:
+            intended_session = _resolve_intended_session()
+            prior_journal = journal.read_journal(root)
+            auto_session = _auto_resumable_session(root, runtime_root, intended_session=intended_session)
+            if auto_session:
+                replay_completed_session = auto_session
+                intended_session = auto_session
+                auto_resumed = True
+            elif (prior_journal is not None and prior_journal.get("stage") != journal.COMPLETE
+                  and prior_journal.get("resolved_session") not in (None, intended_session)):
+                # An earlier invocation left an INCOMPLETE journal for a DIFFERENT (older) session --
+                # this run must never silently replay it as today's Daily (section 1). Superseding it
+                # with a fresh run is the existing, already-governed behavior (`start_run` always
+                # supersedes); this only makes the abandoned state visible on the console/log instead
+                # of silent, per section 1's "surface explicitly" requirement.
+                print("STATUS: SUPERSEDING_INCOMPLETE_PRIOR_OWNER_RUN")
+                print(f"PRIOR_RUN_SESSION: {prior_journal.get('resolved_session')}")
+                print(f"PRIOR_RUN_STAGE: {prior_journal.get('stage')}")
+                print(f"PRIOR_RUN_ID: {prior_journal.get('run_id')}")
+                print(f"NEW_INTENDED_SESSION: {intended_session}")
+
+        run_id = _journal_start(root, intended_session=intended_session,
+                                financial_registry_inputs=financial_registry_inputs)
+        registry_environment = registry_child_environment(root, financial_registry_inputs, run_id=run_id)
+        previous_registry_environment = {key: os.environ.get(key) for key in registry_environment}
+        os.environ.update(registry_environment)
         # SESSION_RESOLVED must be durable BEFORE any material work begins (repository preflight,
         # acquisition, ...) -- see section 2. When the exact session is already definitively known
         # (an explicit replay, or a verified auto-resume) it is recorded immediately, with its
@@ -1605,7 +1667,7 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
             daily_status = "ALREADY_COMPLETED / RESUMED" if auto_resumed else "ALREADY_COMPLETED / REUSED"
         else:
             _run_daily(root, runtime_root, telemetry=telemetry, host_ready=host_ready,
-                       include_tactical_shadow=full_publish)
+                       include_tactical_shadow=full_publish, financial_registry_inputs=financial_registry_inputs)
             daily_status = "COMPLETED"
         if telemetry is not None:
             telemetry.emit(phase_index=2, progress_kind="PIPELINE", status="END")
@@ -1648,9 +1710,12 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         # is withheld.
         session = str(completion["session"])
         presentation_state = _presentation_bound_state(root, session)
+        financial_registry_child_attestations = registry_child_attestations(root, run_id, financial_registry_inputs)
         if presentation_state == "UNKNOWN":
             _journal_advance(root, run_id, journal.BLOCKED, detail={
                 "reason": "PRESENTATION_UNKNOWN_CANNOT_COMPLETE", "presentation_state": presentation_state,
+                "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs,
             })
             return {"status": "BLOCKED", "session": completion["session"], "daily_status": daily_status,
                     "producer_preflight": producer, "dashboard_preflight": dashboard_preflight, "consumer_preflight": consumer_preflight, "producer_state": producer_state,
@@ -1658,7 +1723,8 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
                     "hint": "The dedicated post-handoff presentation attestation for this session is missing or "
                             "does not yet prove BOUND/LEGITIMATE_UNAVAILABLE. Publication was refused before it "
                             "started; rerun once the attestation is written.",
-                    "journal_run_id": run_id}
+                    "journal_run_id": run_id, "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs}
         _journal_advance_strict(root, run_id, journal.PRESENTATION_BOUND, detail={"presentation_state": presentation_state})
 
         # WORKSPACE_DIAGNOSTIC_TRANSPARENCY_AND_DAILY_DASHBOARD_BINDING_V1: publish the exact
@@ -1742,15 +1808,20 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
             if telemetry is not None:
                 telemetry.emit(phase_index=8, progress_kind="PIPELINE", status="END")
 
+        financial_registry_child_attestations = registry_child_attestations(root, run_id, financial_registry_inputs)
         dashboard_failed = dashboard["status"] not in {"READY", "SKIPPED", _NOT_REQUESTED}
         if action_center["status"] == "PARTIAL" or dashboard_failed:
             _journal_advance(root, run_id, journal.BLOCKED, detail={
                 "dashboard_failed": dashboard_failed, "action_center_status": action_center["status"],
+                "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs,
             })
             return {"status": "PARTIAL", "session": completion["session"], "daily_status": daily_status,
                     "producer_preflight": producer, "dashboard_preflight": dashboard_preflight, "consumer_preflight": consumer_preflight, "producer_state": producer_state,
                     "dashboard": dashboard, "ai_handoff": handoff, "action_center": action_center,
-                    "workflow_mode": workflow_mode, "journal_run_id": run_id}
+                    "workflow_mode": workflow_mode, "journal_run_id": run_id,
+                    "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs}
         if full_publish:
             if telemetry is not None:
                 telemetry.emit(phase_index=9, progress_kind="PIPELINE", status="BEGIN")
@@ -1778,7 +1849,10 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         flow_price = (presentation_attestation or {}).get("flow_price_divergence_shadow") or {}
         post_handoff_feedback = (presentation_attestation or {}).get("post_handoff_prospective_decision_feedback") or {}
         runtime_restage = (presentation_attestation or {}).get("runtime_restage") or {}
+        financial_registry_child_attestations = registry_child_attestations(root, run_id, financial_registry_inputs)
         _journal_advance_strict(root, run_id, journal.COMPLETE, detail={
+            "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs,
             "session": str(completion["session"]),
             "workflow_mode": workflow_mode, "completion": completion_scope,
             "canonical_daily_operation_identity": record.get("operation_identity"),
@@ -1808,14 +1882,26 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
                 "producer_preflight": producer, "dashboard_preflight": dashboard_preflight, "consumer_preflight": consumer_preflight, "producer_state": producer_state,
                 "dashboard": dashboard, "ai_handoff": handoff, "action_center": action_center,
                 "workflow_mode": workflow_mode, "completion": completion_scope,
-                "journal_run_id": run_id}
-    except ProducerCodeAdvanced:
+                "journal_run_id": run_id, "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs}
+    except ProducerCodeAdvanced as exc:
         # Not a failure: the relaunched process starts its own journal run, superseding this one.
+        exc.financial_registry_inputs = financial_registry_inputs
         raise
     except BaseException as exc:
+        if run_id is not None:
+            try:
+                financial_registry_child_attestations = registry_child_attestations(
+                    root, run_id, financial_registry_inputs)
+            except (OSError, ValueError, TypeError, KeyError):
+                pass  # Preserve the failure and last verified set; never accept malformed rows.
+        exc.financial_registry_child_attestations = financial_registry_child_attestations
         # A later phase that raises used to discard a Dashboard result that had already
         # failed closed. The journal keeps that reason beside the exception.
-        detail: dict[str, Any] = {"reason": f"{type(exc).__name__}:{exc}"}
+        exc.financial_registry_inputs = financial_registry_inputs
+        detail: dict[str, Any] = {"reason": f"{type(exc).__name__}:{exc}",
+                                  "financial_registry_child_attestations": financial_registry_child_attestations,
+                "financial_registry_inputs": financial_registry_inputs}
         if isinstance(dashboard, Mapping) and dashboard.get("status") not in (None, "READY", "SKIPPED", _NOT_REQUESTED):
             detail["dashboard_status"] = dashboard.get("status")
             if dashboard.get("reason"):
@@ -1823,6 +1909,12 @@ def run_workflow(*, root: Path = ROOT, runtime_root: Path = DEFAULT_RUNTIME,
         _journal_advance(root, run_id, journal.INTERRUPTED if isinstance(exc, KeyboardInterrupt) else journal.FAILED,
                          detail=detail)
         raise
+    finally:
+        for key, value in previous_registry_environment.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
 
 
 def validate_result_path(result_path: Path, *, root: Path) -> Path:
@@ -1938,6 +2030,11 @@ def write_relaunch_failure(argv: list[str], detail: str) -> int:
               "reason": "PRODUCER_CODE_RELAUNCH_FAILED:" + detail,
               "hint": "Nothing analytical ran; start the existing Daily launcher again.",
               "resume_completed_session": False}
+    registry_journal = journal.read_journal(ROOT) or {}
+    result["financial_registry_inputs"] = registry_journal.get("financial_registry_inputs")
+    result["financial_registry_child_attestations"] = (
+        (registry_journal.get("failure") or {}).get("detail") or registry_journal.get("attestation") or {}
+    ).get("financial_registry_child_attestations", {"pids": [], "status": "REGISTRY_NOT_LOADED_BY_CHILD"})
     try:
         target = validate_result_path(Path(argv[argv.index("--result-path") + 1]), root=ROOT)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -2000,6 +2097,8 @@ def main(argv: list[str] | None = None) -> int:
     result: dict[str, Any]
     code = 0
     reraise: BaseException | None = None
+    failure_registry_inputs = None
+    failure_registry_child_attestations = {"pids": [], "status": "REGISTRY_NOT_LOADED_BY_CHILD"}
     try:
         result = run_workflow(runtime_root=args.runtime_root, handoff_repo=args.handoff_repo,
                               dashboard_web_dir=args.dashboard_web_dir,
@@ -2012,6 +2111,8 @@ def main(argv: list[str] | None = None) -> int:
             result["resume_completed_session"] = bool(_auto_resumable_session(
                 ROOT, args.runtime_root, intended_session=result.get("session") or telemetry.session))
     except ProducerCodeAdvanced as advanced:
+        failure_registry_inputs = getattr(advanced, "financial_registry_inputs", None)
+        failure_registry_child_attestations = getattr(advanced, "financial_registry_child_attestations", failure_registry_child_attestations)
         # The relaunched process owns the rest of this run, including the result file.
         try:
             return relaunch_on_advanced_code(advanced.head, list(sys.argv[1:] if argv is None else argv), telemetry)
@@ -2024,14 +2125,19 @@ def main(argv: list[str] | None = None) -> int:
             telemetry.emit(phase_index=1, status="FAILED", reason=result["reason"])
             result["resume_completed_session"] = bool(_auto_resumable_session(ROOT, args.runtime_root, intended_session=telemetry.session))
     except OwnerDailyError as exc:
+        failure_registry_inputs = exc.financial_registry_inputs
+        failure_registry_child_attestations = getattr(exc, "financial_registry_child_attestations", failure_registry_child_attestations)
         code = 1
         result = {"status": "FAILED", "failed_step": exc.step, "reason": exc.reason, "hint": exc.hint}
         if exc.capacity_diagnostics is not None:
             result["capacity_diagnostics"] = exc.capacity_diagnostics
         phase = next((i for i, name in PHASES.items() if name == exc.step), 1)
         telemetry.emit(phase_index=phase, status="FAILED", reason=exc.reason)
-        result["resume_completed_session"] = bool(_auto_resumable_session(ROOT, args.runtime_root, intended_session=telemetry.session))
+        result["resume_completed_session"] = (False if exc.step == "Financial registry preflight" else
+            bool(_auto_resumable_session(ROOT, args.runtime_root, intended_session=telemetry.session)))
     except KeyboardInterrupt as exc:
+        failure_registry_inputs = getattr(exc, "financial_registry_inputs", None)
+        failure_registry_child_attestations = getattr(exc, "financial_registry_child_attestations", failure_registry_child_attestations)
         # The owner (or the console itself) cut the run short. Record what we can before the
         # interrupt propagates, so this is never a bare log with no matching result.json.
         code = 130
@@ -2043,6 +2149,8 @@ def main(argv: list[str] | None = None) -> int:
         result["resume_completed_session"] = bool(_auto_resumable_session(ROOT, args.runtime_root, intended_session=telemetry.session))
         reraise = exc
     except Exception as exc:  # noqa: BLE001 -- last resort so a bug here still leaves a result.
+        failure_registry_inputs = getattr(exc, "financial_registry_inputs", None)
+        failure_registry_child_attestations = getattr(exc, "financial_registry_child_attestations", failure_registry_child_attestations)
         # Keep the traceback visible in the tee'd log exactly as an uncaught exception normally
         # would, but no longer let it also swallow the result file the owner depends on.
         traceback.print_exc()
@@ -2057,6 +2165,8 @@ def main(argv: list[str] | None = None) -> int:
     # This owner result is external operational metadata.  It is deliberately never supplied to
     # analytical builders or any content identity, and a broken telemetry sidecar never prevents it.
     result["telemetry"] = telemetry.summary()
+    result.setdefault("financial_registry_inputs", failure_registry_inputs)
+    result.setdefault("financial_registry_child_attestations", failure_registry_child_attestations)
     result.setdefault("workflow_mode", workflow_mode)
     args.result_path.parent.mkdir(parents=True, exist_ok=True)
     args.result_path.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -96,3 +96,18 @@ No push, PR, merge, Daily, module relocation, evidence rewrite or automatic E1.
 Local implementation completed at `82a1bf3`; released by PR123 merge `56cdc36` (post-merge run
 `38139163689`, four jobs success). E1 later added reviewed relocated-debt rows; the sealed baseline is unchanged.
 [Retained acceptance](internal/E0_LOCAL_ACCEPTANCE_20261011.md).
+
+## Registry migration A CI correction (2026-11-27)
+
+HL-20261126-CDX-41 reviews the Daily registry gate and moves child-attestation
+semantics from the acquisition journal to the evidence owner. The journal retains
+opaque operational metadata; no acquisition-to-evidence dependency is admitted.
+Only the bounded caller AST pin for `tools/run_owner_daily.py` is refreshed.
+Against the archived, previously reviewed caller, all nine subprocess/runner call
+expressions, four command/argv assignment statements, script literals and static
+invocation paths are identical. The three targets remain `daily_analysis_pipeline.py`,
+`tools/release_orchestrator.py` and `tools/run_owner_daily.py`; interpreter, argv and
+launch lifecycle are unchanged. The registry successor is peeled before the
+conserved subtree-codec launcher transition. Historical fixtures and archives remain
+byte-identical; no dependency baseline refresh, capacity measurement or release
+authority follows.
