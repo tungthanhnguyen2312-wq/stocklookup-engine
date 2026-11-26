@@ -17,6 +17,44 @@ from test_prospective_t0_reuse_lineage import reuse, inventory
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_b_transition_peels_before_parent_and_truthfulness_and_preserves_e4():
+    from tools import verify_retention_reader_transition as verifier
+    spec = json.loads((ROOT / verifier.DUAL_READER_TTM_VALUATION_B_TRANSITION_MANIFEST).read_bytes())
+    for relative, row in spec["sources"].items():
+        live = (ROOT / relative).read_bytes().replace(b"\r\n", b"\n")
+        prior = (ROOT / row["archive"]).read_bytes().replace(b"\r\n", b"\n")
+        assert verifier._dual_reader_ttm_valuation_b_prior_bytes(ROOT, relative, live) == prior
+        assert verifier._dual_reader_ttm_valuation_b_prior_bytes(ROOT, relative, prior) == prior
+        assert verifier._parent_pe_prior_bytes(ROOT, relative, live) == verifier._parent_pe_prior_bytes(ROOT, relative, prior)
+        assert verifier._valuation_truthfulness_prior_bytes(ROOT, relative, live) == verifier._valuation_truthfulness_prior_bytes(ROOT, relative, prior)
+    digest = "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7"
+    assert e4.source_identity(ROOT, version="v2")["code_digest"] == spec["e4_v2_code_digest"] == digest
+    assert verifier.active_thesis_evidence_identity(ROOT)["active_e4_v2_digest"] == digest
+
+
+@pytest.mark.parametrize("tamper", ["archive", "scope", "prior", "active"])
+def test_b_transition_temp_root_copies_all_new_inputs_and_refuses_tampering(tmp_path, tamper):
+    from tools import verify_retention_reader_transition as verifier
+    manifest = verifier.DUAL_READER_TTM_VALUATION_B_TRANSITION_MANIFEST
+    spec = json.loads((ROOT / manifest).read_bytes())
+    relative = verifier.DUAL_READER_TTM_VALUATION_B_SOURCES[0]
+    row = spec["sources"][relative]
+    for path in (manifest, relative, *(r["archive"] for r in spec["sources"].values())):
+        target = tmp_path / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / path, target)
+    active = (tmp_path / relative).read_bytes().replace(b"\r\n", b"\n")
+    if tamper == "archive": (tmp_path / row["archive"]).write_bytes(b"tampered")
+    elif tamper == "scope": spec["scope"] = "EXPANDED"
+    elif tamper == "prior": row["prior_sha256_lf"] = "0" * 64
+    else:
+        assert verifier._dual_reader_ttm_valuation_b_prior_bytes(tmp_path, relative, active + b"# tamper") == active + b"# tamper"
+        return  # Downstream historical binding rejects the unpeeled bytes.
+    (tmp_path / manifest).write_text(json.dumps(spec), encoding="utf-8")
+    with pytest.raises(ValueError, match="DUAL_READER_TTM_VALUATION_B_SOURCE_TRANSITION"):
+        verifier._dual_reader_ttm_valuation_b_prior_bytes(tmp_path, relative, active)
+
+
 def test_original_closed_domains_recomputed_and_new_execution_is_separate():
     assert legacy_source_identity(ROOT, version="v1")["code_digest"] == "fa79baadcca197493b9ca70067fbd153f5e8bb7f50dfb6dbc6da53f253483d46"
     assert legacy_source_identity(ROOT, version="v2")["code_digest"] == "07c2a363df0e91a1dee230f0316a081249b247f7aa74bd67e04e45b1d1886567"

@@ -381,16 +381,83 @@ def run(*, landing_root: Path, reader_root: Path, document_evidence_path: Path, 
             "network_used": False, "model_calls": 0}
 
 
+def replay_ttm(config_path: Path, decision_session: str, tickers, *, evidence_root: Path | None = None,
+               raw_valuation: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    """Read-only replay; no admission files, runtime artifacts or sealed sessions are written."""
+    root = Path(config_path).resolve().parents[1]
+    if Path(config_path).resolve() != root / dual.DUAL_READER_TTM_CONFIG_REL:
+        raise ValueError("CONFIG_PATH_INVALID")
+    try:
+        config = dual.load_dual_reader_ttm_research_config(root)
+    except dual.DualReaderTtmConfigCorruptError as exc:
+        return {"state": "CORRUPT_BLOCKED", "reason": str(exc), "records": {}, "network_used": False}
+    tickers = sorted(set(tickers or [e["ticker"] for e in config["evidence_subdirs"] if e["enabled"]]))
+    if config["enabled"] is False:
+        return {"state": "OFF", "records": {}, "network_used": False}
+    if config["enabled"]:
+        registered = {(s["ticker"], s["reporting_period"], s["document_sha256"], s["new_subdir"]) for s in SPECS.values()}
+        for entry in config["evidence_subdirs"]:
+            if entry["enabled"] and (entry["ticker"], entry["reporting_period"], entry["document_sha256"], entry["subdir"]) not in registered:
+                return {"state": "INTEGRITY_BLOCKED", "reason": "ADMISSION_SPEC_IDENTITY_MISMATCH", "records": {}, "network_used": False}
+        # Snapshot and A2 selector vintages are independent approval inputs.
+        snapshot = load_registry_snapshot("admissions", root=ROOT, relative="config/dual_reader_admissions/r0001.json")
+        cutoff = dual.research_timestamp(f"{decision_session}T15:00:00+07:00")
+        receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
+        approvals = [snapshot["review"]["recorded_at"], *[
+            s["approved_at"] for s in receipt.get("financial_registry_inputs", {}).values()]]
+        for role, selector in receipt.get("financial_registry_inputs", {}).items():
+            selected = load_registry_snapshot(role, root=ROOT, relative=selector["path"])
+            approvals.append(selected["review"]["recorded_at"])
+        if any(dual.research_timestamp(stamp) > cutoff for stamp in approvals):
+            return {"state": "PRE_APPROVAL_CUTOFF", "reason": "REGISTRY_APPROVAL_AFTER_KNOWLEDGE_CUTOFF", "records": {}, "network_used": False}
+    from canonical_daily_financial_v2_materialization import _load_dual_reader_ttm_research_overlay
+    from stocklookup_core.valuation import current_research_valuation_context as valuation
+    from ai_research_session_delivery import _valuation_methods_for_delivery
+    overlay = _load_dual_reader_ttm_research_overlay(repo_root=root, decision_session=decision_session,
+        product_tickers=tickers, official_financial_facts=[], evidence_root=evidence_root, config=config)
+    if overlay["state"] == "OFF":
+        return {"state": "OFF", "records": {}, "network_used": False}
+    records = {}
+    for ticker in tickers:
+        records[ticker] = valuation.evaluate_ticker_valuation(ticker=ticker, feature_record=None,
+            valuation_record=((raw_valuation or {}).get("records") or {}).get(ticker),
+            financial_analysis_record={"features": overlay["features_by_ticker"].get(ticker, {})},
+            decision_session=decision_session, official_financial_facts=[], official_equity_facts=[],
+            dual_reader_research_state=overlay)
+    records = valuation.attach_peer_relative(records)
+    for record in records.values():
+        record["ai_export"] = _valuation_methods_for_delivery({"valuation_methods": record["methods"]},
+                                                            source_session=decision_session)
+    return {"state": overlay["state"], **({"reason": overlay["reason"]} if "reason" in overlay else {}),
+        "decision_session": decision_session, "records": records, "network_used": False,
+        "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False}
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--landing-root", type=Path, default=Path(DEFAULT_LANDING_ROOT))
-    parser.add_argument("--reader-root", type=Path, required=True)
-    parser.add_argument("--document-evidence", type=Path, required=True)
-    parser.add_argument("--ocr-layout-proof", type=Path, required=True)
+    parser.add_argument("--landing-root", type=Path)
+    parser.add_argument("--reader-root", type=Path)
+    parser.add_argument("--document-evidence", type=Path)
+    parser.add_argument("--ocr-layout-proof", type=Path)
+    parser.add_argument("--replay-ttm", action="store_true")
+    parser.add_argument("--config", type=Path, default=ROOT / dual.DUAL_READER_TTM_CONFIG_REL)
+    parser.add_argument("--decision-session")
+    parser.add_argument("--tickers", nargs="*")
+    parser.add_argument("--raw-valuation", type=Path)
     parser.add_argument("--admission-completed-at")
     parser.add_argument("--spec", choices=sorted(SPECS), default="HPG-2025-H1-P10")
     args = parser.parse_args(argv)
-    report = run(landing_root=args.landing_root, reader_root=args.reader_root,
+    if args.replay_ttm:
+        if not args.decision_session:
+            parser.error("--replay-ttm requires --decision-session")
+        # Do not let the legacy admission default become a replay fallback.
+        report = replay_ttm(args.config, args.decision_session, args.tickers, evidence_root=args.landing_root,
+            raw_valuation=json.loads(args.raw_valuation.read_bytes()) if args.raw_valuation else None)
+        print(json.dumps(report, ensure_ascii=False, indent=1, sort_keys=True))
+        return 0 if report["state"] in {"OFF", "ON"} else 2
+    if any(value is None for value in (args.reader_root, args.document_evidence, args.ocr_layout_proof)):
+        parser.error("admission requires --reader-root, --document-evidence and --ocr-layout-proof")
+    report = run(landing_root=args.landing_root or Path(DEFAULT_LANDING_ROOT), reader_root=args.reader_root,
                  document_evidence_path=args.document_evidence, ocr_layout_proof_path=args.ocr_layout_proof,
                  admission_completed_at=args.admission_completed_at, spec=SPECS[args.spec])
     print(json.dumps(report, ensure_ascii=False, indent=1, sort_keys=True))

@@ -260,6 +260,36 @@ def _vsdc_valuation_parent_pe_successor_prior_bytes(root: Path, relative: str, a
 
 
 PARENT_PE_MANIFEST = "tests/fixtures/parent_attributable_pe_source_transition_v1.json"
+DUAL_READER_TTM_VALUATION_B_TRANSITION_MANIFEST = "tests/fixtures/dual_reader_ttm_valuation_b_source_transition_v1.json"
+DUAL_READER_TTM_VALUATION_B_SOURCES = ("ai_research_session_delivery.py",
+    "stocklookup_core/valuation/current_research_valuation_context.py")
+
+
+def _dual_reader_ttm_valuation_b_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Exact default-OFF B successor; peel before every historical layer on these files."""
+    manifest = root / DUAL_READER_TTM_VALUATION_B_TRANSITION_MANIFEST
+    if relative not in DUAL_READER_TTM_VALUATION_B_SOURCES or not manifest.is_file():
+        return active
+    spec = json.loads(manifest.read_bytes())
+    if (set(spec) != {"contract_version", "base_commit", "scope", "release_authority", "sources", "e4_v2_code_digest"}
+            or spec["contract_version"] != "dual_reader_ttm_valuation_b_source_transition/v1"
+            or spec["base_commit"] != "1c3b1d1fd1c05186f6660f89085dcf2580f415fb"
+            or spec["scope"] != "DUAL_READER_TTM_VALUATION_B_DEFAULT_OFF_RESEARCH_ONLY"
+            or spec["release_authority"] != "NOT_GRANTED"
+            or spec["e4_v2_code_digest"] != "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7"
+            or not isinstance(spec["sources"], dict) or tuple(spec["sources"]) != DUAL_READER_TTM_VALUATION_B_SOURCES):
+        raise ValueError("DUAL_READER_TTM_VALUATION_B_SOURCE_TRANSITION_SCOPE_INVALID")
+    row = spec["sources"][relative]
+    expected_archive = "tests/fixtures/dual_reader_ttm_valuation_b_v1_sources/" + relative.replace("/", "__") + ".txt"
+    if set(row) != {"archive", "prior_sha256_lf", "active_sha256_lf"} or row["archive"] != expected_archive:
+        raise ValueError("DUAL_READER_TTM_VALUATION_B_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / expected_archive).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != row["prior_sha256_lf"]
+            or row["prior_sha256_lf"] == row["active_sha256_lf"]):
+        raise ValueError("DUAL_READER_TTM_VALUATION_B_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior if hashlib.sha256(active).hexdigest() == row["active_sha256_lf"] else active
+
+
 PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.py",
                      "stocklookup_core/decision/integrated_investment_decision_product.py",
                      "stocklookup_core/valuation/current_research_valuation_context.py",
@@ -269,6 +299,7 @@ PARENT_PE_SOURCES = ("stocklookup_core/decision/daily_integrated_decision_brief.
 
 def _parent_pe_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
     """Exact Owner Decision 1 source successor; historical receipts remain frozen."""
+    active = _dual_reader_ttm_valuation_b_prior_bytes(root, relative, active)
     active = _vsdc_valuation_parent_pe_successor_prior_bytes(root, relative, active)
     manifest = root / PARENT_PE_MANIFEST
     if relative not in PARENT_PE_SOURCES or not manifest.is_file():
@@ -1769,6 +1800,7 @@ def _registry_daily_gate_prior_bytes(root: Path, relative: str, active: bytes) -
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _dual_reader_ttm_valuation_b_prior_bytes(root, relative, content)
     content = _registry_daily_gate_prior_bytes(root, relative, content)
     content = _registry_snapshot_prior_bytes(root, relative, content)
     if relative == OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE:
@@ -1960,6 +1992,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
     if retry_manifest.is_file():
         for relative in TPLUS_RETRY_INTEGRITY_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _dual_reader_ttm_valuation_b_prior_bytes(root, relative, live)
             live = _tplus_taxonomy_direction_prior_bytes(root, relative, live)
             live = _valuation_truthfulness_prior_bytes(root, relative, live)
             row = json.loads(retry_manifest.read_bytes())["sources"][relative]
@@ -1975,6 +2008,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         truthfulness = json.loads(truthfulness_manifest.read_bytes())
         for relative in VALUATION_TRUTHFULNESS_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _dual_reader_ttm_valuation_b_prior_bytes(root, relative, live)
             live = _parent_pe_prior_bytes(root, relative, live)
             if hashlib.sha256(live).hexdigest() != truthfulness["sources"][relative]["active_sha256_lf"]:
                 raise ValueError("VALUATION_TRUTHFULNESS_SOURCE_TRANSITION_BINDING_INVALID")
@@ -1987,6 +2021,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         direction = json.loads(direction_manifest.read_bytes())
         for relative in TPLUS_TAXONOMY_DIRECTION_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _dual_reader_ttm_valuation_b_prior_bytes(root, relative, live)
             if hashlib.sha256(live).hexdigest() != direction["sources"][relative]["active_sha256_lf"]:
                 raise ValueError("TPLUS_TAXONOMY_DIRECTION_SOURCE_TRANSITION_BINDING_INVALID")
             _tplus_taxonomy_direction_prior_bytes(root, relative, live)
@@ -1998,6 +2033,7 @@ def active_thesis_evidence_identity(root: Path) -> dict:
         parent_pe = json.loads(parent_pe_manifest.read_bytes())
         for relative in PARENT_PE_SOURCES:
             live = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+            live = _dual_reader_ttm_valuation_b_prior_bytes(root, relative, live)
             live = _vsdc_valuation_parent_pe_successor_prior_bytes(root, relative, live)
             if hashlib.sha256(live).hexdigest() != parent_pe["sources"][relative]["active_sha256_lf"]:
                 raise ValueError("PARENT_PE_SOURCE_TRANSITION_BINDING_INVALID")

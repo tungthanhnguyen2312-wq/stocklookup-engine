@@ -13,6 +13,125 @@ from stocklookup_core.evidence import dual_reader_transcription as dual
 from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
 
 
+def _research_config():
+    from pathlib import Path
+    return json.loads((Path(__file__).resolve().parents[1] / dual.DUAL_READER_TTM_CONFIG_REL).read_bytes())
+
+
+def _write_research_config(tmp_path, config):
+    path = tmp_path / dual.DUAL_READER_TTM_CONFIG_REL
+    path.parent.mkdir(parents=True, exist_ok=True)
+    raw = json.dumps(config, ensure_ascii=False).encode()
+    path.write_bytes(raw)
+    return hashlib.sha256(raw).hexdigest()
+
+
+@pytest.mark.parametrize("mutation", ["missing", "json", "duplicate", "nan", "overflow", "size", "utf8", "enabled", "unknown", "digest", "timestamp", "nested_unknown"])
+def test_research_config_corrupt_never_becomes_off(tmp_path, mutation):
+    config = _research_config()
+    if mutation == "enabled": config["enabled"] = 0
+    if mutation == "unknown": config["extra"] = True
+    if mutation == "timestamp": config["approved_at"] = "2026-11-26T15:00:00"
+    if mutation == "nested_unknown": config["evidence_subdirs"][0]["extra"] = 1
+    digest = _write_research_config(tmp_path, config)
+    path = tmp_path / dual.DUAL_READER_TTM_CONFIG_REL
+    if mutation == "missing": path.unlink()
+    if mutation == "json": path.write_bytes(b"{")
+    if mutation == "duplicate": path.write_bytes(b'{"enabled":false,"enabled":true}')
+    if mutation == "nan": path.write_bytes(b'{"enabled":NaN}')
+    if mutation == "overflow": path.write_bytes(b'{"enabled":1e999}')
+    if mutation == "size": path.write_bytes(b" " * (1024 * 1024 + 1))
+    if mutation == "utf8": path.write_bytes(b"\xff")
+    if mutation == "digest": digest = "0" * 64
+    with pytest.raises(dual.DualReaderTtmConfigCorruptError):
+        dual.load_dual_reader_ttm_research_config(tmp_path, expected_sha256=digest)
+
+
+def test_research_off_validates_frozen_rows_and_caveat_schema(tmp_path):
+    config = _research_config()
+    digest = _write_research_config(tmp_path, config)
+    assert dual.load_dual_reader_ttm_research_config(tmp_path, expected_sha256=digest) == config
+    assert config["enabled"] is False
+    assert len(config["evidence_subdirs"]) == 6
+    assert {e["ticker"] for e in config["evidence_subdirs"]} == {"POW", "NVL"}
+
+
+def test_research_config_symlink_is_corrupt(tmp_path):
+    raw = json.dumps(_research_config()).encode()
+    outside = tmp_path / "outside.json"
+    outside.write_bytes(raw)
+    root = tmp_path / "repo"
+    target = root / dual.DUAL_READER_TTM_CONFIG_REL
+    target.parent.mkdir(parents=True)
+    try:
+        target.symlink_to(outside)
+    except OSError:
+        pytest.skip("host does not permit test symlinks")
+    with pytest.raises(dual.DualReaderTtmConfigCorruptError, match="CONFIG_PATH_ESCAPE"):
+        dual.load_dual_reader_ttm_research_config(root, expected_sha256=hashlib.sha256(raw).hexdigest())
+
+
+def test_research_landing_symlink_is_integrity_blocked(tmp_path):
+    entry = _research_config()["evidence_subdirs"][0]
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    target = tmp_path / entry["subdir"]
+    try:
+        target.symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("host does not permit test symlinks")
+    with pytest.raises(dual.DualReaderTtmIntegrityError, match="EVIDENCE_PATH_ESCAPE"):
+        dual.load_admitted_rows(tmp_path, [entry])
+
+
+def test_research_caveats_exact_sha_vintage_cutoff_and_lead_preserved():
+    config = _research_config()
+    entry = next(c for c in config["research_caveats"] if c["verification_status"] == "LEAD" and c["document_sha256"])
+    operands = [{"reporting_period": entry["reporting_period"], "document_sha256": entry["document_sha256"]}]
+    bound = dual.bind_sha_caveats(ticker=entry["ticker"], operands=operands, config=config)
+    assert any(c["verification_status"] == "LEAD" and c["never_adjust_multiples"] is True for c in bound)
+    assert not dual.bind_sha_caveats(ticker=entry["ticker"], operands=operands, config=config, cutoff="2026-11-25T15:00:00+07:00")
+    operands[0]["document_sha256"] = "0" * 64
+    assert dual.bind_sha_caveats(ticker=entry["ticker"], operands=operands, config=config) == []
+    assert dual.bind_sha_caveats(ticker="PAN", operands=[{"reporting_period": "2026-H1", "document_sha256": None}], config=config) == []
+
+
+def test_research_share_gate_distinguishes_pb_from_ttm_and_cutoff():
+    config = _research_config()
+    risk = next(c for c in config["research_caveats"] if c["code"].startswith("SHARE_COUNT_"))
+    gate = dual.evaluate_share_basis_caveat_gate(ticker="NVL", config=config, bound_caveats=[risk],
+        share_basis_input={"authority": "provider_reported_lagged", "observation_date": "2026-11-25", "observation_lag_days": 103},
+        cutoff="2026-11-26T15:00:00+07:00")
+    assert gate["pb_blocked"] is True and gate["ttm_blocked"] is False
+    assert gate["share_basis_caveats"][0]["code"] == "SHARE_BASIS_LAGGED_PROVIDER_ISSUED"
+    future = dual.evaluate_share_basis_caveat_gate(ticker="NVL", config=config, bound_caveats=[],
+        share_basis_input={"observation_date": "2026-11-27"}, cutoff="2026-11-26T15:00:00+07:00")
+    assert future["pb_blocked"] and future["ttm_blocked"] and future["share_basis_cutoff_blocked"]
+
+
+@pytest.mark.parametrize("tamper", ["missing", "rows", "proof", "document", "escape"])
+def test_research_retained_integrity_no_fallback(tmp_path, tamper):
+    entry = deepcopy(_research_config()["evidence_subdirs"][0])
+    landing = tmp_path / entry["subdir"]
+    landing.mkdir()
+    proof = landing / "proof.json"
+    proof.write_bytes(b"{}")
+    entry["proof_sha256"] = hashlib.sha256(proof.read_bytes()).hexdigest()
+    row = {"ticker": entry["ticker"], "reporting_period": entry["reporting_period"],
+        "document_sha256": entry["document_sha256"], "evidence_subdir": entry["subdir"],
+        "dual_reader_transcription": {"relative_path": "proof.json", "proof_sha256": entry["proof_sha256"]}}
+    if tamper == "document": row["document_sha256"] = "0" * 64
+    if tamper == "escape": row["dual_reader_transcription"]["relative_path"] = "../../outside.json"
+    path = landing / entry["rows_file"]
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    entry["rows_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    if tamper == "missing": path.unlink()
+    if tamper == "rows": path.write_bytes(b"tampered")
+    if tamper == "proof": proof.write_bytes(b"tampered")
+    with pytest.raises(dual.DualReaderTtmIntegrityError):
+        dual.load_admitted_rows(tmp_path, [entry])
+
+
 @pytest.mark.parametrize("literal,expected", [("10", "10"), ("Trang 10", "10"),
     ("Trang 010", "010"), ("trang 10", "trang 10"), ("Trang  10", "Trang  10"),
     ("Trang Trang 10", "Trang Trang 10"), ("Trang 10 ", "Trang 10 "),
