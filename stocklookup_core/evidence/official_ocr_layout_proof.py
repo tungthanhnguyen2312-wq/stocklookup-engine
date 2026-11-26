@@ -25,6 +25,8 @@ import hashlib
 import json
 import re
 import math
+import os
+import sys
 from statistics import median
 from typing import Any, Iterable, Mapping
 
@@ -41,6 +43,10 @@ REGISTRY_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_LIMIT = 1024 * 1024
 LAYOUT_SNAPSHOT = "config/official_financial_layouts/r0001.json"
 ISSUER_SNAPSHOT = "config/official_financial_issuers/r0001.json"
+CAPACITY_RECEIPT = "config/owner_daily_capacity_qualification.json"
+REGISTRY_BINDINGS_ENV = "STOCK_LOOKUP_FINANCIAL_REGISTRY_INPUTS"
+REGISTRY_RUN_ENV = "STOCK_LOOKUP_FINANCIAL_REGISTRY_RUN_ID"
+_BOUND_REGISTRIES = None
 
 
 def registry_path(root: Path, relative: str) -> Path:
@@ -83,7 +89,7 @@ def _fields(value, required, optional=()):
 
 
 def _string(value):
-    if type(value) is not str or not value:
+    if type(value) is not str or not value.strip():
         raise ValueError("REGISTRY_STRING_INVALID")
 
 
@@ -250,14 +256,196 @@ def _parsed_registry(raw: bytes, digest: str, role: str):
     return value
 
 
-def load_registry_snapshot(role: str, *, root: Path = REGISTRY_ROOT, relative: str | None = None,
+def load_registry_snapshot(role: str, *, root: Path | None = None, relative: str | None = None,
                            expected_sha256_lf: str | None = None):
+    if _BOUND_REGISTRIES is not None:
+        bound_root, bindings, snapshots = _BOUND_REGISTRIES
+        if (role not in snapshots or (root is not None and root.resolve() != bound_root)
+                or relative not in (None, bindings[role]["path"])
+                or expected_sha256_lf not in (None, bindings[role]["sha256_lf"])):
+            raise ValueError("REGISTRY_BOUND_INPUT_CONFLICT")
+        # Never reopen a verified file. Consumers receive detached cached values.
+        return deepcopy(snapshots[role])
+    root = root or REGISTRY_ROOT
     relative = relative or {"layouts": LAYOUT_SNAPSHOT, "issuers": ISSUER_SNAPSHOT}[role]
     raw = registry_bytes(root, relative).replace(b"\r\n", b"\n")
     digest = hashlib.sha256(raw).hexdigest()
     if expected_sha256_lf is not None and digest != expected_sha256_lf:
         raise ValueError("REGISTRY_HASH_MISMATCH")
     return deepcopy(_parsed_registry(raw, digest, role))
+
+
+def _registry_json(raw: bytes):
+    return json.loads(raw.decode("utf-8"), object_pairs_hook=_registry_pairs,
+                      parse_constant=lambda x: (_ for _ in ()).throw(ValueError("REGISTRY_NUMBER_INVALID")))
+
+
+def validate_financial_registry_bindings(bindings):
+    _fields(bindings, ("layouts", "issuers", "capacity_receipt_sha256_lf"))
+    _digest(bindings["capacity_receipt_sha256_lf"])
+    for role in ("layouts", "issuers"):
+        row = bindings[role]
+        _fields(row, ("path", "revision", "sha256_lf"))
+        _integer(row["revision"]); _digest(row["sha256_lf"])
+        _registry_revision_path(role, row["path"], row["revision"])
+
+
+def _registry_revision_path(role, path, revision):
+    _string(path)
+    directory = {"layouts": "official_financial_layouts", "issuers": "official_financial_issuers"}[role]
+    if path != f"config/{directory}/r{revision:04d}.json":
+        raise ValueError("REGISTRY_IMMUTABLE_PATH_INVALID")
+
+
+def verify_financial_registry_inputs(root: Path, *, expected=None):
+    """Read only selected shared snapshots; the capacity receipt is the sole digest anchor.
+
+    The receipt's unrelated capacity history/limits retain their existing owner and schema.
+    This gate strictly validates its selectors and the complete selected snapshot schemas.
+    No feature flag, host-memory observation or receipt digest sidecar participates.
+    """
+    raw = registry_bytes(root, CAPACITY_RECEIPT).replace(b"\r\n", b"\n")
+    receipt = _registry_json(raw)
+    if (type(receipt) is not dict or receipt.get("schema") != "owner_daily_capacity_qualification/v1"
+            or receipt.get("source_byte_normalization") != "CRLF_TO_LF"):
+        raise ValueError("REGISTRY_CAPACITY_SCHEMA_INVALID")
+    selectors = receipt.get("financial_registry_inputs")
+    _fields(selectors, ("layouts", "issuers"))
+    anchors = receipt.get("source_sha256")
+    if type(anchors) is not dict:
+        raise ValueError("REGISTRY_CAPACITY_ANCHOR_MISSING")
+    bindings = {"capacity_receipt_sha256_lf": hashlib.sha256(raw).hexdigest()}
+    snapshots = {}
+    for role in ("layouts", "issuers"):
+        selector = selectors[role]
+        _fields(selector, ("role", "path", "revision", "approval_reference", "approved_at"))
+        if type(selector["role"]) is not str or selector["role"] != role:
+            raise ValueError("REGISTRY_SELECTOR_ROLE_INVALID")
+        _integer(selector["revision"])
+        _string(selector["approval_reference"]); _instant(selector["approved_at"])
+        if selector["approval_reference"].strip().upper() in {"UNKNOWN", "PENDING", "UNAPPROVED", "NONE", "NULL"}:
+            raise ValueError("REGISTRY_SELECTOR_UNAPPROVED")
+        _registry_revision_path(role, selector["path"], selector["revision"])
+        digest = anchors.get(selector["path"])
+        _digest(digest)
+        snapshot_raw = registry_bytes(root, selector["path"]).replace(b"\r\n", b"\n")
+        # Hash and parse exactly these bytes, bypassing any prior unbound/default cache.
+        snapshot = _parsed_registry(snapshot_raw, digest, role)
+        if snapshot["revision"] != selector["revision"]:
+            raise ValueError("REGISTRY_SELECTOR_REVISION_CONFLICT")
+        snapshots[role] = deepcopy(snapshot)
+        bindings[role] = {"path": selector["path"], "revision": selector["revision"], "sha256_lf": digest}
+    if expected is not None:
+        validate_financial_registry_bindings(expected)
+        if bindings != expected:
+            raise ValueError("REGISTRY_CHILD_BINDING_MISMATCH")
+    return bindings, snapshots
+
+
+def bind_financial_registry_inputs(root: Path, *, expected=None):
+    global _BOUND_REGISTRIES
+    bindings, snapshots = verify_financial_registry_inputs(root, expected=expected)
+    if _BOUND_REGISTRIES is not None and (root.resolve(), bindings) != _BOUND_REGISTRIES[:2]:
+        raise ValueError("REGISTRY_BOUND_INPUT_CONFLICT")
+    _BOUND_REGISTRIES = (root.resolve(), deepcopy(bindings), deepcopy(snapshots))
+    # Preserve references held by an already imported consumer, including ENTITY_FAMILY.
+    if "LAYOUT_PROOFS" in globals():
+        LAYOUT_PROOFS.clear(); LAYOUT_PROOFS.update(_layout_payloads())
+        exact, folded, families = issuer_registry_values()
+        for target, values in ((EXACT_REGISTERED_ISSUER_NAMES, exact),
+                               (REGISTERED_ISSUER_FOLD, folded), (_ENTITY_FAMILIES, families)):
+            target.clear(); target.update(values)
+        currency = sys.modules.get("financial_evidence_currency_contract")
+        if currency is not None and hasattr(currency, "ENTITY_FAMILY"):
+            currency.ENTITY_FAMILY.clear(); currency.ENTITY_FAMILY.update(families)
+    return deepcopy(bindings)
+
+
+def _registry_child_directory(root: Path, run_id: str) -> Path:
+    if type(run_id) is not str or not re.fullmatch(r"[0-9a-f]{32}", run_id):
+        raise ValueError("REGISTRY_CHILD_RUN_ID_INVALID")
+    return registry_path(root, "operations-review/owner-daily-journal-v1/financial-registry-children/" + run_id)
+
+
+def _registry_ancestor_pids() -> list[int]:
+    """Capture OS parentage while the importing child and its ancestors are alive."""
+    owner = os.environ.get("STOCKLOOKUP_FINANCIAL_REGISTRY_OWNER_PID", "")
+    if not re.fullmatch(r"[1-9][0-9]*", owner):
+        raise ValueError("REGISTRY_CHILD_OWNER_PID_INVALID")
+    owner_pid = int(owner)
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        class ProcessEntry(ctypes.Structure):
+            _fields_ = [("size", wintypes.DWORD), ("usage", wintypes.DWORD),
+                        ("pid", wintypes.DWORD), ("heap", ctypes.c_size_t),
+                        ("module", wintypes.DWORD), ("threads", wintypes.DWORD),
+                        ("parent", wintypes.DWORD), ("priority", wintypes.LONG),
+                        ("flags", wintypes.DWORD), ("exe", wintypes.WCHAR * 260)]
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+        kernel.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+        kernel.Process32FirstW.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessEntry)]
+        kernel.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(ProcessEntry)]
+        kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+        handle = kernel.CreateToolhelp32Snapshot(2, 0)
+        if handle == ctypes.c_void_p(-1).value:
+            raise ValueError("REGISTRY_CHILD_LINEAGE_UNAVAILABLE")
+        parents = {}
+        try:
+            row = ProcessEntry(); row.size = ctypes.sizeof(row)
+            found = kernel.Process32FirstW(handle, ctypes.byref(row))
+            while found:
+                parents[row.pid] = row.parent
+                found = kernel.Process32NextW(handle, ctypes.byref(row))
+        finally:
+            kernel.CloseHandle(handle)
+        parent_of = parents.get
+    else:
+        def parent_of(pid):
+            # Linux procfs: comm may contain spaces or parentheses.
+            return int((Path("/proc") / str(pid) / "stat").read_text().rsplit(")", 1)[1].split()[1])
+    ancestors = []
+    pid = os.getpid()
+    for _ in range(256):
+        parent = parent_of(pid)
+        if not parent or parent == os.getpid() or parent in ancestors:
+            break
+        ancestors.append(parent)
+        if parent == owner_pid:
+            return ancestors
+        pid = parent
+    raise ValueError("REGISTRY_CHILD_PID_NOT_DESCENDANT")
+
+
+def _attest_registry_child(root: Path, run_id: str, bindings: Mapping[str, Any], *,
+                           ancestor_pids=None) -> None:
+    """Write the same run-bound record without importing the parent journal."""
+    validate_financial_registry_bindings(bindings)
+    directory = _registry_child_directory(root, run_id)
+    if not directory.is_dir():
+        raise ValueError("REGISTRY_CHILD_RUN_MISSING")
+    path = directory / (str(os.getpid()) + ".json")
+    if path.exists() or path.is_symlink():
+        raise ValueError("REGISTRY_CHILD_ATTESTATION_EXISTS")
+    value = {"pid": os.getpid(),
+             "ancestor_pids": (_registry_ancestor_pids if ancestor_pids is None else ancestor_pids)(),
+             "financial_registry_inputs": deepcopy(bindings)}
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
+def _bind_registry_child():
+    encoded = os.environ.get(REGISTRY_BINDINGS_ENV)
+    run_id = os.environ.get(REGISTRY_RUN_ENV)
+    if encoded is None and run_id is None:
+        return
+    if encoded is None or run_id is None or len(encoded) > 8192:
+        raise ValueError("REGISTRY_CHILD_BINDING_MISSING")
+    expected = _registry_json(encoded.encode("utf-8"))
+    bindings = bind_financial_registry_inputs(REGISTRY_ROOT, expected=expected)
+    _attest_registry_child(REGISTRY_ROOT, run_id, bindings)
 
 
 def _layout_payloads():
@@ -277,6 +465,7 @@ def issuer_registry_values():
             {key: entry["family"] for key, entry in snapshot["entity_families"].items()})
 
 
+_bind_registry_child()
 LAYOUT_PROOFS = _layout_payloads()
 
 

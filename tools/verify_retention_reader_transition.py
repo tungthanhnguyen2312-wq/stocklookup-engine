@@ -1688,7 +1688,19 @@ def _registry_snapshot_prior_bytes(root: Path, relative: str, active: bytes) -> 
     if relative not in REGISTRY_SNAPSHOT_TRANSITIONS:
         return active
     expected = REGISTRY_SNAPSHOT_TRANSITIONS[relative]
-    spec = json.loads((root / REGISTRY_LAYOUT_TRANSITION).read_bytes())
+    spec = _registry_transition_spec(root, REGISTRY_LAYOUT_TRANSITION, "REGISTRY_SNAPSHOT_SOURCE_TRANSITION_")
+    successor = spec.pop("daily_gate_transition", None)
+    if (type(successor) is not dict
+            or set(successor) != set(REGISTRY_LAYOUT_DAILY_GATE_SUCCESSOR) | {"prior_source_lf"}
+            or {k: v for k, v in successor.items() if k != "prior_source_lf"} != REGISTRY_LAYOUT_DAILY_GATE_SUCCESSOR):
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    if type(successor["prior_source_lf"]) is not str:
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = successor["prior_source_lf"].encode("utf-8")
+    if (hashlib.sha256(prior).hexdigest() != successor["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != successor["active_sha256_lf"]):
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_BINDING_INVALID")
+    active = prior
     if spec != expected:
         raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
     prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
@@ -1698,9 +1710,45 @@ def _registry_snapshot_prior_bytes(root: Path, relative: str, active: bytes) -> 
     return prior
 
 
+REGISTRY_DAILY_GATE_TRANSITION = "tests/fixtures/registry_migration_v1/run_owner_daily_source_transition_v1.json"
+# Exact reviewed successors are bound here independently of the fixture's claims.
+REGISTRY_LAYOUT_DAILY_GATE_SUCCESSOR = {'contract_version': 'financial_registry_daily_gate_source_transition/v1', 'base_commit': '19c4846e783559c349715b3a799f47c275e929fb', 'scope': 'REGISTRY_MIGRATION_A_DAILY_GATE_AND_BINDINGS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'stocklookup_core/evidence/official_ocr_layout_proof.py', 'prior_sha256_lf': 'aae4182cc194e494c903585c24dcd218332c9d911ff9994835fb08ac33a62ecc', 'active_sha256_lf': '05a00a2883c7a16c00b82469e1195904eedb936f711a3cbd24fe7438b3dccb40'}
+REGISTRY_DAILY_GATE_SUCCESSOR = {'contract_version': 'financial_registry_daily_gate_source_transition/v1', 'base_commit': '19c4846e783559c349715b3a799f47c275e929fb', 'scope': 'REGISTRY_MIGRATION_A_DAILY_GATE_AND_BINDINGS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'tools/run_owner_daily.py', 'archive': 'tests/fixtures/registry_migration_v1/run_owner_daily.py.txt', 'prior_sha256_lf': '41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9', 'active_sha256_lf': '82dc36e6402634c0f532ecb026bc403f4b5da7ae4629e79a11d5e682a6b8648b'}
+
+
+def _registry_transition_spec(root: Path, relative: str, prefix: str):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError(prefix + "SCOPE_INVALID")
+            result[key] = value
+        return result
+    def invalid_number(value):
+        raise ValueError(prefix + "SCOPE_INVALID")
+    spec = json.loads((root / relative).read_bytes(), object_pairs_hook=pairs, parse_constant=invalid_number)
+    if type(spec) is not dict:
+        raise ValueError(prefix + "SCOPE_INVALID")
+    return spec
+
+
+def _registry_daily_gate_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    if relative != "tools/run_owner_daily.py":
+        return active
+    spec = _registry_transition_spec(root, REGISTRY_DAILY_GATE_TRANSITION, "REGISTRY_DAILY_GATE_SOURCE_TRANSITION_")
+    if spec != REGISTRY_DAILY_GATE_SUCCESSOR:
+        raise ValueError("REGISTRY_DAILY_GATE_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]):
+        raise ValueError("REGISTRY_DAILY_GATE_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _registry_daily_gate_prior_bytes(root, relative, content)
     content = _registry_snapshot_prior_bytes(root, relative, content)
     if relative == OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE:
         amended = _official_source_registry_reviewed_amendment_bytes(root, content)

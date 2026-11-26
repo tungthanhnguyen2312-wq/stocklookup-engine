@@ -1,0 +1,10 @@
+{
+  "contract_version": "financial_registry_daily_gate_source_transition/v1",
+  "base_commit": "19c4846e783559c349715b3a799f47c275e929fb",
+  "scope": "REGISTRY_MIGRATION_A_DAILY_GATE_AND_BINDINGS_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "source_path": "tools/run_owner_daily.py",
+  "archive": "tests/fixtures/registry_migration_v1/run_owner_daily.py.txt",
+  "prior_sha256_lf": "41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9",
+  "active_sha256_lf": "82dc36e6402634c0f532ecb026bc403f4b5da7ae4629e79a11d5e682a6b8648b"
+}

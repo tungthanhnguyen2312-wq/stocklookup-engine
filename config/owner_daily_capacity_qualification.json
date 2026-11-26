@@ -150,7 +150,7 @@
     "feedback_publication_lock.py": "6d07c708eb95f6f87555cb14ee1dac33f6b787f407a2d7be88b5d1edb50ce427",
     "field_temporal_contract.py": "02cbd606899572b1f76090cf7adcf34f7be07342a45cac7a153108a877e56359",
     "financial_disclosure_recognizer.py": "8acd876f1125f4da2367efa0ad34d1a39d3eb5f21b20b34a6054cea4d5fb04fa",
-    "financial_evidence_currency_contract.py": "2e68914bd7d83a235695983e68fe49c1dc54efb4bf67fc80358819361d109838",
+    "financial_evidence_currency_contract.py": "242c24374d9370ff5232bea291bb9382d7369c846ac35eee770d5584333b9c79",
     "financial_evidence_currency_refresh.py": "76f1a2a06d9cc2c9bbad1e391c02c4260ef0555c755d7366ba89834f94ebd0fd",
     "financial_fact_coverage_recovery.py": "8c198aec093473c11106e878d5796a6d49c25b630f1eaaecc854754ee127abc6",
     "financial_mapping.py": "9f34de1665e3e0c5db0229d4c061ae4987bc2320a546e5842aa0b54c6e797395",
@@ -680,7 +680,7 @@
     "stocklookup_core/acquisition/macro_vcb_adapter.py": "01c7c9b43a4b42794ff87497ebe7e7f2bc5b47d3215278feddee9c06aa1fcd6b",
     "stocklookup_core/acquisition/market_wide_coverage_report.py": "79c586016f79df47825cd92244471918b3b9f8d908c53d5795ec45565f19cfef",
     "stocklookup_core/acquisition/official_acquisition_budget.py": "faece7c3245d3143d08310c720fb10260affee5f45c894419db384710259622c",
-    "stocklookup_core/acquisition/owner_daily_journal.py": "e201228d1fc570a4ea39367f0e66f0963859397fb52b6e7f54dc96a0db115103",
+    "stocklookup_core/acquisition/owner_daily_journal.py": "866e5c3b62e87d4ccf1c8e163481dcd3a38f88d848e72315f206d2a4ec5345cf",
     "stocklookup_core/acquisition/stocklookup_preflight.py": "9c639fbf41432cf854dba033e14f22ebdfff49e777139e94eff21e5c2724c879",
     "stocklookup_core/acquisition/subprocess_capture.py": "d8bfd2deba97e81496d2cd6a233d777a9647785d78b84ea973251713de542fdc",
     "stocklookup_core/decision/__init__.py": "168e3050ab6d4e0ae513325716510c6084e17a71cf10ccea5ce9569efd3204cd",
@@ -816,7 +816,7 @@
     "stocklookup_core/evidence/official_financial_source_route_discovery.py": "78d9ae3d39b4b9d6734b329b6c9a098e54c833be473c8f73aec2cb2baca65a6c",
     "stocklookup_core/evidence/official_issuer_disclosure_registry.py": "324a2fcda18844093fe28deb2de225d5ee945da11d3b8c9632456dd09c2546cb",
     "stocklookup_core/evidence/official_listing_page_parser.py": "017437c31ead0db6391cf4b3b4b54aaaf15349f1090e98ba02e8014cc1f3b0ce",
-    "stocklookup_core/evidence/official_ocr_layout_proof.py": "e0ca67d98028d3bd87af7ac272d6df7ea2d36131f2d4b9ea0e17d6958b533350",
+    "stocklookup_core/evidence/official_ocr_layout_proof.py": "05a00a2883c7a16c00b82469e1195904eedb936f711a3cbd24fe7438b3dccb40",
     "stocklookup_core/evidence/official_route_ownership_evidence.py": "2b0a1d317d935afc1d1d5fbe8984224be1cffbb06432834f54c0a8a1c1b27c65",
     "stocklookup_core/evidence/official_source_registry.py": "a68cac26c67d7827ad79368ea68377d259e0eef74d7bfe8700587eb712835d2f",
     "stocklookup_core/evidence/official_source_registry_owner_promotion.py": "91a81dbc2bb081359932bcc71b7a39392a285747ec4ee7c273a2685e186faae8",
@@ -1075,7 +1075,7 @@
     "tools/check_architecture.py": "5df6af9e9c1e854a0665b8ee378ddc67e82979228d81f0b3e45266536b9139ad",
     "tools/check_daily_launchers.py": "4623a3a79e1d9c094876c85524c7408376fa57e19fc3214626f92fd694a412d5",
     "tools/check_eodhd_access.py": "c96114cfc713a909e3567da84643ae5bb74d6ccaaa20c14daaf24a711c2d14c2",
-    "tools/check_owner_daily_host_preflight.py": "c46eb491319d82791be60f10717712a332eaea4a3d053976586f3044bd416969",
+    "tools/check_owner_daily_host_preflight.py": "b8732a6fc7830e6976a6daaf6a98c8a4122ff8ca54f66d9da5b8ec7ef985a616",
     "tools/collect_dnse_prospective_pit_shadow.py": "6c28199e19de272ed9aba6b81c7263aff0df36dc36ffcc0ff689e31963170137",
     "tools/collect_market_evidence.py": "49c99c17daa7cead6ff328b97c66442d7ba61956905f5d32e875a03ba8dd2d74",
     "tools/compare_zero_active_retained_session.py": "2b87f212ea9e5fc5e6e59ce47105dc2471f18a9d794c834ccf8f0a41f5c9fcec",
@@ -1247,7 +1247,7 @@
     "tools/run_opportunity_decision_prospective_freeze.py": "f0416bac537485f01dc2fa08463ffe29c26cc55a84047f21de9e89ed1eaef21d",
     "tools/run_owner_daily.cmd": "fd62709ebd133ed950ad204ea2aef115104d3b6d65ddafba9df8cc0b3df4602a",
     "tools/run_owner_daily.ps1": "371de90a4e7853a35f8c851c59f627c6b9e6212688331df3df1c1822df02aa6c",
-    "tools/run_owner_daily.py": "41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9",
+    "tools/run_owner_daily.py": "82dc36e6402634c0f532ecb026bc403f4b5da7ae4629e79a11d5e682a6b8648b",
     "tools/run_p2_closeout_financial_panel.py": "d72a8f828f4a95a111c6bfd49ebd44669b5651256a294c966a9f33c63d191d93",
     "tools/run_p2c2_corporate_evidence_onboarding.py": "1ee8d15eca4ff404ebc5fc4741c56f04a42971e1aa497569a5bba648682c33f8",
     "tools/run_p2c_corporate_evidence_scale_out.py": "82901920dd779d156136afd4acd8353284a9d52f393a1321308356d8cb6404f3",
@@ -1306,7 +1306,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "99c0d11d6879a565e6001edc88c45f0abb1edff5db9d0238b55a4632d6c9bc94",
+    "tools/verify_retention_reader_transition.py": "4fa62f45c5faa526d2a87ad2fe8b27a552d12efe03b97d5f5934df5a6468aaf3",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -1317,7 +1317,9 @@
     "volume_and_flow_retained_v2.py": "0a74da82bfdc1da88edbcf1ab4a4bab4bf599103944dd631aece977d72304b20",
     "watchlist_eval.py": "51042477e5305317368b6af52f5d4859be4477388dd46662fef43e398b5dc5c9",
     "stocklookup_core/evidence/dual_reader_transcription.py": "d06c40ba15372f26d965f20bde4acfcb8ba9f7ea10aa11f337f071e7223ec6a5",
-    "tools/run_dual_reader_transcription_admission.py": "cba18029b0be6f7120c3562b4bcf8c38e4433ffd3f627e5e9f03e8f77132df83"
+    "tools/run_dual_reader_transcription_admission.py": "8d1cbe3eac2b431fc9a886108ebb1aede0798322c21516d7e43563a26aa8377e",
+    "config/official_financial_issuers/r0001.json": "54cc428a0d2901a371976b91152e5fe99a014a114d1e2c81839fad45fd51a818",
+    "config/official_financial_layouts/r0001.json": "8a23646bf7efbda0ae674e22ae3feb2161d01de3678f3b2a388e73be9b238c01"
   },
   "launcher_corrective": {
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
@@ -2462,5 +2464,63 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. The predecessor receipt's measured values, IID bounds, physical/commit limits and runtime safeguards are reused unchanged. Offline HAH/BWE admission source transition only; no Daily launch or release authority."
+  },
+  "financial_registry_inputs": {
+    "layouts": {
+      "role": "layouts",
+      "path": "config/official_financial_layouts/r0001.json",
+      "revision": 1,
+      "approval_reference": "Claude HL review, lane REGISTRY_MIGRATION_A_20261126, Owner standing merge authorization 2026-11-26",
+      "approved_at": "2026-11-26T22:59:12+07:00"
+    },
+    "issuers": {
+      "role": "issuers",
+      "path": "config/official_financial_issuers/r0001.json",
+      "revision": 1,
+      "approval_reference": "Claude HL review, lane REGISTRY_MIGRATION_A_20261126, Owner standing merge authorization 2026-11-26",
+      "approved_at": "2026-11-26T22:59:12+07:00"
+    }
+  },
+  "registry_migration_a_corrective": {
+    "base_commit": "74017553c7a17c33a5464ec735f3700df669bbd5",
+    "predecessor_corrective": "decision2_hah_bwe_admission_corrective",
+    "scope": "REGISTRY_MIGRATION_A_COMPATIBILITY_PIN_UPDATE_ONLY",
+    "changed_source_paths": [
+      "financial_evidence_currency_contract.py",
+      "stocklookup_core/acquisition/owner_daily_journal.py",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py",
+      "tools/check_owner_daily_host_preflight.py",
+      "tools/run_dual_reader_transcription_admission.py",
+      "tools/run_owner_daily.py",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "added_source_paths": [
+      "config/official_financial_issuers/r0001.json",
+      "config/official_financial_layouts/r0001.json"
+    ],
+    "prior_source_sha256_lf": {
+      "financial_evidence_currency_contract.py": "2e68914bd7d83a235695983e68fe49c1dc54efb4bf67fc80358819361d109838",
+      "stocklookup_core/acquisition/owner_daily_journal.py": "e201228d1fc570a4ea39367f0e66f0963859397fb52b6e7f54dc96a0db115103",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "e0ca67d98028d3bd87af7ac272d6df7ea2d36131f2d4b9ea0e17d6958b533350",
+      "tools/check_owner_daily_host_preflight.py": "c46eb491319d82791be60f10717712a332eaea4a3d053976586f3044bd416969",
+      "tools/run_dual_reader_transcription_admission.py": "cba18029b0be6f7120c3562b4bcf8c38e4433ffd3f627e5e9f03e8f77132df83",
+      "tools/run_owner_daily.py": "41f688c7294314a87680f89e2c1c29bf67ed9bd57040b2c1c1271782de2739c9",
+      "tools/verify_retention_reader_transition.py": "99c0d11d6879a565e6001edc88c45f0abb1edff5db9d0238b55a4632d6c9bc94"
+    },
+    "active_source_sha256_lf": {
+      "financial_evidence_currency_contract.py": "242c24374d9370ff5232bea291bb9382d7369c846ac35eee770d5584333b9c79",
+      "stocklookup_core/acquisition/owner_daily_journal.py": "866e5c3b62e87d4ccf1c8e163481dcd3a38f88d848e72315f206d2a4ec5345cf",
+      "stocklookup_core/evidence/official_ocr_layout_proof.py": "05a00a2883c7a16c00b82469e1195904eedb936f711a3cbd24fe7438b3dccb40",
+      "tools/check_owner_daily_host_preflight.py": "b8732a6fc7830e6976a6daaf6a98c8a4122ff8ca54f66d9da5b8ec7ef985a616",
+      "tools/run_dual_reader_transcription_admission.py": "8d1cbe3eac2b431fc9a886108ebb1aede0798322c21516d7e43563a26aa8377e",
+      "tools/run_owner_daily.py": "82dc36e6402634c0f532ecb026bc403f4b5da7ae4629e79a11d5e682a6b8648b",
+      "tools/verify_retention_reader_transition.py": "4fa62f45c5faa526d2a87ad2fe8b27a552d12efe03b97d5f5934df5a6468aaf3",
+      "config/official_financial_issuers/r0001.json": "54cc428a0d2901a371976b91152e5fe99a014a114d1e2c81839fad45fd51a818",
+      "config/official_financial_layouts/r0001.json": "8a23646bf7efbda0ae674e22ae3feb2161d01de3678f3b2a388e73be9b238c01"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. The predecessor receipt's measured values, IID bounds, physical/commit limits and runtime safeguards are reused unchanged. Registry migration A1 + A2 integrity and child-attestation correction only; no Daily launch or release authority."
   }
 }

@@ -65,25 +65,80 @@ loaded read-only with `git show`; no branch is switched. Complete reports compar
 fact, citation and admission IDs, normalized values, rejections and every output
 file SHA256. Synthetic equality is never admission evidence.
 
-In this executor environment all 16 specs remain `REAL_REPLAY_NOT_CERTIFIED`:
+At the original A1 executor checkpoint all 16 specs were `REAL_REPLAY_NOT_CERTIFIED`:
 11 have equal base/current blocked outputs but lack `pypdf` and `fitz`; five lack
 original completion/evidence inputs. Missing parser dependencies caused retained
 text proof to remain unavailable. These comparisons certify neither real
-admission outcomes nor historical availability. HL must replay with the approved
-dependencies before claiming real parity certification. Pytest was not run.
+admission outcomes nor historical availability. The original handoff therefore required HL replay with the approved
+dependencies before real parity certification. A2 leaves the per-spec replay
+artifacts unchanged and does not rerun admission replay. Pytest was not run by
+this executor.
 
-## A2 checkpoint and lease blocker
+## A2 Daily integrity gate (implementation pending HL validation/release)
 
-A2 has not started. The initial durable journal writer
-`stocklookup_core/acquisition/owner_daily_journal.py` has no registry-binding
-parameter and is outside this task's write lease. It must accept the binding in
-its initial atomic write; a second write would leave an unbound initial durable
-record. An exact `run_owner_daily` source-transition fixture/archive also requires
-additional leased paths before the protected owner can be edited.
+Tasks HL-20261126-CDX-35/36/37/38 add the gate, the optional child-load correction,
+the HL-authorized capacity selectors and chained compatibility corrective, and
+the malformed-attestation and import-cycle fixes.
+No Daily, host preflight or Production operation was performed. The corrective
+follows `decision2_hah_bwe_admission_corrective`, pins every changed capacity
+source and both shared snapshots, and preserves all historical corrective entries
+and measured values. No new capacity measurement was performed; this grants no
+release authority.
 
-The planned A2 gate still must require capacity-receipt selectors and matching LF
-hashes, reject unapproved or conflicting registries, bind consumers and children
-to identical snapshots, and propagate bindings into initial, terminal and failure
-records. The current A1 loader is not that hard Daily gate. The capacity receipt
-and preflight test corrective are owned by HL. Production activation remains an
-Owner decision; no Daily or Production operation was performed here.
+The existing capacity receipt must contain exactly two `financial_registry_inputs`
+selectors, keyed `layouts` and `issuers`. Each selector has exactly `role`, `path`,
+`revision`, `approval_reference`, and `approved_at`. Roles must match the keys;
+revision is a positive integer, and the path must be the corresponding shared
+registry's immutable `rNNNN.json` revision path. Approval references must be
+nonblank and not unknown/pending/unapproved sentinels; approval times must be
+non-null timezone-aware instants. These fields record governed approval of the
+capacity receipt; registry-internal migration metadata is never that approval.
+
+The gate validates the capacity schema and CRLF-to-LF convention, rejects duplicate
+JSON keys, and requires each selected snapshot's LF SHA256 to equal its entry in
+`source_sha256`. It fully validates each selected snapshot's schema and revision,
+including existing provenance, type, conflict, path-redirection and 1 MiB limits.
+The selectors reject unknown fields. Unrelated capacity history and limits retain
+their existing contract. No digest sidecar, feature flag, memory-band fallback or
+offline admission manifest can satisfy this gate.
+
+`run_workflow` gates before its first durable journal write or analytical work;
+direct `_run_daily` callers are gated too. The journal's initial atomic write
+already includes `financial_registry_inputs`. The record contains
+`layouts:{path,revision,sha256_lf}`, `issuers:{path,revision,sha256_lf}`, and
+`capacity_receipt_sha256_lf`. Every existing journal/receipt value is preserved;
+the binding is additive operational metadata, outside historical analytical seals.
+
+The selected immutable bytes are parsed once and cached in the shared loader.
+Parent binding refreshes existing registry references; child consumers verify the
+same receipt and snapshot digests on import, then use detached cached snapshots
+without reopening source files. Bindings flow through the child environment.
+Run-token/PID attestations are retained beside the journal. Registry loading is
+lazy: neither the direct Daily child nor a descendant is required to import it.
+The parent rejects differing bindings, malformed or duplicate attestations, and
+PIDs outside this run's owner-descendant lineage. Tokens cannot reuse a prior
+invocation's attestations. The additive `financial_registry_child_attestations`
+records sorted `pids` and status `BOUND` when any valid attestation exists, or
+`REGISTRY_NOT_LOADED_BY_CHILD` when none exists. Terminal and failure receipts
+and journal details carry this result. The child command, launcher lifecycle,
+and import-time `bind_active_workspace` remain unchanged.
+
+The layout owner writes import-time child attestations directly; the journal's
+compatibility wrappers delegate to that owner without a reverse import. Directory
+validation, OS ancestry proof, atomic serialization and record format are unchanged.
+Attestation parse and shape failures raise
+`ValueError("REGISTRY_CHILD_ATTESTATION_INVALID")`; lineage and binding mismatches
+retain their fail-closed refusals.
+
+Terminal, BLOCKED/PARTIAL and failure receipts carry the identical additive binding.
+Failure before a binding can be verified records `null`, never a stale or invented
+approval. Integrity refusal never falls through to analytical resume checks.
+The journal also retains the binding on later failure. This is not a PIT assertion:
+original completion instants, seals, knowledge floors and `pit_backtest_eligible`
+remain unchanged.
+
+The exact Daily successor archives the A1 source bytes and peels into the existing
+E6 chain. The layout fixture appends an exact successor with inline, hash-bound
+A1 bytes before its unchanged original transition. Both boundaries independently
+pin prior and active LF hashes in the verifier and grant no release authority.
+See the A2 checkpoint for validation limits and capacity deltas.
