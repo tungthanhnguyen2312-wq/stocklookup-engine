@@ -1,12 +1,12 @@
 {
   "contract_version": "financial_evidence_currency_contract_source_transition/v1",
   "base_commit": "70fbba96d02369e0f02a5a15dd264bad780fe6ce",
-  "scope": "DECISION2_HAH_CORPORATE_ENTITY_FAMILY_ONLY",
+  "scope": "DECISION2_HAH_CORPORATE_ENTITY_FAMILY_AND_EXACT_ISSUER_LOCATORS",
   "release_authority": "NOT_GRANTED",
   "source_path": "financial_evidence_currency_contract.py",
   "archive": "tests/fixtures/financial_evidence_currency_contract_v1_sources/financial_evidence_currency_contract.py.txt",
   "prior_sha256_lf": "591bd160ac2e13c5f17954db3e35dd8e6a6bdeb187037ad8c48cf607b391ef5d",
-  "active_sha256_lf": "e2fc9db81bb8c01ca62f28615b5a6e23d910d6da64d6c3cb05dffc4745e76d88",
+  "active_sha256_lf": "2e68914bd7d83a235695983e68fe49c1dc54efb4bf67fc80358819361d109838",
   "added_tickers": [
     "HAH"
   ],
@@ -66,6 +66,38 @@
           "form_reference_literal": "M\u1eaaU S\u1ed0 B 02a-DN/HN"
         }
       ]
+    }
+  ],
+  "added_locators": [
+    {
+      "ticker": "HAH",
+      "period": "2025",
+      "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/2026-0223-HAH-Bao-cao-tai-chinh-hop-nhat-da-duoc-kiem-toan-cho-nam-tai-chinh-ket-thuc-ngay-31-12-2025.pdf",
+      "document_class": "audited_annual_financial_statements"
+    },
+    {
+      "ticker": "HAH",
+      "period": "2025-H1",
+      "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/HAH-Bao-cao-tai-chinh-hop-nhat-ban-nien-nam-2025-sau-soat-xet-giai-trinh.pdf",
+      "document_class": "reviewed_interim_financial_statements"
+    },
+    {
+      "ticker": "HAH",
+      "period": "2026-H1",
+      "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/20260817-HAH-Bao-cao-tai-chinh-hop-nhat-giua-nien-do-da-duoc-soat-xet-cho-ky-hoat-dong-6-thang-ket-thuc-ngay-30-06-2026-giai-trinh.pdf",
+      "document_class": "reviewed_interim_financial_statements"
+    }
+  ],
+  "host_evidence_refs": [
+    {
+      "path": "data-landing/gemini-research-20261126/host-ownership-evidence/HAH_hsx_profile.md",
+      "sha256": "026201e4f2ee817ee571b186a47d44ed1fe4a2d97b07530edf4b60e9dfd8db00",
+      "source_url": "https://www.hsx.vn/en/quan-ly-niem-yet/co-phieu/HAH/2649",
+      "declared_website": "www.haiants.vn"
+    },
+    {
+      "path": "data-landing/official-financial-filings-v1/acquisition-batch3-20261126/official_document_acquisition_manifest.json",
+      "sha256": "882204b02bb7932aa7e10e5c8f06e9696621eabce9417d7d61c365e6978955aa"
     }
   ]
 }

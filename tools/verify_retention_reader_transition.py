@@ -1460,10 +1460,27 @@ def _official_financial_assurance_evidence_prior_bytes(root: Path, relative: str
 FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_MANIFEST = "tests/fixtures/financial_evidence_currency_contract_source_transition_v1.json"
 FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE = "financial_evidence_currency_contract.py"
 FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_ARCHIVE = "tests/fixtures/financial_evidence_currency_contract_v1_sources/financial_evidence_currency_contract.py.txt"
+FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_ADDED_LOCATORS = (
+    {
+        "ticker": "HAH", "period": "2025",
+        "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/2026-0223-HAH-Bao-cao-tai-chinh-hop-nhat-da-duoc-kiem-toan-cho-nam-tai-chinh-ket-thuc-ngay-31-12-2025.pdf",
+        "document_class": "audited_annual_financial_statements",
+    },
+    {
+        "ticker": "HAH", "period": "2025-H1",
+        "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/HAH-Bao-cao-tai-chinh-hop-nhat-ban-nien-nam-2025-sau-soat-xet-giai-trinh.pdf",
+        "document_class": "reviewed_interim_financial_statements",
+    },
+    {
+        "ticker": "HAH", "period": "2026-H1",
+        "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/20260817-HAH-Bao-cao-tai-chinh-hop-nhat-giua-nien-do-da-duoc-soat-xet-cho-ky-hoat-dong-6-thang-ket-thuc-ngay-30-06-2026-giai-trinh.pdf",
+        "document_class": "reviewed_interim_financial_statements",
+    },
+)
 
 
 def _financial_evidence_currency_entity_family_structure_valid(prior: bytes, active: bytes) -> bool:
-    """Allow exactly HAH=corporate; compare the remaining complete module AST to E6."""
+    """Allow HAH=corporate and three exact HAH locators; compare the rest to E6."""
     try:
         prior_tree, active_tree = ast.parse(prior), ast.parse(active)
     except (SyntaxError, ValueError):
@@ -1499,23 +1516,53 @@ def _financial_evidence_currency_entity_family_structure_valid(prior: bytes, act
         return False
     del active_family.keys[index]
     del active_family.values[index]
+
+    declarations = [node for node in active_tree.body
+                    if (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+                        and node.target.id == "DIRECT_TARGET_LOCATORS")
+                    or (isinstance(node, ast.Assign) and any(
+                        isinstance(target, ast.Name) and target.id == "DIRECT_TARGET_LOCATORS"
+                        for target in node.targets))]
+    if len(declarations) != 1 or not isinstance(declarations[0].value, ast.Tuple):
+        return False
+    active_locators = declarations[0].value
+    for locator in FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_ADDED_LOCATORS:
+        expected = ast.dump(ast.parse(repr(locator), mode="eval").body, include_attributes=False)
+        matches = [i for i, node in enumerate(active_locators.elts)
+                   if ast.dump(node, include_attributes=False) == expected]
+        if len(matches) != 1:
+            return False
+        del active_locators.elts[matches[0]]
     return ast.dump(prior_tree, include_attributes=False) == ast.dump(active_tree, include_attributes=False)
 
 
 def _financial_evidence_currency_contract_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
-    """Bind the HAH-only declaration to the exact protected E6 bytes; fail closed."""
+    """Bind the HAH family/locator additions to protected E6 bytes; fail closed."""
     if relative != FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE:
         return active
     spec = json.loads((root / FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_MANIFEST).read_bytes())
     expected = {'contract_version': 'financial_evidence_currency_contract_source_transition/v1',
      'base_commit': '70fbba96d02369e0f02a5a15dd264bad780fe6ce',
-     'scope': 'DECISION2_HAH_CORPORATE_ENTITY_FAMILY_ONLY',
+     'scope': 'DECISION2_HAH_CORPORATE_ENTITY_FAMILY_AND_EXACT_ISSUER_LOCATORS',
      'release_authority': 'NOT_GRANTED',
      'source_path': 'financial_evidence_currency_contract.py',
      'archive': 'tests/fixtures/financial_evidence_currency_contract_v1_sources/financial_evidence_currency_contract.py.txt',
      'prior_sha256_lf': '591bd160ac2e13c5f17954db3e35dd8e6a6bdeb187037ad8c48cf607b391ef5d',
-     'active_sha256_lf': 'e2fc9db81bb8c01ca62f28615b5a6e23d910d6da64d6c3cb05dffc4745e76d88',
+     'active_sha256_lf': '2e68914bd7d83a235695983e68fe49c1dc54efb4bf67fc80358819361d109838',
      'added_tickers': ['HAH'],
+     'added_locators': list(FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_ADDED_LOCATORS),
+     'host_evidence_refs': [
+         {
+             'path': 'data-landing/gemini-research-20261126/host-ownership-evidence/HAH_hsx_profile.md',
+             'sha256': '026201e4f2ee817ee571b186a47d44ed1fe4a2d97b07530edf4b60e9dfd8db00',
+             'source_url': 'https://www.hsx.vn/en/quan-ly-niem-yet/co-phieu/HAH/2649',
+             'declared_website': 'www.haiants.vn',
+         },
+         {
+             'path': 'data-landing/official-financial-filings-v1/acquisition-batch3-20261126/official_document_acquisition_manifest.json',
+             'sha256': '882204b02bb7932aa7e10e5c8f06e9696621eabce9417d7d61c365e6978955aa',
+         },
+     ],
      'classification_basis': 'Dual-reader agreed corporate statement form B 02-DN/HN or B 02a-DN/HN; '
                              'classification only, no page admission or release authority.',
      'reader_evidence_root': 'data-landing/reader-transcriptions-20261124',

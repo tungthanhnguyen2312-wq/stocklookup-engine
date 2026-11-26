@@ -80,6 +80,21 @@ DIRECT_TARGET_LOCATORS: tuple[dict[str, str], ...] = (
         "url": "https://ir.vincom.com.vn/wp-content/uploads/2026/03/BCTC-hop-nhat-2025-1.pdf",
         "document_class": "audited_annual_financial_statements",
     },
+    {
+        "ticker": "HAH", "period": "2025",
+        "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/2026-0223-HAH-Bao-cao-tai-chinh-hop-nhat-da-duoc-kiem-toan-cho-nam-tai-chinh-ket-thuc-ngay-31-12-2025.pdf",
+        "document_class": "audited_annual_financial_statements",
+    },
+    {
+        "ticker": "HAH", "period": "2025-H1",
+        "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/HAH-Bao-cao-tai-chinh-hop-nhat-ban-nien-nam-2025-sau-soat-xet-giai-trinh.pdf",
+        "document_class": "reviewed_interim_financial_statements",
+    },
+    {
+        "ticker": "HAH", "period": "2026-H1",
+        "url": "https://haiants.vn/files/Quan_he_co_dong/Bao_cao_tai_chinh/20260817-HAH-Bao-cao-tai-chinh-hop-nhat-giua-nien-do-da-duoc-soat-xet-cho-ky-hoat-dong-6-thang-ket-thuc-ngay-30-06-2026-giai-trinh.pdf",
+        "document_class": "reviewed_interim_financial_statements",
+    },
 )
 
 # One admitted IR index/page per issuer.  EVF has no admitted issuer-IR host.
