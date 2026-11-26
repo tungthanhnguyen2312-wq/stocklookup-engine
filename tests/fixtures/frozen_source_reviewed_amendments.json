@@ -12,6 +12,13 @@
       "reason": "Owner authorized the bounded rollback corrective. A moved Dashboard branch requires exact publisher action, direct parent and an unchanged remote before compare-and-swap.",
       "base_sha256_lf": "3b33945f0554b57479d46b58bced3e2ae3e2f0dbd356e52f5061f96a0883e287",
       "sha256_lf": "bf255b74f994d1d4c735b10edf67b955d0452d06ebac9114dc4c2895448beb3f"
+    },
+    "config/official_source_registry.json": {
+      "milestone": "ACQUISITION_REGISTRY_COVERAGE_EXPANSION_20261125",
+      "reason": "HL-20261125-CDX-15 chains the reviewed HL-20261125-CDX-14 acquisition-only registry expansion (24 issuer IR hosts and HOSE financial-statement document types) after the exact default-OFF VSDC flag state at 747e1964. The pre-flag E6 base and the VSDC transition remain independently verified; no financial-fact, PIT, execution or Daily authority is granted.",
+      "base_sha256_lf": "422f3a805242d377f7f4faf03d26e6f49d55c4cba0185e49c069203219180ba4",
+      "prior_sha256_lf": "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4",
+      "sha256_lf": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881"
     }
   }
 }

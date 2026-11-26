@@ -29,8 +29,19 @@ def test_only_the_nine_owner_approved_hosts_were_added() -> None:
         )
     )
     before = next(source for source in previous["sources"] if source["source_id"] == "issuer_ir")
-    added = set(_issuer_source()["allowed_hosts"]) - set(before["allowed_hosts"])
+    # The promotion is judged on the registry it produced (the exact, hash-verified VSDC-flag
+    # successor 2645eac7). The later reviewed issuer-coverage amendment is verified separately
+    # and may only add hosts on top of it.
+    from tools import verify_retention_reader_transition as vrt
+    archive = (ROOT / vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
+    promoted_bytes = archive[:2] + vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE + archive[2:]
+    assert hashlib.sha256(promoted_bytes).hexdigest() == "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4"
+    current = REGISTRY_PATH.read_bytes().replace(b"\r\n", b"\n")
+    assert vrt._official_source_registry_reviewed_amendment_bytes(ROOT, current) == current
+    promoted = next(source for source in json.loads(promoted_bytes)["sources"] if source["source_id"] == "issuer_ir")
+    added = set(promoted["allowed_hosts"]) - set(before["allowed_hosts"])
     assert added == set(OWNER_APPROVED_HOSTS.values())
+    assert set(promoted["allowed_hosts"]) <= set(_issuer_source()["allowed_hosts"])
 
 
 def test_activation_replay_is_exactly_nine_sha_bound_and_deterministic() -> None:

@@ -45,7 +45,7 @@
     "config/interim_earnings_cash_issuer_gates_v1.json": "858e6889016318cd4e5616c2b028820eb78e9b2b9c527a443a0a7f594b9b5a1f",
     "config/news_mapping_config.json": "ca7d8a99eb70ed02c2029e7ff926ec7b4339bf6e5d5efd57029cac225559356d",
     "config/official_financial_legacy_row_admission_v1.json": "e1515f7a22229f12c83bc9a443afebe8a008aafa56580012f67dc1a174ac5db8",
-    "config/official_source_registry.json": "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4",
+    "config/official_source_registry.json": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881",
     "config/owner_research_focus.json": "31d801e91ab4674e375efd571070a7ca6f9ee2013a2825b6d2a0372fef36d973",
     "config/promoted_comparative_financial_evidence.json": "9c794102ac95edc99690dc630e7257c39c87a839f60e83ea86336cf694b88060",
     "config/promoted_entity_classifications.json": "08647c542d214730ef0ff93c6273fe0d8498c80305cd7019d567382f8d75160e",
@@ -1306,7 +1306,7 @@
     "tools/vault_snapshot.py": "06e037937d13964c7c039ca891b1791f62d77803190ee3002eaaee40969b0a0a",
     "tools/vault_t0_archive_location.py": "b573546c4e54af40a79152f05cf53d4ad8236cf2903f32f87d01435196ecc65c",
     "tools/verify_dependency_tiers.py": "2ae36748540d7b5fc12865509918b29f6f31dad4e33ed5702e5385705c047942",
-    "tools/verify_retention_reader_transition.py": "147124c26079e41c8c5b0d5a138471f131272708ca5ebf102d0f2fe4ad07c349",
+    "tools/verify_retention_reader_transition.py": "ddc5324f4ab4b336eac989109a1316d340c76c7229a260390f0b53526bcf8ecb",
     "trusted_subset_contract.py": "6b6aa822af33dd84ac98b737778ebb4b458e23c520bfa4afd19d5cf1018ab3ba",
     "vci_financial_statement_retention.py": "7400b4fda1082ed943c839d3afe1fb166bd7ea1987d1e6ce797f41b348db632d",
     "vn_indicators.py": "0534c23ef3fea6437b60132023feed7f52a7b8dcbf7f3a7fe25abd8fdc1575d5",
@@ -2377,5 +2377,25 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "Six exact retained SHA/issuer/period/income-page registrations and literal headers only. Text-layer verification pending on host. No verifier, native fallback, issuer-name, printed-page, reading retention, Daily, threshold or runtime authority change."
+  },
+  "issuer_registry_coverage_corrective": {
+    "base_commit": "ab3b50727d68ae48493077a763c9e14d5ceaa187",
+    "scope": "OFFLINE_ISSUER_REGISTRY_COVERAGE_AND_EXACT_HISTORICAL_MANIFEST_BINDING",
+    "changed_source_paths": [
+      "config/official_source_registry.json",
+      "tools/verify_retention_reader_transition.py"
+    ],
+    "prior_source_sha256_lf": {
+      "config/official_source_registry.json": "2645eac76e3c99533a131c622a473d98cd895f536518aeab4f98f10bee441ed4",
+      "tools/verify_retention_reader_transition.py": "147124c26079e41c8c5b0d5a138471f131272708ca5ebf102d0f2fe4ad07c349"
+    },
+    "active_source_sha256_lf": {
+      "config/official_source_registry.json": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881",
+      "tools/verify_retention_reader_transition.py": "ddc5324f4ab4b336eac989109a1316d340c76c7229a260390f0b53526bcf8ecb"
+    },
+    "source_transition": "tests/fixtures/official_source_registry_issuer_coverage_manifest_transition_v1.json",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED"
   }
 }
