@@ -7,6 +7,63 @@ import pytest
 from tools import run_dual_reader_transcription_admission as runner
 
 
+def _replay_config(tmp_path, *, enabled=False, ticker=None):
+    from pathlib import Path
+    import hashlib
+    config = json.loads((runner.ROOT / runner.dual.DUAL_READER_TTM_CONFIG_REL).read_bytes())
+    config["enabled"] = enabled
+    if ticker:
+        specs = [s for s in runner.SPECS.values() if s["ticker"] == ticker]
+        config["evidence_subdirs"] = [{"subdir": s["new_subdir"], "ticker": ticker,
+            "reporting_period": s["reporting_period"], "approved_at": config["approved_at"],
+            "rows_file": "dual_reader_admitted_rows.jsonl", "rows_sha256": "1" * 64,
+            "document_sha256": s["document_sha256"], "proof_sha256": "2" * 64, "enabled": True} for s in specs]
+    path = tmp_path / runner.dual.DUAL_READER_TTM_CONFIG_REL
+    path.parent.mkdir(parents=True)
+    raw = json.dumps(config).encode()
+    path.write_bytes(raw)
+    (path.parent / "owner_daily_capacity_qualification.json").write_text(json.dumps({
+        "source_sha256": {runner.dual.DUAL_READER_TTM_CONFIG_REL: hashlib.sha256(raw).hexdigest()}}), encoding="utf-8")
+    return path
+
+
+def test_replay_ttm_off_never_reads_landing(tmp_path, monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("OFF loaded retained evidence")
+    monkeypatch.setattr(runner.dual, "load_admitted_rows", forbidden)
+    report = runner.replay_ttm(_replay_config(tmp_path), "2026-11-28", ["POW", "NVL"])
+    assert report == {"state": "OFF", "records": {}, "network_used": False}
+
+
+@pytest.mark.parametrize("ticker", ["POW", "NVL", "HAH", "BWE"])
+def test_replay_ttm_missing_registered_three_period_evidence_blocks_entire_branch(tmp_path, ticker):
+    path = _replay_config(tmp_path, enabled=True, ticker=ticker)
+    report = runner.replay_ttm(path, "2026-11-28", [ticker], evidence_root=tmp_path)
+    assert report["state"] == "INTEGRITY_BLOCKED"
+    assert report["network_used"] is False
+    for method_id in ("P/E_TTM", "P/S_TTM"):
+        method = report["records"][ticker]["methods"][method_id]
+        assert method["status"] == "INPUT_BLOCKED" and method["value"] is None
+
+
+def test_replay_ttm_rejects_nvl_restated_vintage_before_loading(tmp_path):
+    import hashlib
+    path = _replay_config(tmp_path, enabled=True, ticker="NVL")
+    config = json.loads(path.read_bytes())
+    prior = next(e for e in config["evidence_subdirs"] if e["reporting_period"] == "2025-H1")
+    prior["document_sha256"] = next(e["document_sha256"] for e in config["evidence_subdirs"] if e["reporting_period"] == "2026-H1")
+    raw = json.dumps(config).encode()
+    path.write_bytes(raw)
+    pin = path.parent / "owner_daily_capacity_qualification.json"
+    pin.write_text(json.dumps({"source_sha256": {runner.dual.DUAL_READER_TTM_CONFIG_REL: hashlib.sha256(raw).hexdigest()}}))
+    assert runner.replay_ttm(path, "2026-11-28", ["NVL"], evidence_root=tmp_path)["reason"] == "ADMISSION_SPEC_IDENTITY_MISMATCH"
+
+
+def test_replay_ttm_registry_approval_is_not_retroactive(tmp_path):
+    report = runner.replay_ttm(_replay_config(tmp_path, enabled=True), "2026-11-25", ["POW", "NVL"])
+    assert report["state"] == "PRE_APPROVAL_CUTOFF" and report["records"] == {}
+
+
 def _table():
     return {"issuer_literal": "synthetic", "form_reference_literal": "B02-DN/HN",
             "currency_unit_literal": "VND",

@@ -8,9 +8,10 @@ from __future__ import annotations
 from datetime import datetime
 import hashlib
 import json
+import math
 import re
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 CONTRACT_VERSION = "dual_reader_reviewed_transcription/v1"
 RAW_VERSION = "independent_image_reading/v1"
@@ -21,6 +22,234 @@ RIGHTS_ROUTE = "OWNER_APPROVED_OFFICIAL_ISSUER_RESEARCH_NOT_VIETSTOCK"
 FAMILY_ALIASES = {"openai-gpt": "gpt", "openai-chatgpt": "gpt", "gpt": "gpt", "codex": "gpt",
                   "google-gemini": "gemini", "gemini": "gemini",
                   "anthropic-claude": "claude", "claude": "claude"}
+
+DUAL_READER_TTM_CONFIG_REL = "config/dual_reader_ttm_research_config.json"
+DUAL_READER_TTM_CONFIG_SCHEMA = "dual_reader_ttm_research_config/v1"
+RESEARCH_ONLY_COMPATIBILITY_CLASS = "DUAL_READER_OFFICIAL_H1_TTM_RESEARCH_ONLY"
+RESEARCH_LIMITATIONS = ("OFFLINE_RESEARCH_ONLY", EVIDENCE_TIER,
+                        "NOT_PIT_BACKTEST_ELIGIBLE", "PEER_COHORT_ISOLATED")
+RESEARCH_METHOD_FIELDS = ("evidence_tier", "authority_effect", "pit_backtest_eligible",
+    "knowledge_available_at", "earnings_attribution", "ttm_compatibility_class",
+    "research_caveats", "share_basis_caveats", "share_authority", "share_observation_date",
+    "share_observation_lag_days", "ttm_operand_provenance")
+RESEARCH_METHOD_FIELDS += ("required_research_caveat_codes",)
+_SHA256 = re.compile(r"[0-9a-f]{64}")
+_CAVEAT_STATES = frozenset({"VERIFIED", "LEAD", "ESTIMATE_UNVERIFIED",
+    "LOCATED_TEXT_IMAGE_PENDING", "VERIFIED_TEXT_LAYER_IMAGE_PENDING",
+    "VERIFIED_POLICY_TEXT_ESTIMATE_IMPACT_UNVERIFIED",
+    "VERIFIED_PRETAX_GROUP_GAIN_SUBSIDIARY_DETAIL_LEAD"})
+
+
+class DualReaderTtmConfigCorruptError(ValueError):
+    pass
+
+
+class DualReaderTtmIntegrityError(ValueError):
+    pass
+
+
+def research_timestamp(value: Any) -> datetime:
+    if not isinstance(value, str) or not value:
+        raise ValueError("TIMESTAMP_INVALID")
+    stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if stamp.utcoffset() is None:
+        raise ValueError("TIMESTAMP_TIMEZONE_REQUIRED")
+    return stamp
+
+
+def _load_strict_json_bytes(raw: bytes) -> Any:
+    if len(raw) > 1024 * 1024:
+        raise DualReaderTtmConfigCorruptError("CONFIG_SIZE_INVALID")
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise DualReaderTtmConfigCorruptError("CONFIG_DUPLICATE_KEY")
+            result[key] = value
+        return result
+    def constant(value):
+        raise DualReaderTtmConfigCorruptError("CONFIG_JSON_INVALID:NON_FINITE")
+    def number(value):
+        parsed = float(value)
+        if not math.isfinite(parsed):
+            constant(value)
+        return parsed
+    try:
+        return json.loads(raw.decode("utf-8"), object_pairs_hook=pairs, parse_constant=constant, parse_float=number)
+    except (UnicodeError, ValueError, RecursionError) as exc:
+        if isinstance(exc, DualReaderTtmConfigCorruptError):
+            raise
+        raise DualReaderTtmConfigCorruptError("CONFIG_JSON_INVALID") from exc
+
+
+def _config_schema(config: Any) -> None:
+    def require(condition):
+        if not condition:
+            raise ValueError("CONFIG_SCHEMA_INVALID")
+    require(isinstance(config, dict) and set(config) == {
+        "schema_version", "revision", "enabled", "approved_at", "approved_by",
+        "max_knowledge_cutoff_override", "evidence_subdirs", "research_caveats", "share_basis_caveats"})
+    require(config["schema_version"] == DUAL_READER_TTM_CONFIG_SCHEMA and config["revision"] == "r0001")
+    require(type(config["enabled"]) is bool and isinstance(config["approved_by"], str) and bool(config["approved_by"].strip()))
+    research_timestamp(config["approved_at"])
+    require(config["max_knowledge_cutoff_override"] is None)
+    require(isinstance(config["evidence_subdirs"], list) and isinstance(config["research_caveats"], list))
+    seen = set()
+    for entry in config["evidence_subdirs"]:
+        require(isinstance(entry, dict) and set(entry) == {"subdir", "ticker", "reporting_period",
+            "approved_at", "rows_file", "rows_sha256", "document_sha256", "proof_sha256", "enabled"})
+        require(isinstance(entry["subdir"], str) and bool(re.fullmatch(r"[A-Za-z0-9_-]+", entry["subdir"])))
+        require(entry["subdir"] not in seen)
+        seen.add(entry["subdir"])
+        require(bool(re.fullmatch(r"[A-Z0-9]+", entry["ticker"]))
+                and bool(re.fullmatch(r"[0-9]{4}(?:-H1)?", entry["reporting_period"])))
+        require(entry["rows_file"] == "dual_reader_admitted_rows.jsonl" and type(entry["enabled"]) is bool)
+        research_timestamp(entry["approved_at"])
+        for key in ("rows_sha256", "proof_sha256", "document_sha256"):
+            require(isinstance(entry[key], str) and _SHA256.fullmatch(entry[key]))
+    required = {"code", "ticker", "reporting_period", "document_sha256", "verification_status",
+                "never_adjust_multiples", "pb_gate", "ttm_gate", "note"}
+    optional = {"null_sha_reason", "recorded_at", "knowledge_available_at"}
+    for entry in config["research_caveats"]:
+        require(isinstance(entry, dict) and required <= set(entry) <= required | optional)
+        require(isinstance(entry["code"], str) and bool(re.fullmatch(r"[A-Z0-9_]+", entry["code"])))
+        require(isinstance(entry["ticker"], str) and bool(re.fullmatch(r"[A-Z0-9]+", entry["ticker"])))
+        require(isinstance(entry["reporting_period"], str)
+                and bool(re.fullmatch(r"[0-9]{4}(?:-H1|-9M)?", entry["reporting_period"])))
+        sha = entry["document_sha256"]
+        require((isinstance(sha, str) and _SHA256.fullmatch(sha)) or
+                (sha is None and isinstance(entry.get("null_sha_reason"), str) and bool(entry["null_sha_reason"].strip())))
+        require(entry["verification_status"] in _CAVEAT_STATES and entry["never_adjust_multiples"] is True)
+        require(entry["pb_gate"] in {"LABEL_ONLY", "FAIL_CLOSED"} and entry["ttm_gate"] in {"LABEL_ONLY", "FAIL_CLOSED"})
+        require(isinstance(entry["note"], str) and bool(entry["note"].strip()))
+        for key in ("recorded_at", "knowledge_available_at"):
+            if key in entry:
+                research_timestamp(entry[key])
+    require(isinstance(config["share_basis_caveats"], dict) and set(config["share_basis_caveats"]) == {
+        "provider_reported_lagged", "official_registered_shares"})
+    for authority, entry in config["share_basis_caveats"].items():
+        require(isinstance(entry, dict) and set(entry) == {"code", "verification_status", "pb_gate", "ttm_gate", "note"})
+        require(entry["code"] == {"provider_reported_lagged": "SHARE_BASIS_LAGGED_PROVIDER_ISSUED",
+            "official_registered_shares": "SHARE_BASIS_VSDC_REGISTERED_INCLUDES_TREASURY"}[authority])
+        require(entry["verification_status"] == "VERIFIED" and entry["pb_gate"] == entry["ttm_gate"] == "LABEL_ONLY")
+        require(isinstance(entry["note"], str) and bool(entry["note"].strip()))
+
+
+def load_dual_reader_ttm_research_config(repo_root: Path, *, expected_sha256: str | None = None) -> dict[str, Any]:
+    root = Path(repo_root).resolve()
+    path = root / DUAL_READER_TTM_CONFIG_REL
+    try:
+        if not path.resolve().is_relative_to(root) or path.is_symlink():
+            raise DualReaderTtmConfigCorruptError("CONFIG_PATH_ESCAPE")
+    except (OSError, RuntimeError) as exc:
+        raise DualReaderTtmConfigCorruptError("CONFIG_PATH_ESCAPE") from exc
+    try:
+        with path.open("rb") as handle:
+            raw = handle.read(1024 * 1024 + 1)
+    except FileNotFoundError as exc:
+        raise DualReaderTtmConfigCorruptError("CONFIG_MISSING") from exc
+    except OSError as exc:
+        raise DualReaderTtmConfigCorruptError("CONFIG_UNREADABLE") from exc
+    config = _load_strict_json_bytes(raw)
+    try:
+        _config_schema(config)
+    except (ValueError, TypeError, KeyError) as exc:
+        raise DualReaderTtmConfigCorruptError("CONFIG_SCHEMA_INVALID") from exc
+    if expected_sha256 is None:
+        try:
+            pin = root / "config/owner_daily_capacity_qualification.json"
+            if not pin.resolve().is_relative_to(root) or pin.is_symlink():
+                raise ValueError("CONFIG_PATH_ESCAPE")
+            expected_sha256 = _load_strict_json_bytes(pin.read_bytes())["source_sha256"][DUAL_READER_TTM_CONFIG_REL]
+        except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+            raise DualReaderTtmConfigCorruptError("CONFIG_DIGEST_ANCHOR_INVALID") from exc
+    if not isinstance(expected_sha256, str) or hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest() != expected_sha256:
+        raise DualReaderTtmConfigCorruptError("CONFIG_DIGEST_MISMATCH")
+    return config
+
+
+def bind_sha_caveats(*, ticker: str, operands: Sequence[Mapping[str, Any]],
+                     config: Mapping[str, Any], cutoff: str | None = None) -> list[dict[str, Any]]:
+    identities = {(r.get("reporting_period"), r.get("document_sha256")) for r in operands}
+    result = []
+    for entry in config["research_caveats"]:
+        if (entry["ticker"] != ticker or entry["document_sha256"] is None
+                or (entry["reporting_period"], entry["document_sha256"]) not in identities):
+            continue
+        if cutoff and any(research_timestamp(entry[key]) > research_timestamp(cutoff)
+                          for key in ("recorded_at", "knowledge_available_at") if key in entry):
+            continue
+        result.append({**entry, "source_verification_status": entry["verification_status"]})
+    return result
+
+
+def evaluate_share_basis_caveat_gate(*, ticker: str, share_basis_input: Mapping[str, Any] | None,
+        bound_caveats: Sequence[Mapping[str, Any]], config: Mapping[str, Any], cutoff: str | None = None) -> dict[str, Any]:
+    share = share_basis_input or {}
+    authority = share.get("authority")
+    caveat = config["share_basis_caveats"].get(authority)
+    caveats = [{**caveat, "never_adjust_multiples": True,
+                "source_verification_status": caveat["verification_status"],
+                "observation_date": share.get("observation_date"),
+                "observation_lag_days": share.get("observation_lag_days")}] if caveat else []
+    blocked = False
+    observation = share.get("observation_date")
+    if cutoff and observation is not None:
+        try:
+            # A date is a session label; a timestamp must additionally respect the exact cutoff.
+            if len(observation) == 10:
+                datetime.strptime(observation, "%Y-%m-%d")
+                blocked = observation > cutoff[:10]
+            else:
+                blocked = research_timestamp(observation) > research_timestamp(cutoff)
+        except (ValueError, TypeError):
+            blocked = True
+    def blockers(key):
+        return (["SHARE_BASIS_AFTER_KNOWLEDGE_CUTOFF"] if blocked else []) + [
+            c["code"] for c in bound_caveats if c.get(key) == "FAIL_CLOSED"]
+    return {"share_basis_caveats": caveats, "share_authority": authority,
+        "share_observation_date": observation, "share_observation_lag_days": share.get("observation_lag_days"),
+        "share_basis_cutoff_blocked": blocked, "pb_blocked": bool(blockers("pb_gate")),
+        "ttm_blocked": bool(blockers("ttm_gate")), "pb_blockers": blockers("pb_gate"), "ttm_blockers": blockers("ttm_gate")}
+
+
+def load_admitted_rows(evidence_root: Path, entries: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Read exactly the frozen rows and proof references; common admission still owns qualification."""
+    root = Path(evidence_root).resolve()
+    rows = []
+    for entry in entries:
+        landing = root / entry["subdir"]
+        path = landing / entry["rows_file"]
+        try:
+            if (landing.is_symlink() or path.is_symlink() or not path.resolve().is_relative_to(root)
+                    or not landing.resolve().is_relative_to(root)):
+                raise DualReaderTtmIntegrityError("EVIDENCE_PATH_ESCAPE")
+        except (OSError, RuntimeError) as exc:
+            raise DualReaderTtmIntegrityError("EVIDENCE_PATH_ESCAPE") from exc
+        try:
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != entry["rows_sha256"]:
+                raise DualReaderTtmIntegrityError("ROWS_DIGEST_MISMATCH:" + entry["subdir"])
+            admitted = [_load_strict_json_bytes(line) for line in raw.splitlines() if line.strip()]
+            if not admitted:
+                raise DualReaderTtmIntegrityError("ROWS_EMPTY")
+            for row in admitted:
+                if (row.get("ticker"), row.get("reporting_period"), row.get("document_sha256"), row.get("evidence_subdir")) != (
+                        entry["ticker"], entry["reporting_period"], entry["document_sha256"], entry["subdir"]):
+                    raise DualReaderTtmIntegrityError("ROW_IDENTITY_MISMATCH")
+                ref = row.get("dual_reader_transcription") or {}
+                proof = landing / str(ref.get("relative_path") or "")
+                if not proof.resolve().is_relative_to(landing.resolve()) or proof.is_symlink():
+                    raise DualReaderTtmIntegrityError("PROOF_PATH_ESCAPE")
+                if (ref.get("proof_sha256") != entry["proof_sha256"]
+                        or hashlib.sha256(proof.read_bytes()).hexdigest() != entry["proof_sha256"]):
+                    raise DualReaderTtmIntegrityError("PROOF_DIGEST_MISMATCH")
+            rows.extend(admitted)
+        except (OSError, ValueError, TypeError, AttributeError, RuntimeError) as exc:
+            if isinstance(exc, DualReaderTtmIntegrityError):
+                raise
+            raise DualReaderTtmIntegrityError("EVIDENCE_UNREADABLE:" + entry["subdir"]) from exc
+    return rows
 
 
 # A printed outline enumerator ("3.", "17.", "17.1", "18") sits in the statement's

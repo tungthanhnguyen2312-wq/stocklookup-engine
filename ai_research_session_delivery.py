@@ -15,6 +15,7 @@ from typing import Any, Mapping
 
 from stocklookup_core.evidence.field_identity import stable_id
 from stocklookup_core.evidence.record_subtree_codec import CODEC_VERSION, encode_record
+from stocklookup_core.evidence import dual_reader_transcription as dual
 from stocklookup_core.decision.current_daily_decision_research_product import (
     ABSENT_OWNER_FOCUS_STATUS, INTEGRATED_PEER_VERDICTS, is_present_research_card, reconcile_card_peer_valuation,
 )
@@ -121,6 +122,13 @@ def _valuation_methods_for_delivery(record: Mapping[str, Any], *, source_session
     for name, method in sorted((record.get("valuation_methods") or {}).items()):
         if not isinstance(method, Mapping):
             continue
+        research = (method.get("ttm_compatibility_class") == dual.RESEARCH_ONLY_COMPATIBILITY_CLASS
+            or method.get("authority_effect") == "OFFLINE_RESEARCH_ONLY"
+            or method.get("evidence_tier") == dual.EVIDENCE_TIER
+            or dual.EVIDENCE_TIER in (method.get("limitations") or []))
+        if research and not _dual_reader_export_complete(method, source_session=source_session,
+                                                        include_qualifiers=include_qualifiers):
+            continue
         row = _selected_fields(method, (
             "method_id", "status", "applicability", "blocker_reason_codes",
             "period_basis", "value", "source_status", "p3f_method_status",
@@ -130,10 +138,49 @@ def _valuation_methods_for_delivery(record: Mapping[str, Any], *, source_session
                 "earnings_definition", "equity_definition", "statement_scope", "share_basis",
                 "denominator_metric", "denominator_period_semantics", "limitations",
             )) or {})
+            if research or "research_caveats" in method:
+                row.update(_selected_fields(method, dual.RESEARCH_METHOD_FIELDS) or {})
         # Targets, fair values, and probabilities are deliberately not a delivery
         # field, even when an upstream blocked row represents them as null.
         result[str(name)] = row
     return result
+
+
+def _dual_reader_export_complete(method: Mapping[str, Any], *, source_session: str | None,
+                                 include_qualifiers: bool) -> bool:
+    """Never export an unlabelled research multiple, even through an older delivery route."""
+    limitations = method.get("limitations")
+    if not isinstance(limitations, list) or not all(isinstance(item, str) for item in limitations):
+        return False
+    if (not include_qualifiers or method.get("authority_effect") != "OFFLINE_RESEARCH_ONLY"
+            or method.get("evidence_tier") != dual.EVIDENCE_TIER or method.get("pit_backtest_eligible") is not False
+            or not set(dual.RESEARCH_LIMITATIONS) <= set(limitations)):
+        return False
+    try:
+        cutoff = dual.research_timestamp(f"{source_session}T15:00:00+07:00")
+        if dual.research_timestamp(method.get("knowledge_available_at")) > cutoff:
+            return False
+        for key in ("research_caveats", "share_basis_caveats"):
+            entries = method.get(key)
+            if not isinstance(entries, list):
+                return False
+            for entry in entries:
+                if (not isinstance(entry, Mapping) or not entry.get("verification_status")
+                        or entry.get("never_adjust_multiples") is not True
+                        or entry.get("source_verification_status") != entry["verification_status"]
+                        or entry.get("code") not in (method.get("limitations") or [])):
+                    return False
+        required = method.get("required_research_caveat_codes")
+        if not isinstance(required, list) or set(required) != {c["code"] for c in method["research_caveats"]}:
+            return False
+        if method.get("share_authority") in {"provider_reported_lagged", "official_registered_shares"} and not method["share_basis_caveats"]:
+            return False
+        from stocklookup_core.research.ai_handoff_publication import _unsafe_pointer
+        if _unsafe_pointer(dict(method)) is not None:
+            return False
+    except (ValueError, TypeError, KeyError):
+        return False
+    return True
 
 
 def project_integrated_decision_for_ai_delivery(record: Any, *, integrated_identity: str | None = None,

@@ -16,6 +16,50 @@ from tools import run_owner_daily as owner
 GIB = preflight.GIB
 
 
+def _before_valuation_b(receipt):
+    prior = copy.deepcopy(receipt)
+    corrective = prior.pop("valuation_integration_b_corrective")
+    prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
+    for relative in corrective["added_source_paths"]:
+        del prior["source_sha256"][relative]
+    return prior, corrective
+
+
+def test_valuation_b_capacity_corrective_exact_chain_and_history():
+    root = preflight.ROOT
+    relative = "config/owner_daily_capacity_qualification.json"
+    live_raw = (root / relative).read_bytes()
+    live = json.loads(live_raw)
+    prior, corrective = _before_valuation_b(live)
+    baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
+    assert prior == json.loads(baseline_raw)
+    assert list(live)[-2:] == ["registry_migration_a_corrective", "valuation_integration_b_corrective"]
+    assert corrective["predecessor_corrective"] == "registry_migration_a_corrective"
+    assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
+    assert corrective["release_authority"] == "NOT_GRANTED"
+    assert corrective["added_source_paths"] == ["config/dual_reader_ttm_research_config.json"]
+    changed = corrective["changed_source_paths"]
+    assert set(changed) == {"ai_research_session_delivery.py", "canonical_daily_financial_v2_materialization.py",
+        "stocklookup_core/evidence/dual_reader_transcription.py", "stocklookup_core/valuation/current_research_valuation_context.py",
+        "tools/run_dual_reader_transcription_admission.py", "tools/verify_retention_reader_transition.py"}
+    assert set(corrective["prior_source_sha256_lf"]) == set(changed)
+    assert set(corrective["active_source_sha256_lf"]) == set(changed + corrective["added_source_paths"])
+    for path, digest in corrective["active_source_sha256_lf"].items():
+        assert hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
+        if path in changed:
+            assert corrective["prior_source_sha256_lf"][path] == prior["source_sha256"][path] != digest
+    # Every historical member retains its literal bytes, including A's selectors and corrective.
+    decoder = json.JSONDecoder()
+    def member(data, key):
+        text = data.decode("utf-8").replace("\r\n", "\n")
+        start = text.index('\n  "' + key + '": ') + len('\n  "' + key + '": ')
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end]
+    for key in prior:
+        if key != "source_sha256":
+            assert member(live_raw, key) == member(baseline_raw, key)
+
+
 def safe_observation():
     return {"available_commit_bytes": 12 * GIB, "available_physical_bytes": 7 * GIB,
             "commit_limit_bytes": 32 * GIB, "committed_bytes": 20 * GIB, "c_free_bytes": 26 * GIB,
@@ -427,6 +471,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     root = preflight.ROOT
     receipt_path = "config/owner_daily_capacity_qualification.json"
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    live_receipt, valuation_b = _before_valuation_b(live_receipt)
     # Verify the older chains against the exact pre-migration source and pins.
     # The separate migration test checks this successor against the working tree.
     migration = live_receipt.pop("registry_migration_a_corrective")
@@ -440,6 +485,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             raw = subprocess.check_output(["git", "show", f"{migration['base_commit']}:{path}"], cwd=root)
             assert hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest() == migration["prior_source_sha256_lf"][path]
             return raw
+        if path in valuation_b["prior_source_sha256_lf"]:
+            return subprocess.check_output(["git", "show", f"{valuation_b['base_commit']}:{path}"], cwd=root)
         return (root / path).read_bytes()
     spec = json.loads((root / "tests/fixtures/offline_financial_capacity_source_transition_v1.json").read_bytes())
     assert spec["scope"] == "EXACT_OFFLINE_FINANCIAL_SOURCE_ENUMERATION_ONLY"
@@ -1401,6 +1448,7 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
     receipt_path = "config/owner_daily_capacity_qualification.json"
     raw = (root / receipt_path).read_bytes()
     live = json.loads(raw)
+    live, valuation_b = _before_valuation_b(live)
     migration = live["registry_migration_a_corrective"]
     assert list(live)[-2:] == ["financial_registry_inputs", "registry_migration_a_corrective"]
     assert migration["base_commit"] == "74017553c7a17c33a5464ec735f3700df669bbd5"
@@ -1430,7 +1478,7 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
     assert list(baseline)[-1] == migration["predecessor_corrective"]
     rebuilt = copy.deepcopy(baseline)
     changed_names = set(subprocess.check_output(
-        ["git", "diff", "--name-only", migration["base_commit"]], cwd=root, text=True).splitlines())
+        ["git", "diff", "--name-only", migration["base_commit"], valuation_b["base_commit"]], cwd=root, text=True).splitlines())
     assert changed_names.intersection(baseline["source_sha256"]) == set(changed)
     for path in changed:
         old = subprocess.check_output(["git", "show", f"{migration['base_commit']}:{path}"], cwd=root)
@@ -1438,7 +1486,9 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
         assert baseline["source_sha256"][path] == migration["prior_source_sha256_lf"][path]
         assert migration["prior_source_sha256_lf"][path] != migration["active_source_sha256_lf"][path]
     for path in changed + added:
-        digest = hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        content = (subprocess.check_output(["git", "show", f"{valuation_b['base_commit']}:{path}"], cwd=root)
+            if path in valuation_b["prior_source_sha256_lf"] else (root / path).read_bytes())
+        digest = hashlib.sha256(content.replace(b"\r\n", b"\n")).hexdigest()
         assert digest == migration["active_source_sha256_lf"][path] == live["source_sha256"][path]
         rebuilt["source_sha256"][path] = digest
     assert not set(added).intersection(baseline["source_sha256"])
@@ -1478,7 +1528,8 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
 def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, path):
     root = preflight.ROOT
     receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
-    selected = receipt["registry_migration_a_corrective"]["active_source_sha256_lf"]
+    selected = {path: receipt["source_sha256"][path]
+                for path in receipt["registry_migration_a_corrective"]["active_source_sha256_lf"]}
     receipt["source_sha256"] = selected
     for relative in selected:
         target = tmp_path / relative

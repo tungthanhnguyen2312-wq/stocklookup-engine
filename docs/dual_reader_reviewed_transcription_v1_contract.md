@@ -380,3 +380,43 @@ loading, source conservation, Daily isolation and replay limitations. No real
 replay is certified in this executor environment, and A2 has not started because
 its initial-journal and protected-source transition paths need lease expansion.
 This migration does not admit any new document or expand existing authority.
+
+
+## Valuation Integration B (HL-20261127-CDX-45, default OFF)
+
+The frozen `config/dual_reader_ttm_research_config.json` ships with `enabled: false`.
+OFF performs no retained-landing reads and preserves the pre-B valuation and AI
+projection bytes. Activation and release authority remain NOT_GRANTED; a separate
+Owner decision and reviewed config/pin change are required.
+
+Only the materializer validates the strict config and its LF SHA256 capacity pin.
+A missing, malformed, escaping or digest-mismatched config is CORRUPT_BLOCKED on
+the research branch, recorded in the valuation artifact and run log; existing
+provider valuation continues. An ON integrity failure blocks the whole research
+branch with no alternate-root, stale-TTM or provider fallback for affected
+research inputs. Runtime replay requires the explicit runtime environment and
+retained workspace role. The offline `--replay-ttm` route accepts an explicit
+retained landing root and never writes admissions or Daily/runtime artifacts.
+
+The existing H1 engine owns FY + current H1 - prior H1 arithmetic and common
+retained admission owns every operand. The engine artifact remains unchanged;
+only a valuation-local copy receives research features where ordinary qualified
+TTM is unavailable. Every operand, original reporting vintage, registry/config
+approval, caveat knowledge timestamp, price session and share observation must
+respect the decision cutoff (15:00 +07:00). Config creation timestamps are not
+backdated to operand completion; the shipped revision cannot unlock older sessions.
+
+SHA-bound caveats require exact ticker, period and document digest. Null-digest
+PAN disposal and POW Part 2 leads remain non-bindable. HPG's pre-tax group disposal
+gain labels every method consuming its 2026-H1 operand. POW TT99 impact estimates
+remain unverified. NVL share/equity consistency risk is a LEAD with P/B fail-closed
+and TTM label-only; it asserts no bias direction. Provider-issued lag and VSDC
+registered-includes-treasury labels preserve the supplied share basis. No caveat
+adjusts EPS, profits or valuation multiples.
+
+Dual-reader TTM is OFFLINE_RESEARCH_ONLY, dual-reader reviewed transcription
+(`DUAL_READER_REVIEWED_TRANSCRIPTION`), and never PIT/backtest eligible. It is
+unconditionally isolated from peer cohorts, percentiles, relative verdicts and
+peer-derived score votes. AI export omits any such method lacking its authority,
+PIT, caveat or share labels; it also refuses status promotion and private paths.
+Historical source bytes, E4 identities and sealed-session history remain frozen.

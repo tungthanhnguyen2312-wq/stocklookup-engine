@@ -45,6 +45,86 @@ class CanonicalFinancialV2MaterializationError(ValueError):
     pass
 
 
+def _load_dual_reader_ttm_research_overlay(*, repo_root: Path, decision_session: str | None,
+        product_tickers: Sequence[str], official_financial_facts: Sequence[Mapping[str, Any]] | None,
+        evidence_root: Path | None = None, config: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    """Composition-root-only retained replay. Explicit evidence_root is for offline replay."""
+    import os
+    from stocklookup_core.evidence import dual_reader_transcription as dual
+    state = {"state": "OFF", "features_by_ticker": {}, "caveats_by_ticker": {}, "integrity_blocked": False}
+    try:
+        config = config if config is not None else dual.load_dual_reader_ttm_research_config(repo_root)
+    except dual.DualReaderTtmConfigCorruptError as exc:
+        state.update(state="CORRUPT_BLOCKED", reason=str(exc), integrity_blocked=True)
+        return state
+    if config["enabled"] is False:
+        return state
+    tickers = set(product_tickers)
+    entries = [e for e in config["evidence_subdirs"] if e["enabled"] and e["ticker"] in tickers]
+    state.update(state="ON", config=config, tickers=sorted({e["ticker"] for e in entries}))
+    try:
+        if not decision_session:
+            raise dual.DualReaderTtmIntegrityError("DECISION_SESSION_REQUIRED")
+        cutoff = f"{decision_session}T15:00:00+07:00"
+        stamp = dual.research_timestamp(cutoff)
+        state["cutoff"] = cutoff
+        if dual.research_timestamp(config["approved_at"]) > stamp:
+            state.update(state="PRE_APPROVAL_CUTOFF", reason="APPROVAL_AFTER_KNOWLEDGE_CUTOFF", integrity_blocked=True)
+            return state
+        after = [e["subdir"] for e in entries if dual.research_timestamp(e["approved_at"]) > stamp]
+        if after:
+            state.update(excluded_subdirs=after, excluded_tickers=sorted({e["ticker"] for e in entries if e["subdir"] in after}))
+            entries = [e for e in entries if e["subdir"] not in after]
+        # Runtime root and retained role are distinct. Neither may resolve via a legacy fallback.
+        if evidence_root is None:
+            if not os.environ.get("STOCK_LOOKUP_RUNTIME_ROOT", "").strip():
+                raise dual.DualReaderTtmIntegrityError("RUNTIME_ROOT_UNSET")
+            from runtime_paths import workspace_profile
+            if workspace_profile() is None:
+                raise dual.DualReaderTtmIntegrityError("RETAINED_WORKSPACE_PROFILE_UNSET")
+            from stocklookup_core.evidence.official_document_qualification import official_landing_root
+            evidence_root = official_landing_root()
+        if not Path(evidence_root).is_dir():
+            raise dual.DualReaderTtmIntegrityError("LANDING_ROOT_MISSING")
+        from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
+        import official_financial_ocr_table_evidence  # noqa: F401 - composition-root native builder
+        from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+        retained = dual.load_admitted_rows(evidence_root, entries)
+        for row in retained:
+            result = admit_retained_financial_fact(row, evidence_root=evidence_root, cutoff=cutoff)
+            if result["state"] != "ADMITTED":
+                raise dual.DualReaderTtmIntegrityError("OPERAND_REJECTED:" + ",".join(result["reason_codes"]))
+        # No partially verified result survives an integrity failure anywhere in this branch.
+        features, caveats = {}, {}
+        for ticker in state["tickers"]:
+            ticker_rows = [r for r in retained if r["ticker"] == ticker]
+            features[ticker] = official_h1_ttm_features(ticker_rows, ticker=ticker,
+                cutoff=cutoff, evidence_root=evidence_root, current_year=int(decision_session[:4]))
+            for feature in features[ticker].values():
+                provenance = [{"reporting_period": p["reporting_period"],
+                    "document_sha256": p["source_sha256"],
+                    "proof_sha256": next(r["dual_reader_transcription"]["proof_sha256"] for r in ticker_rows
+                        if r["document_sha256"] == p["source_sha256"]),
+                    "knowledge_available_at": p["knowledge_available_at"]}
+                    for p in feature.get("provider_source_provenance") or []]
+                bound = dual.bind_sha_caveats(ticker=ticker, operands=provenance, config=config, cutoff=cutoff)
+                expected = [c for c in config["research_caveats"] if c["ticker"] == ticker
+                    and c["document_sha256"] is not None and any(
+                        (p["reporting_period"], p["document_sha256"]) == (c["reporting_period"], c["document_sha256"])
+                        for p in provenance)]
+                if len(bound) != len(expected):
+                    raise dual.DualReaderTtmIntegrityError("CAVEAT_AFTER_KNOWLEDGE_CUTOFF")
+                feature.update(evidence_tier=dual.EVIDENCE_TIER, ttm_operand_provenance=provenance,
+                    research_caveats=bound, compatibility_class=dual.RESEARCH_ONLY_COMPATIBILITY_CLASS)
+            caveats[ticker] = dual.bind_sha_caveats(ticker=ticker, operands=ticker_rows, config=config, cutoff=cutoff)
+        state.update(features_by_ticker=features, caveats_by_ticker=caveats)
+        return state
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+        state.update(state="INTEGRITY_BLOCKED", reason="DUAL_READER_TTM_RESEARCH_INTEGRITY_BLOCKED:" + str(exc),
+                     integrity_blocked=True, features_by_ticker={}, caveats_by_ticker={})
+        return state
+
+
 def _official_equity_overlay(root: Path) -> list[dict[str, Any]]:
     from financial_evidence_currency_refresh import (
         OfficialOverlayArtifactError,
@@ -311,6 +391,23 @@ def build_evaluated_valuation_artifact(
             raise
         official_equity_facts = []
         official_overlay_eligibility = "OFFICIAL_OVERLAY_MALFORMED_INELIGIBLE"
+    research = _load_dual_reader_ttm_research_overlay(repo_root=Path(__file__).resolve().parent,
+        decision_session=decision_session or (calculation_readiness_context or {}).get("decision_session"),
+        product_tickers=product_tickers, official_financial_facts=official_financial_facts)
+    if research["state"] != "OFF":
+        import logging
+        logging.getLogger(__name__).warning("dual_reader_ttm_research state=%s reason=%s",
+            research["state"], research.get("reason", ""))
+    # Copy only the valuation-local feature maps; never inject research into the engine artifact.
+    if research["state"] == "ON":
+        engine_records = dict(engine_records)
+        for ticker, features in research["features_by_ticker"].items():
+            record = dict(engine_records.get(ticker) or {})
+            merged = dict(record.get("features") or {})
+            for key, feature in features.items():
+                if (merged.get(key) or {}).get("fitness") != "READY":
+                    merged[key] = feature
+            engine_records[ticker] = {**record, "features": merged}
     rows = {
         ticker: valuation_context.evaluate_ticker_valuation(
             ticker=ticker, feature_record=None,
@@ -325,6 +422,7 @@ def build_evaluated_valuation_artifact(
             book_equity_rows=equity_by_ticker.get(ticker), monetary_basis_verdict=verdict,
             official_equity_facts=official_equity_facts,
             official_financial_facts=official_financial_facts,
+            **({"dual_reader_research_state": research} if research["state"] != "OFF" else {}),
         )
         for ticker in product_tickers
     }
@@ -357,6 +455,9 @@ def build_evaluated_valuation_artifact(
     }
     if entity_applicability_artifact is not None:
         payload["source_entity_applicability_identity"] = entity_applicability_artifact.get("artifact_identity")
+    if research["state"] != "OFF":
+        payload["dual_reader_ttm_research"] = {key: research[key] for key in
+            ("state", "reason", "tickers", "excluded_subdirs") if key in research}
     if official_overlay_eligibility is not None:
         payload["official_overlay_eligibility"] = official_overlay_eligibility
     if include_metric_research:

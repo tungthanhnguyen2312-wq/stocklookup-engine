@@ -1,0 +1,228 @@
+{
+  "schema_version": "dual_reader_ttm_research_config/v1",
+  "revision": "r0001",
+  "enabled": false,
+  "approved_at": "2026-11-27T01:18:02+07:00",
+  "approved_by": "OWNER_PENDING_ACTIVATION",
+  "max_knowledge_cutoff_override": null,
+  "evidence_subdirs": [
+    {
+      "subdir": "fy2025-dual-reader-pow-20261125",
+      "ticker": "POW",
+      "reporting_period": "2025",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "307ea0e88b72c1f640ba87d2071353070611b0b018b168c62f673d3609e6c8d3",
+      "document_sha256": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+      "proof_sha256": "096f9b91147cfd79a809a7fba1aac2a7f12cd52a77f27937abccb0de2fa5ee4b",
+      "enabled": true
+    },
+    {
+      "subdir": "h1-2025-dual-reader-pow-r2-20261125",
+      "ticker": "POW",
+      "reporting_period": "2025-H1",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "d5dfeb53a8475dfc20129c53e9012e6612e671ca3ec884d9fc3ece4a5d870d08",
+      "document_sha256": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+      "proof_sha256": "6712c78dce41570123587d3ea07e75f54e15aeacc6dd8809199fc0bec05969a9",
+      "enabled": true
+    },
+    {
+      "subdir": "h1-2026-dual-reader-pow-r2b-20261126",
+      "ticker": "POW",
+      "reporting_period": "2026-H1",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "83385792b0bc2ba535b38695745e5f4612e43cc7ebb6cac74e2a072c8758a0cc",
+      "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+      "proof_sha256": "5960ff8e1a0445332a0357a4951af9ef44dca3004d49cf8a37fd892fe32b8053",
+      "enabled": true
+    },
+    {
+      "subdir": "h1-2025-dual-reader-nvl-signed-20261126",
+      "ticker": "NVL",
+      "reporting_period": "2025-H1",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "c50508eb29500f9b4dcde3802cb53567648477f1cf2c4c9f9d473edb88f819bb",
+      "document_sha256": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+      "proof_sha256": "008ca64d665d5f78bebf16a9d3e987e94cc4b06b8e286dad24f72ee32adb9292",
+      "enabled": true
+    },
+    {
+      "subdir": "h1-2026-dual-reader-nvl-20261125",
+      "ticker": "NVL",
+      "reporting_period": "2026-H1",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "1143bcebdb92b357da752018f05224a4e91d996bb853c729d9bee94ea9976d18",
+      "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+      "proof_sha256": "da2d13f8911e99eb1a4d358f8c169602d52f241af04713540c4cf97212f5d760",
+      "enabled": true
+    },
+    {
+      "subdir": "fy2025-dual-reader-nvl-20261125",
+      "ticker": "NVL",
+      "reporting_period": "2025",
+      "approved_at": "2026-11-27T01:18:02+07:00",
+      "rows_file": "dual_reader_admitted_rows.jsonl",
+      "rows_sha256": "d8fb03ca47430f5c63129e1fc6997d1f6c917ee28b6bd7d142737a4ff442c63a",
+      "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+      "proof_sha256": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
+      "enabled": true
+    }
+  ],
+  "research_caveats": [
+    {
+      "code": "ACCOUNTING_POLICY_CHANGE",
+      "ticker": "POW",
+      "reporting_period": "2026-H1",
+      "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+      "verification_status": "VERIFIED_POLICY_TEXT_ESTIMATE_IMPACT_UNVERIFIED",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "TT99 stopped major-repair accruals from 2026-01-01 (Note 4, PDF p22). COGS benefit 430-616 bn VND is ESTIMATE / UNVERIFIED; no earnings or multiple adjustment.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "EARNINGS_COMPARABILITY_LIMITED",
+      "ticker": "POW",
+      "reporting_period": "2026-H1",
+      "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+      "verification_status": "VERIFIED_POLICY_TEXT_ESTIMATE_IMPACT_UNVERIFIED",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "TT99 stopped major-repair accruals from 2026-01-01 (Note 4, PDF p22). COGS benefit 430-616 bn VND is ESTIMATE / UNVERIFIED; no earnings or multiple adjustment.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "UNNORMALIZED_EARNINGS",
+      "ticker": "POW",
+      "reporting_period": "2026-H1",
+      "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+      "verification_status": "VERIFIED_POLICY_TEXT_ESTIMATE_IMPACT_UNVERIFIED",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "TT99 stopped major-repair accruals from 2026-01-01 (Note 4, PDF p22). COGS benefit 430-616 bn VND is ESTIMATE / UNVERIFIED; no earnings or multiple adjustment.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "OVERHAUL_PROVISION_NOTE_PENDING_SHA",
+      "ticker": "POW",
+      "reporting_period": "2025",
+      "document_sha256": null,
+      "verification_status": "LEAD",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Supplemental FY2025 Part 2 Note 23 only.",
+      "recorded_at": "2026-11-27T01:18:02+07:00",
+      "null_sha_reason": "Only 16-character Part 2 SHA prefixes supplied; admitted FY2025 document is Part 1."
+    },
+    {
+      "code": "MATERIAL_NON_RECURRING_DISPOSAL_GAIN",
+      "ticker": "HPG",
+      "reporting_period": "2026-H1",
+      "document_sha256": "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968",
+      "verification_status": "VERIFIED_PRETAX_GROUP_GAIN_SUBSIDIARY_DETAIL_LEAD",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Financial-investment sale gain 4929.1 bn VND is pre-tax, group-level. Parent after-tax impact UNKNOWN; subsidiary detail LEAD; recurring PBT estimate WITHDRAWN. No EPS or multiple adjustment.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "GOING_CONCERN_EMPHASIS_HISTORY",
+      "ticker": "NVL",
+      "reporting_period": "2025",
+      "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+      "verification_status": "LOCATED_TEXT_IMAGE_PENDING",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "FY2025 emphasis text located p6-7; negative CFO 6145.4 bn VND verified by image. Rejected tax-reversal claim and issuer low-persistence quote excluded.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "OVERDUE_DEBT_AND_LIQUIDITY_RISK",
+      "ticker": "NVL",
+      "reporting_period": "2026-H1",
+      "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+      "verification_status": "VERIFIED_TEXT_LAYER_IMAGE_PENDING",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Debt 72911 bn VND; overdue 16716 bn; extended 3244 bn. FY2025 international-lender amount not comparable. TT99 restated comparatives; TTM uses original 2025-H1 vintage. Financial gains 1039.4 bn unnormalized.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "COMPARATIVE_RESTATED",
+      "ticker": "NVL",
+      "reporting_period": "2026-H1",
+      "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+      "verification_status": "VERIFIED_TEXT_LAYER_IMAGE_PENDING",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Debt 72911 bn VND; overdue 16716 bn; extended 3244 bn. FY2025 international-lender amount not comparable. TT99 restated comparatives; TTM uses original 2025-H1 vintage. Financial gains 1039.4 bn unnormalized.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "FY2025_RESTATEMENT_IMPACT_UNKNOWN",
+      "ticker": "NVL",
+      "reporting_period": "2026-H1",
+      "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+      "verification_status": "VERIFIED_TEXT_LAYER_IMAGE_PENDING",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Debt 72911 bn VND; overdue 16716 bn; extended 3244 bn. FY2025 international-lender amount not comparable. TT99 restated comparatives; TTM uses original 2025-H1 vintage. Financial gains 1039.4 bn unnormalized.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "SHARE_COUNT_EQUITY_CONSISTENCY_RISK_UNREGISTERED_CONVERSION",
+      "ticker": "NVL",
+      "reporting_period": "2026-H1",
+      "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+      "verification_status": "LEAD",
+      "never_adjust_multiples": true,
+      "pb_gate": "FAIL_CLOSED",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "FOUND_IN_TEXT_ALIGNMENT_UNVERIFIED: 1844.1 bn VND moved from 411a to 414 within equity. Share/equity consistency risk, no proven bias direction.",
+      "recorded_at": "2026-11-27T01:18:02+07:00"
+    },
+    {
+      "code": "MATERIAL_NON_RECURRING_DISPOSAL_GAIN_PENDING_SHA",
+      "ticker": "PAN",
+      "reporting_period": "2026-H1",
+      "document_sha256": null,
+      "verification_status": "LEAD",
+      "never_adjust_multiples": true,
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Bibica disposal remains LEAD.",
+      "recorded_at": "2026-11-27T01:18:02+07:00",
+      "null_sha_reason": "No official PAN filing SHA in supplied inputs or frozen registries."
+    }
+  ],
+  "share_basis_caveats": {
+    "provider_reported_lagged": {
+      "code": "SHARE_BASIS_LAGGED_PROVIDER_ISSUED",
+      "verification_status": "VERIFIED",
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Lagged VCI issue_share metadata; not an official real-time registry."
+    },
+    "official_registered_shares": {
+      "code": "SHARE_BASIS_VSDC_REGISTERED_INCLUDES_TREASURY",
+      "verification_status": "VERIFIED",
+      "pb_gate": "LABEL_ONLY",
+      "ttm_gate": "LABEL_ONLY",
+      "note": "Registered shares include treasury where applicable; no treasury adjustment."
+    }
+  }
+}

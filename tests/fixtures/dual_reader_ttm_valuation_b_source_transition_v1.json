@@ -1,0 +1,19 @@
+{
+  "contract_version": "dual_reader_ttm_valuation_b_source_transition/v1",
+  "base_commit": "1c3b1d1fd1c05186f6660f89085dcf2580f415fb",
+  "scope": "DUAL_READER_TTM_VALUATION_B_DEFAULT_OFF_RESEARCH_ONLY",
+  "release_authority": "NOT_GRANTED",
+  "sources": {
+    "ai_research_session_delivery.py": {
+      "archive": "tests/fixtures/dual_reader_ttm_valuation_b_v1_sources/ai_research_session_delivery.py.txt",
+      "prior_sha256_lf": "7473ef1e7e2ad9f366bb3afa618e677d538564dbb23985d4fa6ae31481ee36fe",
+      "active_sha256_lf": "b8e5ccefa798898bb73c44103cf5fad315c5d72998bb359d309833b0023b8817"
+    },
+    "stocklookup_core/valuation/current_research_valuation_context.py": {
+      "archive": "tests/fixtures/dual_reader_ttm_valuation_b_v1_sources/stocklookup_core__valuation__current_research_valuation_context.py.txt",
+      "prior_sha256_lf": "78bb03d6fe705f80890f15abef9feea152c4fb5a77cdafa9cf856eb6f876e680",
+      "active_sha256_lf": "e143849fdcad561f80cf65d6f7da23ed1fd334f0bf0e966fa57c1edb7d092c57"
+    }
+  },
+  "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7"
+}

@@ -86,6 +86,134 @@ def feature_record():
     }}
 
 
+def _b_config():
+    import json
+    from pathlib import Path
+    return json.loads((Path(__file__).resolve().parents[1] / "config/dual_reader_ttm_research_config.json").read_bytes())
+
+
+def _b_research_case(ticker="NVL"):
+    from stocklookup_core.evidence import dual_reader_transcription as dual
+    config = _b_config()
+    config["enabled"] = True  # in-memory synthetic shadow only
+    bound = [dict(c, source_verification_status=c["verification_status"])
+             for c in config["research_caveats"] if c["ticker"] == ticker and c["document_sha256"]]
+    features = {}
+    for fid, value in (("attributable_net_income_ttm", 400), ("revenue_ttm", 800)):
+        feature = qualified_feature(value, provider="official_issuer_ir")
+        feature.update(evidence_tier=dual.EVIDENCE_TIER, authority_effect="OFFLINE_RESEARCH_ONLY",
+            pit_backtest_eligible=False, knowledge_available_at=config["approved_at"], research_caveats=bound,
+            ttm_operand_provenance=[{"reporting_period": c["reporting_period"], "document_sha256": c["document_sha256"],
+                "proof_sha256": "1" * 64, "knowledge_available_at": config["approved_at"]} for c in bound])
+        features[fid] = feature
+    state = {"state": "ON", "config": config, "tickers": [ticker], "cutoff": "2026-11-28T15:00:00+07:00",
+        "caveats_by_ticker": {ticker: bound}, "features_by_ticker": {ticker: features}, "integrity_blocked": False}
+    return {"features": features}, state
+
+
+def test_b_off_exact_pre_b_valuation_materializer_and_ai_bytes(monkeypatch):
+    import copy, json, subprocess, types
+    from pathlib import Path
+    import canonical_daily_financial_v2_materialization as materializer
+    import stocklookup_core.valuation.current_research_valuation_context as valuation
+    import ai_research_session_delivery as delivery
+    root = Path(__file__).resolve().parents[1]
+    def module(name, content, file):
+        result = types.ModuleType(name)
+        result.__file__ = str(root / file)
+        exec(compile(content, file, "exec"), result.__dict__)
+        return result
+    archives = root / "tests/fixtures/dual_reader_ttm_valuation_b_v1_sources"
+    prior_valuation = module("b_prior_valuation", (archives / "stocklookup_core__valuation__current_research_valuation_context.py.txt").read_bytes(), "stocklookup_core/valuation/current_research_valuation_context.py")
+    prior_delivery = module("b_prior_delivery", (archives / "ai_research_session_delivery.py.txt").read_bytes(), "ai_research_session_delivery.py")
+    prior_materializer = module("b_prior_materializer", subprocess.check_output([
+        "git", "show", "1c3b1d1fd1c05186f6660f89085dcf2580f415fb:canonical_daily_financial_v2_materialization.py"], cwd=root), "canonical_daily_financial_v2_materialization.py")
+    prior_materializer.valuation_context = prior_valuation
+    for target in (materializer, prior_materializer):
+        monkeypatch.setattr(target, "_official_equity_overlay", lambda root: [])
+    import stocklookup_core.evidence.official_document_qualification as qualification
+    def forbidden(*args, **kwargs):
+        raise AssertionError("OFF read the landing root")
+    monkeypatch.setattr(qualification, "official_landing_root", forbidden)
+    engine = {"artifact_identity": "engine:fixture", "records": {"AAA": financial_analysis_record(
+        net_income=qualified_feature(400), revenue=qualified_feature(800))}}
+    before = copy.deepcopy(engine)
+    kwargs = dict(engine_artifact=engine, raw_valuation_artifact={"records": {"AAA": valuation_record(market_cap_metric(4000))}},
+        product_tickers=["AAA"], requested_at="2026-11-28T15:00:00+07:00", official_financial_facts=[])
+    current, prior = materializer.build_evaluated_valuation_artifact(**kwargs), prior_materializer.build_evaluated_valuation_artifact(**kwargs)
+    encode = lambda value: json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+    assert encode(current) == encode(prior)
+    assert engine == before
+    record = {"valuation_methods": current["records"]["AAA"]["methods"]}
+    assert encode(delivery.project_integrated_decision_for_ai_delivery(record, source_session="2026-11-28")) == encode(
+        prior_delivery.project_integrated_decision_for_ai_delivery(record, source_session="2026-11-28"))
+
+
+def test_b_nvl_ttm_numeric_lead_immutable_pb_closed_and_peer_isolated():
+    import copy
+    from stocklookup_core.evidence import dual_reader_transcription as dual
+    from stocklookup_core.research.ai_handoff_publication import _unsafe_pointer
+    from ai_research_session_delivery import _valuation_methods_for_delivery
+    financial, research = _b_research_case()
+    before = copy.deepcopy(financial)
+    raw = valuation_record(market_cap_metric(4000))
+    row = evaluate_ticker_valuation(ticker="NVL", feature_record=None, valuation_record=raw,
+        financial_analysis_record=financial, dual_reader_research_state=research,
+        official_financial_facts=[], decision_session="2026-11-28")
+    assert row["methods"][PE_TTM]["value"] == 10
+    assert row["methods"][PS_TTM]["value"] == 5
+    pb = row["methods"]["P/B_CURRENT_RESEARCH"]
+    assert pb["status"] == INPUT_BLOCKED
+    assert "SHARE_COUNT_EQUITY_CONSISTENCY_RISK_UNREGISTERED_CONVERSION" in pb["blocker_reason_codes"]
+    cohort = attach_peer_relative({str(i): copy.deepcopy(row) for i in range(6)})
+    for result in cohort.values():
+        for method_id in (PE_TTM, PS_TTM):
+            peer = result["peer_relative"][method_id]
+            assert peer["reason"] == "OFFLINE_RESEARCH_ONLY_PEER_ISOLATED"
+            assert peer["peer_count"] == 0 and peer["percentile"] is None
+        assert result["relative_research_state"] not in {"ATTRACTIVE_RELATIVE_RESEARCH", "EXPENSIVE_RELATIVE_RESEARCH"}
+    methods = _valuation_methods_for_delivery({"valuation_methods": row["methods"]}, source_session="2026-11-28")
+    assert PE_TTM in methods and PS_TTM in methods and _unsafe_pointer(methods) is None
+    assert any(c["verification_status"] == "LEAD" for c in methods[PE_TTM]["research_caveats"])
+    assert set(dual.RESEARCH_LIMITATIONS) <= set(methods[PE_TTM]["limitations"])
+    assert financial == before
+
+
+@pytest.mark.parametrize("missing", ["authority_effect", "evidence_tier", "pit_backtest_eligible", "knowledge_available_at",
+    "limitations", "share_basis_caveats", "research_caveats", "old_session", "absolute_path", "promoted_lead"])
+def test_b_ai_omits_incomplete_research_method(missing):
+    from ai_research_session_delivery import _valuation_methods_for_delivery
+    from stocklookup_core.evidence import dual_reader_transcription as dual
+    method = {"value": 5, "status": "RESEARCH_USABLE", "authority_effect": "OFFLINE_RESEARCH_ONLY",
+        "evidence_tier": dual.EVIDENCE_TIER, "pit_backtest_eligible": False,
+        "knowledge_available_at": "2026-11-27T01:00:00+07:00",
+        "limitations": [*dual.RESEARCH_LIMITATIONS, "SYNTHETIC_LEAD", "SHARE_BASIS_LAGGED_PROVIDER_ISSUED"],
+        "required_research_caveat_codes": ["SYNTHETIC_LEAD"],
+        "share_authority": "provider_reported_lagged", "share_basis_caveats": [{"code": "SHARE_BASIS_LAGGED_PROVIDER_ISSUED", "verification_status": "VERIFIED", "source_verification_status": "VERIFIED", "never_adjust_multiples": True}],
+        "research_caveats": [{"code": "SYNTHETIC_LEAD", "verification_status": "LEAD", "source_verification_status": "LEAD", "never_adjust_multiples": True}]}
+    session = "2026-11-28"
+    assert PE_TTM in _valuation_methods_for_delivery({"valuation_methods": {PE_TTM: method}}, source_session=session)
+    if missing == "old_session": session = "2026-10-13"
+    elif missing == "absolute_path": method["ttm_operand_provenance"] = [{"path": "C:/private/file"}]
+    elif missing == "promoted_lead": method["research_caveats"][0]["verification_status"] = "VERIFIED"
+    else: del method[missing]
+    assert PE_TTM not in _valuation_methods_for_delivery({"valuation_methods": {PE_TTM: method}}, source_session=session)
+
+
+def test_b_overlay_off_corrupt_on_unset_root_and_preapproval(monkeypatch, tmp_path):
+    from canonical_daily_financial_v2_materialization import _load_dual_reader_ttm_research_overlay as load
+    config = _b_config()
+    kwargs = dict(repo_root=tmp_path, decision_session="2026-11-28", product_tickers=["NVL", "POW"], official_financial_facts=[])
+    assert load(**kwargs, config=config)["state"] == "OFF"
+    assert load(**kwargs)["state"] == "CORRUPT_BLOCKED"
+    config["enabled"] = True
+    monkeypatch.delenv("STOCK_LOOKUP_RUNTIME_ROOT", raising=False)
+    blocked = load(**kwargs, config=config)
+    assert blocked["state"] == "INTEGRITY_BLOCKED" and "RUNTIME_ROOT_UNSET" in blocked["reason"]
+    kwargs["decision_session"] = "2026-11-25"
+    assert load(**kwargs, config=config)["state"] == "PRE_APPROVAL_CUTOFF"
+
+
 def evaluate(*, net_income=None, revenue=None, market_cap_value=8_000_000, cap_currency="VND",
             cap_scale="units", cap_monetary_basis=None):
     market_cap = market_cap_metric(market_cap_value, currency=cap_currency, scale=cap_scale,

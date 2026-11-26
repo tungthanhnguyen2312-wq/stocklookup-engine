@@ -18,6 +18,7 @@ from typing import Any, Mapping, Sequence
 
 from stocklookup_core.financial import monetary_basis_contract as basis_contract
 from stocklookup_core.financial import financial_analysis_engine_v2 as financial_engine
+from stocklookup_core.evidence import dual_reader_transcription as dual
 from stocklookup_core.valuation.market_wide_current_valuation_input_scaleout import RESEARCH_SHARE_AUTHORITIES, _applicability, _market_cap_monetary_basis
 from stocklookup_core.financial.operational_fundamental_context_integration import MAX_COMPLETED_QUARTER_LAG
 from stocklookup_core.evidence.temporal_freshness import UNAVAILABLE, completed_quarter_lag, separate_financial_clock
@@ -118,22 +119,32 @@ def _ttm_monetary_basis(*, currency: Any, scale: Any, feature_id: str, provider:
 
 def _qualified_ttm(feature_id: str, record: Mapping[str, Any] | None, context_identity: str | None) -> dict[str, Any] | None:
     feature = ((record or {}).get("features") or {}).get(feature_id) or {}
-    if feature.get("fitness") != "READY" or not _numeric(feature.get("value")):
+    research = (feature.get("evidence_tier") == dual.EVIDENCE_TIER or any(
+        p.get("evidence_tier") == dual.EVIDENCE_TIER for p in feature.get("provider_source_provenance") or []))
+    if not research and (feature.get("fitness") != "READY" or not _numeric(feature.get("value"))):
         return None
     lineage = list(feature.get("provider_source_provenance") or [])
     provider = lineage[0].get("provider") if lineage else None
     basis = _ttm_monetary_basis(currency=feature.get("currency"), scale=feature.get("scale"),
                                 feature_id=feature_id, provider=provider)
-    return {"status": "READY", "value": feature.get("value"), "method": feature.get("method"),
+    result = {"status": "READY" if feature.get("fitness") == "READY" else INPUT_BLOCKED,
+            "value": feature.get("value"), "method": feature.get("method"),
             "input_periods": list(feature.get("period_identity") or []), "compatibility_class": "QUALIFIED_FINANCIAL_ANALYSIS_V2",
             "blocker_reason_codes": list(feature.get("reason_codes") or []), "ttm_input_source": "NEW_QUALIFIED_TTM_SELECTED",
             "ttm_source_context_identity": context_identity, "ttm_feature_id": feature_id,
             "ttm_provider": provider, "ttm_currency": basis["currency"], "ttm_scale": basis["native_scale"],
             "ttm_fitness": feature.get("fitness"), "ttm_source_conflict": False, "ttm_monetary_basis": basis}
+    if research:
+        result.update({key: copy.deepcopy(feature[key]) for key in dual.RESEARCH_METHOD_FIELDS if key in feature})
+        result.update(compatibility_class=dual.RESEARCH_ONLY_COMPATIBILITY_CLASS,
+            authority_effect="OFFLINE_RESEARCH_ONLY", evidence_tier=dual.EVIDENCE_TIER, pit_backtest_eligible=False)
+    return result
 
 
 def _select_ttm(*, old: Mapping[str, Any], qualified: Mapping[str, Any] | None) -> dict[str, Any]:
     old_ready = old.get("status") in READY_STATUSES and _numeric(old.get("value"))
+    if qualified and qualified.get("compatibility_class") == dual.RESEARCH_ONLY_COMPATIBILITY_CLASS and old_ready:
+        return _select_ttm(old=old, qualified=None)
     if qualified:
         conflict = old_ready and float(old["value"]) != float(qualified["value"])
         result = dict(qualified)
@@ -284,6 +295,8 @@ def _ttm_method(*, method_id: str, metric: str, ttm: Mapping[str, Any], market_c
         "ttm_monetary_basis": ttm.get("ttm_monetary_basis"),
         "market_cap_monetary_basis": _market_cap_basis_envelope(market_cap),
     }
+    if ttm.get("compatibility_class") == dual.RESEARCH_ONLY_COMPATIBILITY_CLASS:
+        extra.update({key: copy.deepcopy(ttm[key]) for key in dual.RESEARCH_METHOD_FIELDS if key in ttm})
     if applicability == NOT_APPLICABLE:
         return _method_shell(method_id, applicability=applicability, status=NOT_APPLICABLE,
                              blockers=["SECTOR_ENTITY_METHOD_NOT_SUPPORTED"], extra=extra)
@@ -878,7 +891,8 @@ def evaluate_ticker_valuation(*, ticker: str, feature_record: Mapping[str, Any] 
                               official_financial_facts: Sequence[Mapping[str, Any]] | None = None,
                               earnings_quality: Mapping[str, Any] | None = None,
                               corporate_action_lifecycle: str | None = None,
-                              denominator_observations: Sequence[Mapping[str, Any]] | None = None) -> dict[str, Any]:
+                              denominator_observations: Sequence[Mapping[str, Any]] | None = None,
+                              dual_reader_research_state: Mapping[str, Any] | None = None) -> dict[str, Any]:
     entity, entity_detail = _entity(feature_record, valuation_record, entity_applicability)
     share = (valuation_record or {}).get("share_basis_input") or {}
     share_class = share_basis_class(share)
@@ -967,6 +981,10 @@ def evaluate_ticker_valuation(*, ticker: str, feature_record: Mapping[str, Any] 
     methods.update(_official_reported_period_methods(ticker=ticker, entity=entity, share_class=share_class,
         market_cap=market_cap, decision_session=decision_session, valuation_record=valuation_record,
         facts=official_financial_facts))
+    if dual_reader_research_state and dual_reader_research_state.get("state") != "CORRUPT_BLOCKED":
+        _apply_dual_reader_research_gates(methods, ticker=ticker, share=share,
+            valuation_record=valuation_record or {}, financial_analysis_record=financial_analysis_record or {},
+            research=dual_reader_research_state, decision_session=decision_session)
     readiness_reconciliation = _calculation_readiness_reconciliation(methods, calculation_readiness_record)
     from stocklookup_core.valuation.current_valuation_denominator_integrity import diagnose_methods
     denominator_integrity = diagnose_methods(_denominator_integrity_observations(
@@ -1040,7 +1058,76 @@ def _scope_blocks_peers(method: Mapping[str, Any]) -> bool:
     return "statement_scope" in method and method.get("statement_scope") in UNPROVEN_STATEMENT_SCOPES
 
 
+def _research_peer_isolated(method: Mapping[str, Any]) -> bool:
+    codes = [c.get("code") if isinstance(c, Mapping) else c for c in method.get("research_caveats") or []]
+    return (method.get("ttm_compatibility_class") == dual.RESEARCH_ONLY_COMPATIBILITY_CLASS
+        or method.get("authority_effect") == "OFFLINE_RESEARCH_ONLY"
+        or method.get("evidence_tier") == dual.EVIDENCE_TIER
+        or "SHARE_COUNT_EQUITY_CONSISTENCY_RISK_UNREGISTERED_CONVERSION" in
+            [*(method.get("limitations") or []), *codes])
+
+
+def _apply_dual_reader_research_gates(methods, *, ticker, share, valuation_record,
+        financial_analysis_record, research, decision_session):
+    config = research.get("config")
+    if not config:
+        return
+    cutoff = research.get("cutoff")
+    affected = ticker in research.get("tickers", [])
+    bound = (research.get("caveats_by_ticker") or {}).get(ticker, [])
+    price = valuation_record.get("price_input") or {}
+    price_session = price.get("session") or price.get("session_date") or price.get("price_session")
+    price_blocked = bool(price_session and decision_session and str(price_session)[:10] > decision_session)
+    for method_id, method in methods.items():
+        is_ttm = method_id in {PE_TTM, PS_TTM}
+        feature_id = "attributable_net_income_ttm" if method_id == PE_TTM else "revenue_ttm"
+        feature = (financial_analysis_record.get("features") or {}).get(feature_id) or {}
+        research_ttm = is_ttm and (method.get("ttm_compatibility_class") == dual.RESEARCH_ONLY_COMPATIBILITY_CLASS
+            or (affected and (research.get("integrity_blocked") or feature.get("fitness") != "READY")))
+        # A verified ordinary READY provider feature retains baseline precedence.
+        if is_ttm and feature.get("fitness") == "READY" and feature.get("evidence_tier") != dual.EVIDENCE_TIER:
+            research_ttm = False
+        reported = method_id in REPORTED_PERIOD_METHODS
+        operands = ([method.get("source_fact") or {}] if reported else [
+            {"reporting_period": p.get("reporting_period"),
+             "document_sha256": p.get("source_sha256") or p.get("document_sha256")}
+            for p in feature.get("provider_source_provenance") or []] if is_ttm else [])
+        method_caveats = dual.bind_sha_caveats(ticker=ticker, operands=operands, config=config, cutoff=cutoff)
+        if research_ttm:
+            method_caveats = method.get("research_caveats") or bound
+        is_pb = method_id == PB_CURRENT_RESEARCH and affected
+        if not (research_ttm or is_pb or method_caveats):
+            continue
+        if is_pb:
+            method_caveats = bound
+        gate = dual.evaluate_share_basis_caveat_gate(ticker=ticker, share_basis_input=share,
+            bound_caveats=method_caveats, config=config, cutoff=cutoff)
+        method.update(research_caveats=copy.deepcopy(method_caveats), **{key: gate[key] for key in
+            ("share_basis_caveats", "share_authority", "share_observation_date", "share_observation_lag_days")})
+        labels = [c["code"] for c in [*method_caveats, *gate["share_basis_caveats"]]]
+        method["limitations"] = sorted(set(method.get("limitations") or []) | set(labels))
+        blockers = gate["pb_blockers"] if is_pb else gate["ttm_blockers"]
+        if price_blocked:
+            blockers = [*blockers, "PRICE_AFTER_KNOWLEDGE_CUTOFF"]
+        if research_ttm:
+            method.update(authority_effect="OFFLINE_RESEARCH_ONLY", evidence_tier=dual.EVIDENCE_TIER,
+                pit_backtest_eligible=False, ttm_compatibility_class=dual.RESEARCH_ONLY_COMPATIBILITY_CLASS,
+                required_research_caveat_codes=sorted({c["code"] for c in method_caveats}))
+            method["limitations"] = sorted(set(method["limitations"]) | set(dual.RESEARCH_LIMITATIONS))
+            if research.get("integrity_blocked"):
+                blockers = [*blockers, research.get("reason") or "DUAL_READER_TTM_RESEARCH_INTEGRITY_BLOCKED"]
+            elif ticker in research.get("excluded_tickers", []):
+                blockers = [*blockers, "APPROVAL_AFTER_KNOWLEDGE_CUTOFF"]
+            elif feature.get("fitness") != "READY":
+                blockers = [*blockers, *(feature.get("reason_codes") or ["DUAL_READER_TTM_OPERANDS_UNAVAILABLE"])]
+        if blockers:
+            method.update(status=INPUT_BLOCKED, value=None,
+                blocker_reason_codes=sorted(set(method.get("blocker_reason_codes") or []) | set(blockers)))
+
+
 def _peer_key(row: Mapping[str, Any], method: Mapping[str, Any]) -> tuple[Any, ...] | None:
+    if _research_peer_isolated(method):
+        return None
     if method.get("method_id") == "P/E_TOTAL_INCLUDING_NCI":
         return None
     if method.get("status") not in {"RESEARCH_USABLE", "READY"} or not _numeric(method.get("value")):
@@ -1049,7 +1136,7 @@ def _peer_key(row: Mapping[str, Any], method: Mapping[str, Any]) -> tuple[Any, .
         return None
     periods = tuple(method.get("input_periods") or [])
     latest = periods[-1] if periods else method.get("period_basis")
-    return (
+    key = (
         method["method_id"],
         row.get("entity_class"),
         method.get("share_basis"),
@@ -1058,6 +1145,7 @@ def _peer_key(row: Mapping[str, Any], method: Mapping[str, Any]) -> tuple[Any, .
         latest,
         method.get("earnings_attribution") if method["method_id"] in {PE_TTM, PE_EXISTING} else None,
     )
+    return (*key, method["share_authority"]) if method.get("share_authority") else key
 
 
 def _peer_pool(values: list[float]) -> tuple[list[float], float | None, bool]:
@@ -1103,7 +1191,8 @@ def attach_peer_relative(rows: Mapping[str, Mapping[str, Any]], *,
             if key is None:
                 relatives[method_id] = {
                     "status": "NOT_COMPARABLE",
-                    "reason": (method.get("status") if method.get("status") != "RESEARCH_USABLE"
+                    "reason": ("OFFLINE_RESEARCH_ONLY_PEER_ISOLATED" if _research_peer_isolated(method)
+                               else method.get("status") if method.get("status") != "RESEARCH_USABLE"
                                else SCOPE_NOT_PEER_COMPARABLE if _scope_blocks_peers(method)
                                else "INCOMPATIBLE_OR_UNAVAILABLE_BASIS"),
                     "peer_count": 0, "peer_median": None, "percentile": None,
@@ -1456,6 +1545,8 @@ def valuation_axis(*, ticker: str, decision_session: str, valuation_artifact: Ma
             "statement_scope": method.get("statement_scope"),
             "limitations": method.get("limitations"),
             **({key: method[key] for key in ("monetary_basis",) if key in method and method[key] is not None}),
+            **({key: copy.deepcopy(method[key]) for key in dual.RESEARCH_METHOD_FIELDS if key in method}
+               if "research_caveats" in method or _research_peer_isolated(method) else {}),
             "peer_relative": (row.get("peer_relative") or {}).get(method_id),
             "availability_state": method_availability_state(method, (row.get("peer_relative") or {}).get(method_id)),
             **({key: method[key] for key in (
