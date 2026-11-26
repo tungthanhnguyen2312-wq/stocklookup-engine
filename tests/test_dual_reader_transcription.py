@@ -77,7 +77,8 @@ def _pdf(text, *, image_only=False):
     return output + b'trailer\n<< /Size ' + str(len(objects) + 1).encode() + b' /Root 1 0 R >>\nstartxref\n' + str(xref).encode() + b'\n%%EOF\n'
 
 
-def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income", *, image_only=False):
+def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income", *, image_only=False,
+             native_text_override=None):
     from official_financial_assurance_evidence import resolve_native_document_assurance
     from official_financial_period_identity import period_bounds
     from official_source_registry import load_registry
@@ -96,7 +97,8 @@ def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_inc
         "BAO CAO SOAT XET hop dong dich vu soat xet so 2410 hop nhat giua nien do")
     issuer = "PNJ synthetic fixture"
     native_text = '\n'.join([issuer, period_text, assurance_title, "consolidated", "Unit: VND"])
-    payload = _pdf(native_text, image_only=image_only); sha = _sha(payload)
+    payload = _pdf(native_text if native_text_override is None else native_text_override,
+                   image_only=image_only); sha = _sha(payload)
     (directory / 'fixture.pdf').write_bytes(payload)
     label = GENERIC_METRIC_RULES[metric]["source_label"]
     label = ''.join(c for c in unicodedata.normalize('NFD', label.replace('đ', 'd').replace('Đ', 'D')) if not unicodedata.combining(c))
@@ -863,6 +865,99 @@ def _seal_ocr_pages(row, proof, pages):
     body = {key: value for key, value in proof.items() if key != 'proof_sha256'}
     proof['proof_sha256'] = _sha(ocr.canonical_json(body).encode('utf-8'))
     row['ocr_layout_proof']['proof_sha256'] = proof['proof_sha256']
+
+
+@pytest.mark.parametrize('metric', ['revenue', 'attributable_net_income'])
+@pytest.mark.parametrize('case', ['ready', 'cutoff', 'wrong_root', 'pdf_hash', 'row_value',
+                                  'missing_operand', 'native_proof_hash'])
+def test_dual_h1_engine_replays_zero_native_proof_only_with_registered_builder(tmp_path, monkeypatch, metric, case):
+    from official_financial_pdf_page_evidence import build_artifact
+    from stocklookup_core.evidence import official_document_qualification as owner
+    from stocklookup_core.evidence import official_ocr_layout_proof as ocr
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    from stocklookup_core.valuation import current_research_valuation_context as valuation
+
+    rows, directories = [], []
+    for period, value in [('2025', 100), ('2026-H1', 60), ('2025-H1', 40)]:
+        row, context, directory, _ = _fixture(
+            tmp_path, period, value, metric, native_text_override='unusable native text layer ' + period)
+        proof = _ocr_page_proof(monkeypatch, row)
+        _seal_ocr_pages(row, proof, context['document_pages'])
+        source = context['source_record']
+        native = build_artifact(document={**source, 'entity_type': 'corporate',
+            'official_url': source['canonical_url'], 'retrieved_at': source['observed_at']},
+            path=directory / 'fixture.pdf')
+        assert not native['fact_candidates'] and not native['p3f13_panel_facts']
+        proof['pages']['1']['native_failure_evidence'] = {
+            'document_sha256': row['document_sha256'], 'candidate_count': 0,
+            'trigger': 'EXPLICIT_OPT_IN_AFTER_NATIVE_ZERO_CANDIDATES',
+            'native_artifact_identity': native['artifact_identity'],
+            'native_page_text_sha256': {str(p['page_number']): owner._native_page_text_sha256(p['page_text'])
+                                        for p in native['page_evidence']}}
+        if case == 'native_proof_hash' and period == '2026-H1':
+            proof['pages']['1']['native_failure_evidence']['native_artifact_identity'] = 'tampered'
+        proof['proof_sha256'] = _sha(ocr.canonical_json(
+            {k: v for k, v in proof.items() if k != 'proof_sha256'}).encode('utf8'))
+        row['ocr_layout_proof']['proof_sha256'] = proof['proof_sha256']
+        target = directory / row['ocr_layout_proof']['relative_path']
+        target.parent.mkdir(exist_ok=True)
+        target.write_bytes(_bytes(proof))
+        rows.append(row)
+        directories.append(directory)
+
+    # Reproduce a fresh engine process, even if other tests imported the OCR runner.
+    monkeypatch.setattr(owner, '_NATIVE_ARTIFACT_BUILDER', None)
+    monkeypatch.setattr(owner, 'load_registry', lambda: context['registry'])
+    controls = []
+    for keep_ocr in (True, False):
+        control = deepcopy(rows[0])
+        control.pop('dual_reader_transcription')
+        if not keep_ocr:
+            control.pop('ocr_layout_proof')
+        controls.append((control, owner.admit_retained_financial_fact(control, evidence_root=tmp_path)))
+    if case == 'ready':
+        # Same row, bytes and cutoff: only supplying the existing builder differs.
+        assert owner.admit_retained_financial_fact(rows[0], evidence_root=tmp_path)['state'] == 'BLOCKED'
+        assert owner.admit_retained_financial_fact(rows[0], evidence_root=tmp_path,
+            native_artifact_builder=build_artifact)['state'] == 'ADMITTED'
+    cutoff = '2026-11-24T09:02:00+00:00' if case == 'cutoff' else '2026-11-24T09:04:00+00:00'
+    root = tmp_path / 'absent' if case == 'wrong_root' else tmp_path
+    if case == 'pdf_hash':
+        with (directories[1] / 'fixture.pdf').open('ab') as stream:
+            stream.write(b'\n% tampered retained bytes\n')
+    elif case == 'row_value':
+        rows[1]['normalized_value'] += 1
+    elif case == 'missing_operand':
+        rows.pop(1)
+    before = deepcopy(rows)
+    fid = metric + '_ttm'
+    # Core never imports the root builder: without the composition root's registration the
+    # engine fails closed on the zero-native-candidate replay.
+    unregistered = official_h1_ttm_features(ticker='PNJ', rows=rows, cutoff=cutoff, evidence_root=root)
+    assert unregistered[fid]['fitness'] == 'BLOCKED_BY_EVIDENCE' and unregistered[fid]['value'] is None
+    # The composition root (admission runner, Daily) registers the existing builder by importing
+    # official_financial_ocr_table_evidence; reproduce exactly that registration.
+    monkeypatch.setattr(owner, '_NATIVE_ARTIFACT_BUILDER', build_artifact)
+    features = official_h1_ttm_features(ticker='PNJ', rows=rows, cutoff=cutoff, evidence_root=root)
+    feature = features[fid]
+    assert rows == before
+    monkeypatch.setattr(owner, '_NATIVE_ARTIFACT_BUILDER', None)
+    for control, original in controls:
+        assert owner.admit_retained_financial_fact(control, evidence_root=tmp_path) == original
+    selected = valuation._qualified_ttm(fid, {'features': features}, 'SYNTHETIC_DUAL_REPLAY')
+    if case == 'ready':
+        assert feature['fitness'] == 'READY' and feature['value'] == 120, feature
+        assert selected['value'] == 120
+        method = valuation._ttm_method(method_id='P/S_TTM' if metric == 'revenue' else 'P/E_TTM',
+            metric=fid, ttm=selected, market_cap={'status': 'RESEARCH_USABLE', 'value': 1200,
+                'currency': 'VND', 'scale': 'units'},
+            share_class=valuation.share_basis_class({'research_proxy_eligible': True}),
+            entity='corporate', earnings_state=None)
+        assert method['value'] == 10, method
+        assert method['status'] == 'RESEARCH_USABLE', method
+    else:
+        assert feature['fitness'] == 'BLOCKED_BY_EVIDENCE' and feature['value'] is None, feature
+        assert selected is None
 
 
 @pytest.mark.parametrize('period', ['2025-H1', '2026-H1'])

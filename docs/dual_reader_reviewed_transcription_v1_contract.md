@@ -302,3 +302,18 @@ outside the verifier's existing current-header allowlist; period/header authorit
 is not expanded by these literal-comparison changes. No real admissions or new
 TTM ratios are claimed here. FPT scope change, PVD currency, period changes,
 restatements and corporate actions retain their separate gates (condition 8).
+
+## H1 engine retained replay parity (HL-20261126-CDX-23)
+
+`official_h1_ttm_features` (core) never imports the root native PDF builder
+(architecture ratchet). Retained replay of a dual-reader fact whose native text
+layer yielded zero candidates needs that builder; it is supplied only by the
+composition root importing `official_financial_ocr_table_evidence`, which
+registers it via `register_native_artifact_builder` (the admission runner and
+Daily already do). Without registration the engine fails closed. With it, the
+common retained loader still verifies the zero-candidate artifact identity,
+native page hashes and OCR proof identity before using retained OCR text. No
+verifier, row-claim shortcut or qualification waiver is added. Cutoff, source
+bytes, exact dual-reader agreement, assurance and all three TTM operand gates
+continue to apply. Real POW/NVL replay (later-known, OFFLINE_RESEARCH_ONLY) is
+recorded outside this contract.
