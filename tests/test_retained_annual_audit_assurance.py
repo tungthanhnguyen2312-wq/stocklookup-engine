@@ -196,3 +196,64 @@ def test_vsre_citation_split_by_ocr_artifact_requires_both_exact_literals():
                    split.replace("Vietnamese Standards on Review Engagements", "Vietnamese Standards on Audit Engagements"),
                    split.replace("Vietnamese Standards on Review Engagements el ", "")):
         assert resolve_document_assurance_evidence(_materialization(broken))["state"] == "BLOCKED", broken
+
+
+# Exact E6 source conservation is separate from the E5 frozen-source manifest.
+def _assurance_transition_fixture(tmp_path):
+    from tools import verify_retention_reader_transition as transition
+
+    root = Path(__file__).resolve().parents[1]
+    spec = json.loads((root / transition.OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_MANIFEST).read_bytes())
+    for relative in (transition.OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_MANIFEST,
+                     spec["source_path"], spec["archive"]):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((root / relative).read_bytes())
+    return transition, spec
+
+
+def test_assurance_source_transition_binds_exact_e6_baseline(tmp_path):
+    import subprocess
+
+    transition, spec = _assurance_transition_fixture(tmp_path)
+    root = Path(__file__).resolve().parents[1]
+    prior = transition.historical_bytes(tmp_path, spec["source_path"])
+    baseline = subprocess.check_output(
+        ["git", "show", f"{spec['base_commit']}:{spec['source_path']}"], cwd=root).replace(b"\r\n", b"\n")
+    active = (tmp_path / spec["source_path"]).read_bytes().replace(b"\r\n", b"\n")
+    assert prior == baseline == (tmp_path / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    assert hashlib.sha256(prior).hexdigest() == spec["prior_sha256_lf"]
+    assert hashlib.sha256(active).hexdigest() == spec["active_sha256_lf"]
+    assert prior != active
+    assert transition._official_financial_assurance_evidence_prior_bytes(tmp_path, "other.py", active) == active
+
+
+def test_assurance_source_transition_rejects_tampered_archive(tmp_path):
+    transition, spec = _assurance_transition_fixture(tmp_path)
+    archive = tmp_path / spec["archive"]
+    archive.write_bytes(archive.read_bytes() + b" ")
+    with pytest.raises(ValueError, match="^OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE_TRANSITION_BINDING_INVALID$"):
+        transition.historical_bytes(tmp_path, spec["source_path"])
+
+
+def test_assurance_source_transition_rejects_tampered_spec(tmp_path):
+    transition, spec = _assurance_transition_fixture(tmp_path)
+    manifest = tmp_path / transition.OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_MANIFEST
+    # Every field, missing fields, and added fields must fail the exact dict binding.
+    altered_specs = [dict(spec, **{key: "tampered"}) for key in spec]
+    altered_specs += [{key: value for key, value in spec.items() if key != omitted} for omitted in spec]
+    altered_specs.append(dict(spec, unexpected="tampered"))
+    for altered in altered_specs:
+        manifest.write_text(json.dumps(altered), encoding="utf-8")
+        with pytest.raises(ValueError, match="^OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE_TRANSITION_SCOPE_INVALID$"):
+            transition.historical_bytes(tmp_path, spec["source_path"])
+
+
+def test_assurance_source_transition_rejects_tampered_active(tmp_path):
+    transition, spec = _assurance_transition_fixture(tmp_path)
+    source = tmp_path / spec["source_path"]
+    active = source.read_bytes()
+    for altered in (active + b" ", (tmp_path / spec["archive"]).read_bytes()):
+        source.write_bytes(altered)
+        with pytest.raises(ValueError, match="^OFFICIAL_FINANCIAL_ASSURANCE_EVIDENCE_SOURCE_TRANSITION_BINDING_INVALID$"):
+            transition.historical_bytes(tmp_path, spec["source_path"])
