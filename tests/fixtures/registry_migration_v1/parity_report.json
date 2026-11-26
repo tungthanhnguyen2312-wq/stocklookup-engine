@@ -1,0 +1,2459 @@
+{
+  "schema_version": 1,
+  "base_commit": "74017553c7a17c33a5464ec735f3700df669bbd5",
+  "synthetic_admission_evidence": false,
+  "specs": {
+    "HPG-2025-H1-P10": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "685bea63824eb96fa9a6ba25c6aea3e61270bd876ffd72dbd7336c92c328c0cc",
+        "document": "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9",
+        "original_seal": "68d5d9de5f31db506c43454b615e00508cde3e45c37f7a35c52cb4e8dae9ebb3",
+        "document_evidence": "83e2dc170f4a8d6c579661fe362932e35b83025054ea96eec3ae275632da1f7c",
+        "ocr_proof": "b97aa6ec58f07fdde575496cdccfeaac286344c348bf5a6918bf2a2fe4d4e215",
+        "reader_input_0": "d9369a945cbdb3a7e560bb6b7d45dc3fc8fc9d31e7a477ca52ac6659ca98d436",
+        "reader_input_1": "7320ae048b38d69af6819b294cba7074bacdecff66e6bd73c6790efa6172e581",
+        "reader_input_2": "e1d4c6f24d88c1ec5a075471fbebc1ea32703b58ed18943cf125c7a37ba52425",
+        "reader_input_3": "c01e96e59da90293177d7991b1ef2c0014bed6edb3d1549f81329d4f95f2a379"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-24T21:46:10+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "83e2dc170f4a8d6c579661fe362932e35b83025054ea96eec3ae275632da1f7c",
+          "documents/HPG/2025-H1/reviewed_interim_financial_statements/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9.pdf": "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9",
+          "dual-reader-transcriptions/hpg-2025h1-p10/agreement.proof.json": "68d5d9de5f31db506c43454b615e00508cde3e45c37f7a35c52cb4e8dae9ebb3",
+          "dual-reader-transcriptions/hpg-2025h1-p10/claude-reader.raw.json": "e1d4c6f24d88c1ec5a075471fbebc1ea32703b58ed18943cf125c7a37ba52425",
+          "dual-reader-transcriptions/hpg-2025h1-p10/gemini-reader.raw.json": "c01e96e59da90293177d7991b1ef2c0014bed6edb3d1549f81329d4f95f2a379",
+          "dual-reader-transcriptions/hpg-2025h1-p10/page-10.png": "d9369a945cbdb3a7e560bb6b7d45dc3fc8fc9d31e7a477ca52ac6659ca98d436",
+          "dual-reader-transcriptions/hpg-2025h1-p10/page-10.render-meta.json": "7320ae048b38d69af6819b294cba7074bacdecff66e6bd73c6790efa6172e581",
+          "ocr-layout-proofs/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9/48c609bd76d086b22edce4850265876773086c17f4110b4376eb5e19d6fa61f7.json": "b97aa6ec58f07fdde575496cdccfeaac286344c348bf5a6918bf2a2fe4d4e215",
+          "official_document_acquisition_manifest.json": "e8c635209fb2d9f8d26e7292549a0ac5e4739f1ef59e584abbda280f3bb24979"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-24T21:46:10+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "83e7adb281cca9a077d2cb94512361d7d451672903d1813f11ea55de0193838f",
+              "canonical_metric": "revenue",
+              "citation_id": "d401cb44f6918503516afb9a731b375b9cdccd958bd296baf0f22938711d323d",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "5c38aef9982b69250f5003a27af10ddf0c271d9f4914e65d3e9882ae3103d548",
+              "line_code": "10",
+              "normalized_value": 73532193664787,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "8b8f34ea209787016b5070668f3cd1a2c2bb042c71f59f2e050df8381d94dadf",
+              "canonical_metric": "net_income",
+              "citation_id": "0320b09a1c904c4c8739546672bb198c66559bf316d36da007789f5235aa7627",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "4f47977cfa31a3d9c98ecd144985b73c9a81d4e7b1bd11a60a58fac0c49e6763",
+              "line_code": "60",
+              "normalized_value": 7614329521616,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "fc2c304ab13ac61f08b2a3aafb40411306f06458f46cdf3a3bf5a6267791547a",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "ae7cafc078497e0ae542368bbbf35c3654ef36dfcc324b6ccde07da99a92577b",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "7deba78c92c59d7723c2403aea01279b1806d8ae8d5558e93d6525b22c954361",
+              "line_code": "61",
+              "normalized_value": 7600771906152,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-24T21:33:00+07:00",
+          "document_sha256": "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9",
+          "evidence_subdir": "h1-2025-dual-reader-hpg-20261124",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HPG/2025-H1/reviewed_interim_financial_statements/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9.pdf": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/page-10.png": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/page-10.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9/48c609bd76d086b22edce4850265876773086c17f4110b4376eb5e19d6fa61f7.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-24T21:46:10+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "68d5d9de5f31db506c43454b615e00508cde3e45c37f7a35c52cb4e8dae9ebb3",
+            "relative_path": "dual-reader-transcriptions/hpg-2025h1-p10/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "e1d4c6f24d88c1ec5a075471fbebc1ea32703b58ed18943cf125c7a37ba52425",
+            "c01e96e59da90293177d7991b1ef2c0014bed6edb3d1549f81329d4f95f2a379"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "HPG",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "83e2dc170f4a8d6c579661fe362932e35b83025054ea96eec3ae275632da1f7c",
+          "documents/HPG/2025-H1/reviewed_interim_financial_statements/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9.pdf": "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9",
+          "dual-reader-transcriptions/hpg-2025h1-p10/agreement.proof.json": "68d5d9de5f31db506c43454b615e00508cde3e45c37f7a35c52cb4e8dae9ebb3",
+          "dual-reader-transcriptions/hpg-2025h1-p10/claude-reader.raw.json": "e1d4c6f24d88c1ec5a075471fbebc1ea32703b58ed18943cf125c7a37ba52425",
+          "dual-reader-transcriptions/hpg-2025h1-p10/gemini-reader.raw.json": "c01e96e59da90293177d7991b1ef2c0014bed6edb3d1549f81329d4f95f2a379",
+          "dual-reader-transcriptions/hpg-2025h1-p10/page-10.png": "d9369a945cbdb3a7e560bb6b7d45dc3fc8fc9d31e7a477ca52ac6659ca98d436",
+          "dual-reader-transcriptions/hpg-2025h1-p10/page-10.render-meta.json": "7320ae048b38d69af6819b294cba7074bacdecff66e6bd73c6790efa6172e581",
+          "ocr-layout-proofs/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9/48c609bd76d086b22edce4850265876773086c17f4110b4376eb5e19d6fa61f7.json": "b97aa6ec58f07fdde575496cdccfeaac286344c348bf5a6918bf2a2fe4d4e215",
+          "official_document_acquisition_manifest.json": "e8c635209fb2d9f8d26e7292549a0ac5e4739f1ef59e584abbda280f3bb24979"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-24T21:46:10+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "83e7adb281cca9a077d2cb94512361d7d451672903d1813f11ea55de0193838f",
+              "canonical_metric": "revenue",
+              "citation_id": "d401cb44f6918503516afb9a731b375b9cdccd958bd296baf0f22938711d323d",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "5c38aef9982b69250f5003a27af10ddf0c271d9f4914e65d3e9882ae3103d548",
+              "line_code": "10",
+              "normalized_value": 73532193664787,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "8b8f34ea209787016b5070668f3cd1a2c2bb042c71f59f2e050df8381d94dadf",
+              "canonical_metric": "net_income",
+              "citation_id": "0320b09a1c904c4c8739546672bb198c66559bf316d36da007789f5235aa7627",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "4f47977cfa31a3d9c98ecd144985b73c9a81d4e7b1bd11a60a58fac0c49e6763",
+              "line_code": "60",
+              "normalized_value": 7614329521616,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "fc2c304ab13ac61f08b2a3aafb40411306f06458f46cdf3a3bf5a6267791547a",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "ae7cafc078497e0ae542368bbbf35c3654ef36dfcc324b6ccde07da99a92577b",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "7deba78c92c59d7723c2403aea01279b1806d8ae8d5558e93d6525b22c954361",
+              "line_code": "61",
+              "normalized_value": 7600771906152,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-24T21:33:00+07:00",
+          "document_sha256": "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9",
+          "evidence_subdir": "h1-2025-dual-reader-hpg-20261124",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HPG/2025-H1/reviewed_interim_financial_statements/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9.pdf": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/page-10.png": "CREATED",
+            "dual-reader-transcriptions/hpg-2025h1-p10/page-10.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9/48c609bd76d086b22edce4850265876773086c17f4110b4376eb5e19d6fa61f7.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-24T21:46:10+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "68d5d9de5f31db506c43454b615e00508cde3e45c37f7a35c52cb4e8dae9ebb3",
+            "relative_path": "dual-reader-transcriptions/hpg-2025h1-p10/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "e1d4c6f24d88c1ec5a075471fbebc1ea32703b58ed18943cf125c7a37ba52425",
+            "c01e96e59da90293177d7991b1ef2c0014bed6edb3d1549f81329d4f95f2a379"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "HPG",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "PNJ-2025-P10": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "97189741aaa759bdd2cbc20bcf7b7076f265aca2db91ab36d88db0c621e9009b",
+        "document": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+        "original_seal": "39c8dfde5084058312dc456298b7a63698820d323d79f2b6bfbaeafc34964f11",
+        "document_evidence": "5a8f798b1e0bdbfdc2ca8fc784febe7eb7dcb74b305cdeaf9271f30c43892dd9",
+        "ocr_proof": "d68586e95c5dd1cfdc9099a2b970f9cb9029ef2fe27d021fe52a8798962c2142",
+        "reader_input_0": "4df1be5fb096b9745126885f93bb063aba82c349f58a35c2b15cd56ba41e53d1",
+        "reader_input_1": "10726720c371a30ac5b3fd1c93a8ca8996403d6a936eb2217d55e2ca2a49264d",
+        "reader_input_2": "3ccd1bac1968c3a47c9d54c13e481006b02a340cef754b7c89a0beb847f2fa08",
+        "reader_input_3": "47593dd4bc246f26fb48aa7c2a135d40d6bf141638493154148035253025cb4b"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-24T22:23:57+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "5a8f798b1e0bdbfdc2ca8fc784febe7eb7dcb74b305cdeaf9271f30c43892dd9",
+          "documents/PNJ/2025/audited_annual_financial_statements/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d.pdf": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+          "dual-reader-transcriptions/pnj-fy2025-p10/agreement.proof.json": "39c8dfde5084058312dc456298b7a63698820d323d79f2b6bfbaeafc34964f11",
+          "dual-reader-transcriptions/pnj-fy2025-p10/claude-reader.raw.json": "3ccd1bac1968c3a47c9d54c13e481006b02a340cef754b7c89a0beb847f2fa08",
+          "dual-reader-transcriptions/pnj-fy2025-p10/gemini-reader.raw.json": "47593dd4bc246f26fb48aa7c2a135d40d6bf141638493154148035253025cb4b",
+          "dual-reader-transcriptions/pnj-fy2025-p10/page-10.png": "4df1be5fb096b9745126885f93bb063aba82c349f58a35c2b15cd56ba41e53d1",
+          "dual-reader-transcriptions/pnj-fy2025-p10/page-10.render-meta.json": "10726720c371a30ac5b3fd1c93a8ca8996403d6a936eb2217d55e2ca2a49264d",
+          "ocr-layout-proofs/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d/7e994b1286a5b21579ee91f312b3e929a5f48016d433e27d5225ecdfe7943f4e.json": "d68586e95c5dd1cfdc9099a2b970f9cb9029ef2fe27d021fe52a8798962c2142",
+          "official_document_acquisition_manifest.json": "80667570d0aa1615158154b95777d26a7bb1ed56f42ae74580d6200a1a27b664"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-24T22:23:57+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "0a4915872358e07f4b08ada2b81e8cec1d798c2f2314c533727d8964f285dda2",
+              "canonical_metric": "revenue",
+              "citation_id": "a4d39e9651fb1e1a00f20ab3719e332f923f9dd1c039db1a3506826bebb303ad",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "215f1d4c2c1dffc6d8f344b244d1512458ca7ad98703fb31aae7c8c248be7d68",
+              "line_code": "10",
+              "normalized_value": 34976042929392,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "bf1be57fa1636c34ac0513a464492549c1c3d56bf508126c935a54a4b706c6e9",
+              "canonical_metric": "net_income",
+              "citation_id": "ccd941930263a3ad0a863cda216198482dde84e38a6e2d404093b9fe5008796e",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "90ff856712edf3b40c7e460f259a1c2be90733495235a673975f8727fa48f9aa",
+              "line_code": "60",
+              "normalized_value": 2828497462890,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7ea4ea1d97329ffb3de13146f3971abe9a6cdb76e73f611c3a4b1cecb628c561",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "92f1d95979fd2fad29fb7eea1c9ca4ec31fdfc1eafb45d716236668a313364c4",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "3689c2ead25b270a85dae42c0a4c2d6e15ef8a37d6ff84448dffc17e8c56757a",
+              "line_code": "61",
+              "normalized_value": 2828497462890,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-24T21:55:24+07:00",
+          "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+          "evidence_subdir": "fy2025-dual-reader-pnj-20261124",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/PNJ/2025/audited_annual_financial_statements/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d.pdf": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/page-10.png": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/page-10.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d/7e994b1286a5b21579ee91f312b3e929a5f48016d433e27d5225ecdfe7943f4e.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-24T22:23:57+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "39c8dfde5084058312dc456298b7a63698820d323d79f2b6bfbaeafc34964f11",
+            "relative_path": "dual-reader-transcriptions/pnj-fy2025-p10/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "3ccd1bac1968c3a47c9d54c13e481006b02a340cef754b7c89a0beb847f2fa08",
+            "47593dd4bc246f26fb48aa7c2a135d40d6bf141638493154148035253025cb4b"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "PNJ",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "5a8f798b1e0bdbfdc2ca8fc784febe7eb7dcb74b305cdeaf9271f30c43892dd9",
+          "documents/PNJ/2025/audited_annual_financial_statements/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d.pdf": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+          "dual-reader-transcriptions/pnj-fy2025-p10/agreement.proof.json": "39c8dfde5084058312dc456298b7a63698820d323d79f2b6bfbaeafc34964f11",
+          "dual-reader-transcriptions/pnj-fy2025-p10/claude-reader.raw.json": "3ccd1bac1968c3a47c9d54c13e481006b02a340cef754b7c89a0beb847f2fa08",
+          "dual-reader-transcriptions/pnj-fy2025-p10/gemini-reader.raw.json": "47593dd4bc246f26fb48aa7c2a135d40d6bf141638493154148035253025cb4b",
+          "dual-reader-transcriptions/pnj-fy2025-p10/page-10.png": "4df1be5fb096b9745126885f93bb063aba82c349f58a35c2b15cd56ba41e53d1",
+          "dual-reader-transcriptions/pnj-fy2025-p10/page-10.render-meta.json": "10726720c371a30ac5b3fd1c93a8ca8996403d6a936eb2217d55e2ca2a49264d",
+          "ocr-layout-proofs/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d/7e994b1286a5b21579ee91f312b3e929a5f48016d433e27d5225ecdfe7943f4e.json": "d68586e95c5dd1cfdc9099a2b970f9cb9029ef2fe27d021fe52a8798962c2142",
+          "official_document_acquisition_manifest.json": "80667570d0aa1615158154b95777d26a7bb1ed56f42ae74580d6200a1a27b664"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-24T22:23:57+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "0a4915872358e07f4b08ada2b81e8cec1d798c2f2314c533727d8964f285dda2",
+              "canonical_metric": "revenue",
+              "citation_id": "a4d39e9651fb1e1a00f20ab3719e332f923f9dd1c039db1a3506826bebb303ad",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "215f1d4c2c1dffc6d8f344b244d1512458ca7ad98703fb31aae7c8c248be7d68",
+              "line_code": "10",
+              "normalized_value": 34976042929392,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "bf1be57fa1636c34ac0513a464492549c1c3d56bf508126c935a54a4b706c6e9",
+              "canonical_metric": "net_income",
+              "citation_id": "ccd941930263a3ad0a863cda216198482dde84e38a6e2d404093b9fe5008796e",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "90ff856712edf3b40c7e460f259a1c2be90733495235a673975f8727fa48f9aa",
+              "line_code": "60",
+              "normalized_value": 2828497462890,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7ea4ea1d97329ffb3de13146f3971abe9a6cdb76e73f611c3a4b1cecb628c561",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "92f1d95979fd2fad29fb7eea1c9ca4ec31fdfc1eafb45d716236668a313364c4",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "3689c2ead25b270a85dae42c0a4c2d6e15ef8a37d6ff84448dffc17e8c56757a",
+              "line_code": "61",
+              "normalized_value": 2828497462890,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-24T21:55:24+07:00",
+          "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+          "evidence_subdir": "fy2025-dual-reader-pnj-20261124",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/PNJ/2025/audited_annual_financial_statements/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d.pdf": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/page-10.png": "CREATED",
+            "dual-reader-transcriptions/pnj-fy2025-p10/page-10.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d/7e994b1286a5b21579ee91f312b3e929a5f48016d433e27d5225ecdfe7943f4e.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-24T22:23:57+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "39c8dfde5084058312dc456298b7a63698820d323d79f2b6bfbaeafc34964f11",
+            "relative_path": "dual-reader-transcriptions/pnj-fy2025-p10/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "3ccd1bac1968c3a47c9d54c13e481006b02a340cef754b7c89a0beb847f2fa08",
+            "47593dd4bc246f26fb48aa7c2a135d40d6bf141638493154148035253025cb4b"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "PNJ",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "PNJ-2025-H1-P10": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Required retained inputs or original completion instant unavailable",
+      "missing": [
+        "h1-2025-dual-reader-pnj-20261124\\dual-reader-transcriptions\\pnj-2025h1-p10\\agreement.proof.json",
+        "h1-2025-dual-reader-pnj-20261124\\document_level_evidence.json"
+      ]
+    },
+    "VRE-2025-P11": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Required retained inputs or original completion instant unavailable",
+      "missing": [
+        "fy2025-dual-reader-vre-20261124\\dual-reader-transcriptions\\vre-fy2025-p11\\agreement.proof.json",
+        "fy2025-dual-reader-vre-20261124\\document_level_evidence.json"
+      ]
+    },
+    "POW-2025-P11": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "35ca083e3bcfe7981ab11128302f4c96be36ca5cdc9f76ecaa6ce56d47393ac9",
+        "document": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+        "original_seal": "096f9b91147cfd79a809a7fba1aac2a7f12cd52a77f27937abccb0de2fa5ee4b",
+        "document_evidence": "7082685dad7cfdabab39ad4f943dc5253ce46fd225e78631e760e86819d97717",
+        "ocr_proof": "4580b9166c5a34991b9e0ef1e1f9df0c4d548a58de53d5ec6c044e647e390fc5",
+        "reader_input_0": "fde535333f1ac65b7e40b613229e8906fb3d34be66ade252ec081ef4c2a752c5",
+        "reader_input_1": "3e986c62744b9bbb958d9dd5fd09290f3368fdeb4ae9f0aec59398851634e632",
+        "reader_input_2": "5490e221df069935257c9a5d87afa116781f5e0dd015285a31ad2408edaf3a72",
+        "reader_input_3": "0a3fd588a709cf44a303188d6cd6511a892e33ec10d56f831ce470bf7ddbfa6d"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T00:22:50+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "7082685dad7cfdabab39ad4f943dc5253ce46fd225e78631e760e86819d97717",
+          "documents/POW/2025/audited_annual_financial_statements/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7.pdf": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+          "dual-reader-transcriptions/pow-fy2025-p11/agreement.proof.json": "096f9b91147cfd79a809a7fba1aac2a7f12cd52a77f27937abccb0de2fa5ee4b",
+          "dual-reader-transcriptions/pow-fy2025-p11/claude-reader.raw.json": "5490e221df069935257c9a5d87afa116781f5e0dd015285a31ad2408edaf3a72",
+          "dual-reader-transcriptions/pow-fy2025-p11/gemini-reader.raw.json": "0a3fd588a709cf44a303188d6cd6511a892e33ec10d56f831ce470bf7ddbfa6d",
+          "dual-reader-transcriptions/pow-fy2025-p11/page-11.png": "fde535333f1ac65b7e40b613229e8906fb3d34be66ade252ec081ef4c2a752c5",
+          "dual-reader-transcriptions/pow-fy2025-p11/page-11.render-meta.json": "3e986c62744b9bbb958d9dd5fd09290f3368fdeb4ae9f0aec59398851634e632",
+          "ocr-layout-proofs/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7/bbb2ae05339f3906c29d152b8777eff68696fad2df77b8fd844431c77faa6fa2.json": "4580b9166c5a34991b9e0ef1e1f9df0c4d548a58de53d5ec6c044e647e390fc5",
+          "official_document_acquisition_manifest.json": "08921125df48604efcda0ee2c3331d9affa03e6468bf77b5f678fc14dfd82b99"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T00:22:50+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "ff7cfc97bbb9c7ac697960bc787457b92b4c8e07f5e99a90f5bd7c225c7509d8",
+              "canonical_metric": "revenue",
+              "citation_id": "8ce1132faa86cf6c0ccfdfec4d3acb4ccdf6d901ea6842edacc335827debc7ad",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "16a1cf872404637fd4990ca47cb15e7da10e70ef5df912d6b1c5638a2f61324e",
+              "line_code": "10",
+              "normalized_value": 34306140471915,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "f13b93b7f961cf8ef5ff42c4d276f8ffd6eba4d241acaae297befa6cca56d322",
+              "canonical_metric": "net_income",
+              "citation_id": "be66ddf01e5537448b312b8538f73f4b3830ca63ea5ccc85e31275e251b7979d",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "e829ed11d9d1820a2ac1463df5e1d0204e30f856599ebd2d0615872ab9a39fad",
+              "line_code": "60",
+              "normalized_value": 3007141457275,
+              "reason_codes": [
+                "METRIC_LITERAL_LABEL_NOT_SUPPORTED",
+                "METRIC_STATEMENT_IDENTITY_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "a950da13823efc04494f826fa981d5ede5aa444b4635632964816fdc5e098025",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "4b20c0f195ddcea7756e138b49de407e2e963339133edf8828f5f968926f6d57",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "a8cbf58e33cd5de54efc3aed54beadff25225b76047310bee7100298b202e2dd",
+              "line_code": "61",
+              "normalized_value": 2426656979064,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T12:27:10+07:00",
+          "document_sha256": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+          "evidence_subdir": "fy2025-dual-reader-pow-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/POW/2025/audited_annual_financial_statements/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7.pdf": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/page-11.png": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/page-11.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7/bbb2ae05339f3906c29d152b8777eff68696fad2df77b8fd844431c77faa6fa2.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T00:22:50+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "096f9b91147cfd79a809a7fba1aac2a7f12cd52a77f27937abccb0de2fa5ee4b",
+            "relative_path": "dual-reader-transcriptions/pow-fy2025-p11/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "5490e221df069935257c9a5d87afa116781f5e0dd015285a31ad2408edaf3a72",
+            "0a3fd588a709cf44a303188d6cd6511a892e33ec10d56f831ce470bf7ddbfa6d"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "POW",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "7082685dad7cfdabab39ad4f943dc5253ce46fd225e78631e760e86819d97717",
+          "documents/POW/2025/audited_annual_financial_statements/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7.pdf": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+          "dual-reader-transcriptions/pow-fy2025-p11/agreement.proof.json": "096f9b91147cfd79a809a7fba1aac2a7f12cd52a77f27937abccb0de2fa5ee4b",
+          "dual-reader-transcriptions/pow-fy2025-p11/claude-reader.raw.json": "5490e221df069935257c9a5d87afa116781f5e0dd015285a31ad2408edaf3a72",
+          "dual-reader-transcriptions/pow-fy2025-p11/gemini-reader.raw.json": "0a3fd588a709cf44a303188d6cd6511a892e33ec10d56f831ce470bf7ddbfa6d",
+          "dual-reader-transcriptions/pow-fy2025-p11/page-11.png": "fde535333f1ac65b7e40b613229e8906fb3d34be66ade252ec081ef4c2a752c5",
+          "dual-reader-transcriptions/pow-fy2025-p11/page-11.render-meta.json": "3e986c62744b9bbb958d9dd5fd09290f3368fdeb4ae9f0aec59398851634e632",
+          "ocr-layout-proofs/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7/bbb2ae05339f3906c29d152b8777eff68696fad2df77b8fd844431c77faa6fa2.json": "4580b9166c5a34991b9e0ef1e1f9df0c4d548a58de53d5ec6c044e647e390fc5",
+          "official_document_acquisition_manifest.json": "08921125df48604efcda0ee2c3331d9affa03e6468bf77b5f678fc14dfd82b99"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T00:22:50+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "ff7cfc97bbb9c7ac697960bc787457b92b4c8e07f5e99a90f5bd7c225c7509d8",
+              "canonical_metric": "revenue",
+              "citation_id": "8ce1132faa86cf6c0ccfdfec4d3acb4ccdf6d901ea6842edacc335827debc7ad",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "16a1cf872404637fd4990ca47cb15e7da10e70ef5df912d6b1c5638a2f61324e",
+              "line_code": "10",
+              "normalized_value": 34306140471915,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "f13b93b7f961cf8ef5ff42c4d276f8ffd6eba4d241acaae297befa6cca56d322",
+              "canonical_metric": "net_income",
+              "citation_id": "be66ddf01e5537448b312b8538f73f4b3830ca63ea5ccc85e31275e251b7979d",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "e829ed11d9d1820a2ac1463df5e1d0204e30f856599ebd2d0615872ab9a39fad",
+              "line_code": "60",
+              "normalized_value": 3007141457275,
+              "reason_codes": [
+                "METRIC_LITERAL_LABEL_NOT_SUPPORTED",
+                "METRIC_STATEMENT_IDENTITY_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "a950da13823efc04494f826fa981d5ede5aa444b4635632964816fdc5e098025",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "4b20c0f195ddcea7756e138b49de407e2e963339133edf8828f5f968926f6d57",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "a8cbf58e33cd5de54efc3aed54beadff25225b76047310bee7100298b202e2dd",
+              "line_code": "61",
+              "normalized_value": 2426656979064,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T12:27:10+07:00",
+          "document_sha256": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+          "evidence_subdir": "fy2025-dual-reader-pow-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/POW/2025/audited_annual_financial_statements/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7.pdf": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/page-11.png": "CREATED",
+            "dual-reader-transcriptions/pow-fy2025-p11/page-11.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7/bbb2ae05339f3906c29d152b8777eff68696fad2df77b8fd844431c77faa6fa2.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T00:22:50+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "096f9b91147cfd79a809a7fba1aac2a7f12cd52a77f27937abccb0de2fa5ee4b",
+            "relative_path": "dual-reader-transcriptions/pow-fy2025-p11/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "5490e221df069935257c9a5d87afa116781f5e0dd015285a31ad2408edaf3a72",
+            "0a3fd588a709cf44a303188d6cd6511a892e33ec10d56f831ce470bf7ddbfa6d"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "POW",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "POW-2025-H1-P11": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "37c3467a53ce9ec0f1fdc983e467409ac1c6433a2f1a5953feaa3dec4bc272bd",
+        "document": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+        "original_seal": "6712c78dce41570123587d3ea07e75f54e15aeacc6dd8809199fc0bec05969a9",
+        "document_evidence": "26fd7ccb37840912f39a8554e6e1a8695317ad0f957507cba012040e1b92480a",
+        "ocr_proof": "57c1840381fbeaf342ec5ebcce3e1f45e060f16757353c065c25ad8a5bffb670",
+        "reader_input_0": "c69bb4a8cac577b52ba718b6987b37dd51e7b35945d9dd68eb851b86a959df21",
+        "reader_input_1": "4bf6d52fe46fa62739dbec006df83a42324ec32b4062b7b07a1c57bd1f381a06",
+        "reader_input_2": "8787a89d74b58a3e8417556e35a368485bfc5534ebcb9ffbc5559f58b114870c",
+        "reader_input_3": "5f6bd65583b82d663eb2943bc237f1db352faed883c05f6b88479a1660ff0930"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T00:39:16+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "26fd7ccb37840912f39a8554e6e1a8695317ad0f957507cba012040e1b92480a",
+          "documents/POW/2025-H1/reviewed_interim_financial_statements/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1.pdf": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+          "dual-reader-transcriptions/pow-2025h1-p11/agreement.proof.json": "6712c78dce41570123587d3ea07e75f54e15aeacc6dd8809199fc0bec05969a9",
+          "dual-reader-transcriptions/pow-2025h1-p11/claude-reader.raw.json": "8787a89d74b58a3e8417556e35a368485bfc5534ebcb9ffbc5559f58b114870c",
+          "dual-reader-transcriptions/pow-2025h1-p11/gemini-reader.raw.json": "5f6bd65583b82d663eb2943bc237f1db352faed883c05f6b88479a1660ff0930",
+          "dual-reader-transcriptions/pow-2025h1-p11/page-11.png": "c69bb4a8cac577b52ba718b6987b37dd51e7b35945d9dd68eb851b86a959df21",
+          "dual-reader-transcriptions/pow-2025h1-p11/page-11.render-meta.json": "4bf6d52fe46fa62739dbec006df83a42324ec32b4062b7b07a1c57bd1f381a06",
+          "ocr-layout-proofs/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1/1f76c8b4552f829ecabe7a8a641823bc61d897131fb22bd9194ddc2092d0baac.json": "57c1840381fbeaf342ec5ebcce3e1f45e060f16757353c065c25ad8a5bffb670",
+          "official_document_acquisition_manifest.json": "7b8a2a5065098e1c7de9d94e5f771e7e947e980cf7e719183905e152f20d8342"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T00:39:16+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "785cfc1990a935d5c34566b0f431d1207eed0175985864d279301649f08742b1",
+              "canonical_metric": "revenue",
+              "citation_id": "9fa5057956c1ad0b7d09ed6686ea74316d06b7db0ce8b395bd3fac92aa429f90",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "43fcf0f78504f3ae2afe367f0a37a981779482a06e6fcaea0ed7f2b82e37a671",
+              "line_code": "10",
+              "normalized_value": 17549079198258,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "4ea315c796ed69a5937eeabe1e479865a4195de4c52a64ff01886e79bd24cba0",
+              "canonical_metric": "net_income",
+              "citation_id": "f53bfda5f43c512ff269d8e8a7aee5db0c505069718f2f5545a325417677cb8b",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "74c60ffb86047f9f7c0a6325c055c4a0b7edf87bc548343bf8f30f8805f090d4",
+              "line_code": "60",
+              "normalized_value": 1233596331241,
+              "reason_codes": [
+                "METRIC_LITERAL_LABEL_NOT_SUPPORTED",
+                "METRIC_STATEMENT_IDENTITY_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "f483814f6477e086505e88a8a48f53bf6da435c650d42fdce4a2b76c796def12",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "320ba099c5987dc5f156491abcb36ba9531a785948f7741b219393e457a83537",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "90074640896d42de849c906e4765d7dbc5b20c2145845549a05386101de6038c",
+              "line_code": "61",
+              "normalized_value": 1047507252040,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T23:58:40+07:00",
+          "document_sha256": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+          "evidence_subdir": "h1-2025-dual-reader-pow-r2-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/POW/2025-H1/reviewed_interim_financial_statements/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1.pdf": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/page-11.png": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/page-11.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1/1f76c8b4552f829ecabe7a8a641823bc61d897131fb22bd9194ddc2092d0baac.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T00:39:16+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "6712c78dce41570123587d3ea07e75f54e15aeacc6dd8809199fc0bec05969a9",
+            "relative_path": "dual-reader-transcriptions/pow-2025h1-p11/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "8787a89d74b58a3e8417556e35a368485bfc5534ebcb9ffbc5559f58b114870c",
+            "5f6bd65583b82d663eb2943bc237f1db352faed883c05f6b88479a1660ff0930"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "POW",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "26fd7ccb37840912f39a8554e6e1a8695317ad0f957507cba012040e1b92480a",
+          "documents/POW/2025-H1/reviewed_interim_financial_statements/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1.pdf": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+          "dual-reader-transcriptions/pow-2025h1-p11/agreement.proof.json": "6712c78dce41570123587d3ea07e75f54e15aeacc6dd8809199fc0bec05969a9",
+          "dual-reader-transcriptions/pow-2025h1-p11/claude-reader.raw.json": "8787a89d74b58a3e8417556e35a368485bfc5534ebcb9ffbc5559f58b114870c",
+          "dual-reader-transcriptions/pow-2025h1-p11/gemini-reader.raw.json": "5f6bd65583b82d663eb2943bc237f1db352faed883c05f6b88479a1660ff0930",
+          "dual-reader-transcriptions/pow-2025h1-p11/page-11.png": "c69bb4a8cac577b52ba718b6987b37dd51e7b35945d9dd68eb851b86a959df21",
+          "dual-reader-transcriptions/pow-2025h1-p11/page-11.render-meta.json": "4bf6d52fe46fa62739dbec006df83a42324ec32b4062b7b07a1c57bd1f381a06",
+          "ocr-layout-proofs/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1/1f76c8b4552f829ecabe7a8a641823bc61d897131fb22bd9194ddc2092d0baac.json": "57c1840381fbeaf342ec5ebcce3e1f45e060f16757353c065c25ad8a5bffb670",
+          "official_document_acquisition_manifest.json": "7b8a2a5065098e1c7de9d94e5f771e7e947e980cf7e719183905e152f20d8342"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T00:39:16+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "785cfc1990a935d5c34566b0f431d1207eed0175985864d279301649f08742b1",
+              "canonical_metric": "revenue",
+              "citation_id": "9fa5057956c1ad0b7d09ed6686ea74316d06b7db0ce8b395bd3fac92aa429f90",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "43fcf0f78504f3ae2afe367f0a37a981779482a06e6fcaea0ed7f2b82e37a671",
+              "line_code": "10",
+              "normalized_value": 17549079198258,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "4ea315c796ed69a5937eeabe1e479865a4195de4c52a64ff01886e79bd24cba0",
+              "canonical_metric": "net_income",
+              "citation_id": "f53bfda5f43c512ff269d8e8a7aee5db0c505069718f2f5545a325417677cb8b",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "74c60ffb86047f9f7c0a6325c055c4a0b7edf87bc548343bf8f30f8805f090d4",
+              "line_code": "60",
+              "normalized_value": 1233596331241,
+              "reason_codes": [
+                "METRIC_LITERAL_LABEL_NOT_SUPPORTED",
+                "METRIC_STATEMENT_IDENTITY_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "f483814f6477e086505e88a8a48f53bf6da435c650d42fdce4a2b76c796def12",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "320ba099c5987dc5f156491abcb36ba9531a785948f7741b219393e457a83537",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "90074640896d42de849c906e4765d7dbc5b20c2145845549a05386101de6038c",
+              "line_code": "61",
+              "normalized_value": 1047507252040,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T23:58:40+07:00",
+          "document_sha256": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+          "evidence_subdir": "h1-2025-dual-reader-pow-r2-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/POW/2025-H1/reviewed_interim_financial_statements/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1.pdf": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/page-11.png": "CREATED",
+            "dual-reader-transcriptions/pow-2025h1-p11/page-11.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1/1f76c8b4552f829ecabe7a8a641823bc61d897131fb22bd9194ddc2092d0baac.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T00:39:16+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "6712c78dce41570123587d3ea07e75f54e15aeacc6dd8809199fc0bec05969a9",
+            "relative_path": "dual-reader-transcriptions/pow-2025h1-p11/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "8787a89d74b58a3e8417556e35a368485bfc5534ebcb9ffbc5559f58b114870c",
+            "5f6bd65583b82d663eb2943bc237f1db352faed883c05f6b88479a1660ff0930"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "POW",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "POW-2026-H1-P11": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "35ca083e3bcfe7981ab11128302f4c96be36ca5cdc9f76ecaa6ce56d47393ac9",
+        "document": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+        "original_seal": "5960ff8e1a0445332a0357a4951af9ef44dca3004d49cf8a37fd892fe32b8053",
+        "document_evidence": "2977685ea3a6c4055172fcb2072cf3d17d30633e07721aff3783ef32cd32857b",
+        "ocr_proof": "e162b4731c3fcea3a079f78b705927c0f53f9e99f1395eb53f26208817ac0028",
+        "reader_input_0": "cd386354584d7747f9bb4b6098712b31a4274708ec6e6dd6d21255a34f8578ec",
+        "reader_input_1": "c0953c143b8261489f3ad95f82341135226ba8ba5cd7ee7b67e1412a448ae680",
+        "reader_input_2": "fb381ea78eefb044b13dd58635df5ae1371eeaa3836e932551b77ac479d18d19",
+        "reader_input_3": "3b6cfc6c17576dc1c3ff4f6cca0355e2f704bfe0711e1eee9c7c6c812c7d7922"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T00:43:07+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "2977685ea3a6c4055172fcb2072cf3d17d30633e07721aff3783ef32cd32857b",
+          "documents/POW/2026-H1/reviewed_interim_financial_statements/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5.pdf": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+          "dual-reader-transcriptions/pow-2026h1-p11/agreement.proof.json": "5960ff8e1a0445332a0357a4951af9ef44dca3004d49cf8a37fd892fe32b8053",
+          "dual-reader-transcriptions/pow-2026h1-p11/claude-reader.raw.json": "fb381ea78eefb044b13dd58635df5ae1371eeaa3836e932551b77ac479d18d19",
+          "dual-reader-transcriptions/pow-2026h1-p11/gemini-reader.raw.json": "3b6cfc6c17576dc1c3ff4f6cca0355e2f704bfe0711e1eee9c7c6c812c7d7922",
+          "dual-reader-transcriptions/pow-2026h1-p11/page-11.png": "cd386354584d7747f9bb4b6098712b31a4274708ec6e6dd6d21255a34f8578ec",
+          "dual-reader-transcriptions/pow-2026h1-p11/page-11.render-meta.json": "c0953c143b8261489f3ad95f82341135226ba8ba5cd7ee7b67e1412a448ae680",
+          "ocr-layout-proofs/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5/0691885fda61df988075667cf005869bc69a4b41a13b5f43c43599dcf4ac07b3.json": "e162b4731c3fcea3a079f78b705927c0f53f9e99f1395eb53f26208817ac0028",
+          "official_document_acquisition_manifest.json": "da9b73397e6df21cdfff1c0c20334dec75a653eb961ba2ae2190b046f8d8c0df"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T00:43:07+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "824f7fea5c945f8f5329497f78acf0b40736fa0e8ce5ac930d1b546e2e2cded2",
+              "canonical_metric": "revenue",
+              "citation_id": "6696062665beb8e2412bb39d67f38569a88d260d519c86eae0297ba40d9ff0df",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "7c2451480d182d9cd33d80e5c9f3b5d15ca2f7be27f5f1896d747d1eac5edd5e",
+              "line_code": "10",
+              "normalized_value": 32633328858340,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7d56eb6c62a3e60b10d5c87aad1004a3d6d077850458764f95098ecb38290952",
+              "canonical_metric": "net_income",
+              "citation_id": "d30791abfbdc16730527301e91a77b7e4516de37f4a48a1a985c75891203696e",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "612ab0fbb67587a733014b01aa09925802e41c3689567265da44214c521af055",
+              "line_code": "60",
+              "normalized_value": 4825449469375,
+              "reason_codes": [
+                "METRIC_LITERAL_LABEL_NOT_SUPPORTED",
+                "METRIC_STATEMENT_IDENTITY_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "ea6f9cd9afbdbfe68e15d9e1e567bbb60e0ed31eadfa759e2b413d5e26972db9",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "2917975871bbf84fb49f1d8f382a6db867f64debdbbaa1c54079619ea9bb7c1b",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "268aa920b7dfe972aebf735378fc2bedea6ac069aa4887d363d6f25fe84b3093",
+              "line_code": "61",
+              "normalized_value": 4574921597092,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T00:15:10+07:00",
+          "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+          "evidence_subdir": "h1-2026-dual-reader-pow-r2b-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/POW/2026-H1/reviewed_interim_financial_statements/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5.pdf": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/page-11.png": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/page-11.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5/0691885fda61df988075667cf005869bc69a4b41a13b5f43c43599dcf4ac07b3.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T00:43:07+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "5960ff8e1a0445332a0357a4951af9ef44dca3004d49cf8a37fd892fe32b8053",
+            "relative_path": "dual-reader-transcriptions/pow-2026h1-p11/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "fb381ea78eefb044b13dd58635df5ae1371eeaa3836e932551b77ac479d18d19",
+            "3b6cfc6c17576dc1c3ff4f6cca0355e2f704bfe0711e1eee9c7c6c812c7d7922"
+          ],
+          "reporting_period": "2026-H1",
+          "rows_relative_path": null,
+          "ticker": "POW",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "2977685ea3a6c4055172fcb2072cf3d17d30633e07721aff3783ef32cd32857b",
+          "documents/POW/2026-H1/reviewed_interim_financial_statements/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5.pdf": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+          "dual-reader-transcriptions/pow-2026h1-p11/agreement.proof.json": "5960ff8e1a0445332a0357a4951af9ef44dca3004d49cf8a37fd892fe32b8053",
+          "dual-reader-transcriptions/pow-2026h1-p11/claude-reader.raw.json": "fb381ea78eefb044b13dd58635df5ae1371eeaa3836e932551b77ac479d18d19",
+          "dual-reader-transcriptions/pow-2026h1-p11/gemini-reader.raw.json": "3b6cfc6c17576dc1c3ff4f6cca0355e2f704bfe0711e1eee9c7c6c812c7d7922",
+          "dual-reader-transcriptions/pow-2026h1-p11/page-11.png": "cd386354584d7747f9bb4b6098712b31a4274708ec6e6dd6d21255a34f8578ec",
+          "dual-reader-transcriptions/pow-2026h1-p11/page-11.render-meta.json": "c0953c143b8261489f3ad95f82341135226ba8ba5cd7ee7b67e1412a448ae680",
+          "ocr-layout-proofs/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5/0691885fda61df988075667cf005869bc69a4b41a13b5f43c43599dcf4ac07b3.json": "e162b4731c3fcea3a079f78b705927c0f53f9e99f1395eb53f26208817ac0028",
+          "official_document_acquisition_manifest.json": "da9b73397e6df21cdfff1c0c20334dec75a653eb961ba2ae2190b046f8d8c0df"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T00:43:07+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "824f7fea5c945f8f5329497f78acf0b40736fa0e8ce5ac930d1b546e2e2cded2",
+              "canonical_metric": "revenue",
+              "citation_id": "6696062665beb8e2412bb39d67f38569a88d260d519c86eae0297ba40d9ff0df",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "7c2451480d182d9cd33d80e5c9f3b5d15ca2f7be27f5f1896d747d1eac5edd5e",
+              "line_code": "10",
+              "normalized_value": 32633328858340,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7d56eb6c62a3e60b10d5c87aad1004a3d6d077850458764f95098ecb38290952",
+              "canonical_metric": "net_income",
+              "citation_id": "d30791abfbdc16730527301e91a77b7e4516de37f4a48a1a985c75891203696e",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "612ab0fbb67587a733014b01aa09925802e41c3689567265da44214c521af055",
+              "line_code": "60",
+              "normalized_value": 4825449469375,
+              "reason_codes": [
+                "METRIC_LITERAL_LABEL_NOT_SUPPORTED",
+                "METRIC_STATEMENT_IDENTITY_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "ea6f9cd9afbdbfe68e15d9e1e567bbb60e0ed31eadfa759e2b413d5e26972db9",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "2917975871bbf84fb49f1d8f382a6db867f64debdbbaa1c54079619ea9bb7c1b",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "268aa920b7dfe972aebf735378fc2bedea6ac069aa4887d363d6f25fe84b3093",
+              "line_code": "61",
+              "normalized_value": 4574921597092,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T00:15:10+07:00",
+          "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+          "evidence_subdir": "h1-2026-dual-reader-pow-r2b-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/POW/2026-H1/reviewed_interim_financial_statements/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5.pdf": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/page-11.png": "CREATED",
+            "dual-reader-transcriptions/pow-2026h1-p11/page-11.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5/0691885fda61df988075667cf005869bc69a4b41a13b5f43c43599dcf4ac07b3.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T00:43:07+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "5960ff8e1a0445332a0357a4951af9ef44dca3004d49cf8a37fd892fe32b8053",
+            "relative_path": "dual-reader-transcriptions/pow-2026h1-p11/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "fb381ea78eefb044b13dd58635df5ae1371eeaa3836e932551b77ac479d18d19",
+            "3b6cfc6c17576dc1c3ff4f6cca0355e2f704bfe0711e1eee9c7c6c812c7d7922"
+          ],
+          "reporting_period": "2026-H1",
+          "rows_relative_path": null,
+          "ticker": "POW",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "NVL-2025-H1-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "37c3467a53ce9ec0f1fdc983e467409ac1c6433a2f1a5953feaa3dec4bc272bd",
+        "document": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+        "original_seal": "008ca64d665d5f78bebf16a9d3e987e94cc4b06b8e286dad24f72ee32adb9292",
+        "document_evidence": "893ac6be2ae73f5958875dd111635c86d1164fba5c98b1de5fb4059001b06745",
+        "ocr_proof": "8518e4c3305332c8ace9c73a3d9c2dc7500c9f78555eeb2473a8ce579ee8a1f6",
+        "reader_input_0": "375c77e36fad1ca1797f32777f88625dc535751e7b492aeb71af9cd59a77b49b",
+        "reader_input_1": "0223b0e3bf8026ede9b0bad0db54bee496445b9d21c0365c9cb276a091c90afc",
+        "reader_input_2": "04331d5aa91ac3cbeba0c2eb922c465102a077e35f171ea0530e12b5ae787acf",
+        "reader_input_3": "0b7ec4bbe073acf9b6af9fbf7030c4024f411375f94efe68cd971d44a0f49e3a"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T01:32:57+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "893ac6be2ae73f5958875dd111635c86d1164fba5c98b1de5fb4059001b06745",
+          "documents/NVL/2025-H1/reviewed_interim_financial_statements/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c.pdf": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+          "dual-reader-transcriptions/nvl-2025h1-p12/agreement.proof.json": "008ca64d665d5f78bebf16a9d3e987e94cc4b06b8e286dad24f72ee32adb9292",
+          "dual-reader-transcriptions/nvl-2025h1-p12/claude-reader.raw.json": "04331d5aa91ac3cbeba0c2eb922c465102a077e35f171ea0530e12b5ae787acf",
+          "dual-reader-transcriptions/nvl-2025h1-p12/gemini-reader.raw.json": "0b7ec4bbe073acf9b6af9fbf7030c4024f411375f94efe68cd971d44a0f49e3a",
+          "dual-reader-transcriptions/nvl-2025h1-p12/page-12.png": "375c77e36fad1ca1797f32777f88625dc535751e7b492aeb71af9cd59a77b49b",
+          "dual-reader-transcriptions/nvl-2025h1-p12/page-12.render-meta.json": "0223b0e3bf8026ede9b0bad0db54bee496445b9d21c0365c9cb276a091c90afc",
+          "ocr-layout-proofs/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c/f5460676c36dc5834a34522969c4e3f629ce44bf69c8ee38621b53a24ee9bd24.json": "8518e4c3305332c8ace9c73a3d9c2dc7500c9f78555eeb2473a8ce579ee8a1f6",
+          "official_document_acquisition_manifest.json": "a18aa8ad6b264fd69a1368a6315212c1ec739b49037eaf5ea1075b4a3ed6f866"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T01:32:57+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "8cfda5b1b9f1012c2341f55a81e0ff9667320c1be12476679769ec0baabe1eee",
+              "canonical_metric": "revenue",
+              "citation_id": "20a18753ba00bab163754f795f5d597d1c5b3bb7c62072e969923dd322007da3",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "401d3ebde4cddc819ea174b602ee9aef28a414f776982482e3b5e72d3f811439",
+              "line_code": "10",
+              "normalized_value": 3714779217502,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7bdebf5007a99f16aea21ec6408bdace15ebc700aabee3115a3246f6b15af070",
+              "canonical_metric": "net_income",
+              "citation_id": "81aa10d558ccfdc955b5680ddc6784da278d4d3f4669954f79bb9c3accd98469",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "fd6b57176de38cb453153cdf78638c4674c4ca0a6eab4c9f154208628ceb9386",
+              "line_code": "60",
+              "normalized_value": -666298823264,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "395d46ec52cd715750938d3e9e8746d7d4de56d4341276c04bef162f43264241",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "de5ab2577e600c53026eca68d4135cdc0d89d5d08f9ad939a11ab42af1fa3c9e",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "a9b4e91891248946735c08ebeccc2996794f3ca7683b4737b2d9fc2f43be1811",
+              "line_code": "61",
+              "normalized_value": -603917668121,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T12:06:00+07:00",
+          "document_sha256": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+          "evidence_subdir": "h1-2025-dual-reader-nvl-signed-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/NVL/2025-H1/reviewed_interim_financial_statements/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c.pdf": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c/f5460676c36dc5834a34522969c4e3f629ce44bf69c8ee38621b53a24ee9bd24.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T01:32:57+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "008ca64d665d5f78bebf16a9d3e987e94cc4b06b8e286dad24f72ee32adb9292",
+            "relative_path": "dual-reader-transcriptions/nvl-2025h1-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "04331d5aa91ac3cbeba0c2eb922c465102a077e35f171ea0530e12b5ae787acf",
+            "0b7ec4bbe073acf9b6af9fbf7030c4024f411375f94efe68cd971d44a0f49e3a"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "NVL",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "893ac6be2ae73f5958875dd111635c86d1164fba5c98b1de5fb4059001b06745",
+          "documents/NVL/2025-H1/reviewed_interim_financial_statements/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c.pdf": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+          "dual-reader-transcriptions/nvl-2025h1-p12/agreement.proof.json": "008ca64d665d5f78bebf16a9d3e987e94cc4b06b8e286dad24f72ee32adb9292",
+          "dual-reader-transcriptions/nvl-2025h1-p12/claude-reader.raw.json": "04331d5aa91ac3cbeba0c2eb922c465102a077e35f171ea0530e12b5ae787acf",
+          "dual-reader-transcriptions/nvl-2025h1-p12/gemini-reader.raw.json": "0b7ec4bbe073acf9b6af9fbf7030c4024f411375f94efe68cd971d44a0f49e3a",
+          "dual-reader-transcriptions/nvl-2025h1-p12/page-12.png": "375c77e36fad1ca1797f32777f88625dc535751e7b492aeb71af9cd59a77b49b",
+          "dual-reader-transcriptions/nvl-2025h1-p12/page-12.render-meta.json": "0223b0e3bf8026ede9b0bad0db54bee496445b9d21c0365c9cb276a091c90afc",
+          "ocr-layout-proofs/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c/f5460676c36dc5834a34522969c4e3f629ce44bf69c8ee38621b53a24ee9bd24.json": "8518e4c3305332c8ace9c73a3d9c2dc7500c9f78555eeb2473a8ce579ee8a1f6",
+          "official_document_acquisition_manifest.json": "a18aa8ad6b264fd69a1368a6315212c1ec739b49037eaf5ea1075b4a3ed6f866"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T01:32:57+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "8cfda5b1b9f1012c2341f55a81e0ff9667320c1be12476679769ec0baabe1eee",
+              "canonical_metric": "revenue",
+              "citation_id": "20a18753ba00bab163754f795f5d597d1c5b3bb7c62072e969923dd322007da3",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "401d3ebde4cddc819ea174b602ee9aef28a414f776982482e3b5e72d3f811439",
+              "line_code": "10",
+              "normalized_value": 3714779217502,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7bdebf5007a99f16aea21ec6408bdace15ebc700aabee3115a3246f6b15af070",
+              "canonical_metric": "net_income",
+              "citation_id": "81aa10d558ccfdc955b5680ddc6784da278d4d3f4669954f79bb9c3accd98469",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "fd6b57176de38cb453153cdf78638c4674c4ca0a6eab4c9f154208628ceb9386",
+              "line_code": "60",
+              "normalized_value": -666298823264,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "395d46ec52cd715750938d3e9e8746d7d4de56d4341276c04bef162f43264241",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "de5ab2577e600c53026eca68d4135cdc0d89d5d08f9ad939a11ab42af1fa3c9e",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "a9b4e91891248946735c08ebeccc2996794f3ca7683b4737b2d9fc2f43be1811",
+              "line_code": "61",
+              "normalized_value": -603917668121,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T12:06:00+07:00",
+          "document_sha256": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+          "evidence_subdir": "h1-2025-dual-reader-nvl-signed-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/NVL/2025-H1/reviewed_interim_financial_statements/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c.pdf": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/nvl-2025h1-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c/f5460676c36dc5834a34522969c4e3f629ce44bf69c8ee38621b53a24ee9bd24.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T01:32:57+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "008ca64d665d5f78bebf16a9d3e987e94cc4b06b8e286dad24f72ee32adb9292",
+            "relative_path": "dual-reader-transcriptions/nvl-2025h1-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "04331d5aa91ac3cbeba0c2eb922c465102a077e35f171ea0530e12b5ae787acf",
+            "0b7ec4bbe073acf9b6af9fbf7030c4024f411375f94efe68cd971d44a0f49e3a"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "NVL",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "NVL-2026-H1-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "984b2dafa8740e2264e8b02dc9ce08836ef30c8ea947f195afa66e51bfd74234",
+        "document": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+        "original_seal": "da2d13f8911e99eb1a4d358f8c169602d52f241af04713540c4cf97212f5d760",
+        "document_evidence": "7267391e666d73fb04de4a0def53ebc18b395a693a5b127c6011d234ba23a2b4",
+        "ocr_proof": "5d69a86648da01403245947782b32e787bef7ecf50896d7f53051be228fef8df",
+        "reader_input_0": "880dfa4354201b1135663b5bf1e5f27c58f79e0ed053982c12235d4caac18e9d",
+        "reader_input_1": "5c175829fee521e91679a7d78ccc66a6eaa3a55ca78eeffdfccab9502639850d",
+        "reader_input_2": "aed22909e0400b134aff78529107365940d569582746860e7159a274fd3f1ec3",
+        "reader_input_3": "9987fdfce8655ce5980d349146aa5a8964442f6818b257d6f08e92bad40105d0"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T01:29:51+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "7267391e666d73fb04de4a0def53ebc18b395a693a5b127c6011d234ba23a2b4",
+          "documents/NVL/2026-H1/reviewed_interim_financial_statements/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007.pdf": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+          "dual-reader-transcriptions/nvl-2026h1-p12/agreement.proof.json": "da2d13f8911e99eb1a4d358f8c169602d52f241af04713540c4cf97212f5d760",
+          "dual-reader-transcriptions/nvl-2026h1-p12/claude-reader.raw.json": "aed22909e0400b134aff78529107365940d569582746860e7159a274fd3f1ec3",
+          "dual-reader-transcriptions/nvl-2026h1-p12/gemini-reader.raw.json": "9987fdfce8655ce5980d349146aa5a8964442f6818b257d6f08e92bad40105d0",
+          "dual-reader-transcriptions/nvl-2026h1-p12/page-12.png": "880dfa4354201b1135663b5bf1e5f27c58f79e0ed053982c12235d4caac18e9d",
+          "dual-reader-transcriptions/nvl-2026h1-p12/page-12.render-meta.json": "5c175829fee521e91679a7d78ccc66a6eaa3a55ca78eeffdfccab9502639850d",
+          "ocr-layout-proofs/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007/f05aa910a5adb1f9f742125ca05daf50cb37ff04010b1a40c75bff36fc4d3cd9.json": "5d69a86648da01403245947782b32e787bef7ecf50896d7f53051be228fef8df",
+          "official_document_acquisition_manifest.json": "7373fd58c557e1092f034583c7ef4e10be659bbe7b8e8abc8960a70f38e32840"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T01:29:51+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "888c1e507ae8aae9de344e44bc2d82502af8f5295dc854d1e560ecd1ef0b21e9",
+              "canonical_metric": "revenue",
+              "citation_id": "a3af75ad6ccebf0310445f41f08b545c8d9e0ed9ef9a0a9ffaf5f83801586baa",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "cbcfb9fdd707ecda7340dbeb4ae18d2479ecb4228ec8936e1f8767ade94e82fd",
+              "line_code": "10",
+              "normalized_value": 5095802570041,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "5c424ecf49cb55e748298248927bf845f79a3606a4bd55836cb54321fee56a19",
+              "canonical_metric": "net_income",
+              "citation_id": "475f11b36f94f029ba0f5a4f769fb136222a42699173534436748803a6bfef33",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "6fa15c91fe1d155490e0703b5b56204b01dd2c6c92e5da2f02c48e786b4884ef",
+              "line_code": "60",
+              "normalized_value": 1771558555719,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "fce848af324d47fc2213e780be65fffcbace2ed8d1de0ba7ba89bf8817d3965c",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "06e38320c632609586284dd9221d5fead937f0cd943429a01934366532a61972",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "b9fffcad46165f237ffb769cd1f8aa7a9b8165cd63e94639d8dbd23ead235ca7",
+              "line_code": "61",
+              "normalized_value": 1870049284775,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T12:06:00+07:00",
+          "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+          "evidence_subdir": "h1-2026-dual-reader-nvl-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/NVL/2026-H1/reviewed_interim_financial_statements/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007.pdf": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007/f05aa910a5adb1f9f742125ca05daf50cb37ff04010b1a40c75bff36fc4d3cd9.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T01:29:51+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "da2d13f8911e99eb1a4d358f8c169602d52f241af04713540c4cf97212f5d760",
+            "relative_path": "dual-reader-transcriptions/nvl-2026h1-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "aed22909e0400b134aff78529107365940d569582746860e7159a274fd3f1ec3",
+            "9987fdfce8655ce5980d349146aa5a8964442f6818b257d6f08e92bad40105d0"
+          ],
+          "reporting_period": "2026-H1",
+          "rows_relative_path": null,
+          "ticker": "NVL",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "7267391e666d73fb04de4a0def53ebc18b395a693a5b127c6011d234ba23a2b4",
+          "documents/NVL/2026-H1/reviewed_interim_financial_statements/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007.pdf": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+          "dual-reader-transcriptions/nvl-2026h1-p12/agreement.proof.json": "da2d13f8911e99eb1a4d358f8c169602d52f241af04713540c4cf97212f5d760",
+          "dual-reader-transcriptions/nvl-2026h1-p12/claude-reader.raw.json": "aed22909e0400b134aff78529107365940d569582746860e7159a274fd3f1ec3",
+          "dual-reader-transcriptions/nvl-2026h1-p12/gemini-reader.raw.json": "9987fdfce8655ce5980d349146aa5a8964442f6818b257d6f08e92bad40105d0",
+          "dual-reader-transcriptions/nvl-2026h1-p12/page-12.png": "880dfa4354201b1135663b5bf1e5f27c58f79e0ed053982c12235d4caac18e9d",
+          "dual-reader-transcriptions/nvl-2026h1-p12/page-12.render-meta.json": "5c175829fee521e91679a7d78ccc66a6eaa3a55ca78eeffdfccab9502639850d",
+          "ocr-layout-proofs/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007/f05aa910a5adb1f9f742125ca05daf50cb37ff04010b1a40c75bff36fc4d3cd9.json": "5d69a86648da01403245947782b32e787bef7ecf50896d7f53051be228fef8df",
+          "official_document_acquisition_manifest.json": "7373fd58c557e1092f034583c7ef4e10be659bbe7b8e8abc8960a70f38e32840"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T01:29:51+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "888c1e507ae8aae9de344e44bc2d82502af8f5295dc854d1e560ecd1ef0b21e9",
+              "canonical_metric": "revenue",
+              "citation_id": "a3af75ad6ccebf0310445f41f08b545c8d9e0ed9ef9a0a9ffaf5f83801586baa",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "cbcfb9fdd707ecda7340dbeb4ae18d2479ecb4228ec8936e1f8767ade94e82fd",
+              "line_code": "10",
+              "normalized_value": 5095802570041,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "5c424ecf49cb55e748298248927bf845f79a3606a4bd55836cb54321fee56a19",
+              "canonical_metric": "net_income",
+              "citation_id": "475f11b36f94f029ba0f5a4f769fb136222a42699173534436748803a6bfef33",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "6fa15c91fe1d155490e0703b5b56204b01dd2c6c92e5da2f02c48e786b4884ef",
+              "line_code": "60",
+              "normalized_value": 1771558555719,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "fce848af324d47fc2213e780be65fffcbace2ed8d1de0ba7ba89bf8817d3965c",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "06e38320c632609586284dd9221d5fead937f0cd943429a01934366532a61972",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "b9fffcad46165f237ffb769cd1f8aa7a9b8165cd63e94639d8dbd23ead235ca7",
+              "line_code": "61",
+              "normalized_value": 1870049284775,
+              "reason_codes": [
+                "DOCUMENT_METADATA_NOT_QUALIFIED",
+                "DOCUMENT_UNIT_SCALE_MISMATCH",
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "BLOCKED"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T12:06:00+07:00",
+          "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+          "evidence_subdir": "h1-2026-dual-reader-nvl-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/NVL/2026-H1/reviewed_interim_financial_statements/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007.pdf": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/nvl-2026h1-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007/f05aa910a5adb1f9f742125ca05daf50cb37ff04010b1a40c75bff36fc4d3cd9.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T01:29:51+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "da2d13f8911e99eb1a4d358f8c169602d52f241af04713540c4cf97212f5d760",
+            "relative_path": "dual-reader-transcriptions/nvl-2026h1-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "aed22909e0400b134aff78529107365940d569582746860e7159a274fd3f1ec3",
+            "9987fdfce8655ce5980d349146aa5a8964442f6818b257d6f08e92bad40105d0"
+          ],
+          "reporting_period": "2026-H1",
+          "rows_relative_path": null,
+          "ticker": "NVL",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "NVL-2025-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "35ca083e3bcfe7981ab11128302f4c96be36ca5cdc9f76ecaa6ce56d47393ac9",
+        "document": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+        "original_seal": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
+        "document_evidence": "4c41f782aa86f663aa441357cb8775cf263d3909d5c5d4fdf98d9b9395ec0105",
+        "ocr_proof": "7c087eb301c4e9b16ea25d5ddd0b8a33ba323175ef2976aa9ffadfacd162f9d6",
+        "reader_input_0": "d003a13f910ffab2bf14ef269f80fe3a12b2cf50ba01bdb1706e9b4b28526378",
+        "reader_input_1": "8e14352868505ff5ab8e59654dd5db541e924d0d762f9bcfe1074a3c2166c496",
+        "reader_input_2": "70af852a795fe1ca2ca590f978c68b0e017ad9cc00334f4d0733bd85b964c838",
+        "reader_input_3": "dd6ddda78d94ee66ef9c0d9e2acd8e50c571f37011267e0d14f19f981237feb4"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-25T12:50:27+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "4c41f782aa86f663aa441357cb8775cf263d3909d5c5d4fdf98d9b9395ec0105",
+          "documents/NVL/2025/audited_annual_financial_statements/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353.pdf": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+          "dual-reader-transcriptions/nvl-fy2025-p12/agreement.proof.json": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
+          "dual-reader-transcriptions/nvl-fy2025-p12/claude-reader.raw.json": "70af852a795fe1ca2ca590f978c68b0e017ad9cc00334f4d0733bd85b964c838",
+          "dual-reader-transcriptions/nvl-fy2025-p12/gemini-reader.raw.json": "dd6ddda78d94ee66ef9c0d9e2acd8e50c571f37011267e0d14f19f981237feb4",
+          "dual-reader-transcriptions/nvl-fy2025-p12/page-12.png": "d003a13f910ffab2bf14ef269f80fe3a12b2cf50ba01bdb1706e9b4b28526378",
+          "dual-reader-transcriptions/nvl-fy2025-p12/page-12.render-meta.json": "8e14352868505ff5ab8e59654dd5db541e924d0d762f9bcfe1074a3c2166c496",
+          "ocr-layout-proofs/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353/37b70bafcb081387a51e2424e19ef3e30a491b2d0514c0e909019dd9c1037248.json": "7c087eb301c4e9b16ea25d5ddd0b8a33ba323175ef2976aa9ffadfacd162f9d6",
+          "official_document_acquisition_manifest.json": "202dc305bfd932949862e5990bf28a0e707e426247a07d8b7816a442878442d0"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-25T12:50:27+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "9b88d6b188c032e73fd8f0413d21ea606284a83b58552da8db47a91d082cb1da",
+              "canonical_metric": "revenue",
+              "citation_id": "59861a4d6a36ea04a7a3ce736a31ee0def79eb6222d07f89649c6a15faf98e6a",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "2776985a4f0731e1d0741e90c71d564a47087ea496d6b6571d31c55feb921d5d",
+              "line_code": "10",
+              "normalized_value": 6965748286065,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "e78e26a47f38364c4d234ed2f75721c1a8c2bd9e263ace2c183a38cecb0a7af5",
+              "canonical_metric": "net_income",
+              "citation_id": "3fea286f5a909ee73caf0833dc74fe6d559a2b1e018cbb56b33d49d69e0f4607",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "8a31304f9410f338f43e11fc72a3d8a7459a45a1f7101d5b9f8999e4e3e95e10",
+              "line_code": "60",
+              "normalized_value": 1861407508211,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "0b1af796fa473522fcf43033759b9ad6cec5ea9c75bd8f83b3b599517fff1fb6",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "29cb8bf626b77c973062c60196394dbe4ec43ac57c40e990dc6fe22a2566dafd",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "89e41451fa46fd9e913dda1b409fb3f9582ef944530862e9f48f10c609793f04",
+              "line_code": "61",
+              "normalized_value": 1743741158759,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T08:15:17+07:00",
+          "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+          "evidence_subdir": "fy2025-dual-reader-nvl-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/NVL/2025/audited_annual_financial_statements/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353.pdf": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353/37b70bafcb081387a51e2424e19ef3e30a491b2d0514c0e909019dd9c1037248.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-25T12:50:27+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
+            "relative_path": "dual-reader-transcriptions/nvl-fy2025-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "70af852a795fe1ca2ca590f978c68b0e017ad9cc00334f4d0733bd85b964c838",
+            "dd6ddda78d94ee66ef9c0d9e2acd8e50c571f37011267e0d14f19f981237feb4"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "NVL",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "4c41f782aa86f663aa441357cb8775cf263d3909d5c5d4fdf98d9b9395ec0105",
+          "documents/NVL/2025/audited_annual_financial_statements/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353.pdf": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+          "dual-reader-transcriptions/nvl-fy2025-p12/agreement.proof.json": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
+          "dual-reader-transcriptions/nvl-fy2025-p12/claude-reader.raw.json": "70af852a795fe1ca2ca590f978c68b0e017ad9cc00334f4d0733bd85b964c838",
+          "dual-reader-transcriptions/nvl-fy2025-p12/gemini-reader.raw.json": "dd6ddda78d94ee66ef9c0d9e2acd8e50c571f37011267e0d14f19f981237feb4",
+          "dual-reader-transcriptions/nvl-fy2025-p12/page-12.png": "d003a13f910ffab2bf14ef269f80fe3a12b2cf50ba01bdb1706e9b4b28526378",
+          "dual-reader-transcriptions/nvl-fy2025-p12/page-12.render-meta.json": "8e14352868505ff5ab8e59654dd5db541e924d0d762f9bcfe1074a3c2166c496",
+          "ocr-layout-proofs/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353/37b70bafcb081387a51e2424e19ef3e30a491b2d0514c0e909019dd9c1037248.json": "7c087eb301c4e9b16ea25d5ddd0b8a33ba323175ef2976aa9ffadfacd162f9d6",
+          "official_document_acquisition_manifest.json": "202dc305bfd932949862e5990bf28a0e707e426247a07d8b7816a442878442d0"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-25T12:50:27+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "9b88d6b188c032e73fd8f0413d21ea606284a83b58552da8db47a91d082cb1da",
+              "canonical_metric": "revenue",
+              "citation_id": "59861a4d6a36ea04a7a3ce736a31ee0def79eb6222d07f89649c6a15faf98e6a",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "2776985a4f0731e1d0741e90c71d564a47087ea496d6b6571d31c55feb921d5d",
+              "line_code": "10",
+              "normalized_value": 6965748286065,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "e78e26a47f38364c4d234ed2f75721c1a8c2bd9e263ace2c183a38cecb0a7af5",
+              "canonical_metric": "net_income",
+              "citation_id": "3fea286f5a909ee73caf0833dc74fe6d559a2b1e018cbb56b33d49d69e0f4607",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "8a31304f9410f338f43e11fc72a3d8a7459a45a1f7101d5b9f8999e4e3e95e10",
+              "line_code": "60",
+              "normalized_value": 1861407508211,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "0b1af796fa473522fcf43033759b9ad6cec5ea9c75bd8f83b3b599517fff1fb6",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "29cb8bf626b77c973062c60196394dbe4ec43ac57c40e990dc6fe22a2566dafd",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "89e41451fa46fd9e913dda1b409fb3f9582ef944530862e9f48f10c609793f04",
+              "line_code": "61",
+              "normalized_value": 1743741158759,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-25T08:15:17+07:00",
+          "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+          "evidence_subdir": "fy2025-dual-reader-nvl-20261125",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/NVL/2025/audited_annual_financial_statements/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353.pdf": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/gemini-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/nvl-fy2025-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353/37b70bafcb081387a51e2424e19ef3e30a491b2d0514c0e909019dd9c1037248.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-25T12:50:27+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "d96e41304cae02fc1006a8ab8313529aaaf5fa036465ed97ab5decc4c34341cb",
+            "relative_path": "dual-reader-transcriptions/nvl-fy2025-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "70af852a795fe1ca2ca590f978c68b0e017ad9cc00334f4d0733bd85b964c838",
+            "dd6ddda78d94ee66ef9c0d9e2acd8e50c571f37011267e0d14f19f981237feb4"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "NVL",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "HAH-2025-P13": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "882204b02bb7932aa7e10e5c8f06e9696621eabce9417d7d61c365e6978955aa",
+        "document": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+        "original_seal": "9b41976fae9b6a0f1fbe2848b5da27bb15026fed02370529a40829c10a65d8f8",
+        "document_evidence": "ecf6fbf8475fa9eed63ec0acb219bd2e17ddb4216a7bfeca1f8ee14a7b984724",
+        "ocr_proof": "0f4626d168ee3195e6d7438f01bedffd15eea3ea5169c74d81c5325e31062efa",
+        "reader_input_0": "fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b",
+        "reader_input_1": "bbbc9666b40b785cc1392e6fdf0e738dc573093a5683b8a11dd69139662c75d2",
+        "reader_input_2": "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d",
+        "reader_input_3": "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T19:09:05+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "ecf6fbf8475fa9eed63ec0acb219bd2e17ddb4216a7bfeca1f8ee14a7b984724",
+          "documents/HAH/2025/audited_annual_financial_statements/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1.pdf": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+          "dual-reader-transcriptions/hah-fy2025-p13/agreement.proof.json": "9b41976fae9b6a0f1fbe2848b5da27bb15026fed02370529a40829c10a65d8f8",
+          "dual-reader-transcriptions/hah-fy2025-p13/chatgpt-reader.raw.json": "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145",
+          "dual-reader-transcriptions/hah-fy2025-p13/claude-reader.raw.json": "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d",
+          "dual-reader-transcriptions/hah-fy2025-p13/page-13.png": "fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b",
+          "dual-reader-transcriptions/hah-fy2025-p13/page-13.render-meta.json": "bbbc9666b40b785cc1392e6fdf0e738dc573093a5683b8a11dd69139662c75d2",
+          "ocr-layout-proofs/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1/6d1c9f0542322b588e9fc129a5542496b9e47b7f0eebb29e1e33d203b53c9944.json": "0f4626d168ee3195e6d7438f01bedffd15eea3ea5169c74d81c5325e31062efa",
+          "official_document_acquisition_manifest.json": "7d4436cdd904bedf46adf2faa1b63748ed90bbd490fcd5494459e7ca6584a6b2"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T19:09:05+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "5c0d2043d322552a3c8f98e8b2573a0f32157d3313dd865bc4c62bfe4ceb1fff",
+              "canonical_metric": "revenue",
+              "citation_id": "1a0858c9733665cd76aaedf26f73fd4da3adb7e6fd0ebb9a33232eee0cec255a",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "2ff3d6fb7a692075097e6adfb255ca3830ccc3c0cfeb3bc35bfd545cca25440f",
+              "line_code": "10",
+              "normalized_value": 5091077366754,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "4f51093695f7f5a997d13f344dc02cb5502c1e2bebc1b87bde68c09d86ee75ae",
+              "canonical_metric": "net_income",
+              "citation_id": "57cb28b9a3336959c460f1c569621ac3b951058fd74970b0fc2199cf11b2ffc5",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "427834cda4cedb9c8edf24425cc326c501abf4993a09d99dbd9c20519c8ddfb6",
+              "line_code": "60",
+              "normalized_value": 1400895156847,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "3f6017efa2c999d9cda18b2164145ebc9b81984d943ee1fc6b5a39b9bc1b88cd",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "2f7c96309a553f4f3c370f7aa3f0690a3f8a9755def06fa5228b8b6dfabe5a77",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "27ad07669b4ac54057eddd678235a9792e8c558d8aa056affcaadd414a3fb806",
+              "line_code": "61",
+              "normalized_value": 1206512800982,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T09:09:20+07:00",
+          "document_sha256": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+          "evidence_subdir": "fy2025-dual-reader-hah-r3-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HAH/2025/audited_annual_financial_statements/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1.pdf": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/chatgpt-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/page-13.png": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/page-13.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1/6d1c9f0542322b588e9fc129a5542496b9e47b7f0eebb29e1e33d203b53c9944.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T19:09:05+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "9b41976fae9b6a0f1fbe2848b5da27bb15026fed02370529a40829c10a65d8f8",
+            "relative_path": "dual-reader-transcriptions/hah-fy2025-p13/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d",
+            "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "HAH",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "ecf6fbf8475fa9eed63ec0acb219bd2e17ddb4216a7bfeca1f8ee14a7b984724",
+          "documents/HAH/2025/audited_annual_financial_statements/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1.pdf": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+          "dual-reader-transcriptions/hah-fy2025-p13/agreement.proof.json": "9b41976fae9b6a0f1fbe2848b5da27bb15026fed02370529a40829c10a65d8f8",
+          "dual-reader-transcriptions/hah-fy2025-p13/chatgpt-reader.raw.json": "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145",
+          "dual-reader-transcriptions/hah-fy2025-p13/claude-reader.raw.json": "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d",
+          "dual-reader-transcriptions/hah-fy2025-p13/page-13.png": "fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b",
+          "dual-reader-transcriptions/hah-fy2025-p13/page-13.render-meta.json": "bbbc9666b40b785cc1392e6fdf0e738dc573093a5683b8a11dd69139662c75d2",
+          "ocr-layout-proofs/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1/6d1c9f0542322b588e9fc129a5542496b9e47b7f0eebb29e1e33d203b53c9944.json": "0f4626d168ee3195e6d7438f01bedffd15eea3ea5169c74d81c5325e31062efa",
+          "official_document_acquisition_manifest.json": "7d4436cdd904bedf46adf2faa1b63748ed90bbd490fcd5494459e7ca6584a6b2"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T19:09:05+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "5c0d2043d322552a3c8f98e8b2573a0f32157d3313dd865bc4c62bfe4ceb1fff",
+              "canonical_metric": "revenue",
+              "citation_id": "1a0858c9733665cd76aaedf26f73fd4da3adb7e6fd0ebb9a33232eee0cec255a",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "2ff3d6fb7a692075097e6adfb255ca3830ccc3c0cfeb3bc35bfd545cca25440f",
+              "line_code": "10",
+              "normalized_value": 5091077366754,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "4f51093695f7f5a997d13f344dc02cb5502c1e2bebc1b87bde68c09d86ee75ae",
+              "canonical_metric": "net_income",
+              "citation_id": "57cb28b9a3336959c460f1c569621ac3b951058fd74970b0fc2199cf11b2ffc5",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "427834cda4cedb9c8edf24425cc326c501abf4993a09d99dbd9c20519c8ddfb6",
+              "line_code": "60",
+              "normalized_value": 1400895156847,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "3f6017efa2c999d9cda18b2164145ebc9b81984d943ee1fc6b5a39b9bc1b88cd",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "2f7c96309a553f4f3c370f7aa3f0690a3f8a9755def06fa5228b8b6dfabe5a77",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "27ad07669b4ac54057eddd678235a9792e8c558d8aa056affcaadd414a3fb806",
+              "line_code": "61",
+              "normalized_value": 1206512800982,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T09:09:20+07:00",
+          "document_sha256": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+          "evidence_subdir": "fy2025-dual-reader-hah-r3-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HAH/2025/audited_annual_financial_statements/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1.pdf": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/chatgpt-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/page-13.png": "CREATED",
+            "dual-reader-transcriptions/hah-fy2025-p13/page-13.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1/6d1c9f0542322b588e9fc129a5542496b9e47b7f0eebb29e1e33d203b53c9944.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T19:09:05+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "9b41976fae9b6a0f1fbe2848b5da27bb15026fed02370529a40829c10a65d8f8",
+            "relative_path": "dual-reader-transcriptions/hah-fy2025-p13/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d",
+            "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145"
+          ],
+          "reporting_period": "2025",
+          "rows_relative_path": null,
+          "ticker": "HAH",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "HAH-2025-H1-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "882204b02bb7932aa7e10e5c8f06e9696621eabce9417d7d61c365e6978955aa",
+        "document": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+        "original_seal": "e882b2c9e326d6f2d10a19c9d4d7d8f0786224670ef4aeaf7eebb55449e0947c",
+        "document_evidence": "8d0aecc024761b15f0287d31503ef75d7fa40498d57c67226377cf6318859f82",
+        "ocr_proof": "89ca0780118d9a4b56e4b9d644175aaf28c351a0e3de0591f31306c1058ee864",
+        "reader_input_0": "88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b",
+        "reader_input_1": "afacfe0b02406db6592be987ca34f838afec744e814c36c55a5e013467f2b6e8",
+        "reader_input_2": "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6",
+        "reader_input_3": "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T19:09:44+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "8d0aecc024761b15f0287d31503ef75d7fa40498d57c67226377cf6318859f82",
+          "documents/HAH/2025-H1/reviewed_interim_financial_statements/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b.pdf": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+          "dual-reader-transcriptions/hah-2025h1-p12/agreement.proof.json": "e882b2c9e326d6f2d10a19c9d4d7d8f0786224670ef4aeaf7eebb55449e0947c",
+          "dual-reader-transcriptions/hah-2025h1-p12/chatgpt-reader.raw.json": "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb",
+          "dual-reader-transcriptions/hah-2025h1-p12/claude-reader.raw.json": "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6",
+          "dual-reader-transcriptions/hah-2025h1-p12/page-12.png": "88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b",
+          "dual-reader-transcriptions/hah-2025h1-p12/page-12.render-meta.json": "afacfe0b02406db6592be987ca34f838afec744e814c36c55a5e013467f2b6e8",
+          "ocr-layout-proofs/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b/4ae928d16b5ed7eceb9258771a79dec7a8cc67dfc4491830c08d0c6984ddc19e.json": "89ca0780118d9a4b56e4b9d644175aaf28c351a0e3de0591f31306c1058ee864",
+          "official_document_acquisition_manifest.json": "b89d05bce22d4f4a2b9bd401660d0e8bd9b006a42120f12e86bb7506484ca4e0"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T19:09:44+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "a528a289c4fff7f58f14dc4bd8b04b317403a2747ad684b407c9610090799aa0",
+              "canonical_metric": "revenue",
+              "citation_id": "96816187dbbd11283abc7bc9caf4229897aff6d4a7b89bdabde6d944abef0feb",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "72a902c1552f112275bf6fb23f5d91d8c7495786295d7b553223afa0155a8a00",
+              "line_code": "10",
+              "normalized_value": 2443798697626,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "c1cd7e8605175d30e2b709e904aaf5144af87b1a415e60743183cda81f9f44ce",
+              "canonical_metric": "net_income",
+              "citation_id": "623bd2cdf15848726577aa35c9b0444133abe4160a897205100e949a5a5ee236",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "6f582fdabf8a6f05b42f247ae62d4a0d8c4ac84ec051015c520032fa01660a1c",
+              "line_code": "60",
+              "normalized_value": 687962372807,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "c29c6c73f5d883043dc50810411167ef9b392a273090f7bfe2071e634a965b59",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "ea8582d1c9a8fcfb9b358eb6e7add5d863451ddd3851728ca9a06aff3b99beff",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "e8d7a43f2cd0216ec024413984fbb3554bab05a8afbeeca2e87f351d9712d4cd",
+              "line_code": "61",
+              "normalized_value": 594848667058,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T09:27:30+07:00",
+          "document_sha256": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+          "evidence_subdir": "h1-2025-dual-reader-hah-r3-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HAH/2025-H1/reviewed_interim_financial_statements/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b.pdf": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/chatgpt-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b/4ae928d16b5ed7eceb9258771a79dec7a8cc67dfc4491830c08d0c6984ddc19e.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T19:09:44+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "e882b2c9e326d6f2d10a19c9d4d7d8f0786224670ef4aeaf7eebb55449e0947c",
+            "relative_path": "dual-reader-transcriptions/hah-2025h1-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6",
+            "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "HAH",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "8d0aecc024761b15f0287d31503ef75d7fa40498d57c67226377cf6318859f82",
+          "documents/HAH/2025-H1/reviewed_interim_financial_statements/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b.pdf": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+          "dual-reader-transcriptions/hah-2025h1-p12/agreement.proof.json": "e882b2c9e326d6f2d10a19c9d4d7d8f0786224670ef4aeaf7eebb55449e0947c",
+          "dual-reader-transcriptions/hah-2025h1-p12/chatgpt-reader.raw.json": "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb",
+          "dual-reader-transcriptions/hah-2025h1-p12/claude-reader.raw.json": "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6",
+          "dual-reader-transcriptions/hah-2025h1-p12/page-12.png": "88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b",
+          "dual-reader-transcriptions/hah-2025h1-p12/page-12.render-meta.json": "afacfe0b02406db6592be987ca34f838afec744e814c36c55a5e013467f2b6e8",
+          "ocr-layout-proofs/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b/4ae928d16b5ed7eceb9258771a79dec7a8cc67dfc4491830c08d0c6984ddc19e.json": "89ca0780118d9a4b56e4b9d644175aaf28c351a0e3de0591f31306c1058ee864",
+          "official_document_acquisition_manifest.json": "b89d05bce22d4f4a2b9bd401660d0e8bd9b006a42120f12e86bb7506484ca4e0"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T19:09:44+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "a528a289c4fff7f58f14dc4bd8b04b317403a2747ad684b407c9610090799aa0",
+              "canonical_metric": "revenue",
+              "citation_id": "96816187dbbd11283abc7bc9caf4229897aff6d4a7b89bdabde6d944abef0feb",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "72a902c1552f112275bf6fb23f5d91d8c7495786295d7b553223afa0155a8a00",
+              "line_code": "10",
+              "normalized_value": 2443798697626,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "c1cd7e8605175d30e2b709e904aaf5144af87b1a415e60743183cda81f9f44ce",
+              "canonical_metric": "net_income",
+              "citation_id": "623bd2cdf15848726577aa35c9b0444133abe4160a897205100e949a5a5ee236",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "6f582fdabf8a6f05b42f247ae62d4a0d8c4ac84ec051015c520032fa01660a1c",
+              "line_code": "60",
+              "normalized_value": 687962372807,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "c29c6c73f5d883043dc50810411167ef9b392a273090f7bfe2071e634a965b59",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "ea8582d1c9a8fcfb9b358eb6e7add5d863451ddd3851728ca9a06aff3b99beff",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "e8d7a43f2cd0216ec024413984fbb3554bab05a8afbeeca2e87f351d9712d4cd",
+              "line_code": "61",
+              "normalized_value": 594848667058,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T09:27:30+07:00",
+          "document_sha256": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+          "evidence_subdir": "h1-2025-dual-reader-hah-r3-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HAH/2025-H1/reviewed_interim_financial_statements/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b.pdf": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/chatgpt-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/page-12.png": "CREATED",
+            "dual-reader-transcriptions/hah-2025h1-p12/page-12.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b/4ae928d16b5ed7eceb9258771a79dec7a8cc67dfc4491830c08d0c6984ddc19e.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T19:09:44+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "e882b2c9e326d6f2d10a19c9d4d7d8f0786224670ef4aeaf7eebb55449e0947c",
+            "relative_path": "dual-reader-transcriptions/hah-2025h1-p12/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6",
+            "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb"
+          ],
+          "reporting_period": "2025-H1",
+          "rows_relative_path": null,
+          "ticker": "HAH",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "HAH-2026-H1-P13": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Replay dependencies unavailable: pypdf, fitz",
+      "missing_dependencies": [
+        "pypdf",
+        "fitz"
+      ],
+      "inputs_sha256": {
+        "original_manifest": "882204b02bb7932aa7e10e5c8f06e9696621eabce9417d7d61c365e6978955aa",
+        "document": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+        "original_seal": "7987c626aa84d5d14a425f5fc1f92497deea04efa7d57b0f3af08effda2f3eb8",
+        "document_evidence": "8e31ebacfd7ef5b4c441515c2061d40b58dbd47478965c2be2ef488774894fc5",
+        "ocr_proof": "577dcfd4d7b47d41502c3830b7eb18ebf141885ec637261b319200b48bfaf877",
+        "reader_input_0": "98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6",
+        "reader_input_1": "52b3d1b1001ff53925351b886a436bf9c1c477632228e45c297ebaf693bb390b",
+        "reader_input_2": "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0",
+        "reader_input_3": "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71"
+      },
+      "inputs_unchanged": true,
+      "original_completion_at": "2026-11-26T19:10:24+07:00",
+      "equal": true,
+      "base": {
+        "output_sha256": {
+          "document_level_evidence.json": "8e31ebacfd7ef5b4c441515c2061d40b58dbd47478965c2be2ef488774894fc5",
+          "documents/HAH/2026-H1/reviewed_interim_financial_statements/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291.pdf": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+          "dual-reader-transcriptions/hah-2026h1-p13/agreement.proof.json": "7987c626aa84d5d14a425f5fc1f92497deea04efa7d57b0f3af08effda2f3eb8",
+          "dual-reader-transcriptions/hah-2026h1-p13/chatgpt-reader.raw.json": "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71",
+          "dual-reader-transcriptions/hah-2026h1-p13/claude-reader.raw.json": "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0",
+          "dual-reader-transcriptions/hah-2026h1-p13/page-13.png": "98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6",
+          "dual-reader-transcriptions/hah-2026h1-p13/page-13.render-meta.json": "52b3d1b1001ff53925351b886a436bf9c1c477632228e45c297ebaf693bb390b",
+          "ocr-layout-proofs/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291/fc47c5939ef2e61a1526146ff16e94a540980523f24031504b2bbba1a4412346.json": "577dcfd4d7b47d41502c3830b7eb18ebf141885ec637261b319200b48bfaf877",
+          "official_document_acquisition_manifest.json": "547ce5dc478428b8f2cd6fb75b9134481207e9ea8a0afe47aad0ac78af6a0f56"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T19:10:24+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "40e38cb7674ce5c4c9a6310fe3d5295f4242b1b7af249b03007dc281a7447e89",
+              "canonical_metric": "revenue",
+              "citation_id": "029b88c809a9c30126e6305d75b0407bfad619e2d574c987ba00ffbe654b6bf6",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "ad19f8736155a11dd01de7e8bb574364d17abea9d76d17f4930dac1bd9ccd2b5",
+              "line_code": "10",
+              "normalized_value": 2798514199511,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7dd9987cd4b6cb26012bc26ac5deda531b84ec470c8f14284f5909681aeb4aee",
+              "canonical_metric": "net_income",
+              "citation_id": "39270b85eb019a137454e2832b694dc1c993cd5248dfebff8966af747311495d",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "1205a73729157d35f54f97a3281d5b8fc6a7171a222ecdcde1348343f44d7e8e",
+              "line_code": "60",
+              "normalized_value": 817613076251,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "8a499c5229e768ea31cf17dd8c789bcce8bd9ee04fed055253ac679e750ec946",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "1ceb71594caf4c8f7986e38a2534c4d5bb4620a94ce7b8b79585f645247dd7fe",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "184460d775f0d811fc077bd36bb41ee192aef741e05000642b0d1fa500b62476",
+              "line_code": "61",
+              "normalized_value": 672098576615,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T09:09:20+07:00",
+          "document_sha256": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+          "evidence_subdir": "h1-2026-dual-reader-hah-r3-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HAH/2026-H1/reviewed_interim_financial_statements/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291.pdf": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/chatgpt-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/page-13.png": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/page-13.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291/fc47c5939ef2e61a1526146ff16e94a540980523f24031504b2bbba1a4412346.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T19:10:24+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "7987c626aa84d5d14a425f5fc1f92497deea04efa7d57b0f3af08effda2f3eb8",
+            "relative_path": "dual-reader-transcriptions/hah-2026h1-p13/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0",
+            "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71"
+          ],
+          "reporting_period": "2026-H1",
+          "rows_relative_path": null,
+          "ticker": "HAH",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      },
+      "active": {
+        "output_sha256": {
+          "document_level_evidence.json": "8e31ebacfd7ef5b4c441515c2061d40b58dbd47478965c2be2ef488774894fc5",
+          "documents/HAH/2026-H1/reviewed_interim_financial_statements/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291.pdf": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+          "dual-reader-transcriptions/hah-2026h1-p13/agreement.proof.json": "7987c626aa84d5d14a425f5fc1f92497deea04efa7d57b0f3af08effda2f3eb8",
+          "dual-reader-transcriptions/hah-2026h1-p13/chatgpt-reader.raw.json": "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71",
+          "dual-reader-transcriptions/hah-2026h1-p13/claude-reader.raw.json": "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0",
+          "dual-reader-transcriptions/hah-2026h1-p13/page-13.png": "98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6",
+          "dual-reader-transcriptions/hah-2026h1-p13/page-13.render-meta.json": "52b3d1b1001ff53925351b886a436bf9c1c477632228e45c297ebaf693bb390b",
+          "ocr-layout-proofs/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291/fc47c5939ef2e61a1526146ff16e94a540980523f24031504b2bbba1a4412346.json": "577dcfd4d7b47d41502c3830b7eb18ebf141885ec637261b319200b48bfaf877",
+          "official_document_acquisition_manifest.json": "547ce5dc478428b8f2cd6fb75b9134481207e9ea8a0afe47aad0ac78af6a0f56"
+        },
+        "report": {
+          "admission_completed_at": "2026-11-26T19:10:24+07:00",
+          "admissions": [
+            {
+              "admission_basis": null,
+              "admission_id": "40e38cb7674ce5c4c9a6310fe3d5295f4242b1b7af249b03007dc281a7447e89",
+              "canonical_metric": "revenue",
+              "citation_id": "029b88c809a9c30126e6305d75b0407bfad619e2d574c987ba00ffbe654b6bf6",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "ad19f8736155a11dd01de7e8bb574364d17abea9d76d17f4930dac1bd9ccd2b5",
+              "line_code": "10",
+              "normalized_value": 2798514199511,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "7dd9987cd4b6cb26012bc26ac5deda531b84ec470c8f14284f5909681aeb4aee",
+              "canonical_metric": "net_income",
+              "citation_id": "39270b85eb019a137454e2832b694dc1c993cd5248dfebff8966af747311495d",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "1205a73729157d35f54f97a3281d5b8fc6a7171a222ecdcde1348343f44d7e8e",
+              "line_code": "60",
+              "normalized_value": 817613076251,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            },
+            {
+              "admission_basis": null,
+              "admission_id": "8a499c5229e768ea31cf17dd8c789bcce8bd9ee04fed055253ac679e750ec946",
+              "canonical_metric": "attributable_net_income",
+              "citation_id": "1ceb71594caf4c8f7986e38a2534c4d5bb4620a94ce7b8b79585f645247dd7fe",
+              "evidence_classification": null,
+              "evidence_tier": null,
+              "fact_id": "184460d775f0d811fc077bd36bb41ee192aef741e05000642b0d1fa500b62476",
+              "line_code": "61",
+              "normalized_value": 672098576615,
+              "reason_codes": [
+                "RETAINED_DOCUMENT_TEXT_PROOF_UNAVAILABLE"
+              ],
+              "state": "UNKNOWN"
+            }
+          ],
+          "authority_effect": "OFFLINE_RESEARCH_ONLY",
+          "comparison_started_at": "2026-11-26T09:09:20+07:00",
+          "document_sha256": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+          "evidence_subdir": "h1-2026-dual-reader-hah-r3-20261126",
+          "fact_local_rejections": [],
+          "files": {
+            "document_level_evidence.json": "CREATED",
+            "documents/HAH/2026-H1/reviewed_interim_financial_statements/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291.pdf": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/agreement.proof.json": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/chatgpt-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/claude-reader.raw.json": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/page-13.png": "CREATED",
+            "dual-reader-transcriptions/hah-2026h1-p13/page-13.render-meta.json": "CREATED",
+            "dual_reader_admitted_rows.jsonl": "NOT_WRITTEN",
+            "ocr-layout-proofs/913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291/fc47c5939ef2e61a1526146ff16e94a540980523f24031504b2bbba1a4412346.json": "CREATED",
+            "official_document_acquisition_manifest.json": "CREATED"
+          },
+          "knowledge_floor": "2026-11-26T19:10:24+07:00",
+          "landing_root": "<ISOLATED>",
+          "model_calls": 0,
+          "network_used": false,
+          "pit_backtest_eligible": false,
+          "proof": {
+            "proof_sha256": "7987c626aa84d5d14a425f5fc1f92497deea04efa7d57b0f3af08effda2f3eb8",
+            "relative_path": "dual-reader-transcriptions/hah-2026h1-p13/agreement.proof.json"
+          },
+          "raw_sha256": [
+            "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0",
+            "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71"
+          ],
+          "reporting_period": "2026-H1",
+          "rows_relative_path": null,
+          "ticker": "HAH",
+          "tool_version": "run_dual_reader_transcription_admission/v1"
+        }
+      }
+    },
+    "BWE-2025-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Required retained inputs or original completion instant unavailable",
+      "missing": [
+        "fy2025-dual-reader-bwe-r3-20261126\\dual-reader-transcriptions\\bwe-fy2025-p12\\agreement.proof.json",
+        "fy2025-dual-reader-bwe-r3-20261126\\document_level_evidence.json"
+      ]
+    },
+    "BWE-2025-H1-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Required retained inputs or original completion instant unavailable",
+      "missing": [
+        "h1-2025-dual-reader-bwe-r3-20261126\\dual-reader-transcriptions\\bwe-2025h1-p12\\agreement.proof.json",
+        "h1-2025-dual-reader-bwe-r3-20261126\\document_level_evidence.json"
+      ]
+    },
+    "BWE-2026-H1-P12": {
+      "status": "REAL_REPLAY_NOT_CERTIFIED",
+      "reason": "Required retained inputs or original completion instant unavailable",
+      "missing": [
+        "h1-2026-dual-reader-bwe-r3-20261126\\dual-reader-transcriptions\\bwe-2026h1-p12\\agreement.proof.json",
+        "h1-2026-dual-reader-bwe-r3-20261126\\document_level_evidence.json"
+      ]
+    }
+  }
+}

@@ -31,87 +31,253 @@ from typing import Any, Iterable, Mapping
 CONTRACT_VERSION = "official_ocr_layout_proof/v1"
 PROOF_DIR = "ocr-layout-proofs"
 
-# Registered, individually proven layouts. Adding a document is a reviewed change, never a pattern match.
-LAYOUT_PROOFS: dict[str, dict[str, Any]] = {
-    "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968": {
-        "ticker": "HPG", "reporting_period": "2026-H1", "statement_scope": "consolidated",
-        "layout": "VAS_TT43_2026_INTERIM_CONSOLIDATED_B01a_B02a_B03a_COLUMN_MAJOR_OCR",
-        "statement_pages": (9, 10, 11, 12, 13, 14),
-        "current_headers": ("Kỳ này", "Số cuối kỳ"),
-        "comparative_headers": ("Kỳ trước", "Số đầu kỳ"),
-        "metric_line_codes": {"revenue": "10", "net_income": "60", "attributable_net_income": "61",
-                              "total_assets": "280", "shareholders_equity": "400", "operating_cash_flow": "20"},
-        "approval": "Owner approval 2026-11-07: scoped HPG H1/2026 admission contract corrective",
-        # Verified at registration: no native text layer on any page (pypdf 6.14.2, 67/67 pages empty).
-        "text_layer_verification": {"tool": "pypdf 6.14.2", "pages_checked": 67, "non_empty_pages": 0,
-                                    "state": "NONE_VERIFIED", "verified_at": "2026-11-07"},
-    },
-}
+# Immutable snapshots are parsed from the same bounded bytes used for their digest.
+from copy import deepcopy
+from functools import lru_cache
+from pathlib import Path, PurePosixPath
+from datetime import datetime
 
-# HOL-08: exact retained originals authorized for bounded operand replay. No source-family
-# wildcard and no claim that an existing (possibly unqualified) text layer is absent.
-for _sha, _ticker, _period, _pages in (
-    ("f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07", "HPG", "2025", (7, 8, 9, 10, 11, 12)),
-    ("309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d", "PNJ", "2025", (7, 8, 9, 10, 11)),
-    ("ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9", "HPG", "2025-H1", (10,)),
-    ("12c40161cdb31ef603256892dbe70a2bba6a906c5b2e033ed281cb321466601c", "PNJ", "2025-H1", (10,)),
-    ("eba4fad322c0a634f156a0f4345d72b47b6962842cadee55607cdd278fcdd577", "VRE", "2025-H1", (11,)),
-):
-    LAYOUT_PROOFS[_sha] = {
-        "ticker": _ticker, "reporting_period": _period, "statement_scope": "consolidated",
-        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
-        "statement_pages": _pages, "current_headers": ("Kỳ này", "Năm nay", "2025", "30.6.2025"),
-        "comparative_headers": ("Kỳ trước", "Năm trước", "2024", "30.6.2024"),
-        "metric_line_codes": {"revenue": "10", "net_income": "60", "attributable_net_income": "61",
-                              "total_assets": "270", "shareholders_equity": "400", "operating_cash_flow": "20"},
-        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay",
-    }
+REGISTRY_ROOT = Path(__file__).resolve().parents[2]
+REGISTRY_LIMIT = 1024 * 1024
+LAYOUT_SNAPSHOT = "config/official_financial_layouts/r0001.json"
+ISSUER_SNAPSHOT = "config/official_financial_issuers/r0001.json"
 
-# Decision 2: exact originals only, bounded to the independently read income page.
-# Text-layer descriptions are Head Leader observations, not executor verification:
-# pypdf is unavailable in this sandbox. Presence never qualifies native text or
-# bypasses the existing zero-native-candidate OCR fallback gate.
-for _sha, _ticker, _period, _pages, _current, _comparative, _text_layer in (
-    ("54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7", "POW", "2025", (11,),
-     ("Current year",), ("Prior year",), "Native text layer reported: 60,233 characters over 26 pages"),
-    ("e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1", "POW", "2025-H1", (11,),
-     ("Current period",), ("Prior period",), "Scanned PDF reported: 419 extracted characters"),
-    ("38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5", "POW", "2026-H1", (11,),
-     ("Current period",), ("Prior period",), "Scanned PDF reported: 2,959 extracted characters"),
-    ("618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c", "NVL", "2025-H1", (12,),
-     ("06 tháng đầu năm 2025",), ("06 tháng đầu năm 2024",), "Garbled OCR text layer reported"),
-    ("20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007", "NVL", "2026-H1", (12,),
-     ("06 tháng đầu năm 2026",), ("06 tháng đầu năm 2025 (Trình bày lại)",), "Garbled OCR text layer reported"),
-    ("8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353", "NVL", "2025", (12,),
-     ("Năm 2025",), ("Năm 2024",), "Garbled OCR text layer reported"),
-):
-    LAYOUT_PROOFS[_sha] = {
-        "ticker": _ticker, "reporting_period": _period, "statement_scope": "consolidated",
-        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
-        "statement_pages": _pages, "current_headers": _current, "comparative_headers": _comparative,
-        "metric_line_codes": {"revenue": "10", "net_income": "60", "attributable_net_income": "61"},
-        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
-        "text_layer_verification": {"tool": "pypdf unavailable in executor sandbox",
-                                    "state": "HOST_VERIFICATION_REQUIRED", "reported_observation": _text_layer},
-    }
 
-# HL-20261126-CDX-26: exact retained income pages; no text-layer qualification.
-for _sha, _ticker, _period, _pages, _current, _comparative in (
-    ('2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1', 'HAH', '2025', (13,), ('Năm nay',), ('Năm trước',)),
-    ('a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b', 'HAH', '2025-H1', (12,), ('Kỳ này',), ('Kỳ trước',)),
-    ('913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291', 'HAH', '2026-H1', (13,), ('Kỳ này',), ('Kỳ trước',)),
-    ('9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9', 'BWE', '2025', (12,), ('Năm 2025',), ('Năm 2024',)),
-    ('acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8', 'BWE', '2025-H1', (12,), ('06 tháng đầu năm 2025',), ('06 tháng đầu năm 2024',)),
-    ('6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef', 'BWE', '2026-H1', (12,), ('06 tháng đầu năm 2026',), ('06 tháng đầu năm 2025',)),
-):
-    LAYOUT_PROOFS[_sha] = {
-        "ticker": _ticker, "reporting_period": _period, "statement_scope": "consolidated",
-        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
-        "statement_pages": _pages, "current_headers": _current, "comparative_headers": _comparative,
-        "metric_line_codes": {"revenue": "10", "net_income": "60", "attributable_net_income": "61"},
-        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
-        "text_layer_verification": {"state": "HOST_VERIFICATION_REQUIRED"},
-    }
+def registry_path(root: Path, relative: str) -> Path:
+    if (not isinstance(relative, str) or not relative or "\\" in relative
+            or ":" in relative or PurePosixPath(relative).is_absolute()
+            or any(p in {"", ".", ".."} for p in relative.split("/"))):
+        raise ValueError("REGISTRY_PATH_ESCAPE")
+    root = root.resolve()
+    path = root / relative
+    if not path.resolve().is_relative_to(root):
+        raise ValueError("REGISTRY_PATH_ESCAPE")
+    # Refuse redirection even if a link happens to point back inside the checkout.
+    if any(p.is_symlink() or (hasattr(p, "is_junction") and p.is_junction())
+           for p in (path, *path.parents) if p.is_relative_to(root)):
+        raise ValueError("REGISTRY_PATH_ESCAPE")
+    return path
+
+
+def registry_bytes(root: Path, relative: str) -> bytes:
+    path = registry_path(root, relative)
+    with path.open("rb") as stream:
+        raw = stream.read(REGISTRY_LIMIT + 1)
+    if len(raw) > REGISTRY_LIMIT:
+        raise ValueError("REGISTRY_TOO_LARGE")
+    return raw
+
+
+def _registry_pairs(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("REGISTRY_DUPLICATE_KEY:" + key)
+        result[key] = value
+    return result
+
+
+def _fields(value, required, optional=()):
+    if type(value) is not dict or not set(required) <= value.keys() or value.keys() - set(required) - set(optional):
+        raise ValueError("REGISTRY_FIELDS_INVALID")
+
+
+def _string(value):
+    if type(value) is not str or not value:
+        raise ValueError("REGISTRY_STRING_INVALID")
+
+
+def _integer(value):
+    if type(value) is not int or value < 1:
+        raise ValueError("REGISTRY_INTEGER_INVALID")
+
+
+def _digest(value):
+    if type(value) is not str or not re.fullmatch(r"[0-9a-f]{64}", value):
+        raise ValueError("REGISTRY_DIGEST_INVALID")
+
+
+def _instant(value, *, unknown=False):
+    if value is None and unknown:
+        return
+    _string(value)
+    if datetime.fromisoformat(value).utcoffset() is None:
+        raise ValueError("REGISTRY_TIME_INVALID")
+
+
+def _review(value):
+    _fields(value, ("reference", "recorded_at"))
+    _string(value["reference"])
+    _instant(value["recorded_at"], unknown=True)
+
+
+def _strings(value):
+    if type(value) is not list:
+        raise ValueError("REGISTRY_LIST_INVALID")
+    for item in value:
+        _string(item)
+
+
+def _entry(value, payload_fields, *, offline=False):
+    _fields(value, ("revision", "supersedes", "review", "inputs", "timestamps", *payload_fields))
+    _integer(value["revision"])
+    if value["supersedes"] is not None:
+        _digest(value["supersedes"])
+    _review(value["review"])
+    inputs = value["inputs"]
+    _fields(inputs, ("provenance_refs", "reader_sha256", "render_meta_sha256"), ("tuple_readings",) if offline else ())
+    _strings(inputs["provenance_refs"])
+    if not inputs["provenance_refs"]:
+        raise ValueError("REGISTRY_PROVENANCE_MISSING")
+    if inputs["reader_sha256"] is not None:
+        if type(inputs["reader_sha256"]) is not list or len(inputs["reader_sha256"]) != 2:
+            raise ValueError("REGISTRY_READER_HASHES_INVALID")
+        for item in inputs["reader_sha256"]:
+            if item is not None:
+                _digest(item)
+    if inputs["render_meta_sha256"] is not None:
+        _digest(inputs["render_meta_sha256"])
+    if offline and type(inputs.get("tuple_readings")) is not bool:
+        raise ValueError("REGISTRY_TUPLE_SHAPE_INVALID")
+    _fields(value["timestamps"], ("evidence_observed_at", "registered_at", "knowledge_available_at"))
+    for item in value["timestamps"].values():
+        _instant(item, unknown=True)
+
+
+@lru_cache(maxsize=16)
+def _parsed_registry(raw: bytes, digest: str, role: str):
+    if len(raw) > REGISTRY_LIMIT or hashlib.sha256(raw).hexdigest() != digest:
+        raise ValueError("REGISTRY_HASH_MISMATCH")
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=_registry_pairs,
+                       parse_constant=lambda x: (_ for _ in ()).throw(ValueError("REGISTRY_NUMBER_INVALID")))
+    common = ("schema_version", "revision", "supersedes_sha256_lf", "review")
+    _fields(value, (*common, *(('issuer_legal_names', 'entity_families') if role == 'issuers' else ('entries',))))
+    if type(value["schema_version"]) is not int or value["schema_version"] != 1 or role not in {"layouts", "issuers", "admissions"}:
+        raise ValueError("REGISTRY_SCHEMA_UNKNOWN")
+    _integer(value["revision"])
+    if value["supersedes_sha256_lf"] is not None:
+        _digest(value["supersedes_sha256_lf"])
+    _review(value["review"])
+    groups = ("issuer_legal_names", "entity_families") if role == "issuers" else ("entries",)
+    for group in groups:
+        if type(value[group]) is not dict or not value[group]:
+            raise ValueError("REGISTRY_ENTRIES_INVALID")
+        for key, entry in value[group].items():
+            _string(key)
+            if role == "layouts":
+                _digest(key)
+                _entry(entry, ("payload",))
+                p = entry["payload"]
+                _fields(p, ("ticker", "reporting_period", "statement_scope", "layout", "statement_pages", "current_headers", "comparative_headers", "metric_line_codes", "approval"), ("text_layer_verification",))
+                for field in ("ticker", "reporting_period", "statement_scope", "layout", "approval"):
+                    _string(p[field])
+                if p["statement_scope"] != "consolidated" or type(p["statement_pages"]) is not list or not p["statement_pages"]:
+                    raise ValueError("REGISTRY_LAYOUT_INVALID")
+                for page in p["statement_pages"]:
+                    _integer(page)
+                if len(set(p["statement_pages"])) != len(p["statement_pages"]):
+                    raise ValueError("REGISTRY_CONFLICTING_PAGES")
+                for field in ("current_headers", "comparative_headers"):
+                    _strings(p[field])
+                _fields(p["metric_line_codes"], (), ("revenue", "net_income", "attributable_net_income", "total_assets", "shareholders_equity", "operating_cash_flow"))
+                for code in p["metric_line_codes"].values():
+                    if type(code) is not str or not code.isdigit():
+                        raise ValueError("REGISTRY_LINE_CODE_INVALID")
+                if "text_layer_verification" in p:
+                    q = p["text_layer_verification"]
+                    _fields(q, ("state",), ("tool", "pages_checked", "non_empty_pages", "verified_at", "reported_observation"))
+                    for field, item in q.items():
+                        if field in {"pages_checked", "non_empty_pages"}:
+                            if type(item) is not int or item < 0:
+                                raise ValueError("REGISTRY_PAGE_COUNT_INVALID")
+                        else:
+                            _string(item)
+            elif role == "issuers":
+                if not re.fullmatch(r"[A-Z0-9]{3,10}", key):
+                    raise ValueError("REGISTRY_TICKER_INVALID")
+                _entry(entry, ("exact", "folded") if group == "issuer_legal_names" else ("family",))
+                if group == "entity_families":
+                    if type(entry["family"]) is not str or entry["family"] not in {"corporate", "bank", "securities", "finance_company"}:
+                        raise ValueError("REGISTRY_FAMILY_UNKNOWN")
+                    continue
+                _strings(entry["folded"])
+                if len(entry["folded"]) > 1 or type(entry["exact"]) is not list:
+                    raise ValueError("REGISTRY_NAMES_CONFLICT")
+                for name in entry["exact"]:
+                    _fields(name, ("literal", "provenance"))
+                    _string(name["literal"])
+                    q = name["provenance"]
+                    _fields(q, ("document_sha256", "source_page", "source_host", "description"), ("image_sha256", "reader_files"))
+                    _digest(q["document_sha256"]); _integer(q["source_page"])
+                    _string(q["source_host"]); _string(q["description"])
+                    if "image_sha256" in q:
+                        _digest(q["image_sha256"])
+                    if "reader_files" in q:
+                        if type(q["reader_files"]) is not list:
+                            raise ValueError("REGISTRY_READERS_INVALID")
+                        for reader in q["reader_files"]:
+                            _fields(reader, ("relative_path", "sha256"))
+                            registry_path(REGISTRY_ROOT, reader["relative_path"])
+                            _digest(reader["sha256"])
+            else:
+                _entry(entry, ("payload",), offline=True)
+                p = entry["payload"]
+                fields = ("ticker", "reporting_period", "document_sha256", "document_id", "original_subdir", "new_subdir", "page_key", "source_page", "printed_page", "image_sha256", "column_id", "readings", "image", "render_meta", "comparison_started_at")
+                _fields(p, fields)
+                for field in fields:
+                    if field not in {"readings", "source_page"}:
+                        _string(p[field])
+                for field in ("document_sha256", "document_id", "image_sha256"):
+                    _digest(p[field])
+                _integer(p["source_page"]); _instant(p["comparison_started_at"])
+                for field in ("original_subdir", "new_subdir", "image", "render_meta", "page_key"):
+                    registry_path(REGISTRY_ROOT, p[field])
+                if type(p["readings"]) is not list or len(p["readings"]) != 2:
+                    raise ValueError("REGISTRY_READINGS_INVALID")
+                for reading in p["readings"]:
+                    if type(reading) is not list or len(reading) != 3:
+                        raise ValueError("REGISTRY_READING_INVALID")
+                    _string(reading[0]); registry_path(REGISTRY_ROOT, reading[1]); _instant(reading[2])
+                if key != p["ticker"] + "-" + p["reporting_period"] + "-P" + str(p["source_page"]):
+                    raise ValueError("REGISTRY_SPEC_CONFLICT")
+    if role == "issuers":
+        owners = {}
+        for ticker, entry in value["issuer_legal_names"].items():
+            for literal in [n["literal"] for n in entry["exact"]] + entry["folded"]:
+                if literal in owners and owners[literal] != ticker:
+                    raise ValueError("REGISTRY_CONFLICTING_ISSUER_NAMES")
+                owners[literal] = ticker
+    return value
+
+
+def load_registry_snapshot(role: str, *, root: Path = REGISTRY_ROOT, relative: str | None = None,
+                           expected_sha256_lf: str | None = None):
+    relative = relative or {"layouts": LAYOUT_SNAPSHOT, "issuers": ISSUER_SNAPSHOT}[role]
+    raw = registry_bytes(root, relative).replace(b"\r\n", b"\n")
+    digest = hashlib.sha256(raw).hexdigest()
+    if expected_sha256_lf is not None and digest != expected_sha256_lf:
+        raise ValueError("REGISTRY_HASH_MISMATCH")
+    return deepcopy(_parsed_registry(raw, digest, role))
+
+
+def _layout_payloads():
+    entries = load_registry_snapshot("layouts")["entries"]
+    result = {key: entry["payload"] for key, entry in entries.items()}
+    for payload in result.values():
+        for field in ("statement_pages", "current_headers", "comparative_headers"):
+            payload[field] = tuple(payload[field])
+    return result
+
+
+def issuer_registry_values():
+    snapshot = load_registry_snapshot("issuers")
+    names = snapshot["issuer_legal_names"]
+    return ({key: tuple(entry["exact"]) for key, entry in names.items() if entry["exact"]},
+            {key: entry["folded"][0] for key, entry in names.items() if entry["folded"]},
+            {key: entry["family"] for key, entry in snapshot["entity_families"].items()})
+
+
+LAYOUT_PROOFS = _layout_payloads()
 
 
 _AMOUNT = re.compile(r"^\(?-?\d{1,3}(?:\.\d{3})+\)?$")
@@ -202,82 +368,7 @@ def layout_for(document_sha256: str | None) -> dict[str, Any] | None:
     return LAYOUT_PROOFS.get(str(document_sha256 or ""))
 
 
-EXACT_REGISTERED_ISSUER_NAMES = {
-    'HAH': (
-        {'literal': 'CÔNG TY CỔ PHẦN VẬN TẢI VÀ XẾP DỠ HẢI AN',
-         'provenance': {'document_sha256': '2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1',
-                        'source_page': 13,
-                        'image_sha256': 'fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b',
-                        'source_host': 'haiants.vn',
-                        'description': 'Exact statement-page issuer literal agreed by retained Claude and '
-                                       'ChatGPT blind readings',
-                        'reader_files': [{'relative_path': 'blind-input-hah-fy2025-p13/claude/claude-reader.raw.json',
-                                          'sha256': '6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d'},
-                                         {'relative_path': 'blind-input-hah-fy2025-p13/chatgpt/chatgpt-reader.raw.json',
-                                          'sha256': 'c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145'}]}},
-        {'literal': 'CÔNG TY CỔ PHẦN VẬN TẢI VÀ XẾP DỠ HẢI AN',
-         'provenance': {'document_sha256': 'a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b',
-                        'source_page': 12,
-                        'image_sha256': '88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b',
-                        'source_host': 'haiants.vn',
-                        'description': 'Exact statement-page issuer literal agreed by retained Claude and '
-                                       'ChatGPT blind readings',
-                        'reader_files': [{'relative_path': 'blind-input-hah-2025h1-p12/claude/claude-reader.raw.json',
-                                          'sha256': '9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6'},
-                                         {'relative_path': 'blind-input-hah-2025h1-p12/chatgpt-r2/chatgpt-reader.raw.json',
-                                          'sha256': '7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb'}]}},
-        {'literal': 'CÔNG TY CỔ PHẦN VẬN TẢI VÀ XẾP DỠ HẢI AN',
-         'provenance': {'document_sha256': '913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291',
-                        'source_page': 13,
-                        'image_sha256': '98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6',
-                        'source_host': 'haiants.vn',
-                        'description': 'Exact statement-page issuer literal agreed by retained Claude and '
-                                       'ChatGPT blind readings',
-                        'reader_files': [{'relative_path': 'blind-input-hah-2026h1-p13/claude/claude-reader.raw.json',
-                                          'sha256': 'd6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0'},
-                                         {'relative_path': 'blind-input-hah-2026h1-p13/chatgpt/chatgpt-reader.raw.json',
-                                          'sha256': 'a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71'}]}},
-    ),
-    'BWE': (
-        {'literal': 'Công ty CP - Tổng Công ty Nước - Môi trường Bình Dương',
-         'provenance': {'document_sha256': '9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9',
-                        'source_page': 12,
-                        'image_sha256': 'fa7896a2f4a352ff7435c9b2daf0b8269d3b293b38ef7661798a1f061588902b',
-                        'source_host': 'www.biwase.com.vn',
-                        'description': 'Exact statement-page issuer literal agreed by retained Claude and '
-                                       'ChatGPT blind readings',
-                        'reader_files': [{'relative_path': 'blind-input-bwe-fy2025-p12/claude/claude-reader.raw.json',
-                                          'sha256': 'c64abe2e55ba35242953de9bcb7bf4418bc5c632300e392008a0198c0454d18f'},
-                                         {'relative_path': 'blind-input-bwe-fy2025-p12/chatgpt/chatgpt-reader.raw.json',
-                                          'sha256': '1a228f64043041541536363c4e932c2766f34a1b4c5f7b932b3063b6f40f80e9'}]}},
-        {'literal': 'Công ty CP - Tổng Công ty Nước - Môi trường Bình Dương',
-         'provenance': {'document_sha256': 'acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8',
-                        'source_page': 12,
-                        'image_sha256': 'e7950cad0cc38eb6e9e4ed16f7d12a21eb168f8ac4e62f5428db933f6dba17a6',
-                        'source_host': 'www.biwase.com.vn',
-                        'description': 'Exact statement-page issuer literal agreed by retained Claude and '
-                                       'ChatGPT blind readings',
-                        'reader_files': [{'relative_path': 'blind-input-bwe-2025h1-p12/claude/claude-reader.raw.json',
-                                          'sha256': '0af0725d2f6c2a5fd9cea83a5ebc44b4e1e6fee87cdcca459f6faaa5275f8058'},
-                                         {'relative_path': 'blind-input-bwe-2025h1-p12/chatgpt/chatgpt-reader.raw.json',
-                                          'sha256': '172e64c3f4c845dad1c42e7dfe0c5b88aa590f7a36e33f6c13d5e54a25092749'}]}},
-        {'literal': 'Công ty CP - Tổng Công ty Nước - Môi trường Bình Dương',
-         'provenance': {'document_sha256': '6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef',
-                        'source_page': 12,
-                        'image_sha256': '259e24d077202a6cff9e7c6040142c7fc16444cd42f99d0ecda481bbc63a8ee2',
-                        'source_host': 'www.biwase.com.vn',
-                        'description': 'Exact statement-page issuer literal agreed by retained Claude and '
-                                       'ChatGPT blind readings',
-                        'reader_files': [{'relative_path': 'blind-input-bwe-2026h1-p12/claude/claude-reader.raw.json',
-                                          'sha256': '24b8185dc72ef2cee49bba18a7cf1b9f4f7b078afc59debb360932468ebae05a'},
-                                         {'relative_path': 'blind-input-bwe-2026h1-p12/chatgpt/chatgpt-reader.raw.json',
-                                          'sha256': 'aabf4bf5d0c543d873ab1b5a6de7ddbfda935a9c30b40f8b83398be6d3e7c240'}]}},
-    ),
-    "POW": ({"literal": "PETROVIETNAM POWER CORPORATION",
-             "provenance": {"document_sha256": "3b06425b3d79803f9e7bf634c8bfd600f4aca998bcd15dabcd95ffb04877afbc",
-                            "source_page": 7, "source_host": "pvpower.vn",
-                            "description": "English charter amendment 8, foreign language name"}},),
-}
+EXACT_REGISTERED_ISSUER_NAMES, REGISTERED_ISSUER_FOLD, _ENTITY_FAMILIES = issuer_registry_values()
 
 
 def exact_registered_issuer_name(ticker: str, literal: str) -> bool:
@@ -291,10 +382,7 @@ def retained_issuer_name_matches(row, proof, text: str) -> bool:
     The original bytes, source manifest and issuer host remain separately required.
     """
     from stocklookup_core.evidence.financial_row_identity import _identity_fold
-    names = {'HPG': 'cong ty co phan tap doan hoa phat',
-             'PNJ': 'cong ty co phan vang bac da quy phu nhuan',
-             'VRE': 'cong ty co phan vincom retail',
-             'NVL': 'cong ty co phan tap doan dau tu dia oc no va'}
+    names = REGISTERED_ISSUER_FOLD
     sha = row.get('document_sha256')
     layout = layout_for(sha) or {}
     ref = row.get('ocr_layout_proof') or {}

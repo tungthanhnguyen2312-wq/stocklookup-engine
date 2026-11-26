@@ -1,0 +1,868 @@
+{
+  "schema_version": 1,
+  "revision": 1,
+  "supersedes_sha256_lf": null,
+  "review": {
+    "reference": "HL-20261126-CDX-34 migration of 74017553c7a17c33a5464ec735f3700df669bbd5",
+    "recorded_at": "2026-11-26T13:29:15+00:00"
+  },
+  "entries": {
+    "9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:9a2881a88ac8ca4cc5cd948b0fafa031ff30fd0332a372f362477a8a6b0c9968"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HPG",
+        "reporting_period": "2026-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_TT43_2026_INTERIM_CONSOLIDATED_B01a_B02a_B03a_COLUMN_MAJOR_OCR",
+        "statement_pages": [
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "current_headers": [
+          "Kỳ này",
+          "Số cuối kỳ"
+        ],
+        "comparative_headers": [
+          "Kỳ trước",
+          "Số đầu kỳ"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61",
+          "total_assets": "280",
+          "shareholders_equity": "400",
+          "operating_cash_flow": "20"
+        },
+        "approval": "Owner approval 2026-11-07: scoped HPG H1/2026 admission contract corrective",
+        "text_layer_verification": {
+          "tool": "pypdf 6.14.2",
+          "pages_checked": 67,
+          "non_empty_pages": 0,
+          "state": "NONE_VERIFIED",
+          "verified_at": "2026-11-07"
+        }
+      }
+    },
+    "f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:f38c5f75becf7d3f145d27183eec81f119fd4f75e378b983a2763ddc3f7e0c07"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HPG",
+        "reporting_period": "2025",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
+        "statement_pages": [
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "current_headers": [
+          "Kỳ này",
+          "Năm nay",
+          "2025",
+          "30.6.2025"
+        ],
+        "comparative_headers": [
+          "Kỳ trước",
+          "Năm trước",
+          "2024",
+          "30.6.2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61",
+          "total_assets": "270",
+          "shareholders_equity": "400",
+          "operating_cash_flow": "20"
+        },
+        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay"
+      }
+    },
+    "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "PNJ",
+        "reporting_period": "2025",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
+        "statement_pages": [
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "current_headers": [
+          "Kỳ này",
+          "Năm nay",
+          "2025",
+          "30.6.2025"
+        ],
+        "comparative_headers": [
+          "Kỳ trước",
+          "Năm trước",
+          "2024",
+          "30.6.2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61",
+          "total_assets": "270",
+          "shareholders_equity": "400",
+          "operating_cash_flow": "20"
+        },
+        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay"
+      }
+    },
+    "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HPG",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
+        "statement_pages": [
+          10
+        ],
+        "current_headers": [
+          "Kỳ này",
+          "Năm nay",
+          "2025",
+          "30.6.2025"
+        ],
+        "comparative_headers": [
+          "Kỳ trước",
+          "Năm trước",
+          "2024",
+          "30.6.2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61",
+          "total_assets": "270",
+          "shareholders_equity": "400",
+          "operating_cash_flow": "20"
+        },
+        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay"
+      }
+    },
+    "12c40161cdb31ef603256892dbe70a2bba6a906c5b2e033ed281cb321466601c": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:12c40161cdb31ef603256892dbe70a2bba6a906c5b2e033ed281cb321466601c"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "PNJ",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
+        "statement_pages": [
+          10
+        ],
+        "current_headers": [
+          "Kỳ này",
+          "Năm nay",
+          "2025",
+          "30.6.2025"
+        ],
+        "comparative_headers": [
+          "Kỳ trước",
+          "Năm trước",
+          "2024",
+          "30.6.2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61",
+          "total_assets": "270",
+          "shareholders_equity": "400",
+          "operating_cash_flow": "20"
+        },
+        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay"
+      }
+    },
+    "eba4fad322c0a634f156a0f4345d72b47b6962842cadee55607cdd278fcdd577": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:eba4fad322c0a634f156a0f4345d72b47b6962842cadee55607cdd278fcdd577"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "VRE",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_HOL08",
+        "statement_pages": [
+          11
+        ],
+        "current_headers": [
+          "Kỳ này",
+          "Năm nay",
+          "2025",
+          "30.6.2025"
+        ],
+        "comparative_headers": [
+          "Kỳ trước",
+          "Năm trước",
+          "2024",
+          "30.6.2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61",
+          "total_assets": "270",
+          "shareholders_equity": "400",
+          "operating_cash_flow": "20"
+        },
+        "approval": "HL-20261124-HOL-08: exact retained annual and prior H1 operand replay"
+      }
+    },
+    "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "POW",
+        "reporting_period": "2025",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": [
+          11
+        ],
+        "current_headers": [
+          "Current year"
+        ],
+        "comparative_headers": [
+          "Prior year"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {
+          "tool": "pypdf unavailable in executor sandbox",
+          "state": "HOST_VERIFICATION_REQUIRED",
+          "reported_observation": "Native text layer reported: 60,233 characters over 26 pages"
+        }
+      }
+    },
+    "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "POW",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": [
+          11
+        ],
+        "current_headers": [
+          "Current period"
+        ],
+        "comparative_headers": [
+          "Prior period"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {
+          "tool": "pypdf unavailable in executor sandbox",
+          "state": "HOST_VERIFICATION_REQUIRED",
+          "reported_observation": "Scanned PDF reported: 419 extracted characters"
+        }
+      }
+    },
+    "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "POW",
+        "reporting_period": "2026-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": [
+          11
+        ],
+        "current_headers": [
+          "Current period"
+        ],
+        "comparative_headers": [
+          "Prior period"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {
+          "tool": "pypdf unavailable in executor sandbox",
+          "state": "HOST_VERIFICATION_REQUIRED",
+          "reported_observation": "Scanned PDF reported: 2,959 extracted characters"
+        }
+      }
+    },
+    "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "NVL",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "06 tháng đầu năm 2025"
+        ],
+        "comparative_headers": [
+          "06 tháng đầu năm 2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {
+          "tool": "pypdf unavailable in executor sandbox",
+          "state": "HOST_VERIFICATION_REQUIRED",
+          "reported_observation": "Garbled OCR text layer reported"
+        }
+      }
+    },
+    "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "NVL",
+        "reporting_period": "2026-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "06 tháng đầu năm 2026"
+        ],
+        "comparative_headers": [
+          "06 tháng đầu năm 2025 (Trình bày lại)"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {
+          "tool": "pypdf unavailable in executor sandbox",
+          "state": "HOST_VERIFICATION_REQUIRED",
+          "reported_observation": "Garbled OCR text layer reported"
+        }
+      }
+    },
+    "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "NVL",
+        "reporting_period": "2025",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261125",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "Năm 2025"
+        ],
+        "comparative_headers": [
+          "Năm 2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "Owner directive 2026-11-25 task 5: Decision 2 admission expansion (governed acquisition + dual-reader)",
+        "text_layer_verification": {
+          "tool": "pypdf unavailable in executor sandbox",
+          "state": "HOST_VERIFICATION_REQUIRED",
+          "reported_observation": "Garbled OCR text layer reported"
+        }
+      }
+    },
+    "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HAH",
+        "reporting_period": "2025",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
+        "statement_pages": [
+          13
+        ],
+        "current_headers": [
+          "Năm nay"
+        ],
+        "comparative_headers": [
+          "Năm trước"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
+        "text_layer_verification": {
+          "state": "HOST_VERIFICATION_REQUIRED"
+        }
+      }
+    },
+    "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HAH",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "Kỳ này"
+        ],
+        "comparative_headers": [
+          "Kỳ trước"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
+        "text_layer_verification": {
+          "state": "HOST_VERIFICATION_REQUIRED"
+        }
+      }
+    },
+    "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HAH",
+        "reporting_period": "2026-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
+        "statement_pages": [
+          13
+        ],
+        "current_headers": [
+          "Kỳ này"
+        ],
+        "comparative_headers": [
+          "Kỳ trước"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
+        "text_layer_verification": {
+          "state": "HOST_VERIFICATION_REQUIRED"
+        }
+      }
+    },
+    "9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "BWE",
+        "reporting_period": "2025",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "Năm 2025"
+        ],
+        "comparative_headers": [
+          "Năm 2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
+        "text_layer_verification": {
+          "state": "HOST_VERIFICATION_REQUIRED"
+        }
+      }
+    },
+    "acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "BWE",
+        "reporting_period": "2025-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "06 tháng đầu năm 2025"
+        ],
+        "comparative_headers": [
+          "06 tháng đầu năm 2024"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
+        "text_layer_verification": {
+          "state": "HOST_VERIFICATION_REQUIRED"
+        }
+      }
+    },
+    "6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:stocklookup_core/evidence/official_ocr_layout_proof.py:LAYOUT_PROOFS:6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef"
+        ],
+        "reader_sha256": null,
+        "render_meta_sha256": null
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "BWE",
+        "reporting_period": "2026-H1",
+        "statement_scope": "consolidated",
+        "layout": "VAS_EXACT_RETAINED_TWO_COLUMN_DECISION2_20261126",
+        "statement_pages": [
+          12
+        ],
+        "current_headers": [
+          "06 tháng đầu năm 2026"
+        ],
+        "comparative_headers": [
+          "06 tháng đầu năm 2025"
+        ],
+        "metric_line_codes": {
+          "revenue": "10",
+          "net_income": "60",
+          "attributable_net_income": "61"
+        },
+        "approval": "HL-20261126-CDX-26: bounded Decision 2 HAH/BWE registrations only",
+        "text_layer_verification": {
+          "state": "HOST_VERIFICATION_REQUIRED"
+        }
+      }
+    }
+  }
+}

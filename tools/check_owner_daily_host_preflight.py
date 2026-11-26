@@ -69,11 +69,12 @@ OFFLINE_CONDITIONAL_RESEARCH_SOURCES = frozenset({
 
 def capacity_source_paths(root: Path) -> list[str]:
     """Tracked executable/config surface, not retained data, tests or documentation."""
-    tracked = _git(root, "ls-files", "--", "*.py", "*.ps1", "*.cmd", "*.bat", "*.json", "*requirements*.txt", "constraints.txt")
+    tracked = _git(root, "ls-files", "--", "*.py", "*.ps1", "*.cmd", "*.bat", "*.json", "*requirements*.txt", "constraints.txt",
+        ":(exclude)config/dual_reader_admissions/**")
     if tracked is None:
         return []
     return sorted(p for p in tracked.splitlines() if not p.startswith(
-        ("tests/", "docs/", ".github/")) and p not in OFFLINE_CONDITIONAL_RESEARCH_SOURCES and p not in {
+        ("tests/", "docs/", ".github/", "config/dual_reader_admissions/")) and p not in OFFLINE_CONDITIONAL_RESEARCH_SOURCES and p not in {
             "config/owner_daily_capacity_qualification.json",
             "config/daily_research_session_input_registry.json"})
 

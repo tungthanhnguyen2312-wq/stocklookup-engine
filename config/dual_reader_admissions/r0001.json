@@ -1,0 +1,843 @@
+{
+  "schema_version": 1,
+  "revision": 1,
+  "supersedes_sha256_lf": null,
+  "review": {
+    "reference": "HL-20261126-CDX-34 migration of 74017553c7a17c33a5464ec735f3700df669bbd5",
+    "recorded_at": "2026-11-26T13:29:15+00:00"
+  },
+  "entries": {
+    "HPG-2025-H1-P10": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:HPG-2025-H1-P10"
+        ],
+        "reader_sha256": [
+          "e1d4c6f24d88c1ec5a075471fbebc1ea32703b58ed18943cf125c7a37ba52425",
+          "c01e96e59da90293177d7991b1ef2c0014bed6edb3d1549f81329d4f95f2a379"
+        ],
+        "render_meta_sha256": "7320ae048b38d69af6819b294cba7074bacdecff66e6bd73c6790efa6172e581",
+        "tuple_readings": true
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HPG",
+        "reporting_period": "2025-H1",
+        "document_sha256": "ebb7e9eead6404301473582fc879e63feb4ca09eecbc92ccf98dab63f97b7eb9",
+        "document_id": "e4c57c5a39b3f2a1a09a352b4022fe19fca55cf618283e7a393ec91f40744c56",
+        "original_subdir": "h1-2025-q3-20261124",
+        "new_subdir": "h1-2025-dual-reader-hpg-20261124",
+        "page_key": "hpg-2025h1-p10",
+        "source_page": 10,
+        "printed_page": "8",
+        "image_sha256": "d9369a945cbdb3a7e560bb6b7d45dc3fc8fc9d31e7a477ca52ac6659ca98d436",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-hpg-2025h1-p10/claude/claude-reader.raw.json",
+            "2026-11-24T21:28:21+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-hpg-2025h1-p10/gemini/gemini-reader.raw.json",
+            "2026-11-24T21:30:47+07:00"
+          ]
+        ],
+        "image": "official-hpg-h1-2025/page-10.png",
+        "render_meta": "official-hpg-h1-2025/input.meta.json",
+        "comparison_started_at": "2026-11-24T21:33:00+07:00"
+      }
+    },
+    "PNJ-2025-P10": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:PNJ-2025-P10"
+        ],
+        "reader_sha256": [
+          "3ccd1bac1968c3a47c9d54c13e481006b02a340cef754b7c89a0beb847f2fa08",
+          "47593dd4bc246f26fb48aa7c2a135d40d6bf141638493154148035253025cb4b"
+        ],
+        "render_meta_sha256": "10726720c371a30ac5b3fd1c93a8ca8996403d6a936eb2217d55e2ca2a49264d",
+        "tuple_readings": true
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "PNJ",
+        "reporting_period": "2025",
+        "document_sha256": "309f86836d9f00b37e3cccb25da9e7ffd0dab6c531be995618542004acccdf1d",
+        "document_id": "964efd1c800de93d643eebc42476aaf7eadb465a256f1a48f04be2e25e3ad888",
+        "original_subdir": "currency-refresh-20260929",
+        "new_subdir": "fy2025-dual-reader-pnj-20261124",
+        "page_key": "pnj-fy2025-p10",
+        "source_page": 10,
+        "printed_page": "8",
+        "image_sha256": "4df1be5fb096b9745126885f93bb063aba82c349f58a35c2b15cd56ba41e53d1",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-pnj-fy2025-p10/claude/claude-reader.raw.json",
+            "2026-11-24T21:52:45+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-pnj-fy2025-p10/gemini/gemini-reader.raw.json",
+            "2026-11-24T21:55:01+07:00"
+          ]
+        ],
+        "image": "blind-input-pnj-fy2025-p10/render/page-10.png",
+        "render_meta": "blind-input-pnj-fy2025-p10/input.meta.json",
+        "comparison_started_at": "2026-11-24T21:55:24+07:00"
+      }
+    },
+    "PNJ-2025-H1-P10": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:PNJ-2025-H1-P10"
+        ],
+        "reader_sha256": [
+          "76b629ccba6cab7a6b1423cad7b127b15f0e576ef17d432e940c2e49d6704771",
+          "d6ddb738576041a289b27b599e47c286a6275a35bd21a4b8087f6bac238b3e16"
+        ],
+        "render_meta_sha256": "871200f2f01dd13aa03719962e3ad5c9030e5797c090dd8bee5878febcfd0be3",
+        "tuple_readings": true
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "PNJ",
+        "reporting_period": "2025-H1",
+        "document_sha256": "12c40161cdb31ef603256892dbe70a2bba6a906c5b2e033ed281cb321466601c",
+        "document_id": "9621d34b3740d6408ba52f31d5e167dd3046a99395d389680ce9cadf643d696d",
+        "original_subdir": "h1-2025-q3-20261124",
+        "new_subdir": "h1-2025-dual-reader-pnj-20261124",
+        "page_key": "pnj-2025h1-p10",
+        "source_page": 10,
+        "printed_page": "8",
+        "image_sha256": "ee674c9b3b79d6c0dff38932c501f74579e03cef14e32bf17ba4238dd3c6d05b",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-pnj-2025h1-p10/claude/claude-reader.raw.json",
+            "2026-11-24T22:19:31+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-pnj-2025h1-p10/gemini/gemini-reader.raw.json",
+            "2026-11-24T22:22:10+07:00"
+          ]
+        ],
+        "image": "blind-input-pnj-2025h1-p10/claude/page-10.png",
+        "render_meta": "blind-input-pnj-2025h1-p10/input.meta.json",
+        "comparison_started_at": "2026-11-24T22:25:04+07:00"
+      }
+    },
+    "VRE-2025-P11": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:VRE-2025-P11"
+        ],
+        "reader_sha256": [
+          "19fa72b98d9ff18b3bd5aa8665fc651a981935a3e76e56c85f82fd3401e09c22",
+          "29154e82a04a60016ce0408f3e21c80d50079f9c44e26b6ba783167515d5dd5c"
+        ],
+        "render_meta_sha256": "1e46dda69963692bb279ebb724af0f26e41f5c7ed11d42f1aab2bfe38937629b",
+        "tuple_readings": true
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "VRE",
+        "reporting_period": "2025",
+        "document_sha256": "85b250e9bd3b87aac9a1f650363f7063b2a830f6f4f1dda07eb6eecd09063a3e",
+        "document_id": "5a05c0f2a5831663628922733c937615a43ce992d265a460c5a16eab233e84aa",
+        "original_subdir": "currency-refresh-20260929",
+        "new_subdir": "fy2025-dual-reader-vre-20261124",
+        "page_key": "vre-fy2025-p11",
+        "source_page": 11,
+        "printed_page": "9",
+        "image_sha256": "be921abae56e5d0b09dcaf5b8bd78609d43a3ad1301ecffe83ac45cc89b96b40",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-vre-fy2025-p11/claude/claude-reader.raw.json",
+            "2026-11-24T22:19:24+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-vre-fy2025-p11/gemini/gemini-reader.raw.json",
+            "2026-11-24T22:23:16+07:00"
+          ]
+        ],
+        "image": "blind-input-vre-fy2025-p11/claude/page-11.png",
+        "render_meta": "blind-input-vre-fy2025-p11/input.meta.json",
+        "comparison_started_at": "2026-11-24T22:25:06+07:00"
+      }
+    },
+    "POW-2025-P11": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:POW-2025-P11"
+        ],
+        "reader_sha256": [
+          "5490e221df069935257c9a5d87afa116781f5e0dd015285a31ad2408edaf3a72",
+          "0a3fd588a709cf44a303188d6cd6511a892e33ec10d56f831ce470bf7ddbfa6d"
+        ],
+        "render_meta_sha256": "3e986c62744b9bbb958d9dd5fd09290f3368fdeb4ae9f0aec59398851634e632",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "page_key": "pow-fy2025-p11",
+        "ticker": "POW",
+        "reporting_period": "2025",
+        "document_sha256": "54077f6abf8f31ce54eb92fd92e00ae107fe30cb9fabac2829dfb911b49bcbe7",
+        "document_id": "cb601f58d70aa060d082f5b48d659477dcf7cf28b6514bd4c0a103fc11a72baf",
+        "original_subdir": "gem1-04-acquisition-20261125",
+        "source_page": 11,
+        "image_sha256": "fde535333f1ac65b7e40b613229e8906fb3d34be66ade252ec081ef4c2a752c5",
+        "image": "blind-input-pow-fy2025-p11/claude/page-11.png",
+        "render_meta": "blind-input-pow-fy2025-p11/input.meta.json",
+        "readings": [
+          [
+            "claude",
+            "blind-input-pow-fy2025-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-25T12:26:53+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-pow-fy2025-p11/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:04+07:00"
+          ]
+        ],
+        "new_subdir": "fy2025-dual-reader-pow-20261125",
+        "printed_page": "7",
+        "column_id": "c1",
+        "comparison_started_at": "2026-11-25T12:27:10+07:00"
+      }
+    },
+    "POW-2025-H1-P11": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:POW-2025-H1-P11"
+        ],
+        "reader_sha256": [
+          "8787a89d74b58a3e8417556e35a368485bfc5534ebcb9ffbc5559f58b114870c",
+          "5f6bd65583b82d663eb2943bc237f1db352faed883c05f6b88479a1660ff0930"
+        ],
+        "render_meta_sha256": "4bf6d52fe46fa62739dbec006df83a42324ec32b4062b7b07a1c57bd1f381a06",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "page_key": "pow-2025h1-p11",
+        "ticker": "POW",
+        "reporting_period": "2025-H1",
+        "document_sha256": "e56815b230d3130816b1169055691d3dc6ce6b67af932a651db69b6da52045c1",
+        "document_id": "422afc62b2d433875eb5db8dfa80e0103932a53f2c4a680edade3564ce4a5312",
+        "original_subdir": "h1-2025-ttm-batch3-20261125",
+        "source_page": 11,
+        "image_sha256": "c69bb4a8cac577b52ba718b6987b37dd51e7b35945d9dd68eb851b86a959df21",
+        "image": "blind-input-pow-2025h1-p11/claude/page-11.png",
+        "render_meta": "blind-input-pow-2025h1-p11/input.meta.json",
+        "readings": [
+          [
+            "claude",
+            "blind-input-pow-2025h1-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-25T23:58:20+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-pow-2025h1-p11/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:26+07:00"
+          ]
+        ],
+        "new_subdir": "h1-2025-dual-reader-pow-r2-20261125",
+        "printed_page": "7",
+        "column_id": "c1",
+        "comparison_started_at": "2026-11-25T23:58:40+07:00"
+      }
+    },
+    "POW-2026-H1-P11": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:POW-2026-H1-P11"
+        ],
+        "reader_sha256": [
+          "fb381ea78eefb044b13dd58635df5ae1371eeaa3836e932551b77ac479d18d19",
+          "3b6cfc6c17576dc1c3ff4f6cca0355e2f704bfe0711e1eee9c7c6c812c7d7922"
+        ],
+        "render_meta_sha256": "c0953c143b8261489f3ad95f82341135226ba8ba5cd7ee7b67e1412a448ae680",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "page_key": "pow-2026h1-p11",
+        "ticker": "POW",
+        "reporting_period": "2026-H1",
+        "document_sha256": "38f6bcd441d601fa94e2742ee7d6721c4f423110b656e90ba0f9e8ac2e123cd5",
+        "document_id": "a9fffec5811e3522a692dcec0795f1d70ea0652e9373c819e7561955d646b6d4",
+        "original_subdir": "gem1-04-acquisition-20261125",
+        "source_page": 11,
+        "image_sha256": "cd386354584d7747f9bb4b6098712b31a4274708ec6e6dd6d21255a34f8578ec",
+        "image": "blind-input-pow-2026h1-p11/claude/page-11.png",
+        "render_meta": "blind-input-pow-2026h1-p11/input.meta.json",
+        "readings": [
+          [
+            "claude",
+            "blind-input-pow-2026h1-p11/claude-r2/claude-reader.raw.json",
+            "2026-11-26T00:14:54+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-pow-2026h1-p11/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:16+07:00"
+          ]
+        ],
+        "new_subdir": "h1-2026-dual-reader-pow-r2b-20261126",
+        "printed_page": "7",
+        "column_id": "c1",
+        "comparison_started_at": "2026-11-26T00:15:10+07:00"
+      }
+    },
+    "NVL-2025-H1-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:NVL-2025-H1-P12"
+        ],
+        "reader_sha256": [
+          "04331d5aa91ac3cbeba0c2eb922c465102a077e35f171ea0530e12b5ae787acf",
+          "0b7ec4bbe073acf9b6af9fbf7030c4024f411375f94efe68cd971d44a0f49e3a"
+        ],
+        "render_meta_sha256": "0223b0e3bf8026ede9b0bad0db54bee496445b9d21c0365c9cb276a091c90afc",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "page_key": "nvl-2025h1-p12",
+        "ticker": "NVL",
+        "reporting_period": "2025-H1",
+        "document_sha256": "618d514b355387ade90d2266f8f8c4c7098d94339592dc696d900482c96b4e6c",
+        "document_id": "37c73f169b42344a61cdb529b79c9721f9d0d31d0dc29efd2be824afa3b8897c",
+        "original_subdir": "h1-2025-ttm-batch3-20261125",
+        "source_page": 12,
+        "image_sha256": "375c77e36fad1ca1797f32777f88625dc535751e7b492aeb71af9cd59a77b49b",
+        "image": "blind-input-nvl-2025h1-p12/claude/page-12.png",
+        "render_meta": "blind-input-nvl-2025h1-p12/input.meta.json",
+        "readings": [
+          [
+            "claude",
+            "blind-input-nvl-2025h1-p12/claude/claude-reader.raw.json",
+            "2026-11-25T12:02:28+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-nvl-2025h1-p12/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:36+07:00"
+          ]
+        ],
+        "new_subdir": "h1-2025-dual-reader-nvl-signed-20261126",
+        "printed_page": "10",
+        "column_id": "c1",
+        "comparison_started_at": "2026-11-25T12:06:00+07:00"
+      }
+    },
+    "NVL-2026-H1-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:NVL-2026-H1-P12"
+        ],
+        "reader_sha256": [
+          "aed22909e0400b134aff78529107365940d569582746860e7159a274fd3f1ec3",
+          "9987fdfce8655ce5980d349146aa5a8964442f6818b257d6f08e92bad40105d0"
+        ],
+        "render_meta_sha256": "5c175829fee521e91679a7d78ccc66a6eaa3a55ca78eeffdfccab9502639850d",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "page_key": "nvl-2026h1-p12",
+        "ticker": "NVL",
+        "reporting_period": "2026-H1",
+        "document_sha256": "20aa7254735542d470f12ada8d02786dfa5e673035274e42d3404352e266a007",
+        "document_id": "c7c7ca6cb25567d7a1307e15987cf0eeba7f44b7b11d682ce738a0d978606abd",
+        "original_subdir": "nvl-reviewed-evidence-20261008",
+        "source_page": 12,
+        "image_sha256": "880dfa4354201b1135663b5bf1e5f27c58f79e0ed053982c12235d4caac18e9d",
+        "image": "blind-input-nvl-2026h1-p12/claude/page-12.png",
+        "render_meta": "blind-input-nvl-2026h1-p12/input.meta.json",
+        "readings": [
+          [
+            "claude",
+            "blind-input-nvl-2026h1-p12/claude/claude-reader.raw.json",
+            "2026-11-25T12:02:30+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-nvl-2026h1-p12/gemini/gemini-reader.raw.json",
+            "2026-11-25T12:05:46+07:00"
+          ]
+        ],
+        "new_subdir": "h1-2026-dual-reader-nvl-20261125",
+        "printed_page": "Trang 10",
+        "column_id": "c1",
+        "comparison_started_at": "2026-11-25T12:06:00+07:00"
+      }
+    },
+    "NVL-2025-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:NVL-2025-P12"
+        ],
+        "reader_sha256": [
+          "70af852a795fe1ca2ca590f978c68b0e017ad9cc00334f4d0733bd85b964c838",
+          "dd6ddda78d94ee66ef9c0d9e2acd8e50c571f37011267e0d14f19f981237feb4"
+        ],
+        "render_meta_sha256": "8e14352868505ff5ab8e59654dd5db541e924d0d762f9bcfe1074a3c2166c496",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "page_key": "nvl-fy2025-p12",
+        "ticker": "NVL",
+        "reporting_period": "2025",
+        "document_sha256": "8a1cb94cbe9ef5d98550ef6ab734f54f99ecb9376f43c8aa4a3662cd6d5d0353",
+        "document_id": "c040b3b610442453248c6c43423a17be20869e7c0560da3384677a74f79b9622",
+        "original_subdir": "gem1-04-acquisition-20261125",
+        "source_page": 12,
+        "image_sha256": "d003a13f910ffab2bf14ef269f80fe3a12b2cf50ba01bdb1706e9b4b28526378",
+        "image": "blind-input-nvl-fy2025-p12/claude/page-12.png",
+        "render_meta": "blind-input-nvl-fy2025-p12/input.meta.json",
+        "readings": [
+          [
+            "claude",
+            "blind-input-nvl-fy2025-p12/claude/claude-reader.raw.json",
+            "2026-11-25T08:11:58+07:00"
+          ],
+          [
+            "gemini",
+            "blind-input-nvl-fy2025-p12/gemini/gemini-reader.raw.json",
+            "2026-11-25T08:15:12+07:00"
+          ]
+        ],
+        "new_subdir": "fy2025-dual-reader-nvl-20261125",
+        "printed_page": "Trang 10",
+        "column_id": "c1",
+        "comparison_started_at": "2026-11-25T08:15:17+07:00"
+      }
+    },
+    "HAH-2025-P13": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:HAH-2025-P13"
+        ],
+        "reader_sha256": [
+          "6c1a076eab659c46d8b4f99917d66b8faca035a6eba55148cd3b2401b06f047d",
+          "c98c12f150b0568cadc47d537f558a20bc69526501cafb44257ce1dbfeb7c145"
+        ],
+        "render_meta_sha256": "bbbc9666b40b785cc1392e6fdf0e738dc573093a5683b8a11dd69139662c75d2",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HAH",
+        "reporting_period": "2025",
+        "document_sha256": "2648374e2e6c60403a353f36456a88f4c34675f1cb4ff3cd6a5adc5d0b90f1b1",
+        "document_id": "edb02b425a2b4bc62dac4300ebeacc69d4b8b8b31e207ae8f24284cf535183ad",
+        "original_subdir": "acquisition-batch3-20261126",
+        "new_subdir": "fy2025-dual-reader-hah-r3-20261126",
+        "page_key": "hah-fy2025-p13",
+        "source_page": 13,
+        "printed_page": "8",
+        "image_sha256": "fb88447f588c83f8fdaf70368bb1675bc32c769468b40469a2a3f1cc6536cd2b",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-hah-fy2025-p13/claude/claude-reader.raw.json",
+            "2026-11-26T09:02:15+07:00"
+          ],
+          [
+            "gpt",
+            "blind-input-hah-fy2025-p13/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:00:17+07:00"
+          ]
+        ],
+        "image": "blind-input-hah-fy2025-p13/claude/page-13.png",
+        "render_meta": "blind-input-hah-fy2025-p13/input.meta.json",
+        "comparison_started_at": "2026-11-26T09:09:20+07:00"
+      }
+    },
+    "HAH-2025-H1-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:HAH-2025-H1-P12"
+        ],
+        "reader_sha256": [
+          "9417ba392697766847d29872315fa128c68e04408608ca5d782bdfa40c1919a6",
+          "7cdc2915f5065a8ab22e46510d14fe60c5a48e3dcc4ce42bbe346fad353baaeb"
+        ],
+        "render_meta_sha256": "afacfe0b02406db6592be987ca34f838afec744e814c36c55a5e013467f2b6e8",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HAH",
+        "reporting_period": "2025-H1",
+        "document_sha256": "a36ae93c0c3434d3e47c36f5d6de07ca6623db880b01c850a0bdd9855a45837b",
+        "document_id": "9d550132d892a447b11d06fbe4aa9dace11c3e8d26d164ae9e63935cd9c71a7c",
+        "original_subdir": "acquisition-batch3-20261126",
+        "new_subdir": "h1-2025-dual-reader-hah-r3-20261126",
+        "page_key": "hah-2025h1-p12",
+        "source_page": 12,
+        "printed_page": "8",
+        "image_sha256": "88ca5b22455b8b6b3d4758c8686860a585cf956ac0ea0bd35d66f5f26a19dd4b",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-hah-2025h1-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:28+07:00"
+          ],
+          [
+            "gpt",
+            "blind-input-hah-2025h1-p12/chatgpt-r2/chatgpt-reader.raw.json",
+            "2026-11-26T09:27:14+07:00"
+          ]
+        ],
+        "image": "blind-input-hah-2025h1-p12/claude/page-12.png",
+        "render_meta": "blind-input-hah-2025h1-p12/input.meta.json",
+        "comparison_started_at": "2026-11-26T09:27:30+07:00"
+      }
+    },
+    "HAH-2026-H1-P13": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:HAH-2026-H1-P13"
+        ],
+        "reader_sha256": [
+          "d6e89317797626b68fe095eb44af9f38d630cd0e081bcbc8976c7d3f73bdbad0",
+          "a8f0a08ead429e90caeabad413af1dc17744d303f2e4e6cb747bca544059ca71"
+        ],
+        "render_meta_sha256": "52b3d1b1001ff53925351b886a436bf9c1c477632228e45c297ebaf693bb390b",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "HAH",
+        "reporting_period": "2026-H1",
+        "document_sha256": "913d92bec2564ad9efa15db114e34419d21e4b466bf51964ddca941682cf7291",
+        "document_id": "6579946bb113061c88bf132ad3987de33f721b8b3e192f04730c214d6c4f1a60",
+        "original_subdir": "acquisition-batch3-20261126",
+        "new_subdir": "h1-2026-dual-reader-hah-r3-20261126",
+        "page_key": "hah-2026h1-p13",
+        "source_page": 13,
+        "printed_page": "8",
+        "image_sha256": "98c8c1933a343a7049466db937e6399cc3d6076bc3efefade9a1647316370ec6",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-hah-2026h1-p13/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:45+07:00"
+          ],
+          [
+            "gpt",
+            "blind-input-hah-2026h1-p13/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:02:14+07:00"
+          ]
+        ],
+        "image": "blind-input-hah-2026h1-p13/claude/page-13.png",
+        "render_meta": "blind-input-hah-2026h1-p13/input.meta.json",
+        "comparison_started_at": "2026-11-26T09:09:20+07:00"
+      }
+    },
+    "BWE-2025-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:BWE-2025-P12"
+        ],
+        "reader_sha256": [
+          "c64abe2e55ba35242953de9bcb7bf4418bc5c632300e392008a0198c0454d18f",
+          "1a228f64043041541536363c4e932c2766f34a1b4c5f7b932b3063b6f40f80e9"
+        ],
+        "render_meta_sha256": "8b64a1e937abdec48c05fbdf0c680119f3ca1c399100908de2f3cba5967f6b14",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "BWE",
+        "reporting_period": "2025",
+        "document_sha256": "9e028ec5b6e612767068d0ba25c83c1350a86e55753a61fda7625fae26c4dcf9",
+        "document_id": "b03c92d58bf9c9f92fa4637ee080c5e08e47f6b1d1dc7e89512324da747a1a09",
+        "original_subdir": "acquisition-batch3-20261126",
+        "new_subdir": "fy2025-dual-reader-bwe-r3-20261126",
+        "page_key": "bwe-fy2025-p12",
+        "source_page": 12,
+        "printed_page": "8",
+        "image_sha256": "fa7896a2f4a352ff7435c9b2daf0b8269d3b293b38ef7661798a1f061588902b",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-bwe-fy2025-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:47+07:00"
+          ],
+          [
+            "gpt",
+            "blind-input-bwe-fy2025-p12/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:05:43+07:00"
+          ]
+        ],
+        "image": "blind-input-bwe-fy2025-p12/claude/page-12.png",
+        "render_meta": "blind-input-bwe-fy2025-p12/input.meta.json",
+        "comparison_started_at": "2026-11-26T09:09:20+07:00"
+      }
+    },
+    "BWE-2025-H1-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:BWE-2025-H1-P12"
+        ],
+        "reader_sha256": [
+          "0af0725d2f6c2a5fd9cea83a5ebc44b4e1e6fee87cdcca459f6faaa5275f8058",
+          "172e64c3f4c845dad1c42e7dfe0c5b88aa590f7a36e33f6c13d5e54a25092749"
+        ],
+        "render_meta_sha256": "c4d800fc758242c0c51dc4391abab35e232f55027f6b142634c7b518d7ae1755",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "BWE",
+        "reporting_period": "2025-H1",
+        "document_sha256": "acb48684fcf4d14266f2bd0ca684331d7b69e2953a50f612e9004cb055cb92c8",
+        "document_id": "87fa92572759510c5dd1707af7c7a9c5475046a824eaa858eab742b82bd72f64",
+        "original_subdir": "acquisition-batch3-20261126",
+        "new_subdir": "h1-2025-dual-reader-bwe-r3-20261126",
+        "page_key": "bwe-2025h1-p12",
+        "source_page": 12,
+        "printed_page": "8",
+        "image_sha256": "e7950cad0cc38eb6e9e4ed16f7d12a21eb168f8ac4e62f5428db933f6dba17a6",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-bwe-2025h1-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:20+07:00"
+          ],
+          [
+            "gpt",
+            "blind-input-bwe-2025h1-p12/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:09:10+07:00"
+          ]
+        ],
+        "image": "blind-input-bwe-2025h1-p12/claude/page-12.png",
+        "render_meta": "blind-input-bwe-2025h1-p12/input.meta.json",
+        "comparison_started_at": "2026-11-26T09:09:20+07:00"
+      }
+    },
+    "BWE-2026-H1-P12": {
+      "revision": 1,
+      "supersedes": null,
+      "review": {
+        "reference": "HL-20261126-CDX-34; baseline 74017553c7a17c33a5464ec735f3700df669bbd5",
+        "recorded_at": null
+      },
+      "inputs": {
+        "provenance_refs": [
+          "74017553c7a17c33a5464ec735f3700df669bbd5:tools/run_dual_reader_transcription_admission.py:BWE-2026-H1-P12"
+        ],
+        "reader_sha256": [
+          "24b8185dc72ef2cee49bba18a7cf1b9f4f7b078afc59debb360932468ebae05a",
+          "aabf4bf5d0c543d873ab1b5a6de7ddbfda935a9c30b40f8b83398be6d3e7c240"
+        ],
+        "render_meta_sha256": "16cbbbaa40ce5a61ddca816d84cfef8d3d3a6bc0a54f1bae87b20dbcd45f12e5",
+        "tuple_readings": false
+      },
+      "timestamps": {
+        "evidence_observed_at": null,
+        "registered_at": null,
+        "knowledge_available_at": null
+      },
+      "payload": {
+        "ticker": "BWE",
+        "reporting_period": "2026-H1",
+        "document_sha256": "6e19b66271a6cf87be38791ffb2c29985b13930b12dfd72399909ffde2c9cdef",
+        "document_id": "b21ac8140f19ec3d0f8d9e4fef7a6c1bcba798c1c382d12781502fa1d25768b8",
+        "original_subdir": "acquisition-batch3-20261126",
+        "new_subdir": "h1-2026-dual-reader-bwe-r3-20261126",
+        "page_key": "bwe-2026h1-p12",
+        "source_page": 12,
+        "printed_page": "8",
+        "image_sha256": "259e24d077202a6cff9e7c6040142c7fc16444cd42f99d0ecda481bbc63a8ee2",
+        "column_id": "c1",
+        "readings": [
+          [
+            "claude",
+            "blind-input-bwe-2026h1-p12/claude/claude-reader.raw.json",
+            "2026-11-26T08:58:17+07:00"
+          ],
+          [
+            "gpt",
+            "blind-input-bwe-2026h1-p12/chatgpt/chatgpt-reader.raw.json",
+            "2026-11-26T09:07:21+07:00"
+          ]
+        ],
+        "image": "blind-input-bwe-2026h1-p12/claude/page-12.png",
+        "render_meta": "blind-input-bwe-2026h1-p12/input.meta.json",
+        "comparison_started_at": "2026-11-26T09:09:20+07:00"
+      }
+    }
+  }
+}

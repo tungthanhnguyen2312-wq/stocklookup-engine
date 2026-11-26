@@ -1541,6 +1541,16 @@ def _financial_evidence_currency_contract_prior_bytes(root: Path, relative: str,
     if relative != FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE:
         return active
     spec = json.loads((root / FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_MANIFEST).read_bytes())
+    successor = spec.pop("registry_snapshot_transition", None)
+    if (type(successor) is not dict or set(successor) != set(REGISTRY_CURRENCY_SUCCESSOR) | {"prior_source_lf"}
+            or {k: v for k, v in successor.items() if k != "prior_source_lf"} != REGISTRY_CURRENCY_SUCCESSOR
+            or type(successor["prior_source_lf"]) is not str):
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_SCOPE_INVALID")
+    predecessor = successor["prior_source_lf"].encode("utf-8")
+    if (hashlib.sha256(active).hexdigest() != successor["active_sha256_lf"]
+            or hashlib.sha256(predecessor).hexdigest() != successor["prior_sha256_lf"]):
+        raise ValueError("FINANCIAL_EVIDENCE_CURRENCY_CONTRACT_SOURCE_TRANSITION_BINDING_INVALID")
+    active = predecessor
     expected = {'contract_version': 'financial_evidence_currency_contract_source_transition/v1',
      'base_commit': '70fbba96d02369e0f02a5a15dd264bad780fe6ce',
      'scope': 'DECISION2_HAH_CORPORATE_ENTITY_FAMILY_AND_EXACT_ISSUER_LOCATORS',
@@ -1669,9 +1679,29 @@ def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes
     return active
 
 
+REGISTRY_LAYOUT_TRANSITION = "tests/fixtures/registry_migration_v1/official_ocr_layout_proof_source_transition_v1.json"
+REGISTRY_SNAPSHOT_TRANSITIONS = {'stocklookup_core/evidence/official_ocr_layout_proof.py': {'contract_version': 'financial_registry_snapshot_source_transition/v1', 'base_commit': '74017553c7a17c33a5464ec735f3700df669bbd5', 'scope': 'REGISTRY_MIGRATION_A_SNAPSHOTS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'stocklookup_core/evidence/official_ocr_layout_proof.py', 'archive': 'tests/fixtures/registry_migration_v1/official_ocr_layout_proof.py.txt', 'prior_sha256_lf': 'e0ca67d98028d3bd87af7ac272d6df7ea2d36131f2d4b9ea0e17d6958b533350', 'active_sha256_lf': 'aae4182cc194e494c903585c24dcd218332c9d911ff9994835fb08ac33a62ecc'}}
+REGISTRY_CURRENCY_SUCCESSOR = {'contract_version': 'financial_registry_snapshot_source_transition/v1', 'base_commit': '74017553c7a17c33a5464ec735f3700df669bbd5', 'scope': 'REGISTRY_MIGRATION_A_SNAPSHOTS_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'financial_evidence_currency_contract.py', 'prior_sha256_lf': '2e68914bd7d83a235695983e68fe49c1dc54efb4bf67fc80358819361d109838', 'active_sha256_lf': '242c24374d9370ff5232bea291bb9382d7369c846ac35eee770d5584333b9c79'}
+
+
+def _registry_snapshot_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    if relative not in REGISTRY_SNAPSHOT_TRANSITIONS:
+        return active
+    expected = REGISTRY_SNAPSHOT_TRANSITIONS[relative]
+    spec = json.loads((root / REGISTRY_LAYOUT_TRANSITION).read_bytes())
+    if spec != expected:
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]):
+        raise ValueError("REGISTRY_SNAPSHOT_SOURCE_TRANSITION_BINDING_INVALID")
+    return prior
+
+
 def historical_bytes(root: Path, relative: str) -> bytes:
     """Verify both sides of an approved boundary before supplying legacy bytes."""
     content = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    content = _registry_snapshot_prior_bytes(root, relative, content)
     if relative == OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE:
         amended = _official_source_registry_reviewed_amendment_bytes(root, content)
         if amended is not None:
