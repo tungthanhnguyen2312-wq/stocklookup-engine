@@ -16,8 +16,50 @@ from tools import run_owner_daily as owner
 GIB = preflight.GIB
 
 
+def _before_prospective_stream(receipt):
+    prior = copy.deepcopy(receipt)
+    corrective = prior.pop("prospective_snapshot_stream_corrective")
+    prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
+    for relative in corrective["added_source_paths"]:
+        del prior["source_sha256"][relative]
+    return prior, corrective
+
+
+def test_prospective_stream_capacity_corrective_exact_chain_and_history():
+    root = preflight.ROOT
+    relative = "config/owner_daily_capacity_qualification.json"
+    live_raw = (root / relative).read_bytes()
+    live = json.loads(live_raw)
+    prior, corrective = _before_prospective_stream(live)
+    baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
+    assert prior == json.loads(baseline_raw)
+    assert list(live)[-2:] == ["valuation_integration_b_corrective", "prospective_snapshot_stream_corrective"]
+    assert corrective["predecessor_corrective"] == "valuation_integration_b_corrective"
+    assert corrective["scope"] == "PROSPECTIVE_SNAPSHOT_FROZEN_RECORDS_STREAM_COMPATIBILITY_PIN_UPDATE_ONLY"
+    assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
+    assert corrective["release_authority"] == "NOT_GRANTED"
+    assert corrective["added_source_paths"] == []
+    changed = corrective["changed_source_paths"]
+    assert changed == ["stocklookup_core/evidence/record_artifact_loading.py"]
+    assert set(corrective["prior_source_sha256_lf"]) == set(corrective["active_source_sha256_lf"]) == set(changed)
+    for path, digest in corrective["active_source_sha256_lf"].items():
+        assert hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
+        assert corrective["prior_source_sha256_lf"][path] == prior["source_sha256"][path] != digest
+    decoder = json.JSONDecoder()
+    def member(data, key):
+        text = data.decode("utf-8").replace("\r\n", "\n")
+        start = text.index('\n  "' + key + '": ') + len('\n  "' + key + '": ')
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end]
+    for key in prior:
+        if key != "source_sha256":
+            assert member(live_raw, key) == member(baseline_raw, key)
+
+
 def _before_valuation_b(receipt):
     prior = copy.deepcopy(receipt)
+    if "prospective_snapshot_stream_corrective" in prior:
+        prior, _ = _before_prospective_stream(prior)
     corrective = prior.pop("valuation_integration_b_corrective")
     prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
     for relative in corrective["added_source_paths"]:
@@ -29,7 +71,7 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     live_raw = (root / relative).read_bytes()
-    live = json.loads(live_raw)
+    live, _ = _before_prospective_stream(json.loads(live_raw))
     prior, corrective = _before_valuation_b(live)
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
     assert prior == json.loads(baseline_raw)
