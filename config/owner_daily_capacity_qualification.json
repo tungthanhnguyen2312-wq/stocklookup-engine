@@ -45,7 +45,7 @@
     "config/interim_earnings_cash_issuer_gates_v1.json": "858e6889016318cd4e5616c2b028820eb78e9b2b9c527a443a0a7f594b9b5a1f",
     "config/news_mapping_config.json": "ca7d8a99eb70ed02c2029e7ff926ec7b4339bf6e5d5efd57029cac225559356d",
     "config/official_financial_legacy_row_admission_v1.json": "e1515f7a22229f12c83bc9a443afebe8a008aafa56580012f67dc1a174ac5db8",
-    "config/official_source_registry.json": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881",
+    "config/official_source_registry.json": "2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0",
     "config/owner_research_focus.json": "31d801e91ab4674e375efd571070a7ca6f9ee2013a2825b6d2a0372fef36d973",
     "config/promoted_comparative_financial_evidence.json": "9c794102ac95edc99690dc630e7257c39c87a839f60e83ea86336cf694b88060",
     "config/promoted_entity_classifications.json": "08647c542d214730ef0ff93c6273fe0d8498c80305cd7019d567382f8d75160e",
@@ -2586,5 +2586,26 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. HAH R3 research config only; no source-transition fixture is added. Default-OFF research branch; activation requires separate Owner authorization."
+  },
+  "evf_source_registry_corrective": {
+    "base_commit": "30e623ece28012a5c1bee7281317ca8e903f19fe",
+    "predecessor_corrective": "dual_reader_config_hah_corrective",
+    "scope": "EVF_SOURCE_REGISTRY_STATEMENT_BYTE_ACQUISITION_COMPATIBILITY_PIN_UPDATE_ONLY",
+    "changed_source_paths": [
+      "config/official_source_registry.json"
+    ],
+    "added_source_paths": [],
+    "prior_source_sha256_lf": {
+      "config/official_source_registry.json": "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881"
+    },
+    "active_source_sha256_lf": {
+      "config/official_source_registry.json": "2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0"
+    },
+    "source_transition": null,
+    "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. Exact www.evnfc.vn host admission for audited annual and reviewed interim statement byte acquisition only; no source-transition fixture is added. No financial-fact, PIT, execution, Daily launch or release authority is granted."
   }
 }
