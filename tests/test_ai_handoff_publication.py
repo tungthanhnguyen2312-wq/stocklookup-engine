@@ -673,3 +673,108 @@ def test_unqualified_structured_financial_context_fails_soft_for_an_eligible_ses
     (tmp_path / handoff.STRUCTURED_FINANCIAL_CONTEXT).write_text("{", encoding="utf-8")
     untouched = build_package(session, "2026-11-19", producer_checkpoint="abc")
     assert handoff.STRUCTURED_FINANCIAL_CONTEXT not in untouched[0]
+
+
+# --- Daily 2026-11-27 GH001 corrective: oversize package files are stored as gzip ---------
+
+def _oversize_remote_repo(tmp_path):
+    s, r = tmp_path/"source", tmp_path/"repo"; source(s); repo(r)
+    remote = tmp_path/"remote.git"; subprocess.run(["git","init","--bare","-q",str(remote)],check=True)
+    git(r,"branch","-M","main"); git(r,"remote","add","origin",str(remote)); git(r,"push","-u","origin","main")
+    return s, r
+
+
+def _big_bundle(s, size):
+    body = json.dumps({"artifact_identity": "bundle:big", "pad": "ấ" * (size // 3)}, ensure_ascii=False)
+    (s/"ai_research_session_bundle.json").write_text(body, encoding="utf-8")
+    return hashlib.sha256((s/"ai_research_session_bundle.json").read_bytes()).hexdigest()
+
+
+def test_oversize_file_is_stored_gzip_with_original_identity_and_verifies_remotely(tmp_path, monkeypatch):
+    import gzip
+    s, r = _oversize_remote_repo(tmp_path)
+    original_sha = _big_bundle(s, 300_000)
+    baseline = build_package(s, "2026-11-27", producer_checkpoint="abc")[1]
+    monkeypatch.setattr(handoff, "GIT_STORED_FILE_LIMIT_BYTES", 100_000)
+    result = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=True)
+    # Storage never changes package identity: same files hashes and build id as unencoded.
+    assert result["package"] == baseline
+    assert result["package"]["files"]["ai_research_session_bundle.json"] == original_sha
+    target = r/result["immutable_session_path"]
+    assert not (target/"ai_research_session_bundle.json").exists()
+    stored = target/"ai_research_session_bundle.json.gz"
+    assert stored.is_file() and stored.stat().st_size < 100_000
+    assert hashlib.sha256(gzip.decompress(stored.read_bytes())).hexdigest() == original_sha
+    sidecar = json.loads((target/handoff.STORAGE_SIDECAR).read_text(encoding="utf-8"))
+    record = sidecar["files"]["ai_research_session_bundle.json"]
+    assert sidecar["schema_version"] == handoff.STORAGE_CONTRACT and set(sidecar["files"]) == {"ai_research_session_bundle.json"}
+    assert record["original_sha256"] == original_sha and record["stored_name"] == stored.name
+    assert record["stored_sha256"] == hashlib.sha256(stored.read_bytes()).hexdigest()
+    # Small files are unchanged and stored raw.
+    assert (target/"ai_research_bundle_manifest.json").is_file()
+    verified = verify_remote_publication(r, result)
+    assert verified["status"] == "READY_FOR_AI" and verified["remote_sha"] == result["handoff_commit"]
+    # Resume over the committed gzip build is an idempotent no-op.
+    again = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=True)
+    assert again["status"] == "NO_OP_ALREADY_PUBLISHED" and again["package"] == baseline
+
+
+def test_gzip_storage_is_deterministic_across_builds(tmp_path, monkeypatch):
+    monkeypatch.setattr(handoff, "GIT_STORED_FILE_LIMIT_BYTES", 100_000)
+    digests = []
+    for name in ("a", "b"):
+        base = tmp_path/name; base.mkdir()
+        s, r = base/"source", base/"repo"; source(s); repo(r); _big_bundle(s, 300_000)
+        result = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=False)
+        digests.append(hashlib.sha256((r/result["immutable_session_path"]/"ai_research_session_bundle.json.gz").read_bytes()).hexdigest())
+    assert digests[0] == digests[1]
+
+
+def test_tampered_gzip_or_sidecar_fails_closed_on_resume(tmp_path, monkeypatch):
+    import gzip
+    monkeypatch.setattr(handoff, "GIT_STORED_FILE_LIMIT_BYTES", 100_000)
+    s, r = tmp_path/"source", tmp_path/"repo"; source(s); repo(r); _big_bundle(s, 300_000)
+    first = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=False)
+    stored = r/first["immutable_session_path"]/"ai_research_session_bundle.json.gz"
+    stored.write_bytes(gzip.compress(b'{"mutated":true}', mtime=0))
+    with pytest.raises(HandoffPublicationError, match="HANDOFF_STORED_FILE_HASH_MISMATCH"):
+        publish(r, s, "2026-11-27", producer_checkpoint="abc", push=False)
+    sidecar = r/first["immutable_session_path"]/handoff.STORAGE_SIDECAR
+    sidecar.write_text('{"schema_version":"other","files":{}}', encoding="utf-8")
+    with pytest.raises(HandoffPublicationError, match="HANDOFF_STORAGE_SIDECAR_INVALID"):
+        publish(r, s, "2026-11-27", producer_checkpoint="abc", push=False)
+
+
+def test_remote_stored_blob_tamper_fails_closed(tmp_path, monkeypatch):
+    import gzip
+    s, r = _oversize_remote_repo(tmp_path); _big_bundle(s, 300_000)
+    monkeypatch.setattr(handoff, "GIT_STORED_FILE_LIMIT_BYTES", 100_000)
+    result = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=True)
+    stored = r/result["immutable_session_path"]/"ai_research_session_bundle.json.gz"
+    stored.write_bytes(gzip.compress(b'{"mutated":true}', mtime=0))
+    git(r, "add", "-A"); git(r, "commit", "-qm", "tamper"); git(r, "push")
+    tampered = dict(result, handoff_commit=subprocess.run(["git","-C",str(r),"rev-parse","HEAD"],capture_output=True,text=True,check=True).stdout.strip())
+    with pytest.raises(HandoffPublicationError, match="REMOTE_STORED_FILE_INVALID"):
+        verify_remote_publication(r, tampered)
+
+
+def test_files_at_or_below_the_real_limit_stay_raw_and_byte_identical(tmp_path):
+    s, r = tmp_path/"source", tmp_path/"repo"; source(s); repo(r)
+    result = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=False)
+    target = r/result["immutable_session_path"]
+    assert not (target/handoff.STORAGE_SIDECAR).exists()
+    assert not any(p.suffix == ".gz" for p in target.iterdir())
+    assert (target/"HANDOFF.md").read_text(encoding="utf-8").endswith("Status: READY_FOR_AI\n")
+    assert handoff.GIT_STORED_FILE_LIMIT_BYTES == 95 * 1024 * 1024
+
+
+def test_real_limit_file_above_95_mib_is_gzip_stored(tmp_path):
+    s, r = tmp_path/"source", tmp_path/"repo"; source(s); repo(r)
+    pad = b'{"artifact_identity":"bundle:huge","pad":"' + b"x" * (96 * 1024 * 1024) + b'"}'
+    (s/"ai_research_session_bundle.json").write_bytes(pad)
+    del pad
+    result = publish(r, s, "2026-11-27", producer_checkpoint="abc", push=False)
+    target = r/result["immutable_session_path"]
+    stored = target/"ai_research_session_bundle.json.gz"
+    assert stored.is_file() and stored.stat().st_size < 1024 * 1024
+    assert not (target/"ai_research_session_bundle.json").exists()

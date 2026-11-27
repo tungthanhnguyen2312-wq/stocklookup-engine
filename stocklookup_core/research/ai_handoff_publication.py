@@ -1,6 +1,6 @@
 """Deterministic private-Git transport for already-authoritative daily AI artifacts."""
 from __future__ import annotations
-import hashlib, json, re, subprocess
+import gzip, hashlib, io, json, re, subprocess
 from pathlib import Path
 from typing import Any, Mapping
 from stocklookup_core.evidence.field_identity import stable_id
@@ -17,6 +17,15 @@ QUEUE_NOT_DECLARED = "NOT_DECLARED_BY_SEALED_OPERATION"
 _ABSOLUTE_PATH = re.compile(r"^(?:[A-Za-z]:[\\/]|[\\/]{2}|/)")
 
 class HandoffPublicationError(ValueError): pass
+
+# GitHub refuses any blob above 100 MB (GH001; Daily 2026-11-27 sealed a 125.85 MB
+# ai_research_session_bundle.json). Package files above this margin are STORED as
+# deterministic gzip ``<name>.gz``; ``files``/``handoff_build_id`` keep the original-bytes
+# sha256, so package identity never depends on storage. HANDOFF_STORAGE.json records the
+# encoding. Builds with no oversize file are byte-identical to before (no sidecar).
+GIT_STORED_FILE_LIMIT_BYTES = 95 * 1024 * 1024
+STORAGE_SIDECAR = "HANDOFF_STORAGE.json"
+STORAGE_CONTRACT = "stocklookup_ai_handoff_storage/v1"
 def sha(path: Path) -> str:
     with path.open("rb") as handle:
         return hashlib.file_digest(handle, "sha256").hexdigest()
@@ -28,6 +37,67 @@ def _copy_verified(source: Path, destination: Path, expected_sha: str) -> None:
             copied.write(chunk)
     if digest.hexdigest() != expected_sha:
         raise HandoffPublicationError("HANDOFF_SOURCE_CHANGED_DURING_COPY:" + destination.name)
+
+
+def _entry_size(entry: Any) -> int:
+    return len(entry) if isinstance(entry, (bytes, bytearray)) else entry.stat().st_size
+
+
+def _write_gzip_verified(entry: Any, destination: Path, expected_sha: str) -> dict[str, Any]:
+    """Deterministic gzip (mtime 0, no embedded name) while hashing the ORIGINAL bytes."""
+    original = hashlib.sha256()
+    size = 0
+    with destination.open("xb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=6) as packed:
+            if isinstance(entry, (bytes, bytearray)):
+                original.update(entry)
+                packed.write(entry)
+                size = len(entry)
+            else:
+                with entry.open("rb") as source:
+                    while chunk := source.read(1024 * 1024):
+                        original.update(chunk)
+                        packed.write(chunk)
+                        size += len(chunk)
+    if original.hexdigest() != expected_sha:
+        raise HandoffPublicationError("HANDOFF_SOURCE_CHANGED_DURING_COPY:" + destination.name)
+    return {"encoding": "gzip", "stored_name": destination.name, "original_sha256": expected_sha,
+            "original_bytes": size, "stored_sha256": sha(destination)}
+
+
+def _gunzip_sha(data_or_path: Any) -> str:
+    digest = hashlib.sha256()
+    if isinstance(data_or_path, (bytes, bytearray)):
+        handle = gzip.GzipFile(fileobj=io.BytesIO(data_or_path), mode="rb")
+    else:
+        handle = gzip.open(data_or_path, "rb")
+    with handle:
+        while chunk := handle.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _stored_storage(target: Path) -> dict[str, Any]:
+    path = target / STORAGE_SIDECAR
+    if not path.is_file():
+        return {}
+    storage = json.loads(path.read_text(encoding="utf-8"))
+    if storage.get("schema_version") != STORAGE_CONTRACT or not isinstance(storage.get("files"), dict):
+        raise HandoffPublicationError("HANDOFF_STORAGE_SIDECAR_INVALID")
+    return storage["files"]
+
+
+def _stored_original_sha(target: Path, name: str, storage: Mapping[str, Any]) -> str | None:
+    """Original-bytes sha256 of a package file as stored in an immutable build directory."""
+    record = storage.get(name)
+    if record is not None:
+        stored = target / str(record.get("stored_name") or "")
+        if record.get("encoding") != "gzip" or stored.name != name + ".gz" or not stored.is_file():
+            raise HandoffPublicationError("HANDOFF_STORAGE_RECORD_INVALID:" + name)
+        if sha(stored) != record.get("stored_sha256"):
+            raise HandoffPublicationError("HANDOFF_STORED_FILE_HASH_MISMATCH:" + name)
+        return _gunzip_sha(stored)
+    return sha(target / name) if (target / name).is_file() else None
 
 
 def _git(repo: Path, *args: str) -> str:
@@ -339,7 +409,8 @@ def publish(repo: Path, source: Path, session: str, *, previous: Path|None=None,
         raise HandoffPublicationError("HANDOFF_NEWER_LATEST_SESSION:"+str(latest["latest_session"]))
     immutable_session_path=target.relative_to(repo).as_posix()
     if target.exists():
-        current={name:sha(target/name) for name in files if (target/name).is_file()}
+        storage=_stored_storage(target)
+        current={name:digest for name in files if (digest:=_stored_original_sha(target,name,storage)) is not None}
         if current!=payload["files"]:
             raise HandoffPublicationError("FAIL_CLOSED_HANDOFF_BUILD_CONFLICT:"+payload["handoff_build_id"])
         # A directory alone is not a publication receipt. Resume only committed,
@@ -368,11 +439,18 @@ def publish(repo: Path, source: Path, session: str, *, previous: Path|None=None,
         # filters. The nearest attributes apply only to this new immutable build;
         # neither source bytes, old builds nor the operator's Git config are changed.
         (target/".gitattributes").write_bytes(b"* -text -filter -ident\n")
+        storage={}
         for name,entry in files.items():
-            if isinstance(entry, (bytes, bytearray)): (target/name).write_bytes(entry)
+            if _entry_size(entry) > GIT_STORED_FILE_LIMIT_BYTES:
+                storage[name]=_write_gzip_verified(entry, target / (name + ".gz"), payload["files"][name])
+            elif isinstance(entry, (bytes, bytearray)): (target/name).write_bytes(entry)
             else:
                 _copy_verified(entry, target / name, payload["files"][name])
-        (target/"HANDOFF.md").write_text(f"# Stock Lookup AI handoff\n\nSession: {session}\n\nBuild: {payload['handoff_build_id']}\n\nStatus: READY_FOR_AI\n",encoding="utf-8")
+        note=""
+        if storage:
+            (target/STORAGE_SIDECAR).write_text(json.dumps({"schema_version":STORAGE_CONTRACT,"limit_bytes":GIT_STORED_FILE_LIMIT_BYTES,"files":storage},indent=2,sort_keys=True)+"\n",encoding="utf-8")
+            note="\nStored as gzip (original sha256 unchanged; see "+STORAGE_SIDECAR+"): "+", ".join(sorted(storage))+"\n"
+        (target/"HANDOFF.md").write_text(f"# Stock Lookup AI handoff\n\nSession: {session}\n\nBuild: {payload['handoff_build_id']}\n\nStatus: READY_FOR_AI\n{note}",encoding="utf-8")
         _git(repo,"add",immutable_session_path)
         _git(repo,"commit","-m",f"handoff: {session} build {payload['handoff_build_id']}")
         build_commit=_git(repo,"rev-parse","HEAD")
@@ -405,12 +483,24 @@ def verify_remote_publication(repo: Path, published: Mapping[str, Any]) -> dict[
             or latest.get("handoff_build_id") != package.get("handoff_build_id")):
         raise HandoffPublicationError("REMOTE_LATEST_POINTER_MISMATCH")
     names = set(_git(repo, "ls-tree", "-r", "--name-only", "origin/main", path).splitlines())
+    storage: dict[str, Any] = {}
+    if f"{path}/{STORAGE_SIDECAR}" in names:
+        try:
+            sidecar = json.loads(_git(repo, "show", f"origin/main:{path}/{STORAGE_SIDECAR}"))
+        except (json.JSONDecodeError, HandoffPublicationError) as exc:
+            raise HandoffPublicationError("REMOTE_HANDOFF_STORAGE_INVALID") from exc
+        if sidecar.get("schema_version") != STORAGE_CONTRACT or not isinstance(sidecar.get("files"), dict):
+            raise HandoffPublicationError("REMOTE_HANDOFF_STORAGE_INVALID")
+        storage = sidecar["files"]
     expected_files = set((package.get("files") or {}).keys())
-    missing = sorted(f"{path}/{name}" for name in expected_files if f"{path}/{name}" not in names)
+    if set(storage) - expected_files:
+        raise HandoffPublicationError("REMOTE_HANDOFF_STORAGE_UNDECLARED_FILE")
+    stored = {name: (str(storage[name].get("stored_name")) if name in storage else name) for name in expected_files}
+    missing = sorted(f"{path}/{stored[name]}" for name in expected_files if f"{path}/{stored[name]}" not in names)
     if missing:
         raise HandoffPublicationError("REMOTE_IMMUTABLE_FILES_MISSING:" + ",".join(missing))
     for name, expected_hash in (package.get("files") or {}).items():
-        remote_name = f"{path}/{name}"
+        remote_name = f"{path}/{stored[name]}"
         # Resolve the blob first: Windows Git treats a long ``rev:path`` argument to
         # ``show`` as a filesystem path, while object IDs are platform-neutral.
         tree = _git(repo, "ls-tree", "origin/main", "--", remote_name)
@@ -418,7 +508,17 @@ def verify_remote_publication(repo: Path, published: Mapping[str, Any]) -> dict[
         if len(fields) < 3:
             raise HandoffPublicationError("REMOTE_IMMUTABLE_BLOB_MISSING:" + name)
         data = _git_bytes(repo, "cat-file", "blob", fields[2])
-        if hashlib.sha256(data).hexdigest() != expected_hash:
+        if name in storage:
+            record = storage[name]
+            if (record.get("encoding") != "gzip" or stored[name] != name + ".gz"
+                    or record.get("original_sha256") != expected_hash
+                    or hashlib.sha256(data).hexdigest() != record.get("stored_sha256")):
+                raise HandoffPublicationError("REMOTE_STORED_FILE_INVALID:" + name)
+            actual = _gunzip_sha(data)
+        else:
+            actual = hashlib.sha256(data).hexdigest()
+        del data
+        if actual != expected_hash:
             raise HandoffPublicationError("REMOTE_FILE_HASH_MISMATCH:" + name)
     if latest.get("producer_lineage") != package.get("lineage"):
         raise HandoffPublicationError("REMOTE_LINEAGE_MISMATCH")

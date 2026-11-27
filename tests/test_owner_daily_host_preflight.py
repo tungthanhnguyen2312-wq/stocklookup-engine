@@ -16,8 +16,50 @@ from tools import run_owner_daily as owner
 GIB = preflight.GIB
 
 
+def _before_handoff_gzip(receipt):
+    prior = copy.deepcopy(receipt)
+    corrective = prior.pop("handoff_oversize_gzip_corrective")
+    prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
+    for relative in corrective["added_source_paths"]:
+        del prior["source_sha256"][relative]
+    return prior, corrective
+
+
+def test_handoff_gzip_capacity_corrective_exact_chain_and_history():
+    root = preflight.ROOT
+    relative = "config/owner_daily_capacity_qualification.json"
+    live_raw = (root / relative).read_bytes()
+    live = json.loads(live_raw)
+    prior, corrective = _before_handoff_gzip(live)
+    baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
+    assert prior == json.loads(baseline_raw)
+    assert list(live)[-2:] == ["prospective_snapshot_stream_corrective", "handoff_oversize_gzip_corrective"]
+    assert corrective["predecessor_corrective"] == "prospective_snapshot_stream_corrective"
+    assert corrective["scope"] == "AI_HANDOFF_OVERSIZE_GZIP_STORAGE_COMPATIBILITY_PIN_UPDATE_ONLY"
+    assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
+    assert corrective["release_authority"] == "NOT_GRANTED"
+    assert corrective["added_source_paths"] == []
+    changed = corrective["changed_source_paths"]
+    assert changed == ["stocklookup_core/research/ai_handoff_publication.py"]
+    assert set(corrective["prior_source_sha256_lf"]) == set(corrective["active_source_sha256_lf"]) == set(changed)
+    for path, digest in corrective["active_source_sha256_lf"].items():
+        assert hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
+        assert corrective["prior_source_sha256_lf"][path] == prior["source_sha256"][path] != digest
+    decoder = json.JSONDecoder()
+    def member(data, key):
+        text = data.decode("utf-8").replace("\r\n", "\n")
+        start = text.index('\n  "' + key + '": ') + len('\n  "' + key + '": ')
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end]
+    for key in prior:
+        if key != "source_sha256":
+            assert member(live_raw, key) == member(baseline_raw, key)
+
+
 def _before_prospective_stream(receipt):
     prior = copy.deepcopy(receipt)
+    if "handoff_oversize_gzip_corrective" in prior:
+        prior, _ = _before_handoff_gzip(prior)
     corrective = prior.pop("prospective_snapshot_stream_corrective")
     prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
     for relative in corrective["added_source_paths"]:
@@ -29,7 +71,7 @@ def test_prospective_stream_capacity_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     live_raw = (root / relative).read_bytes()
-    live = json.loads(live_raw)
+    live, _ = _before_handoff_gzip(json.loads(live_raw))
     prior, corrective = _before_prospective_stream(live)
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
     assert prior == json.loads(baseline_raw)
@@ -513,6 +555,9 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     root = preflight.ROOT
     receipt_path = "config/owner_daily_capacity_qualification.json"
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    # Daily 27/11 incident correctives newer than valuation B: their prior bytes live at their base.
+    incident_correctives = [live_receipt[key] for key in (
+        "handoff_oversize_gzip_corrective", "prospective_snapshot_stream_corrective") if key in live_receipt]
     live_receipt, valuation_b = _before_valuation_b(live_receipt)
     # Verify the older chains against the exact pre-migration source and pins.
     # The separate migration test checks this successor against the working tree.
@@ -529,6 +574,9 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             return raw
         if path in valuation_b["prior_source_sha256_lf"]:
             return subprocess.check_output(["git", "show", f"{valuation_b['base_commit']}:{path}"], cwd=root)
+        for incident in incident_correctives:
+            if path in incident["prior_source_sha256_lf"]:
+                return subprocess.check_output(["git", "show", f"{incident['base_commit']}:{path}"], cwd=root)
         return (root / path).read_bytes()
     spec = json.loads((root / "tests/fixtures/offline_financial_capacity_source_transition_v1.json").read_bytes())
     assert spec["scope"] == "EXACT_OFFLINE_FINANCIAL_SOURCE_ENUMERATION_ONLY"
