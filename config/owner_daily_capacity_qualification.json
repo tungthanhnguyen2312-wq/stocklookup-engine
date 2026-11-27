@@ -2565,5 +2565,26 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. Default-OFF research branch; activation requires separate Owner authorization."
+  },
+  "dual_reader_config_hah_corrective": {
+    "base_commit": "0aa79c069cc5c75f342e711ac1039e184010d940",
+    "predecessor_corrective": "valuation_integration_b_corrective",
+    "scope": "DUAL_READER_TTM_RESEARCH_CONFIG_HAH_R3_DEFAULT_OFF_PIN_UPDATE_ONLY",
+    "changed_source_paths": [
+      "config/dual_reader_ttm_research_config.json"
+    ],
+    "added_source_paths": [],
+    "prior_source_sha256_lf": {
+      "config/dual_reader_ttm_research_config.json": "73c25c56df3ea960bfcb433bbdc499fd5cc945726259ecf7e18cd09449e4798a"
+    },
+    "active_source_sha256_lf": {
+      "config/dual_reader_ttm_research_config.json": "376dbced744eab0e8883386461d5eecfbb56e6565c789ab11f062beed879f02f"
+    },
+    "source_transition": null,
+    "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. HAH R3 research config only; no source-transition fixture is added. Default-OFF research branch; activation requires separate Owner authorization."
   }
 }
