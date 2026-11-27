@@ -843,7 +843,7 @@
     "stocklookup_core/evidence/qualified_price_storage_benchmark.py": "30d249d4e917f803110a31289623e77db781c0bf295ec28c400dbece78384c6a",
     "stocklookup_core/evidence/raw_pit_authority_matrix.py": "9378964fda5404e0fcc1f971bd64d35d1b55cef9d0a5ff9254cd25f4a06a7a1c",
     "stocklookup_core/evidence/real_official_corporate_action_factor_evidence.py": "2a26f148fbe995a4914f9ee2e333481a7ad333f0aef5cb5fa18105150799871d",
-    "stocklookup_core/evidence/record_artifact_loading.py": "8d8acab66cc0115ed6980b9a3576439592a81cc2e7a4afa92e7469290fa6d9ff",
+    "stocklookup_core/evidence/record_artifact_loading.py": "6af1dd03e27c8197d44cf49afdd1ff19df2a366ef2da688c709759b8721f5574",
     "stocklookup_core/evidence/record_subtree_codec.py": "bbe237874a17cd642fb6aaffb8a9116895f4d88ec41ce2a598f520613df099ab",
     "stocklookup_core/evidence/research_output_fields.py": "24989b4036d13d543a0c6a00893d2639027e28895e44dd5033103352c0a7d315",
     "stocklookup_core/evidence/retained_evidence_quarantine.py": "ecf43bc232b4c496089555e4a0798d13604af5ae2570380bed58b6be00eb4bcf",
@@ -2565,5 +2565,25 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. Default-OFF research branch; activation requires separate Owner authorization."
+  },
+  "prospective_snapshot_stream_corrective": {
+    "base_commit": "0aa79c069cc5c75f342e711ac1039e184010d940",
+    "predecessor_corrective": "valuation_integration_b_corrective",
+    "scope": "PROSPECTIVE_SNAPSHOT_FROZEN_RECORDS_STREAM_COMPATIBILITY_PIN_UPDATE_ONLY",
+    "incident": "Daily 2026-11-27 CANONICAL_DAILY_EXIT_1: ACCEPTANCE_JSON_MEMBER_LIMIT loading prospective_research_cohort_snapshot_2026-11-27.json (19.2 MB; 158 frozen_records decoded as one member above 16 MiB)",
+    "changed_source_paths": [
+      "stocklookup_core/evidence/record_artifact_loading.py"
+    ],
+    "added_source_paths": [],
+    "prior_source_sha256_lf": {
+      "stocklookup_core/evidence/record_artifact_loading.py": "8d8acab66cc0115ed6980b9a3576439592a81cc2e7a4afa92e7469290fa6d9ff"
+    },
+    "active_source_sha256_lf": {
+      "stocklookup_core/evidence/record_artifact_loading.py": "6af1dd03e27c8197d44cf49afdd1ff19df2a366ef2da688c709759b8721f5574"
+    },
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. The unchanged ObjectStream 16 MiB per-member limit still applies to every individual frozen record; measured replay of the real 2026-11-27 snapshot peaks at about 26 MB traced allocation versus about 92 MB for whole-text json.loads."
   }
 }

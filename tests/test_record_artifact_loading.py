@@ -183,3 +183,64 @@ def test_discarded_oversized_record_still_refuses(tmp_path):
     path.write_text('{"records":{"DROP":"' + 'x' * (16*1024**2 + 1) + '"}}', encoding="utf-8")
     with pytest.raises(ValueError, match="ACCEPTANCE_JSON_MEMBER_LIMIT"):
         loader.load_record_artifact(path, record_tickers=[])
+
+
+def test_prospective_frozen_records_exceeding_member_limit_are_record_bounded(tmp_path, monkeypatch):
+    # Daily 2026-11-27 regression: the prospective cohort snapshot holds its record
+    # universe under ``frozen_records`` (a list). 158 ~125 KB records crossed 16 MiB
+    # as one member and failed ACCEPTANCE_JSON_MEMBER_LIMIT. Each record is bounded.
+    records = [{"ticker": "T%03d" % i, "components": {"opaque": "ấ" * 1024**2}, "types": [None, False, -0.0, 1e-9]}
+               for i in range(17)]
+    graph = {"authority": "RESEARCH", "cohort_count": 17, "frozen_records": records,
+             "snapshot_id": "prospective_research_cohort_snapshot:x", "state_counts": {"BASE_BUILDING": 17}}
+    path = tmp_path / "prospective_research_cohort_snapshot_2026-11-27.json"
+    with path.open("w", encoding="utf-8") as target:
+        json.dump(graph, target, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    assert path.stat().st_size > 16 * 1024**2
+    maxima = []
+    class ObservedStream(ObjectStream):
+        def fill(self, size=64*1024):
+            super().fill(size)
+            maxima.append(len(self.buffer))
+    monkeypatch.setattr(loader, "ObjectStream", ObservedStream)
+    monkeypatch.setattr(Path, "read_text", lambda *a, **k: pytest.fail("whole-file text read"))
+    loaded = loader.load_record_artifact(path)
+    assert loaded == graph and isinstance(loaded["frozen_records"], list)
+    assert max(maxima) < 4*1024**2
+
+
+@pytest.mark.parametrize("text", [
+    '{"frozen_records":[{},]}',
+    '{"frozen_records":[{}}',
+    '{"frozen_records":[{bad}]}',
+    '{"frozen_records":[]} {}',
+])
+def test_frozen_records_malformed_and_trailing_json_refuses(tmp_path, text):
+    path = tmp_path / "bad.json"
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(ValueError):
+        loader.load_record_artifact(path)
+
+
+def test_frozen_record_larger_than_member_limit_still_refuses(tmp_path):
+    path = tmp_path / "oversized-frozen.json"
+    path.write_text('{"frozen_records":[{"x":"' + 'x' * (16*1024**2 + 1) + '"}]}', encoding="utf-8")
+    with pytest.raises(ValueError, match="ACCEPTANCE_JSON_MEMBER_LIMIT"):
+        loader.load_record_artifact(path)
+
+
+@pytest.mark.parametrize("value", [None, {}, {"A": {}}, "UNKNOWN", 0])
+def test_non_list_frozen_records_keep_their_original_types(tmp_path, value):
+    path = tmp_path / "types.json"
+    path.write_text(json.dumps({"frozen_records": value}), encoding="utf-8")
+    assert loader.load_record_artifact(path) == {"frozen_records": value}
+
+
+def test_post_close_load_of_large_prospective_snapshot_uses_bounded_reader(tmp_path):
+    import canonical_post_close_pipeline as post_close
+    records = [{"ticker": "T%03d" % i, "components": "y" * (1024**2 + 7)} for i in range(17)]
+    graph = {"cohort_count": 17, "frozen_records": records, "snapshot_id": "prospective_research_cohort_snapshot:y"}
+    path = tmp_path / "snapshot.json"
+    path.write_text(json.dumps(graph, sort_keys=True), encoding="utf-8")
+    assert path.stat().st_size > 16 * 1024**2
+    assert post_close._load(path) == graph

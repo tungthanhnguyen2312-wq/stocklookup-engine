@@ -19,6 +19,13 @@ _RECORD_ENVELOPES = {
     "metric_research_context",
 }
 
+# List-valued record universes stored under a key other than ``records``/``cards``.
+# The prospective research cohort snapshot keeps one frozen record per cohort ticker
+# under ``frozen_records``; a large cohort (158 tickers on 2026-11-27, ~20 MB) must
+# be decoded one record at a time, never as a single member. Each record must still
+# fit the unchanged ObjectStream member limit.
+_RECORD_LISTS = {"frozen_records"}
+
 
 def shared_string_decoder():
     """Native JSON decoder with bounded per-reader immutable-string sharing."""
@@ -80,7 +87,7 @@ def load_record_artifact(path, *, record_tickers=None):
                         records[ticker] = row
                     del row
                 result[key] = records
-            elif key in {"records", "cards"} and parser.peek() == "[":
+            elif (key in {"records", "cards"} or key in _RECORD_LISTS) and parser.peek() == "[":
                 records = []
                 parser.take("[")
                 while parser.peek() != "]":
