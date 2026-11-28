@@ -1698,7 +1698,72 @@ def issuer_registry_coverage_prior_manifest_bytes(root: Path, relative: str, act
     return prior
 
 
-def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes) -> bytes | None:
+# Exact reviewed EVF successor; predecessor pins remain independently literal below.
+EVF_REGISTRY_AMENDMENT = {'contract_version': 'official_source_registry_evf_reviewed_amendment/v1', 'milestone': 'EVF_OFFICIAL_SOURCE_REGISTRY_20261128', 'base_commit': 'a7e399fa459a3b118809193ae7dcf1971ca2ef00', 'scope': 'EXACT_EVF_ISSUER_HOST_STATEMENT_TYPES_AND_ADMISSION_RULE_APPEND_ONLY', 'release_authority': 'NOT_GRANTED', 'source_path': 'config/official_source_registry.json', 'archive': 'tests/fixtures/official_source_registry_evf_prior.json', 'added_host': 'www.evnfc.vn', 'added_document_types': ['audited_annual_financial_statements', 'reviewed_interim_financial_statements'], 'host_admission_rule_append': ' Owner standing RESEARCH & DATA ACQUISITION authorization dated 2026-11-27, lane HL-20261127-EVF-REGISTRY, admits only `www.evnfc.vn` (EVF, EVNFinance) for byte acquisition of audited_annual_financial_statements and reviewed_interim_financial_statements via host_document_types. Head Leader verified on 2026-11-27 that the official IR disclosure index https://www.evnfc.vn/bao-cao-tai-chinh directly links these filing attachments: (1) FY2025 audited: https://www.evnfc.vn/storage/app/media/uploaded-files/20260213%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20kiem%20toan%202025.pdf (sha256 78b8a73a59a7d216430b9b789f8496dd2c62a62c041e1a3b40833b59b5414080); (2) H1-2026 reviewed: https://www.evnfc.vn/storage/app/media/uploaded-files/B%C3%A1o%20c%C3%A1o%20so%C3%A1t%20x%C3%A9t%20BCTC%20Q2.2026-%20VN-%C4%91%C3%A3%20n%C3%A9n.pdf (sha256 a287b37ec881950e84d70b7e4de584c4b2613b20fcd176b296ef0c8ddad9ed56); (3) 9M-2026 reviewed: https://www.evnfc.vn/storage/app/media/anh_ban_lanh_dao/20261026%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20Q3%202026%20soat%20xet%201.pdf (sha256 ace221dd37e1fd6e3036d6d5df431a43902246903b96a88b6a626dfcdf4b8475); (4) H1-2025 reviewed: https://www.evnfc.vn/storage/app/media/BCTC/20250725%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20ban%20nien%20soat%20xet%202025.pdf (sha256 b9e0ab87da988b0238ee0d69b0c27b8970ab3ec86b35d57c62ef63c6cf3793e5). Retained research copies and provenance: EVF/PROVENANCE.json relative to the research-acquisition-20261127 landing root; these research copies carry no governed admission by themselves. No wildcard, parent-domain or sibling-host admission, financial-fact qualification, PIT or execution authority is granted.', 'prior_sha256_lf': '1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881', 'active_sha256_lf': '2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0'}
+EVF_REGISTRY_MANIFEST_TRANSITION = {'contract_version': 'official_source_registry_evf_manifest_transition/v1', 'milestone': 'EVF_OFFICIAL_SOURCE_REGISTRY_20261128', 'base_commit': 'a7e399fa459a3b118809193ae7dcf1971ca2ef00', 'scope': 'EXACT_E2E3_EVF_REGISTRY_PIN_REPLACEMENT_ONLY', 'release_authority': 'NOT_GRANTED', 'manifest_path': 'tests/fixtures/e2e3_frozen_sources.json', 'archive': 'tests/fixtures/official_source_registry_evf_e2e3_prior.json', 'changed_source_path': 'config/official_source_registry.json', 'prior_source_sha256_lf': '1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881', 'active_source_sha256_lf': '2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0', 'prior_sha256_lf': '42e435533c2081838f026bf13558348d65c954fd137e4bef36bc18fa6b428f61', 'active_sha256_lf': '230c03e35fe205d6234646bb6d4f68d715b396a488021d5631b30038439af015'}
+
+
+def _evf_registry_structure_valid(prior: bytes, active: bytes) -> bool:
+    expected = json.loads(prior)
+    issuers = [s for s in expected["sources"] if s["source_id"] == "issuer_ir"]
+    if len(issuers) != 1:
+        return False
+    issuer = issuers[0]
+    host = EVF_REGISTRY_AMENDMENT["added_host"]
+    if host in issuer["allowed_hosts"] or host in issuer["host_document_types"]:
+        return False
+    issuer["allowed_hosts"].append(host)
+    issuer["host_document_types"][host] = EVF_REGISTRY_AMENDMENT["added_document_types"]
+    issuer["host_admission_rule"] += EVF_REGISTRY_AMENDMENT["host_admission_rule_append"]
+    return json.loads(active) == expected
+
+
+def evf_source_registry_prior_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel only the exact EVF acquisition delta, without granting downstream authority."""
+    if relative != EVF_REGISTRY_AMENDMENT["source_path"]:
+        return active
+    spec = _registry_transition_spec(root, "tests/fixtures/official_source_registry_evf_reviewed_amendment_v1.json",
+                                     "EVF_REGISTRY_REVIEWED_AMENDMENT_")
+    if spec != EVF_REGISTRY_AMENDMENT:
+        raise ValueError("EVF_REGISTRY_REVIEWED_AMENDMENT_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]):
+        raise ValueError("EVF_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID")
+    if not _evf_registry_structure_valid(prior, active):
+        raise ValueError("EVF_REGISTRY_REVIEWED_AMENDMENT_STRUCTURE_INVALID")
+    return prior
+
+
+def evf_registry_prior_manifest_bytes(root: Path, relative: str, active: bytes) -> bytes:
+    """Peel only the EVF pin replacement before the issuer-coverage pin addition."""
+    if relative != EVF_REGISTRY_MANIFEST_TRANSITION["manifest_path"]:
+        return active
+    spec = _registry_transition_spec(root, "tests/fixtures/official_source_registry_evf_manifest_transition_v1.json",
+                                     "EVF_REGISTRY_MANIFEST_")
+    if spec != EVF_REGISTRY_MANIFEST_TRANSITION:
+        raise ValueError("EVF_REGISTRY_MANIFEST_SCOPE_INVALID")
+    prior = (root / spec["archive"]).read_bytes().replace(b"\r\n", b"\n")
+    old = ('"' + spec["changed_source_path"] + '": "' + spec["prior_source_sha256_lf"] + '"').encode()
+    new = ('"' + spec["changed_source_path"] + '": "' + spec["active_source_sha256_lf"] + '"').encode()
+    if (hashlib.sha256(prior).hexdigest() != spec["prior_sha256_lf"]
+            or hashlib.sha256(active).hexdigest() != spec["active_sha256_lf"]
+            or active.count(new) != 1 or active.replace(new, old, 1) != prior):
+        raise ValueError("EVF_REGISTRY_MANIFEST_BINDING_INVALID")
+    return prior
+
+
+def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes) -> bytes:
+    """Verify EVF, then the acquisition amendment and its original VSDC predecessor."""
+    prior = evf_source_registry_prior_bytes(root, OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE, active)
+    manifest = "tests/fixtures/e2e3_frozen_sources.json"
+    frozen_prior = evf_registry_prior_manifest_bytes(root, manifest, (root / manifest).read_bytes().replace(b"\r\n", b"\n"))
+    if _official_source_registry_acquisition_amendment_bytes(root, prior, frozen_prior) != prior:
+        raise ValueError("OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID")
+    return active
+
+
+def _official_source_registry_acquisition_amendment_bytes(root: Path, active: bytes, frozen_manifest: bytes) -> bytes | None:
     """Verify the exact acquisition successor and its unchanged VSDC predecessor."""
     relative = OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE
     amendments = json.loads((root / "tests/fixtures/frozen_source_reviewed_amendments.json").read_bytes())["amendments"]
@@ -1715,7 +1780,7 @@ def _official_source_registry_reviewed_amendment_bytes(root: Path, active: bytes
             or spec.get("prior_sha256_lf") != prior_sha
             or spec.get("sha256_lf") != active_sha):
         raise ValueError("OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_SCOPE_INVALID")
-    pins = json.loads((root / "tests/fixtures/e2e3_frozen_sources.json").read_bytes())["source_sha256_lf"]
+    pins = json.loads(frozen_manifest)["source_sha256_lf"]
     base = (root / OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE).read_bytes().replace(b"\r\n", b"\n")
     # Reconstruct the exact post-flag predecessor from its retained pre-flag archive.
     prior = base[:2] + OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_LINE + base[2:]

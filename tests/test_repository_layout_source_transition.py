@@ -9,7 +9,7 @@ import subprocess
 import pytest
 
 from tools.verify_retention_reader_transition import (
-    issuer_registry_coverage_prior_manifest_bytes,
+    evf_registry_prior_manifest_bytes, issuer_registry_coverage_prior_manifest_bytes,
     LAYOUT_BASE, LAYOUT_MANIFEST, LAYOUT_SOURCES, historical_bytes, layout_source_receipt_admissible,
     layout_transition_identity,
     CAPACITY_SOURCE, CAPACITY_ARCHIVE, CAPACITY_MANIFEST, _capacity_prior_bytes, _launcher_prior_bytes, LAUNCHER_MANIFEST, LAUNCHER_SOURCES,
@@ -34,7 +34,9 @@ def _historical_manifest_bytes(relative: str) -> bytes:
     current = _lf((ROOT / relative).read_bytes())
     if relative != FROZEN_PINS:
         return current
-    # The later issuer-registry coverage lane added exactly one pin; peel it first (fail-closed).
+    # Verify and peel EVF before the earlier issuer-registry pin addition (fail-closed).
+    current = evf_registry_prior_manifest_bytes(ROOT, relative, current)
+    # The earlier issuer-registry coverage lane added exactly one pin.
     current = issuer_registry_coverage_prior_manifest_bytes(ROOT, relative, current)
     # The later reviewed rollback amendment is outside the layout cohort.
     # Reconstruct the historical manifest using only its exactly pinned change.

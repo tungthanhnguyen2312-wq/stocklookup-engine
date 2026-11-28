@@ -316,6 +316,7 @@ def test_evf_source_registry_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     path = "config/official_source_registry.json"
+    verifier = "tools/verify_retention_reader_transition.py"
     live_raw = (root / relative).read_bytes()
     live = json.loads(live_raw)
     prior, corrective = _before_evf_source_registry(live)
@@ -329,13 +330,15 @@ def test_evf_source_registry_corrective_exact_chain_and_history():
     assert corrective["scope"] == "EVF_SOURCE_REGISTRY_STATEMENT_BYTE_ACQUISITION_COMPATIBILITY_PIN_UPDATE_ONLY"
     assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
     assert corrective["release_authority"] == "NOT_GRANTED"
-    assert corrective["changed_source_paths"] == [path]
+    assert corrective["changed_source_paths"] == [path, verifier]
     assert corrective["added_source_paths"] == []
     assert corrective["prior_source_sha256_lf"] == {
-        path: "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881"}
+        path: "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881",
+        verifier: "ce847490c2980be08b0fc6c491c120a05c95adee73538b6786c9714eeb658afa"}
     assert corrective["active_source_sha256_lf"] == {
-        path: "2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0"}
-    assert corrective["source_transition"] is None  # Config-only pin change; no source-transition fixture.
+        path: "2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0",
+        verifier: "4feb76e618bdc288c467bb5a8e5d20e78ce2cacd1c80c76559a756f12e3358d0"}
+    assert corrective["source_transition"] == "tests/fixtures/official_source_registry_evf_reviewed_amendment_v1.json"
     assert corrective["e4_v2_code_digest"] == predecessor["e4_v2_code_digest"]
     for source, digest in corrective["active_source_sha256_lf"].items():
         assert hashlib.sha256((root / source).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][source]
@@ -344,7 +347,7 @@ def test_evf_source_registry_corrective_exact_chain_and_history():
     baseline_registry = json.loads(subprocess.check_output(
         ["git", "show", f"{corrective['base_commit']}:{path}"], cwd=root))
     assert json.loads((root / path).read_bytes())["feature_flags"] == baseline_registry["feature_flags"]
-    # Every pre-existing member keeps its literal bytes; only the active pin changes.
+    # Every historical member keeps its literal bytes; only the two active pins change.
     decoder = json.JSONDecoder()
     def member(data, key):
         text = data.decode("utf-8")
@@ -354,19 +357,22 @@ def test_evf_source_registry_corrective_exact_chain_and_history():
     for key in prior:
         expected = member(baseline_raw, key)
         if key == "source_sha256":
-            old = corrective["prior_source_sha256_lf"][path].encode("ascii")
-            new = corrective["active_source_sha256_lf"][path].encode("ascii")
-            assert expected.count(old) == 1
-            expected = expected.replace(old, new)
+            for source in corrective["changed_source_paths"]:
+                old = corrective["prior_source_sha256_lf"][source].encode("ascii")
+                new = corrective["active_source_sha256_lf"][source].encode("ascii")
+                assert expected.count(old) == 1
+                expected = expected.replace(old, new)
         assert member(live_raw, key) == expected
-    # Removing the append and restoring the sole active pin reproduces the exact receipt bytes.
+    # Removing the append and restoring both active pins reproduces the exact receipt bytes.
     marker = b',\n  "evf_source_registry_corrective": '
     assert live_raw.count(marker) == 1
     peeled_raw = live_raw[:live_raw.index(marker)] + b"\n}\n"
-    active_pin = f'\n    "{path}": "{corrective["active_source_sha256_lf"][path]}"'.encode("ascii")
-    prior_pin = f'\n    "{path}": "{corrective["prior_source_sha256_lf"][path]}"'.encode("ascii")
-    assert peeled_raw.count(active_pin) == 1
-    assert peeled_raw.replace(active_pin, prior_pin, 1) == baseline_raw
+    for source in corrective["changed_source_paths"]:
+        active_pin = f'\n    "{source}": "{corrective["active_source_sha256_lf"][source]}"'.encode("ascii")
+        prior_pin = f'\n    "{source}": "{corrective["prior_source_sha256_lf"][source]}"'.encode("ascii")
+        assert peeled_raw.count(active_pin) == 1
+        peeled_raw = peeled_raw.replace(active_pin, prior_pin, 1)
+    assert peeled_raw == baseline_raw
 
 
 def safe_observation():
@@ -1724,13 +1730,14 @@ def test_offline_edits_keep_receipt_but_runtime_import_or_new_runtime_file_inval
 
 
 def test_issuer_registry_coverage_manifest_peels_only_exact_added_pin(tmp_path):
-    from tools.verify_retention_reader_transition import issuer_registry_coverage_prior_manifest_bytes
+    from tools.verify_retention_reader_transition import evf_registry_prior_manifest_bytes, issuer_registry_coverage_prior_manifest_bytes
 
     root = Path(__file__).resolve().parents[1]
     manifest = "tests/fixtures/e2e3_frozen_sources.json"
     spec_path = "tests/fixtures/official_source_registry_issuer_coverage_manifest_transition_v1.json"
     spec = json.loads((root / spec_path).read_bytes())
     active = (root / manifest).read_bytes().replace(b"\r\n", b"\n")
+    active = evf_registry_prior_manifest_bytes(root, manifest, active)
     prior = issuer_registry_coverage_prior_manifest_bytes(root, manifest, active)
     baseline = subprocess.check_output(["git", "show", f"{spec['base_commit']}:{manifest}"], cwd=root)
     assert prior == baseline.replace(b"\r\n", b"\n")
@@ -1757,6 +1764,142 @@ def test_issuer_registry_coverage_manifest_peels_only_exact_added_pin(tmp_path):
     (tmp_path / spec_path).write_text(json.dumps(altered_spec), encoding="utf-8")
     with pytest.raises(ValueError, match="ISSUER_REGISTRY_COVERAGE_MANIFEST_SCOPE_INVALID"):
         issuer_registry_coverage_prior_manifest_bytes(tmp_path, manifest, active)
+
+
+def _evf_transition_fixture_tree(tmp_path):
+    from tools import verify_retention_reader_transition as vrt
+    root = Path(__file__).resolve().parents[1]
+    paths = [
+        "tests/fixtures/official_source_registry_evf_reviewed_amendment_v1.json",
+        "tests/fixtures/official_source_registry_evf_manifest_transition_v1.json",
+        vrt.EVF_REGISTRY_AMENDMENT["archive"],
+        vrt.EVF_REGISTRY_MANIFEST_TRANSITION["archive"],
+        "tests/fixtures/e2e3_frozen_sources.json",
+        "tests/fixtures/frozen_source_reviewed_amendments.json",
+        vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST,
+        vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE,
+    ]
+    for relative in paths:
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((root / relative).read_bytes())
+    return paths
+
+
+def test_evf_reviewed_amendment_exact_successor_and_fail_closed(tmp_path):
+    from tools import verify_retention_reader_transition as vrt
+    root = Path(__file__).resolve().parents[1]
+    spec = vrt.EVF_REGISTRY_AMENDMENT
+    relative = spec["source_path"]
+    active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    prior = vrt.evf_source_registry_prior_bytes(root, relative, active)
+    baseline = subprocess.check_output(["git", "show", f"{spec['base_commit']}:{relative}"], cwd=root)
+    assert prior == baseline.replace(b"\r\n", b"\n")
+    assert vrt._evf_registry_structure_valid(prior, active)
+    assert vrt._official_source_registry_reviewed_amendment_bytes(root, active) == active
+    assert vrt.historical_bytes(root, relative) == active
+    assert vrt.evf_source_registry_prior_bytes(root, "other.json", active) == active
+    # Both independently pinned predecessors still verify through the original checks.
+    manifest = "tests/fixtures/e2e3_frozen_sources.json"
+    prior_manifest = vrt.evf_registry_prior_manifest_bytes(root, manifest, (root / manifest).read_bytes().replace(b"\r\n", b"\n"))
+    assert vrt._official_source_registry_acquisition_amendment_bytes(root, prior, prior_manifest) == prior
+    original_amendments = subprocess.check_output([
+        "git", "show", f"{spec['base_commit']}:tests/fixtures/frozen_source_reviewed_amendments.json"], cwd=root)
+    assert (root / "tests/fixtures/frozen_source_reviewed_amendments.json").read_bytes().replace(b"\r\n", b"\n") == original_amendments.replace(b"\r\n", b"\n")
+    for changed in (active + b" ", prior, active.replace(b"www.evnfc.vn", b"www.other.vn")):
+        with pytest.raises(ValueError, match="EVF_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID"):
+            vrt._official_source_registry_reviewed_amendment_bytes(root, changed)
+    # Structural proof rejects every edit beyond the exact host/types/rule append.
+    for mutate in (
+        lambda obj: obj.update(extra_registry_change=True),
+        lambda obj: obj["feature_flags"].update(vsdc_registered_share_events_v1=True),
+        lambda obj: next(s for s in obj["sources"] if s["source_id"] == "issuer_ir")["allowed_hosts"].append("evnfc.vn"),
+        lambda obj: next(s for s in obj["sources"] if s["source_id"] == "issuer_ir")["host_document_types"]["www.evnfc.vn"].append("annual_report"),
+        lambda obj: next(s for s in obj["sources"] if s["source_id"] == "issuer_ir").update(host_admission_rule="changed rule"),
+    ):
+        changed = json.loads(active)
+        mutate(changed)
+        changed = json.dumps(changed).encode()
+        assert not vrt._evf_registry_structure_valid(prior, changed)
+        with pytest.raises(ValueError, match="EVF_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID"):
+            vrt._official_source_registry_reviewed_amendment_bytes(root, changed)
+    paths = _evf_transition_fixture_tree(tmp_path)
+    assert vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active) == active
+    for relative in (spec["archive"], vrt.EVF_REGISTRY_MANIFEST_TRANSITION["archive"], vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_ARCHIVE):
+        target = tmp_path / relative
+        original = target.read_bytes()
+        target.write_bytes(original + b" ")
+        with pytest.raises(ValueError, match="BINDING_INVALID"):
+            vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active)
+        target.write_bytes(original)
+    for relative in paths:
+        target = tmp_path / relative
+        original = target.read_bytes()
+        target.unlink()
+        if relative == vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST:
+            with pytest.raises(ValueError, match="OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_BINDING_INVALID"):
+                vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active)
+        else:
+            with pytest.raises(FileNotFoundError):
+                vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active)
+        target.write_bytes(original)
+    spec_path = tmp_path / "tests/fixtures/official_source_registry_evf_reviewed_amendment_v1.json"
+    original = spec_path.read_bytes()
+    for change in ({"active_sha256_lf": "0" * 64}, {"release_authority": "GRANTED"}, {"added_host": "evnfc.vn"}):
+        spec_path.write_bytes(json.dumps(dict(spec, **change)).encode())
+        with pytest.raises(ValueError, match="EVF_REGISTRY_REVIEWED_AMENDMENT_SCOPE_INVALID"):
+            vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active)
+    spec_path.write_bytes(original)
+    amendments_path = tmp_path / "tests/fixtures/frozen_source_reviewed_amendments.json"
+    original = amendments_path.read_bytes()
+    amendments = json.loads(original)
+    amendments["amendments"][spec["source_path"]]["sha256_lf"] = spec["active_sha256_lf"]
+    amendments_path.write_bytes(json.dumps(amendments).encode())
+    with pytest.raises(ValueError, match="OFFICIAL_SOURCE_REGISTRY_REVIEWED_AMENDMENT_SCOPE_INVALID"):
+        vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active)
+    amendments_path.write_bytes(original)
+    vsdc_spec = tmp_path / vrt.OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_MANIFEST
+    original = vsdc_spec.read_bytes()
+    vsdc_spec.write_bytes(b"{}")
+    with pytest.raises(ValueError, match="OFFICIAL_SOURCE_REGISTRY_VSDC_FLAG_SOURCE_TRANSITION_SCOPE_INVALID"):
+        vrt._official_source_registry_reviewed_amendment_bytes(tmp_path, active)
+    vsdc_spec.write_bytes(original)
+
+
+def test_evf_manifest_successor_peels_only_exact_pin_change(tmp_path):
+    from tools import verify_retention_reader_transition as vrt
+    root = Path(__file__).resolve().parents[1]
+    spec = vrt.EVF_REGISTRY_MANIFEST_TRANSITION
+    relative = spec["manifest_path"]
+    active = (root / relative).read_bytes().replace(b"\r\n", b"\n")
+    prior = vrt.evf_registry_prior_manifest_bytes(root, relative, active)
+    baseline = subprocess.check_output(["git", "show", f"{spec['base_commit']}:{relative}"], cwd=root)
+    assert prior == baseline.replace(b"\r\n", b"\n")
+    assert hashlib.sha256(prior).hexdigest() == spec["prior_sha256_lf"]
+    assert hashlib.sha256(active).hexdigest() == spec["active_sha256_lf"]
+    pins = json.loads(active)
+    pins["source_sha256_lf"][spec["changed_source_path"]] = spec["prior_source_sha256_lf"]
+    assert pins == json.loads(prior)
+    assert vrt.evf_registry_prior_manifest_bytes(root, "other.json", active) == active
+    older = vrt.issuer_registry_coverage_prior_manifest_bytes(root, relative, prior)
+    assert hashlib.sha256(older).hexdigest() == "9cd7a7192bb35cd7863a1300ae5b46fa2dfcfa132a9254886c2ed462775c1e49"
+    for changed in (active + b" ", prior, active.replace(b"3543d80a", b"4543d80a", 1)):
+        with pytest.raises(ValueError, match="EVF_REGISTRY_MANIFEST_BINDING_INVALID"):
+            vrt.evf_registry_prior_manifest_bytes(root, relative, changed)
+    _evf_transition_fixture_tree(tmp_path)
+    archive = tmp_path / spec["archive"]
+    original = archive.read_bytes()
+    archive.write_bytes(original + b" ")
+    with pytest.raises(ValueError, match="EVF_REGISTRY_MANIFEST_BINDING_INVALID"):
+        vrt.evf_registry_prior_manifest_bytes(tmp_path, relative, active)
+    archive.write_bytes(original)
+    spec_path = tmp_path / "tests/fixtures/official_source_registry_evf_manifest_transition_v1.json"
+    original = spec_path.read_bytes()
+    for change in ({"active_sha256_lf": "0" * 64}, {"release_authority": "GRANTED"}, {"changed_source_path": "other.json"}):
+        spec_path.write_bytes(json.dumps(dict(spec, **change)).encode())
+        with pytest.raises(ValueError, match="EVF_REGISTRY_MANIFEST_SCOPE_INVALID"):
+            vrt.evf_registry_prior_manifest_bytes(tmp_path, relative, active)
+    spec_path.write_bytes(original)
 
 
 @pytest.mark.registry_gate_real

@@ -251,13 +251,20 @@ def test_v1_v2_inputs_provider_bundle_and_tactical_frozen_sources_are_untouched(
     # Owner-reviewed exceptions keep an exact pin, re-anchored from the historical base bytes.
     amended = json.loads((ROOT/'tests/fixtures/frozen_source_reviewed_amendments.json').read_text(encoding='utf-8'))['amendments']
     assert not set(amended) & ({path for _,path in identity.V1_SOURCES}|set(identity.V2_SOURCES))
+    # Peel the exact EVF successor; keep the acquisition amendment pins literal.
+    from tools.verify_retention_reader_transition import evf_registry_prior_manifest_bytes, evf_source_registry_prior_bytes
+    frozen_path = "tests/fixtures/e2e3_frozen_sources.json"
+    historical_pins = json.loads(evf_registry_prior_manifest_bytes(
+        ROOT, frozen_path, (ROOT / frozen_path).read_bytes().replace(b"\r\n", b"\n")))["source_sha256_lf"]
     for path in sorted(protected):
         original = subprocess.check_output(['git','show',BASE+':'+path],cwd=ROOT).replace(b'\r\n',b'\n')
         from tools.verify_retention_reader_transition import historical_bytes
         current = historical_bytes(ROOT, path)
         if path in amended:
             assert hashlib.sha256(original).hexdigest()==amended[path]['base_sha256_lf'],path
-            assert hashlib.sha256(current).hexdigest()==amended[path]['sha256_lf']==manifest['source_sha256_lf'][path],path
+            assert hashlib.sha256(current).hexdigest() == manifest['source_sha256_lf'][path], path
+            predecessor = evf_source_registry_prior_bytes(ROOT, path, current)
+            assert hashlib.sha256(predecessor).hexdigest() == amended[path]['sha256_lf'] == historical_pins[path], path
             continue
         assert current==original,path
     from tools.verify_retention_reader_transition import legacy_source_identity
