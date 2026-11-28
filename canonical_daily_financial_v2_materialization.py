@@ -98,7 +98,7 @@ def _load_dual_reader_ttm_research_overlay(*, repo_root: Path, decision_session:
         features, caveats = {}, {}
         for ticker in state["tickers"]:
             ticker_rows = [r for r in retained if r["ticker"] == ticker]
-            features[ticker] = official_h1_ttm_features(ticker_rows, ticker=ticker,
+            features[ticker] = official_h1_ttm_features(rows=ticker_rows, ticker=ticker,
                 cutoff=cutoff, evidence_root=evidence_root, current_year=int(decision_session[:4]))
             for feature in features[ticker].values():
                 provenance = [{"reporting_period": p["reporting_period"],

@@ -214,6 +214,79 @@ def test_b_overlay_off_corrupt_on_unset_root_and_preapproval(monkeypatch, tmp_pa
     assert load(**kwargs, config=config)["state"] == "PRE_APPROVAL_CUTOFF"
 
 
+def test_b_overlay_on_real_engine_empty_frozen_rows(monkeypatch, tmp_path):
+    from canonical_daily_financial_v2_materialization import _load_dual_reader_ttm_research_overlay as load
+    from stocklookup_core.evidence import dual_reader_transcription as dual
+    config = _b_config()
+    config["enabled"] = True
+    dual._config_schema(config)
+    # Empty frozen-row boundary, real overlay and keyword-only engine. No runtime lookup.
+    monkeypatch.setattr(dual, "load_admitted_rows", lambda root, entries: [])
+    result = load(repo_root=tmp_path, decision_session="2026-11-28", product_tickers=["NVL"],
+        official_financial_facts=[], evidence_root=tmp_path, config=config)
+    assert result["state"] == "ON" and result["integrity_blocked"] is False, result
+    assert "reason" not in result
+    features = result["features_by_ticker"]["NVL"]
+    assert set(features) == {"revenue_ttm", "net_income_ttm", "attributable_net_income_ttm"}
+    for feature in features.values():
+        assert feature["fitness"] == "BLOCKED_BY_EVIDENCE" and feature["value"] is None
+        assert feature["reason_codes"] == [
+            "OFFICIAL_H1_OPERAND_MISSING_OR_NOT_ADMITTED:" + period
+            for period in ("2025", "2025-H1", "2026-H1")]
+        assert feature["method"] == "official_fy_plus_h1_minus_prior_h1/v2"
+        assert feature["ttm_operand_provenance"] == []
+        assert feature["evidence_tier"] == dual.EVIDENCE_TIER
+
+
+def test_b_overlay_on_real_engine_three_periods_nvl_pb_closed_and_peer_isolated(monkeypatch, tmp_path):
+    import copy
+    from canonical_daily_financial_v2_materialization import _load_dual_reader_ttm_research_overlay as load
+    from stocklookup_core.evidence import dual_reader_transcription as dual
+    import stocklookup_core.evidence.official_document_qualification as admission
+    from test_financial_flow_semantics_ttm_bridge import _official_operands
+    config = _b_config()
+    config["enabled"] = True
+    dual._config_schema(config)
+    entries = [e for e in config["evidence_subdirs"] if e["ticker"] == "NVL"]
+    rows = _official_operands()
+    for row in rows:
+        entry = next(e for e in entries if e["reporting_period"] == row["reporting_period"])
+        row.update(ticker="NVL", document_sha256=entry["document_sha256"],
+            dual_reader_transcription={"proof_sha256": entry["proof_sha256"]})
+    before = copy.deepcopy(rows)
+    # Qualified synthetic operands isolate orchestration/calculation from retained PDF replay,
+    # as in the bridge tests. Neither the materializer seam nor the engine is replaced.
+    monkeypatch.setattr(dual, "load_admitted_rows", lambda root, selected: rows)
+    monkeypatch.setattr(admission, "admit_retained_financial_fact",
+        lambda *args, **kwargs: {"state": "ADMITTED", "reason_codes": []})
+    research = load(repo_root=tmp_path, decision_session="2026-11-28", product_tickers=["NVL"],
+        official_financial_facts=[], evidence_root=tmp_path, config=config)
+    assert research["state"] == "ON" and research["integrity_blocked"] is False, research
+    features = research["features_by_ticker"]["NVL"]
+    for fid, expected in (("revenue_ttm", 120), ("net_income_ttm", 120), ("attributable_net_income_ttm", 115)):
+        feature = features[fid]
+        assert feature["fitness"] == "READY" and feature["value"] == expected
+        assert feature["operand_periods"] == ["2025", "2026-H1", "2025-H1"]
+        assert len(feature["ttm_operand_provenance"]) == 3
+        assert feature["authority_effect"] == "OFFLINE_RESEARCH_ONLY"
+        assert feature["pit_backtest_eligible"] is False
+    row = evaluate_ticker_valuation(ticker="NVL", feature_record=None,
+        valuation_record=valuation_record(market_cap_metric(1200)),
+        financial_analysis_record={"features": features}, dual_reader_research_state=research,
+        official_financial_facts=[], decision_session="2026-11-28")
+    assert row["methods"][PE_TTM]["value"] == pytest.approx(1200 / 115)
+    assert row["methods"][PS_TTM]["value"] == 10
+    pb = row["methods"]["P/B_CURRENT_RESEARCH"]
+    assert pb["status"] == INPUT_BLOCKED
+    assert "SHARE_COUNT_EQUITY_CONSISTENCY_RISK_UNREGISTERED_CONVERSION" in pb["blocker_reason_codes"]
+    for result in attach_peer_relative({str(i): copy.deepcopy(row) for i in range(6)}).values():
+        for method in (PE_TTM, PS_TTM):
+            peer = result["peer_relative"][method]
+            assert peer["reason"] == "OFFLINE_RESEARCH_ONLY_PEER_ISOLATED"
+            assert peer["peer_count"] == 0 and peer["percentile"] is None
+    assert rows == before
+
+
 def evaluate(*, net_income=None, revenue=None, market_cap_value=8_000_000, cap_currency="VND",
             cap_scale="units", cap_monetary_basis=None):
     market_cap = market_cap_metric(market_cap_value, currency=cap_currency, scale=cap_scale,

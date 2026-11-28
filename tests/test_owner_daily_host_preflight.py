@@ -16,8 +16,19 @@ from tools import run_owner_daily as owner
 GIB = preflight.GIB
 
 
+def _before_valuation_b_materializer_kwarg(receipt):
+    prior = copy.deepcopy(receipt)
+    corrective = prior.pop("valuation_b_materializer_kwarg_corrective")
+    prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
+    for relative in corrective["added_source_paths"]:
+        del prior["source_sha256"][relative]
+    return prior, corrective
+
+
 def _before_dual_reader_config_hah(receipt):
     prior = copy.deepcopy(receipt)
+    if "valuation_b_materializer_kwarg_corrective" in prior:
+        prior, _ = _before_valuation_b_materializer_kwarg(prior)
     corrective = prior.pop("dual_reader_config_hah_corrective")
     prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
     for relative in corrective["added_source_paths"]:
@@ -27,6 +38,8 @@ def _before_dual_reader_config_hah(receipt):
 
 def _before_handoff_gzip(receipt):
     prior = copy.deepcopy(receipt)
+    if "valuation_b_materializer_kwarg_corrective" in prior:
+        prior, _ = _before_valuation_b_materializer_kwarg(prior)
     if "dual_reader_config_hah_corrective" in prior:
         prior, _ = _before_dual_reader_config_hah(prior)
     corrective = prior.pop("handoff_oversize_gzip_corrective")
@@ -69,6 +82,8 @@ def test_handoff_gzip_capacity_corrective_exact_chain_and_history():
 
 def _before_prospective_stream(receipt):
     prior = copy.deepcopy(receipt)
+    if "valuation_b_materializer_kwarg_corrective" in prior:
+        prior, _ = _before_valuation_b_materializer_kwarg(prior)
     if "handoff_oversize_gzip_corrective" in prior:
         prior, _ = _before_handoff_gzip(prior)
     corrective = prior.pop("prospective_snapshot_stream_corrective")
@@ -111,6 +126,8 @@ def test_prospective_stream_capacity_corrective_exact_chain_and_history():
 
 def _before_valuation_b(receipt):
     prior = copy.deepcopy(receipt)
+    if "valuation_b_materializer_kwarg_corrective" in prior:
+        prior, _ = _before_valuation_b_materializer_kwarg(prior)
     if "prospective_snapshot_stream_corrective" in prior:
         prior, _ = _before_prospective_stream(prior)
     corrective = prior.pop("valuation_integration_b_corrective")
@@ -124,7 +141,8 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     live_raw = (root / relative).read_bytes()
-    live, hah = _before_dual_reader_config_hah(json.loads(live_raw))
+    live, kwarg = _before_valuation_b_materializer_kwarg(json.loads(live_raw))
+    live, hah = _before_dual_reader_config_hah(live)
     live, _ = _before_prospective_stream(live)
     prior, corrective = _before_valuation_b(live)
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
@@ -141,8 +159,9 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     assert set(corrective["prior_source_sha256_lf"]) == set(changed)
     assert set(corrective["active_source_sha256_lf"]) == set(changed + corrective["added_source_paths"])
     for path, digest in corrective["active_source_sha256_lf"].items():
-        content = (subprocess.check_output(["git", "show", f"{hah['base_commit']}:{path}"], cwd=root)
-            if path in hah["prior_source_sha256_lf"] else (root / path).read_bytes())
+        successor = next((c for c in (kwarg, hah) if path in c["prior_source_sha256_lf"]), None)
+        content = (subprocess.check_output(["git", "show", f"{successor['base_commit']}:{path}"], cwd=root)
+            if successor else (root / path).read_bytes())
         assert hashlib.sha256(content.replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
         if path in changed:
             assert corrective["prior_source_sha256_lf"][path] == prior["source_sha256"][path] != digest
@@ -163,7 +182,7 @@ def test_dual_reader_config_hah_corrective_exact_chain_and_history():
     relative = "config/owner_daily_capacity_qualification.json"
     path = "config/dual_reader_ttm_research_config.json"
     live_raw = (root / relative).read_bytes()
-    live = json.loads(live_raw)
+    live, kwarg = _before_valuation_b_materializer_kwarg(json.loads(live_raw))
     prior, corrective = _before_dual_reader_config_hah(live)
     assert corrective["base_commit"] == "72d558ea771342e020a9afda5dd328da37fb2cb8"
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
@@ -192,6 +211,59 @@ def test_dual_reader_config_hah_corrective_exact_chain_and_history():
     assert config["enabled"] is False
     assert config["approved_by"] == "OWNER_PENDING_ACTIVATION"
     # Every pre-existing member keeps its literal bytes; only the active pin changes.
+    decoder = json.JSONDecoder()
+    def member(data, key):
+        text = data.decode("utf-8")
+        start = text.index('\n  "' + key + '": ') + len('\n  "' + key + '": ')
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end].encode("utf-8")
+    for key in prior:
+        expected = member(baseline_raw, key)
+        if key == "source_sha256":
+            old = corrective["prior_source_sha256_lf"][path].encode("ascii")
+            new = corrective["active_source_sha256_lf"][path].encode("ascii")
+            assert expected.count(old) == 1
+            expected = expected.replace(old, new)
+        observed = member(live_raw, key)
+        if key == "source_sha256":
+            for source, digest in kwarg["active_source_sha256_lf"].items():
+                observed = observed.replace(digest.encode("ascii"), kwarg["prior_source_sha256_lf"][source].encode("ascii"))
+        assert observed == expected
+
+
+def test_valuation_b_materializer_kwarg_corrective_exact_chain_and_history():
+    root = preflight.ROOT
+    relative = "config/owner_daily_capacity_qualification.json"
+    path = "canonical_daily_financial_v2_materialization.py"
+    live_raw = (root / relative).read_bytes()
+    live = json.loads(live_raw)
+    prior, corrective = _before_valuation_b_materializer_kwarg(live)
+    assert corrective["base_commit"] == "09e021b1052b2ab5c1b4708777595883686873d0"
+    baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
+    assert prior == json.loads(baseline_raw)
+    assert list(live)[-2:] == ["dual_reader_config_hah_corrective", "valuation_b_materializer_kwarg_corrective"]
+    assert corrective["predecessor_corrective"] == "dual_reader_config_hah_corrective"
+    schema_reference = prior["dual_reader_config_hah_corrective"]
+    assert list(corrective) == list(schema_reference)
+    assert corrective["scope"] == "VALUATION_B_MATERIALIZER_KWARG_DEFAULT_OFF_COMPATIBILITY_PIN_UPDATE_ONLY"
+    assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
+    assert corrective["release_authority"] == "NOT_GRANTED"
+    assert corrective["changed_source_paths"] == [path]
+    assert corrective["added_source_paths"] == []
+    assert corrective["prior_source_sha256_lf"] == {
+        path: "6561c18b6ed9c5aee97765585a5f6d700aedc207992decfc906bd9df2adda7c8"}
+    assert corrective["active_source_sha256_lf"] == {
+        path: "c458021284f7e106cfab56e685d4120537e26f9239eaea2b4109399bc2567835"}
+    assert corrective["source_transition"] is None
+    assert corrective["e4_v2_code_digest"] == schema_reference["e4_v2_code_digest"]
+    for source, digest in corrective["active_source_sha256_lf"].items():
+        assert hashlib.sha256((root / source).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][source]
+        old = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{source}"], cwd=root)
+        assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == corrective["prior_source_sha256_lf"][source] == prior["source_sha256"][source] != digest
+    config = json.loads((root / "config/dual_reader_ttm_research_config.json").read_bytes())
+    assert config["enabled"] is False
+    assert config["approved_by"] == "OWNER_PENDING_ACTIVATION"
+    # Literal historical bytes survive; the only change within old members is the active pin.
     decoder = json.JSONDecoder()
     def member(data, key):
         text = data.decode("utf-8")
