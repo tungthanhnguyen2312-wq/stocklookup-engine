@@ -85,6 +85,94 @@ def _fact(period: str, value: float, *, provider: str = "KBS", metric: str = "re
     return fact
 
 
+def _official_ttm_run(monkeypatch, *, ticker="AAA", issuer_type=None):
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    import stocklookup_core.evidence.official_document_qualification as admission
+    monkeypatch.setattr(admission, "admit_retained_financial_fact",
+        lambda *a, **kw: {"state": "ADMITTED", "reason_codes": []})
+    rows = [{**row, "ticker": ticker} for row in _official_operands()]
+    return official_h1_ttm_features(ticker=ticker, rows=rows,
+        cutoff="2026-11-25T15:00:00+07:00", evidence_root=None, issuer_type=issuer_type)
+
+
+def test_official_h1_ttm_refuses_configured_fpt_scope_break(monkeypatch):
+    # Synthetic amounts isolate the guard; the caution itself is the tracked gate.
+    result = _official_ttm_run(monkeypatch, ticker="FPT")
+    for feature in result.values():
+        assert feature["value"] is None and feature["fitness"] == "BLOCKED_BY_EVIDENCE"
+        assert feature["reason_codes"] == [
+            "OFFICIAL_H1_TTM_CONSOLIDATION_SCOPE_BREAK:FPT_2026_FTEL_CONSOLIDATION_TO_EQUITY_METHOD"]
+    # Configured reclassification/template cautions are not scope breaks.
+    for ticker in ("VNM", "QNS", "AAA"):
+        assert all(f["fitness"] == "READY" for f in _official_ttm_run(monkeypatch, ticker=ticker).values())
+
+
+def test_official_h1_ttm_scope_guard_respects_operand_window_and_statement_family(monkeypatch):
+    import stocklookup_core.financial.financial_analysis_engine_v2 as gates
+    caution = {"caution_id": "SYNTHETIC_SCOPE_CHANGE", "kind": "CONSOLIDATION_SCOPE_CHANGE",
+               "statement_families": ["income_statement"]}
+    for effective, blocked in (("2024-12-31", False), ("2025-01-01", False),
+            ("2025-01-02", True), ("2025-06-30", True), ("2026-01-01", True),
+            ("2026-06-30", True), ("2026-07-01", False)):
+        monkeypatch.setattr(gates, "_issuer_gates", lambda: {"issuers": {"AAA": {
+            "comparability_cautions": [{**caution, "effective_from": effective}]}}})
+        result = _official_ttm_run(monkeypatch)
+        assert all((f["fitness"] == "BLOCKED_BY_EVIDENCE") == blocked for f in result.values()), effective
+        if blocked:
+            assert all(f["reason_codes"] == [
+                "OFFICIAL_H1_TTM_CONSOLIDATION_SCOPE_BREAK:SYNTHETIC_SCOPE_CHANGE"] for f in result.values())
+    monkeypatch.setattr(gates, "_issuer_gates", lambda: {"issuers": {"AAA": {
+        "comparability_cautions": [{**caution, "effective_from": "2026-01-01",
+                                    "statement_families": ["balance_sheet"]}]}}})
+    assert all(f["fitness"] == "READY" for f in _official_ttm_run(monkeypatch).values())
+
+
+def test_official_h1_ttm_scope_change_without_date_does_not_guess(monkeypatch):
+    import stocklookup_core.financial.financial_analysis_engine_v2 as gates
+    monkeypatch.setattr(gates, "_issuer_gates", lambda: {"issuers": {"AAA": {
+        "comparability_cautions": [{"caution_id": "SYNTHETIC_UNDATED", "kind": "CONSOLIDATION_SCOPE_CHANGE",
+                                    "statement_families": ["income_statement"]}]}}})
+    result = _official_ttm_run(monkeypatch)
+    assert all(f["value"] is None and f["reason_codes"] == [
+        "OFFICIAL_H1_TTM_CONSOLIDATION_SCOPE_DATE_UNPROVEN:SYNTHETIC_UNDATED"] for f in result.values())
+
+
+def test_official_h1_ttm_securities_parent_basis_unproven_without_changing_corporate_or_bank(monkeypatch):
+    # No appropriation field exists in the retained row contract. Do not manufacture
+    # pre/post bases from a code, issuer, value, or restated/comparative label.
+    corporate = _official_ttm_run(monkeypatch, issuer_type="corporate")
+    bank = _official_ttm_run(monkeypatch, issuer_type="bank")
+    assert corporate == bank == _official_ttm_run(monkeypatch)
+    securities = _official_ttm_run(monkeypatch, issuer_type="securities")
+    assert securities["revenue_ttm"] == corporate["revenue_ttm"]
+    assert securities["net_income_ttm"] == corporate["net_income_ttm"]
+    parent = securities["attributable_net_income_ttm"]
+    assert parent["value"] is None and parent["fitness"] == "BLOCKED_BY_EVIDENCE"
+    assert parent["reason_codes"] == ["SECURITIES_BONUS_WELFARE_BASIS_UNPROVEN"]
+    # The existing materializer omits issuer_type. Official SSI classification still
+    # closes the parent-profit/EPS leg, even if a caller supplies a corporate label.
+    for issuer_type in (None, "corporate", "securities"):
+        parent = _official_ttm_run(monkeypatch, ticker="SSI", issuer_type=issuer_type)["attributable_net_income_ttm"]
+        assert parent["value"] is None
+        assert "SECURITIES_BONUS_WELFARE_BASIS_UNPROVEN" in parent["reason_codes"]
+
+
+def test_official_h1_ttm_securities_code_202_cannot_substitute_for_appropriation_basis(monkeypatch):
+    from stocklookup_core.financial.financial_analysis_engine_v2 import official_h1_ttm_features
+    import stocklookup_core.evidence.official_document_qualification as admission
+    monkeypatch.setattr(admission, "admit_retained_financial_fact",
+        lambda *a, **kw: {"state": "ADMITTED", "reason_codes": []})
+    rows = _official_operands()
+    for row in rows:
+        if row["canonical_metric"] == "attributable_net_income":
+            row.update(line_code="202", comparative_basis="ISSUER_LIKE_FOR_LIKE_RESTATEMENT")
+    result = official_h1_ttm_features(ticker="AAA", rows=rows, issuer_type="securities",
+        cutoff="2026-11-25T15:00:00+07:00", evidence_root=None)
+    assert result["attributable_net_income_ttm"]["value"] is None
+    assert "SECURITIES_BONUS_WELFARE_BASIS_UNPROVEN" in result["attributable_net_income_ttm"]["reason_codes"]
+    assert result["net_income_ttm"]["fitness"] == "READY"
+
+
 def test_kbs_income_statement_contract_is_direct_standalone_quarter() -> None:
     fact = _fact("2025-Q2", 20)
     semantic = bridge.flow_semantics(fact)

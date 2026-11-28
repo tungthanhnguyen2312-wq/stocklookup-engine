@@ -463,6 +463,7 @@ def test_product_critical_suites_run_in_mandatory_focused_job():
     focused = _focused_selection_entries(workflow)
     assert len(focused) == len(set(focused)), "duplicate focused selector"
     assert {"tests/test_business_update_observations.py",
+            "tests/test_record_artifact_loading.py",
             "tests/test_official_financial_quarterly_intake.py"} <= set(focused)
     job = _workflow_job_block(workflow, "focused-regressions")
     assert "continue-on-error:" not in job

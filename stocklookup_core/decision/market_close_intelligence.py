@@ -16,6 +16,10 @@ Hard rules (contract ``market_close_intelligence/v1``):
   its denominator and the wider denominators are listed separately.
 - Trading value is never price x volume; without an exchange-basis matched/negotiated/
   total value the liquidity component is ``UNAVAILABLE``.
+- ``universe_turnover_proxy`` is a separate, explicitly non-authoritative constituent
+  volume proxy (``AGGREGATED_UNIVERSE_TURNOVER_PROXY`` / ``NON_AUTHORITATIVE_RESEARCH_PROXY``)
+  derived solely from already-passed descriptive volume fields; it never replaces or
+  relabels official liquidity and never computes price x volume.
 - Provider sector taxonomy is never compared to a broker's sector count.
 - No forecast, probability, score, recommendation, sizing or execution.
 """
@@ -23,12 +27,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from datetime import date, timedelta
 from typing import Any, Mapping
 
 CONTRACT_VERSION = "market_close_intelligence/v1"
 SNAPSHOT_CONTRACT = "market_close_participation_snapshot/v1"
 SESSION_CHANGE_RULE = "matched_cohort_session_change/v1"
+
+TURNOVER_PROXY_METHOD = "AGGREGATED_UNIVERSE_TURNOVER_PROXY"
+TURNOVER_PROXY_AUTHORITY = "NON_AUTHORITATIVE_RESEARCH_PROXY"
+TURNOVER_PROXY_MIN_COVERAGE = 0.8
+# 1.0 = covered constituents' aggregate volume equals the sum of their own 20-session median volumes (no tuned threshold).
+TURNOVER_PROXY_OWN_BASELINE_RATIO = 1.0
+TURNOVER_LABEL_LOW_LIQUIDITY_BOUNCE = "BOUNCE_LOW_LIQUIDITY_UNCONFIRMED"
+TURNOVER_LABEL_ABOVE_AVERAGE_ADVANCE = "ADVANCE_ON_ABOVE_AVERAGE_TURNOVER"
 
 _MACRO_AXES = ("INFLATION_PRESSURE", "FX_PRESSURE", "USD_PRESSURE", "DOMESTIC_RATES",
                "DOMESTIC_LIQUIDITY", "CREDIT_CONTEXT", "GLOBAL_RATES", "COMMODITY_CONTEXT")
@@ -41,6 +54,13 @@ def _hash(value: Any) -> str:
 
 def _ratio(n: Any, d: Any) -> float | None:
     return n / d if isinstance(n, (int, float)) and isinstance(d, (int, float)) and d else None
+
+
+def _pos_finite(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    val = float(value)
+    return val if math.isfinite(val) and val > 0 else None
 
 
 def _unavailable(reason: str, **extra: Any) -> dict[str, Any]:
@@ -154,6 +174,138 @@ def _liquidity(official_liquidity: Mapping[str, Any] | None) -> dict[str, Any]:
                             source_status={k: official_liquidity.get(k) for k in (
                                 "status", "planned_requests", "hard_request_budget", "http_requests_made")})
     return _unavailable("MARKET_AGGREGATE_VALUE_NOT_IN_PER_SYMBOL_RESEARCH_ARTIFACT", **base)
+
+
+def _universe_turnover_proxy(descriptive: Mapping[str, Any], session: str) -> dict[str, Any]:
+    """Non-authoritative constituent volume ratio from already-passed descriptive records.
+
+    Uses ``records[*].liquidity.current_ohlc_v`` (same-session DNSE daily OHLC volume) and
+    ``records[*].technical_features.values.relative_volume_provider_scoped`` (same-session
+    volume divided by the constituent's 20-session median volume in ``market_features``) to
+    recover each covered constituent's 20-session baseline volume without imputation.
+    Never computes price x volume and never relabels this proxy as official liquidity.
+    """
+    base: dict[str, Any] = {
+        "method": TURNOVER_PROXY_METHOD,
+        "authority": TURNOVER_PROXY_AUTHORITY,
+        "is_official_liquidity": False,
+        "price_times_volume": "NOT_PERMITTED",
+        "traded_value_included": False,
+        "traded_value_status": "UNAVAILABLE_NO_PER_TICKER_TRADED_VALUE_IN_DESCRIPTIVE",
+        "scope": "EXACT_SESSION_TECHNICAL_COHORT_NOT_WHOLE_MARKET",
+        "minimum_coverage_required": TURNOVER_PROXY_MIN_COVERAGE,
+        "baseline_reference_ratio": TURNOVER_PROXY_OWN_BASELINE_RATIO,
+        "source_fields": {
+            "same_session_volume": "records[*].liquidity.current_ohlc_v",
+            "relative_volume_20d": "records[*].technical_features.values.relative_volume_provider_scoped",
+            "constituent_20_session_baseline": "current_ohlc_v / relative_volume_provider_scoped",
+        },
+        "limitations": [
+            "Non-authoritative constituent volume proxy only; never official exchange liquidity or traded value.",
+            "Per-ticker 20-session baseline volume is recovered from current_ohlc_v / relative_volume_provider_scoped "
+            "(20-session median volume in market_features); no imputation.",
+            "No per-ticker traded value field exists in descriptive; price x volume is not computed.",
+            "Cohort-level statistic on covered same-session equities; not whole-market turnover.",
+        ],
+    }
+    records = descriptive.get("records")
+    if not isinstance(records, Mapping) or not records:
+        return _unavailable(
+            "DESCRIPTIVE_PER_TICKER_RECORDS_ABSENT",
+            numerator=None, denominator=None, ratio=None,
+            covered_ticker_count=0, eligible_universe_count=0, coverage_ratio=None,
+            **base,
+        )
+    eligible_count = 0
+    covered_count = 0
+    volume_numerator = 0.0
+    volume_denominator = 0.0
+    for ticker in sorted(records):
+        row = records[ticker]
+        if not isinstance(row, Mapping) or not row.get("in_current_descriptive_scope"):
+            continue
+        technical = row.get("technical_features")
+        if not isinstance(technical, Mapping):
+            continue
+        if technical.get("status") != "SHADOW_ONLY" or not technical.get("is_current_session"):
+            continue
+        eligible_count += 1
+        if technical.get("provider_volume_fitness") == "BLOCKED_VOLUME_FAMILY_NOT_COMPATIBLE":
+            continue
+        values = technical.get("values")
+        liq = row.get("liquidity")
+        if not isinstance(values, Mapping) or not isinstance(liq, Mapping):
+            continue
+        if liq.get("status") != "ELIGIBLE" or liq.get("session") not in (None, session):
+            continue
+        vol = _pos_finite(liq.get("current_ohlc_v"))
+        rel_vol = _pos_finite(values.get("relative_volume_provider_scoped"))
+        if vol is None or rel_vol is None:
+            continue
+        baseline_vol = vol / rel_vol
+        if not math.isfinite(baseline_vol) or baseline_vol <= 0:
+            continue
+        covered_count += 1
+        volume_numerator += vol
+        volume_denominator += baseline_vol
+
+    if eligible_count == 0:
+        return _unavailable(
+            "NO_ELIGIBLE_SAME_SESSION_CONSTITUENTS",
+            numerator=None, denominator=None, ratio=None,
+            covered_ticker_count=0, eligible_universe_count=0, coverage_ratio=None,
+            **base,
+        )
+    coverage_ratio = _ratio(covered_count, eligible_count)
+    if covered_count == 0:
+        return _unavailable(
+            "VOLUME_OR_BASELINE_FIELDS_ABSENT",
+            numerator=None, denominator=None, ratio=None,
+            covered_ticker_count=0, eligible_universe_count=eligible_count, coverage_ratio=coverage_ratio,
+            **base,
+        )
+    if coverage_ratio is None or coverage_ratio < TURNOVER_PROXY_MIN_COVERAGE:
+        return _unavailable(
+            "TURNOVER_PROXY_COVERAGE_BELOW_MINIMUM",
+            numerator=None, denominator=None, ratio=None,
+            covered_ticker_count=covered_count, eligible_universe_count=eligible_count, coverage_ratio=coverage_ratio,
+            **base,
+        )
+    ratio = _ratio(volume_numerator, volume_denominator)
+    if ratio is None or not math.isfinite(ratio):
+        return _unavailable(
+            "TURNOVER_PROXY_DENOMINATOR_NON_POSITIVE",
+            numerator=None, denominator=None, ratio=None,
+            covered_ticker_count=covered_count, eligible_universe_count=eligible_count, coverage_ratio=coverage_ratio,
+            **base,
+        )
+    return {
+        "status": "AVAILABLE",
+        "numerator": volume_numerator,
+        "denominator": volume_denominator,
+        "ratio": ratio,
+        "covered_ticker_count": covered_count,
+        "eligible_universe_count": eligible_count,
+        "coverage_ratio": coverage_ratio,
+        **base,
+    }
+
+
+def _turnover_proxy_label(c: Mapping[str, Any]) -> str | None:
+    """Descriptive context label comparing positive benchmark advance against constituents' own
+    20-session baseline ratio (TURNOVER_PROXY_OWN_BASELINE_RATIO = 1.0). Never an entry/exit/sizing rule."""
+    bi = c["benchmark_index"]
+    proxy = c["universe_turnover_proxy"]
+    if bi.get("status") != "AVAILABLE" or proxy.get("status") != "AVAILABLE":
+        return None
+    if _sign(bi.get("change_points")) != 1:
+        return None
+    ratio = _pos_finite(proxy.get("ratio"))
+    if ratio is None:
+        return None
+    if ratio < TURNOVER_PROXY_OWN_BASELINE_RATIO:
+        return TURNOVER_LABEL_LOW_LIQUIDITY_BOUNCE
+    return TURNOVER_LABEL_ABOVE_AVERAGE_ADVANCE
 
 
 def _foreign_flow(regime: Mapping[str, Any] | None, flow: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -393,7 +545,7 @@ def _index_breadth_concordance(c: Mapping[str, Any]) -> dict[str, Any]:
                      "Disagreement suggests a move carried by fewer, larger names; it is context, not proof of concentration.")}
 
 
-def _questions(c: Mapping[str, Any]) -> list[dict[str, Any]]:
+def _questions(c: Mapping[str, Any], *, turnover_label: str | None = None) -> list[dict[str, Any]]:
     breadth, sectors = c["breadth"], c["sectors"]
     index_ok = c["benchmark_index"]["status"] == "AVAILABLE"
     flow_ok = c["foreign_flow"]["status"] != "UNAVAILABLE"
@@ -428,11 +580,16 @@ def _questions(c: Mapping[str, Any]) -> list[dict[str, Any]]:
         pos, neg = breadth["positive_momentum_20d"], breadth["negative_momentum_20d"]
         if isinstance(pos, int) and isinstance(neg, int):
             facts.append("MAJORITY_NEGATIVE_20D_MOMENTUM" if neg > pos else "MAJORITY_POSITIVE_20D_MOMENTUM" if pos > neg else "EVEN_20D_MOMENTUM")
-        out.append({"question": "Technical rebound, bottoming, sideways or confirmed uptrend?",
-                    "answer_state": "PARTIAL", "observed_cohort_facts": facts,
-                    "missing_evidence": ([] if index_ok else ["benchmark_index"]) + ["multi_session_same_cohort_comparison"],
-                    "note": ("Cohort facts describe participation only. A confirmed broad uptrend would need most of the cohort "
-                             "above MA20 with positive momentum; bottoming versus continuation cannot be separated from one session.")})
+        rebound_q: dict[str, Any] = {
+            "question": "Technical rebound, bottoming, sideways or confirmed uptrend?",
+            "answer_state": "PARTIAL", "observed_cohort_facts": facts,
+            "missing_evidence": ([] if index_ok else ["benchmark_index"]) + ["multi_session_same_cohort_comparison"],
+            "note": ("Cohort facts describe participation only. A confirmed broad uptrend would need most of the cohort "
+                     "above MA20 with positive momentum; bottoming versus continuation cannot be separated from one session."),
+        }
+        if turnover_label is not None:
+            rebound_q["turnover_proxy_label"] = turnover_label
+        out.append(rebound_q)
     out.append(_index_breadth_concordance(c))
     out.append({"question": "Is there a false-breakout / bull-trap signature?", "answer_state": "CANNOT_ANSWER_FROM_ONE_SESSION",
                 "missing_evidence": ["next_session_same_cohort_follow_through"],
@@ -440,11 +597,16 @@ def _questions(c: Mapping[str, Any]) -> list[dict[str, Any]]:
     return out
 
 
-def _next_session(c: Mapping[str, Any]) -> list[dict[str, str]]:
+def _next_session(c: Mapping[str, Any], *, turnover_label: str | None = None) -> list[dict[str, str]]:
+    participation_row: dict[str, str] = {
+        "hypothesis": "Participation improves",
+        "confirm_if": "On the same exact-session cohort advancers exceed decliners and the above-MA20 share rises versus this session.",
+        "refute_if": "Decliners again outnumber advancers and the above-MA20 share falls.",
+    }
+    if turnover_label is not None:
+        participation_row["turnover_proxy_label"] = turnover_label
     rows = [
-        {"hypothesis": "Participation improves",
-         "confirm_if": "On the same exact-session cohort advancers exceed decliners and the above-MA20 share rises versus this session.",
-         "refute_if": "Decliners again outnumber advancers and the above-MA20 share falls."},
+        participation_row,
         {"hypothesis": "Sector weakness is broad rather than isolated",
          "confirm_if": "The count of groups with more decliners than advancers stays at or above this session's count.",
          "refute_if": "That count falls and at least one group moves to more advancers than decliners."},
@@ -467,9 +629,23 @@ def build(*, session: str, descriptive: Mapping[str, Any], sector_leadership: Ma
         "breadth": _breadth(descriptive),
         "sectors": _sectors(sector_leadership),
         "liquidity": _liquidity(official_liquidity),
+        "universe_turnover_proxy": _universe_turnover_proxy(descriptive, session),
         "foreign_flow": _foreign_flow(regime_context, market_flow_positioning),
         "macro": _macro(regime_context),
     }
+    turnover_label = _turnover_proxy_label(components)
+    interpretation: dict[str, Any] = {
+        "questions": _questions(components, turnover_label=turnover_label),
+        "next_session_conditions": _next_session(components, turnover_label=turnover_label),
+        "regime_label_note": components["breadth"].get("existing_descriptor_rule", {}).get("meaning"),
+    }
+    if turnover_label is not None:
+        interpretation["turnover_proxy_label"] = turnover_label
+        interpretation["turnover_proxy_label_note"] = (
+            "Descriptive research-proxy context comparing covered constituents' aggregate volume "
+            "against the sum of their own 20-session median volumes (ratio 1.0); not official exchange liquidity "
+            "and never an entry, exit or sizing instruction."
+        )
     artifact = {
         "schema_version": "1.0.0", "contract_version": CONTRACT_VERSION, "session": session,
         "source_artifact_identities": {
@@ -483,8 +659,7 @@ def build(*, session: str, descriptive: Mapping[str, Any], sector_leadership: Ma
         "denominators": _denominators(descriptive),
         "components": components,
         "component_status": {k: v["status"] for k, v in components.items()},
-        "interpretation": {"questions": _questions(components), "next_session_conditions": _next_session(components),
-                           "regime_label_note": components["breadth"].get("existing_descriptor_rule", {}).get("meaning")},
+        "interpretation": interpretation,
         "authority_boundary": {"not_whole_market_unless_stated": True, "no_forecast_probability_or_score": True,
                                "no_recommendation_sizing_or_execution": True, "no_threshold_owned_here": True,
                                "index_never_derived_from_constituents": True, "value_never_price_times_volume": True},
@@ -516,6 +691,21 @@ def markdown_lines(mci: Mapping[str, Any]) -> list[str]:
                      f"{s['groups_with_more_decliners_than_advancers']} with more decliners, {s['groups_with_more_advancers_than_decliners']} with more advancers; "
                      f"states {s['leadership_state_counts']}." + (f" Weakening: {', '.join(weak)}." if weak else ""))
     lines.append(f"- Liquidity (matched/negotiated/total value): {c['liquidity']['status']} ({', '.join(c['liquidity'].get('reason_codes') or [])}); price x volume is not used.")
+    utp = c.get("universe_turnover_proxy")
+    if isinstance(utp, Mapping):
+        if utp.get("status") == "AVAILABLE":
+            label = (mci.get("interpretation") or {}).get("turnover_proxy_label")
+            lines.append(
+                f"- Universe turnover proxy ({utp['authority']}, not official liquidity): "
+                f"{utp['ratio']:.2f}x sum of 20-session median volumes ({utp['covered_ticker_count']}/{utp['eligible_universe_count']} "
+                f"covered, {utp['coverage_ratio']:.1%}); volume only, price x volume is not used."
+                + (f" Context: {label}." if label else "")
+            )
+        else:
+            lines.append(
+                f"- Universe turnover proxy ({utp.get('authority') or TURNOVER_PROXY_AUTHORITY}, not official liquidity): "
+                f"{utp.get('status')} ({', '.join(utp.get('reason_codes') or [])}); price x volume is not used."
+            )
     ff = c["foreign_flow"]
     lines.append(f"- Foreign flow: {ff['status']}" + (f" ({', '.join(ff.get('reason_codes') or [])})" if ff.get("reason_codes") else "") + "; observed-cohort flow is never whole-exchange flow.")
     m = c["macro"]

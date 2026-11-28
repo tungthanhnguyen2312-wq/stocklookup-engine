@@ -337,6 +337,10 @@ def build_package(source: Path, session: str, previous: Path|None=None, *, produ
         rejected = _unsafe_pointer(parsed[name])
         if rejected is not None:
             raise HandoffPublicationError("HANDOFF_ABSOLUTE_PATH_FORBIDDEN:" + name + ":" + rejected)
+        # Previous bundles contribute only their original bytes/hash, never lineage.
+        # Drop the parsed graph before loading the optional briefs that follow it.
+        if previous is not None and entry == previous and name.startswith("previous_session_bundle_"):
+            del parsed[name]
     if queue["identity"] is not None and (parsed.get(OPPORTUNITY_QUEUE) or {}).get("artifact_identity") != queue["identity"]:
         raise HandoffPublicationError("HANDOFF_OPPORTUNITY_QUEUE_IDENTITY_MISMATCH")
     package_identity = _identity({"session": session, "files": hashes})
