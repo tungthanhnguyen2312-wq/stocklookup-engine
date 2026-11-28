@@ -16,8 +16,19 @@ from tools import run_owner_daily as owner
 GIB = preflight.GIB
 
 
+def _before_dual_reader_config_hah(receipt):
+    prior = copy.deepcopy(receipt)
+    corrective = prior.pop("dual_reader_config_hah_corrective")
+    prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
+    for relative in corrective["added_source_paths"]:
+        del prior["source_sha256"][relative]
+    return prior, corrective
+
+
 def _before_handoff_gzip(receipt):
     prior = copy.deepcopy(receipt)
+    if "dual_reader_config_hah_corrective" in prior:
+        prior, _ = _before_dual_reader_config_hah(prior)
     corrective = prior.pop("handoff_oversize_gzip_corrective")
     prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
     for relative in corrective["added_source_paths"]:
@@ -29,7 +40,7 @@ def test_handoff_gzip_capacity_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     live_raw = (root / relative).read_bytes()
-    live = json.loads(live_raw)
+    live, _ = _before_dual_reader_config_hah(json.loads(live_raw))
     prior, corrective = _before_handoff_gzip(live)
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
     assert prior == json.loads(baseline_raw)
@@ -113,7 +124,8 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     live_raw = (root / relative).read_bytes()
-    live, _ = _before_prospective_stream(json.loads(live_raw))
+    live, hah = _before_dual_reader_config_hah(json.loads(live_raw))
+    live, _ = _before_prospective_stream(live)
     prior, corrective = _before_valuation_b(live)
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
     assert prior == json.loads(baseline_raw)
@@ -129,7 +141,9 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     assert set(corrective["prior_source_sha256_lf"]) == set(changed)
     assert set(corrective["active_source_sha256_lf"]) == set(changed + corrective["added_source_paths"])
     for path, digest in corrective["active_source_sha256_lf"].items():
-        assert hashlib.sha256((root / path).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
+        content = (subprocess.check_output(["git", "show", f"{hah['base_commit']}:{path}"], cwd=root)
+            if path in hah["prior_source_sha256_lf"] else (root / path).read_bytes())
+        assert hashlib.sha256(content.replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
         if path in changed:
             assert corrective["prior_source_sha256_lf"][path] == prior["source_sha256"][path] != digest
     # Every historical member retains its literal bytes, including A's selectors and corrective.
@@ -142,6 +156,56 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     for key in prior:
         if key != "source_sha256":
             assert member(live_raw, key) == member(baseline_raw, key)
+
+
+def test_dual_reader_config_hah_corrective_exact_chain_and_history():
+    root = preflight.ROOT
+    relative = "config/owner_daily_capacity_qualification.json"
+    path = "config/dual_reader_ttm_research_config.json"
+    live_raw = (root / relative).read_bytes()
+    live = json.loads(live_raw)
+    prior, corrective = _before_dual_reader_config_hah(live)
+    assert corrective["base_commit"] == "72d558ea771342e020a9afda5dd328da37fb2cb8"
+    baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
+    assert prior == json.loads(baseline_raw)
+    assert list(live)[-2:] == ["handoff_oversize_gzip_corrective", "dual_reader_config_hah_corrective"]
+    assert corrective["predecessor_corrective"] == "handoff_oversize_gzip_corrective"
+    # HAH retains the config-only B receipt schema; gzip is its chronological predecessor.
+    schema_reference = prior["valuation_integration_b_corrective"]
+    assert list(corrective) == list(schema_reference)
+    assert corrective["scope"] == "DUAL_READER_TTM_RESEARCH_CONFIG_HAH_R3_DEFAULT_OFF_PIN_UPDATE_ONLY"
+    assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
+    assert corrective["release_authority"] == "NOT_GRANTED"
+    assert corrective["changed_source_paths"] == [path]
+    assert corrective["added_source_paths"] == []
+    assert corrective["prior_source_sha256_lf"] == {
+        path: "73c25c56df3ea960bfcb433bbdc499fd5cc945726259ecf7e18cd09449e4798a"}
+    assert corrective["active_source_sha256_lf"] == {
+        path: "376dbced744eab0e8883386461d5eecfbb56e6565c789ab11f062beed879f02f"}
+    assert corrective["source_transition"] is None  # Config-only pin change; no source-transition fixture.
+    assert corrective["e4_v2_code_digest"] == schema_reference["e4_v2_code_digest"]
+    for source, digest in corrective["active_source_sha256_lf"].items():
+        assert hashlib.sha256((root / source).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][source]
+        old = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{source}"], cwd=root)
+        assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == corrective["prior_source_sha256_lf"][source] == prior["source_sha256"][source] != digest
+    config = json.loads((root / path).read_bytes())
+    assert config["enabled"] is False
+    assert config["approved_by"] == "OWNER_PENDING_ACTIVATION"
+    # Every pre-existing member keeps its literal bytes; only the active pin changes.
+    decoder = json.JSONDecoder()
+    def member(data, key):
+        text = data.decode("utf-8")
+        start = text.index('\n  "' + key + '": ') + len('\n  "' + key + '": ')
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end].encode("utf-8")
+    for key in prior:
+        expected = member(baseline_raw, key)
+        if key == "source_sha256":
+            old = corrective["prior_source_sha256_lf"][path].encode("ascii")
+            new = corrective["active_source_sha256_lf"][path].encode("ascii")
+            assert expected.count(old) == 1
+            expected = expected.replace(old, new)
+        assert member(live_raw, key) == expected
 
 
 def safe_observation():
@@ -1538,6 +1602,7 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
     receipt_path = "config/owner_daily_capacity_qualification.json"
     raw = (root / receipt_path).read_bytes()
     live = json.loads(raw)
+    live, _ = _before_dual_reader_config_hah(live)
     live, valuation_b = _before_valuation_b(live)
     migration = live["registry_migration_a_corrective"]
     assert list(live)[-2:] == ["financial_registry_inputs", "registry_migration_a_corrective"]
@@ -1618,6 +1683,7 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
 def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, path):
     root = preflight.ROOT
     receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
+    receipt, _ = _before_dual_reader_config_hah(receipt)
     selected = {path: receipt["source_sha256"][path]
                 for path in receipt["registry_migration_a_corrective"]["active_source_sha256_lf"]}
     receipt["source_sha256"] = selected
@@ -1639,6 +1705,7 @@ def test_registry_migration_live_selectors_and_gate_refuse_tampering(tmp_path, t
     from stocklookup_core.evidence.official_ocr_layout_proof import verify_financial_registry_inputs
     root = preflight.ROOT
     receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
+    receipt, _ = _before_dual_reader_config_hah(receipt)
     for selector in receipt["financial_registry_inputs"].values():
         path = tmp_path / selector["path"]
         path.parent.mkdir(parents=True, exist_ok=True)
