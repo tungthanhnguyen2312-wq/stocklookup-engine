@@ -1320,7 +1320,7 @@
     "tools/run_dual_reader_transcription_admission.py": "6438811a5d5118c5d8001a92e8ff12891c7d397d412841fa82e290b78da4a8a5",
     "config/official_financial_issuers/r0001.json": "54cc428a0d2901a371976b91152e5fe99a014a114d1e2c81839fad45fd51a818",
     "config/official_financial_layouts/r0001.json": "8a23646bf7efbda0ae674e22ae3feb2161d01de3678f3b2a388e73be9b238c01",
-    "config/dual_reader_ttm_research_config.json": "73c25c56df3ea960bfcb433bbdc499fd5cc945726259ecf7e18cd09449e4798a"
+    "config/dual_reader_ttm_research_config.json": "376dbced744eab0e8883386461d5eecfbb56e6565c789ab11f062beed879f02f"
   },
   "launcher_corrective": {
     "base_commit": "bff837a9f11fd127eb9326f5411fb6dee8c116f5",
@@ -2605,5 +2605,26 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. Handoff package files above 95 MiB are stored as deterministic gzip with original-bytes sha256 preserved in package identity; the real 125.85 MB bundle compresses to 15.26 MB in about 2 s, streamed in 1 MiB chunks."
+  },
+  "dual_reader_config_hah_corrective": {
+    "base_commit": "72d558ea771342e020a9afda5dd328da37fb2cb8",
+    "predecessor_corrective": "handoff_oversize_gzip_corrective",
+    "scope": "DUAL_READER_TTM_RESEARCH_CONFIG_HAH_R3_DEFAULT_OFF_PIN_UPDATE_ONLY",
+    "changed_source_paths": [
+      "config/dual_reader_ttm_research_config.json"
+    ],
+    "added_source_paths": [],
+    "prior_source_sha256_lf": {
+      "config/dual_reader_ttm_research_config.json": "73c25c56df3ea960bfcb433bbdc499fd5cc945726259ecf7e18cd09449e4798a"
+    },
+    "active_source_sha256_lf": {
+      "config/dual_reader_ttm_research_config.json": "376dbced744eab0e8883386461d5eecfbb56e6565c789ab11f062beed879f02f"
+    },
+    "source_transition": null,
+    "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. HAH R3 research config only; no source-transition fixture is added. Default-OFF research branch; activation requires separate Owner authorization."
   }
 }
