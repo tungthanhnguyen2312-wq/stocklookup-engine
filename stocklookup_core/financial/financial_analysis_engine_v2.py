@@ -339,6 +339,16 @@ def _blocked(feature_id: str, *codes: str, method: str = "blocked_by_evidence/v2
     return _feature(feature_id, method=method, reason_codes=codes, growth_basis=growth_basis)
 
 
+def _issuer_gates() -> dict[str, Any]:
+    """Read the closed issuer-gates contract directly (its research module would add a runtime cycle)."""
+    from pathlib import Path
+    gates = json.loads((Path(__file__).resolve().parents[2] / "config" / "interim_earnings_cash_issuer_gates_v1.json").read_bytes())
+    if (gates.get("contract_version") != "interim_earnings_cash_issuer_gates/v1" or gates.get("closed_set") is not True
+            or gates.get("authority_effect") != "NONE" or not isinstance(gates.get("issuers"), dict)):
+        raise ValueError("INTERIM_EARNINGS_CASH_ISSUER_GATES_INVALID")
+    return gates
+
+
 def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], cutoff: str,
                              evidence_root, current_year: int = 2026,
                              issuer_type: str | None = None) -> dict[str, dict[str, Any]]:
@@ -352,7 +362,6 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
     from datetime import date, datetime
     from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
     from stocklookup_core.evidence.official_ocr_layout_proof import issuer_registry_values
-    from stocklookup_core.financial.interim_earnings_cash_research import load_issuer_gates
     stamp = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
     if stamp.tzinfo is None:
         raise ValueError("QUALIFIED_TIMESTAMP_MISSING_OR_INVALID")
@@ -364,7 +373,7 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
     # registry so a securities issuer cannot bypass this guard by omitting the argument.
     registered_type = issuer_registry_values()[2].get(ticker.upper())
     securities = "securities" in {registered_type, str(issuer_type or "").lower()}
-    cautions = load_issuer_gates()["issuers"].get(ticker.upper(), {}).get("comparability_cautions", [])
+    cautions = _issuer_gates()["issuers"].get(ticker.upper(), {}).get("comparability_cautions") or []
     scope_blockers = []
     # Check the entire operand span, including the subtracted prior H1: identical scope
     # labels cannot establish comparability across a change in consolidated entities.

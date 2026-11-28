@@ -35,7 +35,7 @@
     "config/architecture_dependency_policy.json": "75341e5cae99db89289b7cc0c2d91a57465424a68836f10faea88a41939f1bf8",
     "config/capability_first_eod_operation.json": "a2a6806a3bf31f730acdafdea216cfb3960d71158c63576a99d3169bc02121c9",
     "config/current_research_valuation_assumptions.json": "db25b5fe333bbd08fd6b304b1f97ea42c5c2f6f801cfaaec485d623e84471ad8",
-    "config/daily_path_launchers.json": "ef816298665945957cb57246f6f3939e741e11bd99cc92e6bf1f2c115c9ac562",
+    "config/daily_path_launchers.json": "e4e62e468aa98bcb5e3d0e44446aaf5e3cb9466772c5cf3c1f9e0f030993dae6",
     "config/daily_static_inputs.json": "81fab394f88cb6e705a16e8bf2f09da821b9dd837426510786cbc1af5c293895",
     "config/daily_storage_reuse.json": "4e6da55fc9cb55b6c0d5c8ee86dd72e134bc59b06ebb617d309dfef545c8cd68",
     "config/demonstration_portfolio_risk_input.json": "d0e262b237fb0a7f7ca298d72926a9212d6d0498b763f097259cb2339a79dc7f",
@@ -881,7 +881,7 @@
     "stocklookup_core/financial/entity_classification_scaleout.py": "433c47037958b02b9340e049c2cb3d1c65c997ae8e0c9d0836fe57a9887d1242",
     "stocklookup_core/financial/evidence_backed_entity_classifier.py": "4d4b0133a1f652537167b8476d73fe9a191573cada92b7faa1a32a0646b37109",
     "stocklookup_core/financial/financial_analysis_context_v2.py": "3c1b45894b7878feaea72b4b4fd3982f594d587e4f930023663805dc9645c50f",
-    "stocklookup_core/financial/financial_analysis_engine_v2.py": "d891b390f10a64d7d5bbc1900134de00a6a3043dab67c12865f5fd8cbe833ec9",
+    "stocklookup_core/financial/financial_analysis_engine_v2.py": "564534e83f99601560ce52ab4eb6710a32df1d592df44f883a02b2c6f56c2ee4",
     "stocklookup_core/financial/financial_analysis_product_projection.py": "b557b87168a53121542b2091404d2ca09333834a11e55b1f1c1e6135e5fac35f",
     "stocklookup_core/financial/financial_canonicalization.py": "88d3f875e2ce7afe869bd4945dedbe225fcbc9f6bd63a6603ac2648e970f3d2d",
     "stocklookup_core/financial/financial_entity_applicability.py": "df78493c281b9de98f770346dc986f3c53142a8075cb2cfcf5558c9a9b219a35",
@@ -2679,24 +2679,27 @@
     "changed_source_paths": [
       "stocklookup_core/research/ai_handoff_publication.py",
       "stocklookup_core/financial/financial_analysis_engine_v2.py",
-      "stocklookup_core/decision/market_close_intelligence.py"
+      "stocklookup_core/decision/market_close_intelligence.py",
+      "config/daily_path_launchers.json"
     ],
     "added_source_paths": [],
     "prior_source_sha256_lf": {
       "stocklookup_core/research/ai_handoff_publication.py": "9eab870d83e451566234ebf85c197a2d8664a6e0152d6d56c7468cfb46b37915",
       "stocklookup_core/financial/financial_analysis_engine_v2.py": "5a61580ad20f8a3d15a63a5a68dc6584f35f53d6278dbc2da18272128fca7eaa",
-      "stocklookup_core/decision/market_close_intelligence.py": "0fb11bccec4ff8bd39083a0d71641055d0e37a09db669e5aad9acf268cdd581d"
+      "stocklookup_core/decision/market_close_intelligence.py": "0fb11bccec4ff8bd39083a0d71641055d0e37a09db669e5aad9acf268cdd581d",
+      "config/daily_path_launchers.json": "ef816298665945957cb57246f6f3939e741e11bd99cc92e6bf1f2c115c9ac562"
     },
     "active_source_sha256_lf": {
       "stocklookup_core/research/ai_handoff_publication.py": "f700b1294a56b9d674ced2e87f2c931c8216c71fcaa298e86b94fa7dab8b935a",
-      "stocklookup_core/financial/financial_analysis_engine_v2.py": "d891b390f10a64d7d5bbc1900134de00a6a3043dab67c12865f5fd8cbe833ec9",
-      "stocklookup_core/decision/market_close_intelligence.py": "ba878edd54fce884c3dfe0d2581761077dc659f348be272844117f29fa1f6070"
+      "stocklookup_core/financial/financial_analysis_engine_v2.py": "564534e83f99601560ce52ab4eb6710a32df1d592df44f883a02b2c6f56c2ee4",
+      "stocklookup_core/decision/market_close_intelligence.py": "ba878edd54fce884c3dfe0d2581761077dc659f348be272844117f29fa1f6070",
+      "config/daily_path_launchers.json": "e4e62e468aa98bcb5e3d0e44446aaf5e3cb9466772c5cf3c1f9e0f030993dae6"
     },
     "source_transition": null,
     "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7",
     "new_capacity_measurement": false,
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
-    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, IID bounds, physical/commit limits and runtime safeguards are unchanged. Handoff previous-bundle release (no byte change to handoff output), default-OFF B TTM scope/securities guards, and additive non-authoritative universe_turnover_proxy only. No Daily launch or release authority is granted."
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, IID bounds, physical/commit limits and runtime safeguards are unchanged. Handoff previous-bundle release (no byte change to handoff output), default-OFF B TTM scope/securities guards, additive non-authoritative universe_turnover_proxy, and the reviewed launcher digest for the focused CI selection only. No Daily launch or release authority is granted."
   }
 }

@@ -108,28 +108,28 @@ def test_official_h1_ttm_refuses_configured_fpt_scope_break(monkeypatch):
 
 
 def test_official_h1_ttm_scope_guard_respects_operand_window_and_statement_family(monkeypatch):
-    import stocklookup_core.financial.interim_earnings_cash_research as gates
+    import stocklookup_core.financial.financial_analysis_engine_v2 as gates
     caution = {"caution_id": "SYNTHETIC_SCOPE_CHANGE", "kind": "CONSOLIDATION_SCOPE_CHANGE",
                "statement_families": ["income_statement"]}
     for effective, blocked in (("2024-12-31", False), ("2025-01-01", False),
             ("2025-01-02", True), ("2025-06-30", True), ("2026-01-01", True),
             ("2026-06-30", True), ("2026-07-01", False)):
-        monkeypatch.setattr(gates, "load_issuer_gates", lambda: {"issuers": {"AAA": {
+        monkeypatch.setattr(gates, "_issuer_gates", lambda: {"issuers": {"AAA": {
             "comparability_cautions": [{**caution, "effective_from": effective}]}}})
         result = _official_ttm_run(monkeypatch)
         assert all((f["fitness"] == "BLOCKED_BY_EVIDENCE") == blocked for f in result.values()), effective
         if blocked:
             assert all(f["reason_codes"] == [
                 "OFFICIAL_H1_TTM_CONSOLIDATION_SCOPE_BREAK:SYNTHETIC_SCOPE_CHANGE"] for f in result.values())
-    monkeypatch.setattr(gates, "load_issuer_gates", lambda: {"issuers": {"AAA": {
+    monkeypatch.setattr(gates, "_issuer_gates", lambda: {"issuers": {"AAA": {
         "comparability_cautions": [{**caution, "effective_from": "2026-01-01",
                                     "statement_families": ["balance_sheet"]}]}}})
     assert all(f["fitness"] == "READY" for f in _official_ttm_run(monkeypatch).values())
 
 
 def test_official_h1_ttm_scope_change_without_date_does_not_guess(monkeypatch):
-    import stocklookup_core.financial.interim_earnings_cash_research as gates
-    monkeypatch.setattr(gates, "load_issuer_gates", lambda: {"issuers": {"AAA": {
+    import stocklookup_core.financial.financial_analysis_engine_v2 as gates
+    monkeypatch.setattr(gates, "_issuer_gates", lambda: {"issuers": {"AAA": {
         "comparability_cautions": [{"caution_id": "SYNTHETIC_UNDATED", "kind": "CONSOLIDATION_SCOPE_CHANGE",
                                     "statement_families": ["income_statement"]}]}}})
     result = _official_ttm_run(monkeypatch)
