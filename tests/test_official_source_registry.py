@@ -62,6 +62,14 @@ NEW_ISSUER_STATEMENT_URLS = (
     'https://www.biwase.com.vn/Data/Sites/1/media/quan-he-co-dong/dinh-ky/bao-cao-tai-chinh/2026/20260227-bwe-bctchn-nam-2025-da-kiem-toan-signed.pdf',
     # HL-20261125-GEM1-09-BATCH3/gem1-09_batch3.csv row 123 (DGW).
     'https://digiworld.com.vn/assets/site/investor/20260324-DGW-BCTC-Hop-nhat-2025_Kiem-toan.pdf',
+    # HL-20261127-EVF-REGISTRY: official IR index links 2025; sha256 78b8a73a59a7d216430b9b789f8496dd2c62a62c041e1a3b40833b59b5414080.
+    'https://www.evnfc.vn/storage/app/media/uploaded-files/20260213%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20kiem%20toan%202025.pdf',
+    # HL-20261127-EVF-REGISTRY: official IR index links 2026-H1; sha256 a287b37ec881950e84d70b7e4de584c4b2613b20fcd176b296ef0c8ddad9ed56.
+    'https://www.evnfc.vn/storage/app/media/uploaded-files/B%C3%A1o%20c%C3%A1o%20so%C3%A1t%20x%C3%A9t%20BCTC%20Q2.2026-%20VN-%C4%91%C3%A3%20n%C3%A9n.pdf',
+    # HL-20261127-EVF-REGISTRY: official IR index links 2026-Q3; sha256 ace221dd37e1fd6e3036d6d5df431a43902246903b96a88b6a626dfcdf4b8475.
+    'https://www.evnfc.vn/storage/app/media/anh_ban_lanh_dao/20261026%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20Q3%202026%20soat%20xet%201.pdf',
+    # HL-20261127-EVF-REGISTRY: official IR index links 2025-H1; sha256 b9e0ab87da988b0238ee0d69b0c27b8970ab3ec86b35d57c62ef63c6cf3793e5.
+    'https://www.evnfc.vn/storage/app/media/BCTC/20250725%20-%20EVF%20-%20Bao%20cao%20tai%20chinh%20ban%20nien%20soat%20xet%202025.pdf',
 )
 
 
@@ -91,6 +99,7 @@ def test_expansion_hosts_remain_limited_to_statements(url, document_type):
     "vietstock.vn", "finance.vietstock.vn", "cafef.vn", "vndirect.com.vn",
     "fireant.vn", "simplize.vn", "investing.com",
     "cdnv2.tgdd.vn", "bhxcdn.vn", "gelex.vn.example.org", "cdn.gelex.vn",
+    "evnfc.vn", "cdn.evnfc.vn", "www.evnfc.vn.example.org",
 ])
 @pytest.mark.parametrize("document_type", STATEMENT_TYPES)
 def test_aggregators_unresolved_cdns_and_unlisted_siblings_remain_refused(host, document_type):
@@ -104,3 +113,20 @@ def test_aggregators_unresolved_cdns_and_unlisted_siblings_remain_refused(host, 
 def test_hose_statement_types_mirror_hnx(host, document_type):
     assert admission("hnx", "https://owa.hnx.vn/statement.pdf", document_type)["decision"] == registry.ADMITTED
     assert admission("hose", f"https://{host}/statement.pdf", document_type)["decision"] == registry.ADMITTED
+
+
+def test_evf_host_admits_exactly_statement_types():
+    payload = registry.load_registry(ROOT / "config/official_source_registry.json")
+    source = registry.source_index(payload)["issuer_ir"]
+    assert source["allowed_hosts"].count("www.evnfc.vn") == 1
+    assert source["host_document_types"]["www.evnfc.vn"] == list(STATEMENT_TYPES)
+    for document_type in registry.admissible_document_types(source):
+        result = admission("issuer_ir", "https://www.evnfc.vn/statement.pdf", document_type)
+        if document_type in STATEMENT_TYPES:
+            assert result["decision"] == registry.ADMITTED
+        else:
+            assert result["decision"] == registry.REFUSED
+            assert result["reason"] == registry.REASON_DOCUMENT_TYPE_NOT_ALLOWED_FOR_HOST
+    result = admission("issuer_ir", "https://www.evnfc.vn/statement.pdf", "unlisted_document_type")
+    assert result["decision"] == registry.REFUSED
+    assert result["reason"] == registry.REASON_DOCUMENT_TYPE

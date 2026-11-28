@@ -16,8 +16,19 @@ from tools import run_owner_daily as owner
 GIB = preflight.GIB
 
 
+def _before_evf_source_registry(receipt):
+    prior = copy.deepcopy(receipt)
+    corrective = prior.pop("evf_source_registry_corrective")
+    prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
+    for relative in corrective["added_source_paths"]:
+        del prior["source_sha256"][relative]
+    return prior, corrective
+
+
 def _before_valuation_b_materializer_kwarg(receipt):
     prior = copy.deepcopy(receipt)
+    if "evf_source_registry_corrective" in prior:
+        prior, _ = _before_evf_source_registry(prior)
     corrective = prior.pop("valuation_b_materializer_kwarg_corrective")
     prior["source_sha256"].update(corrective["prior_source_sha256_lf"])
     for relative in corrective["added_source_paths"]:
@@ -27,6 +38,8 @@ def _before_valuation_b_materializer_kwarg(receipt):
 
 def _before_dual_reader_config_hah(receipt):
     prior = copy.deepcopy(receipt)
+    if "evf_source_registry_corrective" in prior:
+        prior, _ = _before_evf_source_registry(prior)
     if "valuation_b_materializer_kwarg_corrective" in prior:
         prior, _ = _before_valuation_b_materializer_kwarg(prior)
     corrective = prior.pop("dual_reader_config_hah_corrective")
@@ -38,6 +51,8 @@ def _before_dual_reader_config_hah(receipt):
 
 def _before_handoff_gzip(receipt):
     prior = copy.deepcopy(receipt)
+    if "evf_source_registry_corrective" in prior:
+        prior, _ = _before_evf_source_registry(prior)
     if "valuation_b_materializer_kwarg_corrective" in prior:
         prior, _ = _before_valuation_b_materializer_kwarg(prior)
     if "dual_reader_config_hah_corrective" in prior:
@@ -82,6 +97,8 @@ def test_handoff_gzip_capacity_corrective_exact_chain_and_history():
 
 def _before_prospective_stream(receipt):
     prior = copy.deepcopy(receipt)
+    if "evf_source_registry_corrective" in prior:
+        prior, _ = _before_evf_source_registry(prior)
     if "valuation_b_materializer_kwarg_corrective" in prior:
         prior, _ = _before_valuation_b_materializer_kwarg(prior)
     if "handoff_oversize_gzip_corrective" in prior:
@@ -126,6 +143,8 @@ def test_prospective_stream_capacity_corrective_exact_chain_and_history():
 
 def _before_valuation_b(receipt):
     prior = copy.deepcopy(receipt)
+    if "evf_source_registry_corrective" in prior:
+        prior, _ = _before_evf_source_registry(prior)
     if "valuation_b_materializer_kwarg_corrective" in prior:
         prior, _ = _before_valuation_b_materializer_kwarg(prior)
     if "prospective_snapshot_stream_corrective" in prior:
@@ -182,7 +201,14 @@ def test_dual_reader_config_hah_corrective_exact_chain_and_history():
     relative = "config/owner_daily_capacity_qualification.json"
     path = "config/dual_reader_ttm_research_config.json"
     live_raw = (root / relative).read_bytes()
-    live, kwarg = _before_valuation_b_materializer_kwarg(json.loads(live_raw))
+    live, evf = _before_evf_source_registry(json.loads(live_raw))
+    # Restore only EVF's active pin before the older literal-byte comparison.
+    for source, digest in evf["prior_source_sha256_lf"].items():
+        active = evf["active_source_sha256_lf"][source]
+        pin = f'\n    "{source}": "{active}"'.encode("ascii")
+        assert live_raw.count(pin) == 1
+        live_raw = live_raw.replace(pin, f'\n    "{source}": "{digest}"'.encode("ascii"), 1)
+    live, kwarg = _before_valuation_b_materializer_kwarg(live)
     prior, corrective = _before_dual_reader_config_hah(live)
     assert corrective["base_commit"] == "72d558ea771342e020a9afda5dd328da37fb2cb8"
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
@@ -236,7 +262,13 @@ def test_valuation_b_materializer_kwarg_corrective_exact_chain_and_history():
     relative = "config/owner_daily_capacity_qualification.json"
     path = "canonical_daily_financial_v2_materialization.py"
     live_raw = (root / relative).read_bytes()
-    live = json.loads(live_raw)
+    live, evf = _before_evf_source_registry(json.loads(live_raw))
+    # Restore only EVF's active pin before the older literal-byte comparison.
+    for source, digest in evf["prior_source_sha256_lf"].items():
+        active = evf["active_source_sha256_lf"][source]
+        pin = f'\n    "{source}": "{active}"'.encode("ascii")
+        assert live_raw.count(pin) == 1
+        live_raw = live_raw.replace(pin, f'\n    "{source}": "{digest}"'.encode("ascii"), 1)
     prior, corrective = _before_valuation_b_materializer_kwarg(live)
     assert corrective["base_commit"] == "09e021b1052b2ab5c1b4708777595883686873d0"
     baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
@@ -278,6 +310,63 @@ def test_valuation_b_materializer_kwarg_corrective_exact_chain_and_history():
             assert expected.count(old) == 1
             expected = expected.replace(old, new)
         assert member(live_raw, key) == expected
+
+
+def test_evf_source_registry_corrective_exact_chain_and_history():
+    root = preflight.ROOT
+    relative = "config/owner_daily_capacity_qualification.json"
+    path = "config/official_source_registry.json"
+    live_raw = (root / relative).read_bytes()
+    live = json.loads(live_raw)
+    prior, corrective = _before_evf_source_registry(live)
+    assert corrective["base_commit"] == "a7e399fa459a3b118809193ae7dcf1971ca2ef00"
+    baseline_raw = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{relative}"], cwd=root)
+    assert prior == json.loads(baseline_raw)
+    assert list(live)[-2:] == ["valuation_b_materializer_kwarg_corrective", "evf_source_registry_corrective"]
+    assert corrective["predecessor_corrective"] == "valuation_b_materializer_kwarg_corrective"
+    predecessor = prior[corrective["predecessor_corrective"]]
+    assert list(corrective) == list(predecessor)
+    assert corrective["scope"] == "EVF_SOURCE_REGISTRY_STATEMENT_BYTE_ACQUISITION_COMPATIBILITY_PIN_UPDATE_ONLY"
+    assert corrective["new_capacity_measurement"] is False and corrective["whole_daily_requalification"] is False
+    assert corrective["release_authority"] == "NOT_GRANTED"
+    assert corrective["changed_source_paths"] == [path]
+    assert corrective["added_source_paths"] == []
+    assert corrective["prior_source_sha256_lf"] == {
+        path: "1c792bd9517a54551225ac20f9e568e21e26faf15a808cf43485d234e8091881"}
+    assert corrective["active_source_sha256_lf"] == {
+        path: "2d4852b70ca341ee1ca52ec1867504e9cf5a8c44c8c405e4b1d34d7bf7de02d0"}
+    assert corrective["source_transition"] is None  # Config-only pin change; no source-transition fixture.
+    assert corrective["e4_v2_code_digest"] == predecessor["e4_v2_code_digest"]
+    for source, digest in corrective["active_source_sha256_lf"].items():
+        assert hashlib.sha256((root / source).read_bytes().replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][source]
+        old = subprocess.check_output(["git", "show", f"{corrective['base_commit']}:{source}"], cwd=root)
+        assert hashlib.sha256(old.replace(b"\r\n", b"\n")).hexdigest() == corrective["prior_source_sha256_lf"][source] == prior["source_sha256"][source] != digest
+    baseline_registry = json.loads(subprocess.check_output(
+        ["git", "show", f"{corrective['base_commit']}:{path}"], cwd=root))
+    assert json.loads((root / path).read_bytes())["feature_flags"] == baseline_registry["feature_flags"]
+    # Every pre-existing member keeps its literal bytes; only the active pin changes.
+    decoder = json.JSONDecoder()
+    def member(data, key):
+        text = data.decode("utf-8")
+        start = text.index('\n  "' + key + '": ') + len('\n  "' + key + '": ')
+        _, end = decoder.raw_decode(text, start)
+        return text[start:end].encode("utf-8")
+    for key in prior:
+        expected = member(baseline_raw, key)
+        if key == "source_sha256":
+            old = corrective["prior_source_sha256_lf"][path].encode("ascii")
+            new = corrective["active_source_sha256_lf"][path].encode("ascii")
+            assert expected.count(old) == 1
+            expected = expected.replace(old, new)
+        assert member(live_raw, key) == expected
+    # Removing the append and restoring the sole active pin reproduces the exact receipt bytes.
+    marker = b',\n  "evf_source_registry_corrective": '
+    assert live_raw.count(marker) == 1
+    peeled_raw = live_raw[:live_raw.index(marker)] + b"\n}\n"
+    active_pin = f'\n    "{path}": "{corrective["active_source_sha256_lf"][path]}"'.encode("ascii")
+    prior_pin = f'\n    "{path}": "{corrective["prior_source_sha256_lf"][path]}"'.encode("ascii")
+    assert peeled_raw.count(active_pin) == 1
+    assert peeled_raw.replace(active_pin, prior_pin, 1) == baseline_raw
 
 
 def safe_observation():
@@ -691,6 +780,7 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
     root = preflight.ROOT
     receipt_path = "config/owner_daily_capacity_qualification.json"
     live_receipt = json.loads((root / receipt_path).read_bytes())
+    live_receipt, evf = _before_evf_source_registry(live_receipt)
     # Daily 27/11 incident correctives newer than valuation B: their prior bytes live at their base.
     incident_correctives = [live_receipt[key] for key in (
         "handoff_oversize_gzip_corrective", "prospective_snapshot_stream_corrective") if key in live_receipt]
@@ -710,6 +800,8 @@ def test_offline_financial_capacity_transition_preserves_the_qualified_daily_sou
             return raw
         if path in valuation_b["prior_source_sha256_lf"]:
             return subprocess.check_output(["git", "show", f"{valuation_b['base_commit']}:{path}"], cwd=root)
+        if path in evf["prior_source_sha256_lf"]:
+            return subprocess.check_output(["git", "show", f"{evf['base_commit']}:{path}"], cwd=root)
         for incident in incident_correctives:
             if path in incident["prior_source_sha256_lf"]:
                 return subprocess.check_output(["git", "show", f"{incident['base_commit']}:{path}"], cwd=root)
