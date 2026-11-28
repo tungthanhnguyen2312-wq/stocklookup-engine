@@ -19,7 +19,7 @@
     "build_frontend.bat": "8fb96adbcf4858006eb116c26cf2d0c48760b77a324238c93a8cba2ef191ecff",
     "candle_scan.py": "98a5dff289e1a199fb7e3279d13d2e5684089da372ae5bea7103cd3ed8eb1844",
     "canonical_current_product_projections.py": "119b8a7895642ff50e759b33b0ec9ef449e7eb83716ce928f81b68f8b2908c76",
-    "canonical_daily_financial_v2_materialization.py": "6561c18b6ed9c5aee97765585a5f6d700aedc207992decfc906bd9df2adda7c8",
+    "canonical_daily_financial_v2_materialization.py": "c458021284f7e106cfab56e685d4120537e26f9239eaea2b4109399bc2567835",
     "canonical_daily_operation.py": "c27cdf0cd3e35f7eaaa878154b814db397bac9f147b5ee04f3f0b522b10b7f59",
     "canonical_dashboard_runtime_release.py": "32f3e995d879df5475873c05ff64276d4278226fb6dcd0f59352e3766b23048f",
     "canonical_fact_store.py": "786abad14d8cce997367322507549cae8c2a843ec86ed8c92e9d3fa2d5c17cf4",
@@ -2626,5 +2626,26 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. HAH R3 research config only; no source-transition fixture is added. Default-OFF research branch; activation requires separate Owner authorization."
+  },
+  "valuation_b_materializer_kwarg_corrective": {
+    "base_commit": "09e021b1052b2ab5c1b4708777595883686873d0",
+    "predecessor_corrective": "dual_reader_config_hah_corrective",
+    "scope": "VALUATION_B_MATERIALIZER_KWARG_DEFAULT_OFF_COMPATIBILITY_PIN_UPDATE_ONLY",
+    "changed_source_paths": [
+      "canonical_daily_financial_v2_materialization.py"
+    ],
+    "added_source_paths": [],
+    "prior_source_sha256_lf": {
+      "canonical_daily_financial_v2_materialization.py": "6561c18b6ed9c5aee97765585a5f6d700aedc207992decfc906bd9df2adda7c8"
+    },
+    "active_source_sha256_lf": {
+      "canonical_daily_financial_v2_materialization.py": "c458021284f7e106cfab56e685d4120537e26f9239eaea2b4109399bc2567835"
+    },
+    "source_transition": null,
+    "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. Valuation B materializer keyword-only engine invocation correction only. Default-OFF research branch; activation requires separate Owner authorization."
   }
 }
