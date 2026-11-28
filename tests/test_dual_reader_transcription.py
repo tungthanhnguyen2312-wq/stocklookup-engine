@@ -1272,3 +1272,195 @@ def test_absent_form_reference_never_inferred_from_agreed_numbers(tmp_path):
     result = _pure(row, context, directory)
     assert result["state"] == "BLOCKED"
     assert "DUAL_READER_MALFORMED_RETAINED_PROOF" in result["reason_codes"]
+
+
+def _form_fixture(tmp_path, code="200", form="B02-CTCK/HN", period="2025"):
+    from stocklookup_core.evidence.dual_reader_form_contract import FORM_ROWS
+    row, context, directory, proof = _fixture(tmp_path, period=period)
+    _, label, metric = next(r for r in FORM_ROWS[form] if r[0] == code)
+    row.update(canonical_metric=metric, line_code=code, raw_row_label=label,
+               form_reference_literal=form)
+    row["source_span"]["text"] = label + " " + row["raw_value_text"]
+    def change(raw):
+        raw["table"]["form_reference_literal"] = form
+        raw["table"]["rows"][0].update(line_code_literal=code, row_label_literal=label)
+    for index in (0, 1):
+        _change_reader(directory, row, proof, change, index=index)
+    return row, context, directory, proof
+
+
+def _verify_form(row, context, directory):
+    from official_financial_period_identity import recognize_statement_period, recognize_scope
+    from official_financial_value_evidence import parse_accounting_integer
+    from financial_statement_unit_resolution import parse_explicit_unit_declaration
+    return dual.verify_dual_reader_transcription(row, dual.load_retained_dual_reader_proof(row, directory),
+        source_record=context["source_record"], retained_bytes=context["retained_bytes"],
+        parse_amount=parse_accounting_integer, parse_unit=parse_explicit_unit_declaration,
+        recognize_period=recognize_statement_period, recognize_scope=recognize_scope)
+
+
+def _basis_note(row, context, directory, proof):
+    from stocklookup_core.evidence.dual_reader_form_contract import _BASIS_NOTES
+    note_form, header, label, quote, caption = _BASIS_NOTES[(row["form_reference_literal"], row["reporting_period"])]
+    image = {**proof["page_image"], "source_page": 2, "printed_page": "2"}
+    context["source_record"]["page_image_bindings"].append(image)
+    refs = []
+    for index in (0, 1):
+        raw = json.loads((directory / proof["readings"][index]["relative_path"]).read_bytes())
+        raw["input"].update(source_page=2, printed_page="2")
+        raw["table"]["form_reference_literal"] = note_form
+        raw["table"]["period_caption_literal"] = caption
+        raw["table"]["columns"][0]["label_literal"] = header
+        raw["table"]["rows"][0].update(line_code_literal=None, row_label_literal=label)
+        raw["prose_observations"] = [{"quote_literal": quote, "uncertainty": []}]
+        payload = _bytes(raw)
+        relative = dual.PROOF_DIR + f"/note-reader-{index}.json"
+        (directory / relative).write_bytes(payload)
+        refs.append({**proof["readings"][index], "relative_path": relative, "sha256": _sha(payload)})
+    proof["appropriation_note"] = {"page_image": image, "readings": refs}
+    row["appropriation_basis"] = "PRE_FUND_APPROPRIATION_UNESTIMATED"
+    _seal(directory, row, proof)
+
+
+@pytest.mark.parametrize("form,period", [("B02-CTCK/HN", "2025"), ("B02a-CTCK/HN", "2026-H1")])
+@pytest.mark.parametrize("code", ["90", "200", "202"])
+def test_securities_exact_sealed_row_identities_at_verifier(tmp_path, form, period, code):
+    row, context, directory, _ = _form_fixture(tmp_path, code, form, period)
+    result = _verify_form(row, context, directory)
+    assert result["valid"], result
+    assert result["authority_effect"] == "OFFLINE_RESEARCH_ONLY"
+    assert result["pit_backtest_eligible"] is False
+    assert result["valuation_applicability"] == {"P/S": "NOT_APPLICABLE", "EV/EBITDA": "NOT_APPLICABLE"}
+    # Explicit scope boundary: the allowlisted verifier edit cannot bypass the
+    # common owner's separate template requirement outside this task's lease.
+    common = _pure(row, context, directory)
+    assert common["state"] != "ADMITTED"
+    assert "METRIC_SOURCE_TEMPLATE_PROOF_UNAVAILABLE" in common["reason_codes"]
+
+
+@pytest.mark.parametrize("case", ["missing", "claim_only", "mismatched", "note_value", "note_family",
+                                   "note_time", "note_hash", "note_path", "restated", "note_image", "note_period", "note_scope"])
+def test_ssi_201_basis_fail_closed(tmp_path, case):
+    row, context, directory, proof = _form_fixture(tmp_path, "201")
+    if case == "claim_only":
+        row["appropriation_basis"] = "PRE_FUND_APPROPRIATION_UNESTIMATED"
+    elif case != "missing":
+        _basis_note(row, context, directory, proof)
+        if case == "mismatched":
+            row["appropriation_basis"] = "POST_FUND_APPROPRIATION"
+        elif case == "note_image":
+            context["source_record"]["page_image_bindings"].pop()
+        elif case == "note_hash":
+            (directory / proof["appropriation_note"]["readings"][0]["relative_path"]).write_bytes(b"tampered")
+        elif case == "note_path":
+            proof["appropriation_note"]["readings"][0]["relative_path"] = "../escape.json"
+            _seal(directory, row, proof)
+        else:
+            ref = proof["appropriation_note"]["readings"][1]
+            path = directory / ref["relative_path"]
+            raw = json.loads(path.read_bytes())
+            if case == "note_value":
+                raw["table"]["rows"][0]["cells"][0]["raw_value_literal"] = "999"
+            elif case == "note_family":
+                raw["model_family"] = "openai-gpt"
+            elif case == "note_time":
+                raw["recorded_at"] = None
+            elif case == "restated":
+                raw["table"]["columns"][0]["label_literal"] += " (trình bày lại)"
+            elif case == "note_period":
+                raw["table"]["period_caption_literal"] = "financial year ended 31 December 2024"
+            elif case == "note_scope":
+                raw["table"]["scope_literal"] = "separate"
+            payload = _bytes(raw)
+            path.write_bytes(payload)
+            ref["sha256"] = _sha(payload)
+            _seal(directory, row, proof)
+    result = _verify_form(row, context, directory)
+    assert result["valid"] is False, result
+    if case in {"missing", "claim_only"}:
+        assert result["reason_codes"] == ["DUAL_READER_APPROPRIATION_BASIS_UNPROVEN"]
+    elif case == "mismatched":
+        assert result["reason_codes"] == ["DUAL_READER_APPROPRIATION_BASIS_MISMATCH"]
+
+
+def test_ssi_201_source_bound_basis_is_returned_without_mutating_row(tmp_path):
+    row, context, directory, proof = _form_fixture(tmp_path, "201")
+    _basis_note(row, context, directory, proof)
+    before = deepcopy(row)
+    result = _verify_form(row, context, directory)
+    assert result["valid"], result
+    assert row == before
+    basis = result["appropriation_basis"]
+    assert basis["basis"] == row["appropriation_basis"]
+    assert basis["document_sha256"] == row["document_sha256"]
+    assert basis["reporting_vintage"] == "ORIGINAL_CURRENT_COLUMN"
+    assert basis["raw_sha256"] == [r["sha256"] for r in proof["appropriation_note"]["readings"]]
+
+
+@pytest.mark.parametrize("case", ["revenue", "corporate_code", "wrong_label", "single_family", "unit",
+                                   "balance_sheet", "nine_month", "comparative", "wrong_form", "eps"])
+def test_noncorporate_gate_retains_existing_restrictions(tmp_path, case):
+    row, context, directory, proof = _form_fixture(tmp_path)
+    if case == "revenue":
+        row["canonical_metric"] = "revenue"
+    elif case == "corporate_code":
+        row.update(canonical_metric="net_income", line_code="60")
+    elif case == "balance_sheet":
+        row["statement_family"] = "balance_sheet"
+    elif case == "nine_month":
+        row["reporting_period"] = "2026-9M"
+    def change(raw):
+        if case == "corporate_code":
+            raw["table"]["rows"][0]["line_code_literal"] = "60"
+        elif case == "wrong_label":
+            raw["table"]["rows"][0]["row_label_literal"] = "Lợi nhuận sau thuế"
+        elif case == "single_family":
+            raw["model_family"] = "openai-gpt"
+        elif case == "unit":
+            raw["table"]["currency_unit_literal"] = "Unit: million VND"
+        elif case == "comparative":
+            raw["table"]["columns"][0]["role"] = "comparative"
+        elif case == "wrong_form":
+            raw["table"]["form_reference_literal"] = "B02-CTCK"
+        elif case == "eps":
+            raw["table"]["rows"][0]["row_label_literal"] = "Lãi cơ bản trên mỗi cổ phiếu"
+    for index in ((1,) if case == "single_family" else (0, 1)):
+        _change_reader(directory, row, proof, change, index=index)
+    assert _verify_form(row, context, directory)["valid"] is False
+
+
+def test_evf_candidates_never_invent_a_form_code_or_parent_profit():
+    from stocklookup_core.evidence.dual_reader_form_contract import EVF_CANDIDATE_ROWS, row_identity
+    for code, label, metric in EVF_CANDIDATE_ROWS:
+        assert metric.startswith("credit_")
+        for form in (None, "B02-TCTD", "B02a-TCTD", "B02-CTCK/HN"):
+            assert not row_identity(form, "income_statement", "2025", code, label, metric)
+            assert not row_identity(form, "income_statement", "2025", code, label, "revenue")
+
+
+def test_form_contract_rows_are_literal_extracts_from_the_sealed_readings():
+    from pathlib import Path
+    from stocklookup_core.evidence.dual_reader_form_contract import FORM_ROWS, EVF_CANDIDATE_ROWS
+    extracts = json.loads((Path(__file__).parent / "fixtures/dual_reader_form_sealed_literals.json").read_bytes())
+    for form, identities in FORM_ROWS.items():
+        tables = [r["table"] for r in extracts["records"] if r["table"]["form_reference_literal"] == form]
+        for code, label, _ in identities:
+            assert all(any(r["line_code_literal"] == code and
+                dual.split_outline_enumerator(r["row_label_literal"])[1] == label for r in t["rows"]) for t in tables)
+            assert tables
+    evf = [r["table"] for r in extracts["records"] if "EVF" in r["source_relative_path"]]
+    assert len(evf) == 3
+    for table in evf:
+        assert table["form_reference_literal"] is None and table["scope_literal"] is None
+        for code, label, _ in EVF_CANDIDATE_ROWS:
+            assert any((r["line_code_literal"], r["row_label_literal"]) == (code, label) for r in table["rows"])
+
+
+@pytest.mark.parametrize("period", ["2025", "2025-H1", "2026-H1"])
+@pytest.mark.parametrize("metric", ["revenue", "net_income", "attributable_net_income"])
+def test_corporate_admission_bytes_match_preextension_golden(tmp_path, period, metric):
+    from pathlib import Path
+    golden = json.loads((Path(__file__).parent / "fixtures/dual_reader_form_corporate_golden.json").read_bytes())
+    row, context, directory, _ = _fixture(tmp_path, period=period, metric=metric)
+    actual = {"verifier": _verify_form(row, context, directory), "common": _pure(row, context, directory)}
+    assert _sha(_bytes(actual)) == golden["sha256"][period + ":" + metric]

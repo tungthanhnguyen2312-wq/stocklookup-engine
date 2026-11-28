@@ -1,0 +1,16 @@
+{
+  "baseline": "a7e399fa",
+  "verifier_source_lf_sha256": "226b4b89001fc473e6dd4283a189a34fd7e2d109b17d29b00f50995dd8dd856d",
+  "serialization": "json ensure_ascii=False sort_keys=True UTF-8",
+  "sha256": {
+    "2025:revenue": "3642c7620fc7e2c8ec57d0d31dd20a02b4a19d11ca1a3e786fb8d7781719b8bd",
+    "2025:net_income": "6821585f9f4372a151b5ce364e7f78f927f2af36f6312d3347be1af7d070ce86",
+    "2025:attributable_net_income": "179b2cba26d9e6b077bc34c3a41bf6e241a3a13f5f1f09fae64c737e891582b1",
+    "2025-H1:revenue": "cfd1116f6c461ab562e6037cdd113ba584de2a18d317b65b4a341b00a140bdd1",
+    "2025-H1:net_income": "df794cabb3eb6a84a248a3e5a024fb0fd885fa9d977684fc94ef05f1b2c5d69e",
+    "2025-H1:attributable_net_income": "621d0f7d146b70136d1d53985c5095f8aa25e5b1c812a62ff75f2beb47a08a92",
+    "2026-H1:revenue": "93862ca5f6670190fabedcd9418b272bc9473632785e7ac92c6788f1249e6c75",
+    "2026-H1:net_income": "d4469e07bf12fbe018b3aa4a7eaff834689fec1f1e63a4e4bb157b4f140f0e59",
+    "2026-H1:attributable_net_income": "412e7a18659cdee1cd32667a2a01fdb5b8fb00b44950814e46125dfa43d38bc3"
+  }
+}

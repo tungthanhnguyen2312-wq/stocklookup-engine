@@ -1,7 +1,8 @@
 """Decision 2 retained image readings: byte replay only, no parser/LLM authority.
 
-This leaf imports only the standard library. Existing admission supplies its
-numeric, unit and period recognizers; none of its other gates is replaced.
+Corporate replay uses only the standard library; non-corporate rows additionally
+call the bounded form contract. Admission supplies its existing numeric, unit
+and period recognizers; none of its other gates is replaced.
 """
 from __future__ import annotations
 
@@ -464,9 +465,18 @@ def load_retained_dual_reader_proof(row: Mapping[str, Any], landing: Path) -> di
         refs = proof["readings"]
         if len(refs) != 2 or refs[0]["relative_path"] == refs[1]["relative_path"]:
             return None
-        return {"proof_bytes": proof_bytes,
+        result = {"proof_bytes": proof_bytes,
                 "raw_reader_bytes": [read(item["relative_path"]) for item in refs],
                 "image_bytes": read(proof["page_image"]["relative_path"])}
+        # Corporate replay performs exactly its existing reads. Supplementary
+        # note evidence classifies securities code 201 only, never a note fact.
+        if (row.get("canonical_metric") == "securities_profit_allocated_to_owners"
+                and "appropriation_note" in proof):
+            note = proof["appropriation_note"]
+            result["appropriation_note"] = {
+                "raw_reader_bytes": [read(item["relative_path"]) for item in note["readings"]],
+                "image_bytes": read(note["page_image"]["relative_path"])}
+        return result
     except (OSError, ValueError, TypeError, KeyError, AttributeError):
         return None
 
@@ -620,11 +630,31 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                 or recognize_scope(agreed["scope_literal"])["statement_scope"] != row["statement_scope"]):
             return fail("SEMANTIC_BINDING_MISMATCH")
         form_key, form_dash_variant = _form_identity_text(agreed["form_reference_literal"])
-        if (row.get("statement_family") != "income_statement"
+        corporate_form = bool(re.search(r"B02A?-DN/HN\b", form_key))
+        form_evidence = {}
+        if corporate_form and (row.get("statement_family") != "income_statement"
                 or {"revenue": "10", "net_income": "60", "attributable_net_income": "61"}.get(
-                    row.get("canonical_metric")) != str(row.get("line_code"))
-                or not re.search(r"B02A?-DN/HN\b", form_key)):
+                    row.get("canonical_metric")) != str(row.get("line_code"))):
             return fail("ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED")
+        if not corporate_form:
+            from stocklookup_core.evidence.dual_reader_form_contract import (
+                CONTRACT_VERSION as form_contract_version, row_identity, verify_appropriation_basis)
+            if not row_identity(agreed["form_reference_literal"], row.get("statement_family"),
+                    row.get("reporting_period"), row.get("line_code"),
+                    agreed["row_label_literal"], row.get("canonical_metric")):
+                return fail("ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED")
+            form_evidence = {"form_identity_contract": form_contract_version,
+                             "form_family": "securities_company_income_statement",
+                             "valuation_applicability": {"P/S": "NOT_APPLICABLE", "EV/EBITDA": "NOT_APPLICABLE"}}
+            if str(row.get("line_code")) == "201":
+                basis = verify_appropriation_basis(row, evidence.get("appropriation_note"),
+                    proof=proof, source_record=source_record, families=families,
+                    family_aliases=FAMILY_ALIASES, time=_time,
+                    input_binding_matches=input_binding_matches, signed_cell_literal=signed_cell_literal,
+                    recognize_scope=recognize_scope)
+                if not basis["valid"]:
+                    return basis
+                form_evidence["appropriation_basis"] = basis["appropriation_basis"]
         if cell.get("uncertainty") != []:
             return fail("UNRESOLVED_CELL_UNCERTAINTY")
         unit = agreed_vnd_unit(readings, parse_unit)
@@ -659,6 +689,7 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                     "currency": unit["currency"], "unit_scale": unit["unit_scale"],
                     "literal": agreed["currency_unit_literal"], "proof_sha256": ref["proof_sha256"]},
                 "authority_effect": "OFFLINE_RESEARCH_ONLY", "pit_backtest_eligible": False,
+                **form_evidence,
                 **({"literal_normalizations": normalizations} if normalizations else {})}
     except (OSError, ValueError, TypeError, KeyError, AttributeError, OverflowError):
         return fail("MALFORMED_RETAINED_PROOF")

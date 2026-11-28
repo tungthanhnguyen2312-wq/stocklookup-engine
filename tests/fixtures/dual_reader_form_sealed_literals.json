@@ -1,0 +1,836 @@
+{
+  "scope": "Literal extracts only; not eligible raw readings or actual admissions",
+  "source_bundle": "clean-readers-20261128",
+  "records": [
+    {
+      "source_relative_path": "claude/EVF_material_credit_funding/output/page_11_EVF_2025_pdf011.json",
+      "source_sha256": "b4deedc2525df8d8c693128ae30608232623b7525732576addb7cc5aad75ebaf",
+      "input": {
+        "document_sha256": "78b8a73a59a7d216430b9b789f8496dd2c62a62c041e1a3b40833b59b5414080",
+        "document_id": null,
+        "image_sha256": "7c58fc6275cd36fd202c9d3bba912b08d657abe7eac2abcde8589ccb85b1b02a",
+        "source_page": 11,
+        "printed_page": "10"
+      },
+      "table": {
+        "issuer_literal": "CÔNG TY TÀI CHÍNH TỔNG HỢP CỔ PHẦN ĐIỆN LỰC",
+        "statement_title_literal": "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG",
+        "scope_literal": null,
+        "form_reference_literal": null,
+        "currency_unit_literal": "Đơn vị: Triệu VND",
+        "period_caption_literal": "Cho năm tài chính kết thúc ngày 31 tháng 12 năm 2025",
+        "columns": [
+          {
+            "column_id": "note",
+            "label_literal": "Thuyết minh",
+            "reporting_period": null,
+            "role": "note_reference"
+          },
+          {
+            "column_id": "y2025",
+            "label_literal": "Năm 2025",
+            "reporting_period": "FY2025",
+            "role": "current_period"
+          },
+          {
+            "column_id": "y2024",
+            "label_literal": "Năm 2024",
+            "reporting_period": "FY2024",
+            "role": "comparative_period"
+          }
+        ],
+        "rows": [
+          {
+            "line_code_literal": "I",
+            "row_label_literal": "Thu nhập lãi thuần",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2025",
+                "raw_value_literal": "1.891.741",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2024",
+                "raw_value_literal": "1.444.335",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "IX",
+            "row_label_literal": "Lợi nhuận thuần từ hoạt động kinh doanh trước chi phí dự phòng rủi ro tín dụng",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2025",
+                "raw_value_literal": "1.933.048",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2024",
+                "raw_value_literal": "1.349.080",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "X",
+            "row_label_literal": "Chi phí dự phòng rủi ro tín dụng",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": "VI.10",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2025",
+                "raw_value_literal": "(828.823)",
+                "sign_literal": "parentheses",
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2024",
+                "raw_value_literal": "(645.306)",
+                "sign_literal": "parentheses",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "XI",
+            "row_label_literal": "Tổng lợi nhuận trước thuế",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2025",
+                "raw_value_literal": "1.104.225",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2024",
+                "raw_value_literal": "703.774",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "XIII",
+            "row_label_literal": "Lợi nhuận sau thuế",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2025",
+                "raw_value_literal": "894.337",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "y2024",
+                "raw_value_literal": "560.822",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source_relative_path": "claude/EVF_material_credit_funding/output/page_11_EVF_2025H1_pdf011.json",
+      "source_sha256": "79d87cbd9c61b953f8535e0090852db777b82d73f8d0704c3cd9c193d907fd76",
+      "input": {
+        "document_sha256": "b9e0ab87da988b0238ee0d69b0c27b8970ab3ec86b35d57c62ef63c6cf3793e5",
+        "document_id": null,
+        "image_sha256": "6786f01aefab16006a42e2228126223ed8952a47d83df1f69fd76bf913472dcc",
+        "source_page": 11,
+        "printed_page": "10"
+      },
+      "table": {
+        "issuer_literal": "CÔNG TY TÀI CHÍNH CỔ PHẦN ĐIỆN LỰC",
+        "statement_title_literal": "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG GIỮA NIÊN ĐỘ",
+        "scope_literal": null,
+        "form_reference_literal": null,
+        "currency_unit_literal": "Đơn vị: Triệu VND",
+        "period_caption_literal": "6 tháng đầu năm của năm tài chính kết thúc ngày 31 tháng 12 năm 2025",
+        "columns": [
+          {
+            "column_id": "note",
+            "label_literal": "Thuyết minh",
+            "reporting_period": null,
+            "role": "note_reference"
+          },
+          {
+            "column_id": "cur",
+            "label_literal": "Kỳ này",
+            "reporting_period": "6 tháng đầu năm 2025 (H1 FY2025)",
+            "role": "current_period"
+          },
+          {
+            "column_id": "prev",
+            "label_literal": "Kỳ trước",
+            "reporting_period": "prior-year comparable period (not dated on page)",
+            "role": "comparative_period"
+          }
+        ],
+        "rows": [
+          {
+            "line_code_literal": "I",
+            "row_label_literal": "Thu nhập lãi thuần",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "cur",
+                "raw_value_literal": "811.842",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "prev",
+                "raw_value_literal": "760.721",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "IX",
+            "row_label_literal": "Lợi nhuận thuần từ hoạt động kinh doanh trước chi phí dự phòng rủi ro tín dụng",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "cur",
+                "raw_value_literal": "889.297",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "prev",
+                "raw_value_literal": "805.886",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "X",
+            "row_label_literal": "Chi phí dự phòng rủi ro tín dụng",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": "VI.10",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "cur",
+                "raw_value_literal": "(291.173)",
+                "sign_literal": "parentheses",
+                "uncertainty": []
+              },
+              {
+                "column_id": "prev",
+                "raw_value_literal": "(495.199)",
+                "sign_literal": "parentheses",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "XI",
+            "row_label_literal": "Tổng lợi nhuận trước thuế",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "cur",
+                "raw_value_literal": "598.124",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "prev",
+                "raw_value_literal": "310.687",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "XIII",
+            "row_label_literal": "Lợi nhuận sau thuế",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "cur",
+                "raw_value_literal": "482.424",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "prev",
+                "raw_value_literal": "249.013",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source_relative_path": "claude/EVF_material_credit_funding/output/page_11_EVF_2026H1_pdf011.json",
+      "source_sha256": "92611d72ede9498b05092b9f61fc2c6657035b6038c363a9b27add4ecca78cf3",
+      "input": {
+        "document_sha256": "a287b37ec881950e84d70b7e4de584c4b2613b20fcd176b296ef0c8ddad9ed56",
+        "document_id": null,
+        "image_sha256": "14c1843f65faac91dd636e5e18d1effb6d1a155b48845c0f53457b78ff950add",
+        "source_page": 11,
+        "printed_page": "10"
+      },
+      "table": {
+        "issuer_literal": "CÔNG TY TÀI CHÍNH TỔNG HỢP CỔ PHẦN ĐIỆN LỰC",
+        "statement_title_literal": "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG GIỮA NIÊN ĐỘ",
+        "scope_literal": null,
+        "form_reference_literal": null,
+        "currency_unit_literal": "Đơn vị: Triệu VND",
+        "period_caption_literal": "6 tháng đầu của năm tài chính kết thúc ngày 31 tháng 12 năm 2026",
+        "columns": [
+          {
+            "column_id": "note",
+            "label_literal": "Thuyết minh",
+            "reporting_period": null,
+            "role": "note_reference"
+          },
+          {
+            "column_id": "h2026",
+            "label_literal": "6 tháng năm 2026",
+            "reporting_period": "H1 2026",
+            "role": "current_period"
+          },
+          {
+            "column_id": "h2025",
+            "label_literal": "6 tháng năm 2025",
+            "reporting_period": "H1 2025",
+            "role": "comparative_period"
+          }
+        ],
+        "rows": [
+          {
+            "line_code_literal": "I",
+            "row_label_literal": "Thu nhập lãi thuần",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2026",
+                "raw_value_literal": "1.102.772",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2025",
+                "raw_value_literal": "811.842",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "IX",
+            "row_label_literal": "Lợi nhuận thuần từ hoạt động kinh doanh trước chi phí dự phòng rủi ro tín dụng",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2026",
+                "raw_value_literal": "978.503",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2025",
+                "raw_value_literal": "889.297",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "X",
+            "row_label_literal": "Chi phí dự phòng rủi ro tín dụng",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": "VI.10",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2026",
+                "raw_value_literal": "(279.220)",
+                "sign_literal": "parentheses",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2025",
+                "raw_value_literal": "(291.173)",
+                "sign_literal": "parentheses",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "XI",
+            "row_label_literal": "Tổng lợi nhuận trước thuế",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2026",
+                "raw_value_literal": "699.283",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2025",
+                "raw_value_literal": "598.124",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "XIII",
+            "row_label_literal": "Lợi nhuận sau thuế",
+            "cells": [
+              {
+                "column_id": "note",
+                "raw_value_literal": null,
+                "sign_literal": null,
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2026",
+                "raw_value_literal": "556.224",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h2025",
+                "raw_value_literal": "482.424",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source_relative_path": "claude/SSI_earnings_basis/output/page_01_SSI_2025_pdf017.json",
+      "source_sha256": "875770dd0ccb65566c1eba3640a1d302a261d77b5fdee2a0129d82acecfb1b14",
+      "input": {
+        "document_sha256": "406da3dfc1130da4c47b4e08c81c7ab1fd82a8e0bbe225af08b6fcb62cb91625",
+        "document_id": "7efb3aa277b6a554a56294351e80b08d2e6f5d940329adcea731a58d3ff162f3",
+        "image_sha256": "d20e3c5b6100e08eda79495d97fe2d931946a15c6c2cfeba94871c440a9002e1",
+        "source_page": 17,
+        "printed_page": "13"
+      },
+      "table": {
+        "issuer_literal": "Công ty Cổ phần Chứng khoán SSI",
+        "statement_title_literal": "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG HỢP NHẤT (tiếp theo)",
+        "scope_literal": "HỢP NHẤT",
+        "form_reference_literal": "B02-CTCK/HN",
+        "currency_unit_literal": "Đơn vị tính: VND",
+        "period_caption_literal": "cho năm tài chính kết thúc ngày 31 tháng 12 năm 2025",
+        "columns": [
+          {
+            "column_id": "note",
+            "label_literal": "Thuyết minh",
+            "reporting_period": null,
+            "role": "note_reference"
+          },
+          {
+            "column_id": "cy",
+            "label_literal": "Năm nay",
+            "reporting_period": "năm tài chính kết thúc ngày 31 tháng 12 năm 2025",
+            "role": "current_period"
+          },
+          {
+            "column_id": "py",
+            "label_literal": "Năm trước (trình bày lại)",
+            "reporting_period": "năm trước (prior year), labelled trình bày lại",
+            "role": "prior_period_restated"
+          }
+        ],
+        "rows": [
+          {
+            "line_code_literal": "90",
+            "row_label_literal": "IX. TỔNG LỢI NHUẬN KẾ TOÁN TRƯỚC THUẾ",
+            "cells": [
+              {
+                "column_id": "cy",
+                "raw_value_literal": "5.082.973.996.371",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "py",
+                "raw_value_literal": "3.543.527.483.662",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "200",
+            "row_label_literal": "XI. LỢI NHUẬN KẾ TOÁN SAU THUẾ TNDN",
+            "cells": [
+              {
+                "column_id": "cy",
+                "raw_value_literal": "4.106.880.733.899",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "py",
+                "raw_value_literal": "2.845.109.032.672",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "201",
+            "row_label_literal": "1. Lợi nhuận sau thuế phân bổ cho chủ sở hữu",
+            "cells": [
+              {
+                "column_id": "cy",
+                "raw_value_literal": "4.106.090.416.749",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "py",
+                "raw_value_literal": "2.704.221.369.052",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "202",
+            "row_label_literal": "2. Lợi nhuận sau thuế trích các Quỹ",
+            "cells": [
+              {
+                "column_id": "cy",
+                "raw_value_literal": "-",
+                "sign_literal": "unsigned",
+                "uncertainty": [
+                  "printed dash in current-year column; preserved as dash"
+                ]
+              },
+              {
+                "column_id": "py",
+                "raw_value_literal": "130.801.751.312",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source_relative_path": "claude/SSI_earnings_basis/output/page_03_SSI_2025H1_pdf017.json",
+      "source_sha256": "84dda390d595569db439cb6b89c3936342a3ea542d95434bb903479ba1d19a0f",
+      "input": {
+        "document_sha256": "563e7786981a96a0873024829505353b541ecf053a9b80440902363ea8adcfac",
+        "document_id": "22a4b13fbe94e983d577f40968a7aeed35cc6e2990991d611b48400e52fdc81e",
+        "image_sha256": "3fa4a9e56f41146528666b34c43fda35cd4578a1a1110a4819780b229c6ecdb3",
+        "source_page": 17,
+        "printed_page": "13"
+      },
+      "table": {
+        "issuer_literal": "Công ty Cổ phần Chứng khoán SSI",
+        "statement_title_literal": "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG HỢP NHẤT GIỮA NIÊN ĐỘ (tiếp theo)",
+        "scope_literal": "HỢP NHẤT GIỮA NIÊN ĐỘ",
+        "form_reference_literal": "B02a-CTCK/HN",
+        "currency_unit_literal": "Đơn vị tính: VND",
+        "period_caption_literal": "cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm 2025",
+        "columns": [
+          {
+            "column_id": "note",
+            "label_literal": "Thuyết minh",
+            "reporting_period": null,
+            "role": "note_reference"
+          },
+          {
+            "column_id": "h1_2025",
+            "label_literal": "Cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm 2025",
+            "reporting_period": "6M ended 2025-06-30",
+            "role": "current_period"
+          },
+          {
+            "column_id": "h1_2024",
+            "label_literal": "Cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm 2024",
+            "reporting_period": "6M ended 2024-06-30",
+            "role": "prior_period"
+          }
+        ],
+        "rows": [
+          {
+            "line_code_literal": "90",
+            "row_label_literal": "VIII. TỔNG LỢI NHUẬN KẾ TOÁN TRƯỚC THUẾ",
+            "cells": [
+              {
+                "column_id": "h1_2025",
+                "raw_value_literal": "2.244.860.176.553",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h1_2024",
+                "raw_value_literal": "2.002.140.905.471",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "200",
+            "row_label_literal": "X. LỢI NHUẬN KẾ TOÁN SAU THUẾ TNDN",
+            "cells": [
+              {
+                "column_id": "h1_2025",
+                "raw_value_literal": "1.811.592.874.189",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h1_2024",
+                "raw_value_literal": "1.612.749.069.801",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "201",
+            "row_label_literal": "1. Lợi nhuận sau thuế phân bổ cho chủ sở hữu",
+            "cells": [
+              {
+                "column_id": "h1_2025",
+                "raw_value_literal": "1.813.501.223.038",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h1_2024",
+                "raw_value_literal": "1.612.769.369.814",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "202",
+            "row_label_literal": "2. Lợi nhuận sau thuế trích các Quỹ",
+            "cells": [
+              {
+                "column_id": "h1_2025",
+                "raw_value_literal": "-",
+                "sign_literal": "unsigned",
+                "uncertainty": [
+                  "printed dash preserved"
+                ]
+              },
+              {
+                "column_id": "h1_2024",
+                "raw_value_literal": "-",
+                "sign_literal": "unsigned",
+                "uncertainty": [
+                  "printed dash preserved"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "source_relative_path": "claude/SSI_earnings_basis/output/page_04_SSI_2026H1_pdf017.json",
+      "source_sha256": "323d7ef436990204bc1355dd7ddd2a8152390a1fe44ceff11abf044e8bc15da0",
+      "input": {
+        "document_sha256": "9b9e03bf94162dd46dcc9ad5ede2e7ce3fc4f541e9a4b895f5fe7f3ef7990dee",
+        "document_id": "95c8fe76ed14185413e037f825897ef6ac7a80720e4dc0da2f6314dc0f12fe5f",
+        "image_sha256": "40ed9f56b663e061d09b9abc27241c9d0b6340be4b5240d2056d1094f790bd0f",
+        "source_page": 17,
+        "printed_page": "13"
+      },
+      "table": {
+        "issuer_literal": "Công ty Cổ phần Chứng khoán SSI",
+        "statement_title_literal": "BÁO CÁO KẾT QUẢ HOẠT ĐỘNG HỢP NHẤT GIỮA NIÊN ĐỘ (tiếp theo)",
+        "scope_literal": "HỢP NHẤT GIỮA NIÊN ĐỘ",
+        "form_reference_literal": "B02a-CTCK/HN",
+        "currency_unit_literal": "Đơn vị tính: VND",
+        "period_caption_literal": "cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm 2026",
+        "columns": [
+          {
+            "column_id": "note",
+            "label_literal": "Thuyết minh",
+            "reporting_period": null,
+            "role": "note_reference"
+          },
+          {
+            "column_id": "h1_2026",
+            "label_literal": "Cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm 2026",
+            "reporting_period": "6M ended 2026-06-30",
+            "role": "current_period"
+          },
+          {
+            "column_id": "h1_2025r",
+            "label_literal": "Cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm 2025 (trình bày lại)",
+            "reporting_period": "6M ended 2025-06-30, restated",
+            "role": "prior_period_restated"
+          }
+        ],
+        "rows": [
+          {
+            "line_code_literal": "90",
+            "row_label_literal": "VIII. TỔNG LỢI NHUẬN KẾ TOÁN TRƯỚC THUẾ",
+            "cells": [
+              {
+                "column_id": "h1_2026",
+                "raw_value_literal": "3.122.397.955.634",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h1_2025r",
+                "raw_value_literal": "2.244.860.176.553",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "200",
+            "row_label_literal": "X. LỢI NHUẬN KẾ TOÁN SAU THUẾ TNDN",
+            "cells": [
+              {
+                "column_id": "h1_2026",
+                "raw_value_literal": "2.509.479.672.227",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h1_2025r",
+                "raw_value_literal": "1.811.592.874.189",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "201",
+            "row_label_literal": "1. Lợi nhuận sau thuế phân bổ cho chủ sở hữu",
+            "cells": [
+              {
+                "column_id": "h1_2026",
+                "raw_value_literal": "2.509.035.928.639",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              },
+              {
+                "column_id": "h1_2025r",
+                "raw_value_literal": "1.706.318.385.106",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          },
+          {
+            "line_code_literal": "202",
+            "row_label_literal": "2. Lợi nhuận sau thuế trích các Quỹ",
+            "cells": [
+              {
+                "column_id": "h1_2026",
+                "raw_value_literal": "-",
+                "sign_literal": "unsigned",
+                "uncertainty": [
+                  "printed dash preserved"
+                ]
+              },
+              {
+                "column_id": "h1_2025r",
+                "raw_value_literal": "107.182.837.932",
+                "sign_literal": "unsigned",
+                "uncertainty": []
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
