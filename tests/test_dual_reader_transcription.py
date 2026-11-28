@@ -197,12 +197,12 @@ def _pdf(text, *, image_only=False):
 
 
 def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_income", *, image_only=False,
-             native_text_override=None):
+             native_text_override=None, ticker="PNJ"):
     from official_financial_assurance_evidence import resolve_native_document_assurance
     from official_financial_period_identity import period_bounds
     from official_source_registry import load_registry
     from financial_statement_template_recognizer import GENERIC_METRIC_RULES
-    from financial_evidence_currency_contract import ISSUER_IR_INDEX_SEEDS
+    from financial_evidence_currency_contract import ISSUER_IR_INDEX_SEEDS, ENTITY_FAMILY
     from urllib.parse import urlsplit
 
     directory = tmp_path / (period + '-' + metric)
@@ -214,7 +214,7 @@ def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_inc
     status = "audited" if annual else "reviewed"
     assurance_title = ("BAO CAO KIEM TOAN DOC LAP chung toi da kiem toan hop nhat" if annual else
         "BAO CAO SOAT XET hop dong dich vu soat xet so 2410 hop nhat giua nien do")
-    issuer = "PNJ synthetic fixture"
+    issuer = ticker + " synthetic fixture"
     native_text = '\n'.join([issuer, period_text, assurance_title, "consolidated", "Unit: VND"])
     payload = _pdf(native_text if native_text_override is None else native_text_override,
                    image_only=image_only); sha = _sha(payload)
@@ -223,12 +223,12 @@ def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_inc
     label = ''.join(c for c in unicodedata.normalize('NFD', label.replace('đ', 'd').replace('Đ', 'D')) if not unicodedata.combining(c))
     code = {"revenue": "10", "net_income": "60", "attributable_net_income": "61"}[metric]
     raw = str(value) if value >= 0 else '(' + str(-value) + ')'
-    url = "https://" + urlsplit(ISSUER_IR_INDEX_SEEDS["PNJ"]).hostname + "/test-only-synthetic-fixture.pdf"
+    url = "https://" + urlsplit(ISSUER_IR_INDEX_SEEDS[ticker]).hostname + "/test-only-synthetic-fixture.pdf"
     image_bytes = b'owned synthetic page image fixture ' + period.encode()
     (proof_dir / 'page.png').write_bytes(image_bytes)
     image = {"relative_path": dual.PROOF_DIR + '/page.png', "sha256": _sha(image_bytes),
              "source_page": 1, "printed_page": "1"}
-    source = {"ticker": "PNJ", "issuer_name": issuer, "sha256": sha, "document_id": "synthetic-" + period,
+    source = {"ticker": ticker, "issuer_name": issuer, "sha256": sha, "document_id": "synthetic-" + period,
         "source_id": "issuer_ir", "canonical_url": url, "final_url": url,
         "document_class": "audited_annual_financial_statements" if annual else "reviewed_interim_financial_statements",
         "acquisition_status": "retained", "observed_at": "2026-11-24T08:00:00+00:00",
@@ -241,11 +241,11 @@ def _fixture(tmp_path, period="2026-H1", value=123, metric="attributable_net_inc
         ("reporting_period", period, period_text), ("periodicity", "annual" if annual else "interim", period_text),
         ("statement_scope", "consolidated", "consolidated"), ("currency", "VND", "VND"),
         ("unit_scale", 1, "Unit: VND"))}
-    metadata = qualify_document_metadata({"issuer_identity": "PNJ", "entity_type": "corporate",
+    metadata = qualify_document_metadata({"issuer_identity": ticker, "entity_type": ENTITY_FAMILY[ticker],
         "document": {"document_id": source["document_id"], "sha256": sha, "source_locator": url,
             "source_id": "issuer_ir", "observed_at": source["observed_at"], "immutable_bytes_verified": True}, "metadata": claims})
     start, end = period_bounds(period)
-    row = {"ticker": "PNJ", "canonical_metric": metric, "line_code": code, "reporting_period": period,
+    row = {"ticker": ticker, "canonical_metric": metric, "line_code": code, "reporting_period": period,
         "period_start": start, "period_end": end, "period_type": "annual" if annual else "interim",
         "statement_family": "income_statement", "statement_scope": "consolidated", "currency": "VND",
         "unit_scale": 1, "source_unit_scale": 1, "raw_row_label": label, "raw_value_text": raw,
@@ -1331,8 +1331,8 @@ def test_securities_exact_sealed_row_identities_at_verifier(tmp_path, form, peri
     assert result["authority_effect"] == "OFFLINE_RESEARCH_ONLY"
     assert result["pit_backtest_eligible"] is False
     assert result["valuation_applicability"] == {"P/S": "NOT_APPLICABLE", "EV/EBITDA": "NOT_APPLICABLE"}
-    # Explicit scope boundary: the allowlisted verifier edit cannot bypass the
-    # common owner's separate template requirement outside this task's lease.
+    # The common extension is bounded to SSI; this PNJ synthetic form fixture
+    # cannot use it even with a valid form verifier result.
     common = _pure(row, context, directory)
     assert common["state"] != "ADMITTED"
     assert "METRIC_SOURCE_TEMPLATE_PROOF_UNAVAILABLE" in common["reason_codes"]
@@ -1464,3 +1464,144 @@ def test_corporate_admission_bytes_match_preextension_golden(tmp_path, period, m
     row, context, directory, _ = _fixture(tmp_path, period=period, metric=metric)
     actual = {"verifier": _verify_form(row, context, directory), "common": _pure(row, context, directory)}
     assert _sha(_bytes(actual)) == golden["sha256"][period + ":" + metric]
+
+
+def _ssi_common_fixture(tmp_path, period="2025", code="200", *, numeric_funds=False):
+    """Sealed literals in OWNED synthetic proofs; never convert a cold raw file.
+
+    PDF/image identities, provenance and timestamps below belong to the test,
+    not to the issuer's actual documents or to the original cold readers.
+    """
+    from pathlib import Path
+    from stocklookup_core.evidence.dual_reader_form_contract import FORM_ROWS
+    key = {"2025": "SSI_2025_", "2025-H1": "SSI_2025H1_", "2026-H1": "SSI_2026H1_"}[period]
+    extracts = json.loads((Path(__file__).parent / "fixtures/dual_reader_form_sealed_literals.json").read_bytes())
+    table = deepcopy(next(r["table"] for r in extracts["records"] if key in r["source_relative_path"]))
+    selected_row = next(r for r in table["rows"] if r["line_code_literal"] == code)
+    column = next(c for c in table["columns"] if c["role"] == "current_period")
+    cell = next(c for c in selected_row["cells"] if c["column_id"] == column["column_id"])
+    if numeric_funds:
+        # Current code 202 is a dash in the sealed extracts. This is an owned
+        # numeric test value, never a conversion of that dash or an issuer fact.
+        assert code == "202" and cell["raw_value_literal"] == "-"
+        cell.update(raw_value_literal="123", sign_literal="unsigned", uncertainty=[])
+    # Owned fixtures deliberately use the D2 schema. Original cold bytes stay immutable.
+    column.update(role="current", reporting_period=None)
+    raw = dual.signed_cell_literal(cell["raw_value_literal"], cell["sign_literal"])
+    from official_financial_value_evidence import parse_accounting_integer
+    row, context, directory, proof = _fixture(tmp_path, period=period, ticker="SSI")
+    label = dual.split_outline_enumerator(selected_row["row_label_literal"])[1]
+    metric = next(m for c, _, m in FORM_ROWS[table["form_reference_literal"]] if c == code)
+    row.update(canonical_metric=metric, line_code=code, raw_row_label=label,
+        raw_value_text=raw, normalized_value=123 if raw == "-" else parse_accounting_integer(raw),
+        issuer_literal=table["issuer_literal"], form_reference_literal=table["form_reference_literal"],
+        statement_title_literal=table["statement_title_literal"], column_id=column["column_id"],
+        current_period_label=column["label_literal"])
+    row["source_span"]["text"] = label + " " + raw
+    context["source_record"]["issuer_name"] = row["issuer_literal"]
+    table["columns"], table["rows"] = [column], [selected_row]
+    selected_row["cells"] = [cell]
+    for index in (0, 1):
+        _change_reader(directory, row, proof, lambda r: r.update(table=deepcopy(table)), index=index)
+    if code == "201" and period != "2025-H1":
+        _basis_note(row, context, directory, proof)
+    return row, context, directory, proof
+
+
+@pytest.mark.parametrize("period,code", [(p, c) for p in ("2025", "2025-H1", "2026-H1")
+    for c in ("90", "200", "202")] + [("2025", "201"), ("2026-H1", "201")])
+def test_ssi_sealed_literals_common_admission(tmp_path, period, code):
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    row, context, directory, _ = _ssi_common_fixture(tmp_path, period, code, numeric_funds=code == "202")
+    before = deepcopy(row)
+    result = _pure(row, context, directory)
+    assert result["state"] == "ADMITTED", result
+    assert row == before
+    classification = result["evidence_classification"]
+    assert classification["authority_effect"] == "OFFLINE_RESEARCH_ONLY"
+    assert classification["pit_backtest_eligible"] is False
+    assert classification["form_identity_contract"] == "dual_reader_form_identity/v1"
+    assert classification["valuation_applicability"]["P/S"] == "NOT_APPLICABLE"
+    if code == "201":
+        assert result["appropriation_basis"] == _verify_form(row, context, directory)["appropriation_basis"]
+        assert classification["appropriation_basis"] == result["appropriation_basis"]
+    else:
+        assert "appropriation_basis" not in result
+    # Exercise the retained entrypoint too. Only PDF text loading is stubbed;
+    # hashes, manifest, raw/proof loading and every admission gate run normally.
+    (directory / "official_document_acquisition_manifest.json").write_bytes(
+        _bytes({"records": [context["source_record"]]}))
+    pages = [SimpleNamespace(extract_text=lambda: context["document_pages"][1])]
+    with patch.dict("sys.modules", {"pypdf": SimpleNamespace(PdfReader=lambda _: SimpleNamespace(pages=pages))}):
+        retained = admit_retained_financial_fact(row, evidence_root=directory.parent, registry=context["registry"])
+    assert retained == result
+
+
+@pytest.mark.parametrize("case,reason", [
+    ("missing_basis", "DUAL_READER_APPROPRIATION_BASIS_UNPROVEN"),
+    ("mismatched_basis", "DUAL_READER_APPROPRIATION_BASIS_MISMATCH"),
+    ("corporate_code", "DUAL_READER_ACCOUNTING_FORM_OR_ROW_IDENTITY_UNSUPPORTED"),
+    ("single_family", "DUAL_READER_DIFFERENT_MODEL_FAMILIES_REQUIRED"),
+    ("missing_proof", "DUAL_READER_RETAINED_PROOF_UNAVAILABLE"),
+    ("prior_h1_basis", "DUAL_READER_APPROPRIATION_BASIS_UNPROVEN"),
+    ("cutoff", "AFTER_KNOWLEDGE_CUTOFF"),
+    ("assurance", "DOCUMENT_ASSURANCE_PROOF_MISSING"),
+    ("conflict", "FACT_QUALIFICATION_BLOCKED"),
+    ("rights", "DUAL_READER_RIGHTS_OR_INDEPENDENT_SOURCE_NOT_PROVEN"),
+])
+def test_ssi_common_admission_refuses_ineligible_proofs(tmp_path, case, reason):
+    row, context, directory, proof = _ssi_common_fixture(tmp_path,
+        "2025-H1" if case == "prior_h1_basis" else "2025", "201")
+    if case == "missing_basis": row.pop("appropriation_basis")
+    elif case == "mismatched_basis": row["appropriation_basis"] = "POST_FUND_APPROPRIATION"
+    elif case == "prior_h1_basis": row["appropriation_basis"] = "PRE_FUND_APPROPRIATION_UNESTIMATED"
+    elif case == "corporate_code":
+        row.update(canonical_metric="net_income", line_code="60")
+        for index in (0, 1):
+            _change_reader(directory, row, proof,
+                lambda r: r["table"]["rows"][0].update(line_code_literal="60"), index=index)
+    elif case == "single_family":
+        _change_reader(directory, row, proof, lambda r: r.update(model_family="openai-gpt"))
+    elif case == "missing_proof":
+        (directory / row["dual_reader_transcription"]["relative_path"]).unlink()
+    elif case == "cutoff": context["cutoff"] = "2026-11-24T09:02:00+00:00"
+    elif case == "assurance": row.pop("assurance_evidence")
+    elif case == "conflict": row["conflicts"] = ["original/restated unresolved"]
+    elif case == "rights": context["source_record"]["rights_status"] = "UNKNOWN"
+    result = _pure(row, context, directory)
+    assert result["state"] != "ADMITTED", result
+    assert reason in result["reason_codes"], result
+    assert "appropriation_basis" not in result
+
+
+@pytest.mark.parametrize("intended_use", ["CANONICAL_CITATION", "VALUATION_INPUT_WHERE_METRIC_PERMITS", "PIT_BACKTEST", "PRODUCTION"])
+def test_ssi_form_admission_is_research_only(tmp_path, intended_use):
+    row, context, directory, _ = _ssi_common_fixture(tmp_path)
+    result = _pure(row, {**context, "intended_use": intended_use}, directory)
+    assert result["state"] != "ADMITTED"
+
+
+@pytest.mark.parametrize("period", ["2025", "2025-H1", "2026-H1"])
+def test_ssi_printed_fund_dash_is_never_zero(tmp_path, period):
+    row, context, directory, _ = _ssi_common_fixture(tmp_path, period, "202")
+    result = _pure(row, context, directory)
+    assert result["state"] != "ADMITTED"
+    assert "DUAL_READER_UNRESOLVED_CELL_UNCERTAINTY" in result["reason_codes"]
+    assert "LITERAL_VALUE_NORMALIZATION_NOT_BOUND" in result["reason_codes"]
+
+
+@pytest.mark.parametrize("case", ["wrong_year", "restated", "corporate", "wrong_form"])
+def test_ssi_full_interim_header_extension_is_exact(tmp_path, case):
+    row, context, directory, proof = _ssi_common_fixture(tmp_path, "2026-H1")
+    if case == "wrong_year": row["current_period_label"] = row["current_period_label"].replace("2026", "2025")
+    elif case == "restated": row["current_period_label"] += " (trình bày lại)"
+    elif case == "corporate": row["form_reference_literal"] = "B02a-DN/HN"
+    elif case == "wrong_form": row["form_reference_literal"] = "B02-CTCK/HN"
+    for index in (0, 1):
+        def change(raw):
+            raw["table"]["columns"][0]["label_literal"] = row["current_period_label"]
+            raw["table"]["form_reference_literal"] = row["form_reference_literal"]
+        _change_reader(directory, row, proof, change, index=index)
+    result = _pure(row, context, directory)
+    assert "DUAL_READER_CURRENT_COLUMN_NOT_EXPLICIT" in result["reason_codes"], result

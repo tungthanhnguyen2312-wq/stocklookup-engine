@@ -586,6 +586,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
         column, cell = agreed["column"], agreed["cell"]
         caption_period = (recognize_period(agreed["period_caption_literal"])["period"]
                           or vn_first_half_period(agreed["period_caption_literal"]))
+        if caption_period is None and agreed["form_reference_literal"] == "B02a-CTCK/HN":
+            from stocklookup_core.evidence.dual_reader_form_contract import income_period_literal
+            caption_period = income_period_literal(agreed["form_reference_literal"], agreed["period_caption_literal"])
         if caption_period is None:
             # Rule 2: a caption without a period defers to the current column's own label, which must
             # equal both the fact period and the qualified document metadata period.
@@ -600,6 +603,9 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
             column["reporting_period"] if column["reporting_period"] == row["reporting_period"]
             else (recognize_period(column["reporting_period"])["period"]
                   or vn_first_half_period(column["reporting_period"])))
+        if column_period is None and agreed["form_reference_literal"] == "B02a-CTCK/HN":
+            from stocklookup_core.evidence.dual_reader_form_contract import income_period_literal
+            column_period = income_period_literal(agreed["form_reference_literal"], column["reporting_period"])
         header = " ".join(column["label_literal"].casefold().split())
         year = str(row["reporting_period"]).split("-")[0]
         # The explicit annual header already accepts "Năm YYYY" below. When
@@ -617,7 +623,12 @@ def verify_dual_reader_transcription(row: Mapping[str, Any], evidence: Mapping[s
                       if str(row["reporting_period"]) == year + "-H1" else set())
         if header not in {"kỳ này", "năm nay", "current period", "current year", year, "năm " + year,
                           *h1_headers}:
-            return fail("CURRENT_COLUMN_NOT_EXPLICIT")
+            if agreed["form_reference_literal"] != "B02a-CTCK/HN":
+                return fail("CURRENT_COLUMN_NOT_EXPLICIT")
+            from stocklookup_core.evidence.dual_reader_form_contract import current_column_identity
+            if not current_column_identity(agreed["form_reference_literal"], row["reporting_period"],
+                                           column["label_literal"]):
+                return fail("CURRENT_COLUMN_NOT_EXPLICIT")
         if (agreed["row_label_literal"] != row["raw_row_label"]
                 or agreed["issuer_literal"] != row["issuer_literal"]
                 or agreed["issuer_literal"] != source_record.get("issuer_name")

@@ -1,8 +1,9 @@
 # Bounded EVF / SSI form support — HL-20261128-CODEX-EVF-SSI-FORMS
 
 Development-only extension of [Decision 2](dual_reader_reviewed_transcription_v1_contract.md).
-No actual facts were admitted. Common-owner integration and evidence remain blocked;
-this note does not change operational state or activate the research config.
+No actual facts were admitted. Common-owner integration is implemented in DEV;
+native lane admission, capacity corrective and conforming evidence remain pending.
+This note does not activate the research config or promote operational authority.
 
 ## Contract
 
@@ -55,12 +56,22 @@ is `DUAL_READER_APPROPRIATION_BASIS_MISMATCH`; absent/unsupported proof is
 `DUAL_READER_APPROPRIATION_BASIS_UNPROVEN`. No AGM fund percentage is applied to
 another earnings period. Restated H1-2025 and approved fund amounts remain distinct.
 
-**Required authorized follow-up:** `official_financial_filing_evidence.py` independently
-adds `METRIC_SOURCE_TEMPLATE_PROOF_UNAVAILABLE` for these new metrics. Its template
-check needs a bounded delegation to the fully verified form contract, and its admitted
-classification needs to propagate the returned basis/provenance. That file is outside
-this task's edit allowlist; no reason-removal hook or global template registration is used.
-There are therefore no admitted EVF/SSI rows to expose downstream yet.
+**DEV continuation — HL-20261128-CODEX-SSI-COMMON-ADMISSION:**
+`official_financial_filing_evidence.py` now delegates its template check only for SSI
+rows whose full Decision 2 verifier returned the registered form contract and family.
+There is no generic metric registration or reason-removal hook. All other source,
+metadata, issuer, assurance, conflict, numeric, cutoff and use checks still run.
+Only `CURRENT_RESEARCH_FACTUAL_AUTHORITY` is eligible for this extension.
+The admission result retains form identity and valuation applicability in its
+classification, and code201's verified `appropriation_basis` object (including note
+provenance) both at the result's top level and in `evidence_classification`. Input
+rows remain immutable; a caller's scalar basis claim is never returned as proof.
+
+The form contract additionally recognizes only the exact retained CTCK H1/2025 and
+H1/2026 full Vietnamese current-column heading and caption spellings. It never
+repairs or changes the literals; contrary years, restated headings, corporate forms
+and other forms remain refused. Current code202 dashes stay nonnumeric and cannot
+be treated as zero. EVF has no enabled printed form and remains closed.
 
 The later H1 engine lane must consume the native metric explicitly, require identical
 proven basis classifications across FY / H1-current / H1-prior, and retain each
@@ -98,6 +109,30 @@ for recording time, and no unrelated rights/assurance proof is borrowed.
 
 ## Validation and integration impact
 
+Continuation validation: **72 direct assertion cases**, **90 complete common-admission
+and 90 verifier byte comparisons with starting HEAD 0373a161** (PNJ corporate / VCB bank, three periods,
+three metrics and five proof/cutoff variants), and **4 standard-library replay tests**
+passed using a temporary harness, deleted after validation. The 72 include 11 positive
+SSI cases through pure and retained common admission; nine corporate golden cases;
+missing/mismatched basis, single family, corporate code on CTCK, unsupported original
+H1/2025 basis, rights/assurance/conflict/cutoff failures, research-only use, exact interim
+headings and nonnumeric fund dashes. Positive values/row literals come from the sealed
+literal fixture; code202 positives explicitly use owned synthetic `123`, since the real
+current cells are dashes. No actual cold reading was converted. PDF text loading is the
+only stub in retained positive tests; raw/proof bytes, hashes and all admission gates
+are replayed. Full pytest remains unavailable (`No module named pytest`); this
+interpreter also lacks pypdf. Syntax and diff checks pass.
+
+Cold replay remains **ADMIT 0 / REFUSE 282**, SSI84 / EVF198 across six income pages,
+with the same sealed-index SHA above. The [answer-free reading spec](ssi_decision2_reading_package_spec.json)
+was built only from the neutral input manifest, independently hash-checking all five
+image/PDF bindings: three income pages and same-PDF FY2025/H1-2026 basis notes. It
+requests ten new raw records from two blind families. It contains no answers, expected
+values, labels, note disclosures or existing reader output. Original H1/2025 basis
+and a compatible three-operand TTM remain unproven.
+
+The earlier implementation validation at 0373a161 is preserved below:
+
 54 direct checks passed through a temporary standard-library harness, including
 nine original-verifier byte comparisons, five original rejection comparisons,
 and nine committed golden checks; four
@@ -114,5 +149,25 @@ source closure); protected capacity config/tests are untouched. Changed pinned f
 | File | Prior LF SHA256 | New LF SHA256 |
 |---|---|---|
 | `stocklookup_core/evidence/dual_reader_transcription.py` | `226b4b89001fc473e6dd4283a189a34fd7e2d109b17d29b00f50995dd8dd856d` | `464355d0a815b04387b7576a69f3e80458b091fdf66d3d26c8a18375403fb85a` |
+
+Continuation LF identities (prior = task starting HEAD 0373a161; not a capacity
+receipt amendment):
+
+| File | Prior LF SHA256 | New LF SHA256 |
+|---|---|---|
+| `official_financial_filing_evidence.py` (capacity-pinned) | `88bc2c0ebbffcb21488dd871742eb7ec160badc6f420a8fc2aa63befea2842a3` | `6754a7e486f80836f18a813e592784834bf84e7382d51f87bd0c7bbd880d49a7` |
+| `stocklookup_core/evidence/dual_reader_transcription.py` (capacity-pinned) | `464355d0a815b04387b7576a69f3e80458b091fdf66d3d26c8a18375403fb85a` | `5ff824e02d1053b8c223b9579cabd31b7cf9416da12d1a0723c76192a9af62f9` |
+| `stocklookup_core/evidence/dual_reader_form_contract.py` (source closure; not yet pinned) | `51a668ea3ee8bf13b36b8484d71e1ac5feaf1e299c45f7a2a83e86b8a49247f3` | `a415cb4de5e8f8ae35db80c0e7b0b0165a626a06076cff0e2abcca3e0fe3d01d` |
+
+No E-tier frozen source is touched. Capacity receipt and protected capacity tests
+remain untouched. HL must retain the prior 226b… → 4643… transition as well as
+this continuation, include the form module's closure, and run the normal corrective;
+these development checks do not grant capacity/release authority.
+
+HL next: admit the native lane for this exact development scope; review/commit the
+candidate and chain the capacity corrective; obtain fresh blind D2 income/note
+readings from the spec; retain proper source/metadata/assurance proofs and replay
+common admission. Missing original H1/2025 basis still blocks compatible TTM.
+Daily/config activation and any authority promotion remain separate gates.
 
 No commits, branch changes, Daily, runtime, production or registry writes were made.

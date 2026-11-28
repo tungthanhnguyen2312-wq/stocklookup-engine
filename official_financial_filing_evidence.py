@@ -101,6 +101,15 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             recognize_scope=recognize_scope)
         reasons.extend(dual["reason_codes"])
     dual_valid = dual is not None and dual["valid"]
+    # Bounded SSI extension: a generic metric registration or caller claim is
+    # insufficient. Only the replayed Decision 2 form contract owns these rows.
+    dual_form_valid = False
+    if dual_valid and row.get("ticker") == "SSI" and dual.get("form_identity_contract"):
+        from stocklookup_core.evidence.dual_reader_form_contract import CONTRACT_VERSION as FORM_CONTRACT_VERSION
+        dual_form_valid = (dual["form_identity_contract"] == FORM_CONTRACT_VERSION
+                           and dual.get("form_family") == "securities_company_income_statement")
+        if dual_form_valid and intended_use != "CURRENT_RESEARCH_FACTUAL_AUTHORITY":
+            reasons.append("INTENDED_USE_NOT_ADMITTED")
     sha = str(row.get("document_sha256") or "")
     dual_unit_claims = set()
     metadata = row.get("document_metadata")
@@ -344,7 +353,7 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
             if ((not parent_label and not any(anchor in normalized_label for anchor in spec["label_anchors"]))
                     or row.get("statement_family") != str(spec["statement_type"])):
                 reasons.append("METRIC_STATEMENT_IDENTITY_MISMATCH")
-        elif metric not in {"investment_property_disposal_result", "provision_charge_or_reversal_adjustment"}:
+        elif not dual_form_valid and metric not in {"investment_property_disposal_result", "provision_charge_or_reversal_adjustment"}:
             missing.append("METRIC_SOURCE_TEMPLATE_PROOF_UNAVAILABLE")
         if not row_label_supports_metric(metric, str(label)):
             reasons.append("METRIC_LITERAL_LABEL_NOT_SUPPORTED")
@@ -455,6 +464,16 @@ def _admit_official_financial_fact(row: Mapping[str, Any], *, source_record: Map
                 "proof_sha256": dual["proof_sha256"], "raw_sha256": dual["raw_sha256"],
                 **({"literal_normalizations": dual["literal_normalizations"]}
                    if dual.get("literal_normalizations") else {})})
+        if dual_form_valid:
+            result["evidence_classification"].update(
+                form_identity_contract=dual["form_identity_contract"],
+                form_family=dual["form_family"],
+                valuation_applicability=dual["valuation_applicability"])
+            if "appropriation_basis" in dual:
+                # Carry the verified classification and its note provenance,
+                # never the row's unverified scalar claim.
+                result["appropriation_basis"] = dual["appropriation_basis"]
+                result["evidence_classification"]["appropriation_basis"] = dual["appropriation_basis"]
     elif state == "ADMITTED":
         result["admission_basis"] = "RETAINED_SOURCE_REPLAY"
     result["admission_id"] = stable_id({**result, "row": {k: v for k, v in row.items() if k != "admission"}, "cutoff": cutoff})

@@ -1,0 +1,128 @@
+{
+  "spec_version": "ssi_decision2_blind_reading_package/v1",
+  "task_id": "HL-20261128-CODEX-SSI-COMMON-ADMISSION",
+  "status": "SPEC_ONLY_NOT_READINGS_OR_ADMISSION",
+  "input_root": "Operator supplies the existing neutral_inputs root; every path below is relative to it.",
+  "input_manifest": "packages/SSI_earnings_basis/input_manifest.json",
+  "input_manifest_sha256": "f4572a04eb907261601107aab62f0e4c2f078252eea00d7a7c2c945bb498be67",
+  "pages": [
+    {
+      "key": "SSI_2025",
+      "image": "pages/SSI_2025_pdf017.png",
+      "image_sha256": "d20e3c5b6100e08eda79495d97fe2d931946a15c6c2cfeba94871c440a9002e1",
+      "original_pdf": "originals/406da3dfc1130da4c47b4e08c81c7ab1fd82a8e0bbe225af08b6fcb62cb91625.pdf",
+      "document_sha256": "406da3dfc1130da4c47b4e08c81c7ab1fd82a8e0bbe225af08b6fcb62cb91625",
+      "document_id": "7efb3aa277b6a554a56294351e80b08d2e6f5d940329adcea731a58d3ff162f3",
+      "source_page": 17,
+      "pdf_page_index": 16,
+      "purpose": "income_table"
+    },
+    {
+      "key": "SSI_2025",
+      "image": "pages/SSI_2025_pdf085.png",
+      "image_sha256": "5cc38ad9f3c32151f0c5858e046baf15084b6044dbc612f4eac17e544b8ec16f",
+      "original_pdf": "originals/406da3dfc1130da4c47b4e08c81c7ab1fd82a8e0bbe225af08b6fcb62cb91625.pdf",
+      "document_sha256": "406da3dfc1130da4c47b4e08c81c7ab1fd82a8e0bbe225af08b6fcb62cb91625",
+      "document_id": "7efb3aa277b6a554a56294351e80b08d2e6f5d940329adcea731a58d3ff162f3",
+      "source_page": 85,
+      "pdf_page_index": 84,
+      "purpose": "appropriation_basis_note_only"
+    },
+    {
+      "key": "SSI_2025H1",
+      "image": "pages/SSI_2025H1_pdf017.png",
+      "image_sha256": "3fa4a9e56f41146528666b34c43fda35cd4578a1a1110a4819780b229c6ecdb3",
+      "original_pdf": "originals/563e7786981a96a0873024829505353b541ecf053a9b80440902363ea8adcfac.pdf",
+      "document_sha256": "563e7786981a96a0873024829505353b541ecf053a9b80440902363ea8adcfac",
+      "document_id": "22a4b13fbe94e983d577f40968a7aeed35cc6e2990991d611b48400e52fdc81e",
+      "source_page": 17,
+      "pdf_page_index": 16,
+      "purpose": "income_table"
+    },
+    {
+      "key": "SSI_2026H1",
+      "image": "pages/SSI_2026H1_pdf017.png",
+      "image_sha256": "40ed9f56b663e061d09b9abc27241c9d0b6340be4b5240d2056d1094f790bd0f",
+      "original_pdf": "originals/9b9e03bf94162dd46dcc9ad5ede2e7ce3fc4f541e9a4b895f5fe7f3ef7990dee.pdf",
+      "document_sha256": "9b9e03bf94162dd46dcc9ad5ede2e7ce3fc4f541e9a4b895f5fe7f3ef7990dee",
+      "document_id": "95c8fe76ed14185413e037f825897ef6ac7a80720e4dc0da2f6314dc0f12fe5f",
+      "source_page": 17,
+      "pdf_page_index": 16,
+      "purpose": "income_table"
+    },
+    {
+      "key": "SSI_2026H1",
+      "image": "pages/SSI_2026H1_pdf082.png",
+      "image_sha256": "63cfc6b36b923ff85e5117c87627e57c2c52107d418cca389ef75f14d2d77ca0",
+      "original_pdf": "originals/9b9e03bf94162dd46dcc9ad5ede2e7ce3fc4f541e9a4b895f5fe7f3ef7990dee.pdf",
+      "document_sha256": "9b9e03bf94162dd46dcc9ad5ede2e7ce3fc4f541e9a4b895f5fe7f3ef7990dee",
+      "document_id": "95c8fe76ed14185413e037f825897ef6ac7a80720e4dc0da2f6314dc0f12fe5f",
+      "source_page": 82,
+      "pdf_page_index": 81,
+      "purpose": "appropriation_basis_note_only"
+    }
+  ],
+  "blind_protocol": [
+    "Give each reader only this spec, these unchanged full-page images and their neutral input bindings. Do not provide code, tests, form rules, prior outputs, research calculations, comparison reports or expected answers.",
+    "Use two different normalized model families with distinct reader_id values. Run isolated sessions; neither sees another output before both immutable raw files are retained and hashed. Use the same two families for income and note pages.",
+    "Read directly from the page image. Preserve literal text, printed codes, case, accents, Roman prefixes, numbers, punctuation, signs and uncertainty. Never infer from accounting arithmetic, another period, AGM percentages or a restated comparative.",
+    "Output one independent_image_reading/v1 JSON object per image per reader (ten new raw records for the five pages). Keep all numeric columns, comparative/restated labels and note references as read. Do not turn dashes or blanks into zero.",
+    "Use deterministic column_id values c1, c2, ... in left-to-right table-column order in both sessions; repeat them in cells. Semantic role current applies ONLY to the original current-period amount column. Keep comparative, restated and note_reference roles distinct; never use current_period as the current role.",
+    "Use explicit actual timezone-aware recorded_at at completion of each reading; no null, guessed time, backdating or substitution of file/seal time. Model family is a supported alias, not a version or product label.",
+    "Retain each raw file byte-identically and record its actual aware retained_at and SHA256 before any comparison. A seal may record retention but cannot supply missing raw recorded_at. Existing cold records remain immutable and ineligible; do not convert them.",
+    "Read printed_page from the image, never from the PDF index or filename. Missing/unreadable prerequisites stay unproven; do not copy the manifest placeholder into a purported eligible binding."
+  ],
+  "raw_record_schema": {
+    "contract_version": "independent_image_reading/v1",
+    "model_family": "One of openai-gpt / openai-chatgpt / gpt / codex (gpt); google-gemini / gemini (gemini); anthropic-claude / claude (claude). Different aliases of one family count as one.",
+    "reader_id": "Nonempty actual reader/session identifier, distinct from the other reader.",
+    "recorded_at": "Actual ISO8601 instant with timezone offset, explicitly recorded by the reader workflow.",
+    "method": "DIRECT_PAGE_IMAGE",
+    "independent_input": true,
+    "saw_other_reader_output": false,
+    "input": {
+      "document_sha256": "Exact bound PDF SHA256 from pages.",
+      "document_id": "Exact bound retained document ID from pages.",
+      "image_sha256": "Exact SHA256 of the unchanged supplied image.",
+      "source_page": "Integer one-based physical PDF page from pages.",
+      "printed_page": "Literal printed page identity independently read from image."
+    },
+    "table": {
+      "issuer_literal": "Read from image.",
+      "statement_title_literal": "Read from image.",
+      "scope_literal": "Read explicit scope from image; never infer consolidated from another page.",
+      "form_reference_literal": "Read printed form reference from image; never invent a template.",
+      "currency_unit_literal": "Read explicit currency/scale declaration from image.",
+      "period_caption_literal": "Read literal caption from image.",
+      "columns[]": {
+        "column_id": "c1, c2, ...",
+        "label_literal": "Full printed header, including any restatement marking.",
+        "reporting_period": "null when the column is caption-bound; otherwise its exact printed period literal. Do not invent FY/6M labels.",
+        "role": "current only for the explicit original current column; comparative/restated/note_reference otherwise."
+      },
+      "rows[]": {
+        "line_code_literal": "Printed code as a string; null if unnumbered, never invented.",
+        "row_label_literal": "Complete literal row label.",
+        "cells[]": {
+          "column_id": "Matching column ID.",
+          "raw_value_literal": "Literal digits/grouping or dash/blank as read; no numeric repair.",
+          "sign_literal": "unsigned or parentheses for a readable numeric cell; preserve unresolved signs as uncertainty.",
+          "uncertainty": "List of actual uncertainties; [] only if none. Never clear uncertainty for eligibility."
+        }
+      }
+    },
+    "prose_observations[]": {
+      "quote_literal": "For the two note pages: exact earnings-allocation/fund-appropriation disclosure text read independently; no interpretation.",
+      "uncertainty": "List of actual uncertainties; [] only if none."
+    }
+  },
+  "postreading_operator_requirements": [
+    "Do not send this section as evidence of an answer. Operator must retain exact same-PDF/image/source bindings and manifest-selected rights_route OWNER_APPROVED_OFFICIAL_ISSUER_RESEARCH_NOT_VIETSTOCK, acquisition_route INDEPENDENT_OFFICIAL_SOURCE, rights_status RESEARCH_AND_AI_READING_APPROVED, issuer_name and page_image_bindings.",
+    "Only after both raw records are retained, create the existing dual_reader_reviewed_transcription/v1 agreement proof with document ID/SHA, page_image, two {relative_path, sha256, retained_at} readings, actual comparison_started_at and admission_completed_at. All referenced files must remain beneath landing/dual-reader-transcriptions/.",
+    "Chronology: source observed_at <= raw recorded_at <= raw retained_at < comparison_started_at <= admission_completed_at. knowledge_available_at is no earlier than completion or either recording. Apply the requested cutoff.",
+    "For income code 201 only, attach appropriation_note = {page_image, readings} for the corresponding same-PDF note page, using both income families and actual chronology. The verifier must establish literal disclosure and identical current numerator; a caller basis claim alone cannot qualify.",
+    "Qualified metadata, legal issuer/scope, audited/reviewed assurance, source and use gates remain separate prerequisites. These five images do not supply missing cover/assurance evidence.",
+    "No registered basis note is supplied here for original H1/2025; that code 201 basis and the three-operand TTM remain blocked pending separately qualified evidence. Comparative/restated H1/2025 is not a replacement. Notes classify basis only; no EPS/share-count or note-fact admission.",
+    "Run the real retained common admission only after native lane, review and capacity corrective gates. Research tier only; no config activation, source promotion, Production, Daily, PIT or execution authority follows from readings or numerical agreement."
+  ]
+}

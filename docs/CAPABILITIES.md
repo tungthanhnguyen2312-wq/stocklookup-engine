@@ -153,6 +153,7 @@ Phase C (2026-10-06): record-wise IID hashing, borrowed binding leaves, bounded 
 [Business updates](official_business_update_research_contract.md): PR135; news blocked. [Intake](official_financial_quarterly_intake_contract.md): PR137; offline/source gate; HPG binding PR138 uses approved routes. [Q3 reconciliation](internal/Q3_FINANCIAL_EVIDENCE_RECOVERY_20261118.md): column gate fixed; no new official facts. HPG reviewed H1 OCR adds 4 facts (2026-11-09 cutoff); Producer PR #235 / Dashboard PR #32 expose 6 HPG Q3 shadow rows (0 official Q3 admissions, no valuation eligibility); PAN HOSE Q3 locator open for filing-type/share continuity. [Qualifier transport](current_financial_valuation_input_unlock_v1_contract.md): PR140; Workspace/AI labels (AI bound ≥2026-10-14); coverage unchanged. [CI extension](CI_AND_DEPENDENCY_TIERS.md): G2/business/quarterly mandatory; 367 files nonblocking; native lanes.
 
 ### 12. Current financial evidence
+- DEV ONLY: [SSI native-form common admission](dual_reader_evf_ssi_form_support_design.md) implemented for verified research rows; 0 real admissions. [Fresh blind-reading spec](ssi_decision2_reading_package_spec.json); lane, capacity corrective and evidence gates pending. EVF closed; no operational authority promotion.
 - Decision 2 [dual-reader transcription](dual_reader_reviewed_transcription_v1_contract.md): local
   retained-byte qualification and H1 bridge integration are implemented with synthetic end-to-end
   tests. Two different model families, precomparison raw retention, explicit source rights and

@@ -68,6 +68,22 @@ def row_identity(form_literal, statement_family, period, line_code, label, metri
     return (str(line_code), label, metric) in FORM_ROWS.get(form_literal, ())
 
 
+def current_column_identity(form_literal, period, label):
+    """Exact retained CTCK interim heading; no corporate/header normalization."""
+    return (form_literal == "B02a-CTCK/HN" and period in {"2025-H1", "2026-H1"}
+            and label == "Cho giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm " + period[:4])
+
+
+def income_period_literal(form_literal, literal):
+    """Exact retained CTCK caption/column spellings, scoped to two H1 periods."""
+    if form_literal == "B02a-CTCK/HN":
+        for year in ("2025", "2026"):
+            for prefix in ("Cho", "cho"):
+                if literal == prefix + " giai đoạn tài chính sáu tháng kết thúc ngày 30 tháng 6 năm " + year:
+                    return year + "-H1"
+    return None
+
+
 def verify_appropriation_basis(row, note, *, proof, source_record, families,
                                family_aliases, time, input_binding_matches,
                                signed_cell_literal, recognize_scope):
