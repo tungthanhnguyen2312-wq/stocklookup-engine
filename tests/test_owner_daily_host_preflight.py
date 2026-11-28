@@ -160,7 +160,8 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     root = preflight.ROOT
     relative = "config/owner_daily_capacity_qualification.json"
     live_raw = (root / relative).read_bytes()
-    live, kwarg = _before_valuation_b_materializer_kwarg(json.loads(live_raw))
+    live, evf = _before_evf_source_registry(json.loads(live_raw))
+    live, kwarg = _before_valuation_b_materializer_kwarg(live)
     live, hah = _before_dual_reader_config_hah(live)
     live, _ = _before_prospective_stream(live)
     prior, corrective = _before_valuation_b(live)
@@ -178,7 +179,8 @@ def test_valuation_b_capacity_corrective_exact_chain_and_history():
     assert set(corrective["prior_source_sha256_lf"]) == set(changed)
     assert set(corrective["active_source_sha256_lf"]) == set(changed + corrective["added_source_paths"])
     for path, digest in corrective["active_source_sha256_lf"].items():
-        successor = next((c for c in (kwarg, hah) if path in c["prior_source_sha256_lf"]), None)
+        # The first later corrective that changed this path holds B's active bytes at its own base.
+        successor = next((c for c in (hah, kwarg, evf) if path in c["prior_source_sha256_lf"]), None)
         content = (subprocess.check_output(["git", "show", f"{successor['base_commit']}:{path}"], cwd=root)
             if successor else (root / path).read_bytes())
         assert hashlib.sha256(content.replace(b"\r\n", b"\n")).hexdigest() == digest == live["source_sha256"][path]
@@ -1990,6 +1992,9 @@ def test_registry_migration_capacity_corrective_is_exact_and_preserves_history()
 def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, path):
     root = preflight.ROOT
     receipt = json.loads((root / "config/owner_daily_capacity_qualification.json").read_bytes())
+    later = [receipt[key] for key in ("dual_reader_config_hah_corrective", "valuation_b_materializer_kwarg_corrective",
+                                      "evf_source_registry_corrective", "monday_readiness_hardening_corrective")
+             if key in receipt]
     receipt, _ = _before_dual_reader_config_hah(receipt)
     selected = {path: receipt["source_sha256"][path]
                 for path in receipt["registry_migration_a_corrective"]["active_source_sha256_lf"]}
@@ -1997,7 +2002,10 @@ def test_registry_migration_capacity_refuses_changed_pin(tmp_path, monkeypatch, 
     for relative in selected:
         target = tmp_path / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes((root / relative).read_bytes())
+        # A peeled pin is matched by the exact bytes at the base of the first corrective that changed it.
+        successor = next((c for c in later if relative in c["prior_source_sha256_lf"]), None)
+        target.write_bytes(subprocess.check_output(["git", "show", f"{successor['base_commit']}:{relative}"], cwd=root)
+                           if successor else (root / relative).read_bytes())
     (tmp_path / "config/owner_daily_capacity_qualification.json").write_text(json.dumps(receipt), encoding="utf-8")
     monkeypatch.setattr(preflight, "capacity_source_paths", lambda root: sorted(selected))
     assert preflight.capacity_qualification(tmp_path)["source_matches"] is True
