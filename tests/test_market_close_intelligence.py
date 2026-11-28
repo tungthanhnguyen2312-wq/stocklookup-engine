@@ -298,3 +298,211 @@ def test_integrated_brief_what_changed_today_carries_compact_participation_chang
     refused = dib.build_what_changed_today(posture_transition=posture, sector_transition=None, watchlist_tickers=[],
                                            market_transition={"matched_cohort": {"status": "UNAVAILABLE", "reason_codes": ["NO_PREVIOUS_PARTICIPATION_SNAPSHOT"]}})
     assert refused["market_participation_change"] == {"status": "UNAVAILABLE", "reason_codes": ["NO_PREVIOUS_PARTICIPATION_SNAPSHOT"]}
+
+
+# --- universe_turnover_proxy (non-authoritative research proxy) ----------------------
+
+def _vol_rec(ret, trend, mom, *, volume=None, rel_vol=None, liq_status="ELIGIBLE", liq_session=S,
+             in_scope=True, tech_status="SHADOW_ONLY", is_current=True, volume_fitness=None):
+    values = {"return_1d": ret, "momentum_20d": mom}
+    if rel_vol is not None:
+        values["relative_volume_provider_scoped"] = rel_vol
+    technical = {"status": tech_status, "is_current_session": is_current, "values": values}
+    if volume_fitness is not None:
+        technical["provider_volume_fitness"] = volume_fitness
+    if liq_status == "ELIGIBLE":
+        liquidity = {"status": "ELIGIBLE", "session": liq_session,
+                     "value_status": "GROSS_TRADE_AMOUNT_RETAINED_ONLY_NON_AUTHORITATIVE_SCALE_BASIS_UNRESOLVED"}
+        if volume is not None:
+            liquidity["current_ohlc_v"] = volume
+    else:
+        liquidity = {"status": liq_status, "reason": "NO_LIQUIDITY_RECORD"}
+    return {"in_current_descriptive_scope": in_scope, "trend_state": trend,
+            "technical_features": technical, "liquidity": liquidity}
+
+
+def _desc_with_volume(session, rows):
+    eligible = [
+        r for r in rows.values()
+        if r.get("in_current_descriptive_scope")
+        and (r.get("technical_features") or {}).get("status") == "SHADOW_ONLY"
+        and (r.get("technical_features") or {}).get("is_current_session")
+    ]
+    adv = sum(1 for r in eligible if r["technical_features"]["values"]["return_1d"] > 0)
+    dec = sum(1 for r in eligible if r["technical_features"]["values"]["return_1d"] < 0)
+    above = sum(1 for r in eligible if r["trend_state"] == "ABOVE_MA20")
+    d = _descriptive(adv=adv, dec=dec, unch=len(eligible) - adv - dec, above=above, below=len(eligible) - above, session=session)
+    d["records"] = dict(rows)
+    return d
+
+
+def _bench(close, previous_close, session=S, previous_session=P):
+    return {"index": "VNINDEX", "session": session, "close": close, "previous_close": previous_close,
+            "previous_session": previous_session, "source_identity": "dnse_index_return_series/x",
+            "knowledge_available_at": session + "T09:00:00Z", "authority": "CURRENT_RESEARCH"}
+
+
+def test_universe_turnover_proxy_computed_from_descriptive_fixture_rows():
+    rows = {
+        "AAA": _vol_rec(1.2, "ABOVE_MA20", 1.0, volume=800.0, rel_vol=0.8),      # baseline 1000
+        "BBB": _vol_rec(0.5, "AT_OR_BELOW_MA20", -1.0, volume=1500.0, rel_vol=0.75),  # baseline 2000
+        "CCC": _vol_rec(-0.4, "AT_OR_BELOW_MA20", -1.0, volume=600.0, rel_vol=0.6),   # baseline 1000
+        "DDD": _vol_rec(2.0, "ABOVE_MA20", 2.0, volume=1200.0, rel_vol=1.2),     # baseline 1000
+        "EEE": _vol_rec(0.1, "AT_OR_BELOW_MA20", -0.5, liq_status="UNAVAILABLE"),  # uncovered -> 4/5 = 0.8
+        "OUT": _vol_rec(5.0, "ABOVE_MA20", 3.0, volume=999999.0, rel_vol=5.0, in_scope=False),
+        "STALE": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=999999.0, rel_vol=5.0, is_current=False),
+    }
+    out = mci.build(session=S, descriptive=_desc_with_volume(S, rows))
+    proxy = out["components"]["universe_turnover_proxy"]
+    assert proxy["status"] == "AVAILABLE"
+    assert proxy["method"] == "AGGREGATED_UNIVERSE_TURNOVER_PROXY"
+    assert proxy["authority"] == "NON_AUTHORITATIVE_RESEARCH_PROXY"
+    assert proxy["is_official_liquidity"] is False
+    assert proxy["price_times_volume"] == "NOT_PERMITTED"
+    assert proxy["traded_value_included"] is False
+    assert proxy["numerator"] == pytest.approx(4100.0)
+    assert proxy["denominator"] == pytest.approx(5000.0)
+    assert proxy["ratio"] == pytest.approx(0.82)
+    assert proxy["covered_ticker_count"] == 4
+    assert proxy["eligible_universe_count"] == 5
+    assert proxy["coverage_ratio"] == pytest.approx(0.8)
+    assert out["component_status"]["universe_turnover_proxy"] == "AVAILABLE"
+    assert out["components"]["liquidity"]["status"] == "UNAVAILABLE"
+    assert out["components"]["liquidity"]["reason_codes"] == ["OFFICIAL_LIQUIDITY_NOT_BOUND_TO_DAILY"]
+
+
+def test_universe_turnover_proxy_unavailable_on_missing_fields_and_low_coverage():
+    # Absent records
+    no_records = mci.build(session=S, descriptive=_descriptive())["components"]["universe_turnover_proxy"]
+    assert no_records["status"] == "UNAVAILABLE"
+    assert no_records["reason_codes"] == ["DESCRIPTIVE_PER_TICKER_RECORDS_ABSENT"]
+    assert no_records["method"] == "AGGREGATED_UNIVERSE_TURNOVER_PROXY"
+    assert no_records["authority"] == "NON_AUTHORITATIVE_RESEARCH_PROXY"
+    assert no_records["covered_ticker_count"] == 0 and no_records["eligible_universe_count"] == 0
+    assert no_records["coverage_ratio"] is None and no_records["ratio"] is None
+
+    # Records present but volume/baseline fields absent
+    no_vol = mci.build(session=S, descriptive=_desc_with(S, CURRENT_ROWS))["components"]["universe_turnover_proxy"]
+    assert no_vol["status"] == "UNAVAILABLE"
+    assert no_vol["reason_codes"] == ["VOLUME_OR_BASELINE_FIELDS_ABSENT"]
+    assert no_vol["eligible_universe_count"] == 5 and no_vol["covered_ticker_count"] == 0
+    assert no_vol["coverage_ratio"] == 0.0 and no_vol["numerator"] is None and no_vol["denominator"] is None
+
+    # Low coverage: 3/5 = 0.6 < 0.8 (one missing liquidity, one zero rel_vol -> no imputation)
+    low_cov_rows = {
+        "AAA": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0),
+        "BBB": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0),
+        "CCC": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0),
+        "DDD": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=0.0),
+        "EEE": _vol_rec(1.0, "ABOVE_MA20", 1.0, liq_status="UNAVAILABLE"),
+    }
+    low_cov = mci.build(session=S, descriptive=_desc_with_volume(S, low_cov_rows))["components"]["universe_turnover_proxy"]
+    assert low_cov["status"] == "UNAVAILABLE"
+    assert low_cov["reason_codes"] == ["TURNOVER_PROXY_COVERAGE_BELOW_MINIMUM"]
+    assert low_cov["covered_ticker_count"] == 3 and low_cov["eligible_universe_count"] == 5
+    assert low_cov["coverage_ratio"] == pytest.approx(0.6)
+    assert low_cov["numerator"] is None and low_cov["denominator"] is None and low_cov["ratio"] is None
+
+    # Stale liquidity session and incompatible volume family are excluded (no imputation -> 3/5 < 0.8)
+    bad_qual_rows = {
+        "AAA": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0),
+        "BBB": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0),
+        "CCC": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0),
+        "DDD": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0, liq_session=P),
+        "EEE": _vol_rec(1.0, "ABOVE_MA20", 1.0, volume=1000.0, rel_vol=1.0,
+                        volume_fitness="BLOCKED_VOLUME_FAMILY_NOT_COMPATIBLE"),
+    }
+    bad_qual = mci.build(session=S, descriptive=_desc_with_volume(S, bad_qual_rows))["components"]["universe_turnover_proxy"]
+    assert bad_qual["status"] == "UNAVAILABLE" and bad_qual["covered_ticker_count"] == 3
+
+
+def test_universe_turnover_proxy_descriptive_labels():
+    assert mci.TURNOVER_PROXY_OWN_BASELINE_RATIO == 1.0
+
+    def _rows_with_ratio(ratio):
+        return {
+            f"T{i}": _vol_rec(1.0, "AT_OR_BELOW_MA20", -1.0, volume=1000.0 * ratio, rel_vol=ratio)
+            for i in range(5)
+        }
+
+    # Positive benchmark + ratio < 1.0 -> BOUNCE_LOW_LIQUIDITY_UNCONFIRMED
+    bounce = mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(0.72)),
+                       benchmark=_bench(1750.0, 1725.0))
+    assert bounce["interpretation"]["turnover_proxy_label"] == "BOUNCE_LOW_LIQUIDITY_UNCONFIRMED"
+    q_bounce = {r["question"]: r for r in bounce["interpretation"]["questions"]}
+    assert q_bounce["Technical rebound, bottoming, sideways or confirmed uptrend?"]["turnover_proxy_label"] == "BOUNCE_LOW_LIQUIDITY_UNCONFIRMED"
+    assert bounce["interpretation"]["next_session_conditions"][0]["turnover_proxy_label"] == "BOUNCE_LOW_LIQUIDITY_UNCONFIRMED"
+
+    # Positive benchmark + ratio > 1.0 -> ADVANCE_ON_ABOVE_AVERAGE_TURNOVER
+    advance = mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(1.25)),
+                        benchmark=_bench(1750.0, 1725.0))
+    assert advance["interpretation"]["turnover_proxy_label"] == "ADVANCE_ON_ABOVE_AVERAGE_TURNOVER"
+    q_adv = {r["question"]: r for r in advance["interpretation"]["questions"]}
+    assert q_adv["Technical rebound, bottoming, sideways or confirmed uptrend?"]["turnover_proxy_label"] == "ADVANCE_ON_ABOVE_AVERAGE_TURNOVER"
+    assert advance["interpretation"]["next_session_conditions"][0]["turnover_proxy_label"] == "ADVANCE_ON_ABOVE_AVERAGE_TURNOVER"
+
+    # Exact 1.0 boundary on positive benchmark -> ADVANCE_ON_ABOVE_AVERAGE_TURNOVER
+    at_avg = mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(1.0)),
+                       benchmark=_bench(1750.0, 1725.0))
+    assert at_avg["interpretation"]["turnover_proxy_label"] == "ADVANCE_ON_ABOVE_AVERAGE_TURNOVER"
+
+    # Down day, flat day, missing benchmark, or unavailable proxy -> no label emitted
+    for label_free in (
+        mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(0.72)), benchmark=_bench(1700.0, 1725.0)),
+        mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(1.25)), benchmark=_bench(1700.0, 1725.0)),
+        mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(0.72)), benchmark=_bench(1725.0, 1725.0)),
+        mci.build(session=S, descriptive=_desc_with_volume(S, _rows_with_ratio(0.72)), benchmark=None),
+        mci.build(session=S, descriptive=_descriptive(), benchmark=_bench(1750.0, 1725.0)),
+    ):
+        assert "turnover_proxy_label" not in label_free["interpretation"]
+        assert all("turnover_proxy_label" not in q for q in label_free["interpretation"]["questions"])
+        assert all("turnover_proxy_label" not in r for r in label_free["interpretation"]["next_session_conditions"])
+
+    # Descriptive context only: no score, probability, recommendation, sizing or buy/sell language in proxy
+    blob = json.dumps({"proxy": bounce["components"]["universe_turnover_proxy"],
+                       "label": bounce["interpretation"]["turnover_proxy_label"],
+                       "note": bounce["interpretation"]["turnover_proxy_label_note"]}).lower()
+    for forbidden in ("score", "probability", "recommend", "position_size", "\"buy", "\"sell", "target_price", "avoid"):
+        assert forbidden not in blob
+
+
+def test_universe_turnover_proxy_preserves_official_liquidity_identity_and_markdown():
+    rows = {f"T{i}": _vol_rec(1.0, "AT_OR_BELOW_MA20", -1.0, volume=720.0, rel_vol=0.72) for i in range(5)}
+    desc_a = _desc_with_volume(S, rows)
+    desc_b = _desc_with_volume(S, dict(reversed(list(rows.items()))))
+    bench = _bench(1750.0, 1725.0)
+    budget = {"status": "UNAVAILABLE_REQUEST_BUDGET", "reason_code": "DAILY_OFFICIAL_LIQUIDITY_ROLLFORWARD_PARTIAL_REQUEST_BUDGET_CEILING",
+              "planned_requests": 403, "hard_request_budget": 400, "http_requests_made": 0}
+
+    first = mci.build(session=S, descriptive=desc_a, benchmark=bench)
+    second = mci.build(session=S, descriptive=desc_b, benchmark=bench)
+    assert first == second
+    assert first["artifact_identity"] == second["artifact_identity"]
+
+    # Official liquidity component is byte-for-byte unchanged whether proxy is AVAILABLE or UNAVAILABLE
+    without_proxy = mci.build(session=S, descriptive=_descriptive(), benchmark=bench)
+    assert first["components"]["liquidity"] == without_proxy["components"]["liquidity"]
+    with_budget_proxy = mci.build(session=S, descriptive=desc_a, official_liquidity=budget)
+    with_budget_plain = mci.build(session=S, descriptive=_descriptive(), official_liquidity=budget)
+    assert with_budget_proxy["components"]["liquidity"] == with_budget_plain["components"]["liquidity"]
+
+    # Changing proxy input changes artifact_identity (proxy is bound in identity inputs)
+    changed_rows = dict(rows, T0=_vol_rec(1.0, "AT_OR_BELOW_MA20", -1.0, volume=1500.0, rel_vol=1.5))
+    changed = mci.build(session=S, descriptive=_desc_with_volume(S, changed_rows), benchmark=bench)
+    assert changed["artifact_identity"] != first["artifact_identity"]
+
+    # markdown_lines stays stable except one added line for the proxy
+    lines = mci.markdown_lines(first)
+    proxy_lines = [line for line in lines if line.startswith("- Universe turnover proxy (")]
+    assert len(proxy_lines) == 1
+    assert "NON_AUTHORITATIVE_RESEARCH_PROXY" in proxy_lines[0]
+    assert "BOUNCE_LOW_LIQUIDITY_UNCONFIRMED" in proxy_lines[0]
+    assert "- Liquidity (matched/negotiated/total value): UNAVAILABLE (OFFICIAL_LIQUIDITY_NOT_BOUND_TO_DAILY); price x volume is not used." in lines
+    same_breadth_no_vol = mci.build(session=S, descriptive={k: v for k, v in desc_a.items() if k != "records"}, benchmark=bench)
+    unavail_lines = mci.markdown_lines(same_breadth_no_vol)
+    unavail_proxy_lines = [line for line in unavail_lines if line.startswith("- Universe turnover proxy (")]
+    assert len(unavail_proxy_lines) == 1
+    assert "UNAVAILABLE (DESCRIPTIVE_PER_TICKER_RECORDS_ABSENT)" in unavail_proxy_lines[0]
+    assert [line for line in lines if not line.startswith("- Universe turnover proxy (")] == [
+        line for line in unavail_lines if not line.startswith("- Universe turnover proxy (")
+    ]

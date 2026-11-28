@@ -23,6 +23,76 @@ def legacy(path):
 def prior(path):
     bundle=path/"2026-08-27"/"prior-build"/"ai_research_session_bundle.json"; bundle.parent.mkdir(parents=True); bundle.write_text(json.dumps({"session":"2026-08-27"}),encoding="utf-8"); return bundle
 
+
+def test_previous_bundle_released_after_validation_with_identical_package(tmp_path, monkeypatch):
+    import gc
+    import weakref
+
+    s = tmp_path / "source"
+    source(s)
+    previous = prior(tmp_path / "prior")
+    previous.write_text(json.dumps({"session": "2026-08-27", "previous_probe": True,
+        "records": [{"label": "retained", "nested": [None, False, -0.0, 1e-9]}] * 100}), encoding="utf-8")
+    brief = tmp_path / "brief.json"
+    brief.write_text(json.dumps({"artifact_identity": "brief:one",
+        "comparison_metadata": {"comparison_session": "2026-08-27"}}), encoding="utf-8")
+    integrated = tmp_path / "integrated.json"
+    integrated.write_text(json.dumps({"artifact_identity": "integrated:one",
+        "previous_qualified_session": "2026-08-27"}), encoding="utf-8")
+    paths = [s / name for name in handoff.REQUIRED] + [previous, brief, integrated]
+    original_bytes = {path: path.read_bytes() for path in paths}
+    loads = handoff.json.loads
+    manifest_lineage = handoff._manifest_lineage
+    previous_ref = None
+    released_before_next_parse = False
+
+    class PreviousGraph(dict):
+        pass
+
+    def probe_loads(text):
+        nonlocal previous_ref, released_before_next_parse
+        if previous_ref is not None:
+            gc.collect()
+            assert previous_ref() is None, "previous graph retained into the next parse"
+            released_before_next_parse = True
+        parsed = loads(text)
+        if isinstance(parsed, dict) and parsed.get("previous_probe"):
+            parsed = PreviousGraph(parsed)
+            previous_ref = weakref.ref(parsed)
+        return parsed
+
+    def probe_lineage(manifest, checkpoint):
+        gc.collect()
+        assert previous_ref is not None and previous_ref() is None
+        return manifest_lineage(manifest, checkpoint)
+
+    monkeypatch.setattr(handoff.json, "loads", probe_loads)
+    monkeypatch.setattr(handoff, "_manifest_lineage", probe_lineage)
+    files, payload = build_package(s, "2026-08-28", previous=previous, producer_checkpoint="abc",
+        decision_brief=brief, daily_integrated_decision_brief=integrated)
+    assert released_before_next_parse
+    assert {path: path.read_bytes() for path in paths} == original_bytes
+    assert {name: entry.read_bytes() for name, entry in files.items()} == {
+        **{name: original_bytes[s / name] for name in handoff.REQUIRED},
+        "previous_session_bundle_2026-08-27.json": original_bytes[previous],
+        "next_session_decision_brief.json": original_bytes[brief],
+        "daily_integrated_decision_brief.json": original_bytes[integrated],
+    }
+    assert payload["files"] == {name: hashlib.sha256(entry.read_bytes()).hexdigest()
+                                for name, entry in files.items()}
+    # Captured from the pre-release builder: covers package/build hashes and all lineage.
+    assert hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest() == \
+        "facbc8290330eb407fdc5a0952fdd6cfb281c02b4e6fdfc9bf3fa3aa8f3305f9"
+
+
+def test_previous_bundle_still_rejects_unsafe_pointers(tmp_path):
+    s = tmp_path / "source"
+    source(s)
+    previous = prior(tmp_path / "prior")
+    previous.write_text(json.dumps({"nested": [{"path": "C:/private/bundle"}]}), encoding="utf-8")
+    with pytest.raises(HandoffPublicationError, match="HANDOFF_ABSOLUTE_PATH_FORBIDDEN:previous_session_bundle_"):
+        build_package(s, "2026-08-28", previous=previous)
+
 def test_versioned_build_preserves_legacy_updates_latest_and_is_idempotent(tmp_path):
     s,r=tmp_path/"source",tmp_path/"repo"; source(s); repo(r); old=legacy(r); previous=prior(tmp_path/"prior")
     first=publish(r,s,"2026-08-28",previous=previous,producer_checkpoint="abc",push=False)

@@ -340,7 +340,8 @@ def _blocked(feature_id: str, *codes: str, method: str = "blocked_by_evidence/v2
 
 
 def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], cutoff: str,
-                             evidence_root, current_year: int = 2026) -> dict[str, dict[str, Any]]:
+                             evidence_root, current_year: int = 2026,
+                             issuer_type: str | None = None) -> dict[str, dict[str, Any]]:
     """HOL-08 opt-in offline V2 bridge: FY + current H1 - prior H1, per literal metric.
 
     Calls the common retained admission owner at the decision cutoff. Neither caller labels
@@ -348,8 +349,10 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
     quarter alias, quarterly-tier input or annualization. All three operands must agree on
     scope/currency and have individually proven base-unit normalization.
     """
-    from datetime import datetime
+    from datetime import date, datetime
     from stocklookup_core.evidence.official_document_qualification import admit_retained_financial_fact
+    from stocklookup_core.evidence.official_ocr_layout_proof import issuer_registry_values
+    from stocklookup_core.financial.interim_earnings_cash_research import load_issuer_gates
     stamp = datetime.fromisoformat(cutoff.replace("Z", "+00:00"))
     if stamp.tzinfo is None:
         raise ValueError("QUALIFIED_TIMESTAMP_MISSING_OR_INVALID")
@@ -357,12 +360,39 @@ def official_h1_ttm_features(*, ticker: str, rows: Sequence[Mapping[str, Any]], 
     bounds = ((f"{current_year-1}-01-01", f"{current_year-1}-12-31"),
               (f"{current_year}-01-01", f"{current_year}-06-30"),
               (f"{current_year-1}-01-01", f"{current_year-1}-06-30"))
+    # The current materializer does not supply issuer_type. Reuse its official issuer
+    # registry so a securities issuer cannot bypass this guard by omitting the argument.
+    registered_type = issuer_registry_values()[2].get(ticker.upper())
+    securities = "securities" in {registered_type, str(issuer_type or "").lower()}
+    cautions = load_issuer_gates()["issuers"].get(ticker.upper(), {}).get("comparability_cautions", [])
+    scope_blockers = []
+    # Check the entire operand span, including the subtracted prior H1: identical scope
+    # labels cannot establish comparability across a change in consolidated entities.
+    first, last = date.fromisoformat(bounds[0][0]), date.fromisoformat(bounds[1][1])
+    for caution in cautions:
+        if (caution.get("kind") != "CONSOLIDATION_SCOPE_CHANGE"
+                or "income_statement" not in caution.get("statement_families", [])):
+            continue
+        caution_id = caution["caution_id"]
+        try:
+            effective = date.fromisoformat(caution.get("effective_from", ""))
+        except (TypeError, ValueError):
+            scope_blockers.append("OFFICIAL_H1_TTM_CONSOLIDATION_SCOPE_DATE_UNPROVEN:" + caution_id)
+            continue
+        if first < effective <= last:
+            scope_blockers.append("OFFICIAL_H1_TTM_CONSOLIDATION_SCOPE_BREAK:" + caution_id)
     output = {}
     for metric, code, attribution in (("revenue", "10", None),
             ("net_income", "60", "TOTAL_PROFIT_AFTER_TAX_INCLUDING_NCI"),
             ("attributable_net_income", "61", "PARENT_ATTRIBUTABLE")):
         fid = metric + "_ttm"
-        inputs, blockers = [], []
+        inputs, blockers = [], list(scope_blockers)
+        if securities and metric == "attributable_net_income":
+            # Retained rows currently carry no source-bound pre/post Code 202 bonus/
+            # welfare appropriation basis. A line code, value, or restatement label is
+            # not that proof. Withhold the parent-profit leg (and dependent EPS) until
+            # the row contract can express it; do not invent a metadata field here.
+            blockers.append("SECURITIES_BONUS_WELFARE_BASIS_UNPROVEN")
         for i, period in enumerate(periods):
             candidates = [r for r in rows if r.get("ticker") == ticker and r.get("canonical_metric") == metric
                           and r.get("reporting_period") == period]

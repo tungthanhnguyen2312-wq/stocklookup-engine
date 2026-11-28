@@ -706,7 +706,7 @@
     "stocklookup_core/decision/investment_decision_workspace_projection.py": "95c27b00b90aad8cedd0f2fb2808d0217297890082ecf24dccc8074afea73379",
     "stocklookup_core/decision/macro_market_regime_decision_context.py": "70151e45eb01f6f28e594896b1d22658175d34de80a66ff4ce0ae7bb2b83d0fb",
     "stocklookup_core/decision/market_close_current_research.py": "826776076f38c186b238253953a817566ceeee7f8152c6c1783d5016a935e33c",
-    "stocklookup_core/decision/market_close_intelligence.py": "0fb11bccec4ff8bd39083a0d71641055d0e37a09db669e5aad9acf268cdd581d",
+    "stocklookup_core/decision/market_close_intelligence.py": "ba878edd54fce884c3dfe0d2581761077dc659f348be272844117f29fa1f6070",
     "stocklookup_core/decision/opportunity_axis_freshness.py": "d890cddb74679a563e53cc761b96c41456a7ddb5b7ba2623602891ffd0b3ee0a",
     "stocklookup_core/decision/opportunity_context.py": "aeb3fba69b38f7d9a886a65fbbd7d9c8b86fbf70dcf757505d3c001c0e40ce8b",
     "stocklookup_core/decision/opportunity_ranking.py": "c6ce8706ed1f415de0dca1c084f7e08564f3e1ee2992ffc2f03376c74ec93060",
@@ -881,7 +881,7 @@
     "stocklookup_core/financial/entity_classification_scaleout.py": "433c47037958b02b9340e049c2cb3d1c65c997ae8e0c9d0836fe57a9887d1242",
     "stocklookup_core/financial/evidence_backed_entity_classifier.py": "4d4b0133a1f652537167b8476d73fe9a191573cada92b7faa1a32a0646b37109",
     "stocklookup_core/financial/financial_analysis_context_v2.py": "3c1b45894b7878feaea72b4b4fd3982f594d587e4f930023663805dc9645c50f",
-    "stocklookup_core/financial/financial_analysis_engine_v2.py": "5a61580ad20f8a3d15a63a5a68dc6584f35f53d6278dbc2da18272128fca7eaa",
+    "stocklookup_core/financial/financial_analysis_engine_v2.py": "d891b390f10a64d7d5bbc1900134de00a6a3043dab67c12865f5fd8cbe833ec9",
     "stocklookup_core/financial/financial_analysis_product_projection.py": "b557b87168a53121542b2091404d2ca09333834a11e55b1f1c1e6135e5fac35f",
     "stocklookup_core/financial/financial_canonicalization.py": "88d3f875e2ce7afe869bd4945dedbe225fcbc9f6bd63a6603ac2648e970f3d2d",
     "stocklookup_core/financial/financial_entity_applicability.py": "df78493c281b9de98f770346dc986f3c53142a8075cb2cfcf5558c9a9b219a35",
@@ -950,7 +950,7 @@
     "stocklookup_core/portfolio/vnm_execution_contract.py": "51cc7b0eda1ed85c42c0eba7f8a40febebabee903ee6eb6b89b89fe52e48699c",
     "stocklookup_core/portfolio/vnm_shadow_backtest.py": "8a2c4887f0dfa2fb2946fd66614a0d7bd5a7f1011f7c5b3e693132a706f9fb7f",
     "stocklookup_core/research/__init__.py": "b6a62d41ac1f5ce58844c3342486d7ced907aabc4ea622ea0072a1c2ac7175c5",
-    "stocklookup_core/research/ai_handoff_publication.py": "9eab870d83e451566234ebf85c197a2d8664a6e0152d6d56c7468cfb46b37915",
+    "stocklookup_core/research/ai_handoff_publication.py": "f700b1294a56b9d674ced2e87f2c931c8216c71fcaa298e86b94fa7dab8b935a",
     "stocklookup_core/research/ai_handoff_source_freshness_matrix.py": "fd7e65eedd3c2fc65a15f11cd3fb218dffca07ceb0e95a17d7a46d8ce3e36633",
     "stocklookup_core/research/ai_research_analyst.py": "d5dbf44368fa5ae21f2b8d4b844867996383be92fcdfb26e7ccb4d17eb1af4ce",
     "stocklookup_core/research/ai_research_ticker_extractor.py": "18b208430804bfa93928b6020a39f443480a5549c006d749c9ba0d8a09bba53b",
@@ -2671,5 +2671,32 @@
     "whole_daily_requalification": false,
     "release_authority": "NOT_GRANTED",
     "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, limits and safeguards are unchanged. Exact www.evnfc.vn host admission for audited annual and reviewed interim statement byte acquisition only. Exact reviewed registry and manifest successors retain and verify the acquisition/VSDC predecessors; the verifier pin is updated in this same corrective. No financial-fact, PIT, execution, Daily launch or release authority is granted."
+  },
+  "monday_readiness_hardening_corrective": {
+    "base_commit": "4ff1665d9aec1892c1cf6d6ab46c3d9b3c57984f",
+    "predecessor_corrective": "evf_source_registry_corrective",
+    "scope": "MONDAY_READINESS_HARDENING_COMPATIBILITY_PIN_UPDATE_ONLY",
+    "changed_source_paths": [
+      "stocklookup_core/research/ai_handoff_publication.py",
+      "stocklookup_core/financial/financial_analysis_engine_v2.py",
+      "stocklookup_core/decision/market_close_intelligence.py"
+    ],
+    "added_source_paths": [],
+    "prior_source_sha256_lf": {
+      "stocklookup_core/research/ai_handoff_publication.py": "9eab870d83e451566234ebf85c197a2d8664a6e0152d6d56c7468cfb46b37915",
+      "stocklookup_core/financial/financial_analysis_engine_v2.py": "5a61580ad20f8a3d15a63a5a68dc6584f35f53d6278dbc2da18272128fca7eaa",
+      "stocklookup_core/decision/market_close_intelligence.py": "0fb11bccec4ff8bd39083a0d71641055d0e37a09db669e5aad9acf268cdd581d"
+    },
+    "active_source_sha256_lf": {
+      "stocklookup_core/research/ai_handoff_publication.py": "f700b1294a56b9d674ced2e87f2c931c8216c71fcaa298e86b94fa7dab8b935a",
+      "stocklookup_core/financial/financial_analysis_engine_v2.py": "d891b390f10a64d7d5bbc1900134de00a6a3043dab67c12865f5fd8cbe833ec9",
+      "stocklookup_core/decision/market_close_intelligence.py": "ba878edd54fce884c3dfe0d2581761077dc659f348be272844117f29fa1f6070"
+    },
+    "source_transition": null,
+    "e4_v2_code_digest": "dc3befaed8cd461bcd083104b35f6cc210c3e6b383beecf4672550415533d1d7",
+    "new_capacity_measurement": false,
+    "whole_daily_requalification": false,
+    "release_authority": "NOT_GRANTED",
+    "compatibility": "COMPATIBILITY pin update only. No new capacity measurement was performed. Prior measured values, IID bounds, physical/commit limits and runtime safeguards are unchanged. Handoff previous-bundle release (no byte change to handoff output), default-OFF B TTM scope/securities guards, and additive non-authoritative universe_turnover_proxy only. No Daily launch or release authority is granted."
   }
 }
